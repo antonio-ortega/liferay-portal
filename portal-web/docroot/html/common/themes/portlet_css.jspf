@@ -74,6 +74,8 @@ String borderLeftWidthValue = StringPool.BLANK;
 
 if (Validator.isNotNull(borderWidthTop.getString(_VALUE_KEY))) {
 	borderTopWidthValue = borderWidthTop.getString(_VALUE_KEY) + borderWidthTop.getString(_UNIT_KEY);
+} else {
+	borderTopWidthValue = "0" + borderWidthTop.getString(_UNIT_KEY);
 }
 
 if (Validator.isNotNull(borderWidthRight.getString(_VALUE_KEY))) {
