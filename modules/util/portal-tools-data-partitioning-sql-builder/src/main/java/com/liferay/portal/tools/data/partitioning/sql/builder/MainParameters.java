@@ -34,35 +34,36 @@ import java.util.List;
 public class MainParameters {
 
 	public String getCompanyIds() {
-		return _companyIds;
+		return _COMPANY_IDS;
 	}
 
 	public String getOutputDirName() {
-		return _outputDirName;
+		return _OUTPUT_DIR_NAME;
 	}
 
 	public String getPropertiesFileName() {
-		return _propertiesFileName;
+		return _PROPERTIES_FILE_NAME;
 	}
 
 	public String getSchemaName() {
-		return _schemaName;
+		return _SCHEMA_NAME;
 	}
 
 	public boolean isWriteFile() {
-		return _writeFile;
+		return _WRITE_FILE;
 	}
 
 	public ExportContext toExportContext() throws IOException {
 		return new ExportContext(
-			_getCompanyIds(), _outputDirName,
-			PropsReader.read(getPropertiesFileName()), _schemaName, _writeFile);
+			_getCompanyIds(), _OUTPUT_DIR_NAME,
+			PropsReader.read(getPropertiesFileName()), _SCHEMA_NAME,
+			_WRITE_FILE);
 	}
 
 	private List<Long> _getCompanyIds() {
 		List<Long> companyIds = new ArrayList<>();
 
-		for (String companyId : _companyIds.split(",")) {
+		for (String companyId : _COMPANY_IDS.split(",")) {
 			companyIds.add(Long.parseLong(companyId));
 		}
 
@@ -74,32 +75,32 @@ public class MainParameters {
 		names = {"-C", "--company-ids"},
 		validateWith = CompanyIdsRequiredParameterValidator.class
 	)
-	private String _companyIds;
+	private static final String _COMPANY_IDS;
 
 	@Parameter(
 		description = "Output directory", names = {"-O", "--output-dir"},
 		validateWith = WritableFileRequiredParameterValidator.class
 	)
-	private String _outputDirName;
+	private static final String _OUTPUT_DIR_NAME;
 
 	@Parameter(
 		description = "Properties file with database configuration",
 		names = {"-P", "--properties-file"},
 		validateWith = FileRequiredParameterValidator.class
 	)
-	private String _propertiesFileName;
+	private static final String _PROPERTIES_FILE_NAME;
 
 	@Parameter(
 		description = "Schema name to be exported",
 		names = {"-S", "--schema-name"},
 		validateWith = RequiredParameterValidator.class
 	)
-	private String _schemaName;
+	private static final String _SCHEMA_NAME;
 
 	@Parameter(
 		description = "Whether to write tables to separate SQL files",
 		names = {"-W", "--write-file"}
 	)
-	private boolean _writeFile;
+	private static final boolean _WRITE_FILE;
 
 }

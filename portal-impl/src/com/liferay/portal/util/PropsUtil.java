@@ -19,8 +19,10 @@ import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.WebDirDetector;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.ClassUtil;
@@ -34,6 +36,7 @@ import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -198,7 +201,20 @@ public class PropsUtil {
 	}
 
 	private void _addProperties(Properties properties) {
-		_getConfiguration().addProperties(properties);
+		if (GetterUtil.getBoolean(
+				SystemProperties.get("company-id-properties"))) {
+
+			List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+
+			for (Company company : companies) {
+				Long companyId = company.getCompanyId();
+
+				_configurations.get(companyId).addProperties(properties);
+			}
+		}
+		else {
+			_configuration.addProperties(properties);
+		}
 	}
 
 	private void _addProperties(UnicodeProperties unicodeProperties) {
@@ -332,7 +348,20 @@ public class PropsUtil {
 	}
 
 	private void _removeProperties(Properties properties) {
-		_getConfiguration().removeProperties(properties);
+		if (GetterUtil.getBoolean(
+				SystemProperties.get("company-id-properties"))) {
+
+			List<Company> companies = CompanyLocalServiceUtil.getCompanies();
+
+			for (Company company : companies) {
+				Long companyId = company.getCompanyId();
+
+				_configurations.get(companyId).removeProperties(properties);
+			}
+		}
+		else {
+			_configuration.removeProperties(properties);
+		}
 	}
 
 	private void _set(String key, String value) {
