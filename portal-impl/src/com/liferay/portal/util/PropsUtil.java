@@ -83,10 +83,10 @@ public class PropsUtil {
 			return properties;
 		}
 
-		Properties systemCompanyProperties =
-			_instance._getProperties(CompanyConstants.SYSTEM);
+		Properties systemCompanyProperties = _instance._getProperties(
+			CompanyConstants.SYSTEM);
 
-		Properties mergedProperties = 
+		Properties mergedProperties =
 			(Properties)systemCompanyProperties.clone();
 
 		mergedProperties.putAll(properties);
