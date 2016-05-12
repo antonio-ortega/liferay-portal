@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -88,9 +89,14 @@ public class PropsUtil {
 	}
 
 	public static boolean contains(String key) {
-		Configuration configuration = _getConfiguration();
-
-		return configuration.contains(key);
+		boolean value = _getConfiguration().contains(key);
+		
+		if (!Validator.isNotNull(value)){
+			CompanyThreadLocal.setCompanyId(CompanyConstants.SYSTEM);
+			value = _getConfiguration().contains(key);
+		}
+		
+		return value;
 	}
 
 	public static String get(Company company, String key) {
@@ -106,15 +112,25 @@ public class PropsUtil {
 	}
 
 	public static String get(String key) {
-		Configuration configuration = _getConfiguration();
-
-		return configuration.get(key);
+		String value =  _getConfiguration().get(key);
+		
+		if (!Validator.isNotNull(value)){
+			CompanyThreadLocal.setCompanyId(CompanyConstants.SYSTEM);
+			value = _getConfiguration().get(key);
+		}
+		
+		return value;
 	}
 
 	public static String get(String key, Filter filter) {
-		Configuration configuration = _getConfiguration();
-
-		return configuration.get(key, filter);
+		String value =  _getConfiguration().get(key, filter);
+		
+		if (!Validator.isNotNull(value)){
+			CompanyThreadLocal.setCompanyId(CompanyConstants.SYSTEM);
+			value = _getConfiguration().get(key, filter);
+		}
+		
+		return value;
 	}
 
 	public static String[] getArray(Company company, String key) {
@@ -132,15 +148,25 @@ public class PropsUtil {
 	}
 
 	public static String[] getArray(String key) {
-		Configuration configuration = _getConfiguration();
-
-		return configuration.getArray(key);
+		String[] value = _getConfiguration().getArray(key);
+		
+		if (!Validator.isNotNull(value)){
+			CompanyThreadLocal.setCompanyId(CompanyConstants.SYSTEM);
+			value = _getConfiguration().getArray(key);
+		}
+		
+		return value;
 	}
 
 	public static String[] getArray(String key, Filter filter) {
-		Configuration configuration = _getConfiguration();
-
-		return configuration.getArray(key, filter);
+		String[] value = _getConfiguration().getArray(key, filter);
+		
+		if (!Validator.isNotNull(value)){
+			CompanyThreadLocal.setCompanyId(CompanyConstants.SYSTEM);
+			value = _getConfiguration().getArray(key, filter);
+		}
+		
+		return value;
 	}
 
 	public static Properties getProperties() {
