@@ -659,6 +659,10 @@ public class MainServlet extends ActionServlet {
 			timeout = GetterUtil.getInteger(sessionTimeout, timeout);
 		}
 
+		if (PropsValues.SESSION_TIMEOUT_AUTO_EXTEND){
+			timeout = -1;
+		}
+
 		PropsUtil.set(PropsKeys.SESSION_TIMEOUT, String.valueOf(timeout));
 
 		PropsValues.SESSION_TIMEOUT = timeout;
