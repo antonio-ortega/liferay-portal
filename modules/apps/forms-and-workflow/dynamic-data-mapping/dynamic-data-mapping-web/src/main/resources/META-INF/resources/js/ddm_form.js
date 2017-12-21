@@ -1887,7 +1887,7 @@ AUI.add(
 									instance._requestLayouts(parentLayoutId, groupId, privateLayout, start, end, A.rbind('_renderLayoutsFragment', instance, key, 'up'));
 								}
 							}
-							else if (scrollTop + innerHeight === scrollHeight) {
+							else if (Math.trunc(scrollTop) + innerHeight === scrollHeight) {
 								start = end;
 								end = start + delta;
 
