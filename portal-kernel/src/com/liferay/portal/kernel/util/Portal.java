@@ -235,6 +235,9 @@ public interface Portal {
 	public String addPreservedParameters(ThemeDisplay themeDisplay, String url);
 
 	public String addPreservedParameters(
+		ThemeDisplay themeDisplay, String url, boolean user);
+
+	public String addPreservedParameters(
 		ThemeDisplay themeDisplay, String url, boolean typeControlPanel,
 		boolean doAsUser);
 
