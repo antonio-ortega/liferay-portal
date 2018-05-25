@@ -191,7 +191,13 @@ AUI.add(
 						var instance = this;
 
 						if (instance.instanceReady) {
-							instance.getNativeEditor().setData(value);
+							instance.getNativeEditor().setData(value, {
+								callback: function() {
+									if (instance.getNativeEditor().getData() !== value) {
+										instance.setHTML(value);
+									}
+								}
+							});
 						}
 						else {
 							instance.set('contents', value);

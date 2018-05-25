@@ -247,7 +247,13 @@ name = HtmlUtil.escapeJS(name);
 			var win = window['<%= name %>'];
 
 			var setHTML = function(data) {
-				ckEditorInstance.setData(data);
+				ckEditorInstance.setData(data, {
+					callback: function() {
+						if (ckEditorInstance.getData() !== data) {
+							setHTML(data);
+						}
+					}
+				});
 
 				win._setStyles();
 			};
