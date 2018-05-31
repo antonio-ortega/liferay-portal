@@ -25,4 +25,4 @@ String fullName = namespace.concat(HtmlUtil.escapeAttribute(name));
 		<fieldset class="input-container" disabled="disabled">
 	</c:if>
 
-	<aui:input name="formDate" type="hidden" value="<%= System.currentTimeMillis() %>" />
+	<aui:input id="<%= name + \"formDate\" %>" name="formDate" type="hidden" value="<%= System.currentTimeMillis() %>" />
