@@ -90,7 +90,15 @@
 	</div>
 
 	<@liferay_aui.script use="liferay-navigation-interaction">
-		var navigation = A.one('#${navbarId}');
+		var navigation = A.all('#${navbarId}');
+
+		if (navigation.size() > 1) {
+			var oldNavigation = navigation.first();
+
+			oldNavigation.remove();
+
+			navigation = navigation.last();
+		}
 
 		Liferay.Data.NAV_INTERACTION_LIST_SELECTOR = '.navbar-site';
 		Liferay.Data.NAV_LIST_SELECTOR = '.navbar-site';
