@@ -144,7 +144,7 @@ if (portletTitleBasedNavigation) {
 
 									commonFileMetadataContainer.loadingmask.show();
 
-									for (var i = 0; i < ddmFormFieldNamespaces.length; i++){
+									for (var i = 0; i < ddmFormFieldNamespaces.length; i++) {
 										var ddmFormFieldNamespace = ddmFormFieldNamespaces[i];
 
 										var ddmForm = Liferay.component('<portlet:namespace />' + ddmFormFieldNamespace + 'ddmForm');
