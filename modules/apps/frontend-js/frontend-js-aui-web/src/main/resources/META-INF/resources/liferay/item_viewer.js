@@ -391,7 +391,7 @@ AUI.add(
 							{
 								dialog: {
 									destroyOnHide: true,
-									zIndex: Liferay.zIndex.WINDOW + 100
+									zIndex: Liferay.zIndex.TOOLTIP + 100
 								},
 								id: instance.get('id'),
 								stack: false,
