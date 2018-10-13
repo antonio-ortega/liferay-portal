@@ -387,13 +387,11 @@ AUI.add(
 							}
 						);
 
-						var editEntityBaseZIndex = parent.CKEDITOR ? parent.CKEDITOR.getNextZIndex() : Liferay.zIndex.WINDOW;
-
 						Liferay.Util.editEntity(
 							{
 								dialog: {
 									destroyOnHide: true,
-									zIndex: editEntityBaseZIndex + 100
+									zIndex: Liferay.zIndex.WINDOW + 100
 								},
 								id: instance.get('id'),
 								stack: false,
