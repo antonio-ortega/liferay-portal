@@ -279,11 +279,17 @@ AUI.add(
 
 						var eventType = 'hideNavigationMenu';
 
+						mapHover.menu = event.currentTarget;
+
 						if (event.type == 'mouseenter') {
 							eventType = 'showNavigationMenu';
-						}
 
-						mapHover.menu = event.currentTarget;
+							var dropdown = A.one('.hover.open');
+	
+							if (dropdown && mapHover.menu != dropdown) {
+								instance._toggleMenu(dropdown, false);
+							}
+						}
 
 						Liferay.fire(eventType, mapHover);
 					},
