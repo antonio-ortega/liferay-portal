@@ -51,6 +51,8 @@ AUI.add(
 
 									if (showMenu) {
 										instance._lastShownMenu = menu;
+
+										instance._toggleMenu(menu, showMenu);
 									}
 
 									instance._toggleMenuTask(menu, showMenu);
