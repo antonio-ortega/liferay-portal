@@ -123,7 +123,7 @@ if (forcePost && (portletURL != null)) {
 
 		<ul class="pagination">
 			<li class="page-item <%= (cur > 1) ? StringPool.BLANK : "disabled" %>">
-				<a class="page-link" data-title="<liferay-ui:message key="previous-page" />" href="<%= (cur > 1) ? _getHREF(formName, namespace + curParam, cur - 1, jsCall, url, urlAnchor) : "javascript:;" %>" onclick="<%= ((cur > 1) && forcePost) ? _getOnClick(namespace, curParam, cur -1) : "" %>">
+				<a class="lfr-portal-tooltip page-link" title="<liferay-ui:message key="previous-page" />" href="<%= (cur > 1) ? _getHREF(formName, namespace + curParam, cur - 1, jsCall, url, urlAnchor) : "javascript:;" %>" onclick="<%= ((cur > 1) && forcePost) ? _getOnClick(namespace, curParam, cur -1) : "" %>">
 					<liferay-ui:icon
 						icon="angle-left"
 						markupView="lexicon"
@@ -319,7 +319,7 @@ if (forcePost && (portletURL != null)) {
 			</c:choose>
 
 			<li class="page-item <%= (cur < pages) ? StringPool.BLANK : "disabled" %>">
-				<a class="page-link" data-title="<liferay-ui:message key="next-page" />" href="<%= (cur < pages) ? _getHREF(formName, namespace + curParam, cur + 1, jsCall, url, urlAnchor) : "javascript:;" %>" onclick="<%= ((cur < pages) && forcePost) ? _getOnClick(namespace, curParam, cur + 1) : "" %>">
+				<a class="lfr-portal-tooltip page-link" title="<liferay-ui:message key="next-page" />" href="<%= (cur < pages) ? _getHREF(formName, namespace + curParam, cur + 1, jsCall, url, urlAnchor) : "javascript:;" %>" onclick="<%= ((cur < pages) && forcePost) ? _getOnClick(namespace, curParam, cur + 1) : "" %>">
 					<liferay-ui:icon
 						icon="angle-right"
 						markupView="lexicon"

@@ -52,18 +52,16 @@ boolean urlIsNotNull = Validator.isNotNull(url);
 		</li>
 	</c:when>
 	<c:otherwise>
-		<span class="<%= cssClass %>">
-			<c:choose>
-				<c:when test="<%= urlIsNotNull %>">
-					<aui:a ariaRole="<%= ariaRole %>" cssClass="<%= linkCssClass %>" data="<%= data %>" href="<%= url %>" id="<%= id %>" lang="<%= lang %>" onClick="<%= onClick %>" target="<%= target %>">
-						<%@ include file="/html/taglib/ui/icon/link_content.jspf" %>
-					</aui:a>
-				</c:when>
-				<c:otherwise>
+		<c:choose>
+			<c:when test="<%= urlIsNotNull %>">
+				<aui:a ariaRole="<%= ariaRole %>" cssClass="<%= linkCssClass %>" data="<%= data %>" href="<%= url %>" id="<%= id %>" lang="<%= lang %>" onClick="<%= onClick %>" target="<%= target %>">
 					<%@ include file="/html/taglib/ui/icon/link_content.jspf" %>
-				</c:otherwise>
-			</c:choose>
-		</span>
+				</aui:a>
+			</c:when>
+			<c:otherwise>
+				<%@ include file="/html/taglib/ui/icon/link_content.jspf" %>
+			</c:otherwise>
+		</c:choose>
 	</c:otherwise>
 </c:choose>
 
