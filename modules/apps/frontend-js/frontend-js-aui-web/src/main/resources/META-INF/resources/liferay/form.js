@@ -430,9 +430,7 @@ AUI.add(
 					var fieldName = rule.fieldName;
 					var validatorName = rule.validatorName;
 
-					var field = this.formValidator
-						.getField(fieldName)
-						.getDOMNode();
+					var field = document.getElementById(fieldName);
 
 					A.Do.after(
 						'_setFieldAttribute',
