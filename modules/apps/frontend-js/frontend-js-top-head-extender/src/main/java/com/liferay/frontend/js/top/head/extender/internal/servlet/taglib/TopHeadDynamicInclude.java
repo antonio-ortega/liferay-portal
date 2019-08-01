@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.servlet.PortalWebResources;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.url.builder.AbsolutePortalURLBuilder;
@@ -257,7 +258,10 @@ public class TopHeadDynamicInclude implements DynamicInclude {
 			sb.append(StringPool.AMPERSAND);
 			sb.append(url);
 
-			if (sb.length() >= 2048) {
+			if ((sb.length() >= 2048) ||
+				(sb.length() >= PrefsPropsUtil.getInteger(
+					PropsKeys.COMBO_URL_MAX_LENGTH))) {
+
 				sb.append("\" type = \"text/javascript\"></script>");
 
 				printWriter.println(sb.toString());
