@@ -117,14 +117,6 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 						'<%= PortletKeys.PORTLET_DISPLAY_TEMPLATE %>',
 					title:
 						'<%= UnicodeLanguageUtil.get(request, "widget-templates") %>'
-				},
-				function(event) {
-					if (!event.newVal) {
-						submitForm(
-							document.<portlet:namespace />fm,
-							'<%= HtmlUtil.escapeJS(refreshURL) %>'
-						);
-					}
 				}
 			);
 		});
