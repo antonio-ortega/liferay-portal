@@ -100,6 +100,14 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 					basePortletURL: '<%= basePortletURL %>',
 					classNameId: '<%= classNameId %>',
 					dialog: {
+						after: {
+							destroy(event) {
+								if (event.target.get('destroyOnHide')) {
+									window.location.reload();
+								}
+							}
+						},
+						destroyOnHide: true,
 						width: 1024
 					},
 					groupId: <%= ddmTemplateGroupId %>,
