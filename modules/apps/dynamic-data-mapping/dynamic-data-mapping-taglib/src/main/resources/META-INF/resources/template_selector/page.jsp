@@ -95,38 +95,27 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 
 	if (selectDDMTemplateLink) {
 		selectDDMTemplateLink.addEventListener('click', function(event) {
-			Liferay.Util.openDDMPortlet(
-				{
-					basePortletURL: '<%= basePortletURL %>',
-					classNameId: '<%= classNameId %>',
-					dialog: {
-						after: {
-							destroy(event) {
-								if (event.target.get('destroyOnHide')) {
-									window.location.reload();
-								}
-							}
-						},
-						destroyOnHide: true,
-						width: 1024
+			Liferay.Util.openDDMPortlet({
+				basePortletURL: '<%= basePortletURL %>',
+				classNameId: '<%= classNameId %>',
+				dialog: {
+					after: {
+						destroy() {
+							submitForm(
+								document.<portlet:namespace />fm,
+								'<%= HtmlUtil.escapeJS(refreshURL) %>'
+							);
+						}
 					},
-					groupId: <%= ddmTemplateGroupId %>,
-					mvcPath: '/view_template.jsp',
-					navigationStartsOn: '<%= DDMNavigationHelper.VIEW_TEMPLATES %>',
-					refererPortletName:
-						'<%= PortletKeys.PORTLET_DISPLAY_TEMPLATE %>',
-					title:
-						'<%= UnicodeLanguageUtil.get(request, "widget-templates") %>'
+					destroyOnHide: true,
+					width: 1024
 				},
-				function(event) {
-					if (!event.newVal) {
-						submitForm(
-							document.<portlet:namespace />fm,
-							'<%= HtmlUtil.escapeJS(refreshURL) %>'
-						);
-					}
-				}
-			);
+				groupId: <%= ddmTemplateGroupId %>,
+				mvcPath: '/view_template.jsp',
+				navigationStartsOn: '<%= DDMNavigationHelper.VIEW_TEMPLATES %>',
+				refererPortletName: '<%= PortletKeys.PORTLET_DISPLAY_TEMPLATE %>',
+				title: '<%= UnicodeLanguageUtil.get(request, "widget-templates") %>'
+			});
 		});
 	}
 
