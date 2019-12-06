@@ -424,6 +424,13 @@ name = HtmlUtil.escapeJS(name);
 		}
 
 		function initData() {
+			var ckeditorInstance = CKEDITOR.instances['<%= name %>'];
+
+			if (ckeditorInstance) {
+				ckEditorContent = ckeditorInstance.getData();
+				window['<%= name %>'].setHTML(ckEditorContent);
+			}
+
 			if (!ckEditorContent) {
 				ckEditorContent = getInitialContent();
 			}
