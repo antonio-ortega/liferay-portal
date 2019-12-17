@@ -50,6 +50,8 @@ if ((portletURL != null) && Validator.isNull(url) && Validator.isNull(urlAnchor)
 	}
 }
 
+url = HtmlUtil.escapeURL(url);
+
 if (Validator.isNull(id)) {
 	id = PortalUtil.generateRandomKey(request, "taglib-page-iterator");
 }
