@@ -18,6 +18,7 @@
 		pending: bool,
 		plid: string,
 		title: string,
+		tooltip: bool,
 		url: string
 	]>}
 	{@param layoutColumnIndex: number}
@@ -97,6 +98,7 @@
 		plid: string,
 		pending: bool,
 		title: string,
+		tooltip: bool,
 		url: string
 	]}
 	{@param handleLayoutColumnItemCheck: any}
@@ -137,7 +139,12 @@
 
 	<li {$listGroupItemAttributes}>
 		{let $listGroupItemMaskAttributes kind="attributes"}
-			class="layout-column-item-click-mask"
+			{if $layoutColumnItem.tooltip}
+				class="layout-column-item-click-mask lfr-portal-tooltip"
+				title="{$layoutColumnItem.title}"
+			{else}
+				class="layout-column-item-click-mask"
+			{/if}
 			data-layout-column-item-plid="{$layoutColumnItem.plid}"
 			data-onclick="{$handleLayoutColumnItemClick}"
 			tabindex="0"

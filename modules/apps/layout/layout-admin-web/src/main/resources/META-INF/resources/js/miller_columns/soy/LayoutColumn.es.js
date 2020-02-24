@@ -112,6 +112,7 @@ LayoutColumn.STATE = {
 			pending: Config.bool().value(false),
 			plid: Config.string().required(),
 			title: Config.string().required(),
+			titleLength: Config.bool(),
 			url: Config.string().required()
 		})
 	).required(),

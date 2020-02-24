@@ -708,6 +708,8 @@ public class LayoutsAdminDisplayContext {
 			layoutJSONObject.put(
 				"title", layout.getName(themeDisplay.getLocale())
 			).put(
+				"tooltip", isTooltip(layout.getName(themeDisplay.getLocale()))
+			).put(
 				"url", portletURL.toString()
 			);
 
@@ -1535,6 +1537,14 @@ public class LayoutsAdminDisplayContext {
 		}
 
 		return true;
+	}
+
+	public Boolean isTooltip(String string) {
+		if (string.length() >= 28) {
+			return true;
+		}
+
+		return false;
 	}
 
 	protected long getActiveLayoutSetBranchId() throws PortalException {
