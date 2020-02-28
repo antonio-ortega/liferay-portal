@@ -98,6 +98,34 @@ class Layout extends Component {
 				this.searchContainer_ = searchContainer;
 			}
 		);
+
+		document
+			.querySelectorAll('.layout-column-item-click-mask')
+			.forEach(element => {
+				element.addEventListener(
+					'mouseover',
+					function isEllipsisActive(e) {
+						var LayoutColumnTitle = document.querySelector(
+							'span[title="' +
+								e.srcElement.getAttribute('data-tooltip') +
+								'"]'
+						);
+
+						if (
+							LayoutColumnTitle &&
+							LayoutColumnTitle.offsetWidth <
+								LayoutColumnTitle.scrollWidth
+						) {
+							e.srcElement.setAttribute(
+								'title',
+								e.srcElement.getAttribute('data-tooltip')
+							);
+							e.srcElement.classList.add('lfr-portal-tooltip');
+						}
+					},
+					{once: true}
+				);
+			});
 	}
 
 	/**

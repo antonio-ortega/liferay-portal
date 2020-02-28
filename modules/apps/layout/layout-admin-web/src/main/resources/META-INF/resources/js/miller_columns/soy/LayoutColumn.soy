@@ -139,6 +139,7 @@
 		{let $listGroupItemMaskAttributes kind="attributes"}
 			class="layout-column-item-click-mask"
 			data-layout-column-item-plid="{$layoutColumnItem.plid}"
+			data-tooltip="{$layoutColumnItem.title}"
 			data-onclick="{$handleLayoutColumnItemClick}"
 			tabindex="0"
 			type="button"
@@ -187,7 +188,7 @@
 
 			<div class="autofit-col autofit-col-expand layout-column-item-title">
 				<h4 class="list-group-title">
-					<span class="text-truncate">
+					<span class="text-truncate" title="{$layoutColumnItem.title}">
 						{$layoutColumnItem.title}
 					</span>
 				</h4>
