@@ -159,6 +159,12 @@ public abstract class BaseWorkflowHandler<T> implements WorkflowHandler<T> {
 				serviceContext.getRequest(), PortletKeys.MY_WORKFLOW_TASK,
 				PortletRequest.RENDER_PHASE);
 
+			if (portletURL == null) {
+				portletURL = PortalUtil.getControlPanelPortletURL(
+					serviceContext.getRequest(), PortletKeys.MY_WORKFLOW_TASK,
+					PortletRequest.RENDER_PHASE);
+			}
+
 			portletURL.setParameter("mvcPath", "/edit_workflow_task.jsp");
 			portletURL.setParameter(
 				"workflowTaskId", String.valueOf(workflowTaskId));
