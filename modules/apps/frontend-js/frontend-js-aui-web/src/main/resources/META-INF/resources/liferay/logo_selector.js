@@ -82,7 +82,11 @@ AUI.add(
 						instance._fileEntryIdInput.val(fileEntryId);
 					}
 				},
-
+				
+				_defLogoURLChangeFn(value, src) {
+					
+					
+				},
 				_onDeleteLogoClick() {
 					var instance = this;
 
@@ -193,6 +197,10 @@ AUI.add(
 						'_changeLogo',
 						instance
 					);
+					
+					instance.publish(instance.name+':logoURLChange', {
+						defaultFn: instance._defLogoURLChangeFn,
+					});
 				},
 
 				renderUI() {
