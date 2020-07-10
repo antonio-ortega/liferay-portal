@@ -44,6 +44,7 @@ function FieldBase({
 	children,
 	displayErrors,
 	errorMessage,
+	id,
 	label,
 	localizedValue = {},
 	name,
@@ -129,11 +130,13 @@ function FieldBase({
 					required ||
 					tooltip ||
 					repeatable) && (
-					<p
+					<label
 						className={classNames({
 							'ddm-empty': !showLabel && !required,
 							'ddm-label': showLabel,
 						})}
+
+						htmlFor={id ? id : name}
 					>
 						{label && showLabel && label}
 
@@ -152,7 +155,7 @@ function FieldBase({
 								/>
 							</span>
 						)}
-					</p>
+					</label>
 				)}
 
 				{children}
