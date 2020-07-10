@@ -1004,6 +1004,11 @@ exports[`Select puts an asterisk when field is required 1`] = `
           />
         </svg>
       </span>
+      <span
+        class="sr-only"
+      >
+        required
+      </span>
     </label>
     <select
       aria-label="select"
