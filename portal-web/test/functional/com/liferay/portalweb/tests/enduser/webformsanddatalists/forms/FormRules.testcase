@@ -582,6 +582,7 @@ definition {
 
 		FormFields.viewTextField(
 			fieldLabel = "Manager",
+			fieldLabelRequired = "Manager Required",
 			fieldName = "Manager");
 
 		FormFields.editText(
@@ -591,10 +592,6 @@ definition {
 		FormFields.editText(
 			fieldName = "Manager",
 			fieldValue = "Admin Comments");
-
-		FormFields.viewTextField(
-			fieldLabel = "Manager",
-			fieldName = "Manager");
 
 		FormPortlet.submitSuccessfully();
 
@@ -1119,6 +1116,7 @@ definition {
 
 		FormFields.viewDateFieldNotPresent(
 			fieldLabel = "Date Field",
+			fieldLabelRequired = "Date Field Required",
 			fieldName = "DateField");
 
 		FormFields.editText(
@@ -1127,6 +1125,7 @@ definition {
 
 		FormFields.viewDateField(
 			fieldLabel = "Date Field",
+			fieldLabelRequired = "Date Field Required",
 			fieldName = "DateField");
 	}
 

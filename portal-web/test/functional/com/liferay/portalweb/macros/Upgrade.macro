@@ -1198,6 +1198,7 @@ definition {
 
 		FormsAdmin.viewMultilineTextEntry(
 			fieldLabel = "MultilineText",
+			fieldLabelRequired = "MultilineText Required",
 			fieldName = "MultilineText",
 			fieldValue = "Multiline Text");
 
@@ -1208,6 +1209,7 @@ definition {
 
 		FormsAdmin.viewRadioEntry(
 			fieldLabel = "Radio",
+			fieldLabelRequired = "Radio Required",
 			fieldName = "Radio",
 			fieldValue = "Option 1");
 
