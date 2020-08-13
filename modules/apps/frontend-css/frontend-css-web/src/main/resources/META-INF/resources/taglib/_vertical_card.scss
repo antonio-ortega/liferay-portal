@@ -49,3 +49,12 @@
 .taglib-vertical-card-footer {
 	min-height: 5.6em;
 }
+
+.rtl {
+	.card .aspect-ratio-item-center-middle {
+		left: auto;
+		margin-right: 1.5rem;
+		right: 50%;
+		transform: translate(-100%, -50%);
+	}
+}
