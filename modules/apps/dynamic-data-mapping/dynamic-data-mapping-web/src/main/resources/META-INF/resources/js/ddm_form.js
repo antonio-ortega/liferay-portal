@@ -355,13 +355,18 @@ AUI.add(
 			getReadOnly() {
 				var instance = this;
 
-				var retVal = false;
-
 				if (instance.get('readOnly')) {
-					retVal = true;
+					return true;
 				}
 
-				return retVal;
+				if (!instance._getLocalizable() &&
+					(instance._valueDisplayLocale() !==
+					 instance.getDefaultLocale())) {
+
+					return  true;
+				}
+
+				return false;
 			},
 		};
 
