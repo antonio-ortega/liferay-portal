@@ -55,6 +55,10 @@ public class VerticalCardTag extends CardTag {
 		_backgroundImage = backgroundImage;
 	}
 
+	public void setDataSennaOff(boolean dataSennaOff) {
+		_dataSennaOff = dataSennaOff;
+	}
+
 	public void setFooter(String footer) {
 		_footer = footer;
 	}
@@ -84,6 +88,7 @@ public class VerticalCardTag extends CardTag {
 		super.cleanUp();
 
 		_backgroundImage = true;
+		_dataSennaOff = false;
 		_footer = null;
 		_header = null;
 		_onClick = null;
@@ -103,6 +108,8 @@ public class VerticalCardTag extends CardTag {
 
 		httpServletRequest.setAttribute(
 			"liferay-frontend:card:backgroundImage", _backgroundImage);
+		request.setAttribute(
+			"liferay-frontend:card:dataSennaOff", _dataSennaOff);
 		httpServletRequest.setAttribute(
 			"liferay-frontend:card:footer", _footer);
 		httpServletRequest.setAttribute(
@@ -117,6 +124,7 @@ public class VerticalCardTag extends CardTag {
 	}
 
 	private boolean _backgroundImage = true;
+	private boolean _dataSennaOff;
 	private String _footer;
 	private String _header;
 	private String _onClick;
