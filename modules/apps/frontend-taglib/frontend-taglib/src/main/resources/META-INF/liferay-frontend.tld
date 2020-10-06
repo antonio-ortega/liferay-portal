@@ -836,6 +836,12 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>The data-senna-off value on the anchor link.</description>
+			<name>dataSennaOff</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<name>icon</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
@@ -1549,6 +1555,12 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
+			<description>The data-senna-off value on the anchor link.</description>
+			<name>dataSennaOff</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
 			<description>If you pass in a row checker value, a result row is mandatory. A result row is of type <![CDATA[<code>com.liferay.portal.kernel.dao.search.ResultRow</code>]]>.</description>
 			<name>resultRow</name>
 			<required>false</required>
@@ -1669,6 +1681,12 @@
 		<attribute>
 			<description>Miscellaneous data to be stored via a map. This data is not shared with the browser. The map holds key value pairs of type <![CDATA[<code>&lt;String, Object&gt;</code>]]>.</description>
 			<name>data</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>The data-senna-off value on the anchor link.</description>
+			<name>dataSennaOff</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
