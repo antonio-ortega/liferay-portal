@@ -27,6 +27,10 @@ GroupItemSelectorCriterion groupItemSelectorCriterion = siteItemSelectorViewDisp
 String target = ParamUtil.getString(request, "target", groupItemSelectorCriterion.getTarget());
 
 GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
+
+InactiveRequestHandlerConfiguration inactiveRequestHandlerConfiguration = ConfigurationProviderUtil.getSystemConfiguration(InactiveRequestHandlerConfiguration.class);
+
+boolean showInactiveRequestMessage = inactiveRequestHandlerConfiguration.showInactiveRequestMessage();
 %>
 
 <clay:management-toolbar
@@ -85,6 +89,8 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 
 				childGroupsHREF = childGroupsURL.toString();
 			}
+
+			boolean dataSennaOff = showInactiveRequestMessage && !group.isActive();
 			%>
 
 			<c:choose>
@@ -106,7 +112,7 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 						colspan="<%= 2 %>"
 					>
 						<h5>
-							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+							<aui:a cssClass="selector-button" data="<%= data %>" data-senna-off="<%= dataSennaOff %>" href="javascript:;">
 								<%= HtmlUtil.escape(siteItemSelectorViewDisplayContext.getGroupName(group)) %>
 							</aui:a>
 
@@ -169,7 +175,7 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 										expand="<%= true %>"
 										gutters="<%= true %>"
 									>
-										<aui:a cssClass="card-title selector-button text-truncate" data="<%= data %>" href="javascript:;" title="<%= siteVerticalCard.getSubtitle() %>">
+										<aui:a cssClass="card-title selector-button text-truncate" data="<%= data %>" data-senna-off="<%= dataSennaOff %>" href="javascript:;" title="<%= siteVerticalCard.getSubtitle() %>">
 											<%= siteVerticalCard.getTitle() %>
 										</aui:a>
 
@@ -195,7 +201,7 @@ GroupSearch groupSearch = siteItemSelectorViewDisplayContext.getGroupSearch();
 						name="name"
 						truncate="<%= true %>"
 					>
-						<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+						<aui:a cssClass="selector-button" data="<%= data %>" data-senna-off="<%= dataSennaOff %>" href="javascript:;">
 							<%= HtmlUtil.escape(siteItemSelectorViewDisplayContext.getGroupName(group)) %>
 						</aui:a>
 
