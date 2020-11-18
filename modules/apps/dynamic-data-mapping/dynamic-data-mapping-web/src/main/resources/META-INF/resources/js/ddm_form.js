@@ -356,10 +356,15 @@ AUI.add(
 			getReadOnly() {
 				var instance = this;
 
-				var retVal = false;
-
 				if (instance.get('readOnly')) {
-					retVal = true;
+					return true;
+				}
+
+				if (!instance._getLocalizable() &&
+					(instance._valueDisplayLocale() !==
+					 instance.getDefaultLocale())) {
+
+					return  true;
 				}
 				else {
 					var form = instance.getForm();
@@ -372,7 +377,7 @@ AUI.add(
 					}
 				}
 
-				return retVal;
+				return false;
 			},
 		};
 
