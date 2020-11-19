@@ -52,8 +52,7 @@ String currentURL = PortalUtil.getCurrentURL(request);
 		ignoreUserLocaleOptionsNode.on(
 			'click',
 			function() {
-				Liferay.Util.Session.set('ignoreUserLocaleOptions', true);
-				Liferay.Util.Session.set('useHttpSession', true);
+				Liferay.Util.Session.setHttpSessionValue('ignoreUserLocaleOptions', true);
 			}
 		);
 	</aui:script>
