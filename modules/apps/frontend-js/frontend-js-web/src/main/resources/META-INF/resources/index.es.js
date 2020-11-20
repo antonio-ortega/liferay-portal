@@ -62,7 +62,7 @@ export {default as createResourceURL} from './liferay/util/portlet_url/create_re
 
 // Session API
 
-export {getSessionValue, setSessionValue} from './liferay/util/session.es';
+export {getSessionValue, getHttpSessionValue, setSessionValue, getHttSessionValue} from './liferay/util/session.es';
 
 // Toast API
 

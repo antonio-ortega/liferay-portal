@@ -63,6 +63,34 @@ export function getSessionValue(key) {
 }
 
 /**
+ * Gets the Store utility fetch value for given key in the HttpSession
+ * @param {String} key string for fetch request
+ * @return {Promise}
+ * @review
+ */
+export function getHttSessionValue(key) {
+	const formData = getSessionClickFormData('get');
+
+	formData.append('key', key);
+	formData.append('useHttpSession', true);
+
+	return fetch(getSessionClickURL(), {
+		body: formData,
+		method: 'POST',
+	})
+		.then((response) => response.text())
+		.then((responseText) => {
+			if (responseText.startsWith(TOKEN_SERIALIZE)) {
+				const value = responseText.substring(TOKEN_SERIALIZE.length);
+
+				responseText = JSON.parse(value);
+			}
+
+			return responseText;
+		});
+}
+
+/**
  * Sets the Store utility fetch value
  * @param {String} key of the formData
  * @param {Object|String} value of the key for the formData
@@ -77,6 +105,29 @@ export function setSessionValue(key, value) {
 	}
 
 	formData.append(key, value);
+
+	return fetch(getSessionClickURL(), {
+		body: formData,
+		method: 'POST',
+	});
+}
+
+/**
+ * Sets the Store utility fetch value in the HttpSession
+ * @param {String} key of the formData
+ * @param {Object|String} value of the key for the formData
+ * @return {Promise}
+ * @review
+ */
+export function setHttpSessionValue(key, value) {
+	const formData = getSessionClickFormData('set');
+
+	if (value && typeof value === 'object') {
+		value = TOKEN_SERIALIZE + JSON.stringify(value);
+	}
+
+	formData.append(key, value);
+	formData.append('useHttpSession', true);
 
 	return fetch(getSessionClickURL(), {
 		body: formData,

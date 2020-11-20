@@ -72,7 +72,12 @@ import createActionURL from './util/portlet_url/create_action_url.es';
 import createPortletURL from './util/portlet_url/create_portlet_url.es';
 import createRenderURL from './util/portlet_url/create_render_url.es';
 import createResourceURL from './util/portlet_url/create_resource_url.es';
-import {getSessionValue, setSessionValue} from './util/session.es';
+import {
+	getSessionValue,
+	getHttpSessionValue,
+	setSessionValue,
+	setHttpSessionValue
+} from './util/session.es';
 import toCharCode from './util/to_char_code.es';
 import toggleDisabled from './util/toggle_disabled';
 
@@ -270,7 +275,9 @@ Liferay.Util.openToast = (...args) => {
 
 Liferay.Util.Session = {
 	get: getSessionValue,
+	getHttpSessionValue,
 	set: setSessionValue,
+	setHttpSessionValue,
 };
 
 Liferay.Util.unescape = unescape;
