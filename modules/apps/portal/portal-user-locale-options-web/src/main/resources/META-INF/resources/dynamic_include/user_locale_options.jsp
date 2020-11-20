@@ -47,12 +47,10 @@ Locale userLocale = user.getLocale();
 		message: '<%= HtmlUtil.escapeJS(alertMessage) %>',
 		onClose: function (data) {
 			if (data.event) {
-				Liferay.Util.Session.set(
+				Liferay.Util.Session.setHttpSessionValue(
 					'com.liferay.portal.user.locale.options.web_ignoreUserLocaleOptions',
 					true
 				);
-
-				Liferay.Util.Session.set('useHttpSession', true);
 			}
 		},
 		type: 'info',
