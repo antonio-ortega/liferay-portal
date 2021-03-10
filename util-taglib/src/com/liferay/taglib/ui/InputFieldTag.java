@@ -14,6 +14,7 @@
 
 package com.liferay.taglib.ui;
 
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.util.IncludeTag;
 
@@ -99,7 +100,9 @@ public class InputFieldTag extends IncludeTag {
 	}
 
 	public void setAutoComplete(String autoComplete) {
-		_autoComplete = autoComplete;
+		_autoComplete =
+			ArrayUtil.contains(_VALID_AUTOCOMPLETE_VALUES, autoComplete) ?
+				autoComplete : "off";
 	}
 
 	public void setAutoFocus(boolean autoFocus) {
@@ -253,6 +256,22 @@ public class InputFieldTag extends IncludeTag {
 	}
 
 	private static final String _PAGE = "/html/taglib/ui/input_field/page.jsp";
+
+	private static final String[] _VALID_AUTOCOMPLETE_VALUES = {
+		"off", "on", "name", "honorific-prefix", "given-name",
+		"additional-name", "family-name", "honorific-suffix", "nickname",
+		"email", "username", "new-password", "current-password",
+		"one-time-code", "organization-title", "organization", "street-address",
+		"address-line1", "address-line2", "address-line3", "address-level14",
+		"address-level13", "address-level12", "address-level11", "country",
+		"country-name", "postal-code", "cc-name", "cc-given-name",
+		"cc-additional-name", "cc-family-name", "cc-number", "cc-exp",
+		"cc-exp-month", "cc-exp-year", "cc-csc", "cc-type",
+		"transaction-currency", "transaction-amount", "language", "bday",
+		"bday-day", "bday-month", "bday-year", "sex", "tel", "tel-country-code",
+		"tel-national", "tel-area-code", "tel-local", "tel-extension", "impp",
+		"url", "photo"
+	};
 
 	private String _autoComplete;
 	private boolean _autoFocus;
