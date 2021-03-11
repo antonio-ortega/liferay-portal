@@ -74,6 +74,10 @@
 		for (Locale availableLocale : availableLocales) {
 			String curLanguageId = LocaleUtil.toLanguageId(availableLocale);
 
+			if (!companyLanguageIds.contains(curLanguageId)) {
+				continue;
+			}
+
 			if (curLanguageId.equals(defaultLanguageId)) {
 				continue;
 			}
@@ -144,6 +148,10 @@
 
 						for (Locale availableLocale : availableLocales) {
 							String curLanguageId = LocaleUtil.toLanguageId(availableLocale);
+
+							if (!companyLanguageIds.contains(curLanguageId)) {
+								continue;
+							}
 
 							uniqueLanguageIds.add(curLanguageId);
 						}
@@ -250,6 +258,10 @@
 			<%
 			for (Locale availableLocale : availableLocales) {
 				String availableLanguageId = LocaleUtil.toLanguageId(availableLocale);
+
+				if (!companyLanguageIds.contains(availableLanguageId)) {
+					continue;
+				}
 			%>
 
 				available['<%= availableLanguageId %>'] = '<%= availableLocale.getDisplayName(locale) %>';

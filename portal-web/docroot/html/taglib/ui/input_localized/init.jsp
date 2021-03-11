@@ -17,6 +17,7 @@
 <%@ include file="/html/taglib/init.jsp" %>
 
 <%@ page import="com.liferay.portal.kernel.editor.Editor" %><%@
+page import="com.liferay.portal.kernel.security.auth.CompanyThreadLocal" %><%@
 page import="com.liferay.taglib.ui.InputEditorTag" %>
 
 <%
@@ -112,4 +113,6 @@ if ((exception != null) && fieldName.equals(focusField) && (exception instanceof
 
 	errorLocales = localizedExceptionsMap.keySet();
 }
+
+Set<String> companyLanguageIds = SetUtil.fromArray(PrefsPropsUtil.getStringArray(CompanyThreadLocal.getCompanyId(), PropsKeys.LOCALES, StringPool.COMMA, PropsValues.LOCALES_ENABLED));
 %>
