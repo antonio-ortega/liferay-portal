@@ -14,7 +14,9 @@
 
 package com.liferay.taglib.ui;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.util.IncludeTag;
 
@@ -100,9 +102,33 @@ public class InputFieldTag extends IncludeTag {
 	}
 
 	public void setAutoComplete(String autoComplete) {
+		autoComplete = StringUtil.toLowerCase(autoComplete.trim());
+
+		String[] autoCompleteParts = StringUtil.split(
+			autoComplete, CharPool.SPACE);
+
+		boolean validAutoComplete = false;
+
+		if (autoCompleteParts.length == 1) {
+			validAutoComplete = _validateAutoCompleteValue(
+				autoCompleteParts[0]);
+		}
+		else if (autoCompleteParts.length == 2) {
+			validAutoComplete =
+				_validateAutoCompleteValue(autoCompleteParts[1]) &&
+				(_validateAutoCompleteContactInformation(
+					autoCompleteParts[0]) ||
+				 _validateSectionAutoComplete(autoCompleteParts[0]));
+		}
+		else if (autoCompleteParts.length == 3) {
+			validAutoComplete =
+				_validateAutoCompleteValue(autoCompleteParts[2]) &&
+				_validateAutoCompleteContactInformation(autoCompleteParts[1]) &&
+				_validateSectionAutoComplete(autoCompleteParts[0]);
+		}
+
 		_autoComplete =
-			ArrayUtil.contains(_VALID_AUTOCOMPLETE_VALUES, autoComplete) ?
-				autoComplete : "off";
+			validAutoComplete ? autoComplete : _AUTOCOMPLETE_DEFAULT_VALUE;
 	}
 
 	public void setAutoFocus(boolean autoFocus) {
@@ -254,6 +280,26 @@ public class InputFieldTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-ui:input-field:placeholder", _placeholder);
 	}
+
+	private boolean _validateAutoCompleteContactInformation(
+		String autoComplete) {
+
+		if (autoComplete.equals("shipping") || autoComplete.equals("billing")) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _validateAutoCompleteValue(String autoComplete) {
+		return ArrayUtil.contains(_VALID_AUTOCOMPLETE_VALUES, autoComplete);
+	}
+
+	private boolean _validateSectionAutoComplete(String autoComplete) {
+		return autoComplete.startsWith("section-");
+	}
+
+	private static final String _AUTOCOMPLETE_DEFAULT_VALUE = "off";
 
 	private static final String _PAGE = "/html/taglib/ui/input_field/page.jsp";
 
