@@ -137,6 +137,9 @@ public class SearchContainerRowTag<R>
 
 		_results = _searchContainer.getResults();
 
+		request.setAttribute(
+			"liferay-ui:search-container-row:cssClass", _cssClass);
+
 		if ((_results != null) && !_results.isEmpty()) {
 			processRow();
 
@@ -331,6 +334,10 @@ public class SearchContainerRowTag<R>
 					FriendlyURLNormalizerUtil.normalizeWithPeriodsAndSlashes(
 						String.valueOf(rowIdObject));
 			}
+
+			request.setAttribute(
+				"liferay-ui:search-container-row:rowIdProperty",
+				_rowIdProperty);
 		}
 
 		_resultRow = new com.liferay.taglib.search.ResultRow(
