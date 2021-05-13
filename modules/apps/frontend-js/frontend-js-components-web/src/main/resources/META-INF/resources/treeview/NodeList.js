@@ -42,6 +42,9 @@ export default function NodeList({
 					onBlur();
 				}
 			}}
+			onClick={() => {
+				console.log('ptr-2428.nodelist.onclick');
+			}}
 			onFocus={(event) => {
 				if (onFocus) {
 					onFocus(event);

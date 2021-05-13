@@ -48,6 +48,7 @@ export default function NodeListItem({NodeComponent, node}) {
 	};
 
 	const toggleSelected = () => {
+		console.log('ptr-2428.nodelistitem.toggleSelected');
 		dispatch({nodeId: node.id, type: 'TOGGLE_SELECT'});
 	};
 
