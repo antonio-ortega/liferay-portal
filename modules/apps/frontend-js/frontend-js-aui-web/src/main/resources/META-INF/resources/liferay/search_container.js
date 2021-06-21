@@ -92,7 +92,7 @@ AUI.add(
 					instance._parentContainer[action]();
 				},
 
-				addRow(array, id) {
+				addRow(array, id, columnsCssClasses) {
 					var instance = this;
 
 					var row;
@@ -101,7 +101,9 @@ AUI.add(
 						var template = instance._table.one('.' + CSS_TEMPLATE);
 
 						if (template) {
-							row = template.clone();
+							row = template.previous()
+								? template.previous().clone()
+								: template.clone();
 
 							var cells = row.all('> td');
 
@@ -112,6 +114,12 @@ AUI.add(
 
 								if (cell) {
 									cell.html(item);
+									if (
+										columnsCssClasses &&
+										columnsCssClasses[index]
+									) {
+										cell.addClass(columnsCssClasses[index]);
+									}
 								}
 							});
 
