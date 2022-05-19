@@ -544,7 +544,7 @@ for (String analyticsType : analyticsTypes) {
 					String googleAnalytics4CustomConfiguration = groupTypeSettings.getProperty("googleAnalytics4CustomConfiguration");
 					%>
 
-					<c:if test="<%= Validator.isNotNull(googleAnalyticsCustomConfiguration) %>">
+					<c:if test="<%= Validator.isNotNull(googleAnalytics4CustomConfiguration) %>">
 						<%= googleAnalytics4CustomConfiguration %>
 					</c:if>
 
