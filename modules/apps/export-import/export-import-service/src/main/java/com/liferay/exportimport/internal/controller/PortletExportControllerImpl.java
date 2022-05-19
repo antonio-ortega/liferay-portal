@@ -195,7 +195,10 @@ public class PortletExportControllerImpl implements PortletExportController {
 
 			List<AssetLink> assetLinks = new ArrayList<>();
 
-			if (_isIncludeAllAssetLinks()) {
+			if (_isIncludeAllAssetLinks() &&
+				(portletDataContext.getStartDate() != null) &&
+				(portletDataContext.getEndDate() != null)) {
+
 				assetLinks.addAll(
 					_assetLinkLocalService.getLinks(
 						portletDataContext.getGroupId(),
