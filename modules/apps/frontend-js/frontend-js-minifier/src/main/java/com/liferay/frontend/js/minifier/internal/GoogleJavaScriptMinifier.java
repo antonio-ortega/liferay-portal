@@ -35,6 +35,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -72,7 +73,13 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 				SourceFile.fromCode("extern", StringPool.BLANK), sourceFile,
 				compilerOptions);
 
-			if (compiler.hasErrors()) {
+			boolean ignoredFile = Stream.of(
+				_IGNORED_FILES
+			).anyMatch(
+				resourceName::endsWith
+			);
+
+			if (compiler.hasErrors() || ignoredFile) {
 				return content;
 			}
 
@@ -111,6 +118,8 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 			}
 		}
 	}
+
+	private static final String[] _IGNORED_FILES = {"ReactFlow.js"};
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		GoogleJavaScriptMinifier.class);
