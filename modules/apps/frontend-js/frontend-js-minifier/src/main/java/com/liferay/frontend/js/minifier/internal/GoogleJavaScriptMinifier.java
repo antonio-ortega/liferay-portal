@@ -69,16 +69,16 @@ public class GoogleJavaScriptMinifier implements JavaScriptMinifier {
 				CompilerOptions.LanguageMode.ECMASCRIPT_NEXT);
 			compilerOptions.setResolveSourceMapAnnotations(false);
 
-			boolean fileToIgnore = false;
+			boolean ignoreFile = false;
 
 			for (String ignoredFile : _IGNORED_FILES) {
 				if (resourceName.endsWith(ignoredFile)) {
-					fileToIgnore = true;
+					ignoreFile = true;
 					break;
 				}
 			}
 
-			if (!fileToIgnore) {
+			if (!ignoreFile) {
 				compiler.compile(
 					SourceFile.fromCode("extern", StringPool.BLANK), sourceFile,
 					compilerOptions);
