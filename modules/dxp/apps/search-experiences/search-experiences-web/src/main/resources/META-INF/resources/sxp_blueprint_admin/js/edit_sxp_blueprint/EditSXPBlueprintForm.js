@@ -474,7 +474,7 @@ function EditSXPBlueprintForm({
 		// }
 
 		fetchData(
-			addParams('/o/search-experiences-rest/v1.0/field-mapping-infos', {
+			addParams(Liferay.ThemeDisplay.getPathContext() + '/o/search-experiences-rest/v1.0/field-mapping-infos', {
 				external: formik.values.indexConfig.external,
 				indexName: formik.values.indexConfig.indexName,
 			})
