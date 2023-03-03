@@ -474,10 +474,14 @@ function EditSXPBlueprintForm({
 		// }
 
 		fetchData(
-			addParams(Liferay.ThemeDisplay.getPathContext() + '/o/search-experiences-rest/v1.0/field-mapping-infos', {
-				external: formik.values.indexConfig.external,
-				indexName: formik.values.indexConfig.indexName,
-			})
+			addParams(
+				Liferay.ThemeDisplay.getPathContext() +
+					'/o/search-experiences-rest/v1.0/field-mapping-infos',
+				{
+					external: formik.values.indexConfig.external,
+					indexName: formik.values.indexConfig.indexName,
+				}
+			)
 		)
 			.then((responseContent) => setIndexFields(responseContent.items))
 			.catch(() => setIndexFields([]));

@@ -322,9 +322,13 @@ function AddSXPElementSidebar({
 
 	useEffect(() => {
 		fetchData(
-			addParams(Liferay.ThemeDisplay.getPathContext() + '/o/search-experiences-rest/v1.0/sxp-elements', {
-				pageSize: 200, // TODO check pagesize
-			})
+			addParams(
+				Liferay.ThemeDisplay.getPathContext() +
+					'/o/search-experiences-rest/v1.0/sxp-elements',
+				{
+					pageSize: 200, // TODO check pagesize
+				}
+			)
 		)
 			.then((responseContent) => {
 				if (isMounted()) {
