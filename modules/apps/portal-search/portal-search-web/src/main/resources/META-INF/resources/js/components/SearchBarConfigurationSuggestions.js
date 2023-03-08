@@ -125,7 +125,7 @@ function SXPBlueprintAttributes({onBlur, onChange, touched, value}) {
 			setSXPBlueprint({loading: true, title: ''});
 
 			fetch(
-				`${window.location.origin}/o/search-experiences-rest/v1.0/sxp-blueprints/${value.attributes?.sxpBlueprintId}`,
+				`${window.location.origin}${Liferay.ThemeDisplay.getPathContext()}/o/search-experiences-rest/v1.0/sxp-blueprints/${value.attributes?.sxpBlueprintId}`,
 				{
 					headers: new Headers({
 						'Accept': 'application/json',
