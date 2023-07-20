@@ -17,12 +17,18 @@ import fetch from './fetch.es';
 const TOKEN_SERIALIZE = 'serialize://';
 
 function getSessionClickFormData(cmd) {
+	const doAsGroupId = Liferay.ThemeDisplay.doAsGroupId();
+
 	const doAsUserIdEncoded = Liferay.ThemeDisplay.getDoAsUserIdEncoded();
 
 	const formData = new FormData();
 
 	formData.append('cmd', cmd);
 	formData.append('p_auth', Liferay.authToken);
+
+	if (doAsGroupId > 0) {
+		formData.append('doAsGroupId', doAsGroupId);
+	}
 
 	if (doAsUserIdEncoded) {
 		formData.append('doAsUserId', doAsUserIdEncoded);

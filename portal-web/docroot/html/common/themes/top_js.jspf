@@ -245,6 +245,9 @@
 			getDefaultLanguageId: function() {
 				return '<%= LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale()) %>';
 			},
+			getDoAsGroupId: function() {
+				return '<%= themeDisplay.getDoAsGroupId() %>';
+			},
 			getDoAsUserIdEncoded: function() {
 				return '<%= UnicodeFormatter.toString(themeDisplay.getDoAsUserId()) %>';
 			},
