@@ -17,7 +17,7 @@ import fetch from './fetch.es';
 const TOKEN_SERIALIZE = 'serialize://';
 
 function getSessionClickFormData(cmd) {
-	const doAsGroupId = Liferay.ThemeDisplay.doAsGroupId();
+	const doAsGroupId = Liferay.ThemeDisplay.getDoAsGroupId();
 
 	const doAsUserIdEncoded = Liferay.ThemeDisplay.getDoAsUserIdEncoded();
 
