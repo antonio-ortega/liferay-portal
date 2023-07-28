@@ -246,7 +246,7 @@ export function ReviewAndSubmitAppPage({
 						I am aware I cannot edit any data or information
 						regarding this app submission until Liferay completes
 						its review process and I agree with the Liferay
-						Marketplace <a href="#">terms</a> and{' '}
+						Marketplace <a href="#">terms</a> and<span>{' '}</span>
 						<a href="#">privacy</a>
 					</span>
 				</div>

@@ -235,7 +235,7 @@ export function ProvideAppBuildPage({
 						tooltip={ReactDOMServer.renderToString(
 							<span>
 								The app submission is compatible with Liferay
-								Experience Cloud and{' '}
+								Experience Cloud and<span>{' '}</span>
 								<a href="https://learn.liferay.com/web/guest/w/dxp/building-applications/client-extensions#client-extensions">
 									Client Extensions
 								</a>
@@ -320,7 +320,7 @@ export function ProvideAppBuildPage({
 								with all deployment targets deliver static
 								resources compatible with all deployment targets
 								deliver the infrastructure metadata necessary to
-								deploy to LXC-(SM) For more information see:{' '}
+								deploy to LXC-(SM) For more information see:<span>{' '}</span>
 								<a href="https://learn.liferay.com/web/guest/w/dxp/building-applications/client-extensions/working-with-client-extensions#working-with-client-extensions">
 									Liferay Learn
 								</a>
