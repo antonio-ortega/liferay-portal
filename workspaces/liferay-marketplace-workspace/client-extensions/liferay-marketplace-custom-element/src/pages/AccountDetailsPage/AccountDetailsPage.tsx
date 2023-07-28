@@ -261,12 +261,13 @@ export function AccountDetailsPage({
 
 									<td className="account-details-body-table-description">
 										{address.streetAddressLine1}
-										{', '}
+										<span>{' '}</span>
 										{address.addressLocality}
-										{', '}
-										{address.addressRegion}{' '}
+										<span>{' '}</span>
+										{address.addressRegion}
+										<span>{' '}</span>
 										{address.postalCode}
-										{', '}
+										<span>{' '}</span>
 										{address.addressCountry}
 									</td>
 								</tr>

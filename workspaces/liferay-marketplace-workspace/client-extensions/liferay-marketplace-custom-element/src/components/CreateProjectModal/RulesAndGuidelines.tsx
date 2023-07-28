@@ -52,16 +52,20 @@ export function RulesAndGuidelines() {
 				If a project is shared with a customer, they must be explicitly
 				informed not to upload their data. If a customer needs to upload
 				data, they are required to sign an Order Form and agree to the
-				Liferay Cloud{' '}
+				Liferay Cloud
+				<span>{' '}</span>
 				{getClayLink(
 					'https://web.liferay.com/legal/doc/app4/1301911_NA?_ga=2.203072209.1745225301.1613503864-1493387283.1612984613',
 					'Appendix 4'
-				)}{' '}
-				Terms and Conditions which includes an agreement to the{' '}
+				)}
+				<span>{' '}</span>
+				Terms and Conditions which includes an agreement to the
+				<span>{' '}</span>
 				{getClayLink(
 					'https://web.liferay.com/legal/doc/DPA/1001810',
 					'Data Processing Addendum.'
-				)}{' '}
+				)}
+				<span>{' '}</span>
 				Please reach out to your Account Executive and request them to
 				create and have the customer sign a zero price Order Form.
 			</ClayAlert>

@@ -276,10 +276,12 @@ export function DefineAppProfilePage({
 								including any permitted alternate versions of
 								the Liferay logo, is permitted only with
 								Liferay's express permission. Please refer to
-								our{' '}
+								our
+								<span>{' '}</span>
 								<a href="https://www.liferay.com/trademark">
 									trademark policy
-								</a>{' '}
+								</a>
+								<span>{' '}</span>
 								for details.
 							</span>
 						)}
@@ -315,7 +317,8 @@ export function DefineAppProfilePage({
 									Connector Kit for Liferay" while "Liferay
 									Mail App" or "Liferay Management Console"
 									would not be permitted without explicit
-									approval. Please refer to our{' '}
+									approval. Please refer to our
+									<span>{' '}</span>
 									<a href="https://www.liferay.com/trademark">
 										trademark policy
 									</a>
