@@ -10,7 +10,7 @@ const TOKEN_SERIALIZE = 'serialize://';
 function getSessionClickFormData(cmd) {
 	const doAsUserIdEncoded = Liferay.ThemeDisplay.getDoAsUserIdEncoded();
 
-	const doAsUserLanguageId = document.documentElement.lang;
+	const currentLanguageId = document.documentElement.lang;
 
 	const formData = new FormData();
 
@@ -21,8 +21,8 @@ function getSessionClickFormData(cmd) {
 		formData.append('doAsUserId', doAsUserIdEncoded);
 	}
 
-	if (doAsUserLanguageId) {
-		formData.append('doAsUserLanguageId', doAsUserLanguageId);
+	if (currentLanguageId) {
+		formData.append('doAsUserLanguageId', currentLanguageId);
 	}
 
 	return formData;
