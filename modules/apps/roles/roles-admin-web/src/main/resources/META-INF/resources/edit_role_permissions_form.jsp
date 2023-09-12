@@ -37,6 +37,10 @@ List<String> modelResources = null;
 if (Validator.isNotNull(portletResource)) {
 	modelResources = ResourceActionsUtil.getPortletModelResources(portletResource);
 }
+
+System.out.println("Portlet resource: " + portletResource);
+
+System.out.println("Model resources: " + modelResources);
 %>
 
 <portlet:actionURL name="updateActions" var="editRolePermissionsURL">
