@@ -518,6 +518,16 @@ public class FriendlyURLServlet extends HttpServlet {
 		try {
 			redirect = getRedirect(
 				httpServletRequest, httpServletResponse, pathInfo);
+			
+			if (httpServletRequest.getHeader("X-Liferay-SPA") != null) {
+				System.out.println("X-Liferay-SPA: " + httpServletRequest.getHeader("X-Liferay-SPA").toString());
+				
+				System.out.println("Redirect Path: " + redirect.getPath());
+				
+				httpServletResponse.setStatus(200);
+				
+				httpServletResponse.setHeader("X-Liferay-Redirect", redirect.getPath());
+			}
 
 			if (httpServletRequest.getAttribute(WebKeys.LAST_PATH) == null) {
 				httpServletRequest.setAttribute(
@@ -569,6 +579,10 @@ public class FriendlyURLServlet extends HttpServlet {
 							"Forward from ", httpServletRequest.getRequestURI(),
 							" to ", redirect.getPath()));
 				}
+
+				System.out.println("Response status: " + httpServletResponse.getStatus());
+
+				System.out.println("Response header: " + httpServletResponse.getHeader("X-Liferay-Redirect"));
 
 				requestDispatcher.forward(
 					httpServletRequest, httpServletResponse);

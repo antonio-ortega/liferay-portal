@@ -54,6 +54,8 @@ public class RedirectProviderImpl implements RedirectProvider {
 			return null;
 		}
 
+		System.out.println("Fetching redirect entry");
+
 		RedirectEntry redirectEntry =
 			_redirectEntryLocalService.fetchRedirectEntry(
 				groupId, fullURL, false);

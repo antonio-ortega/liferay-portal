@@ -79,6 +79,21 @@ export default function defaultFetch(resource, init = {}) {
 		headers.set(key, value);
 	});
 
+	const fetchPromise = fetch(resource, {...config, ...init, headers})
+	.then((response) => {
+		console.log("Response: " + response);
+		
+		console.log("Is it a redirect? " + response.headers.has('X-Liferay-Redirect'));
+
+		if (response.headers.has('X-Liferay-Redirect')) {
+			const redirectUrl = response.headers.get('X-Liferay-Redirect');
+			window.location.href = redirectUrl;
+		}
+	})
+	.catch((error) => {
+		console.log(error);
+	});
+
 	// eslint-disable-next-line @liferay/portal/no-global-fetch
-	return fetch(resource, {...config, ...init, headers});
+	return fetchPromise;
 }
