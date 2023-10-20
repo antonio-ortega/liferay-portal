@@ -255,9 +255,16 @@ class RequestScreen extends Screen {
 				headers: requestHeaders,
 				method: httpMethod,
 				mode: 'cors',
-				redirect: 'manual',
+				redirect: 'follow',
 				referrer: 'client',
 			})
+				.then((resp) => {
+					if (resp.headers.has('X-Liferay-Redirect')) {
+						const redirectUrl = resp.headers.get('X-Liferay-Redirect');
+						
+						window.location.href = redirectUrl;
+					}
+				})
 				.then((resp) => {
 					this.assertValidResponseStatusCode(resp.status);
 

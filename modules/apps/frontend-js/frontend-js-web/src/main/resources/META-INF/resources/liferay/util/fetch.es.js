@@ -79,7 +79,7 @@ export default function defaultFetch(resource, init = {}) {
 		headers.set(key, value);
 	});
 
-	const fetchPromise = fetch(resource, {...config, ...init, headers})
+	/*const fetchPromise = fetch(resource, {...config, ...init, headers})
 	.then((response) => {
 		console.log("Response: " + response);
 		
@@ -92,8 +92,8 @@ export default function defaultFetch(resource, init = {}) {
 	})
 	.catch((error) => {
 		console.log(error);
-	});
+	});*/
 
 	// eslint-disable-next-line @liferay/portal/no-global-fetch
-	return fetchPromise;
+	return fetch(resource, {...config, ...init, headers}); //fetchPromise;
 }

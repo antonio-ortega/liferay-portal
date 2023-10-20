@@ -71,6 +71,9 @@ import com.liferay.site.service.SiteFriendlyURLLocalService;
 
 import java.io.IOException;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -515,18 +518,29 @@ public class FriendlyURLServlet extends HttpServlet {
 
 		Redirect redirect = null;
 
+		boolean spaNavigation = false;
+
 		try {
 			redirect = getRedirect(
 				httpServletRequest, httpServletResponse, pathInfo);
-			
-			if (httpServletRequest.getHeader("X-Liferay-SPA") != null) {
-				System.out.println("X-Liferay-SPA: " + httpServletRequest.getHeader("X-Liferay-SPA").toString());
-				
-				System.out.println("Redirect Path: " + redirect.getPath());
-				
-				httpServletResponse.setStatus(200);
-				
-				httpServletResponse.setHeader("X-Liferay-Redirect", redirect.getPath());
+
+			if (StringUtil.equalsIgnoreCase(
+					httpServletRequest.getHeader("X-Liferay-SPA"), "true")) {
+
+				URI redirectURI = new URI(redirect.getPath());
+
+				System.out.println("Origin server name: " + httpServletRequest.getServerName());
+	
+				System.out.println("uri.getHost(): " + redirectURI.getHost());
+
+				if (!StringUtil.equalsIgnoreCase(redirectURI.getHost(), httpServletRequest.getServerName())) {
+					spaNavigation = true;
+
+					httpServletResponse.setStatus(200);
+	
+					httpServletResponse.setHeader(
+						"X-Liferay-Redirect", redirect.getPath());
+				}
 			}
 
 			if (httpServletRequest.getAttribute(WebKeys.LAST_PATH) == null) {
@@ -550,12 +564,17 @@ public class FriendlyURLServlet extends HttpServlet {
 				return;
 			}
 		}
+		catch (URISyntaxException uriSyntaxException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(uriSyntaxException);
+			}
+		}
 
 		if (redirect == null) {
 			redirect = new Redirect();
 		}
 
-		if (redirect.isValidForward()) {
+		if (redirect.isValidForward() || spaNavigation) {
 			ServletContext servletContext = getServletContext();
 
 			RequestDispatcher requestDispatcher =
@@ -579,10 +598,6 @@ public class FriendlyURLServlet extends HttpServlet {
 							"Forward from ", httpServletRequest.getRequestURI(),
 							" to ", redirect.getPath()));
 				}
-
-				System.out.println("Response status: " + httpServletResponse.getStatus());
-
-				System.out.println("Response header: " + httpServletResponse.getHeader("X-Liferay-Redirect"));
 
 				requestDispatcher.forward(
 					httpServletRequest, httpServletResponse);
