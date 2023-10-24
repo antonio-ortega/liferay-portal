@@ -231,7 +231,7 @@ class RequestScreen extends Screen {
 		}
 		let body = null;
 		let httpMethod = this.httpMethod;
-		const requestHeaders = {'X-PJAX': 'true', ...this.httpHeaders};
+		const requestHeaders = {'X-PJAX': 'true', 'X-Liferay-SPA':'true', ...this.httpHeaders};
 		if (Liferay.SPA.__capturedFormElement__) {
 			body = this.getFormData(
 				Liferay.SPA.__capturedFormElement__,
@@ -255,7 +255,7 @@ class RequestScreen extends Screen {
 				headers: requestHeaders,
 				method: httpMethod,
 				mode: 'cors',
-				redirect: 'follow',
+				redirect: 'manual',
 				referrer: 'client',
 			})
 				.then((resp) => {

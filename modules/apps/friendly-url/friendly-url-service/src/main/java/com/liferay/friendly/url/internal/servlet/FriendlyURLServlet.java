@@ -519,6 +519,18 @@ public class FriendlyURLServlet extends HttpServlet {
 			redirect = getRedirect(
 				httpServletRequest, httpServletResponse, pathInfo);
 
+			if ((redirect != null) &&
+				(httpServletRequest.getHeader("X-Liferay-SPA") != null) &&
+				!redirect.getPath(
+				).startsWith(
+					StringPool.SLASH
+				)) {
+				httpServletResponse.setStatus(200);
+
+				httpServletResponse.setHeader(
+					"X-Liferay-Redirect", redirect.getPath());
+			}
+
 			if (httpServletRequest.getAttribute(WebKeys.LAST_PATH) == null) {
 				httpServletRequest.setAttribute(
 					WebKeys.LAST_PATH,
