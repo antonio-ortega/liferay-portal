@@ -171,7 +171,6 @@ const RichText = ({
 			<ClayInput.Group>
 				<ClayInput.GroupItem>
 					<ClassicEditor
-						aria-required={otherProps.required}
 						className="w-100"
 						contents={
 							currentValue
@@ -193,6 +192,7 @@ const RichText = ({
 						}}
 						readOnly={readOnly}
 						ref={editorRef}
+						required={otherProps.required}
 					/>
 				</ClayInput.GroupItem>
 

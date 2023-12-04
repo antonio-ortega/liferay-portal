@@ -16,13 +16,19 @@ const ClassicEditor = forwardRef(
 			editorConfig,
 			initialToolbarSet = 'simple',
 			name,
+			required,
 			title,
 			...otherProps
 		},
 		ref
 	) => {
 		return (
-			<div className={className} id={`${name}Container`}>
+			<div
+				aria-required={required}
+				className={className}
+				id={`${name}Container`}
+				role="textbox"
+			>
 				{title && (
 					<label className="control-label" htmlFor={name}>
 						{title}
