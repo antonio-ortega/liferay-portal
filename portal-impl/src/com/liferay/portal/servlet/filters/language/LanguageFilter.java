@@ -78,12 +78,14 @@ public class LanguageFilter extends BasePortalFilter {
 
 		String queryString = httpServletRequest.getQueryString();
 
-		if (Validator.isNotNull(queryString) && StringUtil.contains(queryString, "languageId")) {
+		if (Validator.isNotNull(queryString) &&
+			StringUtil.contains(queryString, "languageId")) {
+
 			httpServletResponse.setHeader(
 				HttpHeaders.CACHE_CONTROL, "no-cache");
-		} else {
-			httpServletResponse.setHeader(
-				HttpHeaders.CACHE_CONTROL, "private");
+		}
+		else {
+			httpServletResponse.setHeader(HttpHeaders.CACHE_CONTROL, "private");
 		}
 
 		BufferCacheServletResponse bufferCacheServletResponse =
