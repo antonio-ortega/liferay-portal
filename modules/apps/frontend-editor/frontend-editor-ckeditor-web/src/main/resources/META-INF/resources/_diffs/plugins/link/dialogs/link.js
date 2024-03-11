@@ -1010,7 +1010,18 @@
 
 				this.setupContent( data );
 			},
-			onOk: function() {
+			onOk: function(event) {
+				const idValue = this.getValueOf('advanced', 'advId');
+				const nameValue = this.getValueOf('advanced', 'advName');
+	
+				if (
+					!validateField('id', idValue) ||
+					!validateField('name', nameValue)
+				) {
+					event.data.hide = false;
+					return;
+				}
+
 				var data = {};
 
 				// Collect data from fields.
@@ -1065,6 +1076,23 @@
 		if ( regExp ) {
 			return CKEDITOR.dialog.validate.regex( regExp, msg ).call( this );
 		}
+	}
+
+	function validateField(fieldName, fieldValue) {
+		const regEx = /^[A-Za-z]+[\w\-:.]*$/;
+
+		if (fieldValue && !regEx.test(fieldValue)) {
+			alert(
+				Liferay.Util.sub(
+					Liferay.Language.get('there-was-an-error-when-loading-the-x-field'),
+					fieldName
+				)
+			);
+
+			return false;
+		}
+
+		return true;
 	}
 } )();
 // jscs:disable maximumLineLength
