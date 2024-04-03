@@ -90,6 +90,30 @@ function ManagementToolbar({
 
 	const searchButtonRef = useRef();
 
+	const updateFilterDropdownItems = () => {
+		filterDropdownItems.forEach((filterDropdownItem) => {
+			filterDropdownItem.items.forEach((item) => {
+				if (item.href) {
+					const urlParts = item.href.split('?');
+
+					const params = new URLSearchParams(urlParts[1]);
+
+					params.keys().forEach((key) => {
+						if (key.includes('resetCur')) {
+							params.set(key, true);
+						}
+					});
+
+					item.href = `${urlParts[0]}?${params.toString()}`;
+				}
+			});
+		});
+
+		return filterDropdownItems;
+	};
+
+	const updatedFilterDropdownItems = updateFilterDropdownItems();
+
 	useEffect(() => {
 		if (searchMobile) {
 			const searchButton = searchButtonRef.current;
@@ -124,7 +148,7 @@ function ManagementToolbar({
 							setActive={setActive}
 							showCheckBoxLabel={
 								!active &&
-								!filterDropdownItems &&
+								!updatedFilterDropdownItems &&
 								!sortingURL &&
 								!showSearch
 							}
@@ -135,7 +159,7 @@ function ManagementToolbar({
 					{!active && (
 						<FilterOrderControls
 							disabled={disabled}
-							filterDropdownItems={filterDropdownItems}
+							filterDropdownItems={updatedFilterDropdownItems}
 							onFilterDropdownItemClick={
 								onFilterDropdownItemClick
 							}
