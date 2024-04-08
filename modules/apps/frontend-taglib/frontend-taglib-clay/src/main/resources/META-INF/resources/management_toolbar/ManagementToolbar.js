@@ -91,6 +91,10 @@ function ManagementToolbar({
 	const searchButtonRef = useRef();
 
 	const updateFilterDropdownItems = () => {
+		if (!filterDropdownItems) {
+			return null;
+		}
+
 		filterDropdownItems.forEach((filterDropdownItem) => {
 			filterDropdownItem.items.forEach((item) => {
 				if (item.href) {
