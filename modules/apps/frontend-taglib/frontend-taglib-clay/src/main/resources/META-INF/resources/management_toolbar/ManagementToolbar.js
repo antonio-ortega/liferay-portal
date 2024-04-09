@@ -96,6 +96,10 @@ function ManagementToolbar({
 		}
 
 		filterDropdownItems.forEach((filterDropdownItem) => {
+			if (!filterDropdownItem.items) {
+				return null;
+			}
+
 			filterDropdownItem.items.forEach((item) => {
 				if (item.href) {
 					const urlParts = item.href.split('?');
