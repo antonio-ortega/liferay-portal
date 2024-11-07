@@ -20,19 +20,20 @@ SearchIteratorDisplayContext searchIteratorDisplayContext = (SearchIteratorDispl
 			modelVar="domain"
 		>
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-expand-small table-cell-minw-150"
+				cssClass="table-cell-expand"
 				name="name"
-				value="any random value"
+				value="name value"
 			/>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-expand-small table-cell-minw-150"
+				cssClass="table-cell-expand"
 				name="description"
-				value="any random value"
+				value="description value"
 			/>
 		</liferay-ui:search-container-row>
 
 		<liferay-ui:search-iterator
+			fixedHeader="<%= true %>"
 			markupView="lexicon"
 		/>
 	</liferay-ui:search-container>
