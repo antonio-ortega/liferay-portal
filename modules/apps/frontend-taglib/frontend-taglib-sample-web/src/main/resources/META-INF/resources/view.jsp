@@ -8,7 +8,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-final String navigation = ParamUtil.getString(request, "navigation", "search-iterator");
+final String navigation = ParamUtil.getString(request, "navigation", "logo-selector");
 %>
 
 <clay:navigation-bar
@@ -16,6 +16,9 @@ final String navigation = ParamUtil.getString(request, "navigation", "search-ite
 />
 
 <c:choose>
+	<c:when test='<%= navigation.equals("logo-selector") %>'>
+		<liferay-util:include page="/partials/logo_selector.jsp" servletContext="<%= application %>" />
+	</c:when>
 	<c:when test='<%= navigation.equals("search-iterator") %>'>
 		<liferay-util:include page="/partials/search_iterator.jsp" servletContext="<%= application %>" />
 	</c:when>

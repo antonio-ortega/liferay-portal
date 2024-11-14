@@ -31,9 +31,17 @@ public class FrontendSampleDisplayContext {
 	public List<NavigationItem> getNavigationItems() {
 		String navigation = ParamUtil.getString(
 			PortalUtil.getHttpServletRequest(_renderRequest), "navigation",
-			"search-iterator");
+			"logo-selector");
 
 		return NavigationItemList.of(
+			NavigationItemBuilder.setActive(
+				navigation.equals("logo-selector")
+			).setHref(
+				_renderResponse.createRenderURL(), "navigation",
+				"logo-selector"
+			).setLabel(
+				"Logo Selector"
+			).build(),
 			NavigationItemBuilder.setActive(
 				navigation.equals("search-iterator")
 			).setHref(
