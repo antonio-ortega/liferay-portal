@@ -496,10 +496,10 @@ NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);
 		var pageIterator = document.getElementById('<%= namespace + id %>');
 
 		if (pageIterator) {
-			var button = pageIterator.querySelector('.dropdown-toggle');
-			var list = pageIterator.querySelector('.dropdown-menu');
+			var button = pageIterator.querySelector('.pagination .dropdown-toggle');
+			var list = pageIterator.querySelector('.pagination .dropdown-menu');
 
-			var options = list.querySelectorAll('.dropdown-item');
+			var options = list.querySelectorAll('.pagination .dropdown-item');
 
 			function onButtonKeyDown(event) {
 				if (
