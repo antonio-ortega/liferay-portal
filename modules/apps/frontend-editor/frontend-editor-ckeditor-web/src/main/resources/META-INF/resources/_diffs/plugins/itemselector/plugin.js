@@ -283,6 +283,13 @@
 							editor.focus();
 						};
 					}
+
+					const imageElement = document.querySelector(`img[src='${imageSrc}']`);
+
+					console.log("imageElement.width: " + imageElement.width);
+					if (imageElement.width == 0) {
+						imageElement.width = '150px'
+					}
 				}
 			}
 		},
