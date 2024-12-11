@@ -8,9 +8,9 @@ package com.liferay.adaptive.media.image.internal.util;
 import com.liferay.adaptive.media.exception.AMRuntimeException;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.image.ImageToolUtil;
 import com.liferay.portal.kernel.exception.ImageResolutionException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -63,7 +63,7 @@ public class RenderedImageUtil {
 			try {
 				imageReader = iterator.next();
 
-				imageReader.setInput(imageInputStream);
+				imageReader.setInput(imageInputStream, false, true);
 
 				int height = imageReader.getHeight(0);
 				int width = imageReader.getWidth(0);

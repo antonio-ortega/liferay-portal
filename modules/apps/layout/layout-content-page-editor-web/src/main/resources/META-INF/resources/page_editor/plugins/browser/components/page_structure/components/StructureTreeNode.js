@@ -12,8 +12,6 @@ import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useMemo, useRef} from 'react';
 
-import {addMappingFields} from '../../../../../app/actions/index';
-import {fromControlsId} from '../../../../../app/components/layout_data_items/Collection';
 import {ITEM_ACTIVATION_ORIGINS} from '../../../../../app/config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../../../../../app/config/constants/itemTypes';
 import {
@@ -26,16 +24,20 @@ import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../app/config/constants/layout
 import {VIEWPORT_SIZES} from '../../../../../app/config/constants/viewportSizes';
 import {
 	useActivationOrigin,
-	useActiveItemId,
+	useActiveItemIds,
 	useSelectItem,
 } from '../../../../../app/contexts/ControlsContext';
 import {
 	useDisableKeyboardMovement,
-	useMovementSource,
+	useMovementSources,
 	useMovementTarget,
-	useSetMovementSource,
+	useSetMovementSources,
 	useSetMovementText,
 } from '../../../../../app/contexts/KeyboardMovementContext';
+import {
+	useEditedNodeId,
+	useSetEditedNodeId,
+} from '../../../../../app/contexts/ShortcutContext';
 import {
 	useDispatch,
 	useSelector,
@@ -43,13 +45,12 @@ import {
 	useSelectorRef,
 } from '../../../../../app/contexts/StoreContext';
 import selectCanUpdatePageStructure from '../../../../../app/selectors/selectCanUpdatePageStructure';
-import CollectionService from '../../../../../app/services/CollectionService';
-import moveItem from '../../../../../app/thunks/moveItem';
+import moveItems from '../../../../../app/thunks/moveItems';
+import moveStepper from '../../../../../app/thunks/moveStepper';
 import updateItemConfig from '../../../../../app/thunks/updateItemConfig';
 import canBeRenamed from '../../../../../app/utils/canBeRenamed';
 import {deepEqual} from '../../../../../app/utils/checkDeepEqual';
 import {collectionIsMapped} from '../../../../../app/utils/collectionIsMapped';
-import checkAllowedChild from '../../../../../app/utils/drag_and_drop/checkAllowedChild';
 import {DRAG_DROP_TARGET_TYPE} from '../../../../../app/utils/drag_and_drop/constants/dragDropTargetType';
 import {ORIENTATIONS} from '../../../../../app/utils/drag_and_drop/constants/orientations';
 import {TARGET_POSITIONS} from '../../../../../app/utils/drag_and_drop/constants/targetPositions';
@@ -61,7 +62,6 @@ import {
 	initialDragDrop,
 	useDragItem,
 	useDropTarget,
-	useIsDroppable,
 } from '../../../../../app/utils/drag_and_drop/useDragAndDrop';
 import {formIsMapped} from '../../../../../app/utils/formIsMapped';
 import {formIsRestricted} from '../../../../../app/utils/formIsRestricted';
@@ -69,39 +69,16 @@ import {formIsUnavailable} from '../../../../../app/utils/formIsUnavailable';
 import getFirstControlsId from '../../../../../app/utils/getFirstControlsId';
 import getMappingFieldsKey from '../../../../../app/utils/getMappingFieldsKey';
 import isItemWidget from '../../../../../app/utils/isItemWidget';
+import loadCollectionFields from '../../../../../app/utils/loadCollectionFields';
+import toMovementItem from '../../../../../app/utils/toMovementItem';
 
 const HOVER_EXPAND_DELAY = 1000;
 
-const loadCollectionFields = (
-	dispatch,
-	itemType,
-	itemSubtype,
-	mappingFieldsKey
-) => {
-	CollectionService.getCollectionMappingFields({
-		itemSubtype: itemSubtype || '',
-		itemType,
-	})
-		.then((response) => {
-			dispatch(
-				addMappingFields({
-					fields: response.mappingFields,
-					key: mappingFieldsKey,
-				})
-			);
-		})
-		.catch((error) => {
-			if (process.env.NODE_ENV === 'development') {
-				console.error(error);
-			}
-		});
-};
-
-export default function StructureTreeNode({node, setEditingNodeId}) {
+export default function StructureTreeNode({node}) {
 	const activationOrigin = useActivationOrigin();
-	const activeItemId = useActiveItemId();
+	const activeItemIds = useActiveItemIds();
 	const dispatch = useDispatch();
-	const isSelected = node.id === fromControlsId(activeItemId);
+	const isSelected = activeItemIds.includes(node.id);
 
 	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
 	const layoutData = useSelector((state) => state.layoutData);
@@ -121,6 +98,7 @@ export default function StructureTreeNode({node, setEditingNodeId}) {
 
 			const {
 				classNameId,
+				fieldName,
 				itemSubtype,
 				itemType,
 				key: collectionKey,
@@ -128,10 +106,18 @@ export default function StructureTreeNode({node, setEditingNodeId}) {
 
 			const key = classNameId
 				? getMappingFieldsKey(item.config.collection)
-				: collectionKey;
+				: fieldName
+					? `${collectionKey}-${fieldName}`
+					: collectionKey;
 
 			if (!mappingFields[key]) {
-				loadCollectionFields(dispatch, itemType, itemSubtype, key);
+				loadCollectionFields(
+					dispatch,
+					fieldName,
+					itemType,
+					itemSubtype,
+					key
+				);
 			}
 		}
 	}, [
@@ -143,18 +129,26 @@ export default function StructureTreeNode({node, setEditingNodeId}) {
 		fragmentEntryLinks,
 	]);
 
-	return (
-		<MemoizedStructureTreeNodeContent
+	return node.itemType === ITEM_TYPES.editable || node.isMasterItem ? (
+		<NodeContentWithoutDND
 			activationOrigin={isSelected ? activationOrigin : null}
+			activeItemIds={activeItemIds}
 			isActive={node.activable && isSelected}
 			isMapped={node.mapped}
 			node={node}
-			setEditingNodeId={setEditingNodeId}
+		></NodeContentWithoutDND>
+	) : (
+		<MemoizedNodeContent
+			activationOrigin={isSelected ? activationOrigin : null}
+			activeItemIds={activeItemIds}
+			isActive={node.activable && isSelected}
+			isMapped={node.mapped}
+			node={node}
 		/>
 	);
 }
 
-StructureTreeNodeContent.propTypes = {
+NodeContent.propTypes = {
 	node: PropTypes.shape({
 		id: PropTypes.string.isRequired,
 		name: PropTypes.string.isRequired,
@@ -162,17 +156,122 @@ StructureTreeNodeContent.propTypes = {
 	}).isRequired,
 };
 
-const MemoizedStructureTreeNodeContent = React.memo(
-	StructureTreeNodeContent,
-	(prevProps, nextProps) => deepEqual(prevProps, nextProps)
+const MemoizedNodeContent = React.memo(NodeContent, (prevProps, nextProps) =>
+	deepEqual(prevProps, nextProps)
 );
 
-function StructureTreeNodeContent({
+function NodeContentWithoutDND({isActive, isMapped, node}) {
+	const layoutDataRef = useSelectorRef((store) => store.layoutData);
+	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
+
+	const selectItem = useSelectItem();
+
+	const nodeRef = useRef();
+
+	const item = useMemo(
+		() => ({
+			children:
+				node.itemType === ITEM_TYPES.editable ? [] : node.children,
+			config: layoutDataRef.current.items[node.id]?.config,
+			icon: node.icon,
+			itemId: node.id,
+			name: node.name,
+			origin: ITEM_ACTIVATION_ORIGINS.sidebar,
+			parentId: node.parentItemId,
+			type: node.type || node.itemType,
+		}),
+		[layoutDataRef, node]
+	);
+
+	const {fieldTypes, fragmentEntryType} = useSelectorCallback(
+		(state) => {
+			if (!node.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
+				return null;
+			}
+
+			const fragmentEntryLink =
+				state.fragmentEntryLinks[item.config?.fragmentEntryLinkId];
+
+			return {
+				fieldTypes: fragmentEntryLink?.fieldTypes ?? [],
+				fragmentEntryType: fragmentEntryLink?.fragmentEntryType ?? null,
+			};
+		},
+		[item],
+		deepEqual
+	);
+
+	return (
+		<div
+			aria-disabled={node.isMasterItem || !node.activable}
+			aria-selected={isActive}
+			className="page-editor__page-structure__tree-node"
+		>
+			<div
+				aria-label={sub(Liferay.Language.get('select-x'), [node.name])}
+				className="lfr-portal-tooltip page-editor__page-structure__tree-node__mask"
+				data-item-id={node.id}
+				onClick={(event) => {
+					event.stopPropagation();
+
+					const itemId = getFirstControlsId({
+						item: node,
+						layoutData: layoutDataRef.current,
+					});
+
+					if (node.activable) {
+						selectItem(itemId, {
+							itemType: node.itemType,
+							origin: ITEM_ACTIVATION_ORIGINS.sidebar,
+						});
+					}
+				}}
+				role="button"
+			/>
+
+			<MoveButton
+				canUpdate={canUpdatePageStructure}
+				fieldTypes={fieldTypes}
+				fragmentEntryType={fragmentEntryType}
+				item={item}
+				node={node}
+				nodeRef={nodeRef}
+				selectedViewportSize={selectedViewportSize}
+			/>
+
+			<NameLabel
+				hidden={node.hidden || node.hiddenAncestor}
+				icon={node.icon}
+				isMapped={isMapped}
+				isMasterItem={node.isMasterItem}
+				itemId={node.id}
+				name={node.name}
+				nameInfo={node.nameInfo}
+				ref={nodeRef}
+				showUnavailableWarning={
+					node.type === LAYOUT_DATA_ITEM_TYPES.form &&
+					formIsUnavailable(item)
+				}
+			/>
+
+			{node.hidden ? (
+				<span className="sr-only">
+					{Liferay.Language.get('hidden-item')}
+				</span>
+			) : null}
+		</div>
+	);
+}
+
+function NodeContent({
 	activationOrigin,
+	activeItemIds,
 	isActive,
 	isMapped,
 	node,
-	setEditingNodeId,
 }) {
 	const canUpdatePageStructure = useSelector(selectCanUpdatePageStructure);
 	const dispatch = useDispatch();
@@ -182,6 +281,7 @@ function StructureTreeNodeContent({
 		(state) => state.selectedViewportSize
 	);
 	const selectItem = useSelectItem();
+	const setEditedNodeId = useSetEditedNodeId();
 	const setText = useSetMovementText();
 
 	const layoutDataRef = useSelectorRef((store) => store.layoutData);
@@ -201,7 +301,7 @@ function StructureTreeNodeContent({
 		[layoutDataRef, node]
 	);
 
-	const fragmentEntryType = useSelectorCallback(
+	const {fieldTypes, fragmentEntryType} = useSelectorCallback(
 		(state) => {
 			if (!node.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
 				return null;
@@ -210,14 +310,13 @@ function StructureTreeNodeContent({
 			const fragmentEntryLink =
 				state.fragmentEntryLinks[item.config?.fragmentEntryLinkId];
 
-			return fragmentEntryLink?.fragmentEntryType ?? null;
+			return {
+				fieldTypes: fragmentEntryLink?.fieldTypes ?? [],
+				fragmentEntryType: fragmentEntryLink?.fragmentEntryType ?? null,
+			};
 		},
-		[item]
-	);
-
-	const isWidget = useSelectorCallback(
-		(state) => isItemWidget(item, state.fragmentEntryLinks),
-		[item]
+		[item],
+		deepEqual
 	);
 
 	const {isOverTarget, targetPosition, targetRef} = useDropTarget(
@@ -225,16 +324,47 @@ function StructureTreeNodeContent({
 		computeHover
 	);
 
-	const {handlerRef, isDraggingSource: itemIsDraggingSource} = useDragItem(
-		{...item, fragmentEntryType, isWidget},
-		(parentItemId, position) =>
-			dispatch(
-				moveItem({
+	const dragItem = useSelectorCallback(
+		(state) => ({
+			...toMovementItem(
+				item.itemId,
+				state.layoutData,
+				state.fragmentEntryLinks
+			),
+			origin: ITEM_ACTIVATION_ORIGINS.sidebar,
+		}),
+		[item],
+		deepEqual
+	);
+
+	const onDragEnd = (parentItemId, position) => {
+		const thunk = fieldTypes?.includes('stepper')
+			? moveStepper({
 					itemId: node.id,
 					parentItemId,
 					position,
 				})
-			)
+			: moveItems({
+					itemIds: activeItemIds,
+					parentItemIds: [parentItemId],
+					positions: [position],
+				});
+
+		dispatch(thunk);
+	};
+
+	const onDragBegin = () => {
+		if (!isActive) {
+			selectItem(item.itemId, {
+				origin: ITEM_ACTIVATION_ORIGINS.layout,
+			});
+		}
+	};
+
+	const {handlerRef, isDraggingSource: itemIsDraggingSource} = useDragItem(
+		dragItem,
+		onDragEnd,
+		onDragBegin
 	);
 
 	const {
@@ -244,16 +374,15 @@ function StructureTreeNodeContent({
 
 	const dropTargetPosition = targetPosition || keyboardMovementPosition;
 
-	const keyboardMovementSource = useMovementSource();
+	const keyboardMovementSources = useMovementSources();
+	const lastSource =
+		keyboardMovementSources[keyboardMovementSources.length - 1];
 
 	const isDraggingSource =
-		itemIsDraggingSource || keyboardMovementSource?.itemId === item.itemId;
-
-	const isDroppable = useIsDroppable();
+		itemIsDraggingSource || lastSource?.itemId === item.itemId;
 
 	const isValidDrop =
-		(isDroppable && isOverTarget) ||
-		keyboardMovementTargetId === item.itemId;
+		isOverTarget || keyboardMovementTargetId === item.itemId;
 
 	const onEditName = (nextName) => {
 		const trimmedName = nextName?.trim();
@@ -262,12 +391,12 @@ function StructureTreeNodeContent({
 			dispatch(
 				updateItemConfig({
 					itemConfig: {name: trimmedName},
-					itemId: node.id,
+					itemIds: [node.id],
 				})
 			);
 		}
 
-		setEditingNodeId(null);
+		setEditedNodeId(null);
 		setText(Liferay.Language.get('name-saved'));
 	};
 
@@ -292,7 +421,7 @@ function StructureTreeNodeContent({
 	useEffect(() => {
 		if (
 			item.itemId === keyboardMovementTargetId ||
-			(activationOrigin === ITEM_ACTIVATION_ORIGINS.pageEditor &&
+			(activationOrigin === ITEM_ACTIVATION_ORIGINS.layout &&
 				nodeRef.current &&
 				isActive)
 		) {
@@ -341,8 +470,6 @@ function StructureTreeNodeContent({
 				'drag-over-top':
 					isValidDrop && dropTargetPosition === TARGET_POSITIONS.TOP,
 				'dragged': isDraggingSource,
-				'font-weight-semi-bold':
-					node.activable && node.itemType !== ITEM_TYPES.editable,
 			})}
 			ref={targetRef}
 		>
@@ -366,8 +493,9 @@ function StructureTreeNodeContent({
 				}}
 				onDoubleClick={(event) => {
 					event.stopPropagation();
+
 					if (canBeRenamed(item)) {
-						setEditingNodeId(item.itemId);
+						setEditedNodeId(item.itemId);
 					}
 				}}
 				ref={
@@ -380,8 +508,9 @@ function StructureTreeNodeContent({
 
 			<MoveButton
 				canUpdate={canUpdatePageStructure}
+				fieldTypes={fieldTypes}
 				fragmentEntryType={fragmentEntryType}
-				isWidget={isWidget}
+				item={item}
 				node={node}
 				nodeRef={nodeRef}
 				onKeyDown={handleButtonsKeyDown}
@@ -389,11 +518,11 @@ function StructureTreeNodeContent({
 			/>
 
 			<NameLabel
-				editingName={node.editingName}
 				hidden={node.hidden || node.hiddenAncestor}
 				icon={node.icon}
 				isMapped={isMapped}
 				isMasterItem={node.isMasterItem}
+				itemId={node.id}
 				name={node.name}
 				nameInfo={node.nameInfo}
 				onEditName={onEditName}
@@ -404,7 +533,6 @@ function StructureTreeNodeContent({
 					restrictedItemIds
 				)}
 				showUnavailableWarning={
-					Liferay.FeatureFlags['LPS-169923'] &&
 					node.type === LAYOUT_DATA_ITEM_TYPES.form &&
 					formIsUnavailable(item)
 				}
@@ -422,11 +550,11 @@ function StructureTreeNodeContent({
 const NameLabel = React.forwardRef(
 	(
 		{
-			editingName,
 			hidden,
 			icon,
 			isMapped,
 			isMasterItem,
+			itemId,
 			name: defaultName,
 			nameInfo,
 			onEditName,
@@ -435,9 +563,11 @@ const NameLabel = React.forwardRef(
 		},
 		ref
 	) => {
+		const editedNodeId = useEditedNodeId();
 		const inputRef = useRef();
-
 		const [name, setName] = useControlledState(defaultName);
+
+		const editingName = editedNodeId === itemId;
 
 		useEffect(() => {
 			if (editingName && inputRef.current) {
@@ -450,9 +580,12 @@ const NameLabel = React.forwardRef(
 				className={classNames(
 					'page-editor__page-structure__tree-node__name d-flex flex-grow-1 align-items-center',
 					{
-						'page-editor__page-structure__tree-node__name--hidden': hidden,
-						'page-editor__page-structure__tree-node__name--mapped': isMapped,
-						'page-editor__page-structure__tree-node__name--master-item': isMasterItem,
+						'page-editor__page-structure__tree-node__name--hidden':
+							hidden,
+						'page-editor__page-structure__tree-node__name--mapped':
+							isMapped,
+						'page-editor__page-structure__tree-node__name--master-item':
+							isMasterItem,
 					}
 				)}
 				ref={ref}
@@ -540,15 +673,21 @@ const NameLabel = React.forwardRef(
 
 const MoveButton = ({
 	canUpdate,
+	fieldTypes,
 	fragmentEntryType,
-	isWidget,
+	item,
 	node,
 	nodeRef,
 	onKeyDown,
 	selectedViewportSize,
 }) => {
-	const setMovementSource = useSetMovementSource();
+	const setMovementSources = useSetMovementSources();
 	const disableMovement = useDisableKeyboardMovement();
+
+	const isWidget = useSelectorCallback(
+		(state) => isItemWidget(item, state.fragmentEntryLinks),
+		[item]
+	);
 
 	const buttonRef = useRef(null);
 
@@ -567,6 +706,9 @@ const MoveButton = ({
 
 	if (
 		selectedViewportSize !== VIEWPORT_SIZES.desktop ||
+		item.type === LAYOUT_DATA_ITEM_TYPES.column ||
+		item.type === LAYOUT_DATA_ITEM_TYPES.formStep ||
+		item.type === LAYOUT_DATA_ITEM_TYPES.fragmentDropZone ||
 		node.itemType === ITEM_TYPES.editable ||
 		node.itemType === ITEM_TYPES.dropZone ||
 		node.isMasterItem ||
@@ -584,14 +726,17 @@ const MoveButton = ({
 			displayType="unstyled"
 			onBlur={(event) => event.stopPropagation()}
 			onClick={() =>
-				setMovementSource({
-					fragmentEntryType,
-					icon: node.icon,
-					isWidget,
-					itemId: node.id,
-					name: node.name,
-					type: node.type,
-				})
+				setMovementSources([
+					{
+						fieldTypes,
+						fragmentEntryType,
+						icon: node.icon,
+						isWidget,
+						itemId: node.id,
+						name: node.name,
+						type: node.type,
+					},
+				])
 			}
 			onFocus={(event) => {
 				buttonRef.current
@@ -617,8 +762,8 @@ function computeHover({
 	dispatch,
 	layoutDataRef,
 	monitor,
-	siblingItem = null,
 	sourceItem,
+	state,
 	targetItem,
 	targetRefs,
 }) {
@@ -644,11 +789,8 @@ function computeHover({
 	// Apparently valid drag, calculate vertical position and
 	// nesting validation
 
-	const [
-		targetPositionWithMiddle,
-		targetPositionWithoutMiddle,
-		elevation,
-	] = getItemPosition(siblingItem || targetItem, monitor, targetRefs);
+	const [targetPositionWithMiddle, targetPositionWithoutMiddle, elevation] =
+		getItemPosition(targetItem, monitor, targetRefs);
 
 	// Drop inside target
 
@@ -656,20 +798,29 @@ function computeHover({
 		const targetIsCollectionNotMapped =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.collection &&
 			!collectionIsMapped(targetItem);
+
 		const targetIsColumn =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.column;
+
 		const targetIsFragment =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.fragment;
+
 		const targetIsContainer =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.container ||
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.form;
+
 		const targetIsEmpty =
 			layoutDataRef.current.items[targetItem.itemId]?.children.length ===
 			0;
+
 		const targetIsFormNotMapped =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.form &&
 			!formIsMapped(targetItem);
+
 		const targetIsParent = sourceItem.parentId === targetItem.itemId;
+
+		const targetIsFormStep =
+			targetItem.type === LAYOUT_DATA_ITEM_TYPES.formStep;
 
 		return (
 			targetPositionWithMiddle === TARGET_POSITIONS.MIDDLE &&
@@ -677,37 +828,29 @@ function computeHover({
 				targetIsCollectionNotMapped ||
 				targetIsColumn ||
 				targetIsContainer ||
-				targetIsFormNotMapped) &&
+				targetIsFormNotMapped ||
+				targetIsFormStep) &&
 			!targetIsFragment &&
 			!targetIsParent
 		);
 	})();
 
-	if (!siblingItem && validDropInsideTarget) {
+	if (
+		stateHasChanged(
+			state,
+			sourceItem,
+			targetItem,
+			targetPositionWithMiddle
+		) &&
+		validDropInsideTarget
+	) {
 		return dispatch({
-			dropItem: sourceItem,
-			dropTargetItem: targetItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
+			dragSource: sourceItem,
+			dropTarget: targetItem,
 			elevate: null,
 			targetPositionWithMiddle,
 			targetPositionWithoutMiddle,
 			type: DRAG_DROP_TARGET_TYPE.INSIDE,
-		});
-	}
-
-	// Valid elevation:
-	// - dropItem should be child of dropTargetItem
-	// - dropItem should be sibling of siblingItem
-
-	if (siblingItem) {
-		return dispatch({
-			dropItem: sourceItem,
-			dropTargetItem: siblingItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
-			elevate: true,
-			targetPositionWithMiddle,
-			targetPositionWithoutMiddle,
-			type: DRAG_DROP_TARGET_TYPE.ELEVATE,
 		});
 	}
 
@@ -719,7 +862,7 @@ function computeHover({
 				? {
 						...layoutDataRef.current.items[target.parentId],
 						collectionItemIndex: target.collectionItemIndex,
-				  }
+					}
 				: null;
 
 			if (parent) {
@@ -746,20 +889,33 @@ function computeHover({
 			return [null, null];
 		};
 
-		const [elevatedTargetItem, siblingItem] = getElevatedTargetItem(
-			targetItem
-		);
+		const [elevatedTargetItem, siblingItem] =
+			getElevatedTargetItem(targetItem);
 
 		if (elevatedTargetItem && elevatedTargetItem !== targetItem) {
-			return computeHover({
-				dispatch,
-				layoutDataRef,
-				monitor,
-				siblingItem,
-				sourceItem,
-				targetItem: elevatedTargetItem,
-				targetRefs,
-			});
+
+			// Valid elevation:
+			// - dragSource should be child of dropTarget
+			// - dragSource should be sibling of siblingItem
+
+			if (
+				siblingItem &&
+				stateHasChanged(
+					state,
+					sourceItem,
+					siblingItem,
+					targetPositionWithMiddle
+				)
+			) {
+				return dispatch({
+					dragSource: sourceItem,
+					dropTarget: siblingItem,
+					elevate: true,
+					targetPositionWithMiddle,
+					targetPositionWithoutMiddle,
+					type: DRAG_DROP_TARGET_TYPE.ELEVATE,
+				});
+			}
 		}
 	}
 }
@@ -776,15 +932,13 @@ function getItemPosition(item, monitor, targetRefs) {
 	const clientOffsetY = monitor.getClientOffset().y;
 	const hoverBoundingRect = targetRef.current.getBoundingClientRect();
 
-	const [
-		targetPositionWithMiddle,
-		targetPositionWithoutMiddle,
-	] = getDropTargetPosition(
-		clientOffsetY,
-		ELEVATION_BORDER_SIZE,
-		getTargetPositions(ORIENTATIONS.vertical),
-		getTargetData(hoverBoundingRect, ORIENTATIONS.vertical)
-	);
+	const [targetPositionWithMiddle, targetPositionWithoutMiddle] =
+		getDropTargetPosition(
+			clientOffsetY,
+			ELEVATION_BORDER_SIZE,
+			getTargetPositions(ORIENTATIONS.vertical),
+			getTargetData(hoverBoundingRect, ORIENTATIONS.vertical)
+		);
 
 	const elevation = targetPositionWithMiddle !== TARGET_POSITIONS.MIDDLE;
 
@@ -792,10 +946,6 @@ function getItemPosition(item, monitor, targetRefs) {
 }
 
 function isRestricted(item, node, restrictedItemIds) {
-	if (!Liferay.FeatureFlags['LPS-169923']) {
-		return false;
-	}
-
 	if (node.type === LAYOUT_DATA_ITEM_TYPES.form) {
 		return formIsRestricted(item);
 	}
@@ -808,4 +958,16 @@ function isRestricted(item, node, restrictedItemIds) {
 	}
 
 	return false;
+}
+
+function stateHasChanged(state, sourceItem, targetItem, position) {
+	if (
+		state.dragSource?.itemId === sourceItem.itemId &&
+		state.dropTarget?.itemId === targetItem.itemId &&
+		state.targetPositionWithMiddle === position
+	) {
+		return false;
+	}
+
+	return true;
 }

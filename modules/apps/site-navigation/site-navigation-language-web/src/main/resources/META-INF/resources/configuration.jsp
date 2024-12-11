@@ -30,7 +30,7 @@
 				<liferay-template:template-selector
 					className="<%= LanguageEntry.class.getName() %>"
 					displayStyle="<%= siteNavigationLanguagePortletInstanceConfiguration.displayStyle() %>"
-					displayStyleGroupId="<%= siteNavigationLanguageDisplayContext.getDisplayStyleGroupId() %>"
+					displayStyleGroupKey="<%= siteNavigationLanguageDisplayContext.getDisplayStyleGroupKey() %>"
 					refreshURL="<%= configurationRenderURL %>"
 				/>
 			</div>
@@ -62,7 +62,7 @@
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<script>
+<aui:script>
 	function <portlet:namespace />saveConfiguration() {
 		var form = document.<portlet:namespace />fm;
 
@@ -81,4 +81,4 @@
 			});
 		}
 	}
-</script>
+</aui:script>

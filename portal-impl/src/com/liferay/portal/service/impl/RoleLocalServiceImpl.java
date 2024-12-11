@@ -109,11 +109,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -125,32 +127,12 @@ import java.util.Set;
  */
 public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 
-	/**
-	 * Adds a role with additional parameters. The user is reindexed after role
-	 * is added.
-	 *
-	 * @param  userId the primary key of the user
-	 * @param  className the name of the class for which the role is created
-	 *         (optionally <code>null</code>)
-	 * @param  classPK the primary key of the class for which the role is
-	 *         created (optionally <code>0</code>)
-	 * @param  name the role's name
-	 * @param  titleMap the role's localized titles (optionally
-	 *         <code>null</code>)
-	 * @param  descriptionMap the role's localized descriptions (optionally
-	 *         <code>null</code>)
-	 * @param  type the role's type (optionally <code>0</code>)
-	 * @param  subtype the role's subtype (optionally <code>null</code>)
-	 * @param  serviceContext the service context to be applied (optionally
-	 *         <code>null</code>). Can set expando bridge attributes for the
-	 *         role.
-	 * @return the role
-	 */
 	@Override
 	public Role addRole(
-			long userId, String className, long classPK, String name,
-			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			int type, String subtype, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, String className,
+			long classPK, String name, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, int type, String subtype,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		// Role
@@ -176,6 +158,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			role.setUuid(serviceContext.getUuid());
 		}
 
+		role.setExternalReferenceCode(externalReferenceCode);
 		role.setCompanyId(user.getCompanyId());
 		role.setUserId(user.getUserId());
 		role.setUserName(user.getFullName());
@@ -333,12 +316,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			String description = LocalizationUtil.getXml(
 				Collections.singletonMap(
 					defaultLanguageId,
-					PropsUtil.get(
-						StringBundler.concat(
-							"system.role.",
-							StringUtil.replace(
-								name, CharPool.SPACE, CharPool.PERIOD),
-							".description"))),
+					_getPropertyDescription(name, "system.role.")),
 				defaultLanguageId, "Description");
 
 			int type = RoleConstants.TYPE_REGULAR;
@@ -356,12 +334,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			String description = LocalizationUtil.getXml(
 				Collections.singletonMap(
 					defaultLanguageId,
-					PropsUtil.get(
-						StringBundler.concat(
-							"system.organization.role.",
-							StringUtil.replace(
-								name, CharPool.SPACE, CharPool.PERIOD),
-							".description"))),
+					_getPropertyDescription(name, "system.organization.role.")),
 				defaultLanguageId, "Description");
 
 			int type = RoleConstants.TYPE_ORGANIZATION;
@@ -378,12 +351,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 			String description = LocalizationUtil.getXml(
 				Collections.singletonMap(
 					defaultLanguageId,
-					PropsUtil.get(
-						StringBundler.concat(
-							"system.site.role.",
-							StringUtil.replace(
-								name, CharPool.SPACE, CharPool.PERIOD),
-							".description"))),
+					_getPropertyDescription(name, "system.site.role.")),
 				defaultLanguageId, "Description");
 
 			int type = RoleConstants.TYPE_SITE;
@@ -1257,72 +1225,66 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 	 */
 	@Override
 	public List<Role> getUserRelatedRoles(long userId, long[] groupIds) {
-		Set<Role> roles = new LinkedHashSet<>();
-
-		List<Role> userRoles = dslQuery(
-			DSLQueryFactoryUtil.select(
-				RoleTable.INSTANCE
-			).from(
-				RoleTable.INSTANCE
-			).innerJoinON(
-				Users_RolesTable.INSTANCE,
-				Users_RolesTable.INSTANCE.roleId.eq(RoleTable.INSTANCE.roleId)
-			).where(
-				Users_RolesTable.INSTANCE.userId.eq(userId)
-			));
-
-		if (!userRoles.isEmpty()) {
-			roles.addAll(userRoles);
+		if (ArrayUtil.isEmpty(groupIds)) {
+			return userPersistence.getRoles(userId);
 		}
 
-		if (ArrayUtil.isNotEmpty(groupIds)) {
-			JoinStep joinStep = DSLQueryFactoryUtil.select(
-				RoleTable.INSTANCE
-			).from(
-				RoleTable.INSTANCE
-			).innerJoinON(
-				Groups_RolesTable.INSTANCE,
-				Groups_RolesTable.INSTANCE.roleId.eq(RoleTable.INSTANCE.roleId)
-			);
+		Set<Role> roles = new HashSet<>(userPersistence.getRoles(userId));
 
-			List<Role> groupRoles = new ArrayList<>();
-
-			int chunk = 2000;
-
-			for (int i = 0; i < groupIds.length; i += chunk) {
-
-				// We cannot use an "in" clause because more than 1000 items in
-				// a list causes a syntax error in Oracle. See LPS-173475 and
-				// ORA-01795.
-
-				/*groupRoles.addAll(
-					dslQuery(
-						joinStep.where(
-							Groups_RolesTable.INSTANCE.groupId.in(
-								ArrayUtil.toLongArray(
-									Arrays.copyOfRange(
-										groupIds, i, i + chunk))))));*/
-
-				Predicate predicate = null;
-
-				long[] curGroupIds = Arrays.copyOfRange(
-					groupIds, i, Math.min(groupIds.length, i + chunk));
-
-				for (long curGroupId : curGroupIds) {
-					predicate = Predicate.or(
-						predicate,
-						Groups_RolesTable.INSTANCE.groupId.eq(curGroupId));
-				}
-
-				if (predicate != null) {
-					groupRoles.addAll(
-						dslQuery(joinStep.where(predicate.withParentheses())));
-				}
+		if (groupIds.length <= _CACHEABLE_QUERY_LIMIT_LPD_38877) {
+			for (long groupId : groupIds) {
+				roles.addAll(groupPersistence.getRoles(groupId));
 			}
 
-			if (!groupRoles.isEmpty()) {
-				roles.addAll(groupRoles);
+			return new ArrayList<>(roles);
+		}
+
+		JoinStep joinStep = DSLQueryFactoryUtil.select(
+			RoleTable.INSTANCE
+		).from(
+			RoleTable.INSTANCE
+		).innerJoinON(
+			Groups_RolesTable.INSTANCE,
+			Groups_RolesTable.INSTANCE.roleId.eq(RoleTable.INSTANCE.roleId)
+		);
+
+		List<Role> groupRoles = new ArrayList<>();
+
+		int chunk = 2000;
+
+		for (int i = 0; i < groupIds.length; i += chunk) {
+
+			// We cannot use an "in" clause because more than 1000 items in
+			// a list causes a syntax error in Oracle. See LPS-173475 and
+			// ORA-01795.
+
+			/*groupRoles.addAll(
+				dslQuery(
+					joinStep.where(
+						Groups_RolesTable.INSTANCE.groupId.in(
+							ArrayUtil.toLongArray(
+								Arrays.copyOfRange(
+									groupIds, i, i + chunk))))));*/
+
+			Predicate predicate = null;
+
+			long[] curGroupIds = Arrays.copyOfRange(
+				groupIds, i, Math.min(groupIds.length, i + chunk));
+
+			for (long curGroupId : curGroupIds) {
+				predicate = Predicate.or(
+					predicate,
+					Groups_RolesTable.INSTANCE.groupId.eq(curGroupId));
 			}
+
+			if (predicate != null) {
+				groupRoles.addAll(
+					dslQuery(joinStep.where(predicate.withParentheses())));
+			}
+		}
+
+		if (!groupRoles.isEmpty()) {
+			roles.addAll(groupRoles);
 		}
 
 		return new ArrayList<>(roles);
@@ -1889,6 +1851,31 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 		reindex(userId);
 	}
 
+	@Override
+	public Role updateExternalReferenceCode(
+			long roleId, String externalReferenceCode)
+		throws PortalException {
+
+		return updateExternalReferenceCode(
+			getRole(roleId), externalReferenceCode);
+	}
+
+	@Override
+	public Role updateExternalReferenceCode(
+			Role role, String externalReferenceCode)
+		throws PortalException {
+
+		if (Objects.equals(
+				role.getExternalReferenceCode(), externalReferenceCode)) {
+
+			return role;
+		}
+
+		role.setExternalReferenceCode(externalReferenceCode);
+
+		return updateRole(role);
+	}
+
 	/**
 	 * Updates the role with the primary key.
 	 *
@@ -1963,7 +1950,7 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 
 			try {
 				role = roleLocalService.addRole(
-					user.getUserId(), null, 0, name, null,
+					null, user.getUserId(), null, 0, name, null,
 					LocalizationUtil.getLocalizationMap(description), type,
 					null, null);
 			}
@@ -2148,6 +2135,23 @@ public class RoleLocalServiceImpl extends RoleLocalServiceBaseImpl {
 					" is a temporary placeholder that must not be persisted");
 		}
 	}
+
+	private String _getPropertyDescription(String name, String property) {
+		String propertyDescription = PropsUtil.get(
+			StringBundler.concat(
+				property,
+				StringUtil.replace(name, CharPool.SPACE, CharPool.PERIOD),
+				".description"));
+
+		if (Validator.isNull(propertyDescription)) {
+			return StringPool.BLANK;
+		}
+
+		return propertyDescription;
+	}
+
+	private static final int _CACHEABLE_QUERY_LIMIT_LPD_38877 =
+		GetterUtil.getInteger(PropsUtil.get("cacheable.query.limit.LPD-38877"));
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		RoleLocalServiceImpl.class);

@@ -4,12 +4,15 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		task ("Given a Minium site is created") {
 			CommerceConfiguration.commerceSetUp(minium = "true");
+		}
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
 		}
 
 		task ("And a user with Category Manager role is created") {
@@ -75,9 +78,7 @@ definition {
 		}
 
 		task ("But when the admin logs in") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 		}
 
 		task ("And accepts all the notifications received by the category manager") {
@@ -92,11 +93,11 @@ definition {
 					locator1 = "Notifications#NOTIFICATIONS_WORKFLOW_TITLE",
 					value1 = "Category Manager sent you a Product Link for review in the workflow.");
 
-				LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+				LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 				Workflow.confirmWorkflowAction();
 
-				LexiconEntry.gotoEllipsisMenuItem(menuItem = "Approve");
+				LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Approve");
 
 				Workflow.confirmWorkflowAction();
 
@@ -172,9 +173,7 @@ definition {
 		}
 
 		task ("But when the admin logs in") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 		}
 
 		task ("And accepts the notification received by the category manager") {
@@ -182,11 +181,11 @@ definition {
 				assetType = "Product Link",
 				user = "Category Manager");
 
-			LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+			LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 			Workflow.confirmWorkflowAction();
 
-			LexiconEntry.gotoEllipsisMenuItem(menuItem = "Approve");
+			LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Approve");
 
 			Workflow.confirmWorkflowAction();
 		}
@@ -257,9 +256,7 @@ definition {
 		}
 
 		task ("But when the admin logs in") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 		}
 
 		task ("And rejects the notification received by the category manager") {
@@ -267,11 +264,11 @@ definition {
 				assetType = "Product Link",
 				user = "Category Manager");
 
-			LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+			LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 			Workflow.confirmWorkflowAction();
 
-			LexiconEntry.gotoEllipsisMenuItem(menuItem = "Reject");
+			LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Reject");
 
 			Workflow.confirmWorkflowAction();
 		}
@@ -305,15 +302,13 @@ definition {
 				locator1 = "Notifications#NOTIFICATIONS_WORKFLOW_TITLE",
 				value1 = "Your submission was rejected by Test Test, please modify and resubmit.");
 
-			LexiconEntry.gotoEllipsisMenuItem(menuItem = "Resubmit");
+			LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Resubmit");
 
 			Workflow.confirmWorkflowAction();
 		}
 
 		task ("And the admin accepts the re-submited notification") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			Notifications.gotoNotifications();
 
@@ -323,11 +318,11 @@ definition {
 				locator1 = "Notifications#NOTIFICATIONS_WORKFLOW_TITLE",
 				value1 = "Category Manager sent you a Product Link for review in the workflow.");
 
-			LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+			LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 			Workflow.confirmWorkflowAction();
 
-			LexiconEntry.gotoEllipsisMenuItem(menuItem = "Approve");
+			LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Approve");
 
 			Workflow.confirmWorkflowAction();
 		}
@@ -398,9 +393,7 @@ definition {
 		}
 
 		task ("But when the admin logs in") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 		}
 
 		task ("And rejects all the notifications received by the category manager") {
@@ -415,11 +408,11 @@ definition {
 					locator1 = "Notifications#NOTIFICATIONS_WORKFLOW_TITLE",
 					value1 = "Category Manager sent you a Product Link for review in the workflow.");
 
-				LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+				LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 				Workflow.confirmWorkflowAction();
 
-				LexiconEntry.gotoEllipsisMenuItem(menuItem = "Reject");
+				LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Reject");
 
 				Workflow.confirmWorkflowAction();
 
@@ -461,7 +454,7 @@ definition {
 					locator1 = "Notifications#NOTIFICATIONS_WORKFLOW_TITLE",
 					value1 = "Your submission was rejected by Test Test, please modify and resubmit.");
 
-				LexiconEntry.gotoEllipsisMenuItem(menuItem = "Resubmit");
+				LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Resubmit");
 
 				Workflow.confirmWorkflowAction();
 
@@ -470,9 +463,7 @@ definition {
 		}
 
 		task ("And the admin accepts all the re-submited notifications") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			var notificationCount = 0;
 
@@ -485,11 +476,11 @@ definition {
 					locator1 = "Notifications#NOTIFICATIONS_WORKFLOW_TITLE",
 					value1 = "Category Manager sent you a Product Link for review in the workflow.");
 
-				LexiconEntry.gotoEllipsisMenuItem(menuItem = "Assign to Me");
+				LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Assign to Me");
 
 				Workflow.confirmWorkflowAction();
 
-				LexiconEntry.gotoEllipsisMenuItem(menuItem = "Approve");
+				LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Approve");
 
 				Workflow.confirmWorkflowAction();
 
@@ -603,9 +594,7 @@ definition {
 		}
 
 		task ("When the admin logs in") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 		}
 
 		task ("Then the Admin can see the details of the requested") {

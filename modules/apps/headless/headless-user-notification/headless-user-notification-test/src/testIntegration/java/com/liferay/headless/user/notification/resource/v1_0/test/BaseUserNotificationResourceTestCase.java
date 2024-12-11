@@ -27,21 +27,22 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -62,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -101,11 +100,17 @@ public abstract class BaseUserNotificationResourceTestCase {
 
 		_userNotificationResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		UserNotificationResource.Builder builder =
 			UserNotificationResource.builder();
 
 		userNotificationResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -119,7 +124,32 @@ public abstract class BaseUserNotificationResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		UserNotification userNotification1 = randomUserNotification();
+
+		String json = objectMapper.writeValueAsString(userNotification1);
+
+		UserNotification userNotification2 = UserNotificationSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(userNotification1, userNotification2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		UserNotification userNotification = randomUserNotification();
+
+		String json1 = objectMapper.writeValueAsString(userNotification);
+		String json2 = UserNotificationSerDes.toJSON(userNotification);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -134,40 +164,6 @@ public abstract class BaseUserNotificationResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		UserNotification userNotification1 = randomUserNotification();
-
-		String json = objectMapper.writeValueAsString(userNotification1);
-
-		UserNotification userNotification2 = UserNotificationSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(userNotification1, userNotification2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		UserNotification userNotification = randomUserNotification();
-
-		String json1 = objectMapper.writeValueAsString(userNotification);
-		String json2 = UserNotificationSerDes.toJSON(userNotification);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -319,11 +315,12 @@ public abstract class BaseUserNotificationResourceTestCase {
 	public void testGetMyUserNotificationsPageWithPagination()
 		throws Exception {
 
-		Page<UserNotification> totalPage =
+		Page<UserNotification> userNotificationPage =
 			userNotificationResource.getMyUserNotificationsPage(
 				null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			userNotificationPage.getTotalCount());
 
 		UserNotification userNotification1 =
 			testGetMyUserNotificationsPage_addUserNotification(
@@ -337,39 +334,81 @@ public abstract class BaseUserNotificationResourceTestCase {
 			testGetMyUserNotificationsPage_addUserNotification(
 				randomUserNotification());
 
-		Page<UserNotification> page1 =
-			userNotificationResource.getMyUserNotificationsPage(
-				null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<UserNotification> userNotifications1 =
-			(List<UserNotification>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			userNotifications1.toString(), totalCount + 2,
-			userNotifications1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<UserNotification> page1 =
+				userNotificationResource.getMyUserNotificationsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<UserNotification> page2 =
-			userNotificationResource.getMyUserNotificationsPage(
-				null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(
+				userNotification1, (List<UserNotification>)page1.getItems());
 
-		List<UserNotification> userNotifications2 =
-			(List<UserNotification>)page2.getItems();
+			Page<UserNotification> page2 =
+				userNotificationResource.getMyUserNotificationsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			userNotifications2.toString(), 1, userNotifications2.size());
+			assertContains(
+				userNotification2, (List<UserNotification>)page2.getItems());
 
-		Page<UserNotification> page3 =
-			userNotificationResource.getMyUserNotificationsPage(
-				null, null, Pagination.of(1, totalCount + 3), null);
+			Page<UserNotification> page3 =
+				userNotificationResource.getMyUserNotificationsPage(
+					null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertContains(
-			userNotification1, (List<UserNotification>)page3.getItems());
-		assertContains(
-			userNotification2, (List<UserNotification>)page3.getItems());
-		assertContains(
-			userNotification3, (List<UserNotification>)page3.getItems());
+			assertContains(
+				userNotification3, (List<UserNotification>)page3.getItems());
+		}
+		else {
+			Page<UserNotification> page1 =
+				userNotificationResource.getMyUserNotificationsPage(
+					null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<UserNotification> userNotifications1 =
+				(List<UserNotification>)page1.getItems();
+
+			Assert.assertEquals(
+				userNotifications1.toString(), totalCount + 2,
+				userNotifications1.size());
+
+			Page<UserNotification> page2 =
+				userNotificationResource.getMyUserNotificationsPage(
+					null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<UserNotification> userNotifications2 =
+				(List<UserNotification>)page2.getItems();
+
+			Assert.assertEquals(
+				userNotifications2.toString(), 1, userNotifications2.size());
+
+			Page<UserNotification> page3 =
+				userNotificationResource.getMyUserNotificationsPage(
+					null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				userNotification1, (List<UserNotification>)page3.getItems());
+			assertContains(
+				userNotification2, (List<UserNotification>)page3.getItems());
+			assertContains(
+				userNotification3, (List<UserNotification>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -381,7 +420,7 @@ public abstract class BaseUserNotificationResourceTestCase {
 			(entityField, userNotification1, userNotification2) -> {
 				BeanTestUtil.setProperty(
 					userNotification1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -493,24 +532,30 @@ public abstract class BaseUserNotificationResourceTestCase {
 		userNotification2 = testGetMyUserNotificationsPage_addUserNotification(
 			userNotification2);
 
+		Page<UserNotification> page =
+			userNotificationResource.getMyUserNotificationsPage(
+				null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<UserNotification> ascPage =
 				userNotificationResource.getMyUserNotificationsPage(
-					null, null, Pagination.of(1, 2),
+					null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(userNotification1, userNotification2),
-				(List<UserNotification>)ascPage.getItems());
+			assertContains(
+				userNotification1, (List<UserNotification>)ascPage.getItems());
+			assertContains(
+				userNotification2, (List<UserNotification>)ascPage.getItems());
 
 			Page<UserNotification> descPage =
 				userNotificationResource.getMyUserNotificationsPage(
-					null, null, Pagination.of(1, 2),
+					null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(userNotification2, userNotification1),
-				(List<UserNotification>)descPage.getItems());
+			assertContains(
+				userNotification2, (List<UserNotification>)descPage.getItems());
+			assertContains(
+				userNotification1, (List<UserNotification>)descPage.getItems());
 		}
 	}
 
@@ -534,7 +579,7 @@ public abstract class BaseUserNotificationResourceTestCase {
 			userNotificationResource.getUserAccountUserNotificationsPage(
 				userAccountId, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantUserAccountId != null) {
 			UserNotification irrelevantUserNotification =
@@ -543,12 +588,13 @@ public abstract class BaseUserNotificationResourceTestCase {
 					randomIrrelevantUserNotification());
 
 			page = userNotificationResource.getUserAccountUserNotificationsPage(
-				irrelevantUserAccountId, null, null, Pagination.of(1, 2), null);
+				irrelevantUserAccountId, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantUserNotification),
+			assertContains(
+				irrelevantUserNotification,
 				(List<UserNotification>)page.getItems());
 			assertValid(
 				page,
@@ -567,11 +613,12 @@ public abstract class BaseUserNotificationResourceTestCase {
 		page = userNotificationResource.getUserAccountUserNotificationsPage(
 			userAccountId, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(userNotification1, userNotification2),
-			(List<UserNotification>)page.getItems());
+		assertContains(
+			userNotification1, (List<UserNotification>)page.getItems());
+		assertContains(
+			userNotification2, (List<UserNotification>)page.getItems());
 		assertValid(
 			page,
 			testGetUserAccountUserNotificationsPage_getExpectedActions(
@@ -695,6 +742,13 @@ public abstract class BaseUserNotificationResourceTestCase {
 		Long userAccountId =
 			testGetUserAccountUserNotificationsPage_getUserAccountId();
 
+		Page<UserNotification> userNotificationPage =
+			userNotificationResource.getUserAccountUserNotificationsPage(
+				userAccountId, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			userNotificationPage.getTotalCount());
+
 		UserNotification userNotification1 =
 			testGetUserAccountUserNotificationsPage_addUserNotification(
 				userAccountId, randomUserNotification());
@@ -707,36 +761,84 @@ public abstract class BaseUserNotificationResourceTestCase {
 			testGetUserAccountUserNotificationsPage_addUserNotification(
 				userAccountId, randomUserNotification());
 
-		Page<UserNotification> page1 =
-			userNotificationResource.getUserAccountUserNotificationsPage(
-				userAccountId, null, null, Pagination.of(1, 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<UserNotification> userNotifications1 =
-			(List<UserNotification>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			userNotifications1.toString(), 2, userNotifications1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<UserNotification> page1 =
+				userNotificationResource.getUserAccountUserNotificationsPage(
+					userAccountId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<UserNotification> page2 =
-			userNotificationResource.getUserAccountUserNotificationsPage(
-				userAccountId, null, null, Pagination.of(2, 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				userNotification1, (List<UserNotification>)page1.getItems());
 
-		List<UserNotification> userNotifications2 =
-			(List<UserNotification>)page2.getItems();
+			Page<UserNotification> page2 =
+				userNotificationResource.getUserAccountUserNotificationsPage(
+					userAccountId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			userNotifications2.toString(), 1, userNotifications2.size());
+			assertContains(
+				userNotification2, (List<UserNotification>)page2.getItems());
 
-		Page<UserNotification> page3 =
-			userNotificationResource.getUserAccountUserNotificationsPage(
-				userAccountId, null, null, Pagination.of(1, 3), null);
+			Page<UserNotification> page3 =
+				userNotificationResource.getUserAccountUserNotificationsPage(
+					userAccountId, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				userNotification1, userNotification2, userNotification3),
-			(List<UserNotification>)page3.getItems());
+			assertContains(
+				userNotification3, (List<UserNotification>)page3.getItems());
+		}
+		else {
+			Page<UserNotification> page1 =
+				userNotificationResource.getUserAccountUserNotificationsPage(
+					userAccountId, null, null, Pagination.of(1, totalCount + 2),
+					null);
+
+			List<UserNotification> userNotifications1 =
+				(List<UserNotification>)page1.getItems();
+
+			Assert.assertEquals(
+				userNotifications1.toString(), totalCount + 2,
+				userNotifications1.size());
+
+			Page<UserNotification> page2 =
+				userNotificationResource.getUserAccountUserNotificationsPage(
+					userAccountId, null, null, Pagination.of(2, totalCount + 2),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<UserNotification> userNotifications2 =
+				(List<UserNotification>)page2.getItems();
+
+			Assert.assertEquals(
+				userNotifications2.toString(), 1, userNotifications2.size());
+
+			Page<UserNotification> page3 =
+				userNotificationResource.getUserAccountUserNotificationsPage(
+					userAccountId, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				userNotification1, (List<UserNotification>)page3.getItems());
+			assertContains(
+				userNotification2, (List<UserNotification>)page3.getItems());
+			assertContains(
+				userNotification3, (List<UserNotification>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -748,7 +850,7 @@ public abstract class BaseUserNotificationResourceTestCase {
 			(entityField, userNotification1, userNotification2) -> {
 				BeanTestUtil.setProperty(
 					userNotification1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -865,24 +967,32 @@ public abstract class BaseUserNotificationResourceTestCase {
 			testGetUserAccountUserNotificationsPage_addUserNotification(
 				userAccountId, userNotification2);
 
+		Page<UserNotification> page =
+			userNotificationResource.getUserAccountUserNotificationsPage(
+				userAccountId, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<UserNotification> ascPage =
 				userNotificationResource.getUserAccountUserNotificationsPage(
-					userAccountId, null, null, Pagination.of(1, 2),
+					userAccountId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(userNotification1, userNotification2),
-				(List<UserNotification>)ascPage.getItems());
+			assertContains(
+				userNotification1, (List<UserNotification>)ascPage.getItems());
+			assertContains(
+				userNotification2, (List<UserNotification>)ascPage.getItems());
 
 			Page<UserNotification> descPage =
 				userNotificationResource.getUserAccountUserNotificationsPage(
-					userAccountId, null, null, Pagination.of(1, 2),
+					userAccountId, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(userNotification2, userNotification1),
-				(List<UserNotification>)descPage.getItems());
+			assertContains(
+				userNotification2, (List<UserNotification>)descPage.getItems());
+			assertContains(
+				userNotification1, (List<UserNotification>)descPage.getItems());
 		}
 	}
 
@@ -934,6 +1044,8 @@ public abstract class BaseUserNotificationResourceTestCase {
 		UserNotification userNotification =
 			testGraphQLGetUserNotification_addUserNotification();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				userNotification,
@@ -951,11 +1063,37 @@ public abstract class BaseUserNotificationResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/userNotification"))));
+
+		// Using the namespace headlessUserNotification_v1_0
+
+		Assert.assertTrue(
+			equals(
+				userNotification,
+				UserNotificationSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessUserNotification_v1_0",
+								new GraphQLField(
+									"userNotification",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"userNotificationId",
+												userNotification.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessUserNotification_v1_0",
+						"Object/userNotification"))));
 	}
 
 	@Test
 	public void testGraphQLGetUserNotificationNotFound() throws Exception {
 		Long irrelevantUserNotificationId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -971,6 +1109,27 @@ public abstract class BaseUserNotificationResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessUserNotification_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessUserNotification_v1_0",
+						new GraphQLField(
+							"userNotification",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"userNotificationId",
+										irrelevantUserNotificationId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1385,6 +1544,10 @@ public abstract class BaseUserNotificationResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1459,22 +1622,20 @@ public abstract class BaseUserNotificationResourceTestCase {
 
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = userNotification.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							userNotification.getDateCreated(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							userNotification.getDateCreated(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1567,7 +1728,8 @@ public abstract class BaseUserNotificationResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1620,21 +1782,21 @@ public abstract class BaseUserNotificationResourceTestCase {
 	}
 
 	protected UserNotificationResource userNotificationResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1643,11 +1805,16 @@ public abstract class BaseUserNotificationResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1679,6 +1846,24 @@ public abstract class BaseUserNotificationResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1700,16 +1885,6 @@ public abstract class BaseUserNotificationResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

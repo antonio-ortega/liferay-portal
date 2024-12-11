@@ -2,15 +2,16 @@
 definition {
 
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
-	property osgi.module.configuration.file.names = "com.liferay.commerce.configuration.CommerceOrderImporterTypeConfiguration.config";
-	property osgi.module.configurations = "enabled=\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Setup: Create an account with a buyer user") {
 			CommerceEntry.addAccountEntryUser(
@@ -38,9 +39,7 @@ definition {
 		property portal.acceptance = "false";
 
 		task ("Given admin user enable subscription in one product") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceEntry.activeProductPaymentSubscription(productName = "ABS Sensor");
 		}
@@ -49,7 +48,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -124,14 +123,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 1,
 				productSku = "MIN55859",
-				productTotalPrice = "34.00");
+				productTotalPrice = "$ 34.00");
 
 			CommerceOrders.viewOrderPrices(
 				deliveryPrice = "0.00",
@@ -156,7 +155,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -212,9 +211,7 @@ definition {
 		property portal.acceptance = "false";
 
 		task ("Given admin user enable subscription in two products") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceEntry.activeProductPaymentSubscription(productName = "ABS Sensor");
 
@@ -225,7 +222,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -302,7 +299,7 @@ definition {
 				productName = "ABS Sensor",
 				productQuantity = 1,
 				productSku = "MIN93015",
-				productTotalPrice = "50.00");
+				productTotalPrice = "$ 50.00");
 
 			CommerceOrders.viewOrderPrices(
 				deliveryPrice = "0.00",
@@ -328,20 +325,18 @@ definition {
 		property portal.acceptance = "false";
 
 		task ("Given admin user enable subscription in two products") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceEntry.activeProductPaymentSubscription(productName = "ABS Sensor");
 
-			CommerceEntry.activeProductPaymentSubscription(productName = "Mount");
+			CommerceEntry.activeProductPaymentSubscription(productName = "Engine Mount");
 		}
 
 		task ("And given a Minium site with a buyer user") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -360,7 +355,7 @@ definition {
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
 
 			FrontStore.addInitializerProductToCart(
-				productName = "Mount",
+				productName = "Engine Mount",
 				productQuantity = 1);
 		}
 
@@ -424,11 +419,11 @@ definition {
 
 		task ("Then all the products in the wishlist are not imported") {
 			CommerceOrders.viewOrdersDetails(
-				productListPrice = "3.00",
-				productName = "Mount",
+				productListPrice = "120.00",
+				productName = "Engine Mount",
 				productQuantity = 1,
-				productSku = "MIN55857",
-				productTotalPrice = "3.00");
+				productSku = "MIN00675",
+				productTotalPrice = "$ 120.00");
 
 			AssertNotVisible(
 				key_productName = "U-Joint",
@@ -444,9 +439,9 @@ definition {
 
 			CommerceOrders.viewOrderPrices(
 				deliveryPrice = "0.00",
-				subTotalPrice = "3.00",
+				subTotalPrice = "120.00",
 				taxPrice = "0.00",
-				totalPrice = "3.00");
+				totalPrice = "120.00");
 		}
 	}
 
@@ -456,9 +451,7 @@ definition {
 		property portal.acceptance = "false";
 
 		task ("Given admin user enable subscription in one product") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceEntry.activeProductPaymentSubscription(productName = "ABS Sensor");
 		}
@@ -467,7 +460,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -485,7 +478,7 @@ definition {
 		task ("And given the buyer adds non-subscription products to a new order") {
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Catalog");
 
-			for (var product : list "U-Joint:1,Torque Converters:1,Mount:1") {
+			for (var product : list "U-Joint:1,Torque Converters:1,Engine Mount:1") {
 				var productName = StringUtil.extractFirst(${product}, ":");
 				var productQuantity = StringUtil.extractLast(${product}, ":");
 
@@ -561,27 +554,27 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 2,
 				productSku = "MIN55859",
-				productTotalPrice = "68.00");
+				productTotalPrice = "$ 68.00");
 
 			CommerceOrders.viewOrdersDetails(
-				productListPrice = "3.00",
-				productName = "Mount",
+				productListPrice = "120.00",
+				productName = "Engine Mount",
 				productQuantity = 1,
-				productSku = "MIN55857",
-				productTotalPrice = "3.00");
+				productSku = "MIN00675",
+				productTotalPrice = "$ 120.00");
 
 			CommerceOrders.viewOrderPrices(
 				deliveryPrice = "0.00",
-				subTotalPrice = "119.00",
+				subTotalPrice = "236.00",
 				taxPrice = "0.00",
-				totalPrice = "119.00");
+				totalPrice = "236.00");
 		}
 
 		task ("And then the subscription product is not imported (ABS Sensor)") {
@@ -600,7 +593,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -642,13 +635,9 @@ definition {
 		}
 
 		task ("And given admin user add a new descount and promotion") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			Click(locator1 = "Button#PLUS");
 
@@ -708,7 +697,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -743,7 +732,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productDiscount = "20.00",
@@ -751,14 +740,14 @@ definition {
 				productName = "ABS Sensor",
 				productQuantity = 2,
 				productSku = "MIN93015",
-				productTotalPrice = "80.00");
+				productTotalPrice = "$ 80.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 2,
 				productSku = "MIN55859",
-				productTotalPrice = "68.00");
+				productTotalPrice = "$ 68.00");
 
 			CommerceOrders.viewOrderPrices(
 				deliveryPrice = "0.00",
@@ -777,18 +766,18 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
 
 		task ("And a wish list with some products") {
-			CommerceWishList.addProductToWishList(productName = "U-Joint,ABS Sensor,Torque Converters,Power Steering Pump,Brake Fluid,Master Cylinder,Drive Shafts,CV Axles,Mount,Wear Sensors,Calipers,Brake Rotors,Premium Brake Pads");
+			CommerceWishList.addProductToWishList(productName = "U-Joint,ABS Sensor,Torque Converters,Power Steering Pump,Brake Fluid,Master Cylinder,Drive Shafts,CV Axles,Engine Mount,Wear Sensors,Calipers,Brake Rotors,Premium Brake Pads");
 
 			CommerceNavigator.goToWishLists();
 
 			CommerceWishList.assertWishListProduct(
-				productName = "U-Joint,ABS Sensor,Torque Converters,Power Steering Pump,Brake Fluid,Master Cylinder,Drive Shafts,CV Axles,Mount,Wear Sensors,Calipers,Brake Rotors,Premium Brake Pads",
+				productName = "U-Joint,ABS Sensor,Torque Converters,Power Steering Pump,Brake Fluid,Master Cylinder,Drive Shafts,CV Axles,Engine Mount,Wear Sensors,Calipers,Brake Rotors,Premium Brake Pads",
 				wishListName = "Default");
 		}
 
@@ -900,7 +889,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -971,21 +960,21 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "50.00",
 				productName = "ABS Sensor",
 				productQuantity = 2,
 				productSku = "MIN93015",
-				productTotalPrice = "100.00");
+				productTotalPrice = "$ 100.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 2,
 				productSku = "MIN55859",
-				productTotalPrice = "68.00");
+				productTotalPrice = "$ 68.00");
 		}
 
 		task ("And when the user complete the order") {
@@ -1021,21 +1010,21 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "50.00",
 				productName = "ABS Sensor",
 				productQuantity = 2,
 				productSku = "MIN93015",
-				productTotalPrice = "100.00");
+				productTotalPrice = "$ 100.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 2,
 				productSku = "MIN55859",
-				productTotalPrice = "68.00");
+				productTotalPrice = "$ 68.00");
 
 			AssertTextEquals.assertPartialText(
 				key_priceName = "Subtotal",
@@ -1068,7 +1057,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1141,28 +1130,28 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "50.00",
 				productName = "ABS Sensor",
 				productQuantity = 4,
 				productSku = "MIN93015",
-				productTotalPrice = "200.00");
+				productTotalPrice = "$ 200.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "15.00",
 				productName = "Transmission Cooler Line Assembly",
 				productQuantity = 1,
 				productSku = "MIN55860",
-				productTotalPrice = "15.00");
+				productTotalPrice = "$ 15.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "34.00",
 				productName = "Torque Converters",
 				productQuantity = 1,
 				productSku = "MIN55859",
-				productTotalPrice = "34.00");
+				productTotalPrice = "$ 34.00");
 		}
 	}
 
@@ -1175,7 +1164,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1260,7 +1249,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}

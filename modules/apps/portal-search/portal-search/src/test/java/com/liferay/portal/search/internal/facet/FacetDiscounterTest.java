@@ -5,6 +5,8 @@
 
 package com.liferay.portal.search.internal.facet;
 
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.facet.Facet;
@@ -46,6 +48,36 @@ public class FacetDiscounterTest {
 		_discount(facetDiscounter, _createDocument(new String[] {"a", "c"}));
 
 		_assertFrequencies(facet, "[a=9, b=5, c=1]");
+	}
+
+	@Test
+	public void testNestedFacet() {
+		NestedFacetImpl nestedFacetImpl = new NestedFacetImpl(null, null);
+
+		nestedFacetImpl.setFilterField(_FIELD_NAME + ".fieldName");
+
+		String filterValue = RandomTestUtil.randomString();
+
+		nestedFacetImpl.setFilterValue(filterValue);
+
+		nestedFacetImpl.setPath(_FIELD_NAME);
+
+		_populate(
+			nestedFacetImpl, _toTerm("a", 10), _toTerm("b", 5),
+			_toTerm("c", 2));
+
+		FacetDiscounter facetDiscounter = new FacetDiscounter(nestedFacetImpl);
+
+		_discount(
+			facetDiscounter,
+			_createDocument(
+				new String[] {
+					_createFieldValue(filterValue, "a"),
+					_createFieldValue(RandomTestUtil.randomString(), "b"),
+					_createFieldValue(filterValue, "c")
+				}));
+
+		_assertFrequencies(nestedFacetImpl, "[a=9, b=5, c=1]");
 	}
 
 	@Test
@@ -91,13 +123,15 @@ public class FacetDiscounterTest {
 	public void testZeroedTermIsRemoved() {
 		SimpleFacet facet = new SimpleFacet(null);
 
-		_populate(facet, _toTerm("public", 1000), _toTerm("secret", 1));
+		_populate(
+			facet, _toTerm("public", 1000), _toTerm("none", 0),
+			_toTerm("secret", 1));
 
 		FacetDiscounter facetDiscounter = new FacetDiscounter(facet);
 
 		_discount(facetDiscounter, "secret");
 
-		_assertFrequencies(facet, "[public=1000]");
+		_assertFrequencies(facet, "[public=1000, none=0, secret=-1]");
 	}
 
 	private void _assertFrequencies(Facet facet, String expected) {
@@ -137,6 +171,12 @@ public class FacetDiscounterTest {
 
 		return new SimpleFacetCollector(
 			_FIELD_NAME, Arrays.asList(termCollectors));
+	}
+
+	private String _createFieldValue(String filterValue, String term) {
+		return StringBundler.concat(
+			"{fieldName=", filterValue, StringPool.COMMA_AND_SPACE, _FIELD_NAME,
+			"=", term, "}");
 	}
 
 	private void _discount(

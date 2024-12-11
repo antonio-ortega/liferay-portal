@@ -6,7 +6,6 @@
 package com.liferay.source.formatter.check;
 
 import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.json.JSONObjectImpl;
 import com.liferay.portal.kernel.json.JSONException;
@@ -14,15 +13,20 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.ToolsUtil;
 import com.liferay.source.formatter.BNDSettings;
 import com.liferay.source.formatter.SourceFormatterExcludes;
 import com.liferay.source.formatter.SourceFormatterMessage;
+import com.liferay.source.formatter.check.util.BNDSourceUtil;
 import com.liferay.source.formatter.check.util.JSPSourceUtil;
+import com.liferay.source.formatter.check.util.JavaSourceUtil;
 import com.liferay.source.formatter.check.util.SourceUtil;
+import com.liferay.source.formatter.parser.JavaClass;
+import com.liferay.source.formatter.parser.JavaClassParser;
+import com.liferay.source.formatter.parser.JavaTerm;
+import com.liferay.source.formatter.parser.JavaVariable;
 import com.liferay.source.formatter.processor.JSPSourceProcessor;
 import com.liferay.source.formatter.processor.JavaSourceProcessor;
 import com.liferay.source.formatter.processor.SourceProcessor;
@@ -37,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,24 +73,6 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	@Override
 	public int getWeight() {
 		return _weight;
-	}
-
-	public boolean hasParameterTypes(
-		String fileContent, String javaMethodContent, String[] parameterList,
-		String[] parameterTypes) {
-
-		for (int i = 0; i < parameterTypes.length; i++) {
-			String variableTypeName = getVariableTypeName(
-				javaMethodContent, fileContent, parameterList[i], true);
-
-			if ((variableTypeName == null) ||
-				!parameterTypes[i].equals(variableTypeName)) {
-
-				return false;
-			}
-		}
-
-		return true;
 	}
 
 	@Override
@@ -330,6 +317,19 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		}
 	}
 
+	protected synchronized Map<String, String> getBundleSymbolicNamesMap(
+		String absolutePath) {
+
+		if (_bundleSymbolicNamesMap != null) {
+			return _bundleSymbolicNamesMap;
+		}
+
+		_bundleSymbolicNamesMap = BNDSourceUtil.getBundleSymbolicNamesMap(
+			SourceUtil.getRootDirName(absolutePath));
+
+		return _bundleSymbolicNamesMap;
+	}
+
 	protected String getContent(String fileName, int level) throws IOException {
 		File file = getFile(fileName, level);
 
@@ -456,6 +456,10 @@ public abstract class BaseSourceCheck implements SourceCheck {
 
 	protected int getMaxLineLength() {
 		return _maxLineLength;
+	}
+
+	protected Object[] getModelInformation(String packagePath) {
+		return _modelInformationsMap.get(packagePath);
 	}
 
 	protected String getModulesPropertiesContent(String absolutePath)
@@ -627,32 +631,66 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	}
 
 	protected String getVariableTypeName(
-		String content, String fileContent, String variableName) {
+		String content, JavaTerm javaTerm, String fileContent, String fileName,
+		String variableName) {
 
-		return getVariableTypeName(content, fileContent, variableName, false);
+		return getVariableTypeName(
+			content, javaTerm, fileContent, fileName, variableName, false,
+			false);
 	}
 
 	protected String getVariableTypeName(
-		String content, String fileContent, String variableName,
-		boolean includeArrayOrCollectionTypes) {
+		String content, JavaTerm javaTerm, String fileContent, String fileName,
+		String variableName, boolean includeArrayOrCollectionTypes,
+		boolean includeFullyQualifiedName) {
 
 		if (variableName == null) {
 			return null;
 		}
 
 		String variableTypeName = _getVariableTypeName(
-			content, variableName, includeArrayOrCollectionTypes);
+			content, variableName, includeArrayOrCollectionTypes,
+			includeFullyQualifiedName);
 
 		if ((variableTypeName != null) || content.equals(fileContent)) {
 			return variableTypeName;
 		}
 
-		return _getVariableTypeName(
-			fileContent, variableName, includeArrayOrCollectionTypes);
+		JavaClass javaClass = null;
+
+		try {
+			javaClass = _getJavaClass(javaTerm, fileName, fileContent);
+
+			if (javaClass == null) {
+				return variableTypeName;
+			}
+
+			for (JavaTerm childJavaTerm : javaClass.getChildJavaTerms()) {
+				if (childJavaTerm.isJavaVariable()) {
+					JavaVariable javaVariable = (JavaVariable)childJavaTerm;
+
+					String variableContent = javaVariable.getContent();
+
+					variableTypeName = _getVariableTypeName(
+						variableContent, variableName,
+						includeArrayOrCollectionTypes,
+						includeFullyQualifiedName);
+
+					if (variableTypeName != null) {
+						return variableTypeName;
+					}
+				}
+			}
+		}
+		catch (Exception exception) {
+			return variableTypeName;
+		}
+
+		return variableTypeName;
 	}
 
 	protected boolean hasClassOrVariableName(
-		String className, String content, String fileContent,
+		String className, String content, String fileContent, String fileName,
 		String methodCall) {
 
 		String variable = getVariableName(methodCall);
@@ -662,7 +700,7 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		}
 
 		String variableTypeName = getVariableTypeName(
-			content, fileContent, variable.trim(), true);
+			content, null, fileContent, fileName, variable.trim(), true, false);
 
 		if ((variableTypeName != null) &&
 			variableTypeName.startsWith(className)) {
@@ -771,62 +809,144 @@ public abstract class BaseSourceCheck implements SourceCheck {
 		return _subrepository;
 	}
 
-	protected String stripQuotes(String s) {
-		return stripQuotes(s, CharPool.APOSTROPHE, CharPool.QUOTE);
-	}
+	protected boolean isUpgradeProcess(String absolutePath, String content) {
+		Pattern pattern = Pattern.compile(
+			" class " + JavaSourceUtil.getClassName(absolutePath) +
+				"\\s+extends\\s+([\\w.]+) ");
 
-	protected String stripQuotes(String s, char... delimeters) {
-		List<Character> delimetersList = ListUtil.fromArray(delimeters);
+		Matcher matcher = pattern.matcher(content);
 
-		char delimeter = CharPool.SPACE;
-		boolean insideQuotes = false;
-
-		StringBundler sb = new StringBundler();
-
-		for (int i = 0; i < s.length(); i++) {
-			char c = s.charAt(i);
-
-			if (insideQuotes) {
-				if (c == delimeter) {
-					int precedingBackSlashCount = 0;
-
-					for (int j = i - 1; j >= 0; j--) {
-						if (s.charAt(j) == CharPool.BACK_SLASH) {
-							precedingBackSlashCount += 1;
-						}
-						else {
-							break;
-						}
-					}
-
-					if ((precedingBackSlashCount == 0) ||
-						((precedingBackSlashCount % 2) == 0)) {
-
-						insideQuotes = false;
-					}
-				}
-			}
-			else if (delimetersList.contains(c)) {
-				delimeter = c;
-				insideQuotes = true;
-			}
-			else {
-				sb.append(c);
-			}
+		if (!matcher.find()) {
+			return false;
 		}
 
-		return sb.toString();
+		String extendedClassName = matcher.group(1);
+
+		if (extendedClassName.equals("UpgradeProcess")) {
+			return true;
+		}
+
+		pattern = Pattern.compile("\nimport (.*\\." + extendedClassName + ");");
+
+		matcher = pattern.matcher(content);
+
+		if (matcher.find()) {
+			extendedClassName = matcher.group(1);
+		}
+
+		if (!extendedClassName.contains(StringPool.PERIOD)) {
+			extendedClassName =
+				JavaSourceUtil.getPackageName(content) + StringPool.PERIOD +
+					extendedClassName;
+		}
+
+		if (!extendedClassName.startsWith("com.liferay.")) {
+			return false;
+		}
+
+		File file = JavaSourceUtil.getJavaFile(
+			extendedClassName, SourceUtil.getRootDirName(absolutePath),
+			getBundleSymbolicNamesMap(absolutePath));
+
+		if (file == null) {
+			return false;
+		}
+
+		return isUpgradeProcess(file.getAbsolutePath(), FileUtil.read(file));
+	}
+
+	protected synchronized void populateModelInformations() throws IOException {
+		if (_modelInformationsMap != null) {
+			return;
+		}
+
+		_modelInformationsMap = new HashMap<>();
+
+		File portalDir = getPortalDir();
+
+		if (portalDir == null) {
+			return;
+		}
+
+		List<String> serviceXMLFileNames = SourceFormatterUtil.scanForFileNames(
+			portalDir.getCanonicalPath(), new String[] {"**/service.xml"});
+
+		for (String serviceXMLFileName : serviceXMLFileNames) {
+			Document serviceXMLDocument = SourceUtil.readXML(
+				FileUtil.read(new File(serviceXMLFileName)));
+
+			if (serviceXMLDocument == null) {
+				continue;
+			}
+
+			Element serviceXMLElement = serviceXMLDocument.getRootElement();
+
+			serviceXMLFileName = StringUtil.replace(
+				serviceXMLFileName, CharPool.BACK_SLASH, CharPool.SLASH);
+
+			String packagePath = serviceXMLElement.attributeValue(
+				"api-package-path");
+
+			if (packagePath == null) {
+				packagePath = serviceXMLElement.attributeValue("package-path");
+			}
+
+			if (packagePath == null) {
+				continue;
+			}
+
+			String tablesSQLFilePath = "";
+
+			if (serviceXMLFileName.contains("/portal-impl/")) {
+				tablesSQLFilePath = portalDir + "/sql/portal-tables.sql";
+			}
+			else {
+				int x = serviceXMLFileName.lastIndexOf("/");
+
+				tablesSQLFilePath =
+					serviceXMLFileName.substring(0, x) +
+						"/src/main/resources/META-INF/sql/tables.sql";
+			}
+
+			_modelInformationsMap.put(
+				packagePath,
+				new Object[] {serviceXMLElement, tablesSQLFilePath});
+		}
 	}
 
 	protected static final String RUN_OUTSIDE_PORTAL_EXCLUDES =
 		"run.outside.portal.excludes";
 
+	private JavaClass _getJavaClass(
+			JavaTerm javaTerm, String fileName, String fileContent)
+		throws Exception {
+
+		if (javaTerm == null) {
+			return JavaClassParser.parseJavaClass(fileName, fileContent);
+		}
+
+		if (javaTerm.isJavaClass()) {
+			return (JavaClass)javaTerm;
+		}
+
+		return javaTerm.getParentJavaClass();
+	}
+
 	private String _getVariableTypeName(
 		String content, String variableName,
-		boolean includeArrayOrCollectionTypes) {
+		boolean includeArrayOrCollectionTypes,
+		boolean includeFullyQualifiedName) {
 
-		Pattern pattern = Pattern.compile(
-			"\\W(\\w+)\\s+" + variableName + "\\s*[;=),:]");
+		Pattern pattern = null;
+
+		if (includeFullyQualifiedName) {
+			pattern = Pattern.compile(
+				"\\W((\\w+\\.)*\\w+)\\s+" + variableName + "\\s*[;=),:]");
+		}
+		else {
+			pattern = Pattern.compile(
+				"\\W(\\w+)\\s+" + variableName + "\\s*[;=),:]");
+		}
 
 		Matcher matcher = pattern.matcher(content);
 
@@ -885,6 +1005,7 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	private String _baseDirName;
 	private final Map<String, BNDSettings> _bndSettingsMap =
 		new ConcurrentHashMap<>();
+	private Map<String, String> _bundleSymbolicNamesMap;
 	private JSONObject _excludesJSONObject;
 	private final Map<String, List<String>> _excludesValuesMap =
 		new ConcurrentHashMap<>();
@@ -892,6 +1013,7 @@ public abstract class BaseSourceCheck implements SourceCheck {
 	private List<String> _filterCheckNames;
 	private int _maxDirLevel;
 	private int _maxLineLength;
+	private Map<String, Object[]> _modelInformationsMap;
 	private List<String> _pluginsInsideModulesDirectoryNames;
 	private Document _portalCustomSQLDocument;
 	private boolean _portalSource;

@@ -61,7 +61,8 @@ public class DLAppLocalServiceUtil {
 	 * @throws PortalException if a portal exception occurred
 	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
 	 #addFileEntry(String, long, long, long, String, String,
-	 String, String, String, File, Date, Date, ServiceContext)}
+	 String, String, String, String, File, Date, Date
+	 expirationDate, Date, ServiceContext)}
 	 */
 	@Deprecated
 	public static com.liferay.portal.kernel.repository.model.FileEntry
@@ -81,15 +82,15 @@ public class DLAppLocalServiceUtil {
 			addFileEntry(
 				String externalReferenceCode, long userId, long repositoryId,
 				long folderId, String sourceFileName, String mimeType,
-				byte[] bytes, java.util.Date expirationDate,
-				java.util.Date reviewDate,
+				byte[] bytes, java.util.Date displayDate,
+				java.util.Date expirationDate, java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFileEntry(
 			externalReferenceCode, userId, repositoryId, folderId,
-			sourceFileName, mimeType, bytes, expirationDate, reviewDate,
-			serviceContext);
+			sourceFileName, mimeType, bytes, displayDate, expirationDate,
+			reviewDate, serviceContext);
 	}
 
 	/**
@@ -115,6 +116,8 @@ public class DLAppLocalServiceUtil {
 	 * @param description the file's description
 	 * @param changeLog the file's version change log
 	 * @param bytes the file's data (optionally <code>null</code>)
+	 * @param displayDate the file's display date (optionally
+	 <code>null</code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review Date (optionally <code>null</code>)
@@ -132,15 +135,15 @@ public class DLAppLocalServiceUtil {
 				String externalReferenceCode, long userId, long repositoryId,
 				long folderId, String sourceFileName, String mimeType,
 				String title, String urlTitle, String description,
-				String changeLog, byte[] bytes, java.util.Date expirationDate,
-				java.util.Date reviewDate,
+				String changeLog, byte[] bytes, java.util.Date displayDate,
+				java.util.Date expirationDate, java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFileEntry(
 			externalReferenceCode, userId, repositoryId, folderId,
 			sourceFileName, mimeType, title, urlTitle, description, changeLog,
-			bytes, expirationDate, reviewDate, serviceContext);
+			bytes, displayDate, expirationDate, reviewDate, serviceContext);
 	}
 
 	/**
@@ -166,7 +169,10 @@ public class DLAppLocalServiceUtil {
 	 * @param description the file's description
 	 * @param changeLog the file's version change log
 	 * @param file the file's data (optionally <code>null</code>)
-	 * @param expirationDate the file's expiration date (optionally <code>null</code>)
+	 * @param displayDate the file's display date (optionally
+	 <code>null</code>)
+	 * @param expirationDate the file's expiration date (optionally
+	 <code>null</code>)
 	 * @param reviewDate the file's review Date (optionally <code>null</code>)
 	 * @param serviceContext the service context to be applied. Can set the
 	 asset category IDs, asset tag names, and expando bridge
@@ -182,7 +188,7 @@ public class DLAppLocalServiceUtil {
 				String externalReferenceCode, long userId, long repositoryId,
 				long folderId, String sourceFileName, String mimeType,
 				String title, String urlTitle, String description,
-				String changeLog, java.io.File file,
+				String changeLog, java.io.File file, java.util.Date displayDate,
 				java.util.Date expirationDate, java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
@@ -190,7 +196,7 @@ public class DLAppLocalServiceUtil {
 		return getService().addFileEntry(
 			externalReferenceCode, userId, repositoryId, folderId,
 			sourceFileName, mimeType, title, urlTitle, description, changeLog,
-			file, expirationDate, reviewDate, serviceContext);
+			file, displayDate, expirationDate, reviewDate, serviceContext);
 	}
 
 	/**
@@ -218,6 +224,8 @@ public class DLAppLocalServiceUtil {
 	 * @param changeLog the file's version change log
 	 * @param inputStream the file's data (optionally <code>null</code>)
 	 * @param size the file's size (optionally <code>0</code>)
+	 * @param displayDate the file's display date (optionally
+	 <code>null</code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review Date (optionally <code>null</code>)
@@ -236,14 +244,16 @@ public class DLAppLocalServiceUtil {
 				long folderId, String sourceFileName, String mimeType,
 				String title, String urlTitle, String description,
 				String changeLog, InputStream inputStream, long size,
-				java.util.Date expirationDate, java.util.Date reviewDate,
+				java.util.Date displayDate, java.util.Date expirationDate,
+				java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFileEntry(
 			externalReferenceCode, userId, repositoryId, folderId,
 			sourceFileName, mimeType, title, urlTitle, description, changeLog,
-			inputStream, size, expirationDate, reviewDate, serviceContext);
+			inputStream, size, displayDate, expirationDate, reviewDate,
+			serviceContext);
 	}
 
 	/**
@@ -262,13 +272,14 @@ public class DLAppLocalServiceUtil {
 	 */
 	public static com.liferay.portal.kernel.repository.model.FileShortcut
 			addFileShortcut(
-				long userId, long repositoryId, long folderId,
-				long toFileEntryId,
+				String externalReferenceCode, long userId, long repositoryId,
+				long folderId, long toFileEntryId,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addFileShortcut(
-			userId, repositoryId, folderId, toFileEntryId, serviceContext);
+			externalReferenceCode, userId, repositoryId, folderId,
+			toFileEntryId, serviceContext);
 	}
 
 	/**
@@ -324,6 +335,14 @@ public class DLAppLocalServiceUtil {
 		throws PortalException {
 
 		getService().deleteFileEntry(fileEntryId);
+	}
+
+	public static void deleteFileEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		getService().deleteFileEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -408,6 +427,22 @@ public class DLAppLocalServiceUtil {
 			groupId, externalReferenceCode);
 	}
 
+	public static com.liferay.portal.kernel.repository.model.FileShortcut
+			fetchFileShortcut(long fileShortcutId)
+		throws PortalException {
+
+		return getService().fetchFileShortcut(fileShortcutId);
+	}
+
+	public static com.liferay.portal.kernel.repository.model.FileShortcut
+			fetchFileShortcutByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().fetchFileShortcutByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	public static com.liferay.portal.kernel.repository.model.Folder
 			fetchFolderByExternalReferenceCode(
 				String externalReferenceCode, long groupId)
@@ -457,11 +492,11 @@ public class DLAppLocalServiceUtil {
 	 */
 	public static com.liferay.portal.kernel.repository.model.FileEntry
 			getFileEntryByExternalReferenceCode(
-				long groupId, String externalReferenceCode)
+				String externalReferenceCode, long groupId)
 		throws PortalException {
 
 		return getService().getFileEntryByExternalReferenceCode(
-			groupId, externalReferenceCode);
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -508,6 +543,15 @@ public class DLAppLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getFileShortcut(fileShortcutId);
+	}
+
+	public static com.liferay.portal.kernel.repository.model.FileShortcut
+			getFileShortcutByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getFileShortcutByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -731,6 +775,8 @@ public class DLAppLocalServiceUtil {
 	 * @param dlVersionNumberIncrease the kind of version number increase to
 	 apply for these changes.
 	 * @param bytes the file's data (optionally <code>null</code>)
+	 * @param displayDate the file's display date (optionally <code>null
+	 </code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review date (optionally <code>null</code>)
@@ -750,14 +796,14 @@ public class DLAppLocalServiceUtil {
 				String description, String changeLog,
 				com.liferay.document.library.kernel.model.
 					DLVersionNumberIncrease dlVersionNumberIncrease,
-				byte[] bytes, java.util.Date expirationDate,
-				java.util.Date reviewDate,
+				byte[] bytes, java.util.Date displayDate,
+				java.util.Date expirationDate, java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateFileEntry(
 			userId, fileEntryId, sourceFileName, mimeType, title, urlTitle,
-			description, changeLog, dlVersionNumberIncrease, bytes,
+			description, changeLog, dlVersionNumberIncrease, bytes, displayDate,
 			expirationDate, reviewDate, serviceContext);
 	}
 
@@ -788,6 +834,8 @@ public class DLAppLocalServiceUtil {
 	 * @param dlVersionNumberIncrease the kind of version number increase to
 	 apply for these changes.
 	 * @param file the file's data (optionally <code>null</code>)
+	 * @param displayDate the file's display date (optionally <code>null
+	 </code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review date (optionally <code>null</code>)
@@ -807,14 +855,14 @@ public class DLAppLocalServiceUtil {
 				String description, String changeLog,
 				com.liferay.document.library.kernel.model.
 					DLVersionNumberIncrease dlVersionNumberIncrease,
-				java.io.File file, java.util.Date expirationDate,
-				java.util.Date reviewDate,
+				java.io.File file, java.util.Date displayDate,
+				java.util.Date expirationDate, java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().updateFileEntry(
 			userId, fileEntryId, sourceFileName, mimeType, title, urlTitle,
-			description, changeLog, dlVersionNumberIncrease, file,
+			description, changeLog, dlVersionNumberIncrease, file, displayDate,
 			expirationDate, reviewDate, serviceContext);
 	}
 
@@ -846,6 +894,8 @@ public class DLAppLocalServiceUtil {
 	 apply for these changes.
 	 * @param inputStream the file's data (optionally <code>null</code>)
 	 * @param size the file's size (optionally <code>0</code>)
+	 * @param displayDate the file's displaydate (optionally <code>null
+	 </code>)
 	 * @param expirationDate the file's expiration date (optionally <code>null
 	 </code>)
 	 * @param reviewDate the file's review date (optionally <code>null</code>)
@@ -865,7 +915,7 @@ public class DLAppLocalServiceUtil {
 				String description, String changeLog,
 				com.liferay.document.library.kernel.model.
 					DLVersionNumberIncrease dlVersionNumberIncrease,
-				InputStream inputStream, long size,
+				InputStream inputStream, long size, java.util.Date displayDate,
 				java.util.Date expirationDate, java.util.Date reviewDate,
 				com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
@@ -873,7 +923,7 @@ public class DLAppLocalServiceUtil {
 		return getService().updateFileEntry(
 			userId, fileEntryId, sourceFileName, mimeType, title, urlTitle,
 			description, changeLog, dlVersionNumberIncrease, inputStream, size,
-			expirationDate, reviewDate, serviceContext);
+			displayDate, expirationDate, reviewDate, serviceContext);
 	}
 
 	/**

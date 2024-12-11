@@ -23,6 +23,8 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
+import com.liferay.portal.kernel.dao.db.DBManagerUtil;
+import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -88,7 +90,7 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 
-		if ((groupIds == null) || (groupIds.length == 0)) {
+		if (ArrayUtil.isEmpty(groupIds)) {
 			groupIds = new long[] {0};
 		}
 
@@ -98,7 +100,7 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 			return null;
 		}
 
-		return _getPermissionPredicate(
+		return _getPermissionWherePredicate(
 			permissionChecker, modelClassName, classPKColumn, groupIds);
 	}
 
@@ -173,14 +175,15 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 		DSLQuery dslQuery, Class<?> modelClass, Column<T, Long> classPKColumn,
 		long... groupIds) {
 
-		Predicate permissionPredicate = getPermissionWherePredicate(
+		Predicate permissionWherePredicate = getPermissionWherePredicate(
 			modelClass, classPKColumn, groupIds);
 
-		if (permissionPredicate == null) {
+		if (permissionWherePredicate == null) {
 			return dslQuery;
 		}
 
-		return _insertResourcePermissionQuery(dslQuery, permissionPredicate);
+		return _insertResourcePermissionQuery(
+			dslQuery, permissionWherePredicate);
 	}
 
 	@Override
@@ -410,14 +413,14 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 		}
 	}
 
-	private <T extends Table<T>> Predicate _getPermissionPredicate(
+	private <T extends Table<T>> Predicate _getPermissionWherePredicate(
 		PermissionChecker permissionChecker, String modelClassName,
 		Column<T, Long> classPKColumn, long[] groupIds) {
 
 		DSLQuery resourcePermissionDSLQuery = _getResourcePermissionQuery(
 			permissionChecker, modelClassName, groupIds);
 
-		Predicate permissionPredicate = classPKColumn.in(
+		Predicate permissionWherePredicate = classPKColumn.in(
 			resourcePermissionDSLQuery);
 
 		List<PermissionSQLContributor> permissionSQLContributors =
@@ -429,16 +432,16 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 			for (PermissionSQLContributor permissionSQLContributor :
 					permissionSQLContributors) {
 
-				Predicate contributorPermissionPredicate =
+				Predicate contributorPermissionWherePredicate =
 					permissionSQLContributor.getPermissionPredicate(
 						permissionChecker, modelClassName, classPKColumn,
 						groupIds);
 
-				permissionPredicate =
-					permissionPredicate = permissionPredicate.or(
+				permissionWherePredicate =
+					permissionWherePredicate = permissionWherePredicate.or(
 						() -> {
-							if (contributorPermissionPredicate != null) {
-								return contributorPermissionPredicate.
+							if (contributorPermissionWherePredicate != null) {
+								return contributorPermissionWherePredicate.
 									withParentheses();
 							}
 
@@ -470,13 +473,14 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 					"No groupId column for table " + table.getTableName());
 			}
 
-			permissionPredicate = permissionPredicate.or(
+			permissionWherePredicate = permissionWherePredicate.or(
 				groupIdColumn.in(groupIdSet.toArray(new Long[0])));
 
-			permissionPredicate = permissionPredicate.withParentheses();
+			permissionWherePredicate =
+				permissionWherePredicate.withParentheses();
 		}
 
-		return permissionPredicate;
+		return permissionWherePredicate;
 	}
 
 	private DSLQuery _getResourcePermissionQuery(
@@ -585,15 +589,22 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 
 		int scope = ResourceConstants.SCOPE_INDIVIDUAL;
 
+		String selectOptimizer = StringPool.BLANK;
+
+		if (DBManagerUtil.getDBType() == DBType.MYSQL) {
+			selectOptimizer = "/*+ SUBQUERY(MATERIALIZATION) */";
+		}
+
 		return StringUtil.replace(
 			resourcePermissionSQL,
 			new String[] {
 				"[$CLASS_NAME$]", "[$COMPANY_ID$]",
-				"[$RESOURCE_SCOPE_INDIVIDUAL$]", "[$ROLE_IDS_OR_OWNER_ID$]"
+				"[$RESOURCE_SCOPE_INDIVIDUAL$]", "[$ROLE_IDS_OR_OWNER_ID$]",
+				"[$SELECT_OPTIMIZER$]"
 			},
 			new String[] {
 				className, String.valueOf(permissionChecker.getCompanyId()),
-				String.valueOf(scope), roleIdsOrOwnerIdSQL
+				String.valueOf(scope), roleIdsOrOwnerIdSQL, selectOptimizer
 			});
 	}
 
@@ -628,12 +639,12 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 	}
 
 	private DSLQuery _insertResourcePermissionQuery(
-		DSLQuery dslQuery, Predicate permissionPredicate) {
+		DSLQuery dslQuery, Predicate permissionWherePredicate) {
 
 		if (dslQuery instanceof WhereStep) {
 			WhereStep whereStep = (WhereStep)dslQuery;
 
-			return whereStep.where(permissionPredicate);
+			return whereStep.where(permissionWherePredicate);
 		}
 
 		WhereStep whereStep = null;
@@ -674,13 +685,13 @@ public class InlineSQLHelperImpl implements InlineSQLHelper {
 		ASTNode childASTNode = null;
 
 		if (where == null) {
-			childASTNode = whereStep.where(permissionPredicate);
+			childASTNode = whereStep.where(permissionWherePredicate);
 		}
 		else {
 			Predicate predicate = where.getPredicate();
 
 			childASTNode = new Where(
-				whereStep, predicate.and(permissionPredicate));
+				whereStep, predicate.and(permissionWherePredicate));
 		}
 
 		for (BaseASTNode baseASTNode : baseASTNodes) {

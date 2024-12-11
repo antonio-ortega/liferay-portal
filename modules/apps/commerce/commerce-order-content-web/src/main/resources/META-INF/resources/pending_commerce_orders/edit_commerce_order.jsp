@@ -47,25 +47,21 @@ List<CommerceAddress> shippingAddresses = commerceOrderContentDisplayContext.get
 List<CommerceAddress> billingAddresses = commerceOrderContentDisplayContext.getBillingCommerceAddresses(accountEntry.getAccountEntryId());
 
 List<String> errorMessages = (List<String>)request.getAttribute(CommerceWebKeys.COMMERCE_ORDER_ERROR_MESSAGES);
-
-String backURL = ParamUtil.getString(request, "backURL", null);
-
-if (backURL != null) {
-	portletDisplay.setShowBackIcon(true);
-	portletDisplay.setURLBack(backURL);
-}
 %>
 
 <c:if test="<%= (errorMessages != null) && !errorMessages.isEmpty() %>">
-	<script>
+	<aui:script>
 		Liferay.Util.openModal({
 			bodyHTML: '<%= errorMessages.get(0) %>',
-			title: '<liferay-ui:message key="warning" />',
+			containerProps: {
+				className: 'commerce-modal',
+			},
 			center: true,
 			size: 'm',
 			status: 'warning',
+			title: '<liferay-ui:message key="warning" />',
 		});
-	</script>
+	</aui:script>
 </c:if>
 
 <portlet:actionURL name="/commerce_open_order_content/edit_commerce_order" var="editCommerceOrderActionURL">
@@ -155,7 +151,7 @@ if (backURL != null) {
 		<div class="commerce-panel__content">
 			<div class="align-items-center row">
 				<div class="col-md-3">
-					<div class="commerce-order-title">
+					<div class="autofit-col-expand commerce-order-title">
 						<%= HtmlUtil.escape(accountEntry.getName()) %>
 					</div>
 				</div>
@@ -220,31 +216,72 @@ if (backURL != null) {
 		</div>
 	</div>
 
-	<c:if test="<%= commerceOrderContentDisplayContext.isShowPurchaseOrderNumber() %>">
-		<div class="row">
-			<div class="col-md-12">
-				<div class="commerce-panel">
-					<div class="commerce-panel__title"><liferay-ui:message key="purchase-order-number" /></div>
-					<div class="commerce-panel__content">
-						<div class="row">
-							<div class="col-md-6">
-								<dl class="commerce-list">
-									<c:choose>
-										<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
-											<aui:input cssClass="commerce-input" inlineField="<%= true %>" label="" name="purchaseOrderNumber" wrappedField="<%= false %>" />
-										</c:when>
-										<c:otherwise>
-											<%= HtmlUtil.escape(commerceOrder.getPurchaseOrderNumber()) %>
-										</c:otherwise>
-									</c:choose>
-								</dl>
+	<c:choose>
+		<c:when test="<%= commerceOrderContentDisplayContext.isShowPurchaseOrderNumber() %>">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="commerce-panel">
+						<div class="commerce-panel__title"><liferay-ui:message key="name" /></div>
+						<div class="commerce-panel__content">
+							<dl class="commerce-list">
+								<c:choose>
+									<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
+										<aui:input cssClass="commerce-input" inlineField="<%= true %>" label="" name="name" wrappedField="<%= false %>" />
+									</c:when>
+									<c:otherwise>
+										<%= HtmlUtil.escape(commerceOrder.getName()) %>
+									</c:otherwise>
+								</c:choose>
+							</dl>
+						</div>
+					</div>
+				</div>
+
+				<div class="col-md-6">
+					<div class="commerce-panel">
+						<div class="commerce-panel__title"><liferay-ui:message key="purchase-order-number" /></div>
+						<div class="commerce-panel__content">
+							<dl class="commerce-list">
+								<c:choose>
+									<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
+										<aui:input cssClass="commerce-input" inlineField="<%= true %>" label="" name="purchaseOrderNumber" wrappedField="<%= false %>" />
+									</c:when>
+									<c:otherwise>
+										<%= HtmlUtil.escape(commerceOrder.getPurchaseOrderNumber()) %>
+									</c:otherwise>
+								</c:choose>
+							</dl>
+						</div>
+					</div>
+				</div>
+			</div>
+		</c:when>
+		<c:otherwise>
+			<div class="row">
+				<div class="col-md-12">
+					<div class="commerce-panel">
+						<div class="commerce-panel__title"><liferay-ui:message key="name" /></div>
+						<div class="commerce-panel__content">
+							<div class="row">
+								<div class="col-md-6">
+									<dl class="commerce-list">
+										<c:choose>
+											<c:when test="<%= commerceOrderContentDisplayContext.hasModelPermission(commerceOrder, ActionKeys.UPDATE) %>">
+												<aui:input cssClass="commerce-input" inlineField="<%= true %>" label="" name="name" wrappedField="<%= false %>" />
+											</c:when>
+											<c:otherwise>
+												<%= HtmlUtil.escape(commerceOrder.getName()) %>
+											</c:otherwise>
+										</c:choose>
+									</dl>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
-	</c:if>
+		</c:otherwise>
+	</c:choose>
 
 	<div class="row">
 		<div class="col-md-6">
@@ -387,7 +424,7 @@ if (backURL != null) {
 						"url", viewCommerceOrderImporterTypeURLString
 					).build()
 				%>'
-				module="js/edit_commerce_order"
+				module="{editCommerceOrder} from commerce-order-content-web"
 			/>
 
 		<%
@@ -464,6 +501,7 @@ if (backURL != null) {
 			itemsPerPage="<%= 10 %>"
 			nestedItemsKey="orderItemId"
 			nestedItemsReferenceKey="orderItems"
+			propsTransformer="{PendingOrderItemActionDropdownPropsTransformer} from commerce-order-content-web"
 			style="stacked"
 		/>
 	</div>
@@ -538,7 +576,7 @@ if (backURL != null) {
 <%@ include file="/pending_commerce_orders/transition.jspf" %>
 
 <liferay-frontend:component
-	module="js/view"
+	module="{view} from commerce-order-content-web"
 />
 
 <aui:script use="aui-base">

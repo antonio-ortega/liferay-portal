@@ -55,7 +55,7 @@ const renderFragment = ({
 	};
 
 	const layoutData = {
-		items: {fragment},
+		items: {[fragment.itemId]: fragment},
 	};
 
 	const AutoSelect = () => {
@@ -70,7 +70,8 @@ const renderFragment = ({
 				<StoreAPIContextProvider
 					getState={() => ({
 						fragmentEntryLinks: {
-							[fragmentEntryLink.fragmentEntryLinkId]: fragmentEntryLink,
+							[fragmentEntryLink.fragmentEntryLinkId]:
+								fragmentEntryLink,
 						},
 						layoutData,
 						permissions: {
@@ -134,9 +135,10 @@ describe('FragmentWithControls', () => {
 		await act(async () => {
 			renderFragment({
 				editableValues: {
-					['com.liferay.fragment.entry.processor.styles.StylesFragmentEntryProcessor']: {
-						hasCommonStyles: true,
-					},
+					['com.liferay.fragment.entry.processor.styles.StylesFragmentEntryProcessor']:
+						{
+							hasCommonStyles: true,
+						},
 				},
 			});
 		});

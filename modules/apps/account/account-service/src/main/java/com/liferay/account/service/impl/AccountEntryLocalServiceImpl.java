@@ -182,7 +182,7 @@ public class AccountEntryLocalServiceImpl
 		accountEntry.setRestrictMembership(true);
 		accountEntry.setTaxIdNumber(taxIdNumber);
 
-		_validateType(type);
+		_validateType(user.getCompanyId(), type);
 
 		accountEntry.setType(type);
 		accountEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
@@ -370,6 +370,12 @@ public class AccountEntryLocalServiceImpl
 	public AccountEntry fetchPersonAccountEntry(long userId) {
 		return accountEntryPersistence.fetchByU_T_First(
 			userId, AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON, null);
+	}
+
+	@Override
+	public AccountEntry fetchSupplierAccountEntry(long userId) {
+		return accountEntryPersistence.fetchByU_T_First(
+			userId, AccountConstants.ACCOUNT_ENTRY_TYPE_SUPPLIER, null);
 	}
 
 	@Override
@@ -637,6 +643,10 @@ public class AccountEntryLocalServiceImpl
 		accountEntry.setTaxIdNumber(taxIdNumber);
 		accountEntry.setStatus(WorkflowConstants.STATUS_DRAFT);
 
+		if (serviceContext != null) {
+			accountEntry.setExpandoBridgeAttributes(serviceContext);
+		}
+
 		accountEntry = accountEntryPersistence.update(accountEntry);
 
 		if (domains != null) {
@@ -651,10 +661,6 @@ public class AccountEntryLocalServiceImpl
 			// Asset
 
 			_updateAsset(accountEntry, serviceContext);
-
-			// Expando
-
-			accountEntry.setExpandoBridgeAttributes(serviceContext);
 
 			workflowServiceContext = (ServiceContext)serviceContext.clone();
 			workflowUserId = serviceContext.getUserId();
@@ -1222,13 +1228,18 @@ public class AccountEntryLocalServiceImpl
 		}
 	}
 
-	private void _validateType(String type) throws PortalException {
-		if (!ArrayUtil.contains(AccountConstants.ACCOUNT_ENTRY_TYPES, type)) {
+	private void _validateType(long companyId, String type)
+		throws PortalException {
+
+		if (!ArrayUtil.contains(
+				AccountConstants.getAccountEntryTypes(companyId), type)) {
+
 			throw new AccountEntryTypeException(
 				StringBundler.concat(
 					"Type \"", type, "\" is not among allowed types: ",
 					StringUtil.merge(
-						AccountConstants.ACCOUNT_ENTRY_TYPES, ", ")));
+						AccountConstants.getAccountEntryTypes(companyId),
+						", ")));
 		}
 	}
 

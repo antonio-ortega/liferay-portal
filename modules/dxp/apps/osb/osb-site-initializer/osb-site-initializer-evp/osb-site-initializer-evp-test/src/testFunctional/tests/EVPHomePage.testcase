@@ -1,4 +1,4 @@
-@component-name = "OSB Site Initializer EVP"
+@component-name = "portal-site-management"
 definition {
 
 	var baseURL = PropsUtil.get("portal.url");
@@ -7,7 +7,6 @@ definition {
 	property osgi.modules.includes = "osb-site-initializer-evp";
 	property portal.release = "false";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "OSB Site Initializer EVP";
 
 	setUp {
@@ -15,6 +14,10 @@ definition {
 			TestCase.setUpPortalInstance();
 
 			User.firstLoginPG();
+		}
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
 		}
 
 		task ("Create a new EVP Site") {
@@ -38,7 +41,7 @@ definition {
 	@description = "LPS-161593 - Assert that Requests option only will be displayed to logged-in users."
 	@priority = 4
 	test CannotSeeRequestPageWithoutBeLoggedIn {
-		task ("Given an employee with the employee user role") {
+		task ("Given that an Employee user is on EVP Site") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "employee@liferay.com",
 				userLoginFullName = "Employee User");
@@ -46,21 +49,23 @@ definition {
 			EVPUtils.gotoEVP();
 		}
 
-		task ("and the employee can enter the Request page") {
+		task ("When the Employee navigates to Request page") {
 			EVPNavigator.goToNavItem(navItem = "Request");
+		}
 
+		task ("Then the Employee user can see the Resquest page") {
 			EVPNavigator.assertActiveBreadcrumb(activeItem = "Request");
 		}
 
-		task ("When the employee logs out") {
+		task ("When a unlogged user goes to EVP Page") {
 			User.logoutPG();
-		}
 
-		task ("Then the employee should not be able to view the Request tab") {
 			var portalURL = PropsUtil.get("portal.url");
 
 			Navigator.openSpecificURL(url = "${portalURL}/web/evp-portal");
+		}
 
+		task ("Then the user can't see the Request tab") {
 			EVPNavigator.navItemNotPresent(navItem = "Request");
 		}
 	}

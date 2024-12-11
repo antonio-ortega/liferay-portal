@@ -16,6 +16,11 @@ import {siteURL} from '../../../common/components/dashboard/utils/siteURL';
 import {Liferay} from '../../../common/services/liferay';
 
 import './index.css';
+import {ObjectActionName} from '../../../common/enums/objectActionName';
+import {PermissionActionType} from '../../../common/enums/permissionActionType';
+import {PRMPageRoute} from '../../../common/enums/prmPageRoute';
+import usePermissionActions from '../../../common/hooks/usePermissionActions';
+import {Filters} from '../../../common/utils/constants/filters';
 import {retry} from '../../../common/utils/retry';
 
 const DealsChart = () => {
@@ -24,14 +29,15 @@ const DealsChart = () => {
 	const [approvedLeads, setApprovedLeads] = useState([]);
 
 	const [loading, setLoading] = useState(false);
+	const actions = usePermissionActions(ObjectActionName.DEAL_REGISTRATION);
 
 	const getLeads = async () => {
 		setLoading(true);
 
 		// eslint-disable-next-line @liferay/portal/no-global-fetch
-		const responseApproved = await retry<Response>(() =>
+		const leads = await retry<any>(() =>
 			fetch(
-				"/o/c/leadsfs?pageSize=200&filter=leadType eq 'Partner Qualified Lead (PQL)' and leadStatus eq 'Qualified'",
+				`/o/c/leadsfs?pageSize=200&filter=${Filters.DEAL_DASHBOARD.deals}`,
 				{
 					headers: {
 						'accept': 'application/json',
@@ -41,47 +47,60 @@ const DealsChart = () => {
 			)
 		);
 
-		const responseRejected = await retry<Response>(() =>
-			fetch(
-				"/o/c/leadsfs?pageSize=200&filter=leadType eq 'Partner Qualified Lead (PQL)' and leadStatus eq 'CAM rejected'",
-				{
-					headers: {
-						'accept': 'application/json',
-						'x-csrf-token': Liferay.authToken,
-					},
+		if (leads) {
+			const currentYear = new Date().getFullYear();
+
+			const approvedData = leads.items.filter(
+				(lead: {
+					createdDate: string;
+					isConverted: boolean;
+					leadStatus: string;
+				}) => {
+					const createDateYear = new Date(
+						lead.createdDate
+					).getFullYear();
+
+					return lead.isConverted && createDateYear === currentYear;
 				}
-			)
-		);
+			);
+			const rejectedData = leads.items.filter(
+				(lead: {createdDate: string; leadStatus: string}) => {
+					const createDateYear = new Date(
+						lead.createdDate
+					).getFullYear();
 
-		const responseSubmitted = await retry<Response>(() =>
-			fetch(
-				"/o/c/leadsfs?pageSize=200&filter=leadType eq 'Partner Qualified Lead (PQL)' and leadStatus ne 'Qualified' and leadStatus ne 'CAM rejected'",
-				{
-					headers: {
-						'accept': 'application/json',
-						'x-csrf-token': Liferay.authToken,
-					},
+					return (
+						lead.leadStatus === 'CAM rejected' &&
+						createDateYear === currentYear
+					);
 				}
-			)
-		);
+			);
+			const sumbittedData = leads.items.filter(
+				(lead: {
+					createdDate: string;
+					isConverted: boolean;
+					leadStatus: string;
+				}) => {
+					const createDateYear = new Date(
+						lead.createdDate
+					).getFullYear();
 
-		if (
-			responseApproved.ok &&
-			responseRejected.ok &&
-			responseSubmitted.ok
-		) {
-			const approvedData = await responseApproved.json();
-			const rejectedData = await responseRejected.json();
-			const sumbittedData = await responseSubmitted.json();
+					return (
+						lead.leadStatus !== 'CAM rejected' &&
+						!lead.isConverted &&
+						createDateYear === currentYear
+					);
+				}
+			);
 
-			setApprovedLeads(approvedData?.items);
-			setRejectedLeads(rejectedData?.items);
-			setSubmittedLeads(sumbittedData?.items);
+			setApprovedLeads(approvedData);
+			setRejectedLeads(rejectedData);
+			setSubmittedLeads(sumbittedData);
+
+			setLoading(false);
 
 			return;
 		}
-
-		setLoading(false);
 	};
 
 	useEffect(() => {
@@ -89,9 +108,9 @@ const DealsChart = () => {
 	}, []);
 
 	const leadsChartValues = getLeadsChartValues(
-		rejectedLeads,
 		submittedLeads,
-		approvedLeads
+		approvedLeads,
+		rejectedLeads
 	);
 
 	const Chart = () => {
@@ -129,17 +148,19 @@ const DealsChart = () => {
 			},
 		};
 		if (loading) {
-			<ClayLoadingIndicator className="mb-10 mt-9" size="md" />;
+			return <ClayLoadingIndicator className="mb-10 mt-10" size="md" />;
 		}
 
 		if (!loading && !leadsChartValues) {
-			<ClayAlert
-				className="mx-auto w-50"
-				displayType="info"
-				title="Info:"
-			>
-				No Data Available
-			</ClayAlert>;
+			return (
+				<ClayAlert
+					className="mx-auto text-center w-75"
+					displayType="info"
+					title="Info:"
+				>
+					No Data Available
+				</ClayAlert>
+			);
 		}
 
 		return (
@@ -159,34 +180,39 @@ const DealsChart = () => {
 
 	return (
 		<Container
-			className="deals-chart-card-height"
+			className="deals-chart-card-height justify-content-between"
 			footer={
-				<>
+				<div className="pt-5">
 					<ClayButton
-						className="border-brand-primary-darken-1 mt-2 text-brand-primary-darken-1"
+						className="bg-neutral-0 border-brand-primary-darken-1 text-brand-primary-darken-1"
 						displayType="secondary"
 						onClick={() =>
 							Liferay.Util.navigate(
 								`${siteURL}/sales/deal-registrations`
 							)
 						}
+						size="sm"
 						type="button"
 					>
 						View All
 					</ClayButton>
-					<ClayButton
-						className="btn btn-primary ml-4 mt-2"
-						displayType="primary"
-						onClick={() =>
-							Liferay.Util.navigate(
-								`${siteURL}/sales/deal-registrations/new`
-							)
-						}
-						type="button"
-					>
-						Register New Deal
-					</ClayButton>
-				</>
+
+					{actions?.includes(PermissionActionType.CREATE) && (
+						<ClayButton
+							className="btn btn-primary ml-4"
+							displayType="primary"
+							onClick={() =>
+								Liferay.Util.navigate(
+									`${siteURL}/${PRMPageRoute.CREATE_DEAL_REGISTRATION}`
+								)
+							}
+							size="sm"
+							type="button"
+						>
+							Register New Deal
+						</ClayButton>
+					)}
+				</div>
 			}
 			title="Deal Registrations"
 		>

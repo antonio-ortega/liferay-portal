@@ -15,15 +15,12 @@ import com.liferay.object.rest.filter.parser.ObjectDefinitionFilterParser;
 import com.liferay.object.rest.manager.v1_0.DefaultObjectEntryManager;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.service.ObjectDefinitionLocalService;
-import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.search.Sort;
-import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
-import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -53,6 +50,21 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = ObjectEntryHelper.class)
 public class ObjectEntryHelper {
+
+	public ObjectEntry addObjectEntry(
+			long companyId, String objectDefinitionExternalReferenceCode,
+			ObjectEntry objectEntry, String scopeKey)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.
+				getObjectDefinitionByExternalReferenceCode(
+					objectDefinitionExternalReferenceCode, companyId);
+
+		return _objectEntryManager.addObjectEntry(
+			_getDefaultDTOConverterContext(objectDefinition), objectDefinition,
+			objectEntry, scopeKey);
+	}
 
 	public List<ObjectEntry> getObjectEntries(
 			long companyId, String filterString, List<String> nestedFields,
@@ -96,11 +108,6 @@ public class ObjectEntryHelper {
 		return _withNestedFields(
 			nestedFields,
 			() -> {
-				PermissionThreadLocal.setPermissionChecker(
-					_permissionCheckerFactory.create(
-						_userLocalService.getUser(
-							objectDefinition.getUserId())));
-
 				DefaultObjectEntryManager defaultObjectEntryManager =
 					(DefaultObjectEntryManager)_objectEntryManager;
 
@@ -150,11 +157,6 @@ public class ObjectEntryHelper {
 		return _withNestedFields(
 			nestedFields,
 			() -> {
-				PermissionThreadLocal.setPermissionChecker(
-					_permissionCheckerFactory.create(
-						_userLocalService.getUser(
-							objectDefinition.getUserId())));
-
 				DefaultObjectEntryManager defaultObjectEntryManager =
 					(DefaultObjectEntryManager)_objectEntryManager;
 
@@ -181,17 +183,9 @@ public class ObjectEntryHelper {
 
 		return _withNestedFields(
 			nestedFields,
-			() -> {
-				PermissionThreadLocal.setPermissionChecker(
-					_permissionCheckerFactory.create(
-						_userLocalService.getUser(
-							objectDefinition.getUserId())));
-
-				return _objectEntryManager.getObjectEntry(
-					companyId, _getDefaultDTOConverterContext(objectDefinition),
-					objetEntryExternalReferenceCode, objectDefinition,
-					scopeKey);
-			});
+			() -> _objectEntryManager.getObjectEntry(
+				companyId, _getDefaultDTOConverterContext(objectDefinition),
+				objetEntryExternalReferenceCode, objectDefinition, scopeKey));
 	}
 
 	public ObjectEntry getObjectEntry(
@@ -241,35 +235,6 @@ public class ObjectEntryHelper {
 			_objectFieldLocalService.getObjectFields(
 				objectDefinition.getObjectDefinitionId()),
 			this::_getUniqueFieldName);
-	}
-
-	public boolean isValidObjectEntry(
-			long objectEntryId, String externalReferenceCode)
-		throws Exception {
-
-		if (objectEntryId == 0) {
-			return false;
-		}
-
-		com.liferay.object.model.ObjectEntry objectEntry =
-			_objectEntryLocalService.fetchObjectEntry(objectEntryId);
-
-		if (objectEntry == null) {
-			return false;
-		}
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				objectEntry.getObjectDefinitionId());
-
-		if (!Objects.equals(
-				objectDefinition.getExternalReferenceCode(),
-				externalReferenceCode)) {
-
-			return false;
-		}
-
-		return true;
 	}
 
 	private DTOConverterContext _getDefaultDTOConverterContext(
@@ -353,9 +318,6 @@ public class ObjectEntryHelper {
 	@Reference
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;
 
-	@Reference
-	private ObjectEntryLocalService _objectEntryLocalService;
-
 	@Reference(target = "(object.entry.manager.storage.type=default)")
 	private ObjectEntryManager _objectEntryManager;
 
@@ -364,9 +326,6 @@ public class ObjectEntryHelper {
 
 	@Reference
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
-
-	@Reference
-	private PermissionCheckerFactory _permissionCheckerFactory;
 
 	@Reference
 	private UserLocalService _userLocalService;

@@ -88,7 +88,7 @@ String userIdentifierExpression = attributeMappingDisplayContext.getUserIdentifi
 	<aui:input name="attribute:userAttributeMappingsPrefixes" type="hidden" value="<%= StringUtil.merge(attributeMappingDisplayContext.getPrefixes()) %>" />
 </aui:fieldset>
 
-<script>
+<aui:script>
 	function <portlet:namespace />evaluateAttributeMappingRows() {
 		document.querySelector(
 			'input[name="<portlet:namespace />attribute:userIdentifierExpressionPrefix"]'
@@ -139,6 +139,10 @@ String userIdentifierExpression = attributeMappingDisplayContext.getUserIdentifi
 				radioTarget.closest('label').classList.toggle('disabled', true);
 			}
 		}
+
+		radioTarget.value = selectTarget.name.substring(
+			selectTarget.name.lastIndexOf('-') + 1
+		);
 	}
 
 	var userAttributeMappings = document.getElementById(
@@ -181,4 +185,4 @@ String userIdentifierExpression = attributeMappingDisplayContext.getUserIdentifi
 		);
 
 	<portlet:namespace />evaluateAttributeMappingRows();
-</script>
+</aui:script>

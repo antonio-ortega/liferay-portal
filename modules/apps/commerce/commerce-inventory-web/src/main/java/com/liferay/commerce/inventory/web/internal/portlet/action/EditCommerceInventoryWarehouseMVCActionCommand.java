@@ -13,12 +13,14 @@ import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemServ
 import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.exception.CPInstanceUnitOfMeasureKeyException;
 import com.liferay.commerce.product.exception.NoSuchCPInstanceUnitOfMeasureException;
+import com.liferay.commerce.util.CommerceOrderItemQuantityFormatter;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -68,7 +70,8 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 				exception instanceof
 					DuplicateCommerceInventoryWarehouseItemException ||
 				exception instanceof MVCCException ||
-				exception instanceof NoSuchCPInstanceUnitOfMeasureException) {
+				exception instanceof NoSuchCPInstanceUnitOfMeasureException ||
+				exception instanceof PrincipalException.MustHavePermission) {
 
 				SessionErrors.add(actionRequest, exception.getClass());
 
@@ -84,21 +87,17 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 	}
 
 	private void _addCommerceInventoryWarehouse(ActionRequest actionRequest)
-		throws PortalException {
-
-		long commerceInventoryWarehouseId = ParamUtil.getLong(
-			actionRequest, "commerceInventoryWarehouseId");
-
-		BigDecimal quantity = (BigDecimal)ParamUtil.getNumber(
-			actionRequest, "quantity", BigDecimal.ZERO);
-		String sku = ParamUtil.getString(actionRequest, "sku");
-		String unitOfMeasure = ParamUtil.getString(
-			actionRequest, "unitOfMeasure");
+		throws Exception {
 
 		_commerceInventoryWarehouseItemService.
 			addCommerceInventoryWarehouseItem(
-				StringPool.BLANK, commerceInventoryWarehouseId, quantity, sku,
-				unitOfMeasure);
+				StringPool.BLANK,
+				ParamUtil.getLong(
+					actionRequest, "commerceInventoryWarehouseId"),
+				_commerceOrderItemQuantityFormatter.parse(
+					actionRequest, "quantity"),
+				ParamUtil.getString(actionRequest, "sku"),
+				ParamUtil.getString(actionRequest, "unitOfMeasure"));
 	}
 
 	private void _deleteCommerceInventoryWarehouse(ActionRequest actionRequest)
@@ -120,7 +119,7 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 	}
 
 	private void _updateCommerceInventoryWarehouse(ActionRequest actionRequest)
-		throws PortalException {
+		throws Exception {
 
 		long commerceInventoryWarehouseId = ParamUtil.getLong(
 			actionRequest, "commerceInventoryWarehouseId");
@@ -134,8 +133,8 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 				fetchCommerceInventoryWarehouseItem(
 					commerceInventoryWarehouseId, sku, unitOfMeasureKey);
 
-		BigDecimal quantity = (BigDecimal)ParamUtil.getNumber(
-			actionRequest, "quantity", BigDecimal.ZERO);
+		BigDecimal quantity = _commerceOrderItemQuantityFormatter.parse(
+			actionRequest, "quantity");
 
 		if (commerceInventoryWarehouseItem == null) {
 			_commerceInventoryWarehouseItemService.
@@ -162,6 +161,10 @@ public class EditCommerceInventoryWarehouseMVCActionCommand
 	@Reference
 	private CommerceInventoryWarehouseItemService
 		_commerceInventoryWarehouseItemService;
+
+	@Reference
+	private CommerceOrderItemQuantityFormatter
+		_commerceOrderItemQuantityFormatter;
 
 	@Reference
 	private Portal _portal;

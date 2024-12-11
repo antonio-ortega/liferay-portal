@@ -15,6 +15,7 @@ import com.liferay.commerce.discount.exception.CommerceDiscountDisplayDateExcept
 import com.liferay.commerce.discount.exception.CommerceDiscountExpirationDateException;
 import com.liferay.commerce.discount.exception.CommerceDiscountLimitationTypeException;
 import com.liferay.commerce.discount.exception.CommerceDiscountMaxPriceValueException;
+import com.liferay.commerce.discount.exception.CommerceDiscountMinPriceValueException;
 import com.liferay.commerce.discount.exception.CommerceDiscountRuleTypeSettingsException;
 import com.liferay.commerce.discount.exception.CommerceDiscountTargetException;
 import com.liferay.commerce.discount.exception.CommerceDiscountTitleException;
@@ -58,7 +59,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -287,10 +287,6 @@ public class CommerceDiscountLocalServiceImpl
 			int expirationDateHour, int expirationDateMinute,
 			boolean neverExpire, ServiceContext serviceContext)
 		throws PortalException {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
 
 		// Commerce discount
 
@@ -644,35 +640,6 @@ public class CommerceDiscountLocalServiceImpl
 			commerceDiscountLocalService.deleteCommerceDiscount(
 				commerceDiscount);
 		}
-	}
-
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 *             #fetchByExternalReferenceCode(String, long)}
-	 */
-	@Deprecated
-	@Override
-	public CommerceDiscount fetchByExternalReferenceCode(
-		long companyId, String externalReferenceCode) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			return null;
-		}
-
-		return commerceDiscountPersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
-	}
-
-	@Override
-	public CommerceDiscount fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			return null;
-		}
-
-		return commerceDiscountPersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
 	}
 
 	@Override
@@ -1731,12 +1698,11 @@ public class CommerceDiscountLocalServiceImpl
 			true
 		).and(
 			() -> {
-				if (companyId != null) {
-					return CommerceDiscountTable.INSTANCE.companyId.eq(
-						companyId);
+				if (companyId == null) {
+					return null;
 				}
 
-				return null;
+				return CommerceDiscountTable.INSTANCE.companyId.eq(companyId);
 			}
 		).and(
 			CommerceDiscountTable.INSTANCE.status.eq(
@@ -1902,9 +1868,7 @@ public class CommerceDiscountLocalServiceImpl
 					CPInstance.class.getName()))
 		);
 
-		if (FeatureFlagManagerUtil.isEnabled("COMMERCE-11287") &&
-			!Validator.isBlank(unitOfMeasureKey)) {
-
+		if (!Validator.isBlank(unitOfMeasureKey)) {
 			andPredicate = andPredicate.and(
 				CommerceDiscountRelTable.INSTANCE.typeSettings.like(
 					StringBundler.concat(
@@ -1985,7 +1949,7 @@ public class CommerceDiscountLocalServiceImpl
 			CommerceDiscount commerceDiscount =
 				commerceDiscountPersistence.fetchByC_C_First(
 					companyId, couponCode,
-					new CommerceDiscountCreateDateComparator(true));
+					CommerceDiscountCreateDateComparator.getInstance(true));
 
 			if (((commerceDiscountId <= 0) && (commerceDiscount != null)) ||
 				((commerceDiscount != null) &&
@@ -2011,6 +1975,19 @@ public class CommerceDiscountLocalServiceImpl
 			((level4 != null) && (level4.compareTo(maxValue) > 0))) {
 
 			throw new CommerceDiscountMaxPriceValueException();
+		}
+
+		BigDecimal minValue = BigDecimal.valueOf(
+			GetterUtil.getDouble(CommercePriceConstants.PRICE_VALUE_MIN));
+
+		if (((maxDiscountAmount != null) &&
+			 (maxDiscountAmount.compareTo(minValue) < 0)) ||
+			((level1 != null) && (level1.compareTo(minValue) < 0)) ||
+			((level2 != null) && (level2.compareTo(minValue) < 0)) ||
+			((level3 != null) && (level3.compareTo(minValue) < 0)) ||
+			((level4 != null) && (level4.compareTo(minValue) < 0))) {
+
+			throw new CommerceDiscountMinPriceValueException();
 		}
 
 		if (commerceDiscountId > 0) {

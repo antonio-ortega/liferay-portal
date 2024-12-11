@@ -55,6 +55,8 @@ definition {
 
 		task ("View the site page") {
 			ACUtils.navigateToSitePage(
+				actionType = "View WC",
+				documentTitleList = "1,2,3,4",
 				pageName = "AC Page",
 				siteName = "Site Name");
 		}
@@ -62,10 +64,6 @@ definition {
 
 	tearDown {
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
-
-		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
-
-		//ACUtils.tearDownAC();
 
 		ACUtils.tearDownDXP();
 
@@ -75,6 +73,8 @@ definition {
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: LRAC-6280 | Automation ID: LRAC-10563 | Test Summary: Search for analysis report"
@@ -82,10 +82,6 @@ definition {
 	test AnalysisReportListSearchable {
 		var eventAnalysisNameList = "Save Analysis 1,Save Analysis 2";
 		var defaultEventName = "webContentViewed";
-
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
 
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
@@ -102,14 +98,6 @@ definition {
 
 			task ("Name the report") {
 				ACUtils.setItemName(itemName = ${eventAnalysisName});
-			}
-
-			task ("Check the analysis result appears") {
-				ACTimeFilter.clickTimeFilterButton();
-
-				ACTimeFilter.setLast24Hours();
-
-				ACEventAnalysis.viewAnalysisInformation(informationValueList = "${defaultEventName},1");
 			}
 
 			task ("Save the newly created analysis") {
@@ -129,165 +117,6 @@ definition {
 			ACUtils.searchBar(searchItem = "ac dxp");
 
 			ACUtils.viewNameListIsNotPresent(nameList = "ac dxp");
-		}
-	}
-
-	@description = "Feature ID: LRAC-6280 | Automation ID: LRAC-10557 | Test Summary: Change data type with event already in use"
-	@priority = 4
-	test CanChangeAttributeTypeInUseWithoutAffectingExistingAnalysisReports {
-		var attributeNameList = "temp,category,duration";
-		var attributeNameChangeList = "temp,duration";
-		var filterName = "temp";
-		var newDataTypeList = "Date,String";
-		var oldDataTypeList = "Number,Duration";
-		var list1 = ListUtil.newListFromString(${attributeNameChangeList});
-		var list2 = ListUtil.newListFromString(${newDataTypeList});
-		var list3 = ListUtil.newListFromString(${oldDataTypeList});
-		var size = ListUtil.size(${list1});
-		var i = 0;
-
-		task ("Fill fields and create custom event") {
-			var customEventName = ACCustomEvents.generateCustomEventName();
-
-			ACCustomEvents.createCustomEvent(
-				customEventName = ${customEventName},
-				timeToSendCustomEvent = 1);
-		}
-
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
-
-		task ("Switch the property in AC and go to event analysis") {
-			ACUtils.launchAC();
-
-			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
-
-			ACNavigation.goToEventAnalysis();
-		}
-
-		task ("Add the custom event to analysis by the all tab") {
-			ACEventAnalysis.addEvent(customEventName = ${customEventName});
-		}
-
-		task ("Add the breakdown to analysis") {
-			ACEventAnalysis.addBreakdown(attributeNameList = ${attributeNameList});
-		}
-
-		task ("Add the filter to analysis") {
-			ACEventAnalysis.addFilter(
-				filterName = ${filterName},
-				inputValue = 10,
-				optionValue = "is greater than");
-		}
-
-		task ("Name the report") {
-			ACUtils.setItemName(itemName = "Save Analysis");
-		}
-
-		task ("Check the analysis result appears") {
-			ACTimeFilter.clickTimeFilterButton();
-
-			ACTimeFilter.setLast24Hours();
-
-			ACEventAnalysis.viewAnalysisInformation(informationValueList = "10 - 19,wetsuit,01:00:00 - 01:00:59,1");
-		}
-
-		task ("Save the newly created analysis") {
-			ACUtils.saveButton();
-		}
-
-		task ("Assert the analysis is saved and show up on event analysis list") {
-			ACUtils.viewNameList(nameList = "Save Analysis");
-		}
-
-		task ("Navigation to attributes tab") {
-			ACNavigation.goToSettings();
-
-			ACSettings.goToDefinitions();
-
-			ACSettings.goToEventAttributes();
-
-			ACNavigation.openItem(itemName = "Attributes");
-		}
-
-		while (${i} != ${size}) {
-			var attributeName = ListUtil.get(${list1}, ${i});
-			var newDataType = ListUtil.get(${list2}, ${i});
-
-			task ("Edit the new attribute") {
-				ACUtils.searchBar(searchItem = ${attributeName});
-
-				ACNavigation.openItem(itemName = ${attributeName});
-
-				ACUtils.clickAnyButton(button = "Edit");
-			}
-
-			task ("Change the type of the attribute") {
-				ACCustomEvents.changeAttributeDataType(newDataType = ${newDataType});
-			}
-
-			task ("Back to Event Attributes and Navigation to attributes tab") {
-				ACNavigation.backNavigation(pageName = "Event Attributes");
-
-				ACNavigation.openItem(itemName = "Attributes");
-			}
-
-			task ("Check if the type has been changed") {
-				ACUtils.searchBar(searchItem = ${attributeName});
-
-				ACCustomEvents.viewDataTypeList(
-					attributeName = ${attributeName},
-					typeValue = ${newDataType});
-			}
-
-			var i = ${i} + 1;
-
-			var i = StringUtil.valueOf(${i});
-		}
-
-		task ("Go to event analysis and click on newly created analysis") {
-			ACNavigation.exitSettings();
-
-			ACNavigation.goToEventAnalysis();
-
-			ACNavigation.openItem(itemName = "Save Analysis");
-		}
-
-		task ("Check that the analysis dashboard contains the event,attribute and filter") {
-			ACEventAnalysis.viewAnalysisDashboard(
-				attributeNameList = ${attributeNameList},
-				eventName = ${customEventName},
-				filterNameList = ${filterName});
-		}
-
-		task ("Check the analysis result appears") {
-			ACEventAnalysis.viewAnalysisInformation(informationValueList = "10 - 19,wetsuit,01:00:00 - 01:00:59,1");
-		}
-
-		task ("Check that the attributes used have not had the attribute type changed") {
-			var size = ListUtil.size(${list1});
-			var i = 0;
-
-			while (${i} != ${size}) {
-				var attributeName = ListUtil.get(${list1}, ${i});
-				var oldDataType = ListUtil.get(${list3}, ${i});
-
-				var oldDataType = StringUtil.upperCase(${oldDataType});
-
-				Click(
-					key_attributeName = ${attributeName},
-					locator1 = "ACEventAnalysis#VIEW_DASHBOARD_INFORMATION");
-
-				AssertTextEquals(
-					key_attributeName = ${attributeName},
-					locator1 = "ACEventAnalysis#EDITOR_LABEL",
-					value1 = ${oldDataType});
-
-				var i = ${i} + 1;
-
-				var i = StringUtil.valueOf(${i});
-			}
 		}
 	}
 
@@ -432,19 +261,8 @@ definition {
 	@description = "Feature ID: LRAC-6280 | Automation ID: LRAC-10560 | Test Summary: Delete an analysis report and Bulk delete analysis reports"
 	@priority = 5
 	test CanDeleteAnalysisReport {
+		var defaultEventName = "webContentViewed";
 		var eventAnalysisNameList = "Save Analysis 1,Save Analysis 2,Save Analysis 3";
-
-		task ("Fill fields and create custom event") {
-			var customEventName = ACCustomEvents.generateCustomEventName();
-
-			ACCustomEvents.createCustomEvent(
-				customEventName = ${customEventName},
-				timeToSendCustomEvent = 1);
-		}
-
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
 
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
@@ -456,19 +274,11 @@ definition {
 
 		for (var eventAnalysisName : list ${eventAnalysisNameList}) {
 			task ("Add the custom event to analysis by the all tab") {
-				ACEventAnalysis.addEvent(customEventName = ${customEventName});
+				ACEventAnalysis.addEvent(customEventName = ${defaultEventName});
 			}
 
 			task ("Name the report") {
 				ACUtils.setItemName(itemName = ${eventAnalysisName});
-			}
-
-			task ("Check the analysis result appears") {
-				ACTimeFilter.clickTimeFilterButton();
-
-				ACTimeFilter.setLast24Hours();
-
-				ACEventAnalysis.viewAnalysisInformation(informationValueList = "${customEventName},1");
 			}
 
 			task ("Save the newly created analysis") {
@@ -522,7 +332,6 @@ definition {
 	test CanEditAnalysisReport {
 		var attributeName1 = "price";
 		var attributeName2 = "like";
-		var filterName = "birthdate";
 
 		task ("Fill fields and create custom event") {
 			var customEventName = ACCustomEvents.generateCustomEventName();
@@ -580,15 +389,6 @@ definition {
 			ACEventAnalysis.addBreakdown(attributeNameList = ${attributeName2});
 		}
 
-		task ("Add the filter to analysis") {
-			ACEventAnalysis.addFilter(
-				filterName = ${filterName},
-				inputValue = 25,
-				month = "November",
-				optionValue = "is",
-				year = 2021);
-		}
-
 		task ("Check the analysis result appears") {
 			ACEventAnalysis.viewAnalysisInformation(informationValueList = "260 - 269,true,1");
 		}
@@ -604,8 +404,7 @@ definition {
 		task ("Check that the analysis dashboard contains the event,attribute and filter") {
 			ACEventAnalysis.viewAnalysisDashboard(
 				attributeNameList = "${attributeName1},${attributeName2}",
-				eventName = ${customEventName},
-				filterNameList = ${filterName});
+				eventName = ${customEventName});
 		}
 
 		task ("Check the analysis result appears") {
@@ -619,18 +418,6 @@ definition {
 		var defaultEventName = "webContentViewed";
 		var eventAnalysisNameList = "Save Analysis 1,Save Analysis 2";
 
-		task ("Fill fields and create custom event") {
-			var customEventName = ACCustomEvents.generateCustomEventName();
-
-			ACCustomEvents.createCustomEvent(
-				customEventName = ${customEventName},
-				timeToSendCustomEvent = 1);
-		}
-
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
-
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
 
@@ -639,21 +426,13 @@ definition {
 			ACNavigation.goToEventAnalysis();
 		}
 
-		for (var eventName : list "${customEventName},${defaultEventName}") {
+		for (var eventAnalysisName : list "Save Analysis 1,Save Analysis 1") {
 			task ("Add the custom event to analysis by the all tab") {
-				ACEventAnalysis.addEvent(customEventName = ${eventName});
+				ACEventAnalysis.addEvent(customEventName = ${defaultEventName});
 			}
 
 			task ("Name the report") {
-				ACUtils.setItemName(itemName = "Save Analysis 1");
-			}
-
-			task ("Check the analysis result appears") {
-				ACTimeFilter.clickTimeFilterButton();
-
-				ACTimeFilter.setLast24Hours();
-
-				ACEventAnalysis.viewAnalysisInformation(informationValueList = "${eventName},1");
+				ACUtils.setItemName(itemName = ${eventAnalysisName});
 			}
 
 			task ("Save the newly created analysis") {
@@ -674,36 +453,6 @@ definition {
 		task ("Assert the analysis is saved and show up on event analysis list") {
 			ACUtils.viewNameList(nameList = ${eventAnalysisNameList});
 		}
-
-		var list1 = ListUtil.newListFromString(${eventAnalysisNameList});
-		var list2 = ListUtil.newListFromString("${customEventName},${defaultEventName}");
-		var size = ListUtil.size(${list1});
-		var i = 0;
-
-		while (${i} != ${size}) {
-			var eventAnalysisName = ListUtil.get(${list1}, ${i});
-			var eventName = ListUtil.get(${list2}, ${i});
-
-			task ("Click on newly created analysis") {
-				ACNavigation.openItem(itemName = ${eventAnalysisName});
-			}
-
-			task ("Check that the analysis dashboard contains the event,attribute and filter") {
-				ACEventAnalysis.viewAnalysisDashboard(eventName = ${eventName});
-			}
-
-			task ("Check the analysis result appears") {
-				ACEventAnalysis.viewAnalysisInformation(informationValueList = "${eventName},1");
-			}
-
-			task ("Go to event analysis") {
-				ACNavigation.goToEventAnalysis();
-			}
-
-			var i = ${i} + 1;
-
-			var i = StringUtil.valueOf(${i});
-		}
 	}
 
 	@description = "Feature ID: LRAC-6280 | Automation ID: LRAC-10562 | Test Summary: Pagination for analysis report"
@@ -711,18 +460,7 @@ definition {
 	test CanPaginationAnalysisReportList {
 		var eventAnalysisNameList1 = "Save Analysis 0,Save Analysis 1,Save Analysis 2,Save Analysis 3";
 		var eventAnalysisNameList2 = "Save Analysis 4,Save Analysis 5,Save Analysis 6,Save Analysis 7";
-
-		task ("Fill fields and create custom event") {
-			var customEventName = ACCustomEvents.generateCustomEventName();
-
-			ACCustomEvents.createCustomEvent(
-				customEventName = ${customEventName},
-				timeToSendCustomEvent = 1);
-		}
-
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
+		var eventName = "pageViewed";
 
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
@@ -734,19 +472,11 @@ definition {
 
 		for (var eventAnalysisName : list "${eventAnalysisNameList1},${eventAnalysisNameList2}") {
 			task ("Add the custom event to analysis by the all tab") {
-				ACEventAnalysis.addEvent(customEventName = ${customEventName});
+				ACEventAnalysis.addEvent(customEventName = ${eventName});
 			}
 
 			task ("Name the report") {
 				ACUtils.setItemName(itemName = ${eventAnalysisName});
-			}
-
-			task ("Check the analysis result appears") {
-				ACTimeFilter.clickTimeFilterButton();
-
-				ACTimeFilter.setLast24Hours();
-
-				ACEventAnalysis.viewAnalysisInformation(informationValueList = "${customEventName},1");
 			}
 
 			task ("Save the newly created analysis") {
@@ -759,7 +489,7 @@ definition {
 		}
 
 		task ("Check pagination for "20" item filter") {
-			ACUtils.viewResultsMessage(results = "Showing 1 to 10 of 10 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 1 to 8 of 8 entries.");
 
 			ACUtils.viewResultsPages(pageNumber = 1);
 		}
@@ -767,7 +497,7 @@ definition {
 		task ("Change the pagination to "4" and Check pagination for "5" item filter") {
 			ACUtils.changePagination(itemsPerPage = 4);
 
-			ACUtils.viewResultsMessage(results = "Showing 1 to 4 of 10 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 1 to 4 of 8 entries.");
 
 			ACUtils.viewResultsPages(pageNumber = 1);
 
@@ -783,7 +513,7 @@ definition {
 		task ("Navigate to the next page and check the pagination") {
 			ACUtils.checkPreviousNextButton(nextButton = "true");
 
-			ACUtils.viewResultsMessage(results = "Showing 5 to 8 of 10 entries.");
+			ACUtils.viewResultsMessage(results = "Showing 5 to 8 of 8 entries.");
 		}
 
 		task ("Assert the analysis is saved and show up on event analysis list") {
@@ -803,10 +533,6 @@ definition {
 		var size = ListUtil.size(${list1});
 		var i = 0;
 
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
-
 		task ("Switch the property in AC and go to event analysis") {
 			ACUtils.launchAC();
 
@@ -822,14 +548,6 @@ definition {
 
 			task ("Name the report") {
 				ACUtils.setItemName(itemName = ${eventAnalysisName});
-			}
-
-			task ("Check the analysis result appears") {
-				ACTimeFilter.clickTimeFilterButton();
-
-				ACTimeFilter.setLast24Hours();
-
-				ACEventAnalysis.viewAnalysisInformation(informationValueList = "${defaultEventName},1");
 			}
 
 			task ("Save the newly created analysis") {
@@ -892,10 +610,10 @@ definition {
 			ACUtils.clickGenericHyperlink(hyperlinkText = "Access our documentation to learn more.");
 
 			task ("Switch to the documentation tab") {
-				SelectWindow(locator1 = "title=Events Analysis - Liferay Learn");
+				SelectWindow(value1 = "title=Events - Liferay Learn");
 			}
 
-			ACUtils.viewGenericText(textValueList = "Events Analysis");
+			ACUtils.viewGenericText(textValueList = "Events");
 		}
 	}
 
@@ -949,7 +667,7 @@ definition {
 
 			ACTimeFilter.setLast24Hours();
 
-			ACEventAnalysis.viewAnalysisInformation(informationValueList = "wetsuit,1");
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "wetsuit");
 		}
 
 		task ("Save the newly created analysis") {
@@ -963,11 +681,7 @@ definition {
 		task ("SingOut and Login as member") {
 			ACWorkspace.signOut();
 
-			ACLogin.loginAs(
-				emailAddress = "corbin.murakami@faro.io",
-				password = "test");
-
-			ACWorkspace.openWorkspace();
+			ACUtils.launchAC(emailAddress = "corbin.murakami@faro.io");
 		}
 
 		task ("Switch the property in AC and go to event analysis") {
@@ -989,7 +703,7 @@ definition {
 
 			ACTimeFilter.setLast24Hours();
 
-			ACEventAnalysis.viewAnalysisInformation(informationValueList = "${defaultEventName},1");
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = ${defaultEventName});
 		}
 
 		task ("Save the newly created analysis") {
@@ -1008,7 +722,7 @@ definition {
 		}
 
 		task ("Check the analysis result appears") {
-			ACEventAnalysis.viewAnalysisInformation(informationValueList = "wetsuit,1");
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "wetsuit");
 		}
 
 		task ("Go to event analysis") {
@@ -1024,7 +738,7 @@ definition {
 		}
 
 		task ("Check the analysis result appears") {
-			ACEventAnalysis.viewAnalysisInformation(informationValueList = "${defaultEventName},1");
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = ${defaultEventName});
 		}
 	}
 

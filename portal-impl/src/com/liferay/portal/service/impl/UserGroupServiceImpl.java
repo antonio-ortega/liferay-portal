@@ -13,7 +13,6 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.SortFactoryUtil;
-import com.liferay.portal.kernel.security.membershippolicy.UserGroupMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -26,6 +25,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.comparator.UserGroupIdComparator;
+import com.liferay.portal.security.membershippolicy.UserGroupMembershipPolicyUtil;
 import com.liferay.portal.service.base.UserGroupServiceBaseImpl;
 import com.liferay.portal.service.permission.UserGroupPermissionUtil;
 import com.liferay.portal.service.persistence.constants.UserGroupFinderConstants;
@@ -193,7 +193,7 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 
 		return userGroupPersistence.filterFindByGtU_C_P(
 			gtUserGroupId, companyId, parentUserGroupId, 0, size,
-			new UserGroupIdComparator(true));
+			UserGroupIdComparator.getInstance(true));
 	}
 
 	/**
@@ -224,6 +224,22 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 
 		UserGroup userGroup = userGroupLocalService.getUserGroup(
 			user.getCompanyId(), name);
+
+		UserGroupPermissionUtil.check(
+			getPermissionChecker(), userGroup.getUserGroupId(),
+			ActionKeys.VIEW);
+
+		return userGroup;
+	}
+
+	@Override
+	public UserGroup getUserGroupByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		UserGroup userGroup =
+			userGroupLocalService.getUserGroupByExternalReferenceCode(
+				externalReferenceCode, companyId);
 
 		UserGroupPermissionUtil.check(
 			getPermissionChecker(), userGroup.getUserGroupId(),

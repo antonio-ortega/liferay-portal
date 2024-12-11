@@ -1,11 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-site-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Echo Accessibility";
-	property testray.main.component.name = "Navigation";
+	property testray.main.component.name = "Navigation Menus";
 
 	static var randomSiteName = StringUtil.randomString(8);
 
@@ -65,11 +64,11 @@ definition {
 
 		task ("Then the screen reader should announce relevant info") {
 			AssertAttributeValue(
-				attribute1 = "title",
 				key_itemName = "Web Content Title",
 				key_relationship = "before",
 				locator1 = "SiteNavigationMenu#ITEM_ENTRY_ADD_ICON",
-				value1 = "Add item before Web Content Title.");
+				value1 = "title",
+				value2 = "Add item before Web Content Title.");
 		}
 
 		task ("When the navigation menu creator focuses on the below plus icon of Web Content Article type item") {
@@ -81,11 +80,11 @@ definition {
 
 		task ("Then the screen reader should announce relevant info") {
 			AssertAttributeValue(
-				attribute1 = "title",
 				key_itemName = "Web Content Title",
 				key_relationship = "after",
 				locator1 = "SiteNavigationMenu#ITEM_ENTRY_ADD_ICON",
-				value1 = "Add item after Web Content Title.");
+				value1 = "title",
+				value2 = "Add item after Web Content Title.");
 		}
 
 		task ("When the navigation menu creator focuses on the card body of Web Content Article type item via Tab key") {

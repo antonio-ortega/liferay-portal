@@ -23,6 +23,7 @@ import {FormProvider, useForm, useFormState} from '../../core/hooks/useForm.es';
 import {
 	activePageReducer,
 	fieldReducer,
+	historyReducer,
 	languageReducer,
 	pageValidationReducer,
 	pagesStructureReducer,
@@ -145,10 +146,10 @@ const useFormSubmit = ({apiRef, containerRef}) => {
 			bodyHTML: Liferay.ThemeDisplay.isSignedIn()
 				? Liferay.Language.get(
 						'you-need-to-be-signed-in-to-submit-this-form'
-				  )
+					)
 				: Liferay.Language.get(
 						'you-need-to-reload-the-page-to-submit-this-form'
-				  ),
+					),
 			buttons: [
 				{
 					displayType: 'secondary',
@@ -184,15 +185,25 @@ const useFormSubmit = ({apiRef, containerRef}) => {
 				title,
 			});
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
-		if (containerRef.current) {
-			const form = getFormNode(containerRef.current);
+		const container = containerRef.current;
 
-			if (form) {
-				const onHandle = Liferay.on(
+		if (!container) {
+			return;
+		}
+
+		let form;
+		let formSubmitHandler;
+
+		const waitForElementHandler = waitForElement(
+			container,
+			getFormNode,
+			(form) => {
+				formSubmitHandler = Liferay.on(
 					'submitForm',
 					(event) => {
 						if (event.form && event.form.getDOM() === form) {
@@ -203,14 +214,14 @@ const useFormSubmit = ({apiRef, containerRef}) => {
 				);
 
 				form.addEventListener('submit', handleFormSubmitted);
-
-				return () => {
-					onHandle.detach();
-
-					form.removeEventListener('submit', handleFormSubmitted);
-				};
 			}
-		}
+		);
+
+		return () => {
+			form?.removeEventListener('submit', handleFormSubmitted);
+			formSubmitHandler?.detach();
+			waitForElementHandler.dispose();
+		};
 	}, [containerRef, handleFormSubmitted]);
 };
 
@@ -426,6 +437,7 @@ export const FormView = React.forwardRef((props, ref) => {
 						activePageReducer,
 						fieldReducer,
 						languageReducer,
+						historyReducer,
 						objectRelationshipReducer,
 						pagesStructureReducer,
 						pageValidationReducer,
@@ -447,5 +459,38 @@ export const FormView = React.forwardRef((props, ref) => {
 });
 
 FormView.displayName = 'FormView';
+
+function waitForElement(container, getElement, callback) {
+	const element = getElement(container);
+
+	if (element) {
+		callback(element);
+
+		return {
+			dispose() {},
+		};
+	}
+
+	const mutationObserver = new MutationObserver(() => {
+		const element = getElement(container);
+
+		if (element) {
+			mutationObserver.disconnect();
+			callback(element);
+		}
+	});
+
+	mutationObserver.observe(container, {
+		attributes: false,
+		childList: true,
+		subtree: true,
+	});
+
+	return {
+		dispose() {
+			mutationObserver.disconnect();
+		},
+	};
+}
 
 export default FormView;

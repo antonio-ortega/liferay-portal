@@ -23,9 +23,21 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
+			User.loginPG(
+				password = PropsUtil.get("default.admin.password"),
+				userEmailAddress = "test@liferay.com");
+
+			PortalInstances.tearDownCP();
+
+			Site.tearDownCP();
+
 			PagesAdmin.tearDownCP();
 
 			BlogsEntry.tearDownCP();
+
+			DMDocument.tearDownCP();
+
+			Vocabulary.tearDownCP();
 		}
 	}
 
@@ -33,7 +45,7 @@ definition {
 	test AddAndDeleteBlogEntriesOnSeparateNodes {
 		property portal.upstream = "quarantine";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		Clustering.viewClusterStatusInConsole();
 
@@ -56,12 +68,12 @@ definition {
 			entryTitle = "Blogs Entry1 Title");
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
@@ -129,12 +141,12 @@ definition {
 		RecycleBin.emptyCP();
 
 		User.logoutPG(
-			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
+			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Navigator.gotoPage(pageName = "Test Page2");
@@ -159,7 +171,7 @@ definition {
 	@priority = 3
 	test CanAccessGogoShellOnAnyClusteredNode {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		GogoShell.openGogoShellAdmin();
 
@@ -171,7 +183,7 @@ definition {
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		GogoShell.openGogoShellAdmin(baseURL = "http://localhost:9080");
@@ -185,7 +197,7 @@ definition {
 	@priority = 3
 	test CanAddCategoryToDocumentOnSlaveNode {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		task ("Given a category") {
 			JSONCategory.addVocabulary(
@@ -209,7 +221,7 @@ definition {
 		task ("When the user clicks on the document from the slave node") {
 			User.loginPG(
 				nodePort = 9080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			DMNavigator.openDocumentsAndMediaAdmin(
@@ -232,91 +244,36 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-170924."
-	@priority = 5
-	test CanCreateVirtualInstanceWithClusterDBPartitioningAndLOLProperties {
-		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.baker.com";
-		property database.partition.enabled = "true";
-		property liferay.online.properties = "true";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		Clustering.viewClusterStatusInConsole();
-
-		Page.assertNodePortPG(nodePort = 8080);
-
-		Navigator.openURL();
-
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
-
-		PortalInstances.addCP(
-			mailDomain = "www.baker.com",
-			virtualHost = "www.baker.com",
-			webId = "www.baker.com");
-
-		Navigator.openSpecificURL(url = "http://www.baker.com:8080");
-
-		User.firstLoginPG(
-			password = "test",
-			userEmailAddress = "test@www.baker.com",
-			virtualHostsURL = "http://www.baker.com:8080");
-
-		Navigator.openSpecificURL(url = "http://www.baker.com:9080");
-
-		User.firstLoginUI(
-			password = "test",
-			specificURL = "http://www.baker.com:9080",
-			userEmailAddress = "test@www.baker.com");
-
-		Clustering.viewTextNotPresentOnSpecificNode(
-			exceptionText = "No default user was found for company",
-			nodePort = 8080);
-
-		Clustering.viewTextNotPresentOnSpecificNode(
-			exceptionText = "No default user was found for company",
-			nodePort = 9080);
-	}
-
 	@description = "This is a use case for LPS-171011."
 	@priority = 5
 	test CanCreateVirtualInstanceWithClustering {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		Clustering.viewClusterStatusInConsole();
 
 		Page.assertNodePortPG(nodePort = 8080);
 
-		Navigator.openURL();
-
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Virtual Instances");
+		PortalInstances.openVirtualInstancesAdmin();
 
 		PortalInstances.addCP(
 			mailDomain = "www.able.com",
 			virtualHost = "www.able.com",
 			webId = "www.able.com");
 
-		WaitForElementNotPresent(locator1 = "IFrame#MODAL_BODY");
-
 		Navigator.openSpecificURL(url = "http://www.able.com:8080");
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 
 		Navigator.openSpecificURL(url = "http://www.able.com:9080");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:9080",
 			userEmailAddress = "test@www.able.com");
 
@@ -334,19 +291,19 @@ definition {
 		property custom.properties = "virtual.hosts.valid.hosts=localhost,127.0.0.1,www.able.com";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		Clustering.viewClusterStatusInConsole();
 
 		Page.assertNodePortPG(nodePort = 8080);
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
@@ -361,14 +318,14 @@ definition {
 		Navigator.openSpecificURL(url = "http://www.able.com:8080");
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 
 		Navigator.openSpecificURL(url = "http://www.able.com:9080");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:9080",
 			userEmailAddress = "test@www.able.com");
 
@@ -448,10 +405,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+		ServerAdministration.openServerAdmin();
 
 		ServerAdministration.addCategoryLogLevels(
 			categoryLevel = "DEBUG",
@@ -464,7 +418,7 @@ definition {
 		for (var serverPort : list "8080,9080") {
 			User.loginPG(
 				nodePort = ${serverPort},
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			Clustering.viewTextPresentOnSpecificNode(
@@ -480,12 +434,12 @@ definition {
 		property test.run.type = "single";
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		ServerAdministration.openServerAdmin(baseURL = "http://localhost:9080");
@@ -501,7 +455,7 @@ definition {
 		for (var serverPort : list "8080,9080,10080") {
 			User.loginPG(
 				nodePort = ${serverPort},
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			Clustering.viewTextPresentOnSpecificNode(
@@ -527,7 +481,7 @@ definition {
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
@@ -549,7 +503,7 @@ definition {
 
 		User.firstLoginUI(
 			authenticationMethod = "By Screen Name",
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:9080",
 			userScreenName = "test");
 
@@ -572,7 +526,7 @@ definition {
 		User.logoutPG(specificURL = "http://localhost:9080");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:8080",
 			userEmailAddress = "test@liferay.com");
 
@@ -602,7 +556,7 @@ definition {
 		User.firstLoginUI(
 			authenticationMethod = "By Screen Name",
 			nodePort = 8080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userScreenName = "test");
 
 		Page.assertNodePortPG(nodePort = 8080);
@@ -630,7 +584,7 @@ definition {
 
 		User.firstLoginUI(
 			authenticationMethod = "By Screen Name",
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:9080",
 			userScreenName = "test");
 
@@ -647,7 +601,7 @@ definition {
 	test EnableAndDisableFeatureFlagOnMasterNode {
 		property custom.properties = "feature.flag.ui.visible[dev]=true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		task ("Given a feature is disabled on both nodes") {
 			for (var nodePort : list "9080,8080") {
@@ -664,7 +618,7 @@ definition {
 
 				User.loginPG(
 					nodePort = ${nodePort},
-					password = "test",
+					password = PropsUtil.get("default.admin.password"),
 					userEmailAddress = "test@liferay.com");
 			}
 		}
@@ -689,7 +643,7 @@ definition {
 
 				User.loginPG(
 					nodePort = ${nodePort},
-					password = "test",
+					password = PropsUtil.get("default.admin.password"),
 					userEmailAddress = "test@liferay.com");
 			}
 		}
@@ -721,7 +675,7 @@ definition {
 				if (${nodePort} == 9080) {
 					User.loginPG(
 						nodePort = ${nodePort},
-						password = "test",
+						password = PropsUtil.get("default.admin.password"),
 						userEmailAddress = "test@liferay.com");
 				}
 			}
@@ -732,7 +686,7 @@ definition {
 	test EnableAndDisableFeatureFlagOnSlaveNode {
 		property custom.properties = "feature.flag.ui.visible[dev]=true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		task ("Given a feature is disabled on both nodes") {
 			for (var nodePort : list "9080,8080") {
@@ -750,7 +704,7 @@ definition {
 				if (${nodePort} == 9080) {
 					User.loginPG(
 						nodePort = ${nodePort},
-						password = "test",
+						password = PropsUtil.get("default.admin.password"),
 						userEmailAddress = "test@liferay.com");
 				}
 			}
@@ -777,7 +731,7 @@ definition {
 
 				User.loginPG(
 					nodePort = ${nodePort},
-					password = "test",
+					password = PropsUtil.get("default.admin.password"),
 					userEmailAddress = "test@liferay.com");
 			}
 		}
@@ -810,7 +764,7 @@ definition {
 				if (${nodePort} == 8080) {
 					User.loginPG(
 						nodePort = ${nodePort},
-						password = "test",
+						password = PropsUtil.get("default.admin.password"),
 						userEmailAddress = "test@liferay.com");
 				}
 			}
@@ -836,7 +790,7 @@ definition {
 				if (${nodePort} == 9080) {
 					User.loginPG(
 						nodePort = ${nodePort},
-						password = "test",
+						password = PropsUtil.get("default.admin.password"),
 						userEmailAddress = "test@liferay.com");
 				}
 
@@ -853,6 +807,37 @@ definition {
 		}
 	}
 
+	@priority = 3
+	test NoErrorOnNodeStartupIfCacheManagerNotReady {
+		property test.assert.javascript.errors = "false";
+		property test.assert.liferay.errors = "false";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
+
+		Clustering.shutdownSpecificServer(nodePort = 9080);
+
+		ServerAdministration.openServerAdmin();
+
+		var script = '''
+			import com.liferay.portal.kernel.service.UserLocalServiceUtil
+			import com.liferay.portal.kernel.util.PortalUtil
+
+			userId = PortalUtil.getUserId(actionRequest);
+
+			(1..1000).each {
+			UserLocalServiceUtil.updateAgreedToTermsOfUse(userId, true)
+			sleep 50
+			}
+		''';
+
+		ServerAdministration.executeScript(
+			language = "Groovy",
+			script = ${script},
+			skipSuccessAssert = "true");
+
+		Clustering.startSpecificServer(nodePort = 9080);
+	}
+
 	@priority = 5
 	test ShutdownAndStartupNodes {
 		property portal.upstream = "quarantine";
@@ -864,12 +849,12 @@ definition {
 		Page.assertNodePortPG(nodePort = 8080);
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
@@ -886,12 +871,12 @@ definition {
 		Page.assertNodePortPG(nodePort = 9080);
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 8080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 8080);
@@ -906,12 +891,12 @@ definition {
 		Page.assertNodePortPG(nodePort = 8080);
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
@@ -944,12 +929,12 @@ definition {
 			nodePort = 8080);
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 8080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Groovy.runScriptViaGogoShell(
@@ -975,7 +960,7 @@ definition {
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 
@@ -997,14 +982,14 @@ definition {
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 
 	@priority = 4
 	test ValidateDocumentOnSeparateNodes {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		Clustering.viewClusterStatusInConsole();
 
@@ -1031,12 +1016,12 @@ definition {
 		DMDocument.viewAllPG(dmDocumentTitle = "DM Document Title");
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
@@ -1048,12 +1033,12 @@ definition {
 		DMDocument.viewAllPG(dmDocumentTitle = "DM Document Title");
 
 		User.logoutPG(
-			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
+			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 
@@ -1065,34 +1050,25 @@ definition {
 
 		Clustering.viewClusterStatusInConsole();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Monitoring");
+		UserTracker.openMonitoringAdmin();
 
 		Clustering.viewLiveSessionCount(count = 1);
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Monitoring");
+		UserTracker.openMonitoringAdmin(baseURL = "http://localhost:9080");
 
 		Clustering.viewLiveSessionCount(count = 2);
 
 		User.loginPG(
 			nodePort = 8080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Monitoring");
+		UserTracker.openMonitoringAdmin();
 
 		Clustering.viewLiveSessionCount(count = 3);
 
@@ -1100,13 +1076,10 @@ definition {
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Monitoring");
+		UserTracker.openMonitoringAdmin(baseURL = "http://localhost:9080");
 
 		Clustering.viewLiveSessionCount(count = 3);
 	}
@@ -1115,7 +1088,7 @@ definition {
 	@priority = 4
 	test ValidatePublishOnTwoNodes {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		Clustering.viewClusterStatusInConsole();
 
@@ -1154,12 +1127,12 @@ definition {
 		Staging.publishToLive();
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
@@ -1190,12 +1163,12 @@ definition {
 		Staging.publishToLive();
 
 		User.logoutPG(
-			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
+			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Navigator.gotoSitePage(
@@ -1257,12 +1230,12 @@ definition {
 			value1 = "New Page Name");
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);
@@ -1277,7 +1250,7 @@ definition {
 
 		// Pausing 300 seconds due to LRQA-75909
 
-		Pause(locator1 = 300000);
+		Pause(value1 = 300000);
 
 		Navigator.gotoSpecificURLPage(
 			pageName = "Home",
@@ -1296,12 +1269,12 @@ definition {
 		Staging.deactivateStagingCP(siteName = ${siteName});
 
 		User.logoutPG(
-			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
+			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 

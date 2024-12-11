@@ -18,6 +18,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.util.CommerceCheckoutStepRegistry;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -105,9 +106,6 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 			CommerceOrder commerceOrder = _getCommerceOrder(renderRequest);
 
 			if (commerceOrder != null) {
-				renderRequest.setAttribute(
-					CommerceCheckoutWebKeys.COMMERCE_ORDER, commerceOrder);
-
 				HttpServletRequest httpServletRequest =
 					_portal.getHttpServletRequest(renderRequest);
 				HttpServletResponse httpServletResponse =
@@ -159,7 +157,7 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 
 			CheckoutDisplayContext checkoutDisplayContext =
 				new CheckoutDisplayContext(
-					_commerceCheckoutStepRegistry,
+					_commerceCheckoutStepRegistry, _configurationProvider,
 					_portal.getLiferayPortletRequest(renderRequest),
 					_portal.getLiferayPortletResponse(renderResponse), _portal);
 
@@ -190,6 +188,14 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 	private CommerceOrder _getCommerceOrder(PortletRequest portletRequest)
 		throws PortalException {
 
+		CommerceOrder commerceOrder =
+			(CommerceOrder)portletRequest.getAttribute(
+				CommerceCheckoutWebKeys.COMMERCE_ORDER);
+
+		if (commerceOrder != null) {
+			return commerceOrder;
+		}
+
 		String commerceOrderUuid = ParamUtil.getString(
 			portletRequest, "commerceOrderUuid");
 
@@ -199,27 +205,27 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 					getCommerceChannelGroupIdBySiteGroupId(
 						_portal.getScopeGroupId(portletRequest));
 
-			return _commerceOrderService.getCommerceOrderByUuidAndGroupId(
-				commerceOrderUuid, groupId);
+			commerceOrder =
+				_commerceOrderService.getCommerceOrderByUuidAndGroupId(
+					commerceOrderUuid, groupId);
+		}
+		else {
+			commerceOrder = _commerceOrderHttpHelper.getCurrentCommerceOrder(
+				_portal.getHttpServletRequest(portletRequest));
 		}
 
-		return _commerceOrderHttpHelper.getCurrentCommerceOrder(
-			_portal.getHttpServletRequest(portletRequest));
+		portletRequest.setAttribute(
+			CommerceCheckoutWebKeys.COMMERCE_ORDER, commerceOrder);
+
+		return commerceOrder;
 	}
 
 	private String _getOrderDetailsURL(
 			PortletRequest portletRequest, CommerceOrder commerceOrder)
 		throws PortalException {
 
-		PortletURL portletURL =
-			_commerceOrderHttpHelper.getCommerceCartPortletURL(
-				_portal.getHttpServletRequest(portletRequest), commerceOrder);
-
-		if (portletURL == null) {
-			return StringPool.BLANK;
-		}
-
-		return portletURL.toString();
+		return _commerceOrderHttpHelper.getCommerceCartPortletURL(
+			_portal.getHttpServletRequest(portletRequest), commerceOrder);
 	}
 
 	private boolean _isOrderApproved(CommerceOrder commerceOrder)
@@ -266,6 +272,9 @@ public class CommerceCheckoutPortlet extends MVCPortlet {
 
 	@Reference
 	private CommerceOrderValidatorRegistry _commerceOrderValidatorRegistry;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private Portal _portal;

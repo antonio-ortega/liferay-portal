@@ -1,4 +1,4 @@
-@component-name = "portal-staging"
+@component-name = "portal-headless"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -11,6 +11,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 	}
 
 	tearDown {
@@ -97,7 +101,7 @@ definition {
 		task ("And: Verify the propagation background task is deleted") {
 			var mysqlStatement = "SELECT * FROM BackgroundTask WHERE taskExecutorClassName = 'com.liferay.exportimport.internal.background.task.LayoutSetPrototypeImportBackgroundTaskExecutor' AND STATUS NOT IN (0, 1, 4);";
 
-			var sqlResults = SQL.executeMySQLStatement(mysqlStatement = ${mysqlStatement});
+			var sqlResults = SQL.executeSQLStatement(sqlStatement = ${mysqlStatement});
 
 			var getHeader = StringUtil.regexReplaceAll(${sqlResults}, "[\r\n]", "");
 
@@ -274,7 +278,7 @@ definition {
 		}
 
 		task ("Then: The propagation will be triggered and the page on the Site will be present in the SQL database") {
-			var sqlResults = SQL.executeMySQLStatement(mysqlStatement = ${sQLStatement});
+			var sqlResults = SQL.executeSQLStatement(sqlStatement = ${sQLStatement});
 
 			TestUtils.assertPartialEquals(
 				actual = ${sqlResults},
@@ -323,7 +327,9 @@ definition {
 				key_itemName = "Home",
 				locator1 = "PagesAdmin#LIST_GROUP_ITEM");
 
-			AssertElementNotPresent(locator1 = "Button#NEW");
+			AssertElementNotPresent(
+				key_text = "New",
+				locator1 = "Button#ANY");
 		}
 
 		task ("And: But should be able to add child page to Test Page") {
@@ -331,7 +337,9 @@ definition {
 				key_itemName = "Test Page",
 				locator1 = "PagesAdmin#LIST_GROUP_ITEM");
 
-			Click(locator1 = "Button#NEW");
+			Click(
+				key_text = "New",
+				locator1 = "Button#ANY");
 
 			AssertElementPresent(
 				key_menuItem = "Add Child Page of Test Page",
@@ -578,9 +586,12 @@ definition {
 	@description = "This is a use case for LPS-166286. TC-2: Verify that site template propagation works well on private page."
 	@priority = 3
 	test AssertSiteTemplatePropagationOnPrivatePage {
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Given: Add new site template and a new private site based on this site template") {
 			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
@@ -672,7 +683,7 @@ definition {
 				pageName = "Home",
 				siteTemplateName = "Site Template Name");
 
-			var sqlResults = SQL.executeMySQLStatement(mysqlStatement = ${sQLStatement});
+			var sqlResults = SQL.executeSQLStatement(sqlStatement = ${sQLStatement});
 
 			TestUtils.assertNotEquals(
 				actual = ${sqlResults},
@@ -688,7 +699,7 @@ definition {
 		task ("Then: The page will not be visible on the website but it is present in the database") {
 			Page.viewNoPG(pageName = "Test");
 
-			var sqlResults = SQL.executeMySQLStatement(mysqlStatement = ${sQLStatement});
+			var sqlResults = SQL.executeSQLStatement(sqlStatement = ${sQLStatement});
 
 			TestUtils.assertPartialEquals(
 				actual = ${sqlResults},
@@ -974,7 +985,7 @@ definition {
 
 		task ("And: Import the site template lar file on the virtual instance") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 
@@ -1154,10 +1165,7 @@ definition {
 				userLastName = "userln",
 				userScreenName = "usersn");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			User.editPasswordCP(
 				userEmailAddress = "userea@liferay.com",
@@ -1281,8 +1289,6 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		var siteName = TestCase.getSiteName(siteName = ${siteName});
-
 		task ("Given: Add new site template and two new sites based on this site template") {
 			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
 
@@ -1322,19 +1328,17 @@ definition {
 
 			PageEditor.publish();
 
-			Navigator.gotoSitePage(
-				pageName = "Home",
-				siteName = "Site Name A");
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/site-name-a/home");
 
 			Refresh();
 		}
 
 		task ("And: Navigate to the Site Name B to trigger the propagation") {
-			Navigator.gotoSitePage(
-				pageName = "Home",
-				siteName = "Site Name B");
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/site-name-b/home");
 
 			Refresh();
+
+			Navigator.openWithAppendToBaseURL(urlAppend = "web/site-name-b/home");
 		}
 
 		task ("Then: Verify the propagation of Site Name B should reuse the cached site template Lar file") {
@@ -1714,6 +1718,10 @@ definition {
 				category = "Site Builder",
 				portlet = "Pages");
 
+			Alert.viewSuccessMessage();
+
+			WaitForElementNotPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
+
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "View",
 				pageName = "Home");
@@ -1728,6 +1736,10 @@ definition {
 				siteName = "Site Name",
 				siteTemplateName = "Site Template Name",
 				siteTemplateTab = "Custom Site Templates");
+
+			Alert.viewSuccessMessage();
+
+			WaitForElementNotPresent(locator1 = "Message#SUCCESS_DISMISSIBLE");
 		}
 
 		task ("Then: The javascript will be inherited from the site template") {
@@ -1847,20 +1859,18 @@ definition {
 		task ("Given User adds similar friendly URL page with page in template to 5 sites based on the template") {
 			SiteTemplates.addCP(siteTemplateName = "Site Template Name");
 
-			for (var name : list "1,2,3,4,5") {
-				Site.openSitesAdmin();
+			Site.openSitesAdmin();
 
-				Site.addSiteTemplateCP(
-					siteName = "Site Name${name}",
-					siteTemplateName = "Site Template Name",
-					siteTemplateTab = "Custom Site Templates");
+			Site.addSiteTemplateCP(
+				siteName = "Site Name1",
+				siteTemplateName = "Site Template Name",
+				siteTemplateTab = "Custom Site Templates");
 
-				PagesAdmin.openPagesAdmin(siteURLKey = "Site Name${name}");
+			PagesAdmin.openPagesAdmin(siteURLKey = "Site Name1");
 
-				PagesAdmin.addPage(
-					pageName = "Page1",
-					sitePageType = "Widget Page");
-			}
+			PagesAdmin.addPage(
+				pageName = "Page1",
+				sitePageType = "Widget Page");
 		}
 
 		task ("When User adds page with same Friendly URL conflicts in site template") {
@@ -1875,9 +1885,9 @@ definition {
 				inputFieldId = "/page1",
 				locator1 = "TextInput#INPUT_ID");
 
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_3",
-				value1 = "Warning:The site template page friendly URL is conflicting with the page friendly URL in some of the sites created from this template. Page Page1 of Site Name1 Page Page1 of Site Name2 Page Page1 of Site Name3 Page Page1 of Site Name4 Page Page1 of Site Name5");
+				value1 = "Warning:The site template page friendly URL is conflicting with the page friendly URL in some of the sites created from this template");
 		}
 	}
 

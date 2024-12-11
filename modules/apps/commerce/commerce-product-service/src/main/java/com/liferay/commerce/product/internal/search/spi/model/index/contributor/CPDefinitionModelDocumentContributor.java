@@ -27,6 +27,8 @@ import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.service.CPConfigurationEntryLocalService;
+import com.liferay.commerce.product.service.CPConfigurationListLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLinkLocalService;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
@@ -45,6 +47,7 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -109,10 +112,11 @@ public class CPDefinitionModelDocumentContributor
 				cpDefinition.isAccountGroupFilterEnabled());
 			document.addKeyword(
 				CPField.ASSET_CATEGORY_NAMES,
-				_toLowerCaseStringArray(
+				TransformUtil.unsafeTransform(
 					_assetCategoryLocalService.getCategoryNames(
 						CPDefinition.class.getName(),
-						cpDefinition.getCPDefinitionId())));
+						cpDefinition.getCPDefinitionId()),
+					String::toLowerCase, String.class));
 
 			BigDecimal basePrice = _getBasePrice(cpDefinition.getCPInstances());
 
@@ -136,6 +140,10 @@ public class CPDefinitionModelDocumentContributor
 
 						return commerceChannel.getGroupId();
 					}));
+
+			document.addKeyword(
+				CPField.CP_CONFIGURATION_LIST_IDS,
+				_getCPConfigurationListIds(cpDefinition.getCPDefinitionId()));
 
 			long cpAttachmentFileEntryId = 0;
 
@@ -176,6 +184,11 @@ public class CPDefinitionModelDocumentContributor
 				CPField.EXTERNAL_REFERENCE_CODE,
 				cProduct.getExternalReferenceCode());
 
+			document.addKeyword(
+				CPField.GTINS,
+				TransformUtil.transformToArray(
+					cpDefinition.getCPInstances(), CPInstance::getGtin,
+					String.class));
 			document.addNumber(CPField.HEIGHT, cpDefinition.getHeight());
 			document.addKeyword(
 				CPField.IS_IGNORE_SKU_COMBINATIONS,
@@ -301,7 +314,9 @@ public class CPDefinitionModelDocumentContributor
 
 			document.addText(
 				Field.DESCRIPTION,
-				cpDefinition.getDescription(cpDefinitionDefaultLanguageId));
+				_htmlParser.extractText(
+					cpDefinition.getDescription(
+						cpDefinitionDefaultLanguageId)));
 			document.addKeyword(
 				Field.HIDDEN, _isHidden(cpDefinition, cProduct));
 			document.addText(
@@ -508,6 +523,11 @@ public class CPDefinitionModelDocumentContributor
 			_expandoBridgeIndexer.addAttributes(
 				document, cpDefinition.getExpandoBridge());
 
+			for (CPInstance cpInstance : cpDefinition.getCPInstances()) {
+				_expandoBridgeIndexer.addAttributes(
+					document, cpInstance.getExpandoBridge());
+			}
+
 			if (_log.isDebugEnabled()) {
 				_log.debug(
 					"Commerce product definition " + cpDefinition +
@@ -571,6 +591,16 @@ public class CPDefinitionModelDocumentContributor
 		}
 
 		return lowestPrice;
+	}
+
+	private String[] _getCPConfigurationListIds(long cpDefinitionId) {
+		return TransformUtil.transformToArray(
+			_cpConfigurationEntryLocalService.getCPConfigurationEntries(
+				_classNameLocalService.getClassNameId(CPDefinition.class),
+				cpDefinitionId, true),
+			cpConfigurationEntry -> String.valueOf(
+				cpConfigurationEntry.getCPConfigurationListId()),
+			String.class);
 	}
 
 	private List<CPOption> _getCPOptions(
@@ -655,14 +685,6 @@ public class CPDefinitionModelDocumentContributor
 		return false;
 	}
 
-	private String[] _toLowerCaseStringArray(String[] categoryNames) {
-		for (int i = 0; i < categoryNames.length; i++) {
-			categoryNames[i] = categoryNames[i].toLowerCase();
-		}
-
-		return categoryNames;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		CPDefinitionModelDocumentContributor.class);
 
@@ -685,6 +707,12 @@ public class CPDefinitionModelDocumentContributor
 	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
 
 	@Reference
+	private CPConfigurationEntryLocalService _cpConfigurationEntryLocalService;
+
+	@Reference
+	private CPConfigurationListLocalService _cpConfigurationListLocalService;
+
+	@Reference
 	private CPDefinitionLinkLocalService _cpDefinitionLinkLocalService;
 
 	@Reference
@@ -701,6 +729,9 @@ public class CPDefinitionModelDocumentContributor
 
 	@Reference
 	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
+
+	@Reference
+	private HtmlParser _htmlParser;
 
 	@Reference
 	private Language _language;

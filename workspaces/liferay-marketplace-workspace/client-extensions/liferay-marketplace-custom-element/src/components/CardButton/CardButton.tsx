@@ -6,10 +6,11 @@
 import classNames from 'classnames';
 import {MouseEvent, ReactNode} from 'react';
 
-import sitesIcon from '../../assets/icons/sites_icon.svg';
-
 import './CardButton.scss';
-import {StepType} from '../../pages/GetAppPage/enums/stepType';
+
+import ClayIcon from '@clayui/icon';
+
+import {StepType} from '../../pages/GetApp/enums/stepType';
 
 export function CardButton({
 	description,
@@ -22,7 +23,7 @@ export function CardButton({
 	title,
 }: {
 	description: string;
-	disabled: boolean;
+	disabled?: boolean;
 	icon?: ReactNode;
 	iconRight?: boolean;
 	onClick: (event: MouseEvent) => void;
@@ -39,20 +40,20 @@ export function CardButton({
 			onClick={disabled ? () => {} : onClick}
 		>
 			{step === StepType.PAYMENT ? (
-				<img
-					alt="trial"
+				<ClayIcon
+					aria-label="trial"
 					className="card-button-icon"
-					src={icon as string}
+					symbol={icon as string}
 				/>
 			) : (
 				!iconRight &&
 				(icon ? (
 					icon
 				) : (
-					<img
-						alt="sites-icon"
+					<ClayIcon
+						aria-label="sites-icon"
 						className="card-button-icon"
-						src={sitesIcon}
+						symbol="sites"
 					/>
 				))
 			)}
@@ -68,7 +69,7 @@ export function CardButton({
 						{step !== StepType.PAYMENT && iconRight && icon}
 					</div>
 
-					<div
+					<small
 						className={classNames({
 							'card-button-description':
 								step === StepType.PAYMENT,
@@ -77,7 +78,7 @@ export function CardButton({
 						})}
 					>
 						{description}
-					</div>
+					</small>
 				</div>
 			</div>
 		</div>

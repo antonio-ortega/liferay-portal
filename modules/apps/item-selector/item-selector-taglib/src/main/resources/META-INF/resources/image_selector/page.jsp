@@ -32,12 +32,12 @@ if (draggable) {
 %>
 
 <liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/image_selector.css") %>" rel="stylesheet" type="text/css" />
+	<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/image_selector.css") %>' rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <div>
 	<react:component
-		module="image_selector/js/ImageSelector"
+		module="{ImageSelector} from item-selector-taglib"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"fileEntryId", fileEntryId

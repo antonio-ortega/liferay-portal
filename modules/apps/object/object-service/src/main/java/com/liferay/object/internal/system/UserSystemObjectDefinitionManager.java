@@ -22,12 +22,16 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTable;
+import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -46,7 +50,7 @@ public class UserSystemObjectDefinitionManager
 		throws Exception {
 
 		UserAccountResource userAccountResource = _buildUserAccountResource(
-			user);
+			false, user);
 
 		UserAccount userAccount = userAccountResource.postUserAccount(
 			_toUserAccount(values));
@@ -64,6 +68,7 @@ public class UserSystemObjectDefinitionManager
 		return _userLocalService.deleteUser((User)baseModel);
 	}
 
+	@Override
 	public BaseModel<?> fetchBaseModelByExternalReferenceCode(
 		String externalReferenceCode, long companyId) {
 
@@ -102,8 +107,12 @@ public class UserSystemObjectDefinitionManager
 	}
 
 	@Override
-	public Map<Locale, String> getLabelMap() {
-		return createLabelMap("user");
+	public Map<String, String> getLabelKeys() {
+		return HashMapBuilder.put(
+			"label", "user"
+		).put(
+			"pluralLabel", "users"
+		).build();
 	}
 
 	@Override
@@ -193,8 +202,16 @@ public class UserSystemObjectDefinitionManager
 	}
 
 	@Override
-	public Map<Locale, String> getPluralLabelMap() {
-		return createLabelMap("users");
+	public Page<?> getPage(
+			User user, String search, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception {
+
+		UserAccountResource userAccountResource = _buildUserAccountResource(
+			true, user);
+
+		return userAccountResource.getUserAccountsPage(
+			search, filter, pagination, sorts);
 	}
 
 	@Override
@@ -246,7 +263,7 @@ public class UserSystemObjectDefinitionManager
 
 	@Override
 	public int getVersion() {
-		return 3;
+		return 4;
 	}
 
 	@Override
@@ -255,7 +272,7 @@ public class UserSystemObjectDefinitionManager
 		throws Exception {
 
 		UserAccountResource userAccountResource = _buildUserAccountResource(
-			user);
+			false, user);
 
 		UserAccount userAccount = userAccountResource.patchUserAccount(
 			primaryKey, _toUserAccount(values));
@@ -264,12 +281,14 @@ public class UserSystemObjectDefinitionManager
 			UserAccount.class.getName(), userAccount, user, values);
 	}
 
-	private UserAccountResource _buildUserAccountResource(User user) {
+	private UserAccountResource _buildUserAccountResource(
+		boolean checkPermissions, User user) {
+
 		UserAccountResource.Builder builder =
 			_userAccountResourceFactory.create();
 
 		return builder.checkPermissions(
-			false
+			checkPermissions
 		).preferredLocale(
 			user.getLocale()
 		).user(
@@ -280,15 +299,19 @@ public class UserSystemObjectDefinitionManager
 	private UserAccount _toUserAccount(Map<String, Object> values) {
 		return new UserAccount() {
 			{
-				additionalName = GetterUtil.getString(
-					values.get("additionalName"));
-				alternateName = GetterUtil.getString(
-					values.get("alternateName"));
-				emailAddress = GetterUtil.getString(values.get("emailAddress"));
-				externalReferenceCode = GetterUtil.getString(
-					values.get("externalReferenceCode"));
-				familyName = GetterUtil.getString(values.get("familyName"));
-				givenName = GetterUtil.getString(values.get("givenName"));
+				setAdditionalName(
+					() -> GetterUtil.getString(values.get("additionalName")));
+				setAlternateName(
+					() -> GetterUtil.getString(values.get("alternateName")));
+				setEmailAddress(
+					() -> GetterUtil.getString(values.get("emailAddress")));
+				setExternalReferenceCode(
+					() -> GetterUtil.getString(
+						values.get("externalReferenceCode")));
+				setFamilyName(
+					() -> GetterUtil.getString(values.get("familyName")));
+				setGivenName(
+					() -> GetterUtil.getString(values.get("givenName")));
 			}
 		};
 	}

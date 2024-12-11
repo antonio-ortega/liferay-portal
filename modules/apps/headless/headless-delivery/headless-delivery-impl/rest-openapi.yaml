@@ -9,11 +9,12 @@ components:
                     # @review
                     description:
                         The type of result.
-                    enum: [None, Notification, Page, URL]
+                    enum: [DisplayPage, None, Notification, Page, URL]
                     type:
                         string
                 value:
                     oneOf:
+                        - $ref: "#/components/schemas/DisplayPageActionExecutionResult"
                         - $ref: "#/components/schemas/NoneActionExecutionResult"
                         - $ref: "#/components/schemas/NotificationActionExecutionResult"
                         - $ref: "#/components/schemas/SitePageActionExecutionResult"
@@ -70,8 +71,7 @@ components:
                     readOnly: true
                     type: object
                 aggregateRating:
-                    allOf:
-                        - $ref: "#/components/schemas/AggregateRating"
+                    $ref: "#/components/schemas/AggregateRating"
                     description:
                         The blog post's average rating.
                     readOnly: true
@@ -84,8 +84,7 @@ components:
                         The blog post's body (content).
                     type: string
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The blog post's author.
                     readOnly: true
@@ -245,6 +244,10 @@ components:
                         The image's content type (e.g., `application/png`, etc.).
                     readOnly: true
                     type: string
+                externalReferenceCode:
+                    description:
+                        The image's external reference code.
+                    type: string
                 fileExtension:
                     description:
                         The image's file extension.
@@ -267,6 +270,7 @@ components:
                         The image's title text.
                     type: string
                 viewableBy:
+                    deprecated: true
                     description:
                         A write-only property that specifies the default permissions.
                     enum: [Anyone, Members, Owner]
@@ -411,8 +415,7 @@ components:
                     readOnly: true
                     type: object
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The comment's author.
                     readOnly: true
@@ -554,8 +557,7 @@ components:
                 (e.g., documents, geolocation, etc.).
             properties:
                 contentFieldValue:
-                    allOf:
-                        - $ref: "#/components/schemas/ContentFieldValue"
+                    $ref: "#/components/schemas/ContentFieldValue"
                     description:
                         The field's value.
                 contentFieldValue_i18n:
@@ -612,8 +614,7 @@ components:
                         The field's content for simple types.
                     type: string
                 document:
-                    allOf:
-                        - $ref: "#/components/schemas/ContentDocument"
+                    $ref: "#/components/schemas/ContentDocument"
                     description:
                         A content document element.
                 geo:
@@ -632,8 +633,7 @@ components:
                             type: number
                     type: object
                 image:
-                    allOf:
-                        - $ref: "#/components/schemas/ContentDocument"
+                    $ref: "#/components/schemas/ContentDocument"
                     description:
                         A content document element that stores an image file.
                 link:
@@ -651,8 +651,7 @@ components:
                             readOnly: true
                             type: string
                         embeddedStructuredContent:
-                            allOf:
-                                - $ref: "#/components/schemas/StructuredContent"
+                            $ref: "#/components/schemas/StructuredContent"
                             # @review
                             description:
                                 Optional field with the structured content, can be embedded with nestedFields.
@@ -730,8 +729,7 @@ components:
                     readOnly: true
                     type: array
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The content structure's creator.
                     readOnly: true
@@ -923,8 +921,7 @@ components:
                     format: int64
                     type: integer
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     # @review
                     description:
                         The content template's creator.
@@ -1015,6 +1012,11 @@ components:
                     # @review
                     description:
                         The type of the content.
+                    readOnly: true
+                    type: string
+                externalReferenceCode:
+                    description:
+                        The external reference code of the author.
                     readOnly: true
                     type: string
                 familyName:
@@ -1112,8 +1114,7 @@ components:
                 geolocation, strings, etc.).
             properties:
                 customValue:
-                    allOf:
-                        - $ref: "#/components/schemas/CustomValue"
+                    $ref: "#/components/schemas/CustomValue"
                     description:
                         The field's value.
                 dataType:
@@ -1166,10 +1167,26 @@ components:
                         The localized field's content values for simple types.
                     type: object
                 geo:
-                    allOf:
-                        - $ref: "#/components/schemas/Geo"
+                    $ref: "#/components/schemas/Geo"
                     description:
                         A point determined by latitude and longitude.
+            type: object
+        DisplayPageActionExecutionResult:
+            # @review
+            description:
+                Represents a definition of an action execution of type display page.
+            properties:
+                mapping:
+                    # @review
+                    description:
+                        The mapping of the display page action result.
+                    properties:
+                        fieldKey:
+                            # @review
+                            description:
+                                The mapping's field key.
+                            type: string
+                    type: object
             type: object
         DisplayPageTemplate:
             description:
@@ -1272,8 +1289,7 @@ components:
                     readOnly: true
                     type: array
                 aggregateRating:
-                    allOf:
-                        - $ref: "#/components/schemas/AggregateRating"
+                    $ref: "#/components/schemas/AggregateRating"
                     description:
                         The document's average rating.
                     readOnly: true
@@ -1297,8 +1313,7 @@ components:
                     readOnly: true
                     type: string
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The document's creator.
                     readOnly: true
@@ -1315,15 +1330,29 @@ components:
                     format: date-time
                     readOnly: true
                     type: string
+                dateExpired:
+                    description:
+                        The expiration date of the document.
+                    format: date-time
+                    type: string
                 dateModified:
                     description:
                         The last time a field of the document changed.
                     format: date-time
                     readOnly: true
                     type: string
+                datePublished:
+                    description:
+                        The document's most recent publication date.
+                    format: date-time
+                    type: string
                 description:
                     description:
                         The document's description.
+                    type: string
+                documentFolderExternalReferenceCode:
+                    description:
+                        The external reference code of the `DocumentFolder` where this document is stored.
                     type: string
                 documentFolderId:
                     description:
@@ -1392,6 +1421,10 @@ components:
                 fileName:
                     description:
                         The document's file name.
+                    type: string
+                friendlyUrlPath:
+                    description:
+                        The document's file relative URL.
                     type: string
                 id:
                     description:
@@ -1466,6 +1499,117 @@ components:
                     type: string
                     writeOnly: true
             type: object
+        DocumentDataDefinitionType:
+            description:
+                Represents a document data definition type.
+            properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    # @review
+                    description:
+                        Block of actions allowed by the user making the request.
+                    readOnly: true
+                    type: object
+                assetLibraryKey:
+                    # @review
+                    description:
+                        The key of the asset library to which the document data definition type is scoped.
+                    readOnly: true
+                    type: string
+                availableLanguages:
+                    description:
+                        The list of languages the document data definition type has a translation for.
+                    items:
+                        type: string
+                    type: array
+                creator:
+                    $ref: "#/components/schemas/Creator"
+                    description:
+                        The document data definition type's creator.
+                    readOnly: true
+                dataDefinitionFields:
+                    description:
+                        The list of the document data definition type's data definition fields.
+                    items:
+                        $ref: "../../../data-engine/data-engine-rest-impl/rest-openapi.yaml#DataDefinitionField"
+                    type: array
+                dataLayout:
+                    $ref: "../../../data-engine/data-engine-rest-impl/rest-openapi.yaml#DataLayout"
+                    description:
+                        The layout of the document data definition type fields.
+                dateCreated:
+                    description:
+                        The document data definition type's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description:
+                        The last time a field of the document data definition type changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                description:
+                    description:
+                        The document data definition type's description.
+                    type: string
+                description_i18n:
+                    additionalProperties:
+                        type: string
+                    # @review
+                    description:
+                        The localized document data definition type's description.
+                    type: object
+                documentMetadataSetIds:
+                    description:
+                        The list of document data definition type's id associated with document type.
+                    items:
+                        format: int64
+                        type: integer
+                    type: array
+                externalReferenceCode:
+                    # @review
+                    description:
+                        The document data definition type's external reference code.
+                    type: string
+                id:
+                    description:
+                        The document data definition type's ID.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                name:
+                    description:
+                        The document data definition type's name.
+                    type: string
+                name_i18n:
+                    additionalProperties:
+                        type: string
+                    # @review
+                    description:
+                        The localized document data definition type's names.
+                    type: object
+                siteId:
+                    description:
+                        The ID of the site to which the document data definition type is scoped.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                viewableBy:
+                    description:
+                        A write-only property that specifies the document data definition type's default permissions.
+                    enum: [Anyone, Members, Owner]
+                    type: string
+                    writeOnly: true
+            required:
+                - availableLanguages
+                - dataDefinitionFields
+                - dataLayout
+                - name
+            type: object
         DocumentFolder:
             description:
                 Represents a document folder that can contain documents and other folders.
@@ -1487,8 +1631,7 @@ components:
                     readOnly: true
                     type: string
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The folder's creator.
                     readOnly: true
@@ -1566,6 +1709,171 @@ components:
                     writeOnly: true
             required:
                 - name
+            type: object
+        DocumentMetadataSet:
+            description:
+                Represents a Document Metadata Set.
+            properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    # @review
+                    description:
+                        Block of actions allowed by the user making the request.
+                    readOnly: true
+                    type: object
+                assetLibraryKey:
+                    # @review
+                    description:
+                        The key of the asset library to which the Document Metadata Set is scoped.
+                    readOnly: true
+                    type: string
+                availableLanguages:
+                    # @review
+                    description:
+                        The list of languages the navigation menu item has a translation for.
+                    items:
+                        type: string
+                    type: array
+                dataDefinitionFields:
+                    description:
+                        The list of fields that store the structured content's information.
+                    items:
+                        $ref: "../../../data-engine/data-engine-rest-impl/rest-openapi.yaml#DataDefinitionField"
+                    type: array
+                dataLayout:
+                    $ref: "../../../data-engine/data-engine-rest-impl/rest-openapi.yaml#DataLayout"
+                    description:
+                        The layout of the document data definition type fields.
+                dateCreated:
+                    description:
+                        The Document Metadata Set's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description:
+                        The last time a field of the Document Metadata Set changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                description:
+                    description:
+                        The Document Metadata Set's description.
+                    type: string
+                description_i18n:
+                    additionalProperties:
+                        type: string
+                    # @review
+                    description:
+                        The localized Document Metadata Set descriptions.
+                    type: object
+                externalReferenceCode:
+                    # @review
+                    description:
+                        The Document Metadata Set's external reference code.
+                    type: string
+                id:
+                    description:
+                        The ID of the Document Metadata Set.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                name:
+                    # @review
+                    description:
+                        The Document Metadata Set's name.
+                    type: string
+                name_i18n:
+                    additionalProperties:
+                        type: string
+                    # @review
+                    description:
+                        the localized Document Metadata Set's names.
+                    type: object
+                siteId:
+                    description:
+                        The ID of the site to which this Document Metadata Set is scoped.
+                    format: int64
+                    readOnly: true
+                    type: integer
+            required:
+                - availableLanguages
+                - dataDefinitionFields
+                - dataLayout
+                - name
+            type: object
+        DocumentShortcut:
+            description:
+                Represents a document shortcut.
+            properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            type: string
+                        type: object
+                    # @review
+                    description:
+                        Block of actions allowed by the user making the request.
+                    readOnly: true
+                    type: object
+                assetLibraryKey:
+                    # @review
+                    description:
+                        The key of the asset library to which the document shortcut is scoped.
+                    readOnly: true
+                    type: string
+                dateCreated:
+                    description:
+                        The document shortcut's creation date.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                dateModified:
+                    description:
+                        The last time a field of the document shortcut changed.
+                    format: date-time
+                    readOnly: true
+                    type: string
+                externalReferenceCode:
+                    description:
+                        The document shortcut's external reference code.
+                    type: string
+                folderId:
+                    description:
+                        The document shortcut's folder ID.
+                    format: int64
+                    type: integer
+                id:
+                    description:
+                        The document shortcut's ID.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                siteId:
+                    description:
+                        The ID of the site to which this document shortcut is scoped.
+                    format: int64
+                    readOnly: true
+                    type: integer
+                targetDocumentId:
+                    description:
+                        The ID of the document to which this shortcut is scoped.
+                    format: int64
+                    type: integer
+                title:
+                    description:
+                        The title of the document to which this shortcut is scoped.
+                    readOnly: true
+                    type: string
+                viewableBy:
+                    description:
+                        A write-only property that specifies the default permissions.
+                    enum: [Anyone, Members, Owner]
+                    type: string
+                    writeOnly: true
             type: object
         Experience:
             description:
@@ -1657,14 +1965,12 @@ components:
                     oneOf:
                         - $ref: "#/components/schemas/FragmentMappedValue"
                 onError:
-                    allOf:
-                        - $ref: "#/components/schemas/ActionExecutionResult"
+                    $ref: "#/components/schemas/ActionExecutionResult"
                     # @review
                     description:
                         The action execution result in case the action fails.
                 onSuccess:
-                    allOf:
-                        - $ref: "#/components/schemas/ActionExecutionResult"
+                    $ref: "#/components/schemas/ActionExecutionResult"
                     # @review
                     description:
                         The action execution result in case the action succeeds.
@@ -1682,8 +1988,7 @@ components:
                 Represents a fragment field with a background image.
             properties:
                 backgroundFragmentImage:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentImage"
+                    $ref: "#/components/schemas/FragmentImage"
                     # @review
                     description:
                         The fragment field's background image.
@@ -1723,14 +2028,12 @@ components:
                 Represents a fragment field with an image.
             properties:
                 fragmentImage:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentImage"
+                    $ref: "#/components/schemas/FragmentImage"
                     # @review
                     description:
                         The fragment field's image.
                 fragmentLink:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentLink"
+                    $ref: "#/components/schemas/FragmentLink"
                     # @review
                     description:
                         A link to a fragment.
@@ -1741,8 +2044,7 @@ components:
                 Represents a fragment field with text.
             properties:
                 fragmentLink:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentLink"
+                    $ref: "#/components/schemas/FragmentLink"
                     # @review
                     description:
                         A link to a fragment.
@@ -1766,8 +2068,7 @@ components:
                     oneOf:
                         - $ref: "#/components/schemas/FragmentInlineValue"
                 fragmentImageClassPKReference:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentImageClassPKReference"
+                    $ref: "#/components/schemas/FragmentImageClassPKReference"
                     # @review
                     description:
                         A reference to a fragment image class primary key.
@@ -1798,8 +2099,7 @@ components:
                         A map of class primary key references.
                     type: object
                 fragmentImageConfiguration:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentImageConfiguration"
+                    $ref: "#/components/schemas/FragmentImageConfiguration"
                     # @review
                     description:
                         The fragment image's configuration.
@@ -1858,8 +2158,7 @@ components:
                     enum: [Blank, Parent, Self, Top]
                     type: string
                 value:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentLinkValue"
+                    $ref: "#/components/schemas/FragmentLinkValue"
                     # @review
                     description:
                         The fragment link's value.
@@ -1894,8 +2193,7 @@ components:
                 Represents a fragment mapped value.
             properties:
                 defaultFragmentInlineValue:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentInlineValue"
+                    $ref: "#/components/schemas/FragmentInlineValue"
                     # @review
                     description:
                         The default value of the fragment mapped value.
@@ -1966,8 +2264,7 @@ components:
                         The fragment's background color.
                     type: string
                 backgroundFragmentImage:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentImage"
+                    $ref: "#/components/schemas/FragmentImage"
                     # @review
                     description:
                         The fragment's background image.
@@ -2287,8 +2584,7 @@ components:
                     readOnly: true
                     type: object
                 aggregateRating:
-                    allOf:
-                        - $ref: "#/components/schemas/AggregateRating"
+                    $ref: "#/components/schemas/AggregateRating"
                     description:
                         The article's average rating.
                     readOnly: true
@@ -2297,8 +2593,7 @@ components:
                         The article's main content.
                     type: string
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The article's author.
                     readOnly: true
@@ -2507,8 +2802,7 @@ components:
                     readOnly: true
                     type: object
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The folder's creator.
                     readOnly: true
@@ -2724,8 +3018,7 @@ components:
                     readOnly: true
                     type: object
                 aggregateRating:
-                    allOf:
-                        - $ref: "#/components/schemas/AggregateRating"
+                    $ref: "#/components/schemas/AggregateRating"
                     description:
                         The message's average rating.
                     readOnly: true
@@ -2738,14 +3031,12 @@ components:
                         The message's main content.
                     type: string
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The message's author.
                     readOnly: true
                 creatorStatistics:
-                    allOf:
-                        - $ref: "#/components/schemas/CreatorStatistics"
+                    $ref: "#/components/schemas/CreatorStatistics"
                     # @review
                     description:
                         The message's creator statistics (rank, join date, number of posts, ...)
@@ -2879,8 +3170,7 @@ components:
                     readOnly: true
                     type: object
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The section's creator.
                     readOnly: true
@@ -2972,8 +3262,7 @@ components:
                     readOnly: true
                     type: object
                 aggregateRating:
-                    allOf:
-                        - $ref: "#/components/schemas/AggregateRating"
+                    $ref: "#/components/schemas/AggregateRating"
                     description:
                         The thread's average rating.
                     readOnly: true
@@ -2982,14 +3271,12 @@ components:
                         The thread's main body content (the message written as the thread's description).
                     type: string
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The thread's creator.
                     readOnly: true
                 creatorStatistics:
-                    allOf:
-                        - $ref: "#/components/schemas/CreatorStatistics"
+                    $ref: "#/components/schemas/CreatorStatistics"
                     # @review
                     description:
                         The thread's creator statistics (rank, join date, number of posts, ...)
@@ -3149,8 +3436,7 @@ components:
                 Represents a definition of a submission result of type message.
             properties:
                 message:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentInlineValue"
+                    $ref: "#/components/schemas/FragmentInlineValue"
                     # @review
                     description:
                         The localized submission of message type.
@@ -3179,8 +3465,7 @@ components:
                     readOnly: true
                     type: object
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     # @review
                     description:
                         The navigation menu's creator.
@@ -3250,12 +3535,18 @@ components:
                         The navigation menu item's content API REST URL.
                     type: string
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
-                     # @review
+                    $ref: "#/components/schemas/Creator"
+                        # @review
                     description:
                         The navigation menu item's creator.
                     readOnly: true
+                customFields:
+                    # @review
+                    description:
+                        A list of the custom fields associated with the navigation menu item.
+                    items:
+                        $ref: "#/components/schemas/CustomField"
+                    type: array
                 dateCreated:
                     # @review
                     description:
@@ -3357,8 +3648,7 @@ components:
                         Whether to reload the page after the action is executed.
                     type: boolean
                 text:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentInlineValue"
+                    $ref: "#/components/schemas/FragmentInlineValue"
                     # @review
                     description:
                         The localized text to display when an action is executed.
@@ -3381,8 +3671,7 @@ components:
                         The localized Open Graph's descriptions.
                     type: object
                 image:
-                    allOf:
-                        - $ref: "#/components/schemas/ContentDocument"
+                    $ref: "#/components/schemas/ContentDocument"
                     # @review
                     description:
                         The Open Graph's image.
@@ -3470,8 +3759,7 @@ components:
                             type: object
                     type: object
                 fragmentStyle:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentStyle"
+                    $ref: "#/components/schemas/FragmentStyle"
                     # @review
                     description:
                         The fragment style of the page collection.
@@ -3620,14 +3908,19 @@ components:
                 Represent a definition of a Page.
             properties:
                 pageElement:
-                    allOf:
-                        - $ref: "#/components/schemas/PageElement"
+                    $ref: "#/components/schemas/PageElement"
                     # @review
                     description:
                         The page's page element.
+                pageRules:
+                    # @review
+                    description:
+                        A list of the page rules this page has.
+                    items:
+                        $ref: "#/components/schemas/PageRule"
+                    type: array
                 settings:
-                    allOf:
-                        - $ref: "#/components/schemas/Settings"
+                    $ref: "#/components/schemas/Settings"
                     # @review
                     description:
                         The page's settings.
@@ -3672,6 +3965,10 @@ components:
                         - $ref: "#/components/schemas/PageRowDefinition"
                         - $ref: "#/components/schemas/PageSectionDefinition"
                         - $ref: "#/components/schemas/PageWidgetInstanceDefinition"
+                id:
+                    description:
+                        The page element's ID.
+                    type: string
                 pageElements:
                     # @review
                     description:
@@ -3684,7 +3981,7 @@ components:
                     description:
                         The page element's type (collection, collection item, column, drop zone, form, fragment,
                         fragment drop zone, root, row, section or widget).
-                    enum: [Collection, CollectionItem, Column, DropZone, Form, Fragment, FragmentDropZone, Root, Row, Section,
+                    enum: [Collection, CollectionItem, Column, DropZone, Form, FormStep, FormStepContainer, Fragment, FragmentDropZone, Root, Row, Section,
                         Widget]
                     type: string
         PageFormDefinition:
@@ -3732,10 +4029,35 @@ components:
                                 - $ref: "#/components/schemas/SitePageFormSubmissionResult"
                                 - $ref: "#/components/schemas/URLFormSubmissionResult"
                             type: object
+                        formType:
+                            # @review
+                            description:
+                                A flag that indicates whether the page form instance is multi step or not.
+                            enum: [simple, multistep]
+                            type: string
+                        localizationConfig:
+                            properties:
+                                unlocalizedFieldsMessage:
+                                    $ref: "#/components/schemas/FragmentInlineValue"
+                                    # @review
+                                    description:
+                                        The message displayed in the unlocalized fields.
+                                    type: string
+                                unlocalizedFieldsState:
+                                    # @review
+                                    description:
+                                        The state of the unlocalized fields.
+                                    enum: [Disabled, ReadOnly]
+                                    type: string
+                            type: object
+                        numberOfSteps:
+                            # @review
+                            description:
+                                The definition for the number of steps of the form.
+                            type: integer
                     type: object
                 fragmentStyle:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentStyle"
+                    $ref: "#/components/schemas/FragmentStyle"
                     # @review
                     description:
                         The fragment style of a Page form.
@@ -3781,6 +4103,53 @@ components:
                         The custom name of of a Page form.
                     type: string
             type: object
+        PageFormStepContainerDefinition:
+            # @review
+            description:
+                Represents a definition of a Page form step container.
+            properties:
+                cssClasses:
+                    # @review
+                    description:
+                        A list of CSS Classes that are applied to the element.
+                    items:
+                        type: string
+                    type: array
+                customCSS:
+                    # @review
+                    description:
+                        Custom CSS that is applied on the fragment.
+                    type: string
+                customCSSViewports:
+                    # @review
+                    description:
+                        The custom CSS viewports of the page collection.
+                    items:
+                        $ref: "#/components/schemas/CustomCSSViewport"
+                    type: array
+                fragmentStyle:
+                    $ref: "#/components/schemas/FragmentStyle"
+                    # @review
+                    description:
+                        The fragment style of a Page row.
+                fragmentViewports:
+                    # @review
+                    description:
+                        A list of fragment viewports of a Page row.
+                    items:
+                        $ref: "#/components/schemas/FragmentViewport"
+                    type: array
+                indexed:
+                    # @review
+                    description:
+                        A flag that indicates whether the page row is indexed or not.
+                    type: boolean
+            type: object
+        PageFormStepDefinition:
+            # @review
+            description:
+                Represents a definition of a Form Step.
+            type: object
         PageFragmentDropZoneDefinition:
             # @review
             description:
@@ -3817,8 +4186,7 @@ components:
                         $ref: "#/components/schemas/CustomCSSViewport"
                     type: array
                 fragment:
-                    allOf:
-                        - $ref: "#/components/schemas/Fragment"
+                    $ref: "#/components/schemas/Fragment"
                     # @review
                     description:
                         The fragment of the page fragment instance.
@@ -3837,8 +4205,7 @@ components:
                         $ref: "#/components/schemas/FragmentField"
                     type: array
                 fragmentStyle:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentStyle"
+                    $ref: "#/components/schemas/FragmentStyle"
                     # @review
                     description:
                         The fragment style of the page fragment instance.
@@ -3897,8 +4264,7 @@ components:
                         $ref: "#/components/schemas/CustomCSSViewport"
                     type: array
                 fragmentStyle:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentStyle"
+                    $ref: "#/components/schemas/FragmentStyle"
                     # @review
                     description:
                         The fragment style of a Page row.
@@ -3985,6 +4351,94 @@ components:
                         The vertical aligment property of the page row.
                     type: string
             type: object
+        PageRule:
+            # @review
+            description:
+                Represents a definition of a Page Rule.
+            properties:
+                conditionType:
+                    # @review
+                    description:
+                        The custom name of a Page rule.
+                    enum: [All, Any]
+                    type: string
+                id:
+                    # @review
+                    description:
+                        The page rule ID.
+                    type: string
+                name:
+                    # @review
+                    description:
+                        The custom name of a Page rule.
+                    type: string
+                pageRuleActions:
+                    # @review
+                    description:
+                        A list of actions of a Page rule.
+                    items:
+                        $ref: "#/components/schemas/PageRuleAction"
+                    type: array
+                pageRuleConditions:
+                    # @review
+                    description:
+                        A list of conditions of a Page rule.
+                    items:
+                        $ref: "#/components/schemas/PageRuleCondition"
+                    type: array
+            type: object
+        PageRuleAction:
+            # @review
+            description:
+                Represents a definition of a Page Rule Action.
+            properties:
+                action:
+                    # @review
+                    description:
+                        The page rule action's action.
+                    type: string
+                id:
+                    # @review
+                    description:
+                        The page rule action's ID.
+                    type: string
+                itemId:
+                    # @review
+                    description:
+                        The page rule condition's item ID.
+                    type: string
+                type:
+                    # @review
+                    description:
+                        The page rule action's type.
+                    type: string
+            type: object
+        PageRuleCondition:
+            # @review
+            description:
+                Represents a definition of a Page Rule Condition.
+            properties:
+                condition:
+                    # @review
+                    description:
+                        The page rule condition's description.
+                    type: string
+                id:
+                    # @review
+                    description:
+                        The page rule condition's ID.
+                    type: string
+                type:
+                    # @review
+                    description:
+                        The page rule condition's type.
+                    type: string
+                value:
+                    # @review
+                    description:
+                        The page rule condition's value.
+                    type: string
+            type: object
         PageSectionDefinition:
             # @review
             description:
@@ -3994,8 +4448,7 @@ components:
                     deprecated: true
                     type: string
                 backgroundFragmentImage:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentImage"
+                    $ref: "#/components/schemas/FragmentImage"
                     # @review
                     description:
                         The background fragment image of the page section.
@@ -4040,14 +4493,12 @@ components:
                         $ref: "#/components/schemas/CustomCSSViewport"
                     type: array
                 fragmentLink:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentLink"
+                    $ref: "#/components/schemas/FragmentLink"
                     # @review
                     description:
                         The fragment link of the page section.
                 fragmentStyle:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentStyle"
+                    $ref: "#/components/schemas/FragmentStyle"
                     # @review
                     description:
                         The fragment style of the page section.
@@ -4173,20 +4624,17 @@ components:
                         A flag that indicates whether the page is hidden from navigation.
                     type: boolean
                 openGraphSettings:
-                    allOf:
-                        - $ref: "#/components/schemas/OpenGraphSettings"
+                    $ref: "#/components/schemas/OpenGraphSettings"
                     # @review
                     description:
                         The page's Open Graph settings.
                 seoSettings:
-                    allOf:
-                        - $ref: "#/components/schemas/SEOSettings"
+                    $ref: "#/components/schemas/SEOSettings"
                     # @review
                     description:
                         The page's SEO settings.
                 sitePageNavigationMenuSettings:
-                    allOf:
-                        - $ref: "#/components/schemas/SitePageNavigationMenuSettings"
+                    $ref: "#/components/schemas/SitePageNavigationMenuSettings"
                     # @review
                     description:
                         The page's site navigation menu settings.
@@ -4197,8 +4645,7 @@ components:
                 Represents a Page template.
             properties:
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     # @review
                     description:
                         The page template's creator.
@@ -4237,14 +4684,12 @@ components:
                         The page template's name.
                     type: string
                 pageDefinition:
-                    allOf:
-                        - $ref: "#/components/schemas/PageDefinition"
+                    $ref: "#/components/schemas/PageDefinition"
                     # @review
                     description:
                         The page template's definition.
                 pageTemplateCollection:
-                    allOf:
-                        - $ref: "#/components/schemas/PageTemplateCollection"
+                    $ref: "#/components/schemas/PageTemplateCollection"
                     # @review
                     description:
                         The page template's collection.
@@ -4277,8 +4722,7 @@ components:
                 Represents a Page template collection.
             properties:
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     # @review
                     description:
                         The page template collection's creator.
@@ -4345,8 +4789,7 @@ components:
                         $ref: "#/components/schemas/CustomCSSViewport"
                     type: array
                 fragmentStyle:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentStyle"
+                    $ref: "#/components/schemas/FragmentStyle"
                     # @review
                     description:
                         The fragment style of the page widget instance.
@@ -4363,8 +4806,7 @@ components:
                         The custom name of a Page Widget instance.
                     type: string
                 widgetInstance:
-                    allOf:
-                        - $ref: "#/components/schemas/WidgetInstance"
+                    $ref: "#/components/schemas/WidgetInstance"
                     # @review
                     description:
                         The widget instance of the page widget instance.
@@ -4391,8 +4833,7 @@ components:
                     readOnly: true
                     type: number
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The rating's creator.
                     readOnly: true
@@ -4641,6 +5082,11 @@ components:
                             description:
                                 Whether search engines should crawl and index the page.
                             type: boolean
+                        includeChildSitePages:
+                            # @review
+                            description:
+                                Whether search engines should crawl and index the child pages.
+                            type: boolean
                         pagePriority:
                             description:
                                 How the page should be prioritized relative to other pages.
@@ -4690,8 +5136,7 @@ components:
                         The page's JavaScript.
                     type: string
                 masterPage:
-                    allOf:
-                        - $ref: "#/components/schemas/MasterPage"
+                    $ref: "#/components/schemas/MasterPage"
                     # @review
                     description:
                         The page's master page.
@@ -4712,8 +5157,7 @@ components:
                             type: string
                     type: object
                 themeCSSClientExtension:
-                    allOf:
-                        - $ref: "#/components/schemas/ClientExtension"
+                    $ref: "#/components/schemas/ClientExtension"
                     # @review
                     description:
                         The Client Extension for the theme css of a page
@@ -4727,6 +5171,11 @@ components:
                     description:
                         The page's theme settings.
                     type: object
+                themeSpritemapClientExtension:
+                    $ref: "#/components/schemas/ClientExtension"
+                    # @review
+                    description:
+                        The Client Extension for the theme spritemap of a page
             type: object
         SitePage:
             # @review
@@ -4744,8 +5193,7 @@ components:
                     readOnly: true
                     type: object
                 aggregateRating:
-                    allOf:
-                        - $ref: "#/components/schemas/AggregateRating"
+                    $ref: "#/components/schemas/AggregateRating"
                     # @review
                     description:
                         The page's average rating.
@@ -4759,8 +5207,7 @@ components:
                     readOnly: true
                     type: array
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     # @review
                     description:
                         The page's creator.
@@ -4793,8 +5240,7 @@ components:
                     format: date-time
                     type: string
                 experience:
-                    allOf:
-                        - $ref: "#/components/schemas/Experience"
+                    $ref: "#/components/schemas/Experience"
                     # @review
                     description:
                         Experience of the page that it's being retrieved.
@@ -4824,8 +5270,7 @@ components:
                         type: string
                     type: array
                 pageDefinition:
-                    allOf:
-                        - $ref: "#/components/schemas/PageDefinition"
+                    $ref: "#/components/schemas/PageDefinition"
                     # @review
                     description:
                         Optional field with the structure of all the elements of the page. Can be embedded with
@@ -4852,8 +5297,7 @@ components:
                         type: object
                     type: array
                 pageSettings:
-                    allOf:
-                        - $ref: "#/components/schemas/PageSettings"
+                    $ref: "#/components/schemas/PageSettings"
                     # @review
                     description:
                         Settings of the page, such as SEO or OpenGraph.
@@ -4874,8 +5318,7 @@ components:
                             type: string
                     type: object
                 renderedPage:
-                    allOf:
-                        - $ref: "#/components/schemas/RenderedPage"
+                    $ref: "#/components/schemas/RenderedPage"
                     # @review
                     description:
                         Metadata of the page such as it's master page and template.
@@ -4938,8 +5381,7 @@ components:
                 Represents a definition of an action execution of type page.
             properties:
                 itemReference:
-                    allOf:
-                        - $ref: "#/components/schemas/ClassFieldsReference"
+                    $ref: "#/components/schemas/ClassFieldsReference"
                     # @review
                     description:
                         The reference to a page.
@@ -4950,8 +5392,7 @@ components:
                 Represents a definition of a submission result of type page.
             properties:
                 itemReference:
-                    allOf:
-                        - $ref: "#/components/schemas/ClassFieldsReference"
+                    $ref: "#/components/schemas/ClassFieldsReference"
                     # @review
                     description:
                         The localized submission of page type.
@@ -4994,8 +5435,7 @@ components:
                     readOnly: true
                     type: object
                 aggregateRating:
-                    allOf:
-                        - $ref: "#/components/schemas/AggregateRating"
+                    $ref: "#/components/schemas/AggregateRating"
                     description:
                         The structured content's average rating.
                     readOnly: true
@@ -5024,8 +5464,7 @@ components:
                     format: int64
                     type: integer
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The structured content's creator.
                     readOnly: true
@@ -5041,6 +5480,11 @@ components:
                         The structured content's creation date.
                     format: date-time
                     readOnly: true
+                    type: string
+                dateExpired:
+                    description:
+                        The expiration date of the structured content.
+                    format: date-time
                     type: string
                 dateModified:
                     description:
@@ -5098,6 +5542,10 @@ components:
                     items:
                         type: string
                     type: array
+                neverExpire:
+                    description:
+                        Whether the web content article is not set to auto expire
+                    type: boolean
                 numberOfComments:
                     description:
                         The number of comments the structured content has received.
@@ -5210,8 +5658,7 @@ components:
                     readOnly: true
                     type: string
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The folder's creator.
                     readOnly: true
@@ -5343,8 +5790,7 @@ components:
                 Represents a definition of an action execution result of type URL.
             properties:
                 url:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentInlineValue"
+                    $ref: "#/components/schemas/FragmentInlineValue"
                     # @review
                     description:
                         The localized action execution result of type URL.
@@ -5355,8 +5801,7 @@ components:
                 Represents a definition of a submission result of type URL.
             properties:
                 url:
-                    allOf:
-                        - $ref: "#/components/schemas/FragmentInlineValue"
+                    $ref: "#/components/schemas/FragmentInlineValue"
                     # @review
                     description:
                         The localized submission of URL type.
@@ -5400,7 +5845,7 @@ components:
                     # @review
                     description:
                         The utility page template type.
-                    enum: [Error, ErrorCode404, ErrorCode500, TermsOfUse]
+                    enum: [CookiePolicy, CreateAccount, Error, ErrorCode404, ErrorCode500, ForgotPassword, Login, TermsOfUse]
                     type: string
             type: object
         WidgetInstance:
@@ -5459,8 +5904,7 @@ components:
                     readOnly: true
                     type: object
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The wiki node's creator.
                     readOnly: true
@@ -5534,8 +5978,7 @@ components:
                     readOnly: true
                     type: object
                 aggregateRating:
-                    allOf:
-                        - $ref: "#/components/schemas/AggregateRating"
+                    $ref: "#/components/schemas/AggregateRating"
                     description:
                         The blog post's average rating.
                     readOnly: true
@@ -5544,8 +5987,7 @@ components:
                         The wiki page's content.
                     type: string
                 creator:
-                    allOf:
-                        - $ref: "#/components/schemas/Creator"
+                    $ref: "#/components/schemas/Creator"
                     description:
                         The wiki page's creator.
                     readOnly: true
@@ -5723,7 +6165,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.headless.delivery.client', and version '4.0.66'."
+        'com.liferay.headless.delivery.client', and version '4.0.89'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -5752,10 +6194,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
@@ -5767,6 +6205,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -5809,10 +6251,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -5820,6 +6258,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -5854,10 +6296,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -5865,6 +6303,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -5900,15 +6342,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -5919,6 +6357,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -5982,6 +6424,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -6009,15 +6455,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -6028,6 +6470,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -6050,6 +6496,97 @@ paths:
                                     $ref: "#/components/schemas/ContentTemplate"
                                 type: array
             tags: ["ContentTemplate"]
+    "/asset-libraries/{assetLibraryId}/document-data-definition-types":
+        get:
+            operationId: getAssetLibraryDocumentDataDefinitionTypesPage
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentDataDefinitionType"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentDataDefinitionType"
+                                type: array
+            tags: ["DocumentDataDefinitionType"]
+        post:
+            description:
+                Creates a new document data definition type.
+            operationId: postAssetLibraryDocumentDataDefinitionType
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentDataDefinitionType"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentDataDefinitionType"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentDataDefinitionType"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentDataDefinitionType"
+            tags: ["DocumentDataDefinitionType"]
     "/asset-libraries/{assetLibraryId}/document-folders":
         get:
             operationId: getAssetLibraryDocumentFoldersPage
@@ -6071,19 +6608,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -6094,6 +6627,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -6184,6 +6721,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -6224,6 +6765,238 @@ paths:
                                     $ref: "#/components/schemas/DocumentFolder"
                                 type: array
             tags: ["DocumentFolder"]
+    "/asset-libraries/{assetLibraryId}/document-metadata-sets":
+        get:
+            operationId: getAssetLibraryDocumentMetadataSetsPage
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentMetadataSet"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentMetadataSet"
+                                type: array
+            tags: ["DocumentMetadataSet"]
+        post:
+            operationId: postAssetLibraryDocumentMetadataSet
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentMetadataSet"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentMetadataSet"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+            tags: ["DocumentMetadataSet"]
+    "/asset-libraries/{assetLibraryId}/document-metadata-sets/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Deletes the asset library's Document Metadata Set by external reference code.
+            operationId: deleteAssetLibraryDocumentMetadataSetByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["DocumentMetadataSet"]
+        get:
+            description:
+                Retrieves the asset library's Document Metadata Set by external reference code.
+            operationId: getAssetLibraryDocumentMetadataSetByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+            tags: ["DocumentMetadataSet"]
+        put:
+            # @review
+            description:
+                Updates the asset Library's Document Metadata Set with the given external reference code, or creates it
+                if it does not exists.
+            operationId: putAssetLibraryDocumentMetadataSetByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentMetadataSet"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentMetadataSet"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+            tags: ["DocumentMetadataSet"]
+    "/asset-libraries/{assetLibraryId}/document-shortcuts":
+        get:
+            operationId: getAssetLibraryDocumentShortcutsPage
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentShortcut"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentShortcut"
+                                type: array
+            tags: ["DocumentShortcut"]
+        post:
+            operationId: postAssetLibraryDocumentShortcut
+            parameters:
+                - in: path
+                  name: assetLibraryId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+            tags: ["DocumentShortcut"]
     "/asset-libraries/{assetLibraryId}/documents":
         get:
             operationId: getAssetLibraryDocumentsPage
@@ -6245,19 +7018,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -6268,6 +7037,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -6465,6 +7238,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -6561,19 +7338,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -6584,6 +7357,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -6773,6 +7550,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -6800,19 +7581,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -6823,6 +7600,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -7017,6 +7798,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -7208,15 +7993,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -7227,6 +8008,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -7424,6 +8209,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -7570,15 +8359,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -7589,6 +8374,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -7663,10 +8452,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -7674,6 +8459,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -7763,6 +8552,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -7793,15 +8586,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -7812,6 +8601,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -7838,6 +8631,49 @@ paths:
                                     $ref: "#/components/schemas/StructuredContent"
                                 type: array
             tags: ["StructuredContent"]
+    "/document-data-definition-types/{documentDataDefinitionTypeId}":
+        delete:
+            operationId: deleteDocumentDataDefinitionType
+            parameters:
+                - in: path
+                  name: documentDataDefinitionTypeId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["DocumentDataDefinitionType"]
+        get:
+            operationId: getDocumentDataDefinitionType
+            parameters:
+                - in: path
+                  name: documentDataDefinitionTypeId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentDataDefinitionType"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentDataDefinitionType"
+            tags: ["DocumentDataDefinitionType"]
     "/document-folders/{documentFolderId}":
         delete:
             description:
@@ -7971,19 +8807,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -7994,6 +8826,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -8197,6 +9033,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -8258,19 +9098,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -8281,6 +9117,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -8332,6 +9172,167 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/DocumentFolder"
             tags: ["DocumentFolder"]
+    "/document-metadata-sets/{documentMetadataSetId}":
+        delete:
+            description:
+                Deletes the document metadata set and returns a 204 if the operation succeeds.
+            operationId: deleteDocumentMetadataSet
+            parameters:
+                - in: path
+                  name: documentMetadataSetId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["DocumentMetadataSet"]
+        get:
+            description:
+                Retrieves the document metadata set.
+            operationId: getDocumentMetadataSet
+            parameters:
+                - in: path
+                  name: documentMetadataSetId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+            tags: ["DocumentMetadataSet"]
+    "/document-shortcuts/{documentShortcutId}":
+        delete:
+            description:
+                Deletes the document shortcut and returns a 204 if the operation succeeds.
+            operationId: deleteDocumentShortcut
+            parameters:
+                - in: path
+                  name: documentShortcutId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["DocumentShortcut"]
+        get:
+            description:
+                Retrieves the document shortcut.
+            operationId: getDocumentShortcut
+            parameters:
+                - in: path
+                  name: documentShortcutId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+            tags: ["DocumentShortcut"]
+        patch:
+            description:
+                Updates only the fields received in the request body, leaving any other fields untouched.
+            operationId: patchDocumentShortcut
+            parameters:
+                - in: path
+                  name: documentShortcutId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+            tags: ["DocumentShortcut"]
+        put:
+            description:
+                Replaces the document shortcut with the information sent in the request body. Any missing fields are
+                deleted, unless they are required.
+            operationId: putDocumentShortcut
+            parameters:
+                - in: path
+                  name: documentShortcutId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+            tags: ["DocumentShortcut"]
     "/documents/{documentId}":
         delete:
             description:
@@ -8474,15 +9475,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -8493,6 +9490,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -8691,6 +9692,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -9062,6 +10067,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -9124,19 +10133,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -9147,6 +10152,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -9384,19 +10393,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -9407,6 +10412,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -9499,6 +10508,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -9526,10 +10539,6 @@ paths:
                   schema:
                       type: integer
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -9537,6 +10546,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -9740,6 +10753,22 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/MessageBoardMessage"
+            tags: ["MessageBoardMessage"]
+    "/message-board-messages/{messageBoardMessageId}/mark-as-answer":
+        put:
+            operationId: putMessageBoardMessageMarkAsAnswer
+            parameters:
+                - in: path
+                  name: messageBoardMessageId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
             tags: ["MessageBoardMessage"]
     "/message-board-messages/{messageBoardMessageId}/message-board-attachments":
         get:
@@ -9960,6 +10989,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -9969,6 +11002,22 @@ paths:
     "/message-board-messages/{messageBoardMessageId}/subscribe":
         put:
             operationId: putMessageBoardMessageSubscribe
+            parameters:
+                - in: path
+                  name: messageBoardMessageId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["MessageBoardMessage"]
+    "/message-board-messages/{messageBoardMessageId}/unmark-as-answer":
+        put:
+            operationId: putMessageBoardMessageUnmarkAsAnswer
             parameters:
                 - in: path
                   name: messageBoardMessageId
@@ -10022,19 +11071,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -10045,6 +11090,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -10229,15 +11278,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -10248,6 +11293,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -10340,6 +11389,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -10402,15 +11455,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -10421,6 +11470,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -10500,10 +11553,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -10511,6 +11560,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: sort
                   schema:
@@ -10734,15 +11787,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -10753,6 +11802,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -10951,6 +12004,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -11111,6 +12168,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -11140,15 +12201,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -11159,6 +12216,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -11214,6 +12275,70 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/BlogPostingImage"
             tags: ["BlogPostingImage"]
+    "/sites/{siteId}/blog-posting-images/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Deletes the site's blog post image by external reference code.
+            operationId: deleteSiteBlogPostingImageByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["BlogPostingImage"]
+        get:
+            # @review
+            description:
+                Retrieves the site's blog post image by external reference code. The binary image is returned as a
+                relative URL to the image itself.
+            operationId: getSiteBlogPostingImageByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/BlogPostingImage"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/BlogPostingImage"
+            tags: ["BlogPostingImage"]
     "/sites/{siteId}/blog-postings":
         get:
             description:
@@ -11237,15 +12362,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -11256,6 +12377,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -11560,6 +12685,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -11733,10 +12862,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
                   schema:
                       type: string
@@ -11748,6 +12873,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -11770,6 +12899,51 @@ paths:
                                     $ref: "#/components/schemas/ContentElement"
                                 type: array
             tags: ["ContentElement"]
+    "/sites/{siteId}/content-set-providers/by-key/{key}/content-set-elements":
+        get:
+            operationId: getSiteContentSetProviderByKeyContentSetElementsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: key
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentSetElement"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/ContentSetElement"
+                                type: array
+            tags: ["ContentSetElement"]
     "/sites/{siteId}/content-sets/by-key/{key}/content-set-elements":
         get:
             description:
@@ -11792,10 +12966,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -11803,6 +12973,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -11839,10 +13013,6 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -11850,6 +13020,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -11887,15 +13061,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -11906,6 +13076,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -11969,6 +13143,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -11996,19 +13174,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -12019,6 +13189,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -12078,6 +13252,97 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/ContentTemplate"
             tags: ["ContentTemplate"]
+    "/sites/{siteId}/document-data-definition-types":
+        get:
+            operationId: getSiteDocumentDataDefinitionTypesPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: aggregationTerms
+                  schema:
+                      items:
+                          type: string
+                      type: array
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                - in: query
+                  name: sort
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentDataDefinitionType"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentDataDefinitionType"
+                                type: array
+            tags: ["DocumentDataDefinitionType"]
+        post:
+            description:
+                Creates a new document data definition type.
+            operationId: postSiteDocumentDataDefinitionType
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentDataDefinitionType"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentDataDefinitionType"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentDataDefinitionType"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentDataDefinitionType"
+            tags: ["DocumentDataDefinitionType"]
     "/sites/{siteId}/document-folders":
         get:
             description:
@@ -12102,19 +13367,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -12125,6 +13386,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -12217,6 +13482,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -12257,6 +13526,321 @@ paths:
                                     $ref: "#/components/schemas/DocumentFolder"
                                 type: array
             tags: ["DocumentFolder"]
+    "/sites/{siteId}/document-metadata-sets":
+        get:
+            operationId: getSiteDocumentMetadataSetsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentMetadataSet"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentMetadataSet"
+                                type: array
+            tags: ["DocumentMetadataSet"]
+        post:
+            operationId: postSiteDocumentMetadataSet
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentMetadataSet"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentMetadataSet"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+            tags: ["DocumentMetadataSet"]
+    "/sites/{siteId}/document-metadata-sets/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Deletes the site's Document Metadata Set by external reference code.
+            operationId: deleteSiteDocumentMetadataSetByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["DocumentMetadataSet"]
+        get:
+            description:
+                Retrieves the site's Document Metadata Set by external reference code.
+            operationId: getSiteDocumentMetadataSetByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
+                  schema:
+                      type: string
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+            tags: ["DocumentMetadataSet"]
+        put:
+            # @review
+            description:
+                Updates the site's Document Metadata Set with the given external reference code, or creates it if it
+                does not exist.
+            operationId: putSiteDocumentMetadataSetByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentMetadataSet"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentMetadataSet"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentMetadataSet"
+            tags: ["DocumentMetadataSet"]
+    "/sites/{siteId}/document-shortcuts":
+        get:
+            operationId: getSiteDocumentShortcutsPage
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: query
+                  name: fields
+                  schema:
+                      type: string
+                - in: query
+                  name: page
+                  schema:
+                      type: integer
+                - in: query
+                  name: pageSize
+                  schema:
+                      type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentShortcut"
+                                type: array
+                        application/xml:
+                            schema:
+                                items:
+                                    $ref: "#/components/schemas/DocumentShortcut"
+                                type: array
+            tags: ["DocumentShortcut"]
+        post:
+            operationId: postSiteDocumentShortcut
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+            tags: ["DocumentShortcut"]
+    "/sites/{siteId}/document-shortcuts/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            # @review
+            description:
+                Deletes the site's document shortcut by external reference code returns a 204 if the operation succeeds.
+            operationId: deleteSiteDocumentShortcutByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["DocumentShortcut"]
+        get:
+            # @review
+            description:
+                Retrieves the site's document shortcut by external reference code.
+            operationId: getSiteDocumentShortcutByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+            tags: ["DocumentShortcut"]
+        put:
+            operationId: putSiteDocumentShortcutByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DocumentShortcut"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DocumentShortcut"
+            tags: ["DocumentShortcut"]
     "/sites/{siteId}/documents":
         get:
             description:
@@ -12281,19 +13865,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -12304,6 +13884,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -12705,6 +14289,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -12769,19 +14357,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -12792,6 +14376,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -13057,6 +14645,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -13116,10 +14708,6 @@ paths:
                   schema:
                       type: integer
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -13127,6 +14715,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -13310,6 +14902,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -13375,19 +14971,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -13398,6 +14990,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -13672,6 +15268,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -13731,19 +15331,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -13754,6 +15350,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -13846,6 +15446,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -13876,19 +15480,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -13899,6 +15499,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -14032,6 +15636,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -14057,10 +15665,6 @@ paths:
                   schema:
                       type: integer
                 - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: page
                   schema:
                       type: integer
@@ -14068,6 +15672,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
             responses:
                 200:
                     content:
@@ -14153,6 +15761,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -14183,15 +15795,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -14202,6 +15810,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -14498,19 +16110,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -14521,6 +16129,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -14702,6 +16314,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -14732,19 +16348,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -14755,6 +16367,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -15155,6 +16771,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -15185,15 +16805,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -15204,6 +16820,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -15392,6 +17012,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -15647,6 +17271,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -15677,15 +17305,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -15696,6 +17320,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -15880,19 +17508,15 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: filter
+                  schema:
+                      type: string
+                - in: query
                   name: flatten
                   schema:
                       type: boolean
                 - in: query
                   name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
-                  name: filter
                   schema:
                       type: string
                 - in: query
@@ -15903,6 +17527,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -16139,15 +17767,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -16158,6 +17782,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -16356,6 +17984,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -16590,6 +18222,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -16652,15 +18288,11 @@ paths:
                   schema:
                       type: string
                 - in: query
-                  name: nestedFields
-                  schema:
-                      type: string
-                - in: query
-                  name: restrictFields
-                  schema:
-                      type: string
-                - in: query
                   name: filter
+                  schema:
+                      type: string
+                - in: query
+                  name: nestedFields
                   schema:
                       type: string
                 - in: query
@@ -16671,6 +18303,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: restrictFields
+                  schema:
+                      type: string
                 - in: query
                   name: search
                   schema:
@@ -16961,6 +18597,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:

@@ -8,9 +8,9 @@ package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
+import com.liferay.fragment.service.FragmentEntryLinkService;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
-import com.liferay.layout.content.page.editor.web.internal.util.ContentManager;
-import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkManager;
+import com.liferay.layout.content.page.editor.web.internal.manager.FragmentEntryLinkManager;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.petra.string.StringPool;
@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -132,7 +131,7 @@ public class UpdateCollectionDisplayConfigMVCActionCommand
 				fragmentEntryLink.getFragmentEntryLinkId();
 
 			fragmentEntryLink =
-				_fragmentEntryLinkLocalService.updateFragmentEntryLink(
+				_fragmentEntryLinkService.updateFragmentEntryLink(
 					fragmentEntryLinkId, editableValuesJSONObject.toString());
 
 			fragmentEntryLinksJSONArray.put(
@@ -152,12 +151,6 @@ public class UpdateCollectionDisplayConfigMVCActionCommand
 				themeDisplay.getPlid(),
 				curLayoutStructure -> curLayoutStructure.updateItemConfig(
 					_jsonFactory.createJSONObject(itemConfig), itemId))
-		).put(
-			"pageContents",
-			_contentManager.getPageContentsJSONArray(
-				_portal.getHttpServletRequest(actionRequest),
-				_portal.getHttpServletResponse(actionResponse),
-				themeDisplay.getPlid(), segmentsExperienceId)
 		);
 	}
 
@@ -171,19 +164,16 @@ public class UpdateCollectionDisplayConfigMVCActionCommand
 			"CollectionFilterFragmentRenderer";
 
 	@Reference
-	private ContentManager _contentManager;
-
-	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
 	@Reference
 	private FragmentEntryLinkManager _fragmentEntryLinkManager;
 
 	@Reference
-	private JSONFactory _jsonFactory;
+	private FragmentEntryLinkService _fragmentEntryLinkService;
 
 	@Reference
-	private Language _language;
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Portal _portal;

@@ -6,10 +6,10 @@
 package com.liferay.jethr0.bui1d.run;
 
 import com.liferay.jethr0.bui1d.BuildEntity;
-import com.liferay.jethr0.bui1d.parameter.BuildParameterEntity;
 import com.liferay.jethr0.entity.BaseEntity;
 import com.liferay.jethr0.jenkins.node.JenkinsNodeEntity;
 import com.liferay.jethr0.job.JobEntity;
+import com.liferay.jethr0.util.Jethr0ContextUtil;
 import com.liferay.jethr0.util.StringUtil;
 
 import java.net.URL;
@@ -17,6 +17,7 @@ import java.net.URL;
 import java.time.Instant;
 
 import java.util.Date;
+import java.util.Map;
 
 import org.json.JSONObject;
 
@@ -42,6 +43,14 @@ public abstract class BaseBuildRunEntity
 	}
 
 	@Override
+	public URL getEntityURL() {
+		return StringUtil.toURL(
+			StringUtil.combine(
+				Jethr0ContextUtil.getLiferayPortalURL(), "/#/build-runs/",
+				getId()));
+	}
+
+	@Override
 	public JSONObject getInvokeJSONObject(JenkinsNodeEntity jenkinsNodeEntity) {
 		JSONObject invokeJSONObject = new JSONObject();
 
@@ -51,12 +60,13 @@ public abstract class BaseBuildRunEntity
 
 		JSONObject jobParametersJSONObject = new JSONObject();
 
-		for (BuildParameterEntity buildParameterEntity :
-				buildEntity.getBuildParameterEntities()) {
+		Map<String, String> buildParameters = buildEntity.getBuildParameters();
+
+		for (Map.Entry<String, String> buildParameter :
+				buildParameters.entrySet()) {
 
 			jobParametersJSONObject.put(
-				buildParameterEntity.getName(),
-				buildParameterEntity.getValue());
+				buildParameter.getKey(), buildParameter.getValue());
 		}
 
 		jobParametersJSONObject.put(
@@ -72,12 +82,12 @@ public abstract class BaseBuildRunEntity
 				"JETHR0_JOB_ID", String.valueOf(jobEntity.getId()));
 		}
 
-		invokeJSONObject.put("jobParameters", jobParametersJSONObject);
-
 		if (jenkinsNodeEntity != null) {
-			invokeJSONObject.put(
-				"jenkinsNode", jenkinsNodeEntity.getJSONObject());
+			jobParametersJSONObject.put(
+				"SLAVE_LABEL", jenkinsNodeEntity.getName());
 		}
+
+		invokeJSONObject.put("jobParameters", jobParametersJSONObject);
 
 		return invokeJSONObject;
 	}
@@ -166,17 +176,8 @@ public abstract class BaseBuildRunEntity
 	}
 
 	@Override
-	public void setResult(Result result) {
-		_result = result;
-	}
-
-	@Override
-	public void setState(State state) {
-		_state = state;
-	}
-
-	protected BaseBuildRunEntity(JSONObject jsonObject) {
-		super(jsonObject);
+	public void setJSONObject(JSONObject jsonObject) {
+		super.setJSONObject(jsonObject);
 
 		_buildEntityId = jsonObject.optLong("r_buildToBuildRuns_c_buildId");
 
@@ -189,13 +190,22 @@ public abstract class BaseBuildRunEntity
 				jsonObject.optString("jenkinsBuildURL"));
 		}
 
-		JSONObject resultJSONObject = jsonObject.optJSONObject("result");
+		_result = Result.get(jsonObject.opt("result"));
+		_state = State.get(jsonObject.get("state"));
+	}
 
-		if (resultJSONObject != null) {
-			_result = Result.get(resultJSONObject);
-		}
+	@Override
+	public void setResult(Result result) {
+		_result = result;
+	}
 
-		_state = State.get(jsonObject.getJSONObject("state"));
+	@Override
+	public void setState(State state) {
+		_state = state;
+	}
+
+	protected BaseBuildRunEntity(JSONObject jsonObject) {
+		super(jsonObject);
 	}
 
 	private static final long _MAX_DURATION_IN_QUEUE = 1000 * 60 * 2;

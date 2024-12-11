@@ -1,7 +1,6 @@
 import * as API from 'shared/api';
 import EntityRowActions from './EntityRowActions';
 import getCN from 'classnames';
-import Promise from 'metal-promise';
 import React, {useEffect, useState} from 'react';
 import SearchableTableWithAdded from './SearchableTableWithAdded';
 import ToolbarActionsRenderer from './ToolbarActionsRenderer';
@@ -20,7 +19,8 @@ import {individualsListColumns} from 'shared/util/table-columns';
 import {Map, OrderedMap} from 'immutable';
 import {RootState} from 'shared/store';
 import {sub} from 'shared/util/lang';
-import {useRequest, useStatefulPagination} from 'shared/hooks';
+import {useRequest} from 'shared/hooks/useRequest';
+import {useStatefulPagination} from 'shared/hooks/useStatefulPagination';
 
 const ORDER_BY_OPTIONS = [
 	{
@@ -131,10 +131,6 @@ const SegmentEditStatic: React.FC<ISegmentEditStaticProps> = ({
 	});
 
 	const handleAddEntitiesModal = () => {
-		if (!id) {
-			analytics.track('Static Segment Creation - Clicked Add Members');
-		}
-
 		open(modalTypes.SEARCHABLE_TABLE_MODAL, {
 			checkDisabled: isCurrentMember,
 			columns: getColumns(),
@@ -149,10 +145,6 @@ const SegmentEditStatic: React.FC<ISegmentEditStaticProps> = ({
 			onClose: close,
 			onSubmit: itemsIOMap => {
 				handleStageEntityAdditions(itemsIOMap);
-
-				if (!id) {
-					analytics.track('Static Segment Creation - Added Members');
-				}
 
 				close();
 			},

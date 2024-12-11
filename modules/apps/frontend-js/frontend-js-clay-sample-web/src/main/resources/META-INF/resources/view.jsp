@@ -9,6 +9,6 @@
 
 <div>
 	<react:component
-		module="js/App"
+		module="{App} from frontend-js-clay-sample-web"
 	/>
 </div>

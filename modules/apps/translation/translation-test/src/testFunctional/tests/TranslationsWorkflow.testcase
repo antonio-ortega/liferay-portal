@@ -1,4 +1,4 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.acceptance = "true";
@@ -53,7 +53,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Workflow.openWorkflowAdmin(siteURLKey = "guest");
@@ -82,7 +82,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		WorkflowAsset.gotoViaNotification(
@@ -121,7 +121,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Contenido",
@@ -237,14 +239,16 @@ definition {
 			version = "1.1",
 			webContentTitle = "WebContentTitle");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "Contenidoweb",
 			webContentDescription = "Descripcion",
 			webContentTitle = "Titulodelcontenidoweb");
 
-		Click.clickNoMouseOver(locator1 = "Button#LOCALIZATION_GENERIC");
+		Click.clickNoMouseOver(locator1 = "Button#LOCALIZATION_TRANSLATED");
 
 		AssertTextEquals(
 			key_localizedLanguage = "es-ES",
@@ -334,7 +338,9 @@ definition {
 			locator1 = "AssetWorkflow#WORKFLOW_STATUS",
 			value1 = "Approved");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "Contenidoweb",
@@ -381,7 +387,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
@@ -408,7 +414,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Content",
@@ -417,7 +425,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Navigator.openURL();
@@ -441,7 +449,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Contenido",
@@ -506,7 +516,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		Translations.viewUntranslatedStatus(locale = "es-ES");
+		Translations.viewUntranslatedStatus(
+			locale = "es-ES",
+			translated = "true");
 	}
 
 	@description = "This ensures that an imported translation can be Rejected and Resubmited through the workflow."
@@ -623,7 +635,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WebContentTitle");
 
-		PortletEntry.changeLocale(locale = "fr-FR");
+		PortletEntry.changeLocale(
+			locale = "fr-FR",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "ContenuWeb",
@@ -691,7 +705,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Content",
@@ -757,7 +773,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "ja-JP");
+		PortletEntry.changeLocale(
+			locale = "ja-JP",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Content",
@@ -880,7 +898,9 @@ definition {
 
 		WebContentNavigator.gotoEditCP(webContentTitle = "WebContentTitle");
 
-		PortletEntry.changeLocale(locale = "de-DE");
+		PortletEntry.changeLocale(
+			locale = "de-DE",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "Internetinhalt",
@@ -891,7 +911,9 @@ definition {
 			locator1 = "AssetWorkflow#WORKFLOW_STATUS",
 			value1 = "Approved");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "Contenidoweb",
@@ -933,7 +955,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Workflow.openWorkflowAdmin(siteURLKey = "guest");
@@ -983,7 +1005,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		WorkflowAsset.gotoViaNotification(
@@ -1056,7 +1078,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Notifications.gotoNotifications();
@@ -1090,7 +1112,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Notifications.gotoNotifications();
@@ -1157,7 +1179,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
@@ -1247,7 +1269,9 @@ definition {
 			version = "1.1",
 			webContentTitle = "WC WebContent Title");
 
-		PortletEntry.changeLocale(locale = "es-ES");
+		PortletEntry.changeLocale(
+			locale = "es-ES",
+			translated = "true");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Contenido",

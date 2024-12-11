@@ -1,6 +1,7 @@
 definition {
 
-	macro addFolder {
+	@summary = "Default summary"
+	macro addFolder(folderLabel = null, folderName = null) {
 		Variables.assertDefined(parameterList = "${folderLabel},${folderName}");
 
 		var portalURL = JSONCompany.getPortalURL();
@@ -10,7 +11,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		var curl = '''
@@ -30,8 +31,9 @@ definition {
 		return ${objectFolderERC};
 	}
 
-	macro deleteObjectFolder {
-		var portalURL = JSONCompany.getDefaultPortalURL();
+	@summary = "Default summary"
+	macro deleteObjectFolder(folderName = null) {
+		var portalURL = JSONCompany.getPortalURL();
 		var userLoginInfo = JSONUtil2.formatJSONSuperAdminUser();
 
 		if (!(isSet(folderId))) {
@@ -47,8 +49,9 @@ definition {
 		JSONCurlUtil.delete(${curl});
 	}
 
-	macro getAllCustomObjectFolderId {
-		var portalURL = JSONCompany.getDefaultPortalURL();
+	@summary = "Default summary"
+	macro getAllCustomObjectFolderId() {
+		var portalURL = JSONCompany.getPortalURL();
 		var userLoginInfo = JSONUtil2.formatJSONSuperAdminUser();
 
 		var curl = '''
@@ -57,13 +60,14 @@ definition {
 				-H Content-Type: application/json
 		''';
 
-		var folderIdList = JSONCurlUtil.get(${curl}, "$.items[?(@['name'] != 'Uncategorized')]['id']");
+		var folderIdList = JSONCurlUtil.get(${curl}, "$.items[?(@['name'] != 'Default')]['id']");
 
 		return ${folderIdList};
 	}
 
-	macro getObjectFolderERC {
-		var portalURL = JSONCompany.getDefaultPortalURL();
+	@summary = "Default summary"
+	macro getObjectFolderERC(folderName = null) {
+		var portalURL = JSONCompany.getPortalURL();
 		var userLoginInfo = JSONUtil2.formatJSONSuperAdminUser();
 
 		var curl = '''
@@ -77,8 +81,9 @@ definition {
 		return ${folderERC};
 	}
 
-	macro getObjectFolderId {
-		var portalURL = JSONCompany.getDefaultPortalURL();
+	@summary = "Default summary"
+	macro getObjectFolderId(folderName = null) {
+		var portalURL = JSONCompany.getPortalURL();
 		var userLoginInfo = JSONUtil2.formatJSONSuperAdminUser();
 
 		var curl = '''
@@ -92,7 +97,8 @@ definition {
 		return ${folderId};
 	}
 
-	macro tearDown {
+	@summary = "Default summary"
+	macro tearDown() {
 		var folderIdList = JSONObjectFolder.getAllCustomObjectFolderId();
 
 		if (${folderIdList} != "") {

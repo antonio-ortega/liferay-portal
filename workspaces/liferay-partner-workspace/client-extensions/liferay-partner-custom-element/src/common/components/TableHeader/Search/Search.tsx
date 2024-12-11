@@ -8,17 +8,33 @@ import {ClayInput} from '@clayui/form';
 import {memo, useState} from 'react';
 
 interface IProps {
+	initialSearchTerm?: string;
 	onSearchSubmit: (term: string) => void;
+	urlParams?: URLSearchParams;
 }
 
-const Search = ({onSearchSubmit}: IProps) => {
-	const [term, setTerm] = useState('');
-	const [searching, setSearching] = useState(true);
+const Search = ({initialSearchTerm, onSearchSubmit, urlParams}: IProps) => {
+	const [term, setTerm] = useState(
+		initialSearchTerm ? initialSearchTerm : ''
+	);
+	const [searching, setSearching] = useState(
+		initialSearchTerm ? false : true
+	);
 
 	const handleSearchSubmit = () => {
 		if (searching) {
 			onSearchSubmit(term);
 			setSearching(false);
+
+			if (urlParams) {
+				if (term) {
+					urlParams.set('search', term);
+
+					return;
+				}
+
+				urlParams.delete('search');
+			}
 
 			return;
 		}
@@ -26,6 +42,10 @@ const Search = ({onSearchSubmit}: IProps) => {
 		setTerm('');
 		onSearchSubmit('');
 		setSearching(true);
+
+		if (urlParams) {
+			urlParams.delete('search');
+		}
 	};
 
 	return (

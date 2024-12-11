@@ -79,6 +79,7 @@ public class CTEntryLocalServiceImpl extends CTEntryLocalServiceBaseImpl {
 		return ctEntryPersistence.update(ctEntry);
 	}
 
+	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public CTEntry deleteCTEntry(CTEntry ctEntry) throws PortalException {
 		CTCollection ctCollection = _ctCollectionPersistence.findByPrimaryKey(
@@ -236,6 +237,39 @@ public class CTEntryLocalServiceImpl extends CTEntryLocalServiceBaseImpl {
 		return true;
 	}
 
+	@Override
+	public boolean hasUnpublishedCTEntries(
+		long modelClassNameId, long modelClassPK, int changeType) {
+
+		int count = ctEntryLocalService.dslQueryCount(
+			DSLQueryFactoryUtil.countDistinct(
+				CTEntryTable.INSTANCE.ctEntryId
+			).from(
+				CTEntryTable.INSTANCE
+			).innerJoinON(
+				CTCollectionTable.INSTANCE,
+				CTCollectionTable.INSTANCE.ctCollectionId.eq(
+					CTEntryTable.INSTANCE.ctCollectionId)
+			).where(
+				CTCollectionTable.INSTANCE.status.eq(
+					WorkflowConstants.STATUS_DRAFT
+				).and(
+					CTEntryTable.INSTANCE.modelClassNameId.eq(modelClassNameId)
+				).and(
+					CTEntryTable.INSTANCE.modelClassPK.eq(modelClassPK)
+				).and(
+					CTEntryTable.INSTANCE.changeType.eq(changeType)
+				)
+			));
+
+		if (count == 0) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CTEntry updateCTEntry(CTEntry ctEntry) {
 		CTCollection ctCollection = _ctCollectionPersistence.fetchByPrimaryKey(

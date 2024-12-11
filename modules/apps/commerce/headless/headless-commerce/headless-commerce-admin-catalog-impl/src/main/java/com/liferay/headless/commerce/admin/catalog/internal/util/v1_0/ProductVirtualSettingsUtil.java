@@ -8,12 +8,17 @@ package com.liferay.headless.commerce.admin.catalog.internal.util.v1_0;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.type.virtual.constants.VirtualCPTypeConstants;
+import com.liferay.commerce.product.type.virtual.model.CPDVirtualSettingFileEntry;
 import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSetting;
+import com.liferay.commerce.product.type.virtual.service.CPDVirtualSettingFileEntryService;
 import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSettingService;
+import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductVirtualSettings;
+import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductVirtualSettingsFileEntry;
 import com.liferay.headless.commerce.admin.catalog.internal.util.FileEntryUtil;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.portal.kernel.service.RepositoryLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -22,6 +27,7 @@ import com.liferay.upload.UniqueFileNameProvider;
 
 import java.net.URL;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +41,9 @@ public class ProductVirtualSettingsUtil {
 			CPDefinition cpDefinition,
 			ProductVirtualSettings productVirtualSettings,
 			CPDefinitionVirtualSettingService cpDefinitionVirtualSettingService,
+			CPDVirtualSettingFileEntryService cpdVirtualSettingFileEntryService,
+			DLAppService dlAppService,
+			RepositoryLocalService repositoryLocalService,
 			UniqueFileNameProvider uniqueFileNameProvider,
 			ServiceContext serviceContext)
 		throws Exception {
@@ -46,20 +55,25 @@ public class ProductVirtualSettingsUtil {
 		if (cpDefinitionVirtualSetting == null) {
 			return _addProductVirtualSettings(
 				cpDefinition, productVirtualSettings,
-				cpDefinitionVirtualSettingService, uniqueFileNameProvider,
-				serviceContext);
+				cpDefinitionVirtualSettingService,
+				cpdVirtualSettingFileEntryService, dlAppService,
+				repositoryLocalService, uniqueFileNameProvider, serviceContext);
 		}
 
 		return _updateProductVirtualSettings(
-			cpDefinitionVirtualSetting, productVirtualSettings,
-			cpDefinitionVirtualSettingService, uniqueFileNameProvider,
-			serviceContext);
+			cpDefinition, cpDefinitionVirtualSetting, productVirtualSettings,
+			cpDefinitionVirtualSettingService,
+			cpdVirtualSettingFileEntryService, dlAppService,
+			repositoryLocalService, uniqueFileNameProvider, serviceContext);
 	}
 
 	private static CPDefinitionVirtualSetting _addProductVirtualSettings(
 			CPDefinition cpDefinition,
 			ProductVirtualSettings productVirtualSettings,
 			CPDefinitionVirtualSettingService cpDefinitionVirtualSettingService,
+			CPDVirtualSettingFileEntryService cpdVirtualSettingFileEntryService,
+			DLAppService dlAppService,
+			RepositoryLocalService repositoryLocalService,
 			UniqueFileNameProvider uniqueFileNameProvider,
 			ServiceContext serviceContext)
 		throws Exception {
@@ -68,7 +82,9 @@ public class ProductVirtualSettingsUtil {
 
 		long attachmentFileEntryId = FileEntryUtil.getFileEntryId(
 			productVirtualSettings.getAttachment(), attachmentURL,
-			uniqueFileNameProvider, serviceContext);
+			cpDefinition.getGroupId(), cpdVirtualSettingFileEntryService,
+			dlAppService, repositoryLocalService, uniqueFileNameProvider,
+			serviceContext);
 
 		String sampleAttachmentURL = null;
 		long sampleFileEntryId = 0;
@@ -82,7 +98,9 @@ public class ProductVirtualSettingsUtil {
 
 			sampleFileEntryId = FileEntryUtil.getFileEntryId(
 				productVirtualSettings.getSampleAttachment(),
-				sampleAttachmentURL, uniqueFileNameProvider, serviceContext);
+				sampleAttachmentURL, cpDefinition.getGroupId(),
+				cpdVirtualSettingFileEntryService, dlAppService,
+				repositoryLocalService, uniqueFileNameProvider, serviceContext);
 		}
 
 		Map<Locale, String> termsOfUseContentMap = null;
@@ -98,19 +116,46 @@ public class ProductVirtualSettingsUtil {
 				productVirtualSettings.getTermsOfUseJournalArticleId());
 		}
 
-		return cpDefinitionVirtualSettingService.addCPDefinitionVirtualSetting(
-			CPDefinition.class.getName(), cpDefinition.getCPDefinitionId(),
-			attachmentFileEntryId, attachmentURL,
-			_getActivationStatus(
-				GetterUtil.getInteger(
-					productVirtualSettings.getActivationStatus(),
-					CommerceOrderConstants.ORDER_STATUS_COMPLETED)),
-			TimeUnit.DAYS.toMillis(
-				GetterUtil.getLong(productVirtualSettings.getDuration())),
-			GetterUtil.getInteger(productVirtualSettings.getMaxUsages()),
-			useSample, sampleFileEntryId, sampleAttachmentURL,
-			termsOfUseRequired, termsOfUseContentMap,
-			termsOfUseJournalArticleId, serviceContext);
+		CPDefinitionVirtualSetting cpDefinitionVirtualSetting =
+			cpDefinitionVirtualSettingService.addCPDefinitionVirtualSetting(
+				CPDefinition.class.getName(), cpDefinition.getCPDefinitionId(),
+				attachmentFileEntryId, attachmentURL,
+				_getActivationStatus(
+					GetterUtil.getInteger(
+						productVirtualSettings.getActivationStatus(),
+						CommerceOrderConstants.ORDER_STATUS_COMPLETED)),
+				TimeUnit.DAYS.toMillis(
+					GetterUtil.getLong(productVirtualSettings.getDuration())),
+				GetterUtil.getInteger(productVirtualSettings.getMaxUsages()),
+				useSample, sampleFileEntryId, sampleAttachmentURL,
+				termsOfUseRequired, termsOfUseContentMap,
+				termsOfUseJournalArticleId, false, serviceContext);
+
+		if (productVirtualSettings.getProductVirtualSettingsFileEntries() ==
+				null) {
+
+			return cpDefinitionVirtualSetting;
+		}
+
+		for (ProductVirtualSettingsFileEntry productVirtualSettingsFileEntry :
+				productVirtualSettings.getProductVirtualSettingsFileEntries()) {
+
+			cpdVirtualSettingFileEntryService.addCPDefinitionVirtualSetting(
+				cpDefinitionVirtualSetting.getGroupId(),
+				CPDefinition.class.getName(), cpDefinition.getCPDefinitionId(),
+				cpDefinitionVirtualSetting.getCPDefinitionVirtualSettingId(),
+				FileEntryUtil.getFileEntryId(
+					productVirtualSettingsFileEntry.getAttachment(),
+					productVirtualSettingsFileEntry.getUrl(),
+					cpDefinition.getGroupId(),
+					cpdVirtualSettingFileEntryService, dlAppService,
+					repositoryLocalService, uniqueFileNameProvider,
+					serviceContext),
+				productVirtualSettingsFileEntry.getUrl(),
+				productVirtualSettingsFileEntry.getVersion());
+		}
+
+		return cpDefinitionVirtualSetting;
 	}
 
 	private static int _getActivationStatus(int activationStatus) {
@@ -124,9 +169,13 @@ public class ProductVirtualSettingsUtil {
 	}
 
 	private static CPDefinitionVirtualSetting _updateProductVirtualSettings(
+			CPDefinition cpDefinition,
 			CPDefinitionVirtualSetting cpDefinitionVirtualSetting,
 			ProductVirtualSettings productVirtualSettings,
 			CPDefinitionVirtualSettingService cpDefinitionVirtualSettingService,
+			CPDVirtualSettingFileEntryService cpdVirtualSettingFileEntryService,
+			DLAppService dlAppService,
+			RepositoryLocalService repositoryLocalService,
 			UniqueFileNameProvider uniqueFileNameProvider,
 			ServiceContext serviceContext)
 		throws Exception {
@@ -135,18 +184,27 @@ public class ProductVirtualSettingsUtil {
 		String attachmentURL = _validateURL(productVirtualSettings.getUrl());
 
 		if (Validator.isNull(attachmentURL)) {
+			List<CPDVirtualSettingFileEntry> cpdVirtualSettingFileEntries =
+				cpDefinitionVirtualSetting.getCPDVirtualSettingFileEntries();
+
+			CPDVirtualSettingFileEntry cpdVirtualSettingFileEntry =
+				cpdVirtualSettingFileEntries.get(0);
+
 			if (Validator.isNull(productVirtualSettings.getAttachment())) {
-				attachmentURL = cpDefinitionVirtualSetting.getUrl();
+				attachmentURL = cpdVirtualSettingFileEntry.getUrl();
 			}
 			else {
 				attachmentFileEntryId = FileEntryUtil.getFileEntryId(
 					productVirtualSettings.getAttachment(), attachmentURL,
-					uniqueFileNameProvider, serviceContext);
+					cpDefinition.getGroupId(),
+					cpdVirtualSettingFileEntryService, dlAppService,
+					repositoryLocalService, uniqueFileNameProvider,
+					serviceContext);
 			}
 
 			if (attachmentFileEntryId == 0) {
 				attachmentFileEntryId =
-					cpDefinitionVirtualSetting.getFileEntryId();
+					cpdVirtualSettingFileEntry.getFileEntryId();
 			}
 		}
 
@@ -177,7 +235,9 @@ public class ProductVirtualSettingsUtil {
 				else {
 					sampleFileEntryId = FileEntryUtil.getFileEntryId(
 						productVirtualSettings.getSampleAttachment(),
-						sampleAttachmentURL, uniqueFileNameProvider,
+						sampleAttachmentURL, cpDefinition.getGroupId(),
+						cpdVirtualSettingFileEntryService, dlAppService,
+						repositoryLocalService, uniqueFileNameProvider,
 						serviceContext);
 				}
 
@@ -218,8 +278,8 @@ public class ProductVirtualSettingsUtil {
 			}
 		}
 
-		return cpDefinitionVirtualSettingService.
-			updateCPDefinitionVirtualSetting(
+		cpDefinitionVirtualSetting =
+			cpDefinitionVirtualSettingService.updateCPDefinitionVirtualSetting(
 				cpDefinitionVirtualSetting.getCPDefinitionVirtualSettingId(),
 				attachmentFileEntryId, attachmentURL,
 				_getActivationStatus(
@@ -234,6 +294,43 @@ public class ProductVirtualSettingsUtil {
 				useSample, sampleFileEntryId, sampleAttachmentURL,
 				termsOfUseRequired, termsOfUseContentMap,
 				termsOfUseJournalArticleId, serviceContext);
+
+		if (productVirtualSettings.getProductVirtualSettingsFileEntries() ==
+				null) {
+
+			return cpDefinitionVirtualSetting;
+		}
+
+		for (CPDVirtualSettingFileEntry cpdVirtualSettingFileEntry :
+				cpDefinitionVirtualSetting.getCPDVirtualSettingFileEntries()) {
+
+			cpdVirtualSettingFileEntryService.deleteCPDVirtualSettingFileEntry(
+				CPDefinition.class.getName(),
+				cpDefinitionVirtualSetting.getClassPK(),
+				cpdVirtualSettingFileEntry.
+					getCPDefinitionVirtualSettingFileEntryId());
+		}
+
+		for (ProductVirtualSettingsFileEntry productVirtualSettingsFileEntry :
+				productVirtualSettings.getProductVirtualSettingsFileEntries()) {
+
+			cpdVirtualSettingFileEntryService.addCPDefinitionVirtualSetting(
+				cpDefinitionVirtualSetting.getGroupId(),
+				CPDefinition.class.getName(),
+				cpDefinitionVirtualSetting.getClassPK(),
+				cpDefinitionVirtualSetting.getCPDefinitionVirtualSettingId(),
+				FileEntryUtil.getFileEntryId(
+					productVirtualSettingsFileEntry.getAttachment(),
+					productVirtualSettingsFileEntry.getUrl(),
+					cpDefinition.getGroupId(),
+					cpdVirtualSettingFileEntryService, dlAppService,
+					repositoryLocalService, uniqueFileNameProvider,
+					serviceContext),
+				productVirtualSettingsFileEntry.getUrl(),
+				productVirtualSettingsFileEntry.getVersion());
+		}
+
+		return cpDefinitionVirtualSetting;
 	}
 
 	private static String _validateURL(String value) throws Exception {

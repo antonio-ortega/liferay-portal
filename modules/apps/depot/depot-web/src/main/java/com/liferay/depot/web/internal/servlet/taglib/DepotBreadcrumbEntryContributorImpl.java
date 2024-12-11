@@ -24,7 +24,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.site.util.GroupURLProvider;
+import com.liferay.site.provider.GroupURLProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -114,6 +114,12 @@ public class DepotBreadcrumbEntryContributorImpl
 		}
 
 		breadcrumbEntries.addAll(originalBreadcrumbEntries);
+
+		BreadcrumbEntry breadcrumbEntry = breadcrumbEntries.get(
+			breadcrumbEntries.size() - 1);
+
+		breadcrumbEntry.setBrowsable(false);
+		breadcrumbEntry.setURL(null);
 
 		return breadcrumbEntries;
 	}

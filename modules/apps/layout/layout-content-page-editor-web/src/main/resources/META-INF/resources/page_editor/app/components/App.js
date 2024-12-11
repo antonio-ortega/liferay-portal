@@ -11,6 +11,7 @@ import React from 'react';
 import ConvertToPageTemplateModal from '../../plugins/convert_to_page_template_modal/components/ConvertToPageTemplateModal';
 import {StyleBookContextProvider} from '../../plugins/page_design_options/hooks/useStyleBook';
 import {INIT} from '../actions/types';
+import {ClipboardContextProvider} from '../contexts/ClipboardContext';
 import {CollectionActiveItemContextProvider} from '../contexts/CollectionActiveItemContext';
 import {ControlsProvider} from '../contexts/ControlsContext';
 import {DisplayPagePreviewItemContextProvider} from '../contexts/DisplayPagePreviewItemContext';
@@ -19,25 +20,30 @@ import {FormValidationContextProvider} from '../contexts/FormValidationContext';
 import {GlobalContextProvider} from '../contexts/GlobalContext';
 import {
 	KeyboardMovementContextProvider,
-	useMovementSource,
+	useMovementSources,
 } from '../contexts/KeyboardMovementContext';
+import {LayoutKeyboardContextProvider} from '../contexts/LayoutKeyboardContext';
+import {LocalConfigContextProvider} from '../contexts/LocalConfigContext';
+import {PortletContentContextProvider} from '../contexts/PortletContentContext';
+import {ShortcutContextProvider} from '../contexts/ShortcutContext';
 import {StoreContextProvider} from '../contexts/StoreContext';
+import {WidgetsContextProvider} from '../contexts/WidgetsContext';
 import AppHooks from '../hooks/app_hooks/index';
 import {reducer} from '../reducers/index';
 import {DragAndDropContextProvider} from '../utils/drag_and_drop/useDragAndDrop';
 import CommonStylesManager from './CommonStylesManager';
 import {DisplayPagePreviewItemSelector} from './DisplayPagePreviewItemSelector';
 import DragPreviewWrapper from './DragPreviewWrapper';
+import FocusManager from './FocusManager';
 import ItemConfigurationSidebar from './ItemConfigurationSidebar';
-import KeyboardMovementManager from './KeyboardMovementManager';
-import KeyboardMovementPreview from './KeyboardMovementPreview';
-import KeyboardMovementText from './KeyboardMovementText';
 import {LayoutBreadcrumbs} from './LayoutBreadcrumbs';
 import LayoutViewport from './LayoutViewport';
+import MultiSelectManager from './MultiSelectManager';
 import ShortcutManager from './ShortcutManager';
 import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
-import WidgetsManager from './WidgetsManager';
+import KeyboardMovementManager from './keyboard_movement/KeyboardMovementManager';
+import KeyboardMovementPreview from './keyboard_movement/KeyboardMovementPreview';
 
 export default function App({state}) {
 	const initialState = reducer(state, {type: INIT});
@@ -52,39 +58,49 @@ export default function App({state}) {
 						<DragAndDropContextProvider>
 							<EditableProcessorContextProvider>
 								<DisplayPagePreviewItemContextProvider>
-									<AppHooks />
+									<WidgetsContextProvider>
+										<AppHooks />
 
-									<DisplayPagePreviewItemSelector dark />
+										<DisplayPagePreviewItemSelector dark />
 
-									<DragPreviewWrapper />
+										<DragPreviewWrapper />
 
-									<WidgetsManager />
+										<FocusManager />
 
-									<FormValidationContextProvider>
-										<Toolbar />
+										<FormValidationContextProvider>
+											<Toolbar />
 
-										<KeyboardMovementContextProvider>
-											<KeyboardManager />
+											<KeyboardMovementContextProvider>
+												<ClipboardContextProvider>
+													<ShortcutContextProvider>
+														<KeyboardManager />
 
-											<KeyboardMovementPreview />
+														<KeyboardMovementPreview />
 
-											<KeyboardMovementText />
+														<PortletContentContextProvider>
+															<LocalConfigContextProvider>
+																<GlobalContextProvider>
+																	<CommonStylesManager />
 
-											<GlobalContextProvider>
-												<CommonStylesManager />
+																	<StyleBookContextProvider>
+																		<Sidebar />
 
-												<LayoutViewport />
+																		<LayoutKeyboardContextProvider>
+																			<LayoutViewport />
+																		</LayoutKeyboardContextProvider>
 
-												<LayoutBreadcrumbs />
+																		<LayoutBreadcrumbs />
 
-												<StyleBookContextProvider>
-													<Sidebar />
-
-													<ItemConfigurationSidebar />
-												</StyleBookContextProvider>
-											</GlobalContextProvider>
-										</KeyboardMovementContextProvider>
-									</FormValidationContextProvider>
+																		<ItemConfigurationSidebar />
+																	</StyleBookContextProvider>
+																</GlobalContextProvider>
+															</LocalConfigContextProvider>
+														</PortletContentContextProvider>
+													</ShortcutContextProvider>
+												</ClipboardContextProvider>
+											</KeyboardMovementContextProvider>
+										</FormValidationContextProvider>
+									</WidgetsContextProvider>
 								</DisplayPagePreviewItemContextProvider>
 							</EditableProcessorContextProvider>
 						</DragAndDropContextProvider>
@@ -100,7 +116,14 @@ App.propTypes = {
 };
 
 function KeyboardManager() {
-	const movementSource = useMovementSource();
+	const movementSources = useMovementSources();
 
-	return movementSource ? <KeyboardMovementManager /> : <ShortcutManager />;
+	return movementSources.length ? (
+		<KeyboardMovementManager />
+	) : (
+		<>
+			<ShortcutManager />
+			{Liferay.FeatureFlags['LPD-18221'] ? <MultiSelectManager /> : null}
+		</>
+	);
 }

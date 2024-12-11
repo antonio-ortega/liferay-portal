@@ -13,13 +13,13 @@ import com.liferay.adaptive.media.image.model.AMImageEntry;
 import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.store.Store;
-import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
+import com.liferay.document.library.preview.processor.BasePreviewableDLProcessor;
 import com.liferay.osgi.util.osgi.commands.OSGiCommands;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.image.ImageToolUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.image.ImageBag;
-import com.liferay.portal.kernel.image.ImageTool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -80,8 +80,8 @@ public class AMThumbnailsOSGiCommands implements OSGiCommands {
 
 	private void _cleanUp(long companyId) {
 		String[] fileNames = _store.getFileNames(
-			companyId, DLPreviewableProcessor.REPOSITORY_ID,
-			DLPreviewableProcessor.THUMBNAIL_PATH);
+			companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
+			BasePreviewableDLProcessor.THUMBNAIL_PATH);
 
 		for (String fileName : fileNames) {
 
@@ -98,7 +98,7 @@ public class AMThumbnailsOSGiCommands implements OSGiCommands {
 
 				if (fileVersion != null) {
 					_store.deleteDirectory(
-						companyId, DLPreviewableProcessor.REPOSITORY_ID,
+						companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
 						actualFileName);
 				}
 			}
@@ -107,8 +107,8 @@ public class AMThumbnailsOSGiCommands implements OSGiCommands {
 
 	private void _countPendingThumbnails(Long companyId, AtomicInteger count) {
 		String[] fileNames = _store.getFileNames(
-			companyId, DLPreviewableProcessor.REPOSITORY_ID,
-			DLPreviewableProcessor.THUMBNAIL_PATH);
+			companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
+			BasePreviewableDLProcessor.THUMBNAIL_PATH);
 
 		int companyTotal = 0;
 
@@ -175,7 +175,7 @@ public class AMThumbnailsOSGiCommands implements OSGiCommands {
 				PrefsPropsUtil.getInteger(
 					PropsKeys.DL_FILE_ENTRY_THUMBNAIL_MAX_HEIGHT),
 				Pattern.compile(
-					DLPreviewableProcessor.THUMBNAIL_PATH +
+					BasePreviewableDLProcessor.THUMBNAIL_PATH +
 						"\\d+/\\d+(?:/\\d+)+/(\\d+)(?:\\..+)?$")),
 			new ThumbnailConfiguration(
 				PrefsPropsUtil.getInteger(
@@ -183,7 +183,7 @@ public class AMThumbnailsOSGiCommands implements OSGiCommands {
 				PrefsPropsUtil.getInteger(
 					PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT),
 				Pattern.compile(
-					DLPreviewableProcessor.THUMBNAIL_PATH +
+					BasePreviewableDLProcessor.THUMBNAIL_PATH +
 						"\\d+/\\d+(?:/\\d+)+/(\\d+)-1(?:\\..+)?$")),
 			new ThumbnailConfiguration(
 				PrefsPropsUtil.getInteger(
@@ -191,7 +191,7 @@ public class AMThumbnailsOSGiCommands implements OSGiCommands {
 				PrefsPropsUtil.getInteger(
 					PropsKeys.DL_FILE_ENTRY_THUMBNAIL_CUSTOM_2_MAX_HEIGHT),
 				Pattern.compile(
-					DLPreviewableProcessor.THUMBNAIL_PATH +
+					BasePreviewableDLProcessor.THUMBNAIL_PATH +
 						"\\d+/\\d+(?:/\\d+)+/(\\d+)-2(?:\\..+)?$"))
 		};
 	}
@@ -232,8 +232,8 @@ public class AMThumbnailsOSGiCommands implements OSGiCommands {
 		}
 
 		String[] fileNames = _store.getFileNames(
-			companyId, DLPreviewableProcessor.REPOSITORY_ID,
-			DLPreviewableProcessor.THUMBNAIL_PATH);
+			companyId, BasePreviewableDLProcessor.REPOSITORY_ID,
+			BasePreviewableDLProcessor.THUMBNAIL_PATH);
 
 		for (String fileName : fileNames) {
 
@@ -282,10 +282,10 @@ public class AMThumbnailsOSGiCommands implements OSGiCommands {
 			byte[] bytes = StreamUtil.toByteArray(
 				_store.getFileAsStream(
 					fileVersion.getCompanyId(),
-					DLPreviewableProcessor.REPOSITORY_ID, fileName,
+					BasePreviewableDLProcessor.REPOSITORY_ID, fileName,
 					StringPool.BLANK));
 
-			ImageBag imageBag = _imageTool.read(bytes);
+			ImageBag imageBag = ImageToolUtil.read(bytes);
 
 			RenderedImage renderedImage = imageBag.getRenderedImage();
 
@@ -316,9 +316,6 @@ public class AMThumbnailsOSGiCommands implements OSGiCommands {
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;
-
-	@Reference
-	private ImageTool _imageTool;
 
 	@Reference(target = "(default=true)")
 	private Store _store;

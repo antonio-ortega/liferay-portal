@@ -9,6 +9,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.saved.content.model.SavedContentEntry;
 
@@ -35,6 +36,14 @@ public class SavedContentEntryLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.saved.content.service.impl.SavedContentEntryLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static SavedContentEntry addSavedContentEntry(
+			long userId, long groupId, String className, long classPK,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addSavedContentEntry(
+			userId, groupId, className, classPK, serviceContext);
+	}
 
 	/**
 	 * Adds the saved content entry to the database. Also notifies the appropriate model listeners.
@@ -82,6 +91,16 @@ public class SavedContentEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
+	}
+
+	public static void deleteSavedContentEntries(
+		long groupId, long classNameId, long classPK) {
+
+		getService().deleteSavedContentEntries(groupId, classNameId, classPK);
+	}
+
+	public static void deleteSavedContentEntriesByUserId(long userId) {
+		getService().deleteSavedContentEntriesByUserId(userId);
 	}
 
 	/**
@@ -209,10 +228,39 @@ public class SavedContentEntryLocalServiceUtil {
 		return getService().fetchSavedContentEntry(savedContentEntryId);
 	}
 
+	public static SavedContentEntry fetchSavedContentEntry(
+		long userId, long groupId, String className, long classPK) {
+
+		return getService().fetchSavedContentEntry(
+			userId, groupId, className, classPK);
+	}
+
+	/**
+	 * Returns the saved content entry matching the UUID and group.
+	 *
+	 * @param uuid the saved content entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching saved content entry, or <code>null</code> if a matching saved content entry could not be found
+	 */
+	public static SavedContentEntry fetchSavedContentEntryByUuidAndGroupId(
+		String uuid, long groupId) {
+
+		return getService().fetchSavedContentEntryByUuidAndGroupId(
+			uuid, groupId);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
 		return getService().getActionableDynamicQuery();
+	}
+
+	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return getService().getExportActionableDynamicQuery(portletDataContext);
 	}
 
 	public static
@@ -258,6 +306,39 @@ public class SavedContentEntryLocalServiceUtil {
 	}
 
 	/**
+	 * Returns all the saved content entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the saved content entries
+	 * @param companyId the primary key of the company
+	 * @return the matching saved content entries, or an empty list if no matches were found
+	 */
+	public static List<SavedContentEntry>
+		getSavedContentEntriesByUuidAndCompanyId(String uuid, long companyId) {
+
+		return getService().getSavedContentEntriesByUuidAndCompanyId(
+			uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of saved content entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the saved content entries
+	 * @param companyId the primary key of the company
+	 * @param start the lower bound of the range of saved content entries
+	 * @param end the upper bound of the range of saved content entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the range of matching saved content entries, or an empty list if no matches were found
+	 */
+	public static List<SavedContentEntry>
+		getSavedContentEntriesByUuidAndCompanyId(
+			String uuid, long companyId, int start, int end,
+			OrderByComparator<SavedContentEntry> orderByComparator) {
+
+		return getService().getSavedContentEntriesByUuidAndCompanyId(
+			uuid, companyId, start, end, orderByComparator);
+	}
+
+	/**
 	 * Returns the number of saved content entries.
 	 *
 	 * @return the number of saved content entries
@@ -280,6 +361,30 @@ public class SavedContentEntryLocalServiceUtil {
 		return getService().getSavedContentEntry(savedContentEntryId);
 	}
 
+	public static SavedContentEntry getSavedContentEntry(
+			long userId, long groupId, String className, long classPK)
+		throws com.liferay.saved.content.exception.
+			NoSuchSavedContentEntryException {
+
+		return getService().getSavedContentEntry(
+			userId, groupId, className, classPK);
+	}
+
+	/**
+	 * Returns the saved content entry matching the UUID and group.
+	 *
+	 * @param uuid the saved content entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching saved content entry
+	 * @throws PortalException if a matching saved content entry could not be found
+	 */
+	public static SavedContentEntry getSavedContentEntryByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException {
+
+		return getService().getSavedContentEntryByUuidAndGroupId(uuid, groupId);
+	}
+
 	/**
 	 * Updates the saved content entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
@@ -297,13 +402,12 @@ public class SavedContentEntryLocalServiceUtil {
 	}
 
 	public static SavedContentEntryLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(SavedContentEntryLocalService service) {
-		_service = service;
-	}
-
-	private static volatile SavedContentEntryLocalService _service;
+	private static final Snapshot<SavedContentEntryLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			SavedContentEntryLocalServiceUtil.class,
+			SavedContentEntryLocalService.class);
 
 }

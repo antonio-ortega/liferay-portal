@@ -48,7 +48,9 @@
 			encoding="${javac.encoding}"
 			includeAntRuntime="false"
 			nowarn="${javac.nowarn}"
+			source="${ant.build.javac.source}"
 			srcdir="${javac.srcdir}"
+			target="${ant.build.javac.target}"
 		/>
 
 		<echo file="${javac.destdir}/.touch"></echo>
@@ -202,7 +204,6 @@
 					<attribute name="Liferay-Portal-Build-Date" value="${release.info.build.date}" />
 					<attribute name="Liferay-Portal-Build-Number" value="${release.info.build.number}" />
 					<attribute name="Liferay-Portal-Build-Revision" value="${build.revision}" />
-					<attribute name="Liferay-Portal-Build-Time" value="${build.time}" />
 					<attribute name="Liferay-Portal-Code-Name" value="${release.info.code.name}" />
 					<attribute name="Liferay-Portal-Parent-Build-Number" value="${release.info.parent.build.number}" />
 					<attribute name="Liferay-Portal-Release-Info" value="${release.info.release.info}" />

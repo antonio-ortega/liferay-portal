@@ -112,7 +112,7 @@
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<script>
+<aui:script>
 	function <portlet:namespace />saveConfiguration() {
 		var form = document.<portlet:namespace />fm;
 
@@ -131,11 +131,10 @@
 					hiddenNodes: Liferay.Util.getSelectedOptionValues(
 						availableVisibleNodes
 					),
-					visibleNodes: Liferay.Util.getSelectedOptionValues(
-						currentVisibleNodes
-					),
+					visibleNodes:
+						Liferay.Util.getSelectedOptionValues(currentVisibleNodes),
 				},
 			});
 		}
 	}
-</script>
+</aui:script>

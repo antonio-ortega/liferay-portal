@@ -187,14 +187,14 @@ public class TableJoinHolderFactory {
 								return stringColumn.neq(StringPool.BLANK);
 							}
 
-							if (clazz == Long.class) {
-								Column<?, Long> longColumn =
-									(Column<?, Long>)column;
-
-								return longColumn.neq(0L);
+							if (clazz != Long.class) {
+								return null;
 							}
 
-							return null;
+							Column<?, Long> longColumn =
+								(Column<?, Long>)column;
+
+							return longColumn.neq(0L);
 						}
 					);
 			}
@@ -208,9 +208,10 @@ public class TableJoinHolderFactory {
 	private static List<BridgePredicate> _getBridgePredicates(
 		JoinStep joinStep) {
 
+		List<BridgePredicate> bridgePredicates = new LinkedList<>();
+
 		Queue<DefaultPredicate> defaultPredicateQueue = new LinkedList<>();
 		Queue<Expression<?>> expressionQueue = new LinkedList<>();
-		List<BridgePredicate> bridgePredicates = new LinkedList<>();
 
 		ASTNode astNode = joinStep;
 

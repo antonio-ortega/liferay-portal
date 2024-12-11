@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPOptionValue;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.util.List;
 import java.util.Map;
@@ -57,18 +58,18 @@ public class CPOptionValueServiceUtil {
 		getService().deleteCPOptionValue(cpOptionValueId);
 	}
 
-	public static CPOptionValue fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CPOptionValue fetchCPOptionValue(long cpOptionValueId)
 		throws PortalException {
 
 		return getService().fetchCPOptionValue(cpOptionValueId);
+	}
+
+	public static CPOptionValue fetchCPOptionValueByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().fetchCPOptionValueByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static CPOptionValue getCPOptionValue(long cpOptionValueId)
@@ -128,13 +129,11 @@ public class CPOptionValueServiceUtil {
 	}
 
 	public static CPOptionValueService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPOptionValueService service) {
-		_service = service;
-	}
-
-	private static volatile CPOptionValueService _service;
+	private static final Snapshot<CPOptionValueService> _serviceSnapshot =
+		new Snapshot<>(
+			CPOptionValueServiceUtil.class, CPOptionValueService.class);
 
 }

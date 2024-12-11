@@ -17,6 +17,7 @@ import com.liferay.commerce.product.service.CPSpecificationOptionLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.product.type.simple.constants.SimpleCPTypeConstants;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -66,7 +67,8 @@ public class CPDefinitionSpecificationOptionValueTableReferenceDefinitionTest
 			false);
 
 		_cpOptionCategory = _cpOptionCategoryLocalService.addCPOptionCategory(
-			TestPropsValues.getUserId(), RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomDouble(),
 			CPDefinitionSpecificationOptionValueTableReferenceDefinitionTest.
@@ -75,24 +77,24 @@ public class CPDefinitionSpecificationOptionValueTableReferenceDefinitionTest
 
 		_cpSpecificationOption =
 			_cpSpecificationOptionLocalService.addCPSpecificationOption(
-				TestPropsValues.getUserId(),
-				_cpOptionCategory.getCPOptionCategoryId(),
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				_cpOptionCategory.getCPOptionCategoryId(), null,
 				RandomTestUtil.randomLocaleStringMap(),
 				RandomTestUtil.randomLocaleStringMap(), true,
 				CPDefinitionSpecificationOptionValueTableReferenceDefinitionTest.class.
 					getSimpleName(),
-				_serviceContext);
+				RandomTestUtil.randomDouble(), _serviceContext);
 	}
 
 	@Override
 	protected CTModel<?> addCTModel() throws Exception {
 		return _cpDefinitionSpecificationOptionValueLocalService.
 			addCPDefinitionSpecificationOptionValue(
-				_cpDefinition.getCPDefinitionId(),
+				StringPool.BLANK, _cpDefinition.getCPDefinitionId(),
 				_cpSpecificationOption.getCPSpecificationOptionId(),
 				_cpOptionCategory.getCPOptionCategoryId(),
-				RandomTestUtil.randomLocaleStringMap(),
-				RandomTestUtil.randomDouble(), _serviceContext);
+				RandomTestUtil.randomDouble(),
+				RandomTestUtil.randomLocaleStringMap(), _serviceContext);
 	}
 
 	@Inject

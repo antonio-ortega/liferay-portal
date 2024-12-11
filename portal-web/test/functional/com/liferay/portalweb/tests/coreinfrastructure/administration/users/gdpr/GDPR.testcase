@@ -1,8 +1,9 @@
-@component-name = "portal-user-management"
+@component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "jsonws.web.service.paths.excludes=";
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false${line.separator}jsonws.web.service.paths.excludes=";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Personal Data";
 
@@ -10,6 +11,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -63,21 +66,21 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			JSONWebcontent.addWebContent(
 				content = "This is a WC Content for GDPR Export testing.",
 				groupName = "Guest",
 				title = "GDPR Export Article",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			JSONMBMessage.addMessage(
 				groupName = "Guest",
 				threadBody = "MB Thread Message Body",
 				threadSubject = "MB Thread Message Subject",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("When sign in as Super User and add a data export progress to export all added entries") {
@@ -128,136 +131,6 @@ definition {
 				LexiconEntry.viewNoEntry(rowEntry = ${rowEntry});
 			}
 		}
-	}
-
-	@description = "This test adds entries from different application and anonymizes all entries via Select All"
-	@priority = 4
-	test CanAnonymizeAllEntries {
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		JSONWebcontent.addFolder(
-			folderName = "WC GDPR Folder",
-			groupName = "Guest",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		JSONWebcontent.addWebContent(
-			content = "This is a WC Content for GDPR Anonymize testing.",
-			folderName = "WC GDPR Folder",
-			groupName = "Guest",
-			title = "GDPR Anonymize Article in Folder",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		JSONWebcontent.addWebContent(
-			content = "This is a WC Content for GDPR Anonymize testing.",
-			groupName = "Guest",
-			title = "GDPR Anonymize Article",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "DM Document Title");
-
-		JSONMBMessage.addMessage(
-			groupName = "Guest",
-			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Wiki");
-
-		WikiNavigator.gotoNode(wikiNodeName = "Main");
-
-		WikiNavigator.gotoAllPagesCP();
-
-		WikiPage.addCP(
-			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.deletePersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.anonymizeDataViaReviewData(allApplications = "true");
-
-		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "table");
-
-		BlogsEntry.viewEntryTable(entryTitle = "Blogs Entry Title");
-
-		BlogsEntry.viewEntryAuthorCP(
-			entryAuthorFullName = "Anonymous Anonymous",
-			entryTitle = "Blogs Entry Title");
-
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
-
-		for (var entryTitle : list "WC GDPR Folder,GDPR Anonymize Article") {
-			WebContent.viewEntryListAuthor(
-				author = "Anonymous Anonymous",
-				entryTitle = ${entryTitle});
-		}
-
-		WebContentFolder.gotoCP(
-			folderName = "WC GDPR Folder",
-			webContentTitle = "WC GDPR Folder");
-
-		WebContent.viewEntryListAuthor(
-			author = "Anonymous Anonymous",
-			entryTitle = "GDPR Anonymize Article in Folder");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentCP(dmDocumentTitle = "DM Document Title");
-
-		DMDocument.expandInfo();
-
-		AssertTextEquals(
-			locator1 = "DocumentsAndMediaDocument#DOCUMENT_INFO_UPLOADER_NO_PROFILE",
-			value1 = "Anonymous Anonymous");
-
-		MessageBoardsAdmin.openMessageBoardsAdmin(siteURLKey = "guest");
-
-		MessageboardsThread.gotoPG(
-			lastPostUserName = "Anonymous Anonymous",
-			replyCount = 0,
-			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Wiki");
-
-		WikiNavigator.gotoNode(wikiNodeName = "Main");
-
-		WikiNavigator.gotoAllPagesCP();
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "table");
-
-		var key_wikiPageTitle = "Wiki Page Title";
-		var key_wikiPageUsername = "Anonymous Anonymous";
-
-		AssertTextEquals(
-			locator1 = "WikiTable#ALL_PAGES_USER",
-			value1 = "Anonymous Anonymous");
 	}
 
 	@description = "This test anonymizes all entries from an application"
@@ -370,7 +243,7 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -492,7 +365,7 @@ definition {
 					site = "false",
 					title = "GDPR Anonymize Article ${count}",
 					userEmailAddress = "userea@liferay.com",
-					userPassword = "test");
+					userPassword = PropsUtil.get("default.admin.password"));
 			}
 
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "site-name-staging");
@@ -707,7 +580,7 @@ definition {
 
 			UserNavigator.gotoUser(userScreenName = "usersn");
 
-			User.editPassword(newPassword = "test");
+			User.editPassword(newPassword = PropsUtil.get("default.admin.password"));
 
 			PasswordPolicies.openPasswordPoliciesAdmin();
 
@@ -765,7 +638,7 @@ definition {
 
 			UserNavigator.gotoUser(userScreenName = "usersn");
 
-			User.editPassword(newPassword = "test");
+			User.editPassword(newPassword = PropsUtil.get("default.admin.password"));
 
 			PasswordPolicies.openPasswordPoliciesAdmin();
 
@@ -819,7 +692,7 @@ definition {
 			announcementTitle = "Announcement Entry Title",
 			announcementURL = "http://www.liferay.com",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		Navigator.gotoPage(pageName = "Announcements Page");
 
@@ -928,7 +801,7 @@ definition {
 			entryTitle = "Blogs Entry Title",
 			groupName = "Site Name",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
@@ -975,7 +848,7 @@ definition {
 			groupName = "Site Name (Staging)",
 			site = "false",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -983,7 +856,7 @@ definition {
 			groupName = "Site Name (Staging)",
 			site = "false",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name-staging");
 
@@ -1060,7 +933,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
@@ -1086,13 +959,13 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			JSONWebcontent.addFolder(
 				folderName = "WC GDPR Export Folder",
 				groupName = "Guest",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			JSONWebcontent.addWebContent(
 				content = "This is a WC Content for GDPR Export testing.",
@@ -1100,14 +973,14 @@ definition {
 				groupName = "Guest",
 				title = "GDPR Export Article in Folder",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			JSONWebcontent.addWebContent(
 				content = "This is a WC Content for GDPR Export testing.",
 				groupName = "Guest",
 				title = "GDPR Export Article",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			Navigator.openURL();
 
@@ -1123,7 +996,7 @@ definition {
 				threadBody = "MB Thread Message Body",
 				threadSubject = "MB Thread Message Subject",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			ProductMenu.gotoPortlet(
 				category = "Content & Data",
@@ -1171,7 +1044,7 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
@@ -1247,82 +1120,6 @@ definition {
 		}
 	}
 
-	@description = "This test deletes a staged and a live entry from an application, tests with Blogs entries."
-	@priority = 4
-	test CanDeleteASingleStagedAndLiveBlogsEntry {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Given Publish the staged blogs entries to live as a new admin user") {
-			HeadlessSite.addSite(siteName = "Site Name");
-
-			JSONLayout.addPublicLayout(
-				groupName = "Site Name",
-				layoutName = "Staging Test Page");
-
-			JSONUser.addUserToSite(
-				groupName = "Site Name",
-				userEmailAddress = "userea@liferay.com");
-
-			JSONStaging.enableLocalStaging(groupName = "Site Name");
-
-			for (var count : list "1,2,3") {
-				JSONBlog.addEntry(
-					entryContent = "Blogs Entry Content",
-					entryTitle = "Blogs Entry Title ${count}",
-					groupName = "Site Name (Staging)",
-					site = "false",
-					userEmailAddress = "userea@liferay.com",
-					userPassword = "test");
-			}
-
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name-staging");
-
-			Staging.publishToLiveNowViaPortletCP();
-		}
-
-		task ("When sign in as Test Test and deactivate the user usersn") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
-
-			User.openUsersAdmin();
-
-			User.deletePersonalDataCP(
-				userFirstName = "userfn",
-				userLastName = "userln");
-
-			task ("And deleted staged 'Blogs Entry Title 1' entry and lived 'Blogs Entry Title 2' entry") {
-				GDPR.filterByApplications(
-					applicationItemsCount = 6,
-					applications = "Blogs",
-					totalItemsCount = 6);
-
-				for (var rowIndexNum : list "1,3") {
-					GDPR.deleteTheSpecificEntry(rowIndexNumber = ${rowIndexNum});
-				}
-			}
-		}
-
-		task ("Then assert staged 'Blogs Entry Title 1' entry and lived 'Blogs Entry Title 2' entry have been deleted") {
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name-staging");
-
-			Blogs.viewEntryNotPresent(entryTitle = "Blogs Entry Title 1");
-
-			for (var rowEntry : list "Blogs Entry Title 2,Blogs Entry Title 3") {
-				LexiconEntry.viewEntryName(rowEntry = ${rowEntry});
-			}
-
-			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name");
-
-			Blogs.viewEntryNotPresent(entryTitle = "Blogs Entry Title 2");
-
-			for (var rowEntry : list "Blogs Entry Title 1,Blogs Entry Title 3") {
-				LexiconEntry.viewEntryName(rowEntry = ${rowEntry});
-			}
-		}
-	}
-
 	@description = "This test deletes entries from an application that has hierarchy"
 	@ignore = "Test Stub"
 	@priority = 4
@@ -1335,8 +1132,8 @@ definition {
 	@description = "This test deletes a single entry from a single application"
 	@priority = 4
 	test CanDeleteEntryFromApplication {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 
@@ -1344,7 +1141,7 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
@@ -1459,152 +1256,6 @@ definition {
 			tableEntryPartialTextList = "Document_1.txt,Edit DM Document Description");
 	}
 
-	@description = "This test exports multiple entries from different applications"
-	@priority = 4
-	test CanExportMultipleEntries {
-		property portal.acceptance = "true";
-
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Announcements Page");
-
-		JSONLayout.updateLayoutTemplateOfPublicLayout(
-			groupName = "Guest",
-			layoutName = "Announcements Page",
-			layoutTemplate = "1 Column");
-
-		JSONLayout.addWidgetToPublicLayout(
-			groupName = "Guest",
-			layoutName = "Announcements Page",
-			widgetName = "Announcements");
-
-		JSONAnnouncement.addAnnouncement(
-			announcementContent = "Announcements Entry Content",
-			announcementTitle = "Announcements Entry Title",
-			announcementURL = "http://www.liferay.com",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		Navigator.gotoPage(pageName = "Announcements Page");
-
-		AnnouncementsEntry.viewPG(
-			distributionScope = "General",
-			entryContent = "Announcements Entry Content",
-			entryTitle = "Announcements Entry Title");
-
-		JSONLayout.addPublicLayout(
-			groupName = "Guest",
-			layoutName = "Contacts Center Page");
-
-		JSONLayout.updateLayoutTemplateOfPublicLayout(
-			groupName = "Guest",
-			layoutName = "Contacts Center Page",
-			layoutTemplate = "1 Column");
-
-		JSONLayout.addWidgetToPublicLayout(
-			groupName = "Guest",
-			layoutName = "Contacts Center Page",
-			widgetName = "Contacts Center");
-
-		Navigator.gotoPage(pageName = "Contacts Center Page");
-
-		ContactsCenter.addPG(
-			contactName = "test1",
-			emailAddress = "test1@liferay.com");
-
-		ContactsCenter.viewContactPG(
-			contactName = "test1",
-			emailAddress = "test1@liferay.com");
-
-		JSONBlog.addEntry(
-			entryContent = "Blogs Entry Content",
-			entryTitle = "Blogs Entry Title",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		JSONWebcontent.addFolder(
-			folderName = "WC GDPR Export Folder",
-			groupName = "Guest",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		JSONWebcontent.addWebContent(
-			content = "This is a WC Content for GDPR Export testing.",
-			folderName = "WC GDPR Export Folder",
-			groupName = "Guest",
-			title = "GDPR Export Article in Folder",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		JSONWebcontent.addWebContent(
-			content = "This is a WC Content for GDPR Export testing.",
-			groupName = "Guest",
-			title = "GDPR Export Article",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		Navigator.openURL();
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
-
-		DMDocument.addCP(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentFile = "Document_1.txt",
-			dmDocumentTitle = "DM Document Title");
-
-		JSONMBMessage.addMessage(
-			groupName = "Guest",
-			threadBody = "MB Thread Message Body",
-			threadSubject = "MB Thread Message Subject",
-			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Wiki");
-
-		WikiNavigator.gotoNode(wikiNodeName = "Main");
-
-		WikiNavigator.gotoAllPagesCP();
-
-		WikiPage.addCP(
-			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title");
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		User.openUsersAdmin();
-
-		User.exportPersonalDataCP(
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.addExportProcessCP(
-			applications = "Web Content,Wiki,Message Boards,Contacts Center,Blogs,Announcements,Documents and Media",
-			userFirstName = "userfn",
-			userLastName = "userln");
-
-		GDPR.downloadExportedPersonalData(applications = "Web Content,Wiki,Message Boards,Contacts Center,Blogs,Announcements,Documents and Media");
-
-		AssertConsoleTextNotPresent(value1 = "java.lang.NullPointerException");
-
-		AssertConsoleTextNotPresent(value1 = "com.liferay.portal.kernel.exception.SystemException");
-
-		for (var tableEntry : list "Web Content,Wiki,Message Boards,Contacts Center,Blogs,Announcements,Documents and Media") {
-			GDPR.viewEntryRowInApplicationCP(
-				tableEntry = ${tableEntry},
-				tableEntryPartialTextList = "${tableEntry},Create Date,Completion Date");
-		}
-
-		LexiconEntry.gotoAdd();
-
-		for (var key_tableHeader : list "Application,Items,Last Available Export") {
-			AssertElementPresent(locator1 = "LexiconTable#TABLE_HEADER");
-		}
-	}
-
 	@description = "This test filters and orders data from the export data process"
 	@priority = 4
 	test CanFilterAndOrderExportProcesses {
@@ -1613,7 +1264,7 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			Navigator.openURL();
 
@@ -1629,7 +1280,7 @@ definition {
 				threadBody = "MB Thread Message Body",
 				threadSubject = "MB Thread Message Subject",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Sign in as Super User and begin data export process") {
@@ -1649,7 +1300,7 @@ definition {
 		}
 
 		task ("Filter by Successful and assert that only succesful exports are listed") {
-			ManagementBar.setFilterAndOrder(orderBy = "Successful");
+			ManagementBar.setFilterAndOrder(filterBy = "Successful");
 
 			AssertElementPresent(
 				key_status = "Successful",
@@ -1665,7 +1316,7 @@ definition {
 		}
 
 		task ("Filter by name and assert that data exports are listed alphabetically") {
-			ManagementBar.toggleViewOrder(order = "list-up");
+			ManagementBar.sortAssets(sortDirection = "Descending");
 
 			ManagementBar.setFilterAndOrder(orderBy = "Name");
 
@@ -1692,7 +1343,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		FormsAdmin.addForm(groupName = "Global");
+		FormsAdmin.addForm();
 
 		Form.editName();
 
@@ -1769,7 +1420,7 @@ definition {
 			groupName = "Guest",
 			title = "GDPR Article",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
@@ -1850,7 +1501,7 @@ definition {
 		for (var orderBy : list "Name,Description") {
 			ManagementBar.setFilterAndOrder(orderBy = ${orderBy});
 
-			ManagementBar.toggleViewOrder(order = "list-up");
+			ManagementBar.sortAssets(sortDirection = "Descending");
 
 			AssertTextEquals.assertPartialText(
 				key_rowNumber = 1,
@@ -1862,7 +1513,7 @@ definition {
 				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
 				value1 = "Document_1.jpeg");
 
-			ManagementBar.toggleViewOrder(order = "list-down");
+			ManagementBar.sortAssets(sortDirection = "Ascending");
 
 			AssertTextEquals.assertPartialText(
 				key_rowNumber = 1,
@@ -1898,7 +1549,7 @@ definition {
 				groupName = "Site Name (Staging)",
 				site = "false",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			BlogsNavigator.openBlogsAdmin(siteURLKey = "site-name-staging");
 
@@ -2103,13 +1754,13 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			JSONWebcontent.addFolder(
 				folderName = "WC GDPR Export Folder",
 				groupName = "Guest",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			JSONWebcontent.addWebContent(
 				content = "This is a WC Content for GDPR Export testing.",
@@ -2117,14 +1768,14 @@ definition {
 				groupName = "Guest",
 				title = "GDPR Export Article in Folder",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			JSONWebcontent.addWebContent(
 				content = "This is a WC Content for GDPR Export testing.",
 				groupName = "Guest",
 				title = "GDPR Export Article",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			Navigator.openURL();
 
@@ -2140,7 +1791,7 @@ definition {
 				threadBody = "MB Thread Message Body",
 				threadSubject = "MB Thread Message Subject",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 
 			ProductMenu.gotoPortlet(
 				category = "Content & Data",
@@ -2245,9 +1896,32 @@ definition {
 					Click(locator1 = "Pagination#NEXT_LINK");
 
 					if (IsElementPresent(key_rowEntry = "com.liferay.portal.tools.service.builder.test.uad", locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME")) {
-						Pagination.viewResults(results = "Showing 9 to 10 of 10 entries.");
+						Pagination.viewResults(results = "Showing 9 to 11 of 11 entries.");
 
 						for (var listedEntries : list "com.liferay.portal.tools.service.builder.test.uad,Wiki") {
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
+						}
+
+						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
+						}
+
+						Click(locator1 = "Pagination#PREVIOUS_LINK");
+
+						Pagination.viewResults(results = "Showing 5 to 8 of 11 entries.");
+
+						for (var listedEntries : list "Documents and Media,Forms,Web Content,Message Boards") {
+							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
+						}
+
+						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,com.liferay.portal.tools.service.builder.test.uad,Wiki") {
+							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
+						}
+					}
+					else {
+						Pagination.viewResults(results = "Showing 9 to 10 of 10 entries.");
+
+						for (var listedEntries : list "Wiki") {
 							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
@@ -2263,14 +1937,16 @@ definition {
 							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
-						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,com.liferay.portal.tools.service.builder.test.uad,Wiki") {
+						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Wiki") {
 							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 					}
-					else {
-						Pagination.viewResults(results = "Showing 9 to 9 of 9 entries.");
+				}
+				else if (${listEntries} == 8) {
+					if (IsElementPresent(key_rowEntry = "com.liferay.portal.tools.service.builder.test.uad", locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME")) {
+						Pagination.viewResults(results = "Showing 9 to 11 of 11 entries.");
 
-						for (var listedEntries : list "Wiki") {
+						for (var listedEntries : list "com.liferay.portal.tools.service.builder.test.uad,Wiki") {
 							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
@@ -2280,22 +1956,20 @@ definition {
 
 						Click(locator1 = "Pagination#PREVIOUS_LINK");
 
-						Pagination.viewResults(results = "Showing 5 to 8 of 9 entries.");
+						Pagination.viewResults(results = "Showing 1 to 8 of 11 entries.");
 
-						for (var listedEntries : list "Documents and Media,Forms,Web Content,Message Boards") {
+						for (var listedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
 							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
-						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Wiki") {
+						for (var unlistedEntries : list "com.liferay.portal.tools.service.builder.test.uad,Wiki") {
 							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
 					}
-				}
-				else if (${listEntries} == 8) {
-					if (IsElementPresent(key_rowEntry = "com.liferay.portal.tools.service.builder.test.uad", locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME")) {
+					else {
 						Pagination.viewResults(results = "Showing 9 to 10 of 10 entries.");
 
-						for (var listedEntries : list "com.liferay.portal.tools.service.builder.test.uad,Wiki") {
+						for (var listedEntries : list "Wiki") {
 							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
@@ -2311,29 +1985,6 @@ definition {
 							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 
-						for (var unlistedEntries : list "com.liferay.portal.tools.service.builder.test.uad,Wiki") {
-							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
-						}
-					}
-					else {
-						Pagination.viewResults(results = "Showing 9 to 9 of 9 entries.");
-
-						for (var listedEntries : list "Wiki") {
-							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
-						}
-
-						for (var unlistedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
-						}
-
-						Click(locator1 = "Pagination#PREVIOUS_LINK");
-
-						Pagination.viewResults(results = "Showing 1 to 8 of 9 entries.");
-
-						for (var listedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards") {
-							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
-						}
-
 						for (var unlistedEntries : list "Wiki") {
 							LexiconEntry.viewNoEntry(rowEntry = ${unlistedEntries});
 						}
@@ -2341,14 +1992,14 @@ definition {
 				}
 				else {
 					if (IsElementPresent(key_rowEntry = "com.liferay.portal.tools.service.builder.test.uad", locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME")) {
-						Pagination.viewResults(results = "Showing 1 to 10 of 10 entries.");
+						Pagination.viewResults(results = "Showing 1 to 11 of 11 entries.");
 
 						for (var listedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards,com.liferay.portal.tools.service.builder.test.uad,Wiki") {
 							LexiconEntry.viewEntryName(rowEntry = ${listedEntries});
 						}
 					}
 					else if (IsElementNotPresent(key_rowEntry = "com.liferay.portal.tools.service.builder.test.uad", locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME")) {
-						Pagination.viewResults(results = "Showing 1 to 9 of 9 entries.");
+						Pagination.viewResults(results = "Showing 1 to 10 of 10 entries.");
 
 						for (var listedEntries : list "Announcements,Blogs,Bookmarks,Contacts Center,Documents and Media,Forms,Web Content,Message Boards,Wiki") {
 							LexiconEntry.viewEntryName(rowEntry = ${unlistedEntries});
@@ -2370,13 +2021,13 @@ definition {
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
 			entryTitle = "Blogs Entry Title 2",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",

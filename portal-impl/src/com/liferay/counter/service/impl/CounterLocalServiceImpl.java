@@ -7,9 +7,7 @@ package com.liferay.counter.service.impl;
 
 import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.counter.service.base.CounterLocalServiceBaseImpl;
-import com.liferay.portal.kernel.transaction.Isolation;
-import com.liferay.portal.kernel.transaction.Propagation;
-import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.aop.SkipAop;
 
 import java.util.List;
 
@@ -17,8 +15,14 @@ import java.util.List;
  * @author Brian Wing Shun Chan
  * @author Edward Han
  */
+@SkipAop
 public class CounterLocalServiceImpl
 	extends CounterLocalServiceBaseImpl implements CounterLocalService {
+
+	@Override
+	public long getCurrentId(String name) {
+		return counterFinder.getCurrentId(name);
+	}
 
 	@Override
 	public List<String> getNames() {
@@ -26,49 +30,31 @@ public class CounterLocalServiceImpl
 	}
 
 	@Override
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public long increment() {
 		return counterFinder.increment();
 	}
 
 	@Override
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public long increment(String name) {
 		return counterFinder.increment(name);
 	}
 
 	@Override
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public long increment(String name, int size) {
 		return counterFinder.increment(name, size);
 	}
 
 	@Override
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public void rename(String oldName, String newName) {
 		counterFinder.rename(oldName, newName);
 	}
 
 	@Override
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public void reset(String name) {
 		counterFinder.reset(name);
 	}
 
 	@Override
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public void reset(String name, long size) {
 		counterFinder.reset(name, size);
 	}

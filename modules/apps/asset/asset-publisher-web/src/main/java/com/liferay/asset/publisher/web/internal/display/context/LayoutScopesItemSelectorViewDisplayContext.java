@@ -7,15 +7,17 @@ package com.liferay.asset.publisher.web.internal.display.context;
 
 import com.liferay.asset.publisher.util.AssetPublisherHelper;
 import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.search.GroupSearch;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.portlet.PortletURL;
@@ -86,26 +88,34 @@ public class LayoutScopesItemSelectorViewDisplayContext
 			List<Group> groups, Boolean privateLayout)
 		throws Exception {
 
+		long[] excludedGroupIds =
+			_groupItemSelectorCriterion.getExcludedGroupIds();
+
 		if (privateLayout == null) {
-			return groups;
+			return ListUtil.filter(
+				groups,
+				group -> !ArrayUtil.contains(
+					excludedGroupIds, group.getGroupId()));
 		}
 
-		List<Group> filteredGroups = new ArrayList<>();
+		return TransformUtil.transform(
+			groups,
+			group -> {
+				if (!group.isLayout() ||
+					ArrayUtil.contains(excludedGroupIds, group.getGroupId())) {
 
-		for (Group group : groups) {
-			if (!group.isLayout()) {
-				continue;
-			}
+					return null;
+				}
 
-			Layout layout = LayoutLocalServiceUtil.getLayout(
-				group.getClassPK());
+				Layout layout = LayoutLocalServiceUtil.getLayout(
+					group.getClassPK());
 
-			if (layout.isPrivateLayout() == privateLayout) {
-				filteredGroups.add(group);
-			}
-		}
+				if (layout.isPrivateLayout() == privateLayout) {
+					return group;
+				}
 
-		return filteredGroups;
+				return null;
+			});
 	}
 
 	private Boolean _isPrivateLayout() {

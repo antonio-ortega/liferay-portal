@@ -138,6 +138,12 @@ public interface BenchmarksPropsKeys {
 	public static final String MAX_JOURNAL_ARTICLE_VERSION_COUNT =
 		"sample.sql.max.journal.article.version.count";
 
+	public static final String MAX_LIST_TYPE_DEFINITION_COUNT =
+		"sample.sql.max.list.type.definition.count";
+
+	public static final String MAX_LIST_TYPE_ENTRY_COUNT =
+		"sample.sql.max.list.type.entry.count";
+
 	public static final String MAX_MB_CATEGORY_COUNT =
 		"sample.sql.max.mb.category.count";
 
@@ -147,10 +153,14 @@ public interface BenchmarksPropsKeys {
 	public static final String MAX_MB_THREAD_COUNT =
 		"sample.sql.max.mb.thread.count";
 
+	public static final String MAX_OBJECT_ENTRY_COUNT =
+		"sample.sql.max.object.entry.count";
+
 	public static final String MAX_SEGMENTS_ENTRY_COUNT =
 		"sample.sql.max.segments.entry.count";
 
-	public static final String MAX_USER_COUNT = "sample.sql.max.user.count";
+	public static final String MAX_SEGMENTS_ENTRY_SEGMENTS_EXPERIENCE_COUNT =
+		"sample.sql.max.segments.entry.segments.experience.count";
 
 	public static final String MAX_USER_TO_GROUP_COUNT =
 		"sample.sql.max.user.to.group.count";

@@ -38,7 +38,7 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 
 	<aui:select label="asset-type" name="preferences--anyAssetType--" title="asset-type">
 		<aui:option label="any" selected="<%= assetPublisherDisplayContext.isAnyAssetType() %>" value="<%= true %>" />
-		<aui:option label='<%= LanguageUtil.get(request, "select-more-than-one") + StringPool.TRIPLE_PERIOD %>' selected="<%= !assetPublisherDisplayContext.isAnyAssetType() && (classNameIds.length > 1) %>" value="false" />
+		<aui:option label='<%= LanguageUtil.get(request, "select-more-than-one") %>' selected="<%= !assetPublisherDisplayContext.isAnyAssetType() && (classNameIds.length > 1) %>" value="false" />
 
 		<optgroup label="<liferay-ui:message key="asset-type" />">
 
@@ -84,7 +84,7 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 	for (AssetRendererFactory<?> assetRendererFactory : assetRendererFactories) {
 		ClassTypeReader classTypeReader = assetRendererFactory.getClassTypeReader();
 
-		List<ClassType> classTypes = classTypeReader.getAvailableClassTypes(assetPublisherDisplayContext.getReferencedModelsGroupIds(), locale);
+		List<ClassType> classTypes = assetPublisherDisplayContext.getClassTypes(classTypeReader);
 
 		if (classTypes.isEmpty()) {
 			continue;
@@ -110,8 +110,6 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 			}
 		}
 
-		Arrays.sort(assetSelectedClassTypeIds);
-
 		// Right list
 
 		List<KeyValuePair> subtypesRightList = new ArrayList<KeyValuePair>();
@@ -122,7 +120,7 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 		<div class='asset-subtype <%= (assetSelectedClassTypeIds.length < 1) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace /><%= className %>Options">
 			<aui:select label="<%= ResourceActionsUtil.getModelResource(locale, assetRendererFactory.getClassName()) + StringPool.SPACE + assetRendererFactory.getSubtypeTitle(themeDisplay.getLocale()) %>" name='<%= "preferences--anyClassType" + className + "--" %>'>
 				<aui:option label="any" selected="<%= anyAssetSubtype %>" value="<%= true %>" />
-				<aui:option label='<%= LanguageUtil.get(request, "select-more-than-one") + StringPool.TRIPLE_PERIOD %>' selected="<%= !anyAssetSubtype && (assetSelectedClassTypeIds.length > 1) %>" value="false" />
+				<aui:option label='<%= LanguageUtil.get(request, "select-more-than-one") %>' selected="<%= !anyAssetSubtype && (assetSelectedClassTypeIds.length > 1) %>" value="false" />
 
 				<optgroup label="<%= assetRendererFactory.getSubtypeTitle(themeDisplay.getLocale()) %>">
 
@@ -209,9 +207,7 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 	}
 
 	for (AssetRendererFactory<?> curAssetRendererFactory : classTypesAssetRendererFactories) {
-		ClassTypeReader classTypeReader = curAssetRendererFactory.getClassTypeReader();
-
-		List<ClassType> assetAvailableClassTypes = classTypeReader.getAvailableClassTypes(assetPublisherDisplayContext.getReferencedModelsGroupIds(), locale);
+		List<ClassType> assetAvailableClassTypes = assetPublisherDisplayContext.getClassTypes(curAssetRendererFactory.getClassTypeReader());
 
 		if (assetAvailableClassTypes.isEmpty()) {
 			continue;
@@ -295,6 +291,6 @@ List<Map<String, Object>> classTypesList = new ArrayList<>();
 				"classTypes", classTypesList
 			).build()
 		%>'
-		module="js/Source"
+		module="{Source} from asset-publisher-web"
 	/>
 </liferay-frontend:fieldset>

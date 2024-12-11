@@ -7,7 +7,6 @@ package com.liferay.commerce.currency.service.base;
 
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
-import com.liferay.commerce.currency.service.CommerceCurrencyLocalServiceUtil;
 import com.liferay.commerce.currency.service.persistence.CommerceCurrencyFinder;
 import com.liferay.commerce.currency.service.persistence.CommerceCurrencyPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
@@ -19,8 +18,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DefaultActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -44,6 +42,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.sql.Connection;
 
 import java.util.List;
 
@@ -71,7 +71,7 @@ public abstract class CommerceCurrencyLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CommerceCurrencyLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CommerceCurrencyLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CommerceCurrencyLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.commerce.currency.service.CommerceCurrencyLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -261,6 +261,23 @@ public abstract class CommerceCurrencyLocalServiceBaseImpl
 
 		return commerceCurrencyPersistence.fetchByUuid_C_First(
 			uuid, companyId, null);
+	}
+
+	@Override
+	public CommerceCurrency fetchCommerceCurrencyByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
+
+		return commerceCurrencyPersistence.fetchByERC_C(
+			externalReferenceCode, companyId);
+	}
+
+	@Override
+	public CommerceCurrency getCommerceCurrencyByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return commerceCurrencyPersistence.findByERC_C(
+			externalReferenceCode, companyId);
 	}
 
 	/**
@@ -492,7 +509,6 @@ public abstract class CommerceCurrencyLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		CommerceCurrencyLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -506,9 +522,6 @@ public abstract class CommerceCurrencyLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		commerceCurrencyLocalService = (CommerceCurrencyLocalService)aopProxy;
-
-		CommerceCurrencyLocalServiceUtil.setService(
-			commerceCurrencyLocalService);
 	}
 
 	/**
@@ -535,18 +548,23 @@ public abstract class CommerceCurrencyLocalServiceBaseImpl
 	 * @param sql the sql query
 	 */
 	protected void runSQL(String sql) {
+		DataSource dataSource = commerceCurrencyPersistence.getDataSource();
+
+		DB db = DBManagerUtil.getDB();
+
+		Connection currentConnection = CurrentConnectionUtil.getConnection(
+			dataSource);
+
 		try {
-			DataSource dataSource = commerceCurrencyPersistence.getDataSource();
+			if (currentConnection != null) {
+				db.runSQL(currentConnection, new String[] {sql});
 
-			DB db = DBManagerUtil.getDB();
+				return;
+			}
 
-			sql = db.buildSQL(sql);
-			sql = PortalUtil.transformSQL(sql);
-
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
-				dataSource, sql);
-
-			sqlUpdate.update();
+			try (Connection connection = dataSource.getConnection()) {
+				db.runSQL(connection, new String[] {sql});
+			}
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

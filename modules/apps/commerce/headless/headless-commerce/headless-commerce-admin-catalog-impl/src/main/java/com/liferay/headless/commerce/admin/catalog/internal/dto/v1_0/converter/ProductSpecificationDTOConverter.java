@@ -7,6 +7,7 @@ package com.liferay.headless.commerce.admin.catalog.internal.dto.v1_0.converter;
 
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
+import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductSpecification;
@@ -43,26 +44,53 @@ public class ProductSpecificationDTOConverter
 					getCPDefinitionSpecificationOptionValue(
 						(Long)dtoConverterContext.getId());
 
-		CPDefinition cpDefinition =
-			cpDefinitionSpecificationOptionValue.getCPDefinition();
 		CPSpecificationOption cpSpecificationOption =
 			cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
 
 		return new ProductSpecification() {
 			{
-				id =
-					cpDefinitionSpecificationOptionValue.
-						getCPDefinitionSpecificationOptionValueId();
-				optionCategoryId =
-					cpDefinitionSpecificationOptionValue.
-						getCPOptionCategoryId();
-				priority = cpDefinitionSpecificationOptionValue.getPriority();
-				productId = cpDefinition.getCProductId();
-				specificationId =
-					cpSpecificationOption.getCPSpecificationOptionId();
-				specificationKey = cpSpecificationOption.getKey();
-				value = LanguageUtils.getLanguageIdMap(
-					cpDefinitionSpecificationOptionValue.getValueMap());
+				setExternalReferenceCode(
+					cpDefinitionSpecificationOptionValue::
+						getExternalReferenceCode);
+				setId(
+					cpDefinitionSpecificationOptionValue::
+						getCPDefinitionSpecificationOptionValueId);
+				setKey(cpDefinitionSpecificationOptionValue::getKey);
+				setLabel(
+					() -> LanguageUtils.getLanguageIdMap(
+						cpSpecificationOption.getTitleMap()));
+				setOptionCategoryExternalReferenceCode(
+					() -> {
+						CPOptionCategory cpOptionCategory =
+							cpSpecificationOption.getCPOptionCategory();
+
+						if (cpOptionCategory == null) {
+							return null;
+						}
+
+						return cpOptionCategory.getExternalReferenceCode();
+					});
+				setOptionCategoryId(
+					cpDefinitionSpecificationOptionValue::
+						getCPOptionCategoryId);
+				setPriority(cpDefinitionSpecificationOptionValue::getPriority);
+				setProductId(
+					() -> {
+						CPDefinition cpDefinition =
+							cpDefinitionSpecificationOptionValue.
+								getCPDefinition();
+
+						return cpDefinition.getCProductId();
+					});
+				setSpecificationExternalReferenceCode(
+					cpSpecificationOption::getExternalReferenceCode);
+				setSpecificationId(
+					cpSpecificationOption::getCPSpecificationOptionId);
+				setSpecificationKey(cpSpecificationOption::getKey);
+				setSpecificationPriority(cpSpecificationOption::getPriority);
+				setValue(
+					() -> LanguageUtils.getLanguageIdMap(
+						cpDefinitionSpecificationOptionValue.getValueMap()));
 			}
 		};
 	}

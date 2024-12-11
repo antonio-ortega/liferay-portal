@@ -6,6 +6,7 @@
 package com.liferay.object.definition.util;
 
 import com.liferay.batch.engine.unit.BatchEngineUnitThreadLocal;
+import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -39,22 +40,9 @@ public class ObjectDefinitionUtil {
 		return _allowedModifiableSystemObjectDefinitionNames.containsKey(name);
 	}
 
-	public static boolean
-		isAllowedUnmodifiableSystemObjectDefinitionExternalReferenceCode(
-			String externalReferenceCode, String name) {
-
-		if (PortalRunMode.isTestMode()) {
-			return true;
-		}
-
-		return StringUtil.equals(
-			_allowedUnmodifiableSystemObjectDefinitionNames.get(name),
-			externalReferenceCode);
-	}
-
 	public static boolean isInvokerBundleAllowed() {
 		if (PortalInstances.isCurrentCompanyInDeletionProcess() ||
-			PortalRunMode.isTestMode()) {
+			PortalRunMode.isTestMode() || StartupHelperUtil.isUpgrading()) {
 
 			return true;
 		}
@@ -85,9 +73,11 @@ public class ObjectDefinitionUtil {
 	}
 
 	private static final String[] _ALLOWED_INVOKER_BUNDLE_SYMBOLIC_NAMES = {
-		"com.liferay.frontend.data.set.views.web",
+		"com.liferay.commerce.service", "com.liferay.cookies.impl",
+		"com.liferay.frontend.data.set.admin.web",
+		"com.liferay.frontend.data.set.impl",
 		"com.liferay.headless.builder.impl", "com.liferay.list.type.service",
-		"com.liferay.object.service"
+		"com.liferay.notification.service", "com.liferay.object.service"
 	};
 
 	private static final Map<String, String>
@@ -106,38 +96,58 @@ public class ObjectDefinitionUtil {
 		).put(
 			"Bookmark", "/bookmarks"
 		).put(
+			"CommerceReturn", "/commerce-returns"
+		).put(
+			"CommerceReturnItem", "/commerce-return-items"
+		).put(
+			"DataSet", "/data-set-admin/data-sets"
+		).put(
+			"DataSetAction", "/data-set-admin/data-sets/actions"
+		).put(
+			"DataSetCardsSection", "/data-set-admin/data-sets/cards-sections"
+		).put(
+			"DataSetClientExtensionFilter",
+			"/data-set-admin/data-sets/client-extension-filters"
+		).put(
+			"DataSetDateFilter", "/data-set-admin/data-sets/date-filters"
+		).put(
+			"DataSetListSection", "/data-set-admin/data-sets/list-sections"
+		).put(
+			"DataSetSelectionFilter",
+			"/data-set-admin/data-sets/selection-filters"
+		).put(
+			"DataSetSort", "/data-set-admin/data-sets/sorts"
+		).put(
+			"DataSetTableSection", "/data-set-admin/data-sets/table-sections"
+		).put(
 			"FDSAction", "/data-set-manager/actions"
+		).put(
+			"FDSCardsSection", "/data-set-manager/cards-sections"
 		).put(
 			"FDSClientExtensionFilter",
 			"/data-set-manager/client-extension-filters"
 		).put(
 			"FDSDateFilter", "/data-set-manager/date-filters"
 		).put(
-			"FDSDynamicFilter", "/data-set-manager/dynamic-filters"
+			"FDSDynamicFilter", "/data-set-manager/selection-filters"
 		).put(
 			"FDSEntry", "/data-set-manager/entries"
 		).put(
-			"FDSField", "/data-set-manager/fields"
+			"FDSField", "/data-set-manager/table-sections"
+		).put(
+			"FDSListSection", "/data-set-manager/list-sections"
 		).put(
 			"FDSSort", "/data-set-manager/sorts"
 		).put(
-			"FDSView", "/data-set-manager/views"
-		).build();
-	private static final Map<String, String>
-		_allowedUnmodifiableSystemObjectDefinitionNames = HashMapBuilder.put(
-			"AccountEntry", "L_ACCOUNT"
+			"FDSView", "/data-set-manager/data-sets"
 		).put(
-			"Address", "L_POSTAL_ADDRESS"
+			"FunctionalCookieEntry", "/functional-cookies-entries"
 		).put(
-			"CommerceOrder", "L_COMMERCE_ORDER"
+			"NecessaryCookieEntry", "/necessary-cookies-entries"
 		).put(
-			"CommercePricingClass", "L_COMMERCE_PRODUCT_GROUP"
+			"PerformanceCookieEntry", "/performance-cookies-entries"
 		).put(
-			"CPDefinition", "L_COMMERCE_PRODUCT_DEFINITION"
-		).put(
-			"Organization", "L_ORGANIZATION"
-		).put(
-			"User", "L_USER"
+			"PersonalizationCookieEntry", "/personalization-cookies-entries"
 		).build();
 
 }

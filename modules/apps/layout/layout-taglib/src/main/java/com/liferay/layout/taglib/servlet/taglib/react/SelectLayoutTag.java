@@ -7,14 +7,15 @@ package com.liferay.layout.taglib.servlet.taglib.react;
 
 import com.liferay.layout.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.layout.taglib.internal.util.LayoutUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutConstants;
-import com.liferay.portal.kernel.service.LayoutServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -134,20 +135,25 @@ public class SelectLayoutTag extends IncludeTag {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		String[] selectedLayoutIds = ParamUtil.getStringValues(
-			httpServletRequest, "layoutUuid");
 		long selPlid = ParamUtil.getLong(
 			httpServletRequest, "selPlid", LayoutConstants.DEFAULT_PLID);
+
+		String findLayoutsURL = HttpComponentsUtil.addParameter(
+			themeDisplay.getPathMain() + "/portal/find_layouts", "selPlid",
+			selPlid);
+
+		findLayoutsURL = HttpComponentsUtil.addParameter(
+			findLayoutsURL, "privateLayout", _privateLayout);
+
+		String[] selectedLayoutIds = ParamUtil.getStringValues(
+			httpServletRequest, "layoutUuid");
 
 		return HashMapBuilder.<String, Object>put(
 			"checkDisplayPage", _checkDisplayPage
 		).put(
 			"config",
 			HashMapBuilder.<String, Object>put(
-				"findLayoutsURL",
-				HttpComponentsUtil.addParameter(
-					themeDisplay.getPathMain() + "/portal/find_layouts",
-					"selPlid", selPlid)
+				"findLayoutsURL", findLayoutsURL
 			).put(
 				"loadMoreItemsURL",
 				HttpComponentsUtil.addParameter(
@@ -190,16 +196,22 @@ public class SelectLayoutTag extends IncludeTag {
 			return JSONFactoryUtil.createJSONArray();
 		}
 
+		int end = PropsValues.LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN;
+
+		if (end <= 0) {
+			end = QueryUtil.ALL_POS;
+		}
+
+		JSONObject layoutsJSONObject = LayoutUtil.getLayoutsJSONObject(
+			_checkDisplayPage, _enableCurrentPage,
+			themeDisplay.getScopeGroupId(), getRequest(),
+			_itemSelectorReturnType, _privateLayout,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, selectedLayoutIds,
+			selPlid, QueryUtil.ALL_POS, end);
+
 		return JSONUtil.put(
 			JSONUtil.put(
-				"children",
-				LayoutUtil.getLayoutsJSONArray(
-					_checkDisplayPage, _enableCurrentPage,
-					themeDisplay.getScopeGroupId(), getRequest(),
-					_itemSelectorReturnType, _privateLayout, 0,
-					selectedLayoutIds, selPlid, 0,
-					GetterUtil.getInteger(
-						PropsValues.LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN))
+				"children", layoutsJSONObject.get("items")
 			).put(
 				"disabled", true
 			).put(
@@ -215,11 +227,11 @@ public class SelectLayoutTag extends IncludeTag {
 			).put(
 				"paginated",
 				() -> {
-					int layoutsCount = LayoutServiceUtil.getLayoutsCount(
-						themeDisplay.getScopeGroupId(), _privateLayout,
-						LayoutConstants.DEFAULT_PARENT_LAYOUT_ID);
+					if (PropsValues.LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN <= 0) {
+						return false;
+					}
 
-					if (layoutsCount >
+					if (layoutsJSONObject.getInt("total") >
 							PropsValues.LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN) {
 
 						return true;

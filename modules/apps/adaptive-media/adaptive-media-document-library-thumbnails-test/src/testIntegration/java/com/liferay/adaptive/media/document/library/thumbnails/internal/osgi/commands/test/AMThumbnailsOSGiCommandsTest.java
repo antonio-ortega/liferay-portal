@@ -14,26 +14,28 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLProcessorConstants;
+import com.liferay.document.library.kernel.processor.DLProcessor;
+import com.liferay.document.library.kernel.processor.DLProcessorHelper;
+import com.liferay.document.library.kernel.processor.ImageProcessor;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.document.library.kernel.store.Store;
-import com.liferay.document.library.kernel.util.DLPreviewableProcessor;
-import com.liferay.document.library.kernel.util.DLProcessor;
-import com.liferay.document.library.kernel.util.ImageProcessor;
+import com.liferay.document.library.preview.processor.BasePreviewableDLProcessor;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.image.ImageToolUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.image.ImageBag;
-import com.liferay.portal.kernel.image.ImageTool;
-import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
+import com.liferay.portal.kernel.messaging.MessageBus;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.ImageConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.repository.event.FileVersionPreviewEventListener;
@@ -43,6 +45,7 @@ import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -211,10 +214,10 @@ public class AMThumbnailsOSGiCommandsTest {
 	public void testMigrateOnlyProcessesImages() throws Exception {
 		try (SafeCloseable safeCloseable1 =
 				PropsValuesTestUtil.swapWithSafeCloseable(
-					"DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT", 100);
+					"DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_HEIGHT", 100, false);
 			SafeCloseable safeCloseable2 =
 				PropsValuesTestUtil.swapWithSafeCloseable(
-					"DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_WIDTH", 100)) {
+					"DL_FILE_ENTRY_THUMBNAIL_CUSTOM_1_MAX_WIDTH", 100, false)) {
 
 			FileEntry pdfFileEntry = _addPDFFileEntry();
 			FileEntry pngFileEntry = _addPNGFileEntry();
@@ -232,10 +235,10 @@ public class AMThumbnailsOSGiCommandsTest {
 
 		try (SafeCloseable safeCloseable1 =
 				PropsValuesTestUtil.swapWithSafeCloseable(
-					"DL_FILE_ENTRY_THUMBNAIL_MAX_HEIGHT", 999);
+					"DL_FILE_ENTRY_THUMBNAIL_MAX_HEIGHT", 999, false);
 			SafeCloseable safeCloseable2 =
 				PropsValuesTestUtil.swapWithSafeCloseable(
-					"DL_FILE_ENTRY_THUMBNAIL_MAX_HEIGHT", 999)) {
+					"DL_FILE_ENTRY_THUMBNAIL_MAX_WIDTH", 999, false)) {
 
 			_addPNGFileEntry();
 
@@ -264,13 +267,24 @@ public class AMThumbnailsOSGiCommandsTest {
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
+		DLProcessor imagePreviewableDLProcessor =
+			new ImagePreviewableDLProcessor();
+
 		_serviceRegistration = bundleContext.registerService(
 			new String[] {
 				DLProcessor.class.getName(), ImageProcessor.class.getName()
 			},
-			new ImageProcessorImpl(),
+			imagePreviewableDLProcessor,
 			MapUtil.singletonDictionary(
 				"type", DLProcessorConstants.IMAGE_PROCESSOR));
+
+		ReflectionTestUtil.setFieldValue(
+			imagePreviewableDLProcessor, "dlProcessorHelper",
+			_dlProcessorHelper);
+		ReflectionTestUtil.setFieldValue(
+			imagePreviewableDLProcessor, "messageBus", _messageBus);
+		ReflectionTestUtil.setFieldValue(
+			imagePreviewableDLProcessor, "store", _store);
 	}
 
 	private static void _disableDocumentLibraryAM() throws Exception {
@@ -344,7 +358,7 @@ public class AMThumbnailsOSGiCommandsTest {
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString() + ".pdf",
 			ContentTypes.APPLICATION_PDF, _read("dependencies/sample.pdf"),
-			null, null, _serviceContext);
+			null, null, null, _serviceContext);
 	}
 
 	private FileEntry _addPNGFileEntry() throws Exception {
@@ -352,7 +366,8 @@ public class AMThumbnailsOSGiCommandsTest {
 			null, _user.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString() + ".png", ContentTypes.IMAGE_PNG,
-			_read("dependencies/sample.png"), null, null, _serviceContext);
+			_read("dependencies/sample.png"), null, null, null,
+			_serviceContext);
 
 		return _pngFileEntry;
 	}
@@ -373,8 +388,8 @@ public class AMThumbnailsOSGiCommandsTest {
 
 	private int _getThumbnailCount() throws Exception {
 		String[] fileNames = DLStoreUtil.getFileNames(
-			_company.getCompanyId(), DLPreviewableProcessor.REPOSITORY_ID,
-			DLPreviewableProcessor.THUMBNAIL_PATH);
+			_company.getCompanyId(), BasePreviewableDLProcessor.REPOSITORY_ID,
+			BasePreviewableDLProcessor.THUMBNAIL_PATH);
 
 		return fileNames.length;
 	}
@@ -417,9 +432,18 @@ public class AMThumbnailsOSGiCommandsTest {
 	private static DLProcessor _dlProcessor;
 
 	@Inject
+	private static DLProcessorHelper _dlProcessorHelper;
+
+	@Inject
+	private static MessageBus _messageBus;
+
+	@Inject
 	private static ServiceComponentRuntime _serviceComponentRuntime;
 
 	private static ServiceRegistration<?> _serviceRegistration;
+
+	@Inject(filter = "default=true")
+	private static Store _store;
 
 	private Company _company;
 	private Group _group;
@@ -427,12 +451,8 @@ public class AMThumbnailsOSGiCommandsTest {
 	private ServiceContext _serviceContext;
 	private User _user;
 
-	private static class ImageProcessorImpl
-		extends DLPreviewableProcessor implements ImageProcessor {
-
-		@Override
-		public void afterPropertiesSet() {
-		}
+	private static class ImagePreviewableDLProcessor
+		extends BasePreviewableDLProcessor implements ImageProcessor {
 
 		@Override
 		public void cleanUp(FileEntry fileEntry) {
@@ -738,16 +758,16 @@ public class AMThumbnailsOSGiCommandsTest {
 			String mimeType = fileVersion.getMimeType();
 
 			if (mimeType.equals(ContentTypes.IMAGE_BMP)) {
-				type = ImageTool.TYPE_BMP;
+				type = ImageConstants.TYPE_BMP;
 			}
 			else if (mimeType.equals(ContentTypes.IMAGE_GIF)) {
-				type = ImageTool.TYPE_GIF;
+				type = ImageConstants.TYPE_GIF;
 			}
 			else if (mimeType.equals(ContentTypes.IMAGE_JPEG)) {
-				type = ImageTool.TYPE_JPEG;
+				type = ImageConstants.TYPE_JPEG;
 			}
 			else if (mimeType.equals(ContentTypes.IMAGE_PNG)) {
-				type = ImageTool.TYPE_PNG;
+				type = ImageConstants.TYPE_PNG;
 			}
 			else if (!_previewGenerationRequired(fileVersion)) {
 				type = fileVersion.getExtension();
@@ -878,11 +898,11 @@ public class AMThumbnailsOSGiCommandsTest {
 		}
 
 		private static final Log _log = LogFactoryUtil.getLog(
-			ImageProcessorImpl.class);
+			ImagePreviewableDLProcessor.class);
 
 		private static final Snapshot<FileVersionPreviewEventListener>
 			_fileVersionPreviewEventListenerSnapshot = new Snapshot<>(
-				ImageProcessorImpl.class,
+				ImagePreviewableDLProcessor.class,
 				FileVersionPreviewEventListener.class);
 
 		private final List<Long> _fileVersionIds = new Vector<>();

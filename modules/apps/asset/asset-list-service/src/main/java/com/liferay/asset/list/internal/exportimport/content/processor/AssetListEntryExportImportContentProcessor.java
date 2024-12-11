@@ -68,7 +68,7 @@ public class AssetListEntryExportImportContentProcessor
 		long[] groupIds = GetterUtil.getLongValues(
 			StringUtil.split(unicodeProperties.getProperty("groupIds", null)));
 
-		_addGroupMappingsElement(portletDataContext, groupIds);
+		addGroupMappingsElement(portletDataContext, groupIds);
 
 		String[] classNames = TransformUtil.transform(
 			StringUtil.split(
@@ -143,6 +143,10 @@ public class AssetListEntryExportImportContentProcessor
 
 				String queryValues = unicodeProperties.getProperty(
 					"queryValues" + index);
+
+				if (Validator.isNull(queryValues)) {
+					continue;
+				}
 
 				long[] categoryIds = GetterUtil.getLongValues(
 					queryValues.split(","));
@@ -298,6 +302,10 @@ public class AssetListEntryExportImportContentProcessor
 				String queryValues = unicodeProperties.getProperty(
 					"queryValues" + index);
 
+				if (Validator.isNull(queryValues)) {
+					continue;
+				}
+
 				long[] categoryIds = GetterUtil.getLongValues(
 					queryValues.split(","));
 
@@ -347,9 +355,8 @@ public class AssetListEntryExportImportContentProcessor
 		throws PortalException {
 	}
 
-	private void _addGroupMappingsElement(
-			PortletDataContext portletDataContext, long[] groupIds)
-		throws Exception {
+	protected void addGroupMappingsElement(
+		PortletDataContext portletDataContext, long[] groupIds) {
 
 		Element rootElement = portletDataContext.getExportDataRootElement();
 
@@ -357,10 +364,14 @@ public class AssetListEntryExportImportContentProcessor
 			"group-id-mappings");
 
 		for (long groupId : groupIds) {
+			Group group = _groupLocalService.fetchGroup(groupId);
+
+			if (group == null) {
+				continue;
+			}
+
 			Element groupIdMappingElement = groupIdMappingsElement.addElement(
 				"group-id-mapping");
-
-			Group group = _groupLocalService.getGroup(groupId);
 
 			long liveGroupId = group.getLiveGroupId();
 

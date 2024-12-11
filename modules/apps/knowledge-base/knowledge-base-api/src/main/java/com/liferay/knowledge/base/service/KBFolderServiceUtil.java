@@ -7,6 +7,7 @@ package com.liferay.knowledge.base.service;
 
 import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -142,6 +143,12 @@ public class KBFolderServiceUtil {
 		getService().moveKBFolder(kbFolderId, parentKBFolderId);
 	}
 
+	public static KBFolder moveKBFolderToTrash(long kbFolderId)
+		throws PortalException {
+
+		return getService().moveKBFolderToTrash(kbFolderId);
+	}
+
 	public static KBFolder updateKBFolder(
 			long parentResourceClassNameId, long parentResourcePrimKey,
 			long kbFolderId, String name, String description,
@@ -154,13 +161,10 @@ public class KBFolderServiceUtil {
 	}
 
 	public static KBFolderService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(KBFolderService service) {
-		_service = service;
-	}
-
-	private static volatile KBFolderService _service;
+	private static final Snapshot<KBFolderService> _serviceSnapshot =
+		new Snapshot<>(KBFolderServiceUtil.class, KBFolderService.class);
 
 }

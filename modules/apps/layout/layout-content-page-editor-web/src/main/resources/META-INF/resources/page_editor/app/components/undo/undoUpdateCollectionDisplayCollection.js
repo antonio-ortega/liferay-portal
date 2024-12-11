@@ -7,33 +7,34 @@ import updateCollectionDisplayCollection from '../../actions/updateCollectionDis
 import LayoutService from '../../services/LayoutService';
 import {setIn} from '../../utils/setIn';
 
-const undoAction = ({action, store}) => (dispatch) =>
-	LayoutService.restoreCollectionDisplayConfig({
-		filterFragmentEntryLinks: action.filterFragmentEntryLinks.map(
-			(filterFragmentEntryLink) => ({
-				editableValues: filterFragmentEntryLink.editableValues,
-				fragmentEntryLinkId:
-					filterFragmentEntryLink.fragmentEntryLinkId,
-			})
-		),
-		itemConfig: action.itemConfig,
-		itemId: action.itemId,
-		onNetworkStatus: dispatch,
-		segmentsExperienceId: store.segmentsExperienceId,
-	}).then(() => {
-		dispatch(
-			updateCollectionDisplayCollection({
-				fragmentEntryLinks: action.filterFragmentEntryLinks,
-				itemId: action.itemId,
-				layoutData: setIn(
-					store.layoutData,
-					['items', action.itemId, 'config'],
-					action.itemConfig
-				),
-				pageContents: action.pageContents,
-			})
-		);
-	});
+const undoAction =
+	({action, store}) =>
+	(dispatch) =>
+		LayoutService.restoreCollectionDisplayConfig({
+			filterFragmentEntryLinks: action.filterFragmentEntryLinks.map(
+				(filterFragmentEntryLink) => ({
+					editableValues: filterFragmentEntryLink.editableValues,
+					fragmentEntryLinkId:
+						filterFragmentEntryLink.fragmentEntryLinkId,
+				})
+			),
+			itemConfig: action.itemConfig,
+			itemId: action.itemId,
+			onNetworkStatus: dispatch,
+			segmentsExperienceId: store.segmentsExperienceId,
+		}).then(() => {
+			dispatch(
+				updateCollectionDisplayCollection({
+					fragmentEntryLinks: action.filterFragmentEntryLinks,
+					itemId: action.itemId,
+					layoutData: setIn(
+						store.layoutData,
+						['items', action.itemId, 'config'],
+						action.itemConfig
+					),
+				})
+			);
+		});
 
 const getDerivedStateForUndo = ({action, state}) => ({
 	filterFragmentEntryLinks: action.fragmentEntryLinks.map(
@@ -50,7 +51,6 @@ const getDerivedStateForUndo = ({action, state}) => ({
 	),
 	itemConfig: state.layoutData.items[action.itemId].config,
 	itemId: action.itemId,
-	pageContents: state.pageContents,
 });
 
 export {undoAction, getDerivedStateForUndo};

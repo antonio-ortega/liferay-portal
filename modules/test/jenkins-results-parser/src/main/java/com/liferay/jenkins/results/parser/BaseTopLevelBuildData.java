@@ -148,25 +148,45 @@ public abstract class BaseTopLevelBuildData
 			throw new RuntimeException(ioException);
 		}
 
-		String cohortName = getCohortName();
-
 		List<JenkinsMaster> jenkinsMasters =
 			JenkinsResultsParserUtil.getJenkinsMasters(
 				buildProperties, JenkinsMaster.getSlaveRAMMinimumDefault(),
-				JenkinsMaster.getSlavesPerHostDefault(), cohortName);
+				JenkinsMaster.getSlavesPerHostDefault(), getCohortName());
 
-		List<String> distNodes = JenkinsResultsParserUtil.getRandomList(
-			JenkinsResultsParserUtil.getSlaves(
-				buildProperties, cohortName + "-[1-9]{1}[0-9]?"),
-			jenkinsMasters.size());
+		List<String> distNodes = new ArrayList<>(jenkinsMasters.size());
+
+		for (JenkinsMaster jenkinsMaster : jenkinsMasters) {
+			int retries = 0;
+
+			while (true) {
+				if (retries > jenkinsMaster.getOnlineJenkinsSlavesCount()) {
+					break;
+				}
+
+				JenkinsSlave randomJenkinsSlave =
+					jenkinsMaster.getRandomJenkinsSlave();
+
+				if ((randomJenkinsSlave != null) &&
+					!randomJenkinsSlave.isOffline() &&
+					randomJenkinsSlave.isReachable()) {
+
+					distNodes.add(randomJenkinsSlave.getName());
+
+					break;
+				}
+
+				retries++;
+			}
+		}
 
 		return StringUtils.join(distNodes, ",");
 	}
 
 	private String _getDistPath() {
 		return JenkinsResultsParserUtil.combine(
-			BuildData.FILE_PATH_DIST_ROOT, "/", getMasterHostname(), "/",
-			getJobName(), "/", String.valueOf(getBuildNumber()), "/dist");
+			JenkinsResultsParserUtil.getJenkinsDistRootPath(), "/",
+			getMasterHostname(), "/", getJobName(), "/",
+			String.valueOf(getBuildNumber()), "/dist");
 	}
 
 	private static final String[] _KEYS_REQUIRED = {

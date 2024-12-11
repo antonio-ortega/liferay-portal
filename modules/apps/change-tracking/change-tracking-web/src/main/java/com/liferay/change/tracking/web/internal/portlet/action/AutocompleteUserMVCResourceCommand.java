@@ -5,26 +5,34 @@
 
 package com.liferay.change.tracking.web.internal.portlet.action;
 
+import com.liferay.change.tracking.constants.CTActionKeys;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
+import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
+import com.liferay.portal.kernel.service.permission.UserPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
@@ -67,7 +75,8 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 	}
 
 	private List<User> _getUsers(
-		ResourceRequest resourceRequest, ThemeDisplay themeDisplay) {
+			ResourceRequest resourceRequest, ThemeDisplay themeDisplay)
+		throws PortalException {
 
 		String keywords = ParamUtil.getString(resourceRequest, "keywords");
 
@@ -78,24 +87,51 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 		PermissionChecker permissionChecker =
 			themeDisplay.getPermissionChecker();
 
-		if (permissionChecker.isCompanyAdmin()) {
+		if (UserPermissionUtil.contains(
+				permissionChecker, ResourceConstants.PRIMKEY_DNE,
+				ActionKeys.VIEW)) {
+
 			return _userLocalService.search(
 				themeDisplay.getCompanyId(), keywords,
 				WorkflowConstants.STATUS_APPROVED, new LinkedHashMap<>(), 0, 20,
-				new UserScreenNameComparator(true));
+				UserScreenNameComparator.getInstance(true));
+		}
+
+		long ctCollectionId = ParamUtil.getLong(
+			resourceRequest, "ctCollectionId");
+
+		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
+			ctCollectionId);
+
+		if (CTCollectionPermission.contains(
+				permissionChecker, ctCollection, CTActionKeys.INVITE_USERS)) {
+
+			Role role = _roleLocalService.getRole(
+				themeDisplay.getCompanyId(), RoleConstants.PUBLICATIONS_USER);
+
+			return _userLocalService.search(
+				themeDisplay.getCompanyId(), keywords,
+				WorkflowConstants.STATUS_APPROVED,
+				LinkedHashMapBuilder.<String, Object>put(
+					"inherit", true
+				).put(
+					"usersRoles", role.getRoleId()
+				).build(),
+				0, 20, UserScreenNameComparator.getInstance(true));
 		}
 
 		User user = themeDisplay.getUser();
 
 		long[] groupIds = user.getGroupIds();
+		long[] userGroupIds = user.getUserGroupIds();
 
-		if (ArrayUtil.isEmpty(groupIds)) {
+		if (ArrayUtil.isEmpty(groupIds) && ArrayUtil.isEmpty(userGroupIds)) {
 			return Collections.emptyList();
 		}
 
 		return _userLocalService.searchBySocial(
-			themeDisplay.getCompanyId(), groupIds, keywords, 0, 20,
-			new UserScreenNameComparator(true));
+			themeDisplay.getCompanyId(), groupIds, userGroupIds, keywords, 0,
+			20, UserScreenNameComparator.getInstance(true));
 	}
 
 	private JSONArray _getUsersJSONArray(ResourceRequest resourceRequest)
@@ -136,13 +172,13 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 					"fullName", user.getFullName()
 				).put(
 					"hasPublicationsAccess",
-					_portletPermission.contains(
+					PortletPermissionUtil.contains(
 						permissionChecker, PortletKeys.PORTAL,
 						ActionKeys.VIEW_CONTROL_PANEL) &&
-					_portletPermission.contains(
+					PortletPermissionUtil.contains(
 						permissionChecker, CTPortletKeys.PUBLICATIONS,
 						ActionKeys.ACCESS_IN_CONTROL_PANEL) &&
-					_portletPermission.contains(
+					PortletPermissionUtil.contains(
 						permissionChecker, CTPortletKeys.PUBLICATIONS,
 						ActionKeys.VIEW)
 				).put(
@@ -166,7 +202,7 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 	private JSONFactory _jsonFactory;
 
 	@Reference
-	private PortletPermission _portletPermission;
+	private RoleLocalService _roleLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;

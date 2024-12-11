@@ -6,9 +6,10 @@
 package com.liferay.portal.remote.cors.client.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.PropsValuesTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.util.PropsValues;
 
@@ -58,26 +59,19 @@ public class PortalConfigurationCORSClientTest extends BaseCORSClientTestCase {
 
 	@Test
 	public void testCORSUsingBasicWithDisableAuthorization() throws Exception {
-		boolean corsDisableAuthorizationContextCheck =
-			ReflectionTestUtil.getAndSetFieldValue(
-				PropsValues.class, "CORS_DISABLE_AUTHORIZATION_CONTEXT_CHECK",
-				true);
+		try (SafeCloseable safeCloseable =
+				PropsValuesTestUtil.swapWithSafeCloseable(
+					"CORS_DISABLE_AUTHORIZATION_CONTEXT_CHECK", true)) {
 
-		try {
 			assertJsonWSUrl("/user/get-current-user", HttpMethod.OPTIONS, true);
 			assertJsonWSUrl("/user/get-current-user", HttpMethod.GET, true);
-		}
-		finally {
-			ReflectionTestUtil.setFieldValue(
-				PropsValues.class, "CORS_DISABLE_AUTHORIZATION_CONTEXT_CHECK",
-				corsDisableAuthorizationContextCheck);
 		}
 	}
 
 	@Test
 	public void testNoCORSUsingPortalSession() throws Exception {
 		Cookie authenticatedCookie = _getAuthenticatedCookie(
-			"test@liferay.com", "test");
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		Invocation.Builder invocationBuilder = _getWebTarget(
 			"web", "guest"

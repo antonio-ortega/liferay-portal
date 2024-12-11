@@ -27,19 +27,20 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -97,11 +98,17 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 
 		_productAccountGroupResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		ProductAccountGroupResource.Builder builder =
 			ProductAccountGroupResource.builder();
 
 		productAccountGroupResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -115,7 +122,33 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductAccountGroup productAccountGroup1 = randomProductAccountGroup();
+
+		String json = objectMapper.writeValueAsString(productAccountGroup1);
+
+		ProductAccountGroup productAccountGroup2 =
+			ProductAccountGroupSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(productAccountGroup1, productAccountGroup2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductAccountGroup productAccountGroup = randomProductAccountGroup();
+
+		String json1 = objectMapper.writeValueAsString(productAccountGroup);
+		String json2 = ProductAccountGroupSerDes.toJSON(productAccountGroup);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -130,41 +163,6 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ProductAccountGroup productAccountGroup1 = randomProductAccountGroup();
-
-		String json = objectMapper.writeValueAsString(productAccountGroup1);
-
-		ProductAccountGroup productAccountGroup2 =
-			ProductAccountGroupSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(productAccountGroup1, productAccountGroup2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ProductAccountGroup productAccountGroup = randomProductAccountGroup();
-
-		String json1 = objectMapper.writeValueAsString(productAccountGroup);
-		String json2 = ProductAccountGroupSerDes.toJSON(productAccountGroup);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -219,7 +217,10 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteProductAccountGroup() throws Exception {
-		ProductAccountGroup productAccountGroup =
+
+		// No namespace
+
+		ProductAccountGroup productAccountGroup1 =
 			testGraphQLDeleteProductAccountGroup_addProductAccountGroup();
 
 		Assert.assertTrue(
@@ -229,23 +230,61 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 						"deleteProductAccountGroup",
 						new HashMap<String, Object>() {
 							{
-								put("id", productAccountGroup.getId());
+								put("id", productAccountGroup1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteProductAccountGroup"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"productAccountGroup",
 					new HashMap<String, Object>() {
 						{
-							put("id", productAccountGroup.getId());
+							put("id", productAccountGroup1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		ProductAccountGroup productAccountGroup2 =
+			testGraphQLDeleteProductAccountGroup_addProductAccountGroup();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteProductAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put("id", productAccountGroup2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteProductAccountGroup"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"productAccountGroup",
+						new HashMap<String, Object>() {
+							{
+								put("id", productAccountGroup2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ProductAccountGroup
@@ -281,6 +320,8 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		ProductAccountGroup productAccountGroup =
 			testGraphQLGetProductAccountGroup_addProductAccountGroup();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				productAccountGroup,
@@ -296,11 +337,37 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/productAccountGroup"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productAccountGroup,
+				ProductAccountGroupSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productAccountGroup",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												productAccountGroup.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productAccountGroup"))));
 	}
 
 	@Test
 	public void testGraphQLGetProductAccountGroupNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -314,6 +381,25 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productAccountGroup",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -339,7 +425,7 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 				getProductByExternalReferenceCodeProductAccountGroupsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			ProductAccountGroup irrelevantProductAccountGroup =
@@ -350,12 +436,13 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			page =
 				productAccountGroupResource.
 					getProductByExternalReferenceCodeProductAccountGroupsPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantProductAccountGroup),
+			assertContains(
+				irrelevantProductAccountGroup,
 				(List<ProductAccountGroup>)page.getItems());
 			assertValid(
 				page,
@@ -376,11 +463,12 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 				getProductByExternalReferenceCodeProductAccountGroupsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(productAccountGroup1, productAccountGroup2),
-			(List<ProductAccountGroup>)page.getItems());
+		assertContains(
+			productAccountGroup1, (List<ProductAccountGroup>)page.getItems());
+		assertContains(
+			productAccountGroup2, (List<ProductAccountGroup>)page.getItems());
 		assertValid(
 			page,
 			testGetProductByExternalReferenceCodeProductAccountGroupsPage_getExpectedActions(
@@ -410,6 +498,14 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		String externalReferenceCode =
 			testGetProductByExternalReferenceCodeProductAccountGroupsPage_getExternalReferenceCode();
 
+		Page<ProductAccountGroup> productAccountGroupPage =
+			productAccountGroupResource.
+				getProductByExternalReferenceCodeProductAccountGroupsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			productAccountGroupPage.getTotalCount());
+
 		ProductAccountGroup productAccountGroup1 =
 			testGetProductByExternalReferenceCodeProductAccountGroupsPage_addProductAccountGroup(
 				externalReferenceCode, randomProductAccountGroup());
@@ -422,40 +518,94 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			testGetProductByExternalReferenceCodeProductAccountGroupsPage_addProductAccountGroup(
 				externalReferenceCode, randomProductAccountGroup());
 
-		Page<ProductAccountGroup> page1 =
-			productAccountGroupResource.
-				getProductByExternalReferenceCodeProductAccountGroupsPage(
-					externalReferenceCode, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ProductAccountGroup> productAccountGroups1 =
-			(List<ProductAccountGroup>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			productAccountGroups1.toString(), 2, productAccountGroups1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductAccountGroup> page1 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<ProductAccountGroup> page2 =
-			productAccountGroupResource.
-				getProductByExternalReferenceCodeProductAccountGroupsPage(
-					externalReferenceCode, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				productAccountGroup1,
+				(List<ProductAccountGroup>)page1.getItems());
 
-		List<ProductAccountGroup> productAccountGroups2 =
-			(List<ProductAccountGroup>)page2.getItems();
+			Page<ProductAccountGroup> page2 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			productAccountGroups2.toString(), 1, productAccountGroups2.size());
+			assertContains(
+				productAccountGroup2,
+				(List<ProductAccountGroup>)page2.getItems());
 
-		Page<ProductAccountGroup> page3 =
-			productAccountGroupResource.
-				getProductByExternalReferenceCodeProductAccountGroupsPage(
-					externalReferenceCode, Pagination.of(1, 3));
+			Page<ProductAccountGroup> page3 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				productAccountGroup1, productAccountGroup2,
-				productAccountGroup3),
-			(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup3,
+				(List<ProductAccountGroup>)page3.getItems());
+		}
+		else {
+			Page<ProductAccountGroup> page1 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<ProductAccountGroup> productAccountGroups1 =
+				(List<ProductAccountGroup>)page1.getItems();
+
+			Assert.assertEquals(
+				productAccountGroups1.toString(), totalCount + 2,
+				productAccountGroups1.size());
+
+			Page<ProductAccountGroup> page2 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductAccountGroup> productAccountGroups2 =
+				(List<ProductAccountGroup>)page2.getItems();
+
+			Assert.assertEquals(
+				productAccountGroups2.toString(), 1,
+				productAccountGroups2.size());
+
+			Page<ProductAccountGroup> page3 =
+				productAccountGroupResource.
+					getProductByExternalReferenceCodeProductAccountGroupsPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				productAccountGroup1,
+				(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup2,
+				(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup3,
+				(List<ProductAccountGroup>)page3.getItems());
+		}
 	}
 
 	protected ProductAccountGroup
@@ -493,7 +643,7 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			productAccountGroupResource.getProductIdProductAccountGroupsPage(
 				id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			ProductAccountGroup irrelevantProductAccountGroup =
@@ -503,12 +653,12 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			page =
 				productAccountGroupResource.
 					getProductIdProductAccountGroupsPage(
-						irrelevantId, Pagination.of(1, 2));
+						irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantProductAccountGroup),
+			assertContains(
+				irrelevantProductAccountGroup,
 				(List<ProductAccountGroup>)page.getItems());
 			assertValid(
 				page,
@@ -527,11 +677,12 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 		page = productAccountGroupResource.getProductIdProductAccountGroupsPage(
 			id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(productAccountGroup1, productAccountGroup2),
-			(List<ProductAccountGroup>)page.getItems());
+		assertContains(
+			productAccountGroup1, (List<ProductAccountGroup>)page.getItems());
+		assertContains(
+			productAccountGroup2, (List<ProductAccountGroup>)page.getItems());
 		assertValid(
 			page,
 			testGetProductIdProductAccountGroupsPage_getExpectedActions(id));
@@ -558,6 +709,13 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 
 		Long id = testGetProductIdProductAccountGroupsPage_getId();
 
+		Page<ProductAccountGroup> productAccountGroupPage =
+			productAccountGroupResource.getProductIdProductAccountGroupsPage(
+				id, null);
+
+		int totalCount = GetterUtil.getInteger(
+			productAccountGroupPage.getTotalCount());
+
 		ProductAccountGroup productAccountGroup1 =
 			testGetProductIdProductAccountGroupsPage_addProductAccountGroup(
 				id, randomProductAccountGroup());
@@ -570,37 +728,91 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			testGetProductIdProductAccountGroupsPage_addProductAccountGroup(
 				id, randomProductAccountGroup());
 
-		Page<ProductAccountGroup> page1 =
-			productAccountGroupResource.getProductIdProductAccountGroupsPage(
-				id, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ProductAccountGroup> productAccountGroups1 =
-			(List<ProductAccountGroup>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			productAccountGroups1.toString(), 2, productAccountGroups1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductAccountGroup> page1 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<ProductAccountGroup> page2 =
-			productAccountGroupResource.getProductIdProductAccountGroupsPage(
-				id, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				productAccountGroup1,
+				(List<ProductAccountGroup>)page1.getItems());
 
-		List<ProductAccountGroup> productAccountGroups2 =
-			(List<ProductAccountGroup>)page2.getItems();
+			Page<ProductAccountGroup> page2 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			productAccountGroups2.toString(), 1, productAccountGroups2.size());
+			assertContains(
+				productAccountGroup2,
+				(List<ProductAccountGroup>)page2.getItems());
 
-		Page<ProductAccountGroup> page3 =
-			productAccountGroupResource.getProductIdProductAccountGroupsPage(
-				id, Pagination.of(1, 3));
+			Page<ProductAccountGroup> page3 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				productAccountGroup1, productAccountGroup2,
-				productAccountGroup3),
-			(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup3,
+				(List<ProductAccountGroup>)page3.getItems());
+		}
+		else {
+			Page<ProductAccountGroup> page1 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id, Pagination.of(1, totalCount + 2));
+
+			List<ProductAccountGroup> productAccountGroups1 =
+				(List<ProductAccountGroup>)page1.getItems();
+
+			Assert.assertEquals(
+				productAccountGroups1.toString(), totalCount + 2,
+				productAccountGroups1.size());
+
+			Page<ProductAccountGroup> page2 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductAccountGroup> productAccountGroups2 =
+				(List<ProductAccountGroup>)page2.getItems();
+
+			Assert.assertEquals(
+				productAccountGroups2.toString(), 1,
+				productAccountGroups2.size());
+
+			Page<ProductAccountGroup> page3 =
+				productAccountGroupResource.
+					getProductIdProductAccountGroupsPage(
+						id, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				productAccountGroup1,
+				(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup2,
+				(List<ProductAccountGroup>)page3.getItems());
+			assertContains(
+				productAccountGroup3,
+				(List<ProductAccountGroup>)page3.getItems());
+		}
 	}
 
 	protected ProductAccountGroup
@@ -955,6 +1167,10 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1138,7 +1354,8 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1193,21 +1410,21 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 	}
 
 	protected ProductAccountGroupResource productAccountGroupResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1216,11 +1433,16 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1252,6 +1474,24 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1273,16 +1513,6 @@ public abstract class BaseProductAccountGroupResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

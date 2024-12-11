@@ -9,7 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.service.FragmentCollectionService;
-import com.liferay.fragment.util.FragmentTestUtil;
+import com.liferay.fragment.test.util.FragmentTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -79,7 +79,7 @@ public class FragmentCollectionServicePermissionTest {
 		UserTestUtil.setUser(_user);
 
 		_fragmentCollectionService.addFragmentCollection(
-			_group.getGroupId(), RandomTestUtil.randomString(),
+			null, _group.getGroupId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), StringPool.BLANK, serviceContext);
 	}
 
@@ -95,7 +95,7 @@ public class FragmentCollectionServicePermissionTest {
 		UserTestUtil.setUser(_user);
 
 		_fragmentCollectionService.addFragmentCollection(
-			_group.getGroupId(), RandomTestUtil.randomString(),
+			null, _group.getGroupId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), StringPool.BLANK, serviceContext);
 	}
 
@@ -107,7 +107,7 @@ public class FragmentCollectionServicePermissionTest {
 		UserTestUtil.setUser(_user);
 
 		_fragmentCollectionService.addFragmentCollection(
-			_group.getGroupId(), RandomTestUtil.randomString(),
+			null, _group.getGroupId(), RandomTestUtil.randomString(),
 			StringPool.BLANK, serviceContext);
 	}
 
@@ -121,7 +121,7 @@ public class FragmentCollectionServicePermissionTest {
 		UserTestUtil.setUser(_user);
 
 		_fragmentCollectionService.addFragmentCollection(
-			_group.getGroupId(), RandomTestUtil.randomString(),
+			null, _group.getGroupId(), RandomTestUtil.randomString(),
 			StringPool.BLANK, serviceContext);
 	}
 

@@ -1629,6 +1629,74 @@ public class ObjectRelationshipUtil {
 	}
 
 	/**
+	 * Returns the object relationship where objectDefinitionId2 = &#63; and edge = &#63; or throws a <code>NoSuchObjectRelationshipException</code> if it could not be found.
+	 *
+	 * @param objectDefinitionId2 the object definition id2
+	 * @param edge the edge
+	 * @return the matching object relationship
+	 * @throws NoSuchObjectRelationshipException if a matching object relationship could not be found
+	 */
+	public static ObjectRelationship findByODI2_E(
+			long objectDefinitionId2, boolean edge)
+		throws com.liferay.object.exception.NoSuchObjectRelationshipException {
+
+		return getPersistence().findByODI2_E(objectDefinitionId2, edge);
+	}
+
+	/**
+	 * Returns the object relationship where objectDefinitionId2 = &#63; and edge = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param objectDefinitionId2 the object definition id2
+	 * @param edge the edge
+	 * @return the matching object relationship, or <code>null</code> if a matching object relationship could not be found
+	 */
+	public static ObjectRelationship fetchByODI2_E(
+		long objectDefinitionId2, boolean edge) {
+
+		return getPersistence().fetchByODI2_E(objectDefinitionId2, edge);
+	}
+
+	/**
+	 * Returns the object relationship where objectDefinitionId2 = &#63; and edge = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param objectDefinitionId2 the object definition id2
+	 * @param edge the edge
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching object relationship, or <code>null</code> if a matching object relationship could not be found
+	 */
+	public static ObjectRelationship fetchByODI2_E(
+		long objectDefinitionId2, boolean edge, boolean useFinderCache) {
+
+		return getPersistence().fetchByODI2_E(
+			objectDefinitionId2, edge, useFinderCache);
+	}
+
+	/**
+	 * Removes the object relationship where objectDefinitionId2 = &#63; and edge = &#63; from the database.
+	 *
+	 * @param objectDefinitionId2 the object definition id2
+	 * @param edge the edge
+	 * @return the object relationship that was removed
+	 */
+	public static ObjectRelationship removeByODI2_E(
+			long objectDefinitionId2, boolean edge)
+		throws com.liferay.object.exception.NoSuchObjectRelationshipException {
+
+		return getPersistence().removeByODI2_E(objectDefinitionId2, edge);
+	}
+
+	/**
+	 * Returns the number of object relationships where objectDefinitionId2 = &#63; and edge = &#63;.
+	 *
+	 * @param objectDefinitionId2 the object definition id2
+	 * @param edge the edge
+	 * @return the number of matching object relationships
+	 */
+	public static int countByODI2_E(long objectDefinitionId2, boolean edge) {
+		return getPersistence().countByODI2_E(objectDefinitionId2, edge);
+	}
+
+	/**
 	 * Returns all the object relationships where objectDefinitionId2 = &#63; and reverse = &#63;.
 	 *
 	 * @param objectDefinitionId2 the object definition id2
@@ -1818,6 +1886,159 @@ public class ObjectRelationshipUtil {
 	 */
 	public static int countByODI2_R(long objectDefinitionId2, boolean reverse) {
 		return getPersistence().countByODI2_R(objectDefinitionId2, reverse);
+	}
+
+	/**
+	 * Returns the object relationship where dbTableName = &#63; and reverse = &#63; or throws a <code>NoSuchObjectRelationshipException</code> if it could not be found.
+	 *
+	 * @param dbTableName the db table name
+	 * @param reverse the reverse
+	 * @return the matching object relationship
+	 * @throws NoSuchObjectRelationshipException if a matching object relationship could not be found
+	 */
+	public static ObjectRelationship findByDTN_R(
+			String dbTableName, boolean reverse)
+		throws com.liferay.object.exception.NoSuchObjectRelationshipException {
+
+		return getPersistence().findByDTN_R(dbTableName, reverse);
+	}
+
+	/**
+	 * Returns the object relationship where dbTableName = &#63; and reverse = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param dbTableName the db table name
+	 * @param reverse the reverse
+	 * @return the matching object relationship, or <code>null</code> if a matching object relationship could not be found
+	 */
+	public static ObjectRelationship fetchByDTN_R(
+		String dbTableName, boolean reverse) {
+
+		return getPersistence().fetchByDTN_R(dbTableName, reverse);
+	}
+
+	/**
+	 * Returns the object relationship where dbTableName = &#63; and reverse = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param dbTableName the db table name
+	 * @param reverse the reverse
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching object relationship, or <code>null</code> if a matching object relationship could not be found
+	 */
+	public static ObjectRelationship fetchByDTN_R(
+		String dbTableName, boolean reverse, boolean useFinderCache) {
+
+		return getPersistence().fetchByDTN_R(
+			dbTableName, reverse, useFinderCache);
+	}
+
+	/**
+	 * Removes the object relationship where dbTableName = &#63; and reverse = &#63; from the database.
+	 *
+	 * @param dbTableName the db table name
+	 * @param reverse the reverse
+	 * @return the object relationship that was removed
+	 */
+	public static ObjectRelationship removeByDTN_R(
+			String dbTableName, boolean reverse)
+		throws com.liferay.object.exception.NoSuchObjectRelationshipException {
+
+		return getPersistence().removeByDTN_R(dbTableName, reverse);
+	}
+
+	/**
+	 * Returns the number of object relationships where dbTableName = &#63; and reverse = &#63;.
+	 *
+	 * @param dbTableName the db table name
+	 * @param reverse the reverse
+	 * @return the number of matching object relationships
+	 */
+	public static int countByDTN_R(String dbTableName, boolean reverse) {
+		return getPersistence().countByDTN_R(dbTableName, reverse);
+	}
+
+	/**
+	 * Returns the object relationship where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId1 = &#63; or throws a <code>NoSuchObjectRelationshipException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId1 the object definition id1
+	 * @return the matching object relationship
+	 * @throws NoSuchObjectRelationshipException if a matching object relationship could not be found
+	 */
+	public static ObjectRelationship findByERC_C_ODI1(
+			String externalReferenceCode, long companyId,
+			long objectDefinitionId1)
+		throws com.liferay.object.exception.NoSuchObjectRelationshipException {
+
+		return getPersistence().findByERC_C_ODI1(
+			externalReferenceCode, companyId, objectDefinitionId1);
+	}
+
+	/**
+	 * Returns the object relationship where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId1 = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId1 the object definition id1
+	 * @return the matching object relationship, or <code>null</code> if a matching object relationship could not be found
+	 */
+	public static ObjectRelationship fetchByERC_C_ODI1(
+		String externalReferenceCode, long companyId,
+		long objectDefinitionId1) {
+
+		return getPersistence().fetchByERC_C_ODI1(
+			externalReferenceCode, companyId, objectDefinitionId1);
+	}
+
+	/**
+	 * Returns the object relationship where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId1 = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId1 the object definition id1
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching object relationship, or <code>null</code> if a matching object relationship could not be found
+	 */
+	public static ObjectRelationship fetchByERC_C_ODI1(
+		String externalReferenceCode, long companyId, long objectDefinitionId1,
+		boolean useFinderCache) {
+
+		return getPersistence().fetchByERC_C_ODI1(
+			externalReferenceCode, companyId, objectDefinitionId1,
+			useFinderCache);
+	}
+
+	/**
+	 * Removes the object relationship where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId1 = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId1 the object definition id1
+	 * @return the object relationship that was removed
+	 */
+	public static ObjectRelationship removeByERC_C_ODI1(
+			String externalReferenceCode, long companyId,
+			long objectDefinitionId1)
+		throws com.liferay.object.exception.NoSuchObjectRelationshipException {
+
+		return getPersistence().removeByERC_C_ODI1(
+			externalReferenceCode, companyId, objectDefinitionId1);
+	}
+
+	/**
+	 * Returns the number of object relationships where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId1 = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param objectDefinitionId1 the object definition id1
+	 * @return the number of matching object relationships
+	 */
+	public static int countByERC_C_ODI1(
+		String externalReferenceCode, long companyId,
+		long objectDefinitionId1) {
+
+		return getPersistence().countByERC_C_ODI1(
+			externalReferenceCode, companyId, objectDefinitionId1);
 	}
 
 	/**

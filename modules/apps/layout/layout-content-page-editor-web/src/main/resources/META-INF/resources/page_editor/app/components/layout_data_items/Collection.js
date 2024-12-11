@@ -6,6 +6,7 @@
 import ClayAlert from '@clayui/alert';
 import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {isNullOrUndefined} from '@liferay/layout-js-components-web';
 import classNames from 'classnames';
 import {sub} from 'frontend-js-web';
@@ -25,6 +26,7 @@ import selectLanguageId from '../../selectors/selectLanguageId';
 import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
 import CollectionService from '../../services/CollectionService';
 import updateItemConfig from '../../thunks/updateItemConfig';
+import {deepEqual} from '../../utils/checkDeepEqual';
 import {collectionIsMapped} from '../../utils/collectionIsMapped';
 import getLayoutDataItemClassName from '../../utils/getLayoutDataItemClassName';
 import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
@@ -48,6 +50,13 @@ export function getToControlsId(collectionId, index, toControlsId) {
 			return null;
 		}
 
+		// If the itemId correspond to a collectionId ignore it,
+		// that id is only applied to the children not to the collection itself.
+
+		if (collectionId === itemId) {
+			return itemId;
+		}
+
 		return toControlsId(
 			`${getCollectionPrefix(collectionId, index)}${itemId}`
 		);
@@ -55,15 +64,25 @@ export function getToControlsId(collectionId, index, toControlsId) {
 }
 
 export function fromControlsId(controlsItemId) {
+	const getItemIdFromControlsId = (id) => {
+		const splits = id.split(COLLECTION_ID_DIVIDER);
+
+		const itemId = splits.pop();
+
+		return itemId || id;
+	};
+
 	if (!controlsItemId) {
 		return null;
 	}
+	else if (Array.isArray(controlsItemId)) {
+		const nextIds = controlsItemId.map(getItemIdFromControlsId);
 
-	const splits = controlsItemId.split(COLLECTION_ID_DIVIDER);
-
-	const itemId = splits.pop();
-
-	return itemId || controlsItemId;
+		return deepEqual(nextIds, controlsItemId) ? controlsItemId : nextIds;
+	}
+	else {
+		return getItemIdFromControlsId(controlsItemId);
+	}
 }
 
 const NotCollectionSelectedMessage = () => (
@@ -240,6 +259,7 @@ const ItemContext = ({
 	const contextValue = useMemo(
 		() => ({
 			collectionConfig,
+			collectionId,
 			collectionItem,
 			collectionItemIndex: index,
 			customCollectionSelectorURL,
@@ -286,6 +306,8 @@ const Collection = React.memo(
 		const [loading, setLoading] = useState(!!collectionConfig.collection);
 
 		const numberOfItems = getNumberOfItems(collection, collectionConfig);
+
+		const isMounted = useIsMounted();
 
 		useEffect(() => {
 			if (
@@ -347,11 +369,14 @@ const Collection = React.memo(
 					.then((response) => {
 						const {itemSubtype, itemType, ...collection} = response;
 
-						setCollection(
-							!!collection.length && collection.items?.length > 0
-								? collection
-								: {...collection, ...emptyCollection}
-						);
+						if (isMounted()) {
+							setCollection(
+								!!collection.length &&
+									collection.items?.length > 0
+									? collection
+									: {...collection, ...emptyCollection}
+							);
+						}
 
 						// LPS-133832
 						// Update itemType/itemSubtype if the user changes the type of the collection
@@ -387,7 +412,7 @@ const Collection = React.memo(
 											itemType: nextItemType,
 										},
 									},
-									itemId: item.itemId,
+									itemIds: [item.itemId],
 								})
 							);
 						}
@@ -398,7 +423,9 @@ const Collection = React.memo(
 						}
 					})
 					.finally(() => {
-						setLoading(false);
+						if (isMounted()) {
+							setLoading(false);
+						}
 					});
 			}
 		}, [
@@ -410,6 +437,7 @@ const Collection = React.memo(
 			itemClassNameId,
 			itemClassPK,
 			itemExternalReferenceCode,
+			isMounted,
 			languageId,
 			segmentsExperienceId,
 		]);
@@ -423,16 +451,18 @@ const Collection = React.memo(
 			selectedViewportSize
 		);
 
-		const showEmptyMessage =
-			collectionConfig.listStyle !== '' && collection.fakeCollection;
-
 		const flexEnabled =
 			collectionConfig.listStyle === CONTENT_DISPLAY_OPTIONS.flexColumn ||
 			collectionConfig.listStyle === CONTENT_DISPLAY_OPTIONS.flexRow;
 
+		const showEmptyMessage =
+			collection.fakeCollection &&
+			collectionConfig.listStyle !== '' &&
+			!flexEnabled;
+
 		let CollectionContent = null;
 
-		if (Liferay.FeatureFlags['LPS-169923'] && collection.isRestricted) {
+		if (collection.isRestricted) {
 			CollectionContent = (
 				<ClayAlert displayType="secondary" role={null}>
 					{Liferay.Language.get(
@@ -530,7 +560,7 @@ function getNumberOfItems(collection, collectionConfig) {
 			: Math.min(
 					collectionConfig.numberOfPages * itemsPerPage,
 					collection.totalNumberOfItems
-			  );
+				);
 	}
 
 	return collectionConfig.displayAllItems
@@ -538,7 +568,7 @@ function getNumberOfItems(collection, collectionConfig) {
 		: Math.min(
 				collectionConfig.numberOfItems,
 				collection.totalNumberOfItems
-		  );
+			);
 }
 
 function getNumberOfPages(collection, collectionConfig) {
@@ -552,7 +582,7 @@ function getNumberOfPages(collection, collectionConfig) {
 		: Math.min(
 				Math.ceil(collection.totalNumberOfItems / itemsPerPage),
 				collectionConfig.numberOfPages
-		  );
+			);
 }
 
 export default Collection;

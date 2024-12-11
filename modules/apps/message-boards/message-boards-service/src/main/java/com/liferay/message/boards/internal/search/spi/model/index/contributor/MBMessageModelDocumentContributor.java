@@ -5,7 +5,6 @@
 
 package com.liferay.message.boards.internal.search.spi.model.index.contributor;
 
-import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.message.boards.model.MBDiscussion;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
@@ -14,6 +13,7 @@ import com.liferay.message.boards.service.MBMessageLocalService;
 import com.liferay.message.boards.service.MBThreadLocalService;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -26,10 +26,12 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.RelatedEntryIndexer;
 import com.liferay.portal.kernel.search.RelatedEntryIndexerRegistryUtil;
 import com.liferay.portal.kernel.util.HtmlParser;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.ml.embedding.text.TextEmbeddingDocumentContributor;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 import com.liferay.ratings.kernel.model.RatingsStats;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
@@ -54,6 +56,8 @@ public class MBMessageModelDocumentContributor
 	public void contribute(Document document, MBMessage mbMessage) {
 		document.addKeyword(Field.CATEGORY_ID, mbMessage.getCategoryId());
 
+		String content = _processContent(mbMessage);
+
 		for (Locale locale :
 				_language.getAvailableLocales(mbMessage.getGroupId())) {
 
@@ -61,10 +65,16 @@ public class MBMessageModelDocumentContributor
 
 			document.addText(
 				_localization.getLocalizedName(Field.CONTENT, languageId),
-				_processContent(mbMessage));
+				content);
 			document.addText(
 				_localization.getLocalizedName(Field.TITLE, languageId),
 				mbMessage.getSubject());
+
+			_textEmbeddingDocumentContributor.contribute(
+				document, languageId, mbMessage,
+				StringBundler.concat(
+					mbMessage.getSubject(), StringPool.PERIOD, StringPool.SPACE,
+					content));
 		}
 
 		document.addKeyword(
@@ -92,7 +102,9 @@ public class MBMessageModelDocumentContributor
 
 		document.addKeyword("parentMessageId", mbMessage.getParentMessageId());
 		document.addKeyword("threadId", mbMessage.getThreadId());
-		document.addKeywordSortable("urlSubject", mbMessage.getUrlSubject());
+		document.addKeywordSortable(
+			"urlSubject",
+			HttpComponentsUtil.decodePath(mbMessage.getUrlSubject()));
 
 		if (mbMessage.getMessageId() == mbMessage.getRootMessageId()) {
 			boolean answered = false;
@@ -195,9 +207,6 @@ public class MBMessageModelDocumentContributor
 		MBMessageModelDocumentContributor.class);
 
 	@Reference
-	private AssetTagLocalService _assetTagLocalService;
-
-	@Reference
 	private HtmlParser _htmlParser;
 
 	@Reference
@@ -211,5 +220,8 @@ public class MBMessageModelDocumentContributor
 
 	@Reference
 	private RatingsStatsLocalService _ratingsStatsLocalService;
+
+	@Reference
+	private TextEmbeddingDocumentContributor _textEmbeddingDocumentContributor;
 
 }

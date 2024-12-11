@@ -13,7 +13,6 @@ import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 
 import java.math.BigDecimal;
 
@@ -23,7 +22,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Stefano Motta
  */
-@FeatureFlags("COMMERCE-11287")
 @RunWith(Arquillian.class)
 public class SkuUnitOfMeasureResourceTest
 	extends BaseSkuUnitOfMeasureResourceTestCase {
@@ -40,7 +38,7 @@ public class SkuUnitOfMeasureResourceTest
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
 			"active", "incrementalOrderQuantity", "name", "precision",
-			"priority", "rate"
+			"pricingQuantity", "priority", "rate"
 		};
 	}
 
@@ -56,6 +54,8 @@ public class SkuUnitOfMeasureResourceTest
 				name = LanguageUtils.getLanguageIdMap(
 					RandomTestUtil.randomLocaleStringMap());
 				precision = 0;
+				pricingQuantity = BigDecimal.valueOf(
+					RandomTestUtil.randomInt(1, 10));
 				primary = RandomTestUtil.randomBoolean();
 				priority = RandomTestUtil.randomDouble();
 				promoPrice = BigDecimal.valueOf(RandomTestUtil.nextDouble());

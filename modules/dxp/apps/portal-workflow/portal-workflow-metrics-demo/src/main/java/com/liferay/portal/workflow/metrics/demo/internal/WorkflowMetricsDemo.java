@@ -36,7 +36,7 @@ import com.liferay.portal.workflow.kaleo.demo.data.creator.WorkflowInstanceDemoD
 import com.liferay.portal.workflow.kaleo.demo.data.creator.WorkflowTaskDemoDataCreator;
 import com.liferay.portal.workflow.metrics.demo.data.creator.WorkflowMetricsSLADefinitionDemoDataCreator;
 import com.liferay.portal.workflow.metrics.search.background.task.WorkflowMetricsBackgroundTaskExecutorNames;
-import com.liferay.users.admin.demo.data.creator.OmniAdminUserDemoDataCreator;
+import com.liferay.users.admin.demo.data.creator.OmniadminUserDemoDataCreator;
 import com.liferay.users.admin.demo.data.creator.SiteMemberUserDemoDataCreator;
 
 import java.io.Serializable;
@@ -62,7 +62,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 
 	@Override
 	public void portalInstanceRegistered(Company company) throws Exception {
-		User omniAdminUser = _omniAdminUserDemoDataCreator.create(
+		User omniadminUser = _omniadminUserDemoDataCreator.create(
 			company.getCompanyId());
 
 		LocalDateTime nowLocalDateTime = LocalDateTime.now();
@@ -71,7 +71,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 
 		WorkflowDefinition workflowDefinition =
 			_workflowDefinitionDemoDataCreator.create(
-				company.getCompanyId(), omniAdminUser.getUserId(),
+				company.getCompanyId(), omniadminUser.getUserId(),
 				_toDate(startLocalDateTime));
 
 		Group group = _groupLocalService.getGroup(
@@ -90,16 +90,16 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 
 		DDMFormInstance ddmFormInstance =
 			_ddmFormInstanceDemoDataCreator.create(
-				omniAdminUser.getUserId(), group.getGroupId(),
+				omniadminUser.getUserId(), group.getGroupId(),
 				_toDate(startLocalDateTime));
 
 		_workflowDefinitionLinkDemoDataCreator.create(
-			omniAdminUser.getUserId(), company.getCompanyId(),
+			omniadminUser.getUserId(), company.getCompanyId(),
 			group.getGroupId(), DDMFormInstance.class.getName(),
 			ddmFormInstance.getFormInstanceId(), 0);
 
 		_workflowMetricsSLADefinitionDemoDataCreator.create(
-			company.getCompanyId(), omniAdminUser.getUserId(),
+			company.getCompanyId(), omniadminUser.getUserId(),
 			_toDate(startLocalDateTime),
 			workflowDefinition.getWorkflowDefinitionId());
 
@@ -259,7 +259,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 		}
 
 		_backgroundTaskLocalService.addBackgroundTask(
-			omniAdminUser.getUserId(), group.getGroupId(),
+			omniadminUser.getUserId(), group.getGroupId(),
 			WorkflowMetricsDemo.class.getSimpleName(),
 			WorkflowMetricsBackgroundTaskExecutorNames.
 				WORKFLOW_METRICS_REINDEX_BACKGROUND_TASK_EXECUTOR,
@@ -286,7 +286,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 
 		_workflowDefinitionDemoDataCreator.delete();
 
-		_omniAdminUserDemoDataCreator.delete();
+		_omniadminUserDemoDataCreator.delete();
 		_siteMemberUserDemoDataCreator.delete();
 	}
 
@@ -408,7 +408,7 @@ public class WorkflowMetricsDemo extends BasePortalInstanceLifecycleListener {
 	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 	@Reference
-	private OmniAdminUserDemoDataCreator _omniAdminUserDemoDataCreator;
+	private OmniadminUserDemoDataCreator _omniadminUserDemoDataCreator;
 
 	@Reference
 	private RoleLocalService _roleLocalService;

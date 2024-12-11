@@ -41,6 +41,28 @@ public class JenkinsServerEntityRepository
 		return create(jsonObject);
 	}
 
+	public JenkinsServerEntity create(
+		JenkinsCohortEntity jenkinsCohortEntity, String jenkinsUserName,
+		String jenkinsUserPassword, String name, URL url) {
+
+		JSONObject jsonObject = new JSONObject();
+
+		jsonObject.put(
+			"jenkinsUserName", jenkinsUserName
+		).put(
+			"jenkinsUserPassword", jenkinsUserPassword
+		).put(
+			"name", name
+		).put(
+			"r_jenkinsCohortToJenkinsServers_c_jenkinsCohortId",
+			jenkinsCohortEntity.getId()
+		).put(
+			"url", String.valueOf(url)
+		);
+
+		return create(jsonObject);
+	}
+
 	@Override
 	public JenkinsServerEntity create(JSONObject jsonObject) {
 		URL url = StringUtil.toURL(jsonObject.getString("url"));
@@ -55,43 +77,33 @@ public class JenkinsServerEntityRepository
 		String name = jsonObject.optString("name");
 
 		if (StringUtil.isNullOrEmpty(name)) {
-			jsonObject.put("name", jenkinsURLMatcher.group("name"));
+			jsonObject.put("name", jenkinsURLMatcher.group("serverName"));
 		}
 
 		return super.create(jsonObject);
 	}
 
-	public JenkinsServerEntity create(
-		String jenkinsUserName, String jenkinsUserPassword, String name,
-		URL url) {
+	public JenkinsServerEntity createByURL(URL url) {
+		JenkinsServerEntity jenkinsServerEntity = getByURL(url);
 
-		JSONObject jsonObject = new JSONObject();
+		if (jenkinsServerEntity != null) {
+			return jenkinsServerEntity;
+		}
 
-		jsonObject.put(
-			"jenkinsUserName", jenkinsUserName
-		).put(
-			"jenkinsUserPassword", jenkinsUserPassword
-		).put(
-			"name", name
-		).put(
-			"url", String.valueOf(url)
-		);
+		Matcher jenkinsURLMatcher = _jenkinsURLPattern.matcher(
+			String.valueOf(url));
 
-		return create(jsonObject);
-	}
+		if (!jenkinsURLMatcher.find()) {
+			throw new RuntimeException("Invalid Jenkins URL: " + url);
+		}
 
-	public JenkinsServerEntity create(URL url) {
-		JSONObject jsonObject = new JSONObject();
+		JenkinsCohortEntity jenkinsCohortEntity =
+			_jenkinsCohortEntityRepository.create(
+				jenkinsURLMatcher.group("cohortName"));
 
-		jsonObject.put(
-			"jenkinsUserName", _jenkinsUserName
-		).put(
-			"jenkinsUserPassword", _jenkinsUserPassword
-		).put(
-			"url", String.valueOf(url)
-		);
-
-		return create(jsonObject);
+		return create(
+			jenkinsCohortEntity, _jenkinsUserName, _jenkinsUserPassword,
+			jenkinsURLMatcher.group("serverName"), url);
 	}
 
 	public JenkinsServerEntity getByURL(URL url) {
@@ -109,6 +121,17 @@ public class JenkinsServerEntityRepository
 	@Override
 	public JenkinsServerEntityDALO getEntityDALO() {
 		return _jenkinsServerEntityDALO;
+	}
+
+	@Override
+	public void initialize() {
+		addAll(_jenkinsServerEntityDALO.getAll());
+
+		for (JenkinsServerEntity jenkinsServerEntity : getAll()) {
+			jenkinsServerEntity.update();
+
+			update(jenkinsServerEntity);
+		}
 	}
 
 	@Override
@@ -176,7 +199,8 @@ public class JenkinsServerEntityRepository
 	}
 
 	private static final Pattern _jenkinsURLPattern = Pattern.compile(
-		"https?://(?<name>[^/]+)(\\.liferay\\.com)?(/.*)?");
+		"https?://(?<serverName>(?<cohortName>test-\\d+)-\\d+)" +
+			"(\\.liferay\\.com)?(/.*)?");
 
 	@Autowired
 	private JenkinsCohortEntityRepository _jenkinsCohortEntityRepository;
@@ -191,10 +215,10 @@ public class JenkinsServerEntityRepository
 	private JenkinsServerToJenkinsNodesEntityRelationshipDALO
 		_jenkinsServerToJenkinsNodesEntityRelationshipDALO;
 
-	@Value("${jenkins.user.name}")
+	@Value("${JETHR0_JENKINS_USER_NAME:test@liferay.com}")
 	private String _jenkinsUserName;
 
-	@Value("${jenkins.user.password}")
+	@Value("${JETHR0_JENKINS_USER_PASSWORD:password}")
 	private String _jenkinsUserPassword;
 
 }

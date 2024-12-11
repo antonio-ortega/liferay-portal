@@ -1,32 +1,34 @@
 {
 	"dependencies": {
-		"@clayui/breadcrumb": "3.104.0",
-		"@clayui/button": "3.100.0",
-		"@clayui/card": "3.105.0",
-		"@clayui/core": "3.104.0",
-		"@clayui/drop-down": "3.105.0",
-		"@clayui/form": "3.104.0",
-		"@clayui/icon": "3.56.0",
-		"@clayui/label": "3.88.0",
-		"@clayui/layout": "3.93.0",
-		"@clayui/link": "3.88.0",
-		"@clayui/management-toolbar": "3.93.0",
-		"@clayui/modal": "3.104.0",
-		"@clayui/navigation-bar": "3.104.0",
-		"@clayui/panel": "3.104.0",
-		"@clayui/tabs": "3.104.0",
-		"@clayui/tooltip": "3.104.0",
+		"@clayui/alert": "3.111.0",
+		"@clayui/breadcrumb": "3.116.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/card": "3.123.1",
+		"@clayui/core": "3.123.0",
+		"@clayui/drop-down": "3.123.1",
+		"@clayui/form": "3.122.0",
+		"@clayui/icon": "3.111.0",
+		"@clayui/label": "3.111.0",
+		"@clayui/layout": "3.111.0",
+		"@clayui/link": "3.111.0",
+		"@clayui/management-toolbar": "3.111.0",
+		"@clayui/modal": "3.122.0",
+		"@clayui/navigation-bar": "3.123.1",
+		"@clayui/panel": "3.119.0",
+		"@clayui/tabs": "3.119.0",
+		"@clayui/tooltip": "3.119.0",
 		"@liferay/frontend-data-set-web": "*",
 		"classnames": "2.3.1",
 		"frontend-js-web": "*",
-		"react": "16.12.0"
+		"react": "18.2.0"
 	},
+	"main": "js/index.ts",
 	"name": "@liferay/headless-builder-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
-	"version": "1.0.11"
+	"version": "1.0.33"
 }

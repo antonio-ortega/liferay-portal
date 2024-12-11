@@ -3,47 +3,55 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Liferay} from './liferay/liferay';
-import {AppCreationFlow} from './pages/AppCreationFlow/AppCreationFlow';
-import CreateLicense from './pages/CreateLicense';
-import {CustomerGatePage} from './pages/CustomerGatePage/CustomerGatePage';
-import GetAppPage from './pages/GetAppPage/GetAppPage';
-import {NextStepPage} from './pages/NextStepPage/NextStepPage';
-import {PublishedAppsDashboardPage} from './pages/PublishedAppsDashboardPage/PublishedAppsDashboardPage';
-import {PurchasedAppsDashboardPage} from './pages/PurchasedAppsDashboardPage/PurchasedAppsDashboardPage';
-import PurchasedSolutions from './pages/PurchasedSolutions/PurchasedSolutions';
+import React, {Suspense} from 'react';
 
-interface AppRoutesProps {
-	route: string;
-}
+import Loading from './components/Loading';
 
-export default function AppRoutes({route}: AppRoutesProps) {
-	if (Liferay.ThemeDisplay.isSignedIn()) {
-		if (route === 'create-app') {
-			return <AppCreationFlow />;
-		}
-		if (route === 'create-license') {
-			return <CreateLicense />;
-		}
-		else if (route === 'get-app') {
-			return <GetAppPage />;
-		}
-		else if (route === 'next-steps') {
-			return <NextStepPage />;
-		}
-		else if (route === 'purchased-apps') {
-			return <PurchasedAppsDashboardPage />;
-		}
-		else if (route === 'published-apps') {
-			return <PublishedAppsDashboardPage />;
-		}
-		else if (route === 'customer-gate') {
-			return <CustomerGatePage />;
-		}
-		else if (route === 'purchased-solutions') {
-			return <PurchasedSolutions />;
-		}
+const lazyRoutes = {
+	'administrator-dashboard': React.lazy(
+		() =>
+			import(
+				'./pages/AdministratorDashboard/AdministratorDashboardRouter'
+			)
+	),
+	'get-app': React.lazy(() => import('./pages/GetApp/GetAppRouter')),
+	'license-agreement': React.lazy(
+		() => import('./pages/LicenseAgreementPage')
+	),
+	'next-steps': React.lazy(() => import('./pages/NextSteps')),
+	'product-purchase': React.lazy(
+		() => import('./pages/ProductPurchase/ProductPurchaseRouter')
+	),
+	'published-apps': React.lazy(
+		() => import('./pages/PublisherDashboard/PublisherDashboardRouter')
+	),
+	'publisher-gate': React.lazy(
+		() => import('./pages/PublisherGate/PublisherGateRouter')
+	),
+	'purchased-apps': React.lazy(
+		() => import('./pages/CustomerDashboard/CustomerDashboardRouter')
+	),
+} as const;
+
+export type RouteType = keyof typeof lazyRoutes;
+
+type AppRoutesProps = {
+	path: RouteType;
+	properties: DefaultProperties;
+};
+
+export default function Routes({path, properties}: AppRoutesProps) {
+	const Route = lazyRoutes[path] as React.FC<{properties: DefaultProperties}>;
+
+	if (!Route) {
+		return <h1>Page not found</h1>;
 	}
 
-	return <></>;
+	return (
+		<Suspense
+			fallback={<Loading displayType="secondary" shape="squares" />}
+		>
+			<Route properties={properties} />
+		</Suspense>
+	);
 }

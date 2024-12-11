@@ -97,6 +97,7 @@ const DateFilter: React.FC<IFilterProps> = ({
 									<Form.DateInput
 										name='date'
 										overlayAlignment='rightCenter'
+										showRetentionPeriod={false}
 										usePortal={false}
 										validate={validateRequired}
 									/>
@@ -122,7 +123,7 @@ const DateFilter: React.FC<IFilterProps> = ({
 							displayType='primary'
 							type='submit'
 						>
-							{Liferay.Language.get('done')}
+							{Liferay.Language.get('apply')}
 						</ClayButton>
 					</div>
 				</Form.Form>

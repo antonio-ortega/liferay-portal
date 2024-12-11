@@ -182,7 +182,7 @@ public class SpeedwellSiteInitializer implements SiteInitializer {
 
 			_configureB2CSite(commerceChannel.getGroup(), serviceContext);
 
-			_speedwellLayoutsInitializer.initialize(serviceContext);
+			_createLayouts(serviceContext);
 
 			_importAssetCategories(serviceContext);
 
@@ -351,6 +351,20 @@ public class SpeedwellSiteInitializer implements SiteInitializer {
 			commerceCatalog.getCommerceCurrencyCode(), serviceContext);
 	}
 
+	private void _createLayouts(ServiceContext serviceContext)
+		throws Exception {
+
+		_cpFileImporter.cleanLayouts(serviceContext);
+
+		JSONArray jsonArray = _jsonFactory.createJSONArray(
+			SpeedwellDependencyResolverUtil.getJSON("layouts.json"));
+
+		_cpFileImporter.createLayouts(
+			jsonArray, SpeedwellDependencyResolverUtil.getImageClassLoader(),
+			SpeedwellDependencyResolverUtil.getImageDependencyPath(),
+			serviceContext);
+	}
+
 	private void _createRoles(ServiceContext serviceContext) throws Exception {
 		_cpFileImporter.createRoles(
 			_getJSONArray("roles.json"), serviceContext);
@@ -430,18 +444,21 @@ public class SpeedwellSiteInitializer implements SiteInitializer {
 	private ServiceContext _getServiceContext(long groupId)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(PrincipalThreadLocal.getUserId());
-		Group group = _groupLocalService.getGroup(groupId);
-
-		Locale locale = LocaleUtil.getSiteDefault();
-
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setAddGroupPermissions(true);
 		serviceContext.setAddGuestPermissions(true);
+
+		Group group = _groupLocalService.getGroup(groupId);
+
 		serviceContext.setCompanyId(group.getCompanyId());
-		serviceContext.setLanguageId(_language.getLanguageId(locale));
+
+		serviceContext.setLanguageId(
+			_language.getLanguageId(LocaleUtil.getSiteDefault()));
 		serviceContext.setScopeGroupId(groupId);
+
+		User user = _userLocalService.getUser(PrincipalThreadLocal.getUserId());
+
 		serviceContext.setTimeZone(user.getTimeZone());
 		serviceContext.setUserId(user.getUserId());
 
@@ -1123,9 +1140,6 @@ public class SpeedwellSiteInitializer implements SiteInitializer {
 		target = "(osgi.web.symbolicname=com.liferay.commerce.theme.speedwell.site.initializer)"
 	)
 	private ServletContext _servletContext;
-
-	@Reference
-	private SpeedwellLayoutsInitializer _speedwellLayoutsInitializer;
 
 	@Reference
 	private ThemeLocalService _themeLocalService;

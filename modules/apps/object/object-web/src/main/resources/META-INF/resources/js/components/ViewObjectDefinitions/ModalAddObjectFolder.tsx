@@ -11,7 +11,7 @@ import {
 	API,
 	FormError,
 	Input,
-	REQUIRED_MSG,
+	constantsUtils,
 	openToast,
 	useForm,
 } from '@liferay/object-js-components-web';
@@ -23,8 +23,8 @@ import {normalizeName} from './objectDefinitionUtil';
 
 interface ModalAddObjectFolderProps {
 	handleOnClose: () => void;
-	setObjectFolders: React.Dispatch<
-		React.SetStateAction<Partial<ObjectFolder>[]>
+	setObjectFoldersRequestInfo: React.Dispatch<
+		React.SetStateAction<ObjectFoldersRequestInfo>
 	>;
 	setSelectedObjectFolder: (values: Partial<ObjectFolder>) => void;
 }
@@ -36,7 +36,7 @@ type TInitialValues = {
 
 export function ModalAddObjectFolder({
 	handleOnClose,
-	setObjectFolders,
+	setObjectFoldersRequestInfo,
 	setSelectedObjectFolder,
 }: ModalAddObjectFolderProps) {
 	const [error, setError] = useState<string>('');
@@ -76,8 +76,25 @@ export function ModalAddObjectFolder({
 				type: 'success',
 			});
 
-			setObjectFolders((prevValues) => [...prevValues, newObjectFolder]);
+			setObjectFoldersRequestInfo(
+				(prevValues: ObjectFoldersRequestInfo) => {
+					return {
+						actions: prevValues.actions,
+						items: [...prevValues.items, newObjectFolder],
+					};
+				}
+			);
+
 			setSelectedObjectFolder(newObjectFolder);
+
+			const currentURL = new URL(window.location.href);
+
+			currentURL.searchParams.set(
+				'objectFolderName',
+				newObjectFolder.name
+			);
+
+			window.history.replaceState(null, '', currentURL.href);
 		}
 		catch (error) {
 			setError((error as Error).message);
@@ -88,10 +105,10 @@ export function ModalAddObjectFolder({
 		const errors: FormError<TInitialValues> = {};
 
 		if (!values.label) {
-			errors.label = REQUIRED_MSG;
+			errors.label = constantsUtils.REQUIRED_MSG;
 		}
 		if (!(values.name ?? values.label)) {
-			errors.name = REQUIRED_MSG;
+			errors.name = constantsUtils.REQUIRED_MSG;
 		}
 
 		return errors;
@@ -105,7 +122,7 @@ export function ModalAddObjectFolder({
 
 	return (
 		<ClayModalProvider>
-			<ClayModal observer={observer}>
+			<ClayModal center observer={observer}>
 				<ClayForm onSubmit={handleSubmit}>
 					<ClayModal.Header>
 						{Liferay.Language.get('new-object-folder')}

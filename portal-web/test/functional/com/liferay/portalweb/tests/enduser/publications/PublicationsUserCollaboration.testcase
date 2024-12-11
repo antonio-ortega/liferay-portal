@@ -101,7 +101,7 @@ definition {
 		SignOut.signOut();
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Notifications.gotoNotifications();
@@ -126,16 +126,16 @@ definition {
 	@description = "This is a use case for LPS-195716. Can enable and disable share access link."
 	@priority = 3
 	test CanEnableAndDisableShareAccessLink {
-		property custom.properties = "feature.flag.LPS-187436=true";
-
 		task ("Create Web Content and Publication") {
 			JSONPublications.addPublication(publicationName = "Publication Name");
 
 			JSONPublications.selectPublication(publicationName = "Publication Name");
 
+			HeadlessSite.addSite(siteName = "Site Name");
+
 			JSONWebcontent.addWebContent(
 				content = "WC WebContent Content",
-				groupName = "Guest",
+				groupName = "Site Name",
 				title = "WC WebContent Title");
 		}
 
@@ -146,7 +146,7 @@ definition {
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Web Content Article",
-				changeSite = "Guest",
+				changeSite = "Site Name",
 				changeTitle = "WC WebContent Title",
 				changeType = "Added",
 				changeUser = "Test Test");
@@ -178,16 +178,16 @@ definition {
 	@description = "This is a use case for LPS-195715. Can view Publication with link as Guest user."
 	@priority = 3
 	test CanReviewPublicationWithLinkAsGuest {
-		property custom.properties = "feature.flag.LPS-187436=true";
-
 		task ("Create Web Content and Publication") {
 			JSONPublications.addPublication(publicationName = "Publication Name");
 
 			JSONPublications.selectPublication(publicationName = "Publication Name");
 
+			HeadlessSite.addSite(siteName = "Site Name");
+
 			JSONWebcontent.addWebContent(
 				content = "WC WebContent Content",
-				groupName = "Guest",
+				groupName = "Site Name",
 				title = "WC WebContent Title");
 		}
 
@@ -198,7 +198,7 @@ definition {
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Web Content Article",
-				changeSite = "Guest",
+				changeSite = "Site Name",
 				changeTitle = "WC WebContent Title",
 				changeType = "Added",
 				changeUser = "Test Test");
@@ -216,17 +216,17 @@ definition {
 			SignOut.signOut();
 
 			Navigator.openSpecificURL(url = ${shareLinkURL});
-
-			echo("shareLinkURL is ${shareLinkURL}");
 		}
 
 		task ("Assert guest user can view Publication with link") {
 			PublicationsChanges.viewChanges(
 				changeCategory = "Web Content Article",
-				changeSite = "Guest",
+				changeSite = "Site Name",
 				changeTitle = "WC WebContent Title",
 				changeType = "Added",
 				changeUser = "Test Test");
+
+			AssertElementNotPresent(locator1 = "Icon#SVG_ELLIPSIS");
 		}
 	}
 
@@ -248,6 +248,8 @@ definition {
 		PublicationsNavigator.gotoPublicationEllipsisItem(
 			menuItem = "Invite Users",
 			publicationName = "Test Publication");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		Click(
 			key_title = "Viewers can view. Viewers cannot edit, publish, or invite other users.",
@@ -273,7 +275,11 @@ definition {
 			key_publicationRole = "Editor",
 			locator1 = "Publications#PUBLICATION_ROLE_BUTTON_BODY");
 
-		Click(
+		SelectFrame(value1 = "relative=top");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		Click.javaScriptClick(
 			key_title = "Editors can view and edit. Editors cannot publish or invite other users.",
 			locator1 = "Publications#PUBLICATION_ROLE_BUTTON_BODY_TITLE");
 
@@ -291,16 +297,16 @@ definition {
 	@description = "This is a use case for LPS-195718. Expire link when publication is published."
 	@priority = 3
 	test ExpireLinkWhenPublicationIsPublished {
-		property custom.properties = "feature.flag.LPS-187436=true";
-
 		task ("Create Web Content and Publication") {
 			JSONPublications.addPublication(publicationName = "Publication Name");
 
 			JSONPublications.selectPublication(publicationName = "Publication Name");
 
+			HeadlessSite.addSite(siteName = "Site Name");
+
 			JSONWebcontent.addWebContent(
 				content = "WC WebContent Content",
-				groupName = "Guest",
+				groupName = "Site Name",
 				title = "WC WebContent Title");
 		}
 
@@ -311,7 +317,7 @@ definition {
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Web Content Article",
-				changeSite = "Guest",
+				changeSite = "Site Name",
 				changeTitle = "WC WebContent Title",
 				changeType = "Added",
 				changeUser = "Test Test");
@@ -333,8 +339,6 @@ definition {
 			SignOut.signOut();
 
 			Navigator.openSpecificURL(url = ${shareLinkURL});
-
-			echo("shareLinkURL is ${shareLinkURL}");
 		}
 
 		task ("Assert 404 page shows up indicating the link is expired") {
@@ -348,16 +352,16 @@ definition {
 	@description = "This is a use case for LPS-195717. Expire link when sharing is disabled."
 	@priority = 3
 	test ExpireLinkWhenSharingIsDisabled {
-		property custom.properties = "feature.flag.LPS-187436=true";
-
 		task ("Create Web Content and Publication") {
 			JSONPublications.addPublication(publicationName = "Publication Name");
 
 			JSONPublications.selectPublication(publicationName = "Publication Name");
 
+			HeadlessSite.addSite(siteName = "Site Name");
+
 			JSONWebcontent.addWebContent(
 				content = "WC WebContent Content",
-				groupName = "Guest",
+				groupName = "Site Name",
 				title = "WC WebContent Title");
 		}
 
@@ -368,7 +372,7 @@ definition {
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Web Content Article",
-				changeSite = "Guest",
+				changeSite = "Site Name",
 				changeTitle = "WC WebContent Title",
 				changeType = "Added",
 				changeUser = "Test Test");
@@ -390,8 +394,6 @@ definition {
 			SignOut.signOut();
 
 			Navigator.openSpecificURL(url = ${shareLinkURL});
-
-			echo("shareLinkURL is ${shareLinkURL}");
 		}
 
 		task ("Assert 404 page shows up indicating the link is expired") {
@@ -431,81 +433,6 @@ definition {
 		PublicationsPermissions.viewPublicationRoleHelpText(
 			publicationRole = "Admin",
 			publicationRoleHelpText = "Administrators can view, edit, publish, and invite other users.");
-	}
-
-	@priority = 5
-	test InviteUserAsAdmin {
-		property portal.acceptance = "true";
-
-		for (var userNumber : list "1,2") {
-			JSONUser.addUser(
-				userEmailAddress = "userea${userNumber}@liferay.com",
-				userFirstName = "userfn${userNumber}",
-				userLastName = "userln${userNumber}",
-				userScreenName = "usersn${userNumber}");
-
-			JSONUser.setFirstPassword(
-				agreeToTermsAndAnswerReminderQuery = "true",
-				requireReset = "false",
-				userEmailAddress = "userea${userNumber}@liferay.com");
-
-			JSONUser.addUserToSite(
-				groupName = "Guest",
-				userEmailAddress = "userea${userNumber}@liferay.com");
-
-			JSONRole.assignSiteRoleToUser(
-				groupName = "Guest",
-				roleTitle = "Site Administrator",
-				userEmailAddress = "userea${userNumber}@liferay.com");
-
-			JSONRole.assignRoleToUser(
-				roleTitle = "Publications User",
-				userEmailAddress = "userea${userNumber}@liferay.com");
-		}
-
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "PUBLISH",
-			resourceName = "com.liferay.change.tracking.model.CTCollection",
-			roleTitle = "Publications User");
-
-		JSONPublications.addPublication(publicationName = "Publication Name");
-
-		PublicationsNavigator.openPublicationsAdmin();
-
-		Publications.inviteUsers(
-			gotoReviewChanges = "true",
-			publicationName = "Publication Name",
-			publicationRole = "Admin",
-			userInvite = "userea1@liferay.com");
-
-		JSONPublications.selectPublication(publicationName = "Publication Name");
-
-		JSONWebcontent.addWebContent(
-			content = "WC WebContent Content",
-			groupName = "Guest",
-			title = "WC WebContent Title");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest",
-			mimeType = "text/plain",
-			sourceFileName = "Document_1.txt");
-
-		SignOut.signOut();
-
-		User.firstLoginPG(
-			password = "test",
-			userEmailAddress = "userea1@liferay.com");
-
-		Notifications.gotoNotifications();
-
-		AssertElementPresent(
-			locator1 = "Notifications#NOTIFICATIONS_WORKFLOW_TITLE",
-			value1 = "Test Test has invited you to work on Publication Name as a Admin.");
-
-		PublicationsNavigator.openPublicationsAdmin();
-
-		PublicationsPermissions.assertAdminPermissions(publicationName = "Publication Name");
 	}
 
 	@priority = 5
@@ -560,7 +487,7 @@ definition {
 		SignOut.signOut();
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Notifications.gotoNotifications();
@@ -631,7 +558,7 @@ definition {
 		SignOut.signOut();
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Notifications.gotoNotifications();
@@ -693,7 +620,7 @@ definition {
 		SignOut.signOut();
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Notifications.gotoNotifications();
@@ -710,10 +637,7 @@ definition {
 	@description = "This is a use case for LPS-150313."
 	@priority = 4
 	test VerifyPublicationsUserPermissions {
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		AssertClick(
 			key_itemName = "Publications User",

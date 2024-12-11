@@ -138,6 +138,9 @@ public class CommerceOrderFDSUtil {
 			"commerceOrderImporterTypeKey",
 			CommerceOrdersCommerceOrderImporterTypeImpl.KEY
 		).setParameter(
+			"orderDetailURL",
+			ParamUtil.getString(httpServletRequest, "orderDetailURL")
+		).setParameter(
 			"selectedCommerceOrderId", order.getOrderId()
 		).setWindowState(
 			LiferayWindowState.POP_UP
@@ -215,15 +218,16 @@ public class CommerceOrderFDSUtil {
 				new Order(
 					commerceOrder.getExternalReferenceCode(),
 					commerceOrder.getCommerceOrderId(),
-					commerceOrder.getCommerceAccountName(),
+					commerceOrder.getCommerceAccountName(), amount,
+					commerceOrder.getUserName(),
 					_formatCommerceOrderCreateDate(
 						themeDisplay.getLocale(), orderDate,
 						showCommerceOrderCreateTime,
 						themeDisplay.getTimeZone()),
-					commerceOrder.getUserName(), commerceOrderStatusLabel,
+					commerceOrder.getName(), commerceOrderStatusLabel,
 					commerceOrderTypeName,
-					commerceOrder.getPurchaseOrderNumber(), workflowStatusLabel,
-					amount));
+					commerceOrder.getPurchaseOrderNumber(),
+					workflowStatusLabel));
 		}
 
 		return orders;
@@ -312,6 +316,9 @@ public class CommerceOrderFDSUtil {
 			CommerceWishListsCommerceOrderImporterTypeImpl.KEY
 		).setParameter(
 			"commerceWishListId", wishList.getWishListId()
+		).setParameter(
+			"orderDetailURL",
+			ParamUtil.getString(httpServletRequest, "orderDetailURL")
 		).setWindowState(
 			LiferayWindowState.POP_UP
 		).buildString();

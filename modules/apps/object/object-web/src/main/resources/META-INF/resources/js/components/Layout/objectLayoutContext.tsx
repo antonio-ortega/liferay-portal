@@ -22,7 +22,7 @@ type TState = {
 	creationLanguageId: Liferay.Language.Locale;
 	enableCategorization: boolean;
 	isViewOnly: boolean;
-	objectFieldTypes: ObjectFieldType[];
+	objectFieldBusinessTypes: ObjectFieldBusinessType[];
 	objectFields: TObjectField[];
 	objectLayout: TObjectLayout;
 	objectLayoutId: string;
@@ -251,12 +251,8 @@ const layoutReducer = (state: TState, action: TAction) => {
 			};
 		}
 		case TYPES.ADD_OBJECT_LAYOUT_FIELD: {
-			const {
-				boxIndex,
-				objectFieldName,
-				objectFieldSize,
-				tabIndex,
-			} = action.payload;
+			const {boxIndex, objectFieldName, objectFieldSize, tabIndex} =
+				action.payload;
 
 			const newState = {...state};
 
@@ -380,13 +376,8 @@ const layoutReducer = (state: TState, action: TAction) => {
 			return newState;
 		}
 		case TYPES.DELETE_OBJECT_LAYOUT_FIELD: {
-			const {
-				boxIndex,
-				columnIndex,
-				objectFieldName,
-				rowIndex,
-				tabIndex,
-			} = action.payload;
+			const {boxIndex, columnIndex, objectFieldName, rowIndex, tabIndex} =
+				action.payload;
 
 			const newState = {...state};
 
@@ -424,13 +415,11 @@ const layoutReducer = (state: TState, action: TAction) => {
 				const objectRelationshipIds = newState.objectRelationships.map(
 					({id}) => id
 				);
-				const objectRelationshipIndex = objectRelationshipIds.indexOf(
-					objectRelationshipId
-				);
+				const objectRelationshipIndex =
+					objectRelationshipIds.indexOf(objectRelationshipId);
 
-				newState.objectRelationships[
-					objectRelationshipIndex
-				].inLayout = false;
+				newState.objectRelationships[objectRelationshipIndex].inLayout =
+					false;
 			}
 
 			// Change object field inLayout attribute to false to be visible when add field again.
@@ -466,7 +455,7 @@ interface ILayoutContextProviderProps
 	extends React.HTMLAttributes<HTMLElement> {
 	value: {
 		isViewOnly: boolean;
-		objectFieldTypes: ObjectFieldType[];
+		objectFieldBusinessTypes: ObjectFieldBusinessType[];
 		objectLayoutId: string;
 	};
 }

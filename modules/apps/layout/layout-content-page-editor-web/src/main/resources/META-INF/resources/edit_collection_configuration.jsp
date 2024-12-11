@@ -12,6 +12,7 @@ EditCollectionConfigurationDisplayContext editCollectionConfigurationDisplayCont
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(editCollectionConfigurationDisplayContext.getRedirect());
+portletDisplay.setURLBackTitle(ParamUtil.getString(request, "backURLTitle"));
 
 renderResponse.setTitle(LanguageUtil.get(request, "filter-collection"));
 %>
@@ -21,7 +22,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "filter-collection"));
 <portlet:actionURL name="/layout_content_page_editor/update_collection_configuration" var="updateCollectionConfigurationURL" />
 
 <liferay-util:html-top>
-	<style type="text/css">
+	<aui:style type="text/css">
 		.edit-collection-configuration-form .sheet {
 			padding: 0;
 		}
@@ -29,7 +30,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "filter-collection"));
 		.edit-collection-configuration-form .sheet-footer {
 			padding: 0 1.5rem;
 		}
-	</style>
+	</aui:style>
 </liferay-util:html-top>
 
 <liferay-frontend:edit-form
@@ -49,7 +50,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "filter-collection"));
 
 	<div>
 		<react:component
-			module="page_editor/plugins/collection_configuration/CollectionConfiguration"
+			module="{CollectionConfiguration} from layout-content-page-editor-web"
 			props="<%= editCollectionConfigurationDisplayContext.getData() %>"
 		/>
 	</div>

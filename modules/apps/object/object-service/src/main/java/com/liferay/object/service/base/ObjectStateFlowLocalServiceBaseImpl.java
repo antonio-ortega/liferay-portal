@@ -12,14 +12,12 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.object.model.ObjectStateFlow;
 import com.liferay.object.service.ObjectStateFlowLocalService;
-import com.liferay.object.service.ObjectStateFlowLocalServiceUtil;
 import com.liferay.object.service.persistence.ObjectStateFlowPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DefaultActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -43,6 +41,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.sql.Connection;
 
 import java.util.List;
 
@@ -70,7 +70,7 @@ public abstract class ObjectStateFlowLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ObjectStateFlowLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ObjectStateFlowLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ObjectStateFlowLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.object.service.ObjectStateFlowLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -486,7 +486,6 @@ public abstract class ObjectStateFlowLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		ObjectStateFlowLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -500,8 +499,6 @@ public abstract class ObjectStateFlowLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		objectStateFlowLocalService = (ObjectStateFlowLocalService)aopProxy;
-
-		ObjectStateFlowLocalServiceUtil.setService(objectStateFlowLocalService);
 	}
 
 	/**
@@ -528,18 +525,23 @@ public abstract class ObjectStateFlowLocalServiceBaseImpl
 	 * @param sql the sql query
 	 */
 	protected void runSQL(String sql) {
+		DataSource dataSource = objectStateFlowPersistence.getDataSource();
+
+		DB db = DBManagerUtil.getDB();
+
+		Connection currentConnection = CurrentConnectionUtil.getConnection(
+			dataSource);
+
 		try {
-			DataSource dataSource = objectStateFlowPersistence.getDataSource();
+			if (currentConnection != null) {
+				db.runSQL(currentConnection, new String[] {sql});
 
-			DB db = DBManagerUtil.getDB();
+				return;
+			}
 
-			sql = db.buildSQL(sql);
-			sql = PortalUtil.transformSQL(sql);
-
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
-				dataSource, sql);
-
-			sqlUpdate.update();
+			try (Connection connection = dataSource.getConnection()) {
+				db.runSQL(connection, new String[] {sql});
+			}
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

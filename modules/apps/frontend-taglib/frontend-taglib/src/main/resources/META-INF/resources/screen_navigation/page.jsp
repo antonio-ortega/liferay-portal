@@ -44,6 +44,7 @@ LiferayPortletResponse finalLiferayPortletResponse = liferayPortletResponse;
 								add(
 									navigationItem -> {
 										navigationItem.setActive((selectedScreenNavigationCategory != null) && Objects.equals(selectedScreenNavigationCategory.getCategoryKey(), screenNavigationCategory.getCategoryKey()));
+										navigationItem.setDeprecated(screenNavigationCategory.isDeprecated());
 										navigationItem.setHref(screenNavigationCategoryURL, "screenNavigationCategoryKey", screenNavigationCategory.getCategoryKey(), "screenNavigationEntryKey", StringPool.BLANK);
 										navigationItem.setLabel(screenNavigationCategory.getLabel(themeDisplay.getLocale()));
 									});
@@ -138,7 +139,16 @@ LiferayPortletResponse finalLiferayPortletResponse = liferayPortletResponse;
 				}
 			}
 
-			selectedScreenNavigationEntry.render(request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
+			request.setAttribute(ScreenNavigationWebKeys.SELECTED_CATEGORY_KEY, selectedScreenNavigationCategory.getCategoryKey());
+			request.setAttribute(ScreenNavigationWebKeys.SELECTED_ENTRY_KEY, selectedScreenNavigationEntry.getEntryKey());
+
+			try {
+				selectedScreenNavigationEntry.render(request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
+			}
+			finally {
+				request.removeAttribute(ScreenNavigationWebKeys.SELECTED_CATEGORY_KEY);
+				request.removeAttribute(ScreenNavigationWebKeys.SELECTED_ENTRY_KEY);
+			}
 			%>
 
 		</div>

@@ -99,7 +99,6 @@ public class CommercePricingClassLocalServiceImpl
 		commercePricingClass.setUserName(user.getFullName());
 		commercePricingClass.setTitleMap(titleMap);
 		commercePricingClass.setDescriptionMap(descriptionMap);
-		commercePricingClass.setExpandoBridgeAttributes(serviceContext);
 
 		Date date = new Date();
 
@@ -107,6 +106,8 @@ public class CommercePricingClassLocalServiceImpl
 			date.getTime(), user.getTimeZone());
 
 		commercePricingClass.setLastPublishDate(calendar.getTime());
+
+		commercePricingClass.setExpandoBridgeAttributes(serviceContext);
 
 		commercePricingClass = commercePricingClassPersistence.update(
 			commercePricingClass);
@@ -214,18 +215,6 @@ public class CommercePricingClassLocalServiceImpl
 			commercePricingClassLocalService.deleteCommercePricingClass(
 				commercePricingClass);
 		}
-	}
-
-	@Override
-	public CommercePricingClass fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			return null;
-		}
-
-		return commercePricingClassPersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
 	}
 
 	@Override

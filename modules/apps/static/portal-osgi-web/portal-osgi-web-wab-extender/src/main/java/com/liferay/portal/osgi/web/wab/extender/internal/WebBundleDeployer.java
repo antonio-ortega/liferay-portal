@@ -7,14 +7,13 @@ package com.liferay.portal.osgi.web.wab.extender.internal;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.osgi.web.servlet.JSPServletFactory;
-import com.liferay.portal.osgi.web.servlet.JSPTaglibHelper;
 import com.liferay.portal.profile.PortalProfile;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import java.net.URL;
 
@@ -38,12 +37,10 @@ public class WebBundleDeployer {
 
 	public WebBundleDeployer(
 		BundleContext bundleContext, JSPServletFactory jspServletFactory,
-		JSPTaglibHelper jspTaglibHelper,
 		Dictionary<String, Object> properties) {
 
 		_bundleContext = bundleContext;
 		_jspServletFactory = jspServletFactory;
-		_jspTaglibHelper = jspTaglibHelper;
 		_properties = properties;
 	}
 
@@ -63,34 +60,33 @@ public class WebBundleDeployer {
 			return null;
 		}
 
-		URL url = enumeration.nextElement();
+		try {
+			Properties properties = PropertiesUtil.load(
+				enumeration.nextElement());
 
-		Properties properties = new Properties();
+			Set<String> portalProfileNames = SetUtil.fromArray(
+				StringUtil.split(
+					properties.getProperty("liferay-portal-profile-names")));
 
-		try (InputStream inputStream = url.openStream()) {
-			properties.load(inputStream);
+			if (portalProfileNames.isEmpty()) {
+				_initWabBundle(bundle);
+
+				return null;
+			}
+
+			portalProfileNames.add(bundle.getSymbolicName());
+
+			return _bundleContext.registerService(
+				PortalProfile.class,
+				new WarModuleProfile(bundle, portalProfileNames), null);
 		}
 		catch (IOException ioException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(ioException);
 			}
-		}
-
-		Set<String> portalProfileNames = SetUtil.fromArray(
-			StringUtil.split(
-				properties.getProperty("liferay-portal-profile-names")));
-
-		if (portalProfileNames.isEmpty()) {
-			_initWabBundle(bundle);
 
 			return null;
 		}
-
-		portalProfileNames.add(bundle.getSymbolicName());
-
-		return _bundleContext.registerService(
-			PortalProfile.class,
-			new WarModuleProfile(bundle, portalProfileNames), null);
 	}
 
 	public void doStop(Bundle bundle) {
@@ -124,7 +120,7 @@ public class WebBundleDeployer {
 	private void _initWabBundle(Bundle bundle) {
 		try {
 			WabBundleProcessor wabBundleProcessor = new WabBundleProcessor(
-				bundle, _jspServletFactory, _jspTaglibHelper);
+				bundle, _jspServletFactory);
 
 			wabBundleProcessor.init(_properties);
 
@@ -142,7 +138,6 @@ public class WebBundleDeployer {
 
 	private final BundleContext _bundleContext;
 	private final JSPServletFactory _jspServletFactory;
-	private final JSPTaglibHelper _jspTaglibHelper;
 	private final Dictionary<String, Object> _properties;
 	private final ConcurrentMap<Bundle, WabBundleProcessor>
 		_wabBundleProcessors = new ConcurrentHashMap<>();

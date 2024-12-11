@@ -10,17 +10,17 @@ import com.liferay.batch.engine.internal.bundle.AdvancedBundleBatchEngineUnitImp
 import com.liferay.batch.engine.internal.bundle.ClassicBundleBatchEngineUnitImpl;
 import com.liferay.batch.engine.unit.BatchEngineUnit;
 import com.liferay.batch.engine.unit.BatchEngineUnitConfiguration;
+import com.liferay.batch.engine.unit.BatchEngineUnitMetaInfo;
 import com.liferay.batch.engine.unit.BatchEngineUnitReader;
 import com.liferay.petra.io.Deserializer;
 import com.liferay.petra.io.Serializer;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,15 +32,15 @@ import java.net.URL;
 
 import java.nio.ByteBuffer;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.HashMap;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.osgi.framework.Bundle;
 import org.osgi.service.component.annotations.Component;
@@ -77,109 +77,95 @@ public class BatchEngineUnitReaderImpl implements BatchEngineUnitReader {
 		return Collections.emptyList();
 	}
 
-	public boolean isBatchEngineTechnical(String zipEntryName) {
-		if (zipEntryName.endsWith(
-				BatchEngineTaskContentType.JSONT.getFileExtension())) {
-
-			return true;
-		}
-
-		return false;
-	}
-
-	private void _addBundleBatchEngineUnit(
-		BatchEngineUnit batchEngineUnit, List<BatchEngineUnit> batchEngineUnits,
-		List<Map.Entry<String, URL>> featureFlagURLs, List<URL> urls) {
-
-		if (!batchEngineUnit.isValid()) {
-			return;
-		}
-
-		try {
-			String featureFlagKey = _getFeatureFlagKey(
-				batchEngineUnit.getBatchEngineUnitConfiguration());
-
-			for (URL url : urls) {
-				featureFlagURLs.add(
-					new AbstractMap.SimpleImmutableEntry<>(
-						featureFlagKey, url));
-			}
-
-			if (!_isFeatureFlagDisabled(featureFlagKey)) {
-				batchEngineUnits.add(batchEngineUnit);
-			}
-		}
-		catch (IOException ioException) {
-			_log.error(ioException);
-		}
-	}
-
 	private String _getBatchEngineBundleEntryKey(URL url) {
 		String zipEntryName = url.getPath();
 
-		if (isBatchEngineTechnical(zipEntryName)) {
+		if (_isBatchEngineTechnical(zipEntryName)) {
 			return zipEntryName;
 		}
 
 		if (!zipEntryName.contains(StringPool.SLASH)) {
-			return StringPool.BLANK;
+			return StringPool.SLASH;
 		}
 
 		return zipEntryName.substring(
-			0, zipEntryName.lastIndexOf(StringPool.SLASH));
+			0, zipEntryName.lastIndexOf(StringPool.SLASH) + 1);
 	}
 
 	private Collection<BatchEngineUnit> _getBatchEngineBundleUnitsCollection(
 		Bundle bundle, String batchPath) {
 
-		Map<String, List<URL>> classicBundleBatchEngineUnitURLs =
-			new HashMap<>();
-		List<BatchEngineUnit> batchEngineUnits = new ArrayList<>();
-		List<Map.Entry<String, URL>> featureFlagURLs = new ArrayList<>();
+		List<BatchEngineUnit> batchEngineUnits = _loadBatchEngineUnits(bundle);
 
-		List<URL> entryURLs = _loadEntryURLs(bundle);
-
-		boolean save = false;
-
-		if (entryURLs == null) {
-			save = true;
-
-			entryURLs = Collections.list(
-				bundle.findEntries(batchPath, "*", true));
+		if (batchEngineUnits != null) {
+			return batchEngineUnits;
 		}
 
-		for (URL url : entryURLs) {
+		batchEngineUnits = new ArrayList<>();
+
+		Map<String, List<URL>> bundleBatchEngineUnitURLs = new TreeMap<>(
+			new NaturalOrderStringComparator());
+
+		Enumeration<URL> enumeration = bundle.findEntries(batchPath, "*", true);
+
+		while (enumeration.hasMoreElements()) {
+			URL url = enumeration.nextElement();
+
 			if (StringUtil.endsWith(url.getPath(), StringPool.SLASH)) {
 				continue;
 			}
 
-			String key = _getBatchEngineBundleEntryKey(url);
+			bundleBatchEngineUnitURLs.compute(
+				_getBatchEngineBundleEntryKey(url),
+				(k, urls) -> {
+					if (urls == null) {
+						urls = new ArrayList<>();
+					}
 
-			if (_isAdvancedBundleBatchEngineUnit(url.toString())) {
-				_addBundleBatchEngineUnit(
-					new AdvancedBundleBatchEngineUnitImpl(bundle, url),
-					batchEngineUnits, featureFlagURLs, Arrays.asList(url));
+					urls.add(url);
 
-				continue;
+					return urls;
+				});
+		}
+
+		for (Map.Entry<String, List<URL>> entry :
+				bundleBatchEngineUnitURLs.entrySet()) {
+
+			List<URL> urls = entry.getValue();
+
+			if (_isBatchEngineTechnical(entry.getKey())) {
+				URL url = urls.get(0);
+
+				AdvancedBundleBatchEngineUnitImpl
+					advancedBundleBatchEngineUnitImpl =
+						new AdvancedBundleBatchEngineUnitImpl(bundle, url);
+
+				if (advancedBundleBatchEngineUnitImpl.isValid()) {
+					advancedBundleBatchEngineUnitImpl.
+						setBatchEngineUnitMetaInfo(
+							_toBatchEngineUnitMetaInfo(
+								advancedBundleBatchEngineUnitImpl,
+								Arrays.asList(url)));
+
+					batchEngineUnits.add(advancedBundleBatchEngineUnitImpl);
+				}
 			}
+			else {
+				ClassicBundleBatchEngineUnitImpl
+					classicBundleBatchEngineUnitImpl =
+						new ClassicBundleBatchEngineUnitImpl(bundle, urls);
 
-			classicBundleBatchEngineUnitURLs.computeIfAbsent(
-				key, k -> new ArrayList<>());
+				if (classicBundleBatchEngineUnitImpl.isValid()) {
+					classicBundleBatchEngineUnitImpl.setBatchEngineUnitMetaInfo(
+						_toBatchEngineUnitMetaInfo(
+							classicBundleBatchEngineUnitImpl, urls));
 
-			List<URL> urls = classicBundleBatchEngineUnitURLs.get(key);
-
-			urls.add(url);
+					batchEngineUnits.add(classicBundleBatchEngineUnitImpl);
+				}
+			}
 		}
 
-		for (List<URL> urls : classicBundleBatchEngineUnitURLs.values()) {
-			_addBundleBatchEngineUnit(
-				new ClassicBundleBatchEngineUnitImpl(bundle, urls),
-				batchEngineUnits, featureFlagURLs, urls);
-		}
-
-		if (save) {
-			_saveEntryURLs(bundle, featureFlagURLs);
-		}
+		_saveBatchEngineUnits(bundle, batchEngineUnits);
 
 		return batchEngineUnits;
 	}
@@ -197,14 +183,9 @@ public class BatchEngineUnitReaderImpl implements BatchEngineUnitReader {
 		return GetterUtil.getString(parameters.get("featureFlag"));
 	}
 
-	private boolean _isAdvancedBundleBatchEngineUnit(String url) {
-		return url.endsWith(
-			BatchEngineTaskContentType.JSONT.getFileExtension());
-	}
-
-	private boolean _isFeatureFlagDisabled(String featureFlagKey) {
-		if (Validator.isNotNull(featureFlagKey) &&
-			!FeatureFlagManagerUtil.isEnabled(featureFlagKey)) {
+	private boolean _isBatchEngineTechnical(String zipEntryName) {
+		if (zipEntryName.endsWith(
+				BatchEngineTaskContentType.JSONT.getFileExtension())) {
 
 			return true;
 		}
@@ -212,8 +193,8 @@ public class BatchEngineUnitReaderImpl implements BatchEngineUnitReader {
 		return false;
 	}
 
-	private List<URL> _loadEntryURLs(Bundle bundle) {
-		File file = bundle.getDataFile("entryURLs.data");
+	private List<BatchEngineUnit> _loadBatchEngineUnits(Bundle bundle) {
+		File file = bundle.getDataFile("batchEngineUnits.data");
 
 		if (!file.exists()) {
 			return null;
@@ -224,52 +205,111 @@ public class BatchEngineUnitReaderImpl implements BatchEngineUnitReader {
 				ByteBuffer.wrap(FileUtil.getBytes(file)));
 
 			if (deserializer.readLong() == bundle.getLastModified()) {
+				List<BatchEngineUnit> batchEngineUnits = new ArrayList<>();
+
 				int size = deserializer.readInt();
 
-				List<URL> urls = new ArrayList<>();
-
 				for (int i = 0; i < size; i++) {
-					String featureFlagKey = deserializer.readString();
-					String path = deserializer.readString();
+					BatchEngineUnitMetaInfo batchEngineUnitMetaInfo =
+						BatchEngineUnitMetaInfo.readFrom(deserializer);
 
-					if (!_isFeatureFlagDisabled(featureFlagKey)) {
-						urls.add(bundle.getEntry(path));
-					}
+					batchEngineUnits.add(
+						_toBatchEngineUnit(bundle, batchEngineUnitMetaInfo));
 				}
 
-				return urls;
+				return batchEngineUnits;
 			}
 		}
 		catch (IOException ioException) {
-			_log.error("Unable to read batch engine entry URLs", ioException);
+			_log.error("Unable to read batch engine units", ioException);
 		}
 
 		return null;
 	}
 
-	private void _saveEntryURLs(
-		Bundle bundle, List<Map.Entry<String, URL>> featureFlagURLs) {
+	private void _saveBatchEngineUnits(
+		Bundle bundle, List<BatchEngineUnit> batchEngineUnits) {
 
 		Serializer serializer = new Serializer();
 
 		serializer.writeLong(bundle.getLastModified());
-		serializer.writeInt(featureFlagURLs.size());
-
-		for (Map.Entry<String, URL> entry : featureFlagURLs) {
-			serializer.writeString(entry.getKey());
-
-			URL url = entry.getValue();
-
-			serializer.writeString(url.getPath());
-		}
+		serializer.writeInt(batchEngineUnits.size());
 
 		try (OutputStream outputStream = new FileOutputStream(
-				bundle.getDataFile("entryURLs.data"))) {
+				bundle.getDataFile("batchEngineUnits.data"))) {
+
+			for (BatchEngineUnit batchEngineUnit : batchEngineUnits) {
+				BatchEngineUnitMetaInfo batchEngineUnitMetaInfo =
+					batchEngineUnit.getBatchEngineUnitMetaInfo();
+
+				batchEngineUnitMetaInfo.writeTo(serializer);
+			}
 
 			serializer.writeTo(outputStream);
 		}
 		catch (IOException ioException) {
-			_log.error("Unable to write batch engine entry URLs", ioException);
+			_log.error("Unable to write batch engine units", ioException);
+		}
+	}
+
+	private BatchEngineUnit _toBatchEngineUnit(
+		Bundle bundle, BatchEngineUnitMetaInfo batchEngineUnitMetaInfo) {
+
+		String[] paths = batchEngineUnitMetaInfo.getPaths();
+
+		if (batchEngineUnitMetaInfo.isAdvanced()) {
+			AdvancedBundleBatchEngineUnitImpl
+				advancedBundleBatchEngineUnitImpl =
+					new AdvancedBundleBatchEngineUnitImpl(
+						bundle, bundle.getEntry(paths[0]));
+
+			advancedBundleBatchEngineUnitImpl.setBatchEngineUnitMetaInfo(
+				batchEngineUnitMetaInfo);
+
+			return advancedBundleBatchEngineUnitImpl;
+		}
+
+		List<URL> urls = new ArrayList<>();
+
+		for (String path : paths) {
+			urls.add(bundle.getEntry(path));
+		}
+
+		ClassicBundleBatchEngineUnitImpl classicBundleBatchEngineUnitImpl =
+			new ClassicBundleBatchEngineUnitImpl(bundle, urls);
+
+		classicBundleBatchEngineUnitImpl.setBatchEngineUnitMetaInfo(
+			batchEngineUnitMetaInfo);
+
+		return classicBundleBatchEngineUnitImpl;
+	}
+
+	private BatchEngineUnitMetaInfo _toBatchEngineUnitMetaInfo(
+		BatchEngineUnit batchEngineUnit, List<URL> urls) {
+
+		try {
+			BatchEngineUnitConfiguration batchEngineUnitConfiguration =
+				batchEngineUnit.getBatchEngineUnitConfiguration();
+
+			String[] paths = new String[urls.size()];
+
+			for (int i = 0; i < urls.size(); i++) {
+				URL url = urls.get(i);
+
+				paths[i] = url.getPath();
+			}
+
+			return new BatchEngineUnitMetaInfo(
+				batchEngineUnit instanceof AdvancedBundleBatchEngineUnitImpl,
+				batchEngineUnitConfiguration.getCompanyId(),
+				_getFeatureFlagKey(batchEngineUnitConfiguration),
+				batchEngineUnitConfiguration.isMultiCompany(), paths);
+		}
+		catch (IOException ioException) {
+			_log.error(
+				"Unable to parse batch engine unit configuration", ioException);
+
+			return null;
 		}
 	}
 

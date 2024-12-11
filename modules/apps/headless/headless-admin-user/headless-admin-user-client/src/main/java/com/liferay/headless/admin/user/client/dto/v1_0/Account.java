@@ -27,6 +27,31 @@ public class Account implements Cloneable, Serializable {
 		return AccountSerDes.toDTO(json);
 	}
 
+	public AccountContactInformation getAccountContactInformation() {
+		return accountContactInformation;
+	}
+
+	public void setAccountContactInformation(
+		AccountContactInformation accountContactInformation) {
+
+		this.accountContactInformation = accountContactInformation;
+	}
+
+	public void setAccountContactInformation(
+		UnsafeSupplier<AccountContactInformation, Exception>
+			accountContactInformationUnsafeSupplier) {
+
+		try {
+			accountContactInformation =
+				accountContactInformationUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected AccountContactInformation accountContactInformation;
+
 	public UserAccount[] getAccountUserAccounts() {
 		return accountUserAccounts;
 	}
@@ -134,6 +159,32 @@ public class Account implements Cloneable, Serializable {
 
 	protected Date dateModified;
 
+	public String getDefaultBillingAddressExternalReferenceCode() {
+		return defaultBillingAddressExternalReferenceCode;
+	}
+
+	public void setDefaultBillingAddressExternalReferenceCode(
+		String defaultBillingAddressExternalReferenceCode) {
+
+		this.defaultBillingAddressExternalReferenceCode =
+			defaultBillingAddressExternalReferenceCode;
+	}
+
+	public void setDefaultBillingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			defaultBillingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			defaultBillingAddressExternalReferenceCode =
+				defaultBillingAddressExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String defaultBillingAddressExternalReferenceCode;
+
 	public Long getDefaultBillingAddressId() {
 		return defaultBillingAddressId;
 	}
@@ -155,6 +206,32 @@ public class Account implements Cloneable, Serializable {
 	}
 
 	protected Long defaultBillingAddressId;
+
+	public String getDefaultShippingAddressExternalReferenceCode() {
+		return defaultShippingAddressExternalReferenceCode;
+	}
+
+	public void setDefaultShippingAddressExternalReferenceCode(
+		String defaultShippingAddressExternalReferenceCode) {
+
+		this.defaultShippingAddressExternalReferenceCode =
+			defaultShippingAddressExternalReferenceCode;
+	}
+
+	public void setDefaultShippingAddressExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			defaultShippingAddressExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			defaultShippingAddressExternalReferenceCode =
+				defaultShippingAddressExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String defaultShippingAddressExternalReferenceCode;
 
 	public Long getDefaultShippingAddressId() {
 		return defaultShippingAddressId;
@@ -261,6 +338,29 @@ public class Account implements Cloneable, Serializable {
 
 	protected Long id;
 
+	public String getLogoExternalReferenceCode() {
+		return logoExternalReferenceCode;
+	}
+
+	public void setLogoExternalReferenceCode(String logoExternalReferenceCode) {
+		this.logoExternalReferenceCode = logoExternalReferenceCode;
+	}
+
+	public void setLogoExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			logoExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			logoExternalReferenceCode =
+				logoExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String logoExternalReferenceCode;
+
 	public Long getLogoId() {
 		return logoId;
 	}
@@ -343,6 +443,32 @@ public class Account implements Cloneable, Serializable {
 
 	protected Integer numberOfUsers;
 
+	public String[] getOrganizationExternalReferenceCodes() {
+		return organizationExternalReferenceCodes;
+	}
+
+	public void setOrganizationExternalReferenceCodes(
+		String[] organizationExternalReferenceCodes) {
+
+		this.organizationExternalReferenceCodes =
+			organizationExternalReferenceCodes;
+	}
+
+	public void setOrganizationExternalReferenceCodes(
+		UnsafeSupplier<String[], Exception>
+			organizationExternalReferenceCodesUnsafeSupplier) {
+
+		try {
+			organizationExternalReferenceCodes =
+				organizationExternalReferenceCodesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String[] organizationExternalReferenceCodes;
+
 	public Long[] getOrganizationIds() {
 		return organizationIds;
 	}
@@ -363,6 +489,32 @@ public class Account implements Cloneable, Serializable {
 	}
 
 	protected Long[] organizationIds;
+
+	public String getParentAccountExternalReferenceCode() {
+		return parentAccountExternalReferenceCode;
+	}
+
+	public void setParentAccountExternalReferenceCode(
+		String parentAccountExternalReferenceCode) {
+
+		this.parentAccountExternalReferenceCode =
+			parentAccountExternalReferenceCode;
+	}
+
+	public void setParentAccountExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			parentAccountExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			parentAccountExternalReferenceCode =
+				parentAccountExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String parentAccountExternalReferenceCode;
 
 	public Long getParentAccountId() {
 		return parentAccountId;

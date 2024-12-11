@@ -11,9 +11,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.jsp.engine.internal.delegate.CheckEnabledServletDelegate;
 import com.liferay.portal.jsp.engine.internal.delegate.JspConfigDescriptorServletContextDelegate;
+import com.liferay.portal.kernel.dependency.manager.DependencyManagerSyncUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalLifecycle;
-import com.liferay.portal.kernel.util.PortalLifecycleUtil;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
@@ -40,7 +39,10 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 import javax.servlet.ServletRequest;
+import javax.servlet.ServletRequestWrapper;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
 import org.apache.jasper.servlet.JasperInitializer;
 import org.apache.jasper.servlet.JspServlet;
@@ -113,20 +115,12 @@ public class JSPEngineShieldedContainerInitializer
 				new JspConfigDescriptorServletContextDelegate(servletContext),
 				servletContext));
 
-		PortalLifecycleUtil.register(
-			new PortalLifecycle() {
+		DependencyManagerSyncUtil.registerSyncCallable(
+			() -> {
+				JspFactorySwapper.swap();
 
-				@Override
-				public void portalDestroy() {
-				}
-
-				@Override
-				public void portalInit() {
-					JspFactorySwapper.swap();
-				}
-
-			},
-			PortalLifecycle.METHOD_INIT);
+				return null;
+			});
 
 		Map<String, String> initParameters = PropertiesUtil.toMap(
 			PropsUtil.getProperties("jsp.engine.", true));
@@ -179,8 +173,31 @@ public class JSPEngineShieldedContainerInitializer
 							FilterChain filterChain)
 						throws IOException, ServletException {
 
-						portalJSPServlet.service(
-							servletRequest, servletResponse);
+						if (servletRequest instanceof HttpServletRequest) {
+							portalJSPServlet.service(
+								new HttpServletRequestWrapper(
+									(HttpServletRequest)servletRequest) {
+
+									@Override
+									public ServletContext getServletContext() {
+										return servletContext;
+									}
+
+								},
+								servletResponse);
+						}
+						else {
+							portalJSPServlet.service(
+								new ServletRequestWrapper(servletRequest) {
+
+									@Override
+									public ServletContext getServletContext() {
+										return servletContext;
+									}
+
+								},
+								servletResponse);
+						}
 					}
 
 					@Override

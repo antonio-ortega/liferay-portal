@@ -5,18 +5,21 @@
 
 package com.liferay.analytics.settings.rest.internal.resource.v1_0;
 
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.analytics.settings.rest.dto.v1_0.CommerceChannel;
 import com.liferay.analytics.settings.rest.internal.client.AnalyticsCloudClient;
 import com.liferay.analytics.settings.rest.internal.client.model.AnalyticsChannel;
 import com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.CommerceChannelDTOConverterContext;
 import com.liferay.analytics.settings.rest.internal.util.SortUtil;
 import com.liferay.analytics.settings.rest.resource.v1_0.CommerceChannelResource;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupService;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -24,6 +27,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -50,8 +54,10 @@ public class CommerceChannelResourceImpl
 		com.liferay.analytics.settings.rest.internal.client.pagination.Page
 			<AnalyticsChannel> page =
 				_analyticsCloudClient.getAnalyticsChannelsPage(
-					contextCompany.getCompanyId(), null, 0, QueryUtil.ALL_POS,
-					null);
+					_configurationProvider.getCompanyConfiguration(
+						AnalyticsConfiguration.class,
+						contextCompany.getCompanyId()),
+					null, 0, QueryUtil.ALL_POS, null);
 
 		for (AnalyticsChannel analyticsChannel : page.getItems()) {
 			analyticsChannelsMap.put(
@@ -61,8 +67,8 @@ public class CommerceChannelResourceImpl
 		return Page.of(
 			transform(
 				_groupService.search(
-					contextCompany.getCompanyId(), _classNameIds, keywords,
-					_getParams(), pagination.getStartPosition(),
+					contextCompany.getCompanyId(), _classNameIdsSupplier.get(),
+					keywords, _getParams(), pagination.getStartPosition(),
 					pagination.getEndPosition(),
 					SortUtil.getIgnoreCaseOrderByComparator(
 						contextAcceptLanguage.getPreferredLocale(), sorts)),
@@ -74,16 +80,17 @@ public class CommerceChannelResourceImpl
 					group)),
 			pagination,
 			_groupService.searchCount(
-				contextCompany.getCompanyId(), _classNameIds, keywords,
-				_getParams()));
+				contextCompany.getCompanyId(), _classNameIdsSupplier.get(),
+				keywords, _getParams()));
 	}
 
 	@Activate
 	protected void activate(Map<String, Object> properties) {
-		_classNameIds = new long[] {
-			_portal.getClassNameId(
-				"com.liferay.commerce.product.model.CommerceChannel")
-		};
+		_analyticsCloudClient = new AnalyticsCloudClient(_http);
+		_classNameIdsSupplier = _classNameLocalService.getClassNameIdsSupplier(
+			new String[] {
+				"com.liferay.commerce.product.model.CommerceChannel"
+			});
 	}
 
 	private LinkedHashMap<String, Object> _getParams() {
@@ -92,10 +99,11 @@ public class CommerceChannelResourceImpl
 		).build();
 	}
 
-	@Reference
 	private AnalyticsCloudClient _analyticsCloudClient;
+	private Supplier<long[]> _classNameIdsSupplier;
 
-	private long[] _classNameIds;
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference(
 		target = "(component.name=com.liferay.analytics.settings.rest.internal.dto.v1_0.converter.CommerceChannelDTOConverter)"
@@ -103,9 +111,12 @@ public class CommerceChannelResourceImpl
 	private DTOConverter<Group, CommerceChannel> _commerceChannelDTOConverter;
 
 	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference
 	private GroupService _groupService;
 
 	@Reference
-	private Portal _portal;
+	private Http _http;
 
 }

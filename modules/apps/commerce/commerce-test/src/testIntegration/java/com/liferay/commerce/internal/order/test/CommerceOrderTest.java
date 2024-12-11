@@ -226,8 +226,8 @@ public class CommerceOrderTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		User secondUser = UserTestUtil.addUser();
 
@@ -240,7 +240,7 @@ public class CommerceOrderTest {
 			_commerceOrderLocalService.addCommerceOrder(
 				secondUser.getUserId(), _commerceChannel.getGroupId(),
 				secondAccountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_commerceCurrency.getCode(), 0);
 
 		List<CommerceOrder> commerceOrders = _getUserOrders(
 			_commerceChannel.getGroupId(), false);
@@ -310,8 +310,8 @@ public class CommerceOrderTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), commerceChannelGroupId,
-				accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		User secondUser = UserTestUtil.addUser();
 
@@ -330,7 +330,7 @@ public class CommerceOrderTest {
 			_commerceOrderLocalService.addCommerceOrder(
 				secondUser.getUserId(), commerceChannelGroupId,
 				secondAccountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_commerceCurrency.getCode(), 0);
 
 		List<CommerceOrder> commerceOrders = _getUserOrders(
 			commerceChannelGroupId, false);
@@ -369,7 +369,7 @@ public class CommerceOrderTest {
 	}
 
 	@Test
-	public void testGetCommerceOrdersForOmniAdmin() throws Exception {
+	public void testGetCommerceOrdersForOmniadmin() throws Exception {
 		frutillaRule.scenario(
 			"Ensure that the Omni-Admin is able to pull all orders"
 		).given(
@@ -416,7 +416,7 @@ public class CommerceOrderTest {
 					_commerceOrderLocalService.addCommerceOrder(
 						user.getUserId(), commerceChannelGroupId,
 						accountEntry.getAccountEntryId(),
-						_commerceCurrency.getCommerceCurrencyId(), 0));
+						_commerceCurrency.getCode(), 0));
 			}
 
 			ordersCreated += ordersToCreate;
@@ -547,8 +547,8 @@ public class CommerceOrderTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				adminUserId, commerceChannelGroupId,
-				accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		AccountEntry secondAccountEntry =
 			CommerceAccountTestUtil.addBusinessAccountEntry(
@@ -559,7 +559,7 @@ public class CommerceOrderTest {
 			_commerceOrderLocalService.addCommerceOrder(
 				adminUserId, commerceChannelGroupId,
 				secondAccountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_commerceCurrency.getCode(), 0);
 
 		Role role = _roleLocalService.fetchRole(
 			_serviceContext.getCompanyId(), "Sales Agent");
@@ -784,8 +784,8 @@ public class CommerceOrderTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), commerceChannelGroupId,
-				accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		int ordersCountByAccountId =
 			_commerceOrderService.getPendingCommerceOrdersCount(
@@ -844,8 +844,8 @@ public class CommerceOrderTest {
 		CommerceOrder commerceOrder1 =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), commerceChannelGroupId,
-				accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		String commerceOrderId = String.valueOf(
 			commerceOrder1.getCommerceOrderId());
@@ -883,6 +883,47 @@ public class CommerceOrderTest {
 	}
 
 	@Test
+	public void testGetPendingCommerceOrdersExceedingMaxAllowedBooleanClauses()
+		throws Exception {
+
+		List<AccountEntry> accountEntries = new ArrayList<>();
+
+		long accountEntryIdsCount = _MAX_CLAUSES_COUNT + 1;
+
+		for (int i = 0; i < accountEntryIdsCount; i++) {
+			AccountEntry accountEntry =
+				CommerceAccountTestUtil.addBusinessAccountEntry(
+					_user.getUserId(), "Test Business Account" + i, null, null,
+					new long[] {_user.getUserId()}, null, _serviceContext);
+
+			accountEntries.add(accountEntry);
+		}
+
+		long commerceChannelGroupId = _commerceChannel.getGroupId();
+
+		AccountEntry userAccountEntry = accountEntries.get(0);
+
+		CommerceOrder commerceOrder =
+			_commerceOrderLocalService.addCommerceOrder(
+				_user.getUserId(), commerceChannelGroupId,
+				userAccountEntry.getAccountEntryId(),
+				_commerceCurrency.getCode(), 0);
+
+		List<CommerceOrder> commerceOrders = _getUserOrders(
+			commerceChannelGroupId, false);
+
+		CommerceOrder actualCommerceOrder = commerceOrders.get(0);
+
+		Assert.assertEquals(commerceOrder, actualCommerceOrder);
+
+		_commerceOrderLocalService.deleteCommerceOrders(commerceChannelGroupId);
+
+		for (AccountEntry accountEntry : accountEntries) {
+			_accountEntryLocalService.deleteAccountEntry(accountEntry);
+		}
+	}
+
+	@Test
 	public void testGetPlacedCommerceOrder() throws Exception {
 		frutillaRule.scenario(
 			"Try to get a placed order based on the userId, and directly " +
@@ -909,8 +950,8 @@ public class CommerceOrderTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), commerceChannelGroupId,
-				accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		CommerceAddress commerceAddress = _addAddressToAccount(
 			accountEntry.getAccountEntryId());
@@ -995,19 +1036,17 @@ public class CommerceOrderTest {
 
 		_commerceOrderLocalService.addCommerceOrder(
 			_user.getUserId(), commerceChannelGroupId,
-			accountEntry.getAccountEntryId(),
-			_commerceCurrency.getCommerceCurrencyId(), 0);
+			accountEntry.getAccountEntryId(), _commerceCurrency.getCode(), 0);
 
 		_commerceOrderLocalService.addCommerceOrder(
 			_user.getUserId(), commerceChannelGroupId,
-			accountEntry.getAccountEntryId(),
-			_commerceCurrency.getCommerceCurrencyId(), 0);
+			accountEntry.getAccountEntryId(), _commerceCurrency.getCode(), 0);
 
 		try {
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), commerceChannelGroupId,
-				accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 		}
 		catch (CommerceOrderAccountLimitException
 					commerceOrderAccountLimitException) {
@@ -1061,7 +1100,8 @@ public class CommerceOrderTest {
 
 	private Role _addSalesAgentRole() throws Exception {
 		Role role = _roleLocalService.addRole(
-			_user.getUserId(), null, 0, "Sales Agent",
+			RandomTestUtil.randomString(), _user.getUserId(), null, 0,
+			"Sales Agent",
 			HashMapBuilder.put(
 				_serviceContext.getLocale(), "Sales Agent"
 			).build(),
@@ -1115,6 +1155,8 @@ public class CommerceOrderTest {
 			StringPool.BLANK,
 			new int[] {CommerceOrderConstants.ORDER_STATUS_OPEN}, negate);
 	}
+
+	private static final int _MAX_CLAUSES_COUNT = 1024;
 
 	@Inject
 	private static ServiceComponentRuntime _serviceComponentRuntime;

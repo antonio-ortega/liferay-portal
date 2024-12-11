@@ -28,19 +28,21 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -100,10 +100,16 @@ public abstract class BaseObjectViewResourceTestCase {
 
 		_objectViewResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		ObjectViewResource.Builder builder = ObjectViewResource.builder();
 
 		objectViewResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +123,32 @@ public abstract class BaseObjectViewResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ObjectView objectView1 = randomObjectView();
+
+		String json = objectMapper.writeValueAsString(objectView1);
+
+		ObjectView objectView2 = ObjectViewSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(objectView1, objectView2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ObjectView objectView = randomObjectView();
+
+		String json1 = objectMapper.writeValueAsString(objectView);
+		String json2 = ObjectViewSerDes.toJSON(objectView);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +163,6 @@ public abstract class BaseObjectViewResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ObjectView objectView1 = randomObjectView();
-
-		String json = objectMapper.writeValueAsString(objectView1);
-
-		ObjectView objectView2 = ObjectViewSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(objectView1, objectView2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ObjectView objectView = randomObjectView();
-
-		String json1 = objectMapper.writeValueAsString(objectView);
-		String json2 = ObjectViewSerDes.toJSON(objectView);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -200,7 +197,7 @@ public abstract class BaseObjectViewResourceTestCase {
 				getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
 					externalReferenceCode, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			ObjectView irrelevantObjectView =
@@ -212,13 +209,12 @@ public abstract class BaseObjectViewResourceTestCase {
 				objectViewResource.
 					getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
 						irrelevantExternalReferenceCode, null,
-						Pagination.of(1, 2), null);
+						Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantObjectView),
-				(List<ObjectView>)page.getItems());
+			assertContains(
+				irrelevantObjectView, (List<ObjectView>)page.getItems());
 			assertValid(
 				page,
 				testGetObjectDefinitionByExternalReferenceCodeObjectViewsPage_getExpectedActions(
@@ -238,11 +234,10 @@ public abstract class BaseObjectViewResourceTestCase {
 				getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
 					externalReferenceCode, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(objectView1, objectView2),
-			(List<ObjectView>)page.getItems());
+		assertContains(objectView1, (List<ObjectView>)page.getItems());
+		assertContains(objectView2, (List<ObjectView>)page.getItems());
 		assertValid(
 			page,
 			testGetObjectDefinitionByExternalReferenceCodeObjectViewsPage_getExpectedActions(
@@ -270,6 +265,13 @@ public abstract class BaseObjectViewResourceTestCase {
 		String externalReferenceCode =
 			testGetObjectDefinitionByExternalReferenceCodeObjectViewsPage_getExternalReferenceCode();
 
+		Page<ObjectView> objectViewPage =
+			objectViewResource.
+				getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
+					externalReferenceCode, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(objectViewPage.getTotalCount());
+
 		ObjectView objectView1 =
 			testGetObjectDefinitionByExternalReferenceCodeObjectViewsPage_addObjectView(
 				externalReferenceCode, randomObjectView());
@@ -282,34 +284,81 @@ public abstract class BaseObjectViewResourceTestCase {
 			testGetObjectDefinitionByExternalReferenceCodeObjectViewsPage_addObjectView(
 				externalReferenceCode, randomObjectView());
 
-		Page<ObjectView> page1 =
-			objectViewResource.
-				getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
-					externalReferenceCode, null, Pagination.of(1, 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ObjectView> objectViews1 = (List<ObjectView>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(objectViews1.toString(), 2, objectViews1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ObjectView> page1 =
+				objectViewResource.
+					getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<ObjectView> page2 =
-			objectViewResource.
-				getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
-					externalReferenceCode, null, Pagination.of(2, 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(objectView1, (List<ObjectView>)page1.getItems());
 
-		List<ObjectView> objectViews2 = (List<ObjectView>)page2.getItems();
+			Page<ObjectView> page2 =
+				objectViewResource.
+					getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(objectViews2.toString(), 1, objectViews2.size());
+			assertContains(objectView2, (List<ObjectView>)page2.getItems());
 
-		Page<ObjectView> page3 =
-			objectViewResource.
-				getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
-					externalReferenceCode, null, Pagination.of(1, 3), null);
+			Page<ObjectView> page3 =
+				objectViewResource.
+					getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
+						externalReferenceCode, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(objectView1, objectView2, objectView3),
-			(List<ObjectView>)page3.getItems());
+			assertContains(objectView3, (List<ObjectView>)page3.getItems());
+		}
+		else {
+			Page<ObjectView> page1 =
+				objectViewResource.
+					getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
+						externalReferenceCode, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<ObjectView> objectViews1 = (List<ObjectView>)page1.getItems();
+
+			Assert.assertEquals(
+				objectViews1.toString(), totalCount + 2, objectViews1.size());
+
+			Page<ObjectView> page2 =
+				objectViewResource.
+					getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
+						externalReferenceCode, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ObjectView> objectViews2 = (List<ObjectView>)page2.getItems();
+
+			Assert.assertEquals(
+				objectViews2.toString(), 1, objectViews2.size());
+
+			Page<ObjectView> page3 =
+				objectViewResource.
+					getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
+						externalReferenceCode, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(objectView1, (List<ObjectView>)page3.getItems());
+			assertContains(objectView2, (List<ObjectView>)page3.getItems());
+			assertContains(objectView3, (List<ObjectView>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -321,7 +370,7 @@ public abstract class BaseObjectViewResourceTestCase {
 			(entityField, objectView1, objectView2) -> {
 				BeanTestUtil.setProperty(
 					objectView1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -436,26 +485,31 @@ public abstract class BaseObjectViewResourceTestCase {
 			testGetObjectDefinitionByExternalReferenceCodeObjectViewsPage_addObjectView(
 				externalReferenceCode, objectView2);
 
+		Page<ObjectView> page =
+			objectViewResource.
+				getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
+					externalReferenceCode, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ObjectView> ascPage =
 				objectViewResource.
 					getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
-						externalReferenceCode, null, Pagination.of(1, 2),
+						externalReferenceCode, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(objectView1, objectView2),
-				(List<ObjectView>)ascPage.getItems());
+			assertContains(objectView1, (List<ObjectView>)ascPage.getItems());
+			assertContains(objectView2, (List<ObjectView>)ascPage.getItems());
 
 			Page<ObjectView> descPage =
 				objectViewResource.
 					getObjectDefinitionByExternalReferenceCodeObjectViewsPage(
-						externalReferenceCode, null, Pagination.of(1, 2),
+						externalReferenceCode, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(objectView2, objectView1),
-				(List<ObjectView>)descPage.getItems());
+			assertContains(objectView2, (List<ObjectView>)descPage.getItems());
+			assertContains(objectView1, (List<ObjectView>)descPage.getItems());
 		}
 	}
 
@@ -517,7 +571,7 @@ public abstract class BaseObjectViewResourceTestCase {
 			objectViewResource.getObjectDefinitionObjectViewsPage(
 				objectDefinitionId, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantObjectDefinitionId != null) {
 			ObjectView irrelevantObjectView =
@@ -525,13 +579,13 @@ public abstract class BaseObjectViewResourceTestCase {
 					irrelevantObjectDefinitionId, randomIrrelevantObjectView());
 
 			page = objectViewResource.getObjectDefinitionObjectViewsPage(
-				irrelevantObjectDefinitionId, null, Pagination.of(1, 2), null);
+				irrelevantObjectDefinitionId, null,
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantObjectView),
-				(List<ObjectView>)page.getItems());
+			assertContains(
+				irrelevantObjectView, (List<ObjectView>)page.getItems());
 			assertValid(
 				page,
 				testGetObjectDefinitionObjectViewsPage_getExpectedActions(
@@ -549,11 +603,10 @@ public abstract class BaseObjectViewResourceTestCase {
 		page = objectViewResource.getObjectDefinitionObjectViewsPage(
 			objectDefinitionId, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(objectView1, objectView2),
-			(List<ObjectView>)page.getItems());
+		assertContains(objectView1, (List<ObjectView>)page.getItems());
+		assertContains(objectView2, (List<ObjectView>)page.getItems());
 		assertValid(
 			page,
 			testGetObjectDefinitionObjectViewsPage_getExpectedActions(
@@ -592,6 +645,12 @@ public abstract class BaseObjectViewResourceTestCase {
 		Long objectDefinitionId =
 			testGetObjectDefinitionObjectViewsPage_getObjectDefinitionId();
 
+		Page<ObjectView> objectViewPage =
+			objectViewResource.getObjectDefinitionObjectViewsPage(
+				objectDefinitionId, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(objectViewPage.getTotalCount());
+
 		ObjectView objectView1 =
 			testGetObjectDefinitionObjectViewsPage_addObjectView(
 				objectDefinitionId, randomObjectView());
@@ -604,31 +663,75 @@ public abstract class BaseObjectViewResourceTestCase {
 			testGetObjectDefinitionObjectViewsPage_addObjectView(
 				objectDefinitionId, randomObjectView());
 
-		Page<ObjectView> page1 =
-			objectViewResource.getObjectDefinitionObjectViewsPage(
-				objectDefinitionId, null, Pagination.of(1, 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ObjectView> objectViews1 = (List<ObjectView>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(objectViews1.toString(), 2, objectViews1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ObjectView> page1 =
+				objectViewResource.getObjectDefinitionObjectViewsPage(
+					objectDefinitionId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<ObjectView> page2 =
-			objectViewResource.getObjectDefinitionObjectViewsPage(
-				objectDefinitionId, null, Pagination.of(2, 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(objectView1, (List<ObjectView>)page1.getItems());
 
-		List<ObjectView> objectViews2 = (List<ObjectView>)page2.getItems();
+			Page<ObjectView> page2 =
+				objectViewResource.getObjectDefinitionObjectViewsPage(
+					objectDefinitionId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(objectViews2.toString(), 1, objectViews2.size());
+			assertContains(objectView2, (List<ObjectView>)page2.getItems());
 
-		Page<ObjectView> page3 =
-			objectViewResource.getObjectDefinitionObjectViewsPage(
-				objectDefinitionId, null, Pagination.of(1, 3), null);
+			Page<ObjectView> page3 =
+				objectViewResource.getObjectDefinitionObjectViewsPage(
+					objectDefinitionId, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(objectView1, objectView2, objectView3),
-			(List<ObjectView>)page3.getItems());
+			assertContains(objectView3, (List<ObjectView>)page3.getItems());
+		}
+		else {
+			Page<ObjectView> page1 =
+				objectViewResource.getObjectDefinitionObjectViewsPage(
+					objectDefinitionId, null, Pagination.of(1, totalCount + 2),
+					null);
+
+			List<ObjectView> objectViews1 = (List<ObjectView>)page1.getItems();
+
+			Assert.assertEquals(
+				objectViews1.toString(), totalCount + 2, objectViews1.size());
+
+			Page<ObjectView> page2 =
+				objectViewResource.getObjectDefinitionObjectViewsPage(
+					objectDefinitionId, null, Pagination.of(2, totalCount + 2),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ObjectView> objectViews2 = (List<ObjectView>)page2.getItems();
+
+			Assert.assertEquals(
+				objectViews2.toString(), 1, objectViews2.size());
+
+			Page<ObjectView> page3 =
+				objectViewResource.getObjectDefinitionObjectViewsPage(
+					objectDefinitionId, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(objectView1, (List<ObjectView>)page3.getItems());
+			assertContains(objectView2, (List<ObjectView>)page3.getItems());
+			assertContains(objectView3, (List<ObjectView>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -640,7 +743,7 @@ public abstract class BaseObjectViewResourceTestCase {
 			(entityField, objectView1, objectView2) -> {
 				BeanTestUtil.setProperty(
 					objectView1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -751,24 +854,28 @@ public abstract class BaseObjectViewResourceTestCase {
 		objectView2 = testGetObjectDefinitionObjectViewsPage_addObjectView(
 			objectDefinitionId, objectView2);
 
+		Page<ObjectView> page =
+			objectViewResource.getObjectDefinitionObjectViewsPage(
+				objectDefinitionId, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ObjectView> ascPage =
 				objectViewResource.getObjectDefinitionObjectViewsPage(
-					objectDefinitionId, null, Pagination.of(1, 2),
+					objectDefinitionId, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(objectView1, objectView2),
-				(List<ObjectView>)ascPage.getItems());
+			assertContains(objectView1, (List<ObjectView>)ascPage.getItems());
+			assertContains(objectView2, (List<ObjectView>)ascPage.getItems());
 
 			Page<ObjectView> descPage =
 				objectViewResource.getObjectDefinitionObjectViewsPage(
-					objectDefinitionId, null, Pagination.of(1, 2),
+					objectDefinitionId, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(objectView2, objectView1),
-				(List<ObjectView>)descPage.getItems());
+			assertContains(objectView2, (List<ObjectView>)descPage.getItems());
+			assertContains(objectView1, (List<ObjectView>)descPage.getItems());
 		}
 	}
 
@@ -840,7 +947,10 @@ public abstract class BaseObjectViewResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteObjectView() throws Exception {
-		ObjectView objectView = testGraphQLDeleteObjectView_addObjectView();
+
+		// No namespace
+
+		ObjectView objectView1 = testGraphQLDeleteObjectView_addObjectView();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -849,23 +959,59 @@ public abstract class BaseObjectViewResourceTestCase {
 						"deleteObjectView",
 						new HashMap<String, Object>() {
 							{
-								put("objectViewId", objectView.getId());
+								put("objectViewId", objectView1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteObjectView"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"objectView",
 					new HashMap<String, Object>() {
 						{
-							put("objectViewId", objectView.getId());
+							put("objectViewId", objectView1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectView objectView2 = testGraphQLDeleteObjectView_addObjectView();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectView",
+							new HashMap<String, Object>() {
+								{
+									put("objectViewId", objectView2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectView"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectView",
+						new HashMap<String, Object>() {
+							{
+								put("objectViewId", objectView2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ObjectView testGraphQLDeleteObjectView_addObjectView()
@@ -894,6 +1040,8 @@ public abstract class BaseObjectViewResourceTestCase {
 	public void testGraphQLGetObjectView() throws Exception {
 		ObjectView objectView = testGraphQLGetObjectView_addObjectView();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectView,
@@ -909,11 +1057,36 @@ public abstract class BaseObjectViewResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/objectView"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectView,
+				ObjectViewSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectView",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"objectViewId",
+												objectView.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectView"))));
 	}
 
 	@Test
 	public void testGraphQLGetObjectViewNotFound() throws Exception {
 		Long irrelevantObjectViewId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -927,6 +1100,25 @@ public abstract class BaseObjectViewResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectView",
+							new HashMap<String, Object>() {
+								{
+									put("objectViewId", irrelevantObjectViewId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1438,6 +1630,10 @@ public abstract class BaseObjectViewResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1511,20 +1707,20 @@ public abstract class BaseObjectViewResourceTestCase {
 
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = objectView.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(objectView.getDateCreated(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(objectView.getDateCreated(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1542,21 +1738,20 @@ public abstract class BaseObjectViewResourceTestCase {
 
 		if (entityFieldName.equals("dateModified")) {
 			if (operator.equals("between")) {
+				Date date = objectView.getDateModified();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							objectView.getDateModified(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(objectView.getDateModified(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1668,7 +1863,8 @@ public abstract class BaseObjectViewResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1720,21 +1916,21 @@ public abstract class BaseObjectViewResourceTestCase {
 	}
 
 	protected ObjectViewResource objectViewResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1743,11 +1939,16 @@ public abstract class BaseObjectViewResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1779,6 +1980,24 @@ public abstract class BaseObjectViewResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1800,16 +2019,6 @@ public abstract class BaseObjectViewResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

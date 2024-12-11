@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -130,6 +131,7 @@ public class RepositoryBrowserServlet extends HttpServlet {
 				_dlAppService.updateFileEntry(
 					fileEntryId, null, null, name, null, null, null,
 					DLVersionNumberIncrease.NONE, (byte[])null, null, null,
+					null,
 					ServiceContextFactory.getInstance(
 						FileEntry.class.getName(), httpServletRequest));
 			}
@@ -178,6 +180,9 @@ public class RepositoryBrowserServlet extends HttpServlet {
 				return;
 			}
 
+			boolean viewableByGuest = ParamUtil.getBoolean(
+				httpServletRequest, "viewableByGuest");
+
 			UploadServletRequest uploadServletRequest =
 				_portal.getUploadServletRequest(httpServletRequest);
 
@@ -192,12 +197,19 @@ public class RepositoryBrowserServlet extends HttpServlet {
 
 				String title = FileUtil.stripExtension(sourceFileName);
 
+				ServiceContext serviceContext =
+					ServiceContextFactory.getInstance(
+						FileEntry.class.getName(), httpServletRequest);
+
+				if (viewableByGuest) {
+					serviceContext.setAddGroupPermissions(true);
+					serviceContext.setAddGuestPermissions(true);
+				}
+
 				_dlAppService.addFileEntry(
 					null, repositoryId, parentFolderId, sourceFileName,
 					uploadServletRequest.getContentType("file"), title, null,
-					null, null, file, null, null,
-					ServiceContextFactory.getInstance(
-						FileEntry.class.getName(), httpServletRequest));
+					null, null, file, null, null, null, serviceContext);
 
 				SessionMessages.add(httpServletRequest, "requestProcessed");
 
@@ -218,10 +230,17 @@ public class RepositoryBrowserServlet extends HttpServlet {
 			long parentFolderId = ParamUtil.getLong(
 				httpServletRequest, "parentFolderId");
 
+			ServiceContext serviceContext = ServiceContextFactory.getInstance(
+				Folder.class.getName(), httpServletRequest);
+
+			if (viewableByGuest) {
+				serviceContext.setAddGroupPermissions(true);
+				serviceContext.setAddGuestPermissions(true);
+			}
+
 			_dlAppService.addFolder(
 				null, repositoryId, parentFolderId, name, StringPool.BLANK,
-				ServiceContextFactory.getInstance(
-					Folder.class.getName(), httpServletRequest));
+				serviceContext);
 
 			SessionMessages.add(
 				httpServletRequest, "requestProcessed",

@@ -186,7 +186,7 @@ public class BlogsEntryContentDashboardItemTest {
 	@Test
 	public void testGetAssetTags() throws Exception {
 		AssetTag assetTag = _assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			RandomTestUtil.randomString(), _serviceContext);
 
 		_serviceContext.setAssetTagNames(new String[] {assetTag.getName()});
@@ -429,7 +429,7 @@ public class BlogsEntryContentDashboardItemTest {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				_group.getCreatorUserId(), blogsEntry.getGroupId(), 0,
+				null, _group.getCreatorUserId(), blogsEntry.getGroupId(), 0,
 				_portal.getClassNameId(BlogsEntry.class.getName()), 0,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, true, 0,

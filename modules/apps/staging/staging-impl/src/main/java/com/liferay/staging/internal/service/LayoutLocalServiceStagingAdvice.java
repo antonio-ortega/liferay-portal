@@ -8,6 +8,9 @@ package com.liferay.staging.internal.service;
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.portal.kernel.exception.LayoutNameException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -36,6 +39,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -134,9 +138,24 @@ public class LayoutLocalServiceStagingAdvice {
 		Layout layout = _layoutPersistence.findByG_P_L(
 			groupId, privateLayout, layoutId);
 
+		if (nameMap.isEmpty()) {
+			nameMap = _localization.getLocalizationMap(layout.getName(), true);
+		}
+
 		String name = nameMap.get(LocaleUtil.getSiteDefault());
 
-		if (Validator.isNull(name)) {
+		if (Validator.isNull(name) && nameMap.isEmpty()) {
+			name = _getLayoutPageTemplateEntryName(layout);
+
+			if (Validator.isNull(name)) {
+				throw new LayoutNameException(
+					"Name is required for layout PLID " + layout.getPlid(),
+					LayoutNameException.REQUIRED);
+			}
+
+			nameMap.put(LocaleUtil.getSiteDefault(), name);
+		}
+		else if (Validator.isNull(name)) {
 			List<String> values = new ArrayList<>(nameMap.values());
 
 			name = values.get(0);
@@ -628,6 +647,28 @@ public class LayoutLocalServiceStagingAdvice {
 		return returnValue;
 	}
 
+	private String _getLayoutPageTemplateEntryName(Layout layout) {
+		if (!layout.isTypeAssetDisplay() && !layout.isTypeContent()) {
+			return null;
+		}
+
+		long plid = layout.getPlid();
+
+		if (layout.isDraftLayout()) {
+			plid = layout.getClassPK();
+		}
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.
+				fetchLayoutPageTemplateEntryByPlid(plid);
+
+		if (layoutPageTemplateEntry != null) {
+			return layoutPageTemplateEntry.getName();
+		}
+
+		return null;
+	}
+
 	private static final Class<?>[] _GET_LAYOUTS_TYPES = {
 		Long.TYPE, Boolean.TYPE, Long.TYPE
 	};
@@ -662,6 +703,10 @@ public class LayoutLocalServiceStagingAdvice {
 	private LayoutLocalServiceHelper _layoutLocalServiceHelper;
 
 	@Reference
+	private LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
+
+	@Reference
 	private LayoutPersistence _layoutPersistence;
 
 	@Reference
@@ -669,6 +714,9 @@ public class LayoutLocalServiceStagingAdvice {
 
 	@Reference
 	private LayoutRevisionPersistence _layoutRevisionPersistence;
+
+	@Reference
+	private Localization _localization;
 
 	@Reference
 	private Portal _portal;

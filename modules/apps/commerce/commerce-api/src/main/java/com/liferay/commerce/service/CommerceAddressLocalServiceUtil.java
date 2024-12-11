@@ -7,6 +7,7 @@ package com.liferay.commerce.service;
 
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -21,8 +22,10 @@ import java.util.List;
  *
  * @author Alessio Antonio Rendina
  * @see CommerceAddressLocalService
+ * @deprecated As of Cavanaugh (7.4.x)
  * @generated
  */
+@Deprecated
 public class CommerceAddressLocalServiceUtil {
 
 	/*
@@ -116,15 +119,15 @@ public class CommerceAddressLocalServiceUtil {
 		getService().deleteRegionCommerceAddresses(regionId);
 	}
 
-	public static CommerceAddress fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CommerceAddress fetchCommerceAddress(long commerceAddressId) {
 		return getService().fetchCommerceAddress(commerceAddressId);
+	}
+
+	public static CommerceAddress fetchCommerceAddressByExternalReferenceCode(
+		String externalReferenceCode, long companyId) {
+
+		return getService().fetchCommerceAddressByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static CommerceAddress geolocateCommerceAddress(
@@ -157,12 +160,14 @@ public class CommerceAddressLocalServiceUtil {
 	}
 
 	public static List<CommerceAddress> getBillingCommerceAddresses(
-			long companyId, String className, long classPK, String keywords,
-			int start, int end, com.liferay.portal.kernel.search.Sort sort)
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords, int start, int end,
+			com.liferay.portal.kernel.search.Sort sort)
 		throws PortalException {
 
 		return getService().getBillingCommerceAddresses(
-			companyId, className, classPK, keywords, start, end, sort);
+			companyId, className, classPK, commerceChannelId, keywords, start,
+			end, sort);
 	}
 
 	public static int getBillingCommerceAddressesCount(
@@ -173,11 +178,12 @@ public class CommerceAddressLocalServiceUtil {
 	}
 
 	public static int getBillingCommerceAddressesCount(
-			long companyId, String className, long classPK, String keywords)
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords)
 		throws PortalException {
 
 		return getService().getBillingCommerceAddressesCount(
-			companyId, className, classPK, keywords);
+			companyId, className, classPK, commerceChannelId, keywords);
 	}
 
 	public static CommerceAddress getCommerceAddress(long commerceAddressId)
@@ -280,27 +286,23 @@ public class CommerceAddressLocalServiceUtil {
 	}
 
 	public static List<CommerceAddress> getShippingCommerceAddresses(
-			long companyId, String className, long classPK, String keywords,
-			int start, int end, com.liferay.portal.kernel.search.Sort sort)
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords, int start, int end,
+			com.liferay.portal.kernel.search.Sort sort)
 		throws PortalException {
 
 		return getService().getShippingCommerceAddresses(
-			companyId, className, classPK, keywords, start, end, sort);
+			companyId, className, classPK, commerceChannelId, keywords, start,
+			end, sort);
 	}
 
 	public static int getShippingCommerceAddressesCount(
-		long channelId, String className, long classPK, int start, int end) {
-
-		return getService().getShippingCommerceAddressesCount(
-			channelId, className, classPK, start, end);
-	}
-
-	public static int getShippingCommerceAddressesCount(
-			long companyId, String className, long classPK, String keywords)
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords)
 		throws PortalException {
 
 		return getService().getShippingCommerceAddressesCount(
-			companyId, className, classPK, keywords);
+			companyId, className, classPK, commerceChannelId, keywords);
 	}
 
 	/**
@@ -360,13 +362,12 @@ public class CommerceAddressLocalServiceUtil {
 	}
 
 	public static CommerceAddressLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceAddressLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceAddressLocalService _service;
+	private static final Snapshot<CommerceAddressLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceAddressLocalServiceUtil.class,
+			CommerceAddressLocalService.class);
 
 }

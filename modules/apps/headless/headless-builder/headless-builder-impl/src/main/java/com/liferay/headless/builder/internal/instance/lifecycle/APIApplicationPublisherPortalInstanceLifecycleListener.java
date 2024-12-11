@@ -5,14 +5,20 @@
 
 package com.liferay.headless.builder.internal.instance.lifecycle;
 
-import com.liferay.headless.builder.application.APIApplication;
-import com.liferay.headless.builder.application.provider.APIApplicationProvider;
 import com.liferay.headless.builder.application.publisher.APIApplicationPublisher;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.EveryNodeEveryStartup;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
+import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 
 import org.osgi.service.component.annotations.Component;
@@ -30,30 +36,50 @@ public class APIApplicationPublisherPortalInstanceLifecycleListener
 	implements EveryNodeEveryStartup {
 
 	@Override
-	public void portalInstanceRegistered(Company company) throws Exception {
+	public void portalInstanceRegistered(Company company) {
 		if (!FeatureFlagManagerUtil.isEnabled("LPS-178642")) {
 			return;
 		}
 
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
-				for (APIApplication apiApplication :
-						_apiApplicationProvider.getPublishedAPIApplications(
-							company.getCompanyId())) {
+				PermissionThreadLocal.setPermissionChecker(
+					_permissionCheckerFactory.create(
+						_userLocalService.getUser(
+							_getAdminUserId(company.getCompanyId()))));
 
-					_apiApplicationPublisher.publish(
-						apiApplication.getBaseURL(),
-						apiApplication.getCompanyId());
-				}
+				_apiApplicationPublisher.publish(company.getCompanyId());
 
 				return null;
 			});
 	}
 
-	@Reference
-	private APIApplicationProvider _apiApplicationProvider;
+	private long _getAdminUserId(long companyId) throws Exception {
+		Role role = _roleLocalService.getRole(
+			companyId, RoleConstants.ADMINISTRATOR);
+
+		long[] userIds = _userLocalService.getRoleUserIds(role.getRoleId());
+
+		if (userIds.length == 0) {
+			throw new NoSuchUserException(
+				StringBundler.concat(
+					"No user exists in company ", companyId, " with role ",
+					role.getName()));
+		}
+
+		return userIds[0];
+	}
 
 	@Reference
 	private APIApplicationPublisher _apiApplicationPublisher;
+
+	@Reference
+	private PermissionCheckerFactory _permissionCheckerFactory;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

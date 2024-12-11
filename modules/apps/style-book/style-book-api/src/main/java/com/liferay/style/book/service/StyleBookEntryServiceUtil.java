@@ -6,6 +6,7 @@
 package com.liferay.style.book.service;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.style.book.model.StyleBookEntry;
 
 /**
@@ -28,23 +29,26 @@ public class StyleBookEntryServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.style.book.service.impl.StyleBookEntryServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static StyleBookEntry addStyleBookEntry(
-			long groupId, String name, String styleBookEntryKey,
+			String externalReferenceCode, long groupId, String name,
+			String styleBookEntryKey, String themeId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addStyleBookEntry(
-			groupId, name, styleBookEntryKey, serviceContext);
+			externalReferenceCode, groupId, name, styleBookEntryKey, themeId,
+			serviceContext);
 	}
 
 	public static StyleBookEntry addStyleBookEntry(
-			long groupId, String frontendTokensValues, String name,
-			String styleBookEntryKey,
+			String externalReferenceCode, long groupId,
+			String frontendTokensValues, String name, String styleBookEntryKey,
+			String themeId,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addStyleBookEntry(
-			groupId, frontendTokensValues, name, styleBookEntryKey,
-			serviceContext);
+			externalReferenceCode, groupId, frontendTokensValues, name,
+			styleBookEntryKey, themeId, serviceContext);
 	}
 
 	public static StyleBookEntry copyStyleBookEntry(
@@ -60,6 +64,14 @@ public class StyleBookEntryServiceUtil {
 		throws PortalException {
 
 		return getService().deleteStyleBookEntry(styleBookEntryId);
+	}
+
+	public static StyleBookEntry deleteStyleBookEntry(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteStyleBookEntry(
+			externalReferenceCode, groupId);
 	}
 
 	public static StyleBookEntry deleteStyleBookEntry(
@@ -83,6 +95,14 @@ public class StyleBookEntryServiceUtil {
 	 */
 	public static String getOSGiServiceIdentifier() {
 		return getService().getOSGiServiceIdentifier();
+	}
+
+	public static StyleBookEntry getStyleBookEntryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getStyleBookEntryByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	public static StyleBookEntry publishDraft(long styleBookEntryId)
@@ -130,13 +150,11 @@ public class StyleBookEntryServiceUtil {
 	}
 
 	public static StyleBookEntryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(StyleBookEntryService service) {
-		_service = service;
-	}
-
-	private static volatile StyleBookEntryService _service;
+	private static final Snapshot<StyleBookEntryService> _serviceSnapshot =
+		new Snapshot<>(
+			StyleBookEntryServiceUtil.class, StyleBookEntryService.class);
 
 }

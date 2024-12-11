@@ -3,6 +3,9 @@ apply plugin: "com.liferay.maven.plugin.builder"
 task writeParentThemeDependencies
 task writeTestThemeDependencies
 
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
 buildPluginDescriptor {
 	configurationScopeMapping "mavenCompile", "compile"
 
@@ -25,14 +28,18 @@ configurations {
 	testThemes
 }
 
+copyCSS {
+	mustRunAfter buildPluginDescriptor
+}
+
 dependencies {
 	compileInclude group: "com.beust", name: "jcommander", version: "1.48"
 	compileInclude group: "net.coobird", name: "thumbnailator", version: "0.4.8"
 
-	compileOnly group: "org.apache.ant", name: "ant", transitive: false, version: "1.10.11"
-	compileOnly group: "org.apache.maven", name: "maven-artifact", version: "3.2.5"
-	compileOnly group: "org.apache.maven", name: "maven-core", version: "3.2.5"
-	compileOnly group: "org.apache.maven", name: "maven-plugin-api", version: "3.2.5"
+	compileOnly group: "org.apache.ant", name: "ant", transitive: false, version: "1.10.14"
+	compileOnly group: "org.apache.maven", name: "maven-artifact", version: "3.8.1"
+	compileOnly group: "org.apache.maven", name: "maven-core", version: "3.8.1"
+	compileOnly group: "org.apache.maven", name: "maven-plugin-api", version: "3.8.1"
 
 	mavenCompile group: "com.liferay", name: "com.liferay.frontend.theme.styled", version: "3.0.4"
 	mavenCompile group: "com.liferay", name: "com.liferay.frontend.theme.unstyled", version: "3.0.4"
@@ -73,7 +80,7 @@ test {
 	systemProperty "maven.debug", System.properties["maven.debug"]
 	systemProperty "maven.repo.local", System.properties["maven.repo.local"]
 	systemProperty "repository.url", System.properties["repository.url"]
-	systemProperty "theme.builder.version", jar.version
+	systemProperty "theme.builder.version", jar.archiveVersion.get()
 }
 
 updateFileVersions {

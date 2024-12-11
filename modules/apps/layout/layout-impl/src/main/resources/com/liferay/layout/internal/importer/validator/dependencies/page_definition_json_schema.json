@@ -9,6 +9,22 @@
 					"if": {
 						"properties": {
 							"type": {
+								"const": "DisplayPage"
+							}
+						}
+					},
+					"then": {
+						"properties": {
+							"value": {
+								"$ref": "#/definitions/DisplayPageActionExecutionResult"
+							}
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": {
+							"type": {
 								"const": "None"
 							}
 						}
@@ -73,6 +89,7 @@
 			"properties": {
 				"type": {
 					"enum": [
+						"DisplayPage",
 						"None",
 						"Notification",
 						"Page",
@@ -348,6 +365,22 @@
 				"customCSS"
 			],
 			"title": "The CustomCSSViewport Schema",
+			"type": "object"
+		},
+		"DisplayPageActionExecutionResult": {
+			"additionalProperties": false,
+			"properties": {
+				"mapping": {
+					"additionalProperties": false,
+					"properties": {
+						"fieldKey": {
+							"title": "The fieldKey Schema",
+							"type": "string"
+						}
+					}
+				}
+			},
+			"title": "The DisplayPageActionExecutionResult Schema",
 			"type": "object"
 		},
 		"Fragment": {
@@ -1538,6 +1571,10 @@
 					"title": "The definition Schema",
 					"type": "object"
 				},
+				"id": {
+					"title": "The id Schema",
+					"type": "string"
+				},
 				"pageElements": {
 					"items": {
 						"$ref": "#/definitions/PageElement"
@@ -1552,6 +1589,8 @@
 						"Column",
 						"DropZone",
 						"Form",
+						"FormStep",
+						"FormStepContainer",
 						"Fragment",
 						"FragmentDropZone",
 						"Root",
@@ -1605,6 +1644,14 @@
 					},
 					"title": "The formConfig Schema",
 					"type": "object"
+				},
+				"formType": {
+					"enum": [
+						"simple",
+						"multistep"
+					],
+					"title": "The multistep Schema",
+					"type": "string"
 				},
 				"fragmentStyle": {
 					"$ref": "#/definitions/FragmentStyle"
@@ -1677,12 +1724,75 @@
 					"title": "The layout Schema",
 					"type": "object"
 				},
+				"localizationConfig": {
+					"properties": {
+						"unlocalizedFieldsMessage": {
+							"$ref": "#/definitions/FragmentInlineValue"
+						},
+						"unlocalizedFieldsState": {
+							"enum": [
+								"disabled",
+								"readOnly"
+							],
+							"title": "The unlocalizedFieldsState Schema",
+							"type": "string"
+						}
+					},
+					"title": "The localizationConfig Schema",
+					"type": "object"
+				},
 				"name": {
 					"title": "The name Schema",
 					"type": "string"
+				},
+				"numberOfSteps": {
+					"title": "The number of steps Schema",
+					"type": "integer"
 				}
 			},
 			"title": "The PageFormDefinition Schema",
+			"type": "object"
+		},
+		"PageFormStepContainerDefinition": {
+			"additionalProperties": false,
+			"properties": {
+				"cssClasses": {
+					"items": {
+						"type": "string"
+					},
+					"title": "The CSS Classes Schema",
+					"type": "array"
+				},
+				"customCSS": {
+					"title": "The Custom CSS Schema",
+					"type": "string"
+				},
+				"customCSSViewports": {
+					"items": {
+						"$ref": "#/definitions/CustomCSSViewport"
+					},
+					"title": "The customCSSViewports Schema",
+					"type": "array"
+				},
+				"fragmentStyle": {
+					"$ref": "#/definitions/FragmentStyle"
+				},
+				"fragmentViewports": {
+					"items": {
+						"$ref": "#/definitions/FragmentViewport"
+					},
+					"title": "The fragmentViewports Schema",
+					"type": "array"
+				}
+			},
+			"title": "The PageFormStepContainerDefinition Schema",
+			"type": "object"
+		},
+		"PageFormStepDefinition": {
+			"additionalProperties": false,
+			"properties": {
+			},
+			"title": "The PageFormStepDefinition Schema",
 			"type": "object"
 		},
 		"PageFragmentDropZoneDefinition": {
@@ -1907,6 +2017,92 @@
 				}
 			},
 			"title": "The PageRowDefinition Schema",
+			"type": "object"
+		},
+		"PageRule": {
+			"additionalProperties": false,
+			"properties": {
+				"conditionType": {
+					"enum": [
+						"All",
+						"Any"
+					],
+					"title": "The condition type Schema",
+					"type": "string"
+				},
+				"id": {
+					"title": "The rule ID Schema",
+					"type": "string"
+				},
+				"name": {
+					"title": "The name Schema",
+					"type": "string"
+				},
+				"pageRuleActions": {
+					"items": {
+						"$ref": "#/definitions/PageRuleAction"
+					},
+					"title": "The actions Schema",
+					"type": "array"
+				},
+				"pageRuleConditions": {
+					"items": {
+						"$ref": "#/definitions/PageRuleCondition"
+					},
+					"title": "The conditions Schema",
+					"type": "array"
+				}
+			},
+			"required": [
+				"id"
+			],
+			"title": "The PageRule Schema",
+			"type": "object"
+		},
+		"PageRuleAction": {
+			"additionalProperties": false,
+			"properties": {
+				"action": {
+					"title": "The action Schema",
+					"type": "string"
+				},
+				"id": {
+					"title": "The id Schema",
+					"type": "string"
+				},
+				"itemId": {
+					"title": "The itemId Schema",
+					"type": "string"
+				},
+				"type": {
+					"title": "The type Schema",
+					"type": "string"
+				}
+			},
+			"title": "The PageRuleAction Schema",
+			"type": "object"
+		},
+		"PageRuleCondition": {
+			"additionalProperties": false,
+			"properties": {
+				"condition": {
+					"title": "The condition Schema",
+					"type": "string"
+				},
+				"id": {
+					"title": "The id Schema",
+					"type": "string"
+				},
+				"type": {
+					"title": "The type Schema",
+					"type": "string"
+				},
+				"value": {
+					"title": "The value Schema",
+					"type": "string"
+				}
+			},
+			"title": "The PageRuleAction Schema",
 			"type": "object"
 		},
 		"PageSectionDefinition": {
@@ -2401,6 +2597,13 @@
 			"$ref": "#/definitions/PageElement",
 			"title": "The pageElement Schema"
 		},
+		"pageRules": {
+			"items": {
+				"$ref": "#/definitions/PageRule"
+			},
+			"title": "The pageRules Schema",
+			"type": "array"
+		},
 		"settings": {
 			"additionalProperties": false,
 			"properties": {
@@ -2488,6 +2691,11 @@
 				},
 				"themeSettings": {
 					"title": "The themeSettings Schema",
+					"type": "object"
+				},
+				"themeSpritemapClientExtension": {
+					"$ref": "#/definitions/ClientExtension",
+					"title": "The themeSpritemapClientExtension Schema",
 					"type": "object"
 				}
 			},

@@ -301,6 +301,35 @@ public class UserAccount implements Cloneable, Serializable {
 
 	protected String familyName;
 
+	public Gender getGender() {
+		return gender;
+	}
+
+	public String getGenderAsString() {
+		if (gender == null) {
+			return null;
+		}
+
+		return gender.toString();
+	}
+
+	public void setGender(Gender gender) {
+		this.gender = gender;
+	}
+
+	public void setGender(
+		UnsafeSupplier<Gender, Exception> genderUnsafeSupplier) {
+
+		try {
+			gender = genderUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Gender gender;
+
 	public String getGivenName() {
 		return givenName;
 	}
@@ -321,6 +350,27 @@ public class UserAccount implements Cloneable, Serializable {
 	}
 
 	protected String givenName;
+
+	public Boolean getHasLoginDate() {
+		return hasLoginDate;
+	}
+
+	public void setHasLoginDate(Boolean hasLoginDate) {
+		this.hasLoginDate = hasLoginDate;
+	}
+
+	public void setHasLoginDate(
+		UnsafeSupplier<Boolean, Exception> hasLoginDateUnsafeSupplier) {
+
+		try {
+			hasLoginDate = hasLoginDateUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean hasLoginDate;
 
 	public String getHonorificPrefix() {
 		return honorificPrefix;
@@ -404,6 +454,52 @@ public class UserAccount implements Cloneable, Serializable {
 
 	protected String image;
 
+	public String getImageExternalReferenceCode() {
+		return imageExternalReferenceCode;
+	}
+
+	public void setImageExternalReferenceCode(
+		String imageExternalReferenceCode) {
+
+		this.imageExternalReferenceCode = imageExternalReferenceCode;
+	}
+
+	public void setImageExternalReferenceCode(
+		UnsafeSupplier<String, Exception>
+			imageExternalReferenceCodeUnsafeSupplier) {
+
+		try {
+			imageExternalReferenceCode =
+				imageExternalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String imageExternalReferenceCode;
+
+	public Long getImageId() {
+		return imageId;
+	}
+
+	public void setImageId(Long imageId) {
+		this.imageId = imageId;
+	}
+
+	public void setImageId(
+		UnsafeSupplier<Long, Exception> imageIdUnsafeSupplier) {
+
+		try {
+			imageId = imageIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long imageId;
+
 	public String getJobTitle() {
 		return jobTitle;
 	}
@@ -445,6 +541,48 @@ public class UserAccount implements Cloneable, Serializable {
 	}
 
 	protected String[] keywords;
+
+	public String getLanguageDisplayName() {
+		return languageDisplayName;
+	}
+
+	public void setLanguageDisplayName(String languageDisplayName) {
+		this.languageDisplayName = languageDisplayName;
+	}
+
+	public void setLanguageDisplayName(
+		UnsafeSupplier<String, Exception> languageDisplayNameUnsafeSupplier) {
+
+		try {
+			languageDisplayName = languageDisplayNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String languageDisplayName;
+
+	public String getLanguageId() {
+		return languageId;
+	}
+
+	public void setLanguageId(String languageId) {
+		this.languageId = languageId;
+	}
+
+	public void setLanguageId(
+		UnsafeSupplier<String, Exception> languageIdUnsafeSupplier) {
+
+		try {
+			languageId = languageIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String languageId;
 
 	public Date getLastLoginDate() {
 		return lastLoginDate;
@@ -697,6 +835,39 @@ public class UserAccount implements Cloneable, Serializable {
 
 	public String toString() {
 		return UserAccountSerDes.toJSON(this);
+	}
+
+	public static enum Gender {
+
+		MALE("Male"), FEMALE("Female");
+
+		public static Gender create(String value) {
+			for (Gender gender : values()) {
+				if (Objects.equals(gender.getValue(), value) ||
+					Objects.equals(gender.name(), value)) {
+
+					return gender;
+				}
+			}
+
+			return null;
+		}
+
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private Gender(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
 	}
 
 	public static enum Status {

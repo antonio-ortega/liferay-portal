@@ -32,7 +32,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.AuthException;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
-import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManagerUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Accessor;
@@ -45,6 +44,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.security.auth.session.AuthenticatedSessionManagerUtil;
 
 import java.security.Key;
 
@@ -189,7 +189,8 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 			throw new PrincipalException("User sent unverified state");
 		}
 
-		Key mfaWebKey = (Key)httpSession.getAttribute(MFAWebKeys.MFA_WEB_KEY);
+		Key mfaWebKey = _encryptor.deserializeKey(
+			(String)httpSession.getAttribute(MFAWebKeys.MFA_WEB_KEY));
 
 		Map<String, Object> stateMap = _jsonFactory.looseDeserialize(
 			_encryptor.decrypt(mfaWebKey, state), Map.class);
@@ -340,7 +341,8 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 		httpSession.setAttribute(
 			MFAWebKeys.MFA_WEB_DIGEST,
 			DigesterUtil.digest(encryptedStateMapJSON));
-		httpSession.setAttribute(MFAWebKeys.MFA_WEB_KEY, key);
+		httpSession.setAttribute(
+			MFAWebKeys.MFA_WEB_KEY, _encryptor.serializeKey(key));
 	}
 
 	private static final Accessor<Object, String> _STRING_ACCESSOR =

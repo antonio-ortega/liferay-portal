@@ -4,7 +4,7 @@
 
 		dlFolderModel = dataFactory.newDLFolderModel(commerceCatalogGroupModel.groupId, cpDefinitionDLFolderModel.folderId, "Commerce Product Definition Attachment Folder " + cpAttachmentFileEntryModel.CPAttachmentFileEntryId)
 
-		dlFileEntryModel = dataFactory.newDlFileEntryModel(dlFolderModel, "TestFile" + cpAttachmentFileEntryModel.CPAttachmentFileEntryId, "jpeg", "image/jpeg", cpAttachmentFileEntryModel.fileEntryId)
+		dlFileEntryModel = dataFactory.newDLFileEntryModel(dlFolderModel, "TestFile" + cpAttachmentFileEntryModel.CPAttachmentFileEntryId, "jpeg", "image/jpeg", cpAttachmentFileEntryModel.fileEntryId)
 
 		dlFileVersionModel = dataFactory.newDLFileVersionModel(dlFileEntryModel)
 	/>
@@ -17,7 +17,7 @@
 
 	${dataFactory.toInsertSQL(dlFileVersionModel)}
 
-	<@insertAssetEntry _entry=dlFileEntryModel />
+	<@insertAssetEntry _entry = dlFileEntryModel />
 </#list>
 
 <#list dataFactory.getSequence(dataFactory.maxCPDefinitionAttachmentTypePDFCount) as cpDefinitionAttachmentTypePDFCount>
@@ -26,7 +26,7 @@
 
 		dlFolderModel = dataFactory.newDLFolderModel(commerceCatalogGroupModel.groupId, cpDefinitionDLFolderModel.folderId, "Commerce PDF Folder" + cpAttachmentFileEntryModel.CPAttachmentFileEntryId)
 
-		dlFileEntryModel = dataFactory.newDlFileEntryModel(dlFolderModel, "TestFile" + cpAttachmentFileEntryModel.CPAttachmentFileEntryId, "pdf", "application/pdf", cpAttachmentFileEntryModel.fileEntryId)
+		dlFileEntryModel = dataFactory.newDLFileEntryModel(dlFolderModel, "TestFile" + cpAttachmentFileEntryModel.CPAttachmentFileEntryId, "pdf", "application/pdf", cpAttachmentFileEntryModel.fileEntryId)
 
 		dlFileVersionModel = dataFactory.newDLFileVersionModel(dlFileEntryModel)
 	/>
@@ -39,5 +39,5 @@
 
 	${dataFactory.toInsertSQL(dlFileVersionModel)}
 
-	<@insertAssetEntry _entry=dlFileEntryModel />
+	<@insertAssetEntry _entry = dlFileEntryModel />
 </#list>

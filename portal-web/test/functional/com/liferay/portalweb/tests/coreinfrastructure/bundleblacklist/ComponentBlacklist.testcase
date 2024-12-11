@@ -1,4 +1,4 @@
-@component-name = "portal-bundle-blacklist"
+@component-name = "portal-core-infra"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -18,12 +18,14 @@ definition {
 		if (${testLiferayVirtualInstance} == "true") {
 			PortalInstances.tearDownCP();
 		}
+
+		FileInstall.deleteConfigFile(configFile = "com.liferay.portal.component.blacklist.internal.configuration.ComponentBlacklistConfiguration.config");
 	}
 
 	@priority = 4
 	test BlacklistComponent {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		OSGiConfig.deployOSGiConfigFile(
 			osgiConfigFileName = "com.liferay.portal.component.blacklist.internal.configuration.ComponentBlacklistConfiguration.config",

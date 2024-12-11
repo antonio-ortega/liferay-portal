@@ -46,15 +46,21 @@ public class UpgradeJavaGetLayoutDisplayPageObjectProviderCheck
 			Matcher methodMatcher = _methodPattern.matcher(javaMethodContent);
 
 			while (methodMatcher.find()) {
+				String variableTypeName = getVariableTypeName(
+					javaMethodContent, null, content, fileName,
+					methodMatcher.group(2));
+
+				if (variableTypeName == null) {
+					continue;
+				}
+
 				boolean infoItemReference = Objects.equals(
-					getVariableTypeName(
-						javaMethodContent, content, methodMatcher.group(2)),
-					"InfoItemReference");
+					variableTypeName, "InfoItemReference");
 
 				if (infoItemReference ||
 					!hasClassOrVariableName(
 						"LayoutDisplayPageProvider", javaMethodContent, content,
-						methodMatcher.group(1))) {
+						fileName, methodMatcher.group(1))) {
 
 					continue;
 				}
@@ -96,9 +102,9 @@ public class UpgradeJavaGetLayoutDisplayPageObjectProviderCheck
 			addMessage(
 				fileName,
 				StringBundler.concat(
-					"Could not resolve variable className for new ",
+					"Unable to resolve variable className for new ",
 					"InfoItemReference(). Replace ",
-					"'TO_BE_REPLACED_FOR_CLASSNAME' with the correct type"));
+					"\"TO_BE_REPLACED_FOR_CLASSNAME\" with the correct type"));
 		}
 
 		return content;

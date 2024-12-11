@@ -203,9 +203,9 @@ public class KBArticleFinderImpl
 	private Predicate _getKeywordsPredicate(
 		Expression<String> expression, String[] keywords) {
 
-		expression = DSLFunctionFactoryUtil.lower(expression);
-
 		Predicate keywordsPredicate = null;
+
+		expression = DSLFunctionFactoryUtil.lower(expression);
 
 		for (String keyword : keywords) {
 			if (keyword == null) {
@@ -259,7 +259,12 @@ public class KBArticleFinderImpl
 			).and(
 				() -> {
 					if (status == WorkflowConstants.STATUS_ANY) {
-						return KBArticleTable.INSTANCE.latest.eq(Boolean.TRUE);
+						return KBArticleTable.INSTANCE.latest.eq(
+							Boolean.TRUE
+						).and(
+							KBArticleTable.INSTANCE.status.neq(
+								WorkflowConstants.STATUS_IN_TRASH)
+						);
 					}
 
 					return KBArticleTable.INSTANCE.status.eq(status);

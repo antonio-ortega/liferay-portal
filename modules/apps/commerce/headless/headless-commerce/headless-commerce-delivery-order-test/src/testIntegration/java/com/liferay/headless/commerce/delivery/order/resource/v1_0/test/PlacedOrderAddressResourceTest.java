@@ -68,7 +68,7 @@ public class PlacedOrderAddressResourceTest
 			RandomTestUtil.randomString(), "business", 1, _serviceContext);
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE, new HashMap<>(), 2,
 			2, "HALF_EVEN", false, RandomTestUtil.nextDouble(), true);
@@ -130,6 +130,7 @@ public class PlacedOrderAddressResourceTest
 				country = _country.getName();
 				countryISOCode = _country.getA2();
 				description = address.getDescription();
+				externalReferenceCode = address.getExternalReferenceCode();
 				id = address.getAddressId();
 				latitude = address.getLatitude();
 				longitude = address.getLongitude();
@@ -151,14 +152,49 @@ public class PlacedOrderAddressResourceTest
 
 	@Override
 	protected PlacedOrderAddress
-			testGetPlacedOrderPlacedOrderBillingAddres_addPlacedOrderAddress()
+			testGetPlacedOrderByExternalReferenceCodePlacedOrderBillingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		return _updateBillingAndShippingAddresses();
 	}
 
 	@Override
-	protected Long testGetPlacedOrderPlacedOrderBillingAddres_getPlacedOrderId()
+	protected String
+			testGetPlacedOrderByExternalReferenceCodePlacedOrderBillingAddress_getExternalReferenceCode(
+				PlacedOrderAddress placedOrderAddress)
+		throws Exception {
+
+		return _commerceOrder.getExternalReferenceCode();
+	}
+
+	@Override
+	protected PlacedOrderAddress
+			testGetPlacedOrderByExternalReferenceCodePlacedOrderShippingAddress_addPlacedOrderAddress()
+		throws Exception {
+
+		return _updateBillingAndShippingAddresses();
+	}
+
+	@Override
+	protected String
+			testGetPlacedOrderByExternalReferenceCodePlacedOrderShippingAddress_getExternalReferenceCode(
+				PlacedOrderAddress placedOrderAddress)
+		throws Exception {
+
+		return _commerceOrder.getExternalReferenceCode();
+	}
+
+	@Override
+	protected PlacedOrderAddress
+			testGetPlacedOrderPlacedOrderBillingAddress_addPlacedOrderAddress()
+		throws Exception {
+
+		return _updateBillingAndShippingAddresses();
+	}
+
+	@Override
+	protected Long
+			testGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId()
 		throws Exception {
 
 		return _commerceOrder.getCommerceOrderId();
@@ -166,7 +202,7 @@ public class PlacedOrderAddressResourceTest
 
 	@Override
 	protected PlacedOrderAddress
-			testGetPlacedOrderPlacedOrderShippingAddres_addPlacedOrderAddress()
+			testGetPlacedOrderPlacedOrderShippingAddress_addPlacedOrderAddress()
 		throws Exception {
 
 		return _updateBillingAndShippingAddresses();
@@ -174,7 +210,33 @@ public class PlacedOrderAddressResourceTest
 
 	@Override
 	protected Long
-			testGetPlacedOrderPlacedOrderShippingAddres_getPlacedOrderId()
+			testGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId()
+		throws Exception {
+
+		return _commerceOrder.getCommerceOrderId();
+	}
+
+	@Override
+	protected String
+			testGraphQLGetPlacedOrderByExternalReferenceCodePlacedOrderBillingAddress_getExternalReferenceCode(
+				PlacedOrderAddress placedOrderAddress)
+		throws Exception {
+
+		return _commerceOrder.getExternalReferenceCode();
+	}
+
+	@Override
+	protected String
+			testGraphQLGetPlacedOrderByExternalReferenceCodePlacedOrderShippingAddress_getExternalReferenceCode(
+				PlacedOrderAddress placedOrderAddress)
+		throws Exception {
+
+		return _commerceOrder.getExternalReferenceCode();
+	}
+
+	@Override
+	protected Long
+			testGraphQLGetPlacedOrderPlacedOrderBillingAddress_getPlacedOrderId()
 		throws Exception {
 
 		return _commerceOrder.getCommerceOrderId();
@@ -182,15 +244,7 @@ public class PlacedOrderAddressResourceTest
 
 	@Override
 	protected Long
-			testGraphQLGetPlacedOrderPlacedOrderBillingAddres_getPlacedOrderId()
-		throws Exception {
-
-		return _commerceOrder.getCommerceOrderId();
-	}
-
-	@Override
-	protected Long
-			testGraphQLGetPlacedOrderPlacedOrderShippingAddres_getPlacedOrderId()
+			testGraphQLGetPlacedOrderPlacedOrderShippingAddress_getPlacedOrderId()
 		throws Exception {
 
 		return _commerceOrder.getCommerceOrderId();

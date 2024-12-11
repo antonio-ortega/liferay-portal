@@ -3,21 +3,14 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {
-	FrontendDataSet,
-
-	// @ts-ignore
-
-} from '@liferay/frontend-data-set-web';
+import {FrontendDataSet} from '@liferay/frontend-data-set-web';
 import classNames from 'classnames';
 import React from 'react';
 
-import {
-	IFDSTableProps,
-	defaultDataSetProps,
-	fdsItem,
-	formatActionURL,
-} from '../../utils/fds';
+import {defaultFDSDataSetProps, formatActionURL} from '../../utils/fds';
+import LabelRenderer from '../LabelRenderer';
+
+import type {FDSItem, IFDSTableProps} from '../../utils/fds';
 
 type Status = {
 	code: number;
@@ -51,15 +44,15 @@ function ObjectActionLastExecutionDataRenderer({
 				itemData.status.label === 'never-ran'
 					? 'label-info'
 					: itemData.status.label === 'failed'
-					? 'label-danger'
-					: 'label-success'
+						? 'label-danger'
+						: 'label-success'
 			)}
 		>
 			{itemData.status.label === 'never-ran'
 				? Liferay.Language.get('never-ran')
 				: itemData.status.label === 'failed'
-				? Liferay.Language.get('failed')
-				: Liferay.Language.get('success')}
+					? Liferay.Language.get('failed')
+					: Liferay.Language.get('success')}
 		</strong>
 	);
 }
@@ -92,24 +85,21 @@ export default function Actions({
 		itemData,
 		openSidePanel,
 		value,
-	}: fdsItem<ItemData>) {
-		const handleEditAction = () => {
-			openSidePanel({
-				url: formatActionURL(url, itemData.id),
-			});
-		};
-
+	}: FDSItem<ItemData>) {
 		return (
-			<div className="table-list-title">
-				<a href="#" onClick={handleEditAction}>
-					{value}
-				</a>
-			</div>
+			<LabelRenderer
+				onClick={() => {
+					openSidePanel({
+						url: formatActionURL(url, itemData.id),
+					});
+				}}
+				value={value}
+			/>
 		);
 	}
 
-	const dataSetProps = {
-		...defaultDataSetProps,
+	const frontendDataSetProps = {
+		...defaultFDSDataSetProps,
 		apiURL,
 		creationMenu,
 		customDataRenderers: {
@@ -180,5 +170,5 @@ export default function Actions({
 		],
 	};
 
-	return <FrontendDataSet {...dataSetProps} />;
+	return <FrontendDataSet {...frontendDataSetProps} />;
 }

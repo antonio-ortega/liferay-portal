@@ -50,7 +50,7 @@ if (portletTitleBasedNavigation) {
 <c:if test="<%= portletTitleBasedNavigation %>">
 
 	<%
-	KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse);
+	KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(liferayPortletRequest, liferayPortletResponse, trashHelper);
 	%>
 
 	<div class="management-bar management-bar-light navbar navbar-expand-md">
@@ -87,7 +87,7 @@ if (portletTitleBasedNavigation) {
 					<clay:dropdown-actions
 						aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 						dropdownItems="<%= kbDropdownItemsProvider.getKBArticleDropdownItems(kbArticle) %>"
-						propsTransformer="admin/js/KBDropdownPropsTransformer"
+						propsTransformer="{KBDropdownPropsTransformer} from knowledge-base-web"
 					/>
 				</li>
 			</ul>
@@ -118,13 +118,13 @@ if (portletTitleBasedNavigation) {
 					<div class="autofit-col">
 
 						<%
-						KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(kbGroupServiceConfiguration, liferayPortletRequest, liferayPortletResponse);
+						KBDropdownItemsProvider kbDropdownItemsProvider = new KBDropdownItemsProvider(kbGroupServiceConfiguration, liferayPortletRequest, liferayPortletResponse, trashHelper);
 						%>
 
 						<clay:dropdown-actions
 							aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 							dropdownItems="<%= kbDropdownItemsProvider.getKBArticleDropdownItems(kbArticle) %>"
-							propsTransformer="admin/js/KBDropdownPropsTransformer"
+							propsTransformer="{KBDropdownPropsTransformer} from knowledge-base-web"
 						/>
 					</div>
 				</c:if>
@@ -223,7 +223,7 @@ if (portletTitleBasedNavigation) {
 				status = WorkflowConstants.STATUS_ANY;
 			}
 
-			List<KBArticle> childKBArticles = KBArticleServiceUtil.getKBArticles(scopeGroupId, kbArticle.getResourcePrimKey(), status, QueryUtil.ALL_POS, QueryUtil.ALL_POS, new KBArticlePriorityComparator(true));
+			List<KBArticle> childKBArticles = KBArticleServiceUtil.getKBArticles(scopeGroupId, kbArticle.getResourcePrimKey(), status, QueryUtil.ALL_POS, QueryUtil.ALL_POS, KBArticlePriorityComparator.getInstance(true));
 			%>
 
 			<c:if test="<%= enableKBArticleSuggestions || !childKBArticles.isEmpty() %>">
@@ -262,6 +262,47 @@ if (portletTitleBasedNavigation) {
 			</c:if>
 		</div>
 	</div>
+</div>
+
+<%
+String kbArticleSuccessMessage = GetterUtil.getString(MultiSessionMessages.get(renderRequest, "kbArticleSuccessMessage"));
+%>
+
+<c:if test="<%= Validator.isNotNull(kbArticleSuccessMessage) %>">
+	<liferay-frontend:component
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"autoClose", 20000
+			).put(
+				"message", kbArticleSuccessMessage
+			).build()
+		%>'
+		module="{openToast} from knowledge-base-web"
+	/>
+</c:if>
+
+<div>
+
+	<%
+	LockedKBArticleException lockedKBArticleException = (LockedKBArticleException)MultiSessionErrors.get(liferayPortletRequest, LockedKBArticleException.class.getName());
+	%>
+
+	<react:component
+		module="{LockedKBArticleModal} from knowledge-base-web"
+		props='<%=
+			HashMapBuilder.<String, Object>put(
+				"actionLabel", (lockedKBArticleException != null) ? LanguageUtil.get(request, lockedKBArticleException.getCmd()) : null
+			).put(
+				"actionURL", (lockedKBArticleException != null) ? lockedKBArticleException.getActionURL() : null
+			).put(
+				"groupAdmin", permissionChecker.isGroupAdmin(scopeGroupId)
+			).put(
+				"open", lockedKBArticleException != null
+			).put(
+				"userName", (lockedKBArticleException != null) ? lockedKBArticleException.getUserName() : null
+			).build()
+		%>'
+	/>
 </div>
 
 <%

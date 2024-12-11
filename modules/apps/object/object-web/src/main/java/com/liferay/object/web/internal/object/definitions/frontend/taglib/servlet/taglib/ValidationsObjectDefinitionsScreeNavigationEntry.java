@@ -7,12 +7,14 @@ package com.liferay.object.web.internal.object.definitions.frontend.taglib.servl
 
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.validation.rule.ObjectValidationRuleEngineRegistry;
 import com.liferay.object.web.internal.object.definitions.constants.ObjectDefinitionsScreenNavigationEntryConstants;
 import com.liferay.object.web.internal.object.definitions.display.context.ObjectDefinitionsValidationsDisplayContext;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.security.script.management.configuration.helper.ScriptManagementConfigurationHelper;
 
 import java.io.IOException;
 
@@ -58,7 +60,8 @@ public class ValidationsObjectDefinitionsScreeNavigationEntry
 			WebKeys.PORTLET_DISPLAY_CONTEXT,
 			new ObjectDefinitionsValidationsDisplayContext(
 				httpServletRequest, _objectDefinitionModelResourcePermission,
-				_objectValidationRuleEngineRegistry));
+				_objectFolderLocalService, _objectValidationRuleEngineRegistry,
+				_scriptManagementConfigurationHelper));
 
 		super.render(httpServletRequest, httpServletResponse);
 	}
@@ -70,7 +73,14 @@ public class ValidationsObjectDefinitionsScreeNavigationEntry
 		_objectDefinitionModelResourcePermission;
 
 	@Reference
+	private ObjectFolderLocalService _objectFolderLocalService;
+
+	@Reference
 	private ObjectValidationRuleEngineRegistry
 		_objectValidationRuleEngineRegistry;
+
+	@Reference
+	private ScriptManagementConfigurationHelper
+		_scriptManagementConfigurationHelper;
 
 }

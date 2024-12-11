@@ -124,6 +124,8 @@ export default withRouter(
 			}
 
 			setError(error);
+
+			setIsPostButtonDisable(false);
 		};
 
 		const processResponse = (error) =>
@@ -162,8 +164,6 @@ export default withRouter(
 					.then(({error}) => processResponse(error))
 					.catch(processError);
 			}
-
-			setIsPostButtonDisable(false);
 		};
 
 		return (
@@ -262,17 +262,17 @@ export default withRouter(
 									context.trustedUser
 										? Liferay.FeatureFlags['LPS-185892']
 											? context.postYourQuestionButtonText !==
-											  ''
+												''
 												? context.postYourQuestionButtonText
 												: Liferay.Language.get(
 														'post-your-question'
-												  )
+													)
 											: Liferay.Language.get(
 													'post-your-question'
-											  )
+												)
 										: Liferay.Language.get(
 												'submit-for-workflow'
-										  )
+											)
 								}
 								className="c-mt-4 c-mt-sm-0"
 								disabled={isPostButtonDisable}
@@ -284,17 +284,17 @@ export default withRouter(
 								{context.trustedUser
 									? Liferay.FeatureFlags['LPS-185892']
 										? context.postYourQuestionButtonText !==
-										  ''
+											''
 											? context.postYourQuestionButtonText
 											: Liferay.Language.get(
 													'post-your-question'
-											  )
+												)
 										: Liferay.Language.get(
 												'post-your-question'
-										  )
+											)
 									: Liferay.Language.get(
 											'submit-for-workflow'
-									  )}
+										)}
 							</ClayButton>
 
 							<Link

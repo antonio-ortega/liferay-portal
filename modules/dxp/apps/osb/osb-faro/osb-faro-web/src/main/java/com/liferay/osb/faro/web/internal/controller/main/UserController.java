@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
@@ -62,15 +61,19 @@ public class UserController extends BaseFaroController {
 	@Path("/{id}/accept")
 	@POST
 	@RolesAllowed(RoleConstants.SITE_ADMINISTRATOR)
-	public FaroUserDisplay accept(@PathParam("id") long id)
+	public FaroUserDisplay accept(
+			@PathParam("groupId") long groupId, @PathParam("id") long id)
 		throws PortalException {
 
 		FaroUser faroUser = _faroUserLocalService.getFaroUser(id);
 
 		faroUser.setStatus(FaroUserConstants.STATUS_APPROVED);
 
-		return new FaroUserDisplay(
-			_faroUserLocalService.updateFaroUser(faroUser));
+		faroUser = _faroUserLocalService.updateFaroUser(faroUser);
+
+		_groupLocalService.addUserGroup(faroUser.getLiveUserId(), groupId);
+
+		return new FaroUserDisplay(faroUser);
 	}
 
 	@POST
@@ -122,15 +125,9 @@ public class UserController extends BaseFaroController {
 	}
 
 	@GET
-	@Path("/{id}")
-	@RolesAllowed(RoleConstants.SITE_MEMBER)
-	public FaroUserDisplay get(@PathParam("id") long id) throws Exception {
-		return new FaroUserDisplay(_faroUserLocalService.getFaroUser(id));
-	}
-
-	@GET
 	@Path("/current")
-	public FaroUserDisplay getCurrent(@PathParam("groupId") long groupId)
+	public FaroUserDisplay getCurrentFaroUserDisplay(
+			@PathParam("groupId") long groupId)
 		throws Exception {
 
 		if (groupId == 0) {
@@ -139,6 +136,15 @@ public class UserController extends BaseFaroController {
 
 		return new FaroUserDisplay(
 			_faroUserLocalService.getFaroUser(groupId, getUserId()));
+	}
+
+	@GET
+	@Path("/{id}")
+	@RolesAllowed(RoleConstants.SITE_MEMBER)
+	public FaroUserDisplay getFaroUserDisplay(@PathParam("id") long id)
+		throws Exception {
+
+		return new FaroUserDisplay(_faroUserLocalService.getFaroUser(id));
 	}
 
 	@Path("/join_request")
@@ -357,8 +363,5 @@ public class UserController extends BaseFaroController {
 
 	@Reference
 	private RoleLocalService _roleLocalService;
-
-	@Reference
-	private UserLocalService _userLocalService;
 
 }

@@ -8,6 +8,7 @@ package com.liferay.headless.admin.workflow.internal.resource.v1_0;
 import com.liferay.headless.admin.workflow.dto.v1_0.Node;
 import com.liferay.headless.admin.workflow.dto.v1_0.Transition;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowDefinition;
+import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.CreatorUtil;
 import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.NodeUtil;
 import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.TransitionUtil;
 import com.liferay.headless.admin.workflow.internal.odata.entity.v1_0.WorkflowDefinitionEntityModel;
@@ -19,18 +20,19 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.workflow.comparator.WorkflowComparatorFactory;
 import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
@@ -56,7 +58,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 )
 @CTAware
 public class WorkflowDefinitionResourceImpl
-	extends BaseWorkflowDefinitionResourceImpl implements EntityModelResource {
+	extends BaseWorkflowDefinitionResourceImpl {
 
 	@Override
 	public void create(
@@ -123,16 +125,18 @@ public class WorkflowDefinitionResourceImpl
 		throws Exception {
 
 		return _toWorkflowDefinition(
+			null,
 			() -> _workflowDefinitionManager.getWorkflowDefinition(
 				workflowDefinitionId));
 	}
 
 	@Override
 	public WorkflowDefinition getWorkflowDefinitionByName(
-			String name, Integer version)
+			String name, String contentFormat, Integer version)
 		throws Exception {
 
 		return _toWorkflowDefinition(
+			contentFormat,
 			() -> {
 				if (version == null) {
 					return _workflowDefinitionManager.
@@ -210,6 +214,7 @@ public class WorkflowDefinitionResourceImpl
 
 		return _toWorkflowDefinition(
 			_workflowDefinitionManager.deployWorkflowDefinition(
+				workflowDefinition.getExternalReferenceCode(),
 				contextCompany.getCompanyId(), contextUser.getUserId(),
 				_getTitle(workflowDefinition), workflowDefinition.getName(),
 				content.getBytes()));
@@ -224,6 +229,7 @@ public class WorkflowDefinitionResourceImpl
 
 		return _toWorkflowDefinition(
 			_workflowDefinitionManager.saveWorkflowDefinition(
+				workflowDefinition.getExternalReferenceCode(),
 				contextCompany.getCompanyId(), contextUser.getUserId(),
 				_getTitle(workflowDefinition), workflowDefinition.getName(),
 				content.getBytes()));
@@ -282,13 +288,14 @@ public class WorkflowDefinitionResourceImpl
 	}
 
 	private WorkflowDefinition _toWorkflowDefinition(
+			String contentFormat,
 			UnsafeSupplier
 				<com.liferay.portal.kernel.workflow.WorkflowDefinition,
 				 Exception> unsafeSupplier)
 		throws Exception {
 
 		try {
-			return _toWorkflowDefinition(unsafeSupplier.get());
+			return _toWorkflowDefinition(contentFormat, unsafeSupplier.get());
 		}
 		catch (Exception exception) {
 			Throwable throwable = exception.getCause();
@@ -302,35 +309,12 @@ public class WorkflowDefinitionResourceImpl
 	}
 
 	private WorkflowDefinition _toWorkflowDefinition(
+		String contentFormat,
 		com.liferay.portal.kernel.workflow.WorkflowDefinition
 			workflowDefinition) {
 
 		return new WorkflowDefinition() {
 			{
-				active = workflowDefinition.isActive();
-				content = workflowDefinition.getContent();
-				dateCreated = workflowDefinition.getCreateDate();
-				dateModified = workflowDefinition.getModifiedDate();
-				description = workflowDefinition.getDescription();
-				id = workflowDefinition.getWorkflowDefinitionId();
-				name = workflowDefinition.getName();
-				nodes = transformToArray(
-					workflowDefinition.getWorkflowNodes(),
-					workflowNode -> NodeUtil.toNode(
-						contextAcceptLanguage.getPreferredLocale(),
-						workflowNode),
-					Node.class);
-				title = workflowDefinition.getTitle(
-					_language.getLanguageId(
-						contextAcceptLanguage.getPreferredLocale()));
-				transitions = transformToArray(
-					workflowDefinition.getWorkflowTransitions(),
-					workflowTransition -> TransitionUtil.toTransition(
-						contextAcceptLanguage.getPreferredLocale(),
-						workflowTransition),
-					Transition.class);
-				version = String.valueOf(workflowDefinition.getVersion());
-
 				setActions(
 					() -> HashMapBuilder.put(
 						"delete",
@@ -347,7 +331,38 @@ public class WorkflowDefinitionResourceImpl
 							"putWorkflowDefinition",
 							_workflowDefinitionModelResourcePermission)
 					).build());
+				setActive(workflowDefinition::isActive);
+				setContent(
+					() -> {
+						if (StringUtil.equalsIgnoreCase(contentFormat, "xml")) {
+							return workflowDefinition.getContentAsXML();
+						}
 
+						return workflowDefinition.getContent();
+					});
+				setCreator(
+					() -> CreatorUtil.toCreator(
+						_portal,
+						_userLocalService.fetchUser(
+							workflowDefinition.getUserId())));
+				setDateCreated(workflowDefinition::getCreateDate);
+				setDateModified(workflowDefinition::getModifiedDate);
+				setDescription(workflowDefinition::getDescription);
+				setExternalReferenceCode(
+					workflowDefinition::getExternalReferenceCode);
+				setId(workflowDefinition::getWorkflowDefinitionId);
+				setName(workflowDefinition::getName);
+				setNodes(
+					() -> transformToArray(
+						workflowDefinition.getWorkflowNodes(),
+						workflowNode -> NodeUtil.toNode(
+							contextAcceptLanguage.getPreferredLocale(),
+							workflowNode),
+						Node.class));
+				setTitle(
+					() -> workflowDefinition.getTitle(
+						_language.getLanguageId(
+							contextAcceptLanguage.getPreferredLocale())));
 				setTitle_i18n(
 					() -> {
 						Map<String, String> title_i18n = new HashMap<>();
@@ -364,8 +379,24 @@ public class WorkflowDefinitionResourceImpl
 
 						return title_i18n;
 					});
+				setTransitions(
+					() -> transformToArray(
+						workflowDefinition.getWorkflowTransitions(),
+						workflowTransition -> TransitionUtil.toTransition(
+							contextAcceptLanguage.getPreferredLocale(),
+							workflowTransition),
+						Transition.class));
+				setVersion(
+					() -> String.valueOf(workflowDefinition.getVersion()));
 			}
 		};
+	}
+
+	private WorkflowDefinition _toWorkflowDefinition(
+		com.liferay.portal.kernel.workflow.WorkflowDefinition
+			workflowDefinition) {
+
+		return _toWorkflowDefinition(null, workflowDefinition);
 	}
 
 	private static final EntityModel _entityModel =
@@ -376,6 +407,12 @@ public class WorkflowDefinitionResourceImpl
 
 	@Reference
 	private Localization _localization;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 	@Reference
 	private WorkflowComparatorFactory _workflowComparatorFactory;

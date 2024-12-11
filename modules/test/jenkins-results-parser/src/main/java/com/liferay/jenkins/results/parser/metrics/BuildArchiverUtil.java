@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -62,13 +63,13 @@ public class BuildArchiverUtil {
 	public static void archiveOneDay(String startDateString) {
 		String outputDirPath = null;
 
+		String propertyKey = "archive.ci.build.data.tmp.dir";
+
 		try {
-			outputDirPath = _buildProperties.getProperty(
-				"archive.build.tmp.dir");
+			outputDirPath = _buildProperties.getProperty(propertyKey);
 		}
 		catch (Exception exception) {
-			System.out.println(
-				"Unable to get property \"archive.build.tmp.dir\"");
+			System.out.println("Unable to get property " + propertyKey);
 		}
 
 		if (outputDirPath == null) {
@@ -185,9 +186,14 @@ public class BuildArchiverUtil {
 		}
 
 		ParallelExecutor<Boolean> parallelExecutor = new ParallelExecutor<>(
-			callables, _executorService);
+			callables, _executorService, "recordGroovyScriptResponses");
 
-		parallelExecutor.execute();
+		try {
+			parallelExecutor.execute();
+		}
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
+		}
 	}
 
 	private static final String _DEFAULT_OUTPUT_DIR_PATH =

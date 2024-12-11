@@ -1,10 +1,10 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Document Management";
-	property testray.main.component.name = "Lima Headless";
+	property testray.main.component.name = "Content Management Headless";
 
 	setUp {
 		TestCase.setUpPortalInstanceNoSelenium();
@@ -214,7 +214,7 @@ definition {
 				documentId = ${documentId},
 				ratingValue = 1,
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		echo(${response});
@@ -261,12 +261,8 @@ definition {
 				actual = ${response},
 				expected = "NOT_FOUND");
 
-			TestUtils.assertPartialEquals(
-				actual = ${response},
-				expected = "No FileEntry exists with the key {fileEntryId=40000}");
-
 			User.loginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			DMDocument.downloadViaURL(dmDocumentTitle = "document_1-jpg");

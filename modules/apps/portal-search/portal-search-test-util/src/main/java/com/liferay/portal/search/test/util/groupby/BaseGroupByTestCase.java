@@ -58,7 +58,8 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 						"one",
 						Arrays.asList(
 							"companyId", "entryClassName", "entryClassPK",
-							"groupId", SORT_FIELD, "uid", "userName"),
+							"groupId", SORT_FIELD, "timestamp", "uid",
+							"userName"),
 						hits, indexingTestHelper));
 			});
 	}
@@ -83,6 +84,8 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 
 	@Test
 	public void testFieldNamesSameWithSelected() throws Exception {
+		String[] fieldNames = {Field.COMPANY_ID, Field.UID};
+
 		indexDuplicates("one", 1);
 
 		assertSearch(
@@ -94,15 +97,15 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 						QueryConfig queryConfig =
 							searchContext.getQueryConfig();
 
-						queryConfig.addSelectedFieldNames(
-							Field.COMPANY_ID, Field.UID);
+						queryConfig.addSelectedFieldNames(fieldNames);
 					});
 
 				indexingTestHelper.search();
 
 				indexingTestHelper.verify(
 					hits -> assertGroupedHitsFieldNames(
-						"one", getFieldNames(hits), hits, indexingTestHelper));
+						"one", Arrays.asList(fieldNames), hits,
+						indexingTestHelper));
 			});
 	}
 

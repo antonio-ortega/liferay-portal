@@ -1,0 +1,6 @@
+{
+	"className": "com.liferay.blogs.model.BlogsEntry",
+	"ddmTemplateKey": "ANNOUNCEMENTS-ENTRIES",
+	"name": "Announcements Entries",
+	"resourceClassName": "com.liferay.portlet.display.template.PortletDisplayTemplate"
+}

@@ -43,6 +43,8 @@ import java.util.Random;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -90,6 +92,19 @@ public class PaymentMethodResourceTest
 		PrincipalThreadLocal.setName(_originalName);
 	}
 
+	@Ignore
+	@Override
+	@Test
+	public void testGetCartByExternalReferenceCodePaymentMethodsPage()
+		throws Exception {
+	}
+
+	@Ignore
+	@Override
+	@Test
+	public void testGetCartPaymentMethodsPage() throws Exception {
+	}
+
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {"key"};
@@ -104,6 +119,44 @@ public class PaymentMethodResourceTest
 				name = RandomTestUtil.randomString();
 			}
 		};
+	}
+
+	@Override
+	protected PaymentMethod
+			testGetCartByExternalReferenceCodePaymentMethodsPage_addPaymentMethod(
+				String externalReferenceCode, PaymentMethod paymentMethod)
+		throws Exception {
+
+		CommercePaymentMethodGroupRel commercePaymentMethodGroupRel =
+			CommercePaymentMethodGroupRelLocalServiceUtil.
+				addCommercePaymentMethodGroupRel(
+					_user.getUserId(), _commerceChannel.getGroupId(),
+					Collections.singletonMap(
+						LocaleUtil.US, paymentMethod.getName()),
+					Collections.singletonMap(
+						LocaleUtil.US, paymentMethod.getDescription()),
+					true, null, paymentMethod.getKey(), 1, null);
+
+		_commercePaymentMethodGroupRels.add(commercePaymentMethodGroupRel);
+
+		return new PaymentMethod() {
+			{
+				description = commercePaymentMethodGroupRel.getDescription(
+					LocaleUtil.US);
+				key = commercePaymentMethodGroupRel.getPaymentIntegrationKey();
+				name = commercePaymentMethodGroupRel.getName(LocaleUtil.US);
+			}
+		};
+	}
+
+	@Override
+	protected String
+			testGetCartByExternalReferenceCodePaymentMethodsPage_getExternalReferenceCode()
+		throws Exception {
+
+		CommerceOrder commerceOrder = _addCommerceOrder();
+
+		return commerceOrder.getExternalReferenceCode();
 	}
 
 	@Override

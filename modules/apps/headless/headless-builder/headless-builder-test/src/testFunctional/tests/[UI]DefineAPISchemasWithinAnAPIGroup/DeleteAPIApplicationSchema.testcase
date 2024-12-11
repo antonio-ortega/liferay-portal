@@ -2,10 +2,10 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -79,13 +79,12 @@ definition {
 
 	@priority = 4
 	test CannotSeeSchemaInAPIExplorerAfterDelete {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("And Given create an API Endpoint in the Application") {
 			EndpointAPI.createAPIEndpoint(
-				externalReferenceCode = "My-app",
+				apiApplicationERC = "My-app",
 				name = "myendpoint",
 				path = "/myendpoint");
 		}
@@ -114,7 +113,6 @@ definition {
 
 	@priority = 4
 	test CanSeeWarningMessageBeforeSchemaIsDeleted {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

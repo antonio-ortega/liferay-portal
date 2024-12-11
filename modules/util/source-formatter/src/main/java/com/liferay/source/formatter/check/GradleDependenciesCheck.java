@@ -66,92 +66,9 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 			content = _formatDependencies(
 				content, SourceUtil.getIndent(dependenciesBlock), dependencies,
 				releasePortalAPIVersion);
-
-			if (isAttributeValue(_CHECK_PETRA_DEPENDENCIES_KEY, absolutePath) &&
-				absolutePath.contains("/modules/core/petra/")) {
-
-				_checkPetraDependencies(fileName, content, dependencies);
-			}
-
-			_checkCommerceDependencies(
-				fileName, absolutePath, content, dependencies,
-				getAttributeValues(
-					_ALLOWED_COMMERCE_DEPENDENCIES_MODULE_PATH_NAMES,
-					absolutePath));
-
-			if (isAttributeValue(
-					_CHECK_REST_CLIENT_DEPENDENCIES_KEY, absolutePath)) {
-
-				_checkRestClientDependencies(fileName, content, dependencies);
-			}
 		}
 
 		return content;
-	}
-
-	private void _checkCommerceDependencies(
-		String fileName, String absolutePath, String content,
-		String dependencies,
-		List<String> allowedCommerceDependenciesModulePathNames) {
-
-		if (!isModulesFile(absolutePath) ||
-			absolutePath.contains("/commerce/")) {
-
-			return;
-		}
-
-		for (String line : StringUtil.splitLines(dependencies)) {
-			if (Validator.isNull(line) ||
-				!line.matches(
-					"\\s*compileOnly project\\(\".*?:apps:commerce.+?\"\\)")) {
-
-				continue;
-			}
-
-			for (String allowedCommerceDependenciesModulePathName :
-					allowedCommerceDependenciesModulePathNames) {
-
-				if (absolutePath.contains(
-						allowedCommerceDependenciesModulePathName)) {
-
-					return;
-				}
-			}
-
-			addMessage(
-				fileName,
-				"Modules that are outside of Commerce are not allowed to " +
-					"depend on Commerce modules",
-				SourceUtil.getLineNumber(content, content.indexOf(line)));
-		}
-	}
-
-	private void _checkPetraDependencies(
-		String fileName, String content, String dependencies) {
-
-		for (String line : StringUtil.splitLines(dependencies)) {
-			if (Validator.isNotNull(line) && !line.contains("petra")) {
-				addMessage(
-					fileName,
-					"Only modules/core/petra dependencies are allowed",
-					SourceUtil.getLineNumber(content, content.indexOf(line)));
-			}
-		}
-	}
-
-	private void _checkRestClientDependencies(
-		String fileName, String content, String dependencies) {
-
-		Matcher matcher = _restClientPattern.matcher(dependencies);
-
-		while (matcher.find()) {
-			addMessage(
-				fileName,
-				"Project dependencies '.*-rest-client' can only be used for " +
-					"'testIntegrationImplementation'",
-				SourceUtil.getLineNumber(
-					content, content.indexOf(matcher.group())));
-		}
 	}
 
 	private String _formatDependencies(
@@ -293,16 +210,6 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 	}
 
 	private static final String
-		_ALLOWED_COMMERCE_DEPENDENCIES_MODULE_PATH_NAMES =
-			"allowedCommerceDependenciesModulePathNames";
-
-	private static final String _CHECK_PETRA_DEPENDENCIES_KEY =
-		"checkPetraDependencies";
-
-	private static final String _CHECK_REST_CLIENT_DEPENDENCIES_KEY =
-		"checkRestClientDependencies";
-
-	private static final String
 		_CHECK_TEST_INTEGRATION_IMPLEMENTATION_DEPENDENCIES_KEY =
 			"checkTestIntegrationImplementationDependencies";
 
@@ -322,9 +229,8 @@ public class GradleDependenciesCheck extends BaseFileCheck {
 	private static final Pattern _petraPattern = Pattern.compile(
 		"testIntegrationImplementation project\\(\":core:petra:.*");
 	private static final Pattern _portalKernelPattern = Pattern.compile(
-		"testIntegrationImplementation.* name: \"com\\.liferay\\.portal\\.kernel\".*");
-	private static final Pattern _restClientPattern = Pattern.compile(
-		"(?<!testIntegrationImplementation) project\\(\".*-rest-client\"\\)");
+		"testIntegrationImplementation.* name: \"com\\.liferay\\.portal\\." +
+			"kernel\".*");
 
 	private class GradleDependencyComparator implements Comparator<String> {
 

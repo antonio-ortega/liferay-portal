@@ -27,20 +27,22 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -100,11 +100,17 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 
 		_priceModifierProductGroupResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		PriceModifierProductGroupResource.Builder builder =
 			PriceModifierProductGroupResource.builder();
 
 		priceModifierProductGroupResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -118,21 +124,7 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				enable(SerializationFeature.INDENT_OUTPUT);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		PriceModifierProductGroup priceModifierProductGroup1 =
 			randomPriceModifierProductGroup();
@@ -149,20 +141,7 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 
 	@Test
 	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
 
 		PriceModifierProductGroup priceModifierProductGroup =
 			randomPriceModifierProductGroup();
@@ -174,6 +153,24 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 
 		Assert.assertEquals(
 			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
+			{
+				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+				configure(
+					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
+				enable(SerializationFeature.INDENT_OUTPUT);
+				setDateFormat(new ISO8601DateFormat());
+				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+				setSerializationInclusion(JsonInclude.Include.NON_NULL);
+				setVisibility(
+					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+				setVisibility(
+					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
+			}
+		};
 	}
 
 	@Test
@@ -225,7 +222,7 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 				getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			PriceModifierProductGroup irrelevantPriceModifierProductGroup =
@@ -236,12 +233,13 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 			page =
 				priceModifierProductGroupResource.
 					getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantPriceModifierProductGroup),
+			assertContains(
+				irrelevantPriceModifierProductGroup,
 				(List<PriceModifierProductGroup>)page.getItems());
 			assertValid(
 				page,
@@ -262,11 +260,13 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 				getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				priceModifierProductGroup1, priceModifierProductGroup2),
+		assertContains(
+			priceModifierProductGroup1,
+			(List<PriceModifierProductGroup>)page.getItems());
+		assertContains(
+			priceModifierProductGroup2,
 			(List<PriceModifierProductGroup>)page.getItems());
 		assertValid(
 			page,
@@ -291,6 +291,14 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 		String externalReferenceCode =
 			testGetPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage_getExternalReferenceCode();
 
+		Page<PriceModifierProductGroup> priceModifierProductGroupPage =
+			priceModifierProductGroupResource.
+				getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			priceModifierProductGroupPage.getTotalCount());
+
 		PriceModifierProductGroup priceModifierProductGroup1 =
 			testGetPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage_addPriceModifierProductGroup(
 				externalReferenceCode, randomPriceModifierProductGroup());
@@ -303,42 +311,94 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 			testGetPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage_addPriceModifierProductGroup(
 				externalReferenceCode, randomPriceModifierProductGroup());
 
-		Page<PriceModifierProductGroup> page1 =
-			priceModifierProductGroupResource.
-				getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
-					externalReferenceCode, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceModifierProductGroup> priceModifierProductGroups1 =
-			(List<PriceModifierProductGroup>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceModifierProductGroups1.toString(), 2,
-			priceModifierProductGroups1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceModifierProductGroup> page1 =
+				priceModifierProductGroupResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<PriceModifierProductGroup> page2 =
-			priceModifierProductGroupResource.
-				getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
-					externalReferenceCode, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				priceModifierProductGroup1,
+				(List<PriceModifierProductGroup>)page1.getItems());
 
-		List<PriceModifierProductGroup> priceModifierProductGroups2 =
-			(List<PriceModifierProductGroup>)page2.getItems();
+			Page<PriceModifierProductGroup> page2 =
+				priceModifierProductGroupResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			priceModifierProductGroups2.toString(), 1,
-			priceModifierProductGroups2.size());
+			assertContains(
+				priceModifierProductGroup2,
+				(List<PriceModifierProductGroup>)page2.getItems());
 
-		Page<PriceModifierProductGroup> page3 =
-			priceModifierProductGroupResource.
-				getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
-					externalReferenceCode, Pagination.of(1, 3));
+			Page<PriceModifierProductGroup> page3 =
+				priceModifierProductGroupResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				priceModifierProductGroup1, priceModifierProductGroup2,
-				priceModifierProductGroup3),
-			(List<PriceModifierProductGroup>)page3.getItems());
+			assertContains(
+				priceModifierProductGroup3,
+				(List<PriceModifierProductGroup>)page3.getItems());
+		}
+		else {
+			Page<PriceModifierProductGroup> page1 =
+				priceModifierProductGroupResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<PriceModifierProductGroup> priceModifierProductGroups1 =
+				(List<PriceModifierProductGroup>)page1.getItems();
+
+			Assert.assertEquals(
+				priceModifierProductGroups1.toString(), totalCount + 2,
+				priceModifierProductGroups1.size());
+
+			Page<PriceModifierProductGroup> page2 =
+				priceModifierProductGroupResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceModifierProductGroup> priceModifierProductGroups2 =
+				(List<PriceModifierProductGroup>)page2.getItems();
+
+			Assert.assertEquals(
+				priceModifierProductGroups2.toString(), 1,
+				priceModifierProductGroups2.size());
+
+			Page<PriceModifierProductGroup> page3 =
+				priceModifierProductGroupResource.
+					getPriceModifierByExternalReferenceCodePriceModifierProductGroupsPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				priceModifierProductGroup1,
+				(List<PriceModifierProductGroup>)page3.getItems());
+			assertContains(
+				priceModifierProductGroup2,
+				(List<PriceModifierProductGroup>)page3.getItems());
+			assertContains(
+				priceModifierProductGroup3,
+				(List<PriceModifierProductGroup>)page3.getItems());
+		}
 	}
 
 	protected PriceModifierProductGroup
@@ -404,7 +464,7 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 				getPriceModifierIdPriceModifierProductGroupsPage(
 					id, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			PriceModifierProductGroup irrelevantPriceModifierProductGroup =
@@ -414,12 +474,13 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 			page =
 				priceModifierProductGroupResource.
 					getPriceModifierIdPriceModifierProductGroupsPage(
-						irrelevantId, null, null, Pagination.of(1, 2), null);
+						irrelevantId, null, null,
+						Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantPriceModifierProductGroup),
+			assertContains(
+				irrelevantPriceModifierProductGroup,
 				(List<PriceModifierProductGroup>)page.getItems());
 			assertValid(
 				page,
@@ -440,11 +501,13 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 				getPriceModifierIdPriceModifierProductGroupsPage(
 					id, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				priceModifierProductGroup1, priceModifierProductGroup2),
+		assertContains(
+			priceModifierProductGroup1,
+			(List<PriceModifierProductGroup>)page.getItems());
+		assertContains(
+			priceModifierProductGroup2,
 			(List<PriceModifierProductGroup>)page.getItems());
 		assertValid(
 			page,
@@ -572,6 +635,14 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 
 		Long id = testGetPriceModifierIdPriceModifierProductGroupsPage_getId();
 
+		Page<PriceModifierProductGroup> priceModifierProductGroupPage =
+			priceModifierProductGroupResource.
+				getPriceModifierIdPriceModifierProductGroupsPage(
+					id, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			priceModifierProductGroupPage.getTotalCount());
+
 		PriceModifierProductGroup priceModifierProductGroup1 =
 			testGetPriceModifierIdPriceModifierProductGroupsPage_addPriceModifierProductGroup(
 				id, randomPriceModifierProductGroup());
@@ -584,42 +655,95 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 			testGetPriceModifierIdPriceModifierProductGroupsPage_addPriceModifierProductGroup(
 				id, randomPriceModifierProductGroup());
 
-		Page<PriceModifierProductGroup> page1 =
-			priceModifierProductGroupResource.
-				getPriceModifierIdPriceModifierProductGroupsPage(
-					id, null, null, Pagination.of(1, 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceModifierProductGroup> priceModifierProductGroups1 =
-			(List<PriceModifierProductGroup>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceModifierProductGroups1.toString(), 2,
-			priceModifierProductGroups1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceModifierProductGroup> page1 =
+				priceModifierProductGroupResource.
+					getPriceModifierIdPriceModifierProductGroupsPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<PriceModifierProductGroup> page2 =
-			priceModifierProductGroupResource.
-				getPriceModifierIdPriceModifierProductGroupsPage(
-					id, null, null, Pagination.of(2, 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				priceModifierProductGroup1,
+				(List<PriceModifierProductGroup>)page1.getItems());
 
-		List<PriceModifierProductGroup> priceModifierProductGroups2 =
-			(List<PriceModifierProductGroup>)page2.getItems();
+			Page<PriceModifierProductGroup> page2 =
+				priceModifierProductGroupResource.
+					getPriceModifierIdPriceModifierProductGroupsPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			priceModifierProductGroups2.toString(), 1,
-			priceModifierProductGroups2.size());
+			assertContains(
+				priceModifierProductGroup2,
+				(List<PriceModifierProductGroup>)page2.getItems());
 
-		Page<PriceModifierProductGroup> page3 =
-			priceModifierProductGroupResource.
-				getPriceModifierIdPriceModifierProductGroupsPage(
-					id, null, null, Pagination.of(1, 3), null);
+			Page<PriceModifierProductGroup> page3 =
+				priceModifierProductGroupResource.
+					getPriceModifierIdPriceModifierProductGroupsPage(
+						id, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				priceModifierProductGroup1, priceModifierProductGroup2,
-				priceModifierProductGroup3),
-			(List<PriceModifierProductGroup>)page3.getItems());
+			assertContains(
+				priceModifierProductGroup3,
+				(List<PriceModifierProductGroup>)page3.getItems());
+		}
+		else {
+			Page<PriceModifierProductGroup> page1 =
+				priceModifierProductGroupResource.
+					getPriceModifierIdPriceModifierProductGroupsPage(
+						id, null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<PriceModifierProductGroup> priceModifierProductGroups1 =
+				(List<PriceModifierProductGroup>)page1.getItems();
+
+			Assert.assertEquals(
+				priceModifierProductGroups1.toString(), totalCount + 2,
+				priceModifierProductGroups1.size());
+
+			Page<PriceModifierProductGroup> page2 =
+				priceModifierProductGroupResource.
+					getPriceModifierIdPriceModifierProductGroupsPage(
+						id, null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceModifierProductGroup> priceModifierProductGroups2 =
+				(List<PriceModifierProductGroup>)page2.getItems();
+
+			Assert.assertEquals(
+				priceModifierProductGroups2.toString(), 1,
+				priceModifierProductGroups2.size());
+
+			Page<PriceModifierProductGroup> page3 =
+				priceModifierProductGroupResource.
+					getPriceModifierIdPriceModifierProductGroupsPage(
+						id, null, null, Pagination.of(1, (int)totalCount + 3),
+						null);
+
+			assertContains(
+				priceModifierProductGroup1,
+				(List<PriceModifierProductGroup>)page3.getItems());
+			assertContains(
+				priceModifierProductGroup2,
+				(List<PriceModifierProductGroup>)page3.getItems());
+			assertContains(
+				priceModifierProductGroup3,
+				(List<PriceModifierProductGroup>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -633,7 +757,7 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 
 				BeanTestUtil.setProperty(
 					priceModifierProductGroup1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -758,27 +882,38 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 			testGetPriceModifierIdPriceModifierProductGroupsPage_addPriceModifierProductGroup(
 				id, priceModifierProductGroup2);
 
+		Page<PriceModifierProductGroup> page =
+			priceModifierProductGroupResource.
+				getPriceModifierIdPriceModifierProductGroupsPage(
+					id, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<PriceModifierProductGroup> ascPage =
 				priceModifierProductGroupResource.
 					getPriceModifierIdPriceModifierProductGroupsPage(
-						id, null, null, Pagination.of(1, 2),
+						id, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(
-					priceModifierProductGroup1, priceModifierProductGroup2),
+			assertContains(
+				priceModifierProductGroup1,
+				(List<PriceModifierProductGroup>)ascPage.getItems());
+			assertContains(
+				priceModifierProductGroup2,
 				(List<PriceModifierProductGroup>)ascPage.getItems());
 
 			Page<PriceModifierProductGroup> descPage =
 				priceModifierProductGroupResource.
 					getPriceModifierIdPriceModifierProductGroupsPage(
-						id, null, null, Pagination.of(1, 2),
+						id, null, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(
-					priceModifierProductGroup2, priceModifierProductGroup1),
+			assertContains(
+				priceModifierProductGroup2,
+				(List<PriceModifierProductGroup>)descPage.getItems());
+			assertContains(
+				priceModifierProductGroup1,
 				(List<PriceModifierProductGroup>)descPage.getItems());
 		}
 	}
@@ -1252,6 +1387,10 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1456,7 +1595,8 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1517,21 +1657,21 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 
 	protected PriceModifierProductGroupResource
 		priceModifierProductGroupResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1540,11 +1680,16 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1576,6 +1721,24 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1597,16 +1760,6 @@ public abstract class BasePriceModifierProductGroupResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

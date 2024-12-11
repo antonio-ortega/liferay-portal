@@ -8,23 +8,30 @@ import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
+import ClayTabs from '@clayui/tabs';
+import {useState} from 'react';
 import {CSVLink} from 'react-csv';
 
 import Table from '../../common/components/Table';
 import TableHeader from '../../common/components/TableHeader';
-import CheckboxFilter from '../../common/components/TableHeader/Filter/components/CheckboxFilter';
 import DropDownWithDrillDown from '../../common/components/TableHeader/Filter/components/DropDownWithDrillDown';
-import DateFilter from '../../common/components/TableHeader/Filter/components/filters/DateFilter';
+import {FilterTypes} from '../../common/components/TableHeader/Filter/components/FilterSelector/FilterSelector';
+import {Dates} from '../../common/components/TableHeader/Filter/components/filters/DateFilter/DateFilter';
 import Search from '../../common/components/TableHeader/Search';
-import {LiferayPicklistName} from '../../common/enums/liferayPicklistName';
 import {MDFClaimColumnKey} from '../../common/enums/mdfClaimColumnKey';
 import {ObjectActionName} from '../../common/enums/objectActionName';
+import {PermissionActionType} from '../../common/enums/permissionActionType';
+import {SortableTable} from '../../common/enums/sortableTable';
+import useDebounce from '../../common/hooks/useDebounce';
+import useIsChannel from '../../common/hooks/useIsChannel';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
 import usePagination from '../../common/hooks/usePagination';
 import usePermissionActions from '../../common/hooks/usePermissionActions';
+import useQueryParams from '../../common/hooks/useQueryParams';
 import {MDFClaimListItem} from '../../common/interfaces/mdfClaimListItem';
 import TableColumn from '../../common/interfaces/tableColumn';
-import getDropDownFilterMenus from '../../common/utils/getDropDownFilterMenus';
+import {Filters} from '../../common/utils/constants/filters';
+import {maxPagination} from '../../common/utils/constants/maxPagination';
 import useDynamicFieldEntries from './hooks/useDynamicFieldEntries';
 import useFilters from './hooks/useFilters';
 import useGetListItemsFromMDFClaims from './hooks/useGetListItemsFromMDFClaims';
@@ -35,32 +42,47 @@ type MDFClaimItem = {
 	[key in MDFClaimColumnKey]?: any;
 };
 
-const BASE_PAGE = 1;
-const MAX_ITEMS = -1;
-
 const MDFClaimList = () => {
-	const {companiesEntries, fieldEntries} = useDynamicFieldEntries();
+	const {isChannel} = useIsChannel();
 
-	const {filters, filtersTerm, onFilter, setFilters} = useFilters();
+	const urlParams = useQueryParams();
+
+	const [openClaimsFilter, setOpenClaimsFilter] = useState(
+		!urlParams.get('tab') || urlParams.get('tab') === 'open' ? true : false
+	);
+
+	const {companiesEntries} = useDynamicFieldEntries();
+
+	const [claimTableSort, setClaimTableSort] =
+		useState<string>('dateCreated:desc');
+
+	const debouncedClaimTableSort = useDebounce(claimTableSort, 1000);
+
+	const {filters, onFilter, setFilters} = useFilters(
+		openClaimsFilter,
+		debouncedClaimTableSort,
+		urlParams,
+		isChannel
+	);
 
 	const pagination = usePagination();
+
 	const {data, isValidating, mutate} = useGetListItemsFromMDFClaims(
 		pagination.activePage,
 		pagination.activeDelta,
-		filtersTerm
+		urlParams
 	);
 
 	const {data: dataCSV} = useGetListItemsFromMDFClaims(
-		BASE_PAGE,
-		MAX_ITEMS,
-		filtersTerm
+		pagination.activePage,
+		maxPagination.MAX_ITEMS.size,
+		urlParams
 	);
 
 	const siteURL = useLiferayNavigate();
-
 	const actions = usePermissionActions(ObjectActionName.MDF_CLAIM);
 
-	const columns = getMDFClaimListColumns(siteURL, actions, mutate);
+	const columns = getMDFClaimListColumns(urlParams, siteURL, actions, mutate);
 
 	const getTable = (
 		totalCount: number,
@@ -84,7 +106,18 @@ const MDFClaimList = () => {
 
 			return (
 				<div className="mt-3">
-					<Table<MDFClaimListItem> columns={columns} rows={items} />
+					<Table<MDFClaimListItem>
+						columns={columns}
+						rows={items}
+						setTableSort={setClaimTableSort}
+						sortable={[
+							SortableTable.DATE_SUBMITTED,
+							SortableTable.PARTNER,
+							SortableTable.STATUS,
+							SortableTable.TYPE,
+						]}
+						tableLayoutAuto
+					/>
 
 					<ClayPaginationBarWithBasicItems
 						{...pagination}
@@ -95,19 +128,126 @@ const MDFClaimList = () => {
 		}
 	};
 
+	const filterFields = [
+		{
+			component: {
+				initialValues: filters.submitDate?.dates,
+				props: {
+					clearInputs: filters?.submitDate,
+					filterDescription: 'Claim Submitted',
+				},
+				type: FilterTypes.DATE,
+				updateFilter: (dates: Dates) =>
+					onFilter({
+						submitDate: {
+							dates,
+						},
+					}),
+			},
+			name: 'Date Submitted',
+		},
+		{
+			component: {
+				initialValues: filters.status.value,
+				props: {
+					availableItems: openClaimsFilter
+						? Filters.MDF_CLAIM_LISTING.openList
+						: Filters.MDF_CLAIM_LISTING.completedList,
+					clearCheckboxes: !filters.status.value?.length,
+				},
+				type: FilterTypes.CHECKBOX,
+				updateFilter: (checkedItems: string[]) =>
+					setFilters((previousFilters) => ({
+						...previousFilters,
+						status: {
+							...previousFilters.status,
+							value: checkedItems,
+						},
+					})),
+			},
+			name: 'Status',
+		},
+		{
+			component: {
+				initialValues: filters.partner.value,
+				props: {
+					availableItems: companiesEntries?.map<string>(
+						(company) => company.label as string
+					),
+					clearCheckboxes: !filters.partner.value?.length,
+				},
+				type: FilterTypes.CHECKBOX,
+				updateFilter: (checkedItems: string[]) =>
+					setFilters((previousFilters) => ({
+						...previousFilters,
+						partner: {
+							...previousFilters.status,
+							value: checkedItems,
+						},
+					})),
+			},
+			name: 'Partner',
+		},
+		{
+			component: {
+				initialValues: filters.type.value,
+				props: {
+					availableItems: ['Full', 'Partial'],
+					clearCheckboxes: !filters.type.value?.length,
+				},
+				type: FilterTypes.CHECKBOX,
+				updateFilter: (checkedItems: string[]) =>
+					setFilters((previousFilters) => ({
+						...previousFilters,
+						type: {
+							...previousFilters.type,
+							value: checkedItems,
+						},
+					})),
+			},
+			name: 'Type',
+		},
+	];
+
 	return (
 		<div className="border-0 my-4">
-			<h1>MDF Claim</h1>
+			<div className="align-items-center d-md-flex justify-content-between mb-3 mr-4">
+				<h1>MDF Claim</h1>
+				<ClayTabs className="h-100 nav nav-segment nav-tabs">
+					<ClayTabs.Item
+						active={openClaimsFilter}
+						className="nav-item"
+						onClick={() => {
+							setOpenClaimsFilter(true);
+							urlParams.set('tab', 'open');
+						}}
+					>
+						Open
+					</ClayTabs.Item>
+					<ClayTabs.Item
+						active={!openClaimsFilter}
+						className="nav-item"
+						onClick={() => {
+							setOpenClaimsFilter(false);
+							urlParams.set('tab', 'completed');
+						}}
+					>
+						Completed
+					</ClayTabs.Item>
+				</ClayTabs>
+			</div>
 
 			<TableHeader>
 				<div className="d-flex">
 					<div>
 						<Search
+							initialSearchTerm={filters.searchTerm}
 							onSearchSubmit={(searchTerm: string) =>
 								onFilter({
 									searchTerm,
 								})
 							}
+							urlParams={urlParams}
 						/>
 
 						<div className="bd-highlight flex-shrink-2 mt-1">
@@ -146,94 +286,7 @@ const MDFClaimList = () => {
 					</div>
 
 					<DropDownWithDrillDown
-						className=""
-						initialActiveMenu="x0a0"
-						menus={getDropDownFilterMenus([
-							{
-								component: (
-									<DateFilter
-										dateFilters={(dates: {
-											endDate: string;
-											startDate: string;
-										}) => {
-											onFilter({
-												dateCreated: {
-													dates,
-												},
-											});
-										}}
-										filterDescription="Claim Submitted "
-									/>
-								),
-								name: 'Date Submitted',
-							},
-							{
-								component: (
-									<CheckboxFilter
-										availableItems={fieldEntries[
-											LiferayPicklistName.MDF_CLAIM_STATUS
-										]?.map<string>(
-											(status) => status.label as string
-										)}
-										clearCheckboxes={
-											!filters.status.value?.length
-										}
-										updateFilters={(checkedItems) =>
-											setFilters((previousFilters) => ({
-												...previousFilters,
-												status: {
-													...previousFilters.status,
-													value: checkedItems,
-												},
-											}))
-										}
-									/>
-								),
-								name: 'Status',
-							},
-							{
-								component: (
-									<CheckboxFilter
-										availableItems={companiesEntries?.map<
-											string
-										>((company) => company.label as string)}
-										clearCheckboxes={
-											!filters.partner.value?.length
-										}
-										updateFilters={(checkedItems) =>
-											setFilters((previousFilters) => ({
-												...previousFilters,
-												partner: {
-													...previousFilters.status,
-													value: checkedItems,
-												},
-											}))
-										}
-									/>
-								),
-								name: 'Partner',
-							},
-							{
-								component: (
-									<CheckboxFilter
-										availableItems={['Full', 'Partial']}
-										clearCheckboxes={
-											!filters.type.value?.length
-										}
-										updateFilters={(checkedItems) =>
-											setFilters((previousFilters) => ({
-												...previousFilters,
-												type: {
-													...previousFilters.type,
-													value: checkedItems,
-												},
-											}))
-										}
-									/>
-								),
-								name: 'Type',
-							},
-						])}
+						menuItems={filterFields}
 						trigger={
 							<ClayButton borderless className="btn-secondary">
 								<span className="inline-item inline-item-before">
@@ -246,15 +299,16 @@ const MDFClaimList = () => {
 				</div>
 
 				<div className="mb-2 mb-lg-0">
-					{!!dataCSV.items?.length && (
-						<CSVLink
-							className="btn btn-secondary mr-2"
-							data={dataCSV.items}
-							filename="MDF Claim.csv"
-						>
-							Export MDF Claim
-						</CSVLink>
-					)}
+					{!!dataCSV.items?.length &&
+						actions?.includes(PermissionActionType.EXPORT) && (
+							<CSVLink
+								className="btn btn-secondary mr-2"
+								data={dataCSV.items}
+								filename="MDF Claim.csv"
+							>
+								Export MDF Claim
+							</CSVLink>
+						)}
 				</div>
 			</TableHeader>
 

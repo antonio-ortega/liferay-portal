@@ -45,24 +45,14 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 			>
 
 				<%
-				String messageUserName = "anonymous";
-
-				if (!message.isAnonymous()) {
-					messageUserName = message.getUserName();
-				}
-
-				Date modifiedDate = message.getModifiedDate();
-
-				String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true);
-
-				String userDisplayText = LanguageUtil.format(request, "x-modified-x-ago", new Object[] {messageUserName, modifiedDateDescription});
+				String userDisplayText = mbDisplayContext.getModifiedLabel(message);
 				%>
 
 				<span class="message-user-display text-default" title="<%= HtmlUtil.escapeAttribute(userDisplayText) %>">
 					<%= HtmlUtil.escape(userDisplayText) %>
 				</span>
 
-				<h4 title="<%= HtmlUtil.escape(message.getSubject()) %>">
+				<div class="h4" title="<%= HtmlUtil.escape(message.getSubject()) %>">
 					<c:choose>
 						<c:when test="<%= showPermanentLink %>">
 							<a href="#<portlet:namespace />message_<%= message.getMessageId() %>" title="<liferay-ui:message key="permanent-link-to-this-item" />">
@@ -77,7 +67,7 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 					<c:if test="<%= message.isAnswer() %>">
 						(<liferay-ui:message key="answer[noun]" />)
 					</c:if>
-				</h4>
+				</div>
 
 				<%
 				int messageCount = 0;
@@ -143,12 +133,15 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 							/>
 						</span>
 					</c:if>
+				</c:if>
 
-					<c:if test="<%= !message.isApproved() %>">
-						<span class="h5 text-default">
-							<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= message.getStatus() %>" />
-						</span>
-					</c:if>
+				<c:if test="<%= !message.isApproved() %>">
+					<span class="h5 text-default">
+						<liferay-portal-workflow:status
+							showStatusLabel="<%= false %>"
+							status="<%= message.getStatus() %>"
+						/>
+					</span>
 				</c:if>
 
 				<c:if test="<%= enableFlags || enableRatings %>">

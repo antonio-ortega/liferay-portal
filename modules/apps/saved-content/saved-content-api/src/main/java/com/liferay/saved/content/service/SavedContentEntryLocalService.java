@@ -5,11 +5,13 @@
 
 package com.liferay.saved.content.service;
 
+import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -19,12 +21,14 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.saved.content.exception.NoSuchSavedContentEntryException;
 import com.liferay.saved.content.model.SavedContentEntry;
 
 import java.io.Serializable;
@@ -58,6 +62,11 @@ public interface SavedContentEntryLocalService
 	 *
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.saved.content.service.impl.SavedContentEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the saved content entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SavedContentEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
+	@Indexable(type = IndexableType.REINDEX)
+	public SavedContentEntry addSavedContentEntry(
+			long userId, long groupId, String className, long classPK,
+			ServiceContext serviceContext)
+		throws PortalException;
 
 	/**
 	 * Adds the saved content entry to the database. Also notifies the appropriate model listeners.
@@ -94,6 +103,11 @@ public interface SavedContentEntryLocalService
 	@Override
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
+
+	public void deleteSavedContentEntries(
+		long groupId, long classNameId, long classPK);
+
+	public void deleteSavedContentEntriesByUserId(long userId);
 
 	/**
 	 * Deletes the saved content entry with the primary key from the database. Also notifies the appropriate model listeners.
@@ -200,7 +214,26 @@ public interface SavedContentEntryLocalService
 	public SavedContentEntry fetchSavedContentEntry(long savedContentEntryId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SavedContentEntry fetchSavedContentEntry(
+		long userId, long groupId, String className, long classPK);
+
+	/**
+	 * Returns the saved content entry matching the UUID and group.
+	 *
+	 * @param uuid the saved content entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching saved content entry, or <code>null</code> if a matching saved content entry could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SavedContentEntry fetchSavedContentEntryByUuidAndGroupId(
+		String uuid, long groupId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
+		PortletDataContext portletDataContext);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
@@ -235,6 +268,32 @@ public interface SavedContentEntryLocalService
 	public List<SavedContentEntry> getSavedContentEntries(int start, int end);
 
 	/**
+	 * Returns all the saved content entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the saved content entries
+	 * @param companyId the primary key of the company
+	 * @return the matching saved content entries, or an empty list if no matches were found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<SavedContentEntry> getSavedContentEntriesByUuidAndCompanyId(
+		String uuid, long companyId);
+
+	/**
+	 * Returns a range of saved content entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the saved content entries
+	 * @param companyId the primary key of the company
+	 * @param start the lower bound of the range of saved content entries
+	 * @param end the upper bound of the range of saved content entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the range of matching saved content entries, or an empty list if no matches were found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<SavedContentEntry> getSavedContentEntriesByUuidAndCompanyId(
+		String uuid, long companyId, int start, int end,
+		OrderByComparator<SavedContentEntry> orderByComparator);
+
+	/**
 	 * Returns the number of saved content entries.
 	 *
 	 * @return the number of saved content entries
@@ -251,6 +310,24 @@ public interface SavedContentEntryLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SavedContentEntry getSavedContentEntry(long savedContentEntryId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SavedContentEntry getSavedContentEntry(
+			long userId, long groupId, String className, long classPK)
+		throws NoSuchSavedContentEntryException;
+
+	/**
+	 * Returns the saved content entry matching the UUID and group.
+	 *
+	 * @param uuid the saved content entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching saved content entry
+	 * @throws PortalException if a matching saved content entry could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SavedContentEntry getSavedContentEntryByUuidAndGroupId(
+			String uuid, long groupId)
 		throws PortalException;
 
 	/**

@@ -8,14 +8,14 @@ import ClayIcon from '@clayui/icon';
 import ClayPopover from '@clayui/popover';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
-import React, {ReactNode, useState} from 'react';
+import React, {useState} from 'react';
 
 import FieldFeedback from './FieldFeedback';
 
 import './FieldBase.scss';
 
 interface FieldBaseProps {
-	children: ReactNode;
+	children: React.ReactNode;
 	className?: string;
 	disabled?: boolean;
 	errorMessage?: string;
@@ -121,6 +121,7 @@ export default function FieldBase({
 				<FieldFeedback
 					errorMessage={errorMessage}
 					helpMessage={helpMessage}
+					id={`${id}fieldFeedback`}
 					warningMessage={warningMessage}
 				/>
 			)}

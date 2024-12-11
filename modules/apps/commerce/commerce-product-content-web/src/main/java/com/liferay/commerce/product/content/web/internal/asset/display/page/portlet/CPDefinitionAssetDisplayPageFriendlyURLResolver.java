@@ -16,6 +16,11 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.asset.util.LinkedAssetEntryIdsUtil;
+import com.liferay.commerce.constants.CommerceWebKeys;
+import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.context.CommerceContextFactory;
+import com.liferay.commerce.context.CommerceContextThreadLocal;
+import com.liferay.commerce.context.CommerceGroupThreadLocal;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.configuration.CPDisplayLayoutConfiguration;
 import com.liferay.commerce.product.constants.CPConstants;
@@ -62,8 +67,8 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
-import com.liferay.portal.kernel.util.InheritableMap;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -185,8 +190,7 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 		}
 
 		return _getBasicLayoutURL(
-			groupId, privateLayout, mainPath, params, requestContext,
-			cpDefinition);
+			groupId, privateLayout, mainPath, requestContext, cpDefinition);
 	}
 
 	@Override
@@ -300,8 +304,7 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 
 	private String _getBasicLayoutURL(
 			long groupId, boolean privateLayout, String mainPath,
-			Map<String, String[]> params, Map<String, Object> requestContext,
-			CPDefinition cpDefinition)
+			Map<String, Object> requestContext, CPDefinition cpDefinition)
 		throws PortalException {
 
 		HttpServletRequest httpServletRequest =
@@ -318,17 +321,13 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 
 		String layoutActualURL = _portal.getLayoutActualURL(layout, mainPath);
 
-		InheritableMap<String, String[]> actualParams = new InheritableMap<>();
-
-		if (params != null) {
-			actualParams.setParentMap(params);
-		}
-
-		actualParams.put("p_p_lifecycle", new String[] {"0"});
-		actualParams.put("p_p_mode", new String[] {"view"});
-
 		String queryString = HttpComponentsUtil.parameterMapToString(
-			actualParams, false);
+			HashMapBuilder.put(
+				"p_p_lifecycle", new String[] {"0"}
+			).put(
+				"p_p_mode", new String[] {"view"}
+			).build(),
+			false);
 
 		if (layoutActualURL.contains(StringPool.QUESTION)) {
 			layoutActualURL =
@@ -381,6 +380,25 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 	private long _getCommerceAccountId(
 			long groupId, HttpServletRequest httpServletRequest)
 		throws PortalException {
+
+		CommerceContext commerceContext = _commerceContextFactory.create(
+			httpServletRequest);
+
+		httpServletRequest.setAttribute(
+			CommerceWebKeys.COMMERCE_CONTEXT, commerceContext);
+
+		try {
+			CommerceContextThreadLocal.set(commerceContext);
+
+			CommerceGroupThreadLocal.set(
+				_groupLocalService.fetchGroup(
+					commerceContext.getCommerceChannelGroupId()));
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
 
 		long commerceAccountId = AccountConstants.ACCOUNT_ENTRY_ID_GUEST;
 
@@ -550,6 +568,9 @@ public class CPDefinitionAssetDisplayPageFriendlyURLResolver
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference
+	private CommerceContextFactory _commerceContextFactory;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

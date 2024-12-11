@@ -5,6 +5,7 @@ import URLConstants from 'shared/util/url-constants';
 import {GEOLOCATION_FRAGMENT} from 'shared/queries/fragments';
 import {gql} from 'apollo-boost';
 import {graphql} from '@apollo/react-hoc';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {withLocationsCard} from 'cerebro-shared/hocs/LocationsCard';
 
 const GEOLOCATION_QUERY = gql`
@@ -70,6 +71,7 @@ export default withLocationsCard(
 			'learn-more-about-views-by-location'
 		),
 		documentationUrl: URLConstants.SitesDashboardWebContentViewsByLocation,
+		reportContainer: ReportContainer.ViewsByLocationCard,
 		title: Liferay.Language.get('there-are-no-views-on-the-selected-period')
 	}
 );

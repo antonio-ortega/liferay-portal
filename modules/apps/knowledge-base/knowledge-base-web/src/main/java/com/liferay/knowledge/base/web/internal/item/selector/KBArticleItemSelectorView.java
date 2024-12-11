@@ -260,8 +260,11 @@ public class KBArticleItemSelectorView
 					WorkflowConstants.STATUS_APPROVED,
 					entriesSearchContainer.getStart(),
 					entriesSearchContainer.getEnd(),
-					new KBArticlePriorityComparator(true)),
-				_kbArticleLocalService.getKBArticlesCount());
+					KBArticlePriorityComparator.getInstance(true)),
+				_kbArticleLocalService.getKBArticlesCount(
+					themeDisplay.getScopeGroupId(),
+					KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+					WorkflowConstants.STATUS_APPROVED));
 
 			return entriesSearchContainer;
 		}

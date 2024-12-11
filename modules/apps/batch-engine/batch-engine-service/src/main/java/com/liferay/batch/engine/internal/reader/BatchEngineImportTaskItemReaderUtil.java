@@ -6,6 +6,7 @@
 package com.liferay.batch.engine.internal.reader;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,9 +17,13 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.liferay.batch.engine.action.ItemReaderPostAction;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.IOException;
@@ -26,11 +31,16 @@ import java.io.Serializable;
 
 import java.lang.reflect.Field;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Ivica Cardic
@@ -46,8 +56,25 @@ public class BatchEngineImportTaskItemReaderUtil {
 		Map<String, Serializable> extendedProperties = new HashMap<>();
 		T item = itemClass.newInstance();
 
+		boolean keepCreatorInfo = false;
+
+		if (StringUtil.equals(
+				batchEngineImportTask.getParameterValue(
+					"importCreatorStrategy"),
+				"KEEP_CREATOR")) {
+
+			keepCreatorInfo = true;
+		}
+
+		Set<String> restrictedFieldNames = _getRestrictedFieldNames(
+			batchEngineImportTask);
+
 		for (Map.Entry<String, Object> entry : fieldNameValueMap.entrySet()) {
 			String name = entry.getKey();
+
+			if (restrictedFieldNames.contains(name)) {
+				continue;
+			}
 
 			Field field = null;
 
@@ -65,7 +92,8 @@ public class BatchEngineImportTaskItemReaderUtil {
 			if (field != null) {
 				field.setAccessible(true);
 
-				ObjectMapper objectMapper = _getObjectMapper(field);
+				ObjectMapper objectMapper = _getObjectMapper(
+					field, keepCreatorInfo);
 
 				field.set(
 					item,
@@ -135,14 +163,84 @@ public class BatchEngineImportTaskItemReaderUtil {
 					targetFieldNameValueMap.put(
 						targetFieldName, entry.getValue());
 				}
+
+				continue;
+			}
+
+			String[] fieldNameParts = StringUtil.split(
+				entry.getKey(), StringPool.PERIOD);
+
+			targetFieldName = (String)fieldNameMappingMap.get(
+				fieldNameParts[0]);
+
+			if (Validator.isNull(targetFieldName)) {
+				continue;
+			}
+
+			Matcher multiselectPicklistMatcher =
+				_multiselectPicklistPattern.matcher(fieldNameParts[1]);
+
+			if (multiselectPicklistMatcher.matches()) {
+				if (fieldNameParts[1].startsWith("name_")) {
+					continue;
+				}
+
+				List<Object> list =
+					(List<Object>)targetFieldNameValueMap.computeIfAbsent(
+						targetFieldName, key -> new ArrayList<>());
+
+				list.add(entry.getValue());
+
+				continue;
+			}
+
+			Map<String, Object> map =
+				(Map<String, Object>)targetFieldNameValueMap.computeIfAbsent(
+					targetFieldName, key -> new HashMap<>());
+
+			for (int i = 1; i < fieldNameParts.length; i++) {
+				if ((fieldNameParts.length - 1) > i) {
+					map = (Map<String, Object>)map.computeIfAbsent(
+						fieldNameParts[i], key -> new HashMap<>());
+
+					continue;
+				}
+
+				map.put(fieldNameParts[i], entry.getValue());
 			}
 		}
 
 		return targetFieldNameValueMap;
 	}
 
-	private static ObjectMapper _getObjectMapper(Field field)
+	public abstract static class CreatorMixin {
+
+		@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+		public String externalReferenceCode;
+
+		@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+		public Long id;
+
+	}
+
+	private static ObjectMapper _getObjectMapper(
+			Field field, boolean keepCreatorInfo)
 		throws IllegalAccessException, InstantiationException {
+
+		if (keepCreatorInfo && StringUtil.equals(field.getName(), "creator")) {
+			return new ObjectMapper() {
+				{
+					addMixIn(field.getType(), CreatorMixin.class);
+
+					SimpleModule simpleModule = new SimpleModule();
+
+					simpleModule.addDeserializer(
+						Map.class, new MapStdDeserializer());
+
+					registerModule(simpleModule);
+				}
+			};
+		}
 
 		JsonDeserialize[] jsonDeserializes = field.getAnnotationsByType(
 			JsonDeserialize.class);
@@ -167,8 +265,35 @@ public class BatchEngineImportTaskItemReaderUtil {
 		};
 	}
 
+	private static Set<String> _getRestrictedFieldNames(
+		BatchEngineImportTask batchEngineImportTask) {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-29367")) {
+			return new HashSet<>();
+		}
+
+		Map<String, Serializable> parameters =
+			batchEngineImportTask.getParameters();
+
+		if (parameters == null) {
+			return new HashSet<>();
+		}
+
+		String restrictedFieldNames = MapUtil.getString(
+			parameters, "restrictedFieldNames");
+
+		if (Validator.isBlank(restrictedFieldNames)) {
+			return new HashSet<>();
+		}
+
+		return SetUtil.fromArray(StringUtil.split(restrictedFieldNames));
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		BatchEngineImportTaskItemReaderUtil.class);
+
+	private static final Pattern _multiselectPicklistPattern = Pattern.compile(
+		"key_\\d+|name_\\d+");
 
 	private static final ObjectMapper _objectMapper = new ObjectMapper() {
 		{

@@ -4,84 +4,172 @@
  */
 
 import {Heading} from '@clayui/core';
-import ClayForm, {ClayInput, ClaySelectWithOption} from '@clayui/form';
+import ClayForm, {ClayCheckbox} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import {useState} from 'react';
+import {useParams} from 'react-router-dom';
 
 import Jethr0Breadcrumbs from '../../components/Jethr0Breadcrumbs/Jethr0Breadcrumbs';
 import Jethr0ButtonsRow from '../../components/Jethr0ButtonsRow/Jethr0ButtonsRow';
 import Jethr0Card from '../../components/Jethr0Card/Jethr0Card';
+import Jethr0Input from '../../components/Jethr0Input/Jethr0Input';
+import Jethr0JobFieldLabel from '../../components/Jethr0JobFieldLabel/Jethr0JobFieldLabel';
+import Jethr0JobParameterFields from '../../components/Jethr0JobParameterFields/Jethr0JobParameterFields';
 import Jethr0NavigationBar from '../../components/Jethr0NavigationBar/Jethr0NavigationBar';
-import postSpringBootData from '../../services/postSpringBootData';
-import useSpringBootData from '../../services/useSpringBootData';
+import Jethr0SelectWithOption from '../../components/Jethr0SelectWithOption/Jethr0SelectWithOption';
+import {getJobDefinitions} from '../../objects/jobdefinitions/JobDefinitionUtil';
+import {createJob, getJobParameter} from '../../objects/jobs/JobUtil';
+import {getRoutineById} from '../../objects/routines/RoutineUtil';
 
 function CreateJobPage() {
-	const [jenkinsGitHubURL, setJenkinsGitHubURL] = useState(null);
+	const [jobBlessed, setJobBlessed] = useState(null);
+	const [jobDefinitionKey, setJobDefinitionKey] = useState(null);
+	const [jobDefinitions, setJobDefinitions] = useState(null);
 	const [jobName, setJobName] = useState(null);
+	const [jobParameters, setJobParameters] = useState(null);
 	const [jobPriority, setJobPriority] = useState(4);
-	const [jobTypeKey, setJobTypeKey] = useState('portalPullRequestSF');
-	const [jobTypes, setJobTypes] = useState(null);
-	const [portalPullRequestURL, setPortalPullRequestURL] = useState(null);
-	const [testSuiteName, setTestSuiteName] = useState('sf');
+	const [routine, setRoutine] = useState(null);
+	const {routineId} = useParams();
 
 	function redirectToJobPage(data) {
-		const json = JSON.parse(data);
-
-		if (json !== null && json.id !== null) {
-			window.location.replace('/#/jobs/' + json.id);
+		if (data !== null && data.id !== null) {
+			window.location.replace('/#/jobs/' + data.id);
 		}
 	}
 
-	function setJobNameFromJobTypeKey(jobTypeKey) {
-		for (const jobType of jobTypes) {
-			if (jobType.key === jobTypeKey) {
-				setJobName(jobType.name);
+	if (!jobDefinitions) {
+		getJobDefinitions({setJobDefinitions});
 
-				break;
-			}
+		return;
+	}
+
+	if (routineId && !routine) {
+		getRoutineById({id: routineId, setRoutine});
+
+		return;
+	}
+
+	if (!jobDefinitionKey) {
+		if (routine?.jobType.key) {
+			setJobDefinitionKey(routine.jobType.key);
+
+			return;
+		}
+
+		setJobDefinitionKey('default');
+
+		return;
+	}
+
+	if (!jobName && routine?.jobName) {
+		setJobName(routine?.jobName);
+
+		return;
+	}
+
+	if (!jobPriority && routine?.jobPriority) {
+		setJobPriority(routine?.jobPriority);
+
+		return;
+	}
+
+	let jobDefinition = null;
+
+	for (const candidateJobDefinition of jobDefinitions) {
+		if (candidateJobDefinition.key === jobDefinitionKey) {
+			jobDefinition = candidateJobDefinition;
 		}
 	}
 
-	const breadcrumbs = [
+	if (!jobParameters) {
+		const defaultJobParameters = [];
+
+		if (jobDefinition?.jobDefinitionParameters) {
+			jobDefinition.jobDefinitionParameters.forEach(
+				(jobDefinitionParameter) => {
+					let defaultJobParameter;
+
+					if (jobDefinitionParameter.valueDefault) {
+						defaultJobParameter = {
+							key: jobDefinitionParameter.key,
+							value: jobDefinitionParameter.valueDefault,
+						};
+					}
+
+					if (routine?.jobParameters) {
+						const routineJobParameters = JSON.parse(
+							routine?.jobParameters
+						);
+
+						const routineJobParameter = getJobParameter({
+							jobParameters: routineJobParameters,
+							key: jobDefinitionParameter.key,
+						});
+
+						if (
+							routineJobParameter &&
+							routineJobParameter.value !== ''
+						) {
+							defaultJobParameter = {
+								fromRoutine: true,
+								key: jobDefinitionParameter.key,
+								value: routineJobParameter.value,
+							};
+						}
+					}
+
+					if (defaultJobParameter) {
+						defaultJobParameters.push(defaultJobParameter);
+					}
+				}
+			);
+		}
+
+		setJobParameters(defaultJobParameters);
+
+		return;
+	}
+
+	let breadcrumbs = [
 		{active: false, link: '/', name: 'Home'},
 		{active: false, link: '/jobs', name: 'Jobs'},
 		{active: true, link: '/jobs/create', name: 'Create Job'},
 	];
 
-	useSpringBootData({
-		setData: setJobTypes,
-		urlPath: '/jobs/types',
-	});
-
-	let jobTypesOptions = [];
-
-	if (jobTypes !== null) {
-		jobTypesOptions = jobTypes.map((jobType) => {
-			return {
-				label: jobType.name,
-				value: jobType.key,
-			};
-		});
-
-		if (jobName === null && jobTypeKey !== null) {
-			setJobNameFromJobTypeKey(jobTypeKey);
-		}
+	if (routine) {
+		breadcrumbs = [
+			{active: false, link: '/', name: 'Home'},
+			{active: false, link: '/routines', name: 'Routines'},
+			{
+				active: false,
+				link: '/routines/' + routine.id,
+				name: routine.name,
+			},
+			{active: true, link: '/jobs/create', name: 'Create Job'},
+		];
 	}
 
+	const jobTypeOptions = jobDefinitions.map((jobDefinition) => {
+		return {
+			label: jobDefinition.label,
+			value: jobDefinition.key,
+		};
+	});
+
 	const jobData = {
-		jenkinsGitHubURL,
+		blessed: jobBlessed,
 		name: jobName,
-		portalPullRequestURL,
+		parameters: JSON.stringify(jobParameters),
 		priority: jobPriority,
-		state: 'opened',
-		testSuiteName,
-		type: jobTypeKey,
+		r_routineToJobs_c_routineId: routine?.id,
+		state: 'queued',
+		type: jobDefinitionKey,
 	};
 
 	return (
 		<ClayLayout.Container>
 			<Jethr0Card>
-				<Jethr0NavigationBar active="Jobs" />
+				<Jethr0NavigationBar active={routine ? 'Routines' : 'Jobs'} />
 
 				<Jethr0Breadcrumbs breadcrumbs={breadcrumbs} />
 
@@ -90,11 +178,31 @@ function CreateJobPage() {
 				</Heading>
 
 				<ClayForm.Group>
-					<label htmlFor="buildPriority">Build Priority</label>
+					<Jethr0JobFieldLabel
+						labelKey="jobBlessed"
+						labelName="Job Blessed"
+					/>
 
-					<ClayInput
-						disabled="true"
-						id="buildPriority"
+					<ClayCheckbox
+						id="jobBlessed"
+						onChange={(event) => {
+							setJobBlessed(event.target.checked);
+						}}
+						value={jobBlessed}
+					/>
+				</ClayForm.Group>
+
+				<ClayForm.Group>
+					<Jethr0JobFieldLabel
+						fromRoutine={routine?.jobPriority ? true : false}
+						labelKey="jobPriority"
+						labelName="Job Priority"
+						routine={routine}
+					/>
+
+					<Jethr0Input
+						disabled={routine?.jobPriority ? true : false}
+						id="jobPriority"
 						onChange={(event) => {
 							setJobPriority(event.target.value);
 						}}
@@ -104,24 +212,35 @@ function CreateJobPage() {
 				</ClayForm.Group>
 
 				<ClayForm.Group>
-					<label htmlFor="jobType">Job Type</label>
+					<Jethr0JobFieldLabel
+						fromRoutine={routine?.jobType ? true : false}
+						labelKey="jobType"
+						labelName="Job Type"
+						routine={routine}
+					/>
 
-					<ClaySelectWithOption
-						aria-label="Job Types"
+					<Jethr0SelectWithOption
+						ariaLabel="Job Types"
+						disabled={routine?.jobType ? true : false}
 						id="jobType"
 						onChange={(event) => {
-							setJobNameFromJobTypeKey(event.target.value);
-							setJobTypeKey(event.target.value);
+							setJobDefinitionKey(event.target.value);
 						}}
-						options={jobTypesOptions}
-						value={jobTypeKey}
+						options={jobTypeOptions}
+						value={jobDefinitionKey}
 					/>
 				</ClayForm.Group>
 
 				<ClayForm.Group>
-					<label htmlFor="jobName">Name</label>
+					<Jethr0JobFieldLabel
+						fromRoutine={routine?.jobName ? true : false}
+						labelKey="jobName"
+						labelName="Job Name"
+						routine={routine}
+					/>
 
-					<ClayInput
+					<Jethr0Input
+						disabled={routine?.jobName ? true : false}
 						id="jobName"
 						onChange={(event) => {
 							setJobName(event.target.value);
@@ -132,47 +251,14 @@ function CreateJobPage() {
 					/>
 				</ClayForm.Group>
 
-				<ClayForm.Group>
-					<label htmlFor="jenkinsGitHubURL">Jenkins GitHub URL</label>
-
-					<ClayInput
-						id="jenkinsGitHubURL"
-						onChange={(event) => {
-							setJenkinsGitHubURL(event.target.value);
-						}}
-						placeholder="Insert your Jenkins GitHub URL here"
-						type="text"
-					/>
-				</ClayForm.Group>
-
-				<ClayForm.Group>
-					<label htmlFor="portalPullRequestURL">
-						Portal Pull Request URL
-					</label>
-
-					<ClayInput
-						id="portalPullRequestURL"
-						onChange={(event) => {
-							setPortalPullRequestURL(event.target.value);
-						}}
-						placeholder="Insert your Portal Pull Request URL here"
-						type="text"
-					/>
-				</ClayForm.Group>
-
-				<ClayForm.Group>
-					<label htmlFor="testSuiteName">Test Suite Name</label>
-
-					<ClayInput
-						id="testSuiteName"
-						onChange={(event) => {
-							setTestSuiteName(event.target.value);
-						}}
-						placeholder="Insert your Test Suite Name here"
-						type="text"
-						value={testSuiteName}
-					/>
-				</ClayForm.Group>
+				<Jethr0JobParameterFields
+					jobDefinitionParameters={
+						jobDefinition.jobDefinitionParameters
+					}
+					jobParameters={jobParameters}
+					routine={routine}
+					setJobParameters={setJobParameters}
+				/>
 
 				<Jethr0ButtonsRow
 					buttons={[
@@ -183,25 +269,12 @@ function CreateJobPage() {
 						},
 						{
 							onClick: () => {
-								postSpringBootData({
+								createJob({
 									data: jobData,
 									redirect: redirectToJobPage,
-									urlPath: '/jobs/create',
 								});
 							},
 							title: 'Save',
-						},
-						{
-							onClick: () => {
-								jobData.state = 'queued';
-
-								postSpringBootData({
-									data: jobData,
-									redirect: redirectToJobPage,
-									urlPath: '/jobs/create',
-								});
-							},
-							title: 'Save & Start',
 						},
 					]}
 				/>

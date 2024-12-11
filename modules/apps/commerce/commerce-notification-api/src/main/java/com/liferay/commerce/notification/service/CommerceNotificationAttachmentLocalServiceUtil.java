@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -26,8 +27,10 @@ import java.util.List;
  *
  * @author Alessio Antonio Rendina
  * @see CommerceNotificationAttachmentLocalService
+ * @deprecated As of Cavanaugh (7.4.x)
  * @generated
  */
+@Deprecated
 public class CommerceNotificationAttachmentLocalServiceUtil {
 
 	/*
@@ -417,15 +420,12 @@ public class CommerceNotificationAttachmentLocalServiceUtil {
 	}
 
 	public static CommerceNotificationAttachmentLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CommerceNotificationAttachmentLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile CommerceNotificationAttachmentLocalService _service;
+	private static final Snapshot<CommerceNotificationAttachmentLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceNotificationAttachmentLocalServiceUtil.class,
+			CommerceNotificationAttachmentLocalService.class);
 
 }

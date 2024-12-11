@@ -31,25 +31,6 @@ export default class CustomStringInput extends React.Component<ICustomStringInpu
 		autocomplete: true
 	};
 
-	_completedAnalytics = false;
-
-	componentDidUpdate() {
-		const {
-			id,
-			property: {entityName, type},
-			valid
-		} = this.props;
-
-		if (!id && valid && !this._completedAnalytics) {
-			this._completedAnalytics = true;
-
-			analytics.track('Dynamic Segment Creation - Completed Attribute', {
-				entityName,
-				type
-			});
-		}
-	}
-
 	getSelectedOperatorKey() {
 		const criterionIMap = this.props.value.getIn(
 			['criterionGroup', 'items', 0],
@@ -147,7 +128,6 @@ export default class CustomStringInput extends React.Component<ICustomStringInpu
 			className: getCN(className, {
 				'has-error': showError
 			}),
-			'data-testid': 'string-input',
 			onBlur: this.handleBlur,
 			value
 		};
@@ -165,15 +145,17 @@ export default class CustomStringInput extends React.Component<ICustomStringInpu
 
 					<Form.GroupItem shrink>
 						<Picker
-							items={TEXT_OPERATORS.map(({key, label}) => ({
-								label,
-								value: key
-							}))}
+							items={
+								TEXT_OPERATORS.map(({key, label}) => ({
+									key,
+									label
+								})) as {label: string; key: string}[]
+							}
 							onSelectionChange={this.handleOperatorChange}
 							selectedKey={selectedOperatorKey}
 						>
-							{({label, value}) => (
-								<Option key={value}>{label}</Option>
+							{({key, label}) => (
+								<Option key={key}>{label}</Option>
 							)}
 						</Picker>
 					</Form.GroupItem>
@@ -200,10 +182,12 @@ export default class CustomStringInput extends React.Component<ICustomStringInpu
 								)
 							) : (
 								<Picker
-									items={options.map(option => ({
-										label: option.label,
-										value: option.value
-									}))}
+									items={
+										options.map(({label, value}) => ({
+											label,
+											value
+										})) as {label: string; value: string}[]
+									}
 									onBlur={this.handleBlur}
 									onSelectionChange={this.handleValueChange}
 									selectedKey={value}

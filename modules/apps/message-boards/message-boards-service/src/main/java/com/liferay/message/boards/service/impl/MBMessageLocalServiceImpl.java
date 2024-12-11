@@ -51,7 +51,6 @@ import com.liferay.message.boards.social.MBActivityKeys;
 import com.liferay.message.boards.util.comparator.MessageCreateDateComparator;
 import com.liferay.message.boards.util.comparator.MessageThreadComparator;
 import com.liferay.petra.lang.SafeCloseable;
-import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.petra.string.StringBundler;
@@ -435,7 +434,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		body = SanitizerUtil.sanitize(
 			user.getCompanyId(), groupId, userId, MBMessage.class.getName(),
-			messageId, ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL, body,
+			messageId, "text/" + format, Sanitizer.MODE_ALL, body,
 			HashMapBuilder.<String, Object>put(
 				"discussion",
 				() -> {
@@ -853,7 +852,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 							WorkflowConstants.STATUS_APPROVED) {
 
 					MessageCreateDateComparator comparator =
-						new MessageCreateDateComparator(true);
+						MessageCreateDateComparator.getInstance(true);
 
 					MBMessage[] prevAndNextMessages =
 						mbMessagePersistence.findByT_S_PrevAndNext(
@@ -992,7 +991,10 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 	public MBMessage fetchMBMessageByUrlSubject(
 		long groupId, String urlSubject) {
 
-		return mbMessagePersistence.fetchByG_US(groupId, urlSubject);
+		return mbMessagePersistence.fetchByG_US(
+			groupId,
+			_friendlyURLNormalizer.normalizeWithEncodingPeriodsAndSlashes(
+				urlSubject));
 	}
 
 	@Override
@@ -1157,9 +1159,12 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 						subject, new ServiceContext());
 				}
 				else {
+					Group group = _groupLocalService.fetchGroup(groupId);
+
 					try (SafeCloseable safeCloseable =
 							CTCollectionThreadLocal.
-								setProductionModeWithSafeCloseable()) {
+								setCTCollectionIdWithSafeCloseable(
+									group.getCtCollectionId())) {
 
 						message = mbMessageLocalService.addDiscussionMessage(
 							null, userId, null, groupId, className, classPK, 0,
@@ -1330,9 +1335,8 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			MBMessageTable.INSTANCE
 		).where(
 			MBMessageTable.INSTANCE.modifiedDate.in(
-				DSLQueryFactoryUtil.select(
-					DSLFunctionFactoryUtil.max(
-						MBMessageTable.INSTANCE.modifiedDate)
+				DSLQueryFactoryUtil.selectDistinct(
+					MBMessageTable.INSTANCE.modifiedDate
 				).from(
 					aliasMBMessageTable
 				).where(
@@ -1388,9 +1392,8 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 				MBMessageTable.INSTANCE
 			).where(
 				MBMessageTable.INSTANCE.modifiedDate.in(
-					DSLQueryFactoryUtil.select(
-						DSLFunctionFactoryUtil.max(
-							MBMessageTable.INSTANCE.modifiedDate)
+					DSLQueryFactoryUtil.selectDistinct(
+						MBMessageTable.INSTANCE.modifiedDate
 					).from(
 						aliasMBMessageTable
 					).where(
@@ -2180,7 +2183,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		HttpServletRequest httpServletRequest = serviceContext.getRequest();
 
-		if (httpServletRequest == null) {
+		if ((httpServletRequest == null) || message.isDiscussion()) {
 			if (Validator.isNull(serviceContext.getLayoutFullURL())) {
 				return StringPool.BLANK;
 			}
@@ -2223,7 +2226,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		MBMessage message = mbMessagePersistence.findByC_C_First(
 			_classNameLocalService.getClassNameId(className), classPK,
-			new MessageCreateDateComparator(true));
+			MessageCreateDateComparator.getInstance(true));
 
 		return message.getMessageId();
 	}
@@ -2256,7 +2259,6 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		subscriptionSender.setBulk(PropsValues.MESSAGE_BOARDS_EMAIL_BULK);
 		subscriptionSender.setClassName(message.getModelClassName());
 		subscriptionSender.setClassPK(message.getMessageId());
-		subscriptionSender.setCompanyId(message.getCompanyId());
 		subscriptionSender.setContextAttribute(
 			"[$MESSAGE_BODY$]", messageBody, false);
 		subscriptionSender.setContextAttribute(
@@ -2352,8 +2354,16 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 		MBMessage mbMessage = mbMessagePersistence.fetchByG_US(
 			groupId, uniqueUrlSubject);
 
+		if (mbMessage == null) {
+			return uniqueUrlSubject;
+		}
+
+		if (!StringUtil.endsWith(uniqueUrlSubject, StringPool.DASH)) {
+			urlSubject = urlSubject + StringPool.DASH;
+		}
+
 		for (int i = 1; mbMessage != null; i++) {
-			uniqueUrlSubject = urlSubject + StringPool.DASH + i;
+			uniqueUrlSubject = urlSubject + i;
 
 			mbMessage = mbMessagePersistence.fetchByG_US(
 				groupId, uniqueUrlSubject);
@@ -2375,8 +2385,9 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			subject = String.valueOf(id);
 		}
 		else {
-			subject = _friendlyURLNormalizer.normalizeWithPeriodsAndSlashes(
-				subject);
+			subject =
+				_friendlyURLNormalizer.normalizeWithEncodingPeriodsAndSlashes(
+					subject);
 		}
 
 		return ModelHintsUtil.trimString(
@@ -2414,7 +2425,6 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 			new MBDiscussionSubscriptionSender(
 				commentGroupServiceConfiguration);
 
-		subscriptionSender.setCompanyId(message.getCompanyId());
 		subscriptionSender.setClassName(MBDiscussion.class.getName());
 		subscriptionSender.setClassPK(mbDiscussion.getDiscussionId());
 		subscriptionSender.setContextAttribute(
@@ -2791,7 +2801,7 @@ public class MBMessageLocalServiceImpl extends MBMessageLocalServiceBaseImpl {
 
 		body = SanitizerUtil.sanitize(
 			message.getCompanyId(), message.getGroupId(), userId,
-			MBMessage.class.getName(), messageId, ContentTypes.TEXT_HTML,
+			MBMessage.class.getName(), messageId, "text/" + message.getFormat(),
 			Sanitizer.MODE_ALL, body,
 			HashMapBuilder.<String, Object>put(
 				"discussion", message.isDiscussion()

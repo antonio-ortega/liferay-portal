@@ -8,6 +8,7 @@ package com.liferay.site.admin.web.internal.servlet.taglib.util;
 import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -18,16 +19,18 @@ import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.UserGroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.site.admin.web.internal.constants.SiteAdminPortletKeys;
 import com.liferay.site.admin.web.internal.display.context.SiteAdminDisplayContext;
 
@@ -154,11 +157,21 @@ public class SiteActionDropdownItemsProvider {
 	private UnsafeConsumer<DropdownItem, Exception>
 		_getAddChildSiteActionUnsafeConsumer() {
 
+		PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
+
 		return dropdownItem -> {
+			String backURLTitle = portletDisplay.getPortletDisplayName();
+
+			if (_group != null) {
+				backURLTitle = _group.getDescriptiveName(
+					_themeDisplay.getLocale());
+			}
+
 			dropdownItem.setHref(
-				_liferayPortletResponse.createRenderURL(),
-				"mvcRenderCommandName", "/site_admin/select_site_initializer",
-				"redirect", _themeDisplay.getURLCurrent(), "parentGroupId",
+				_liferayPortletResponse.createRenderURL(), "backURLTitle",
+				backURLTitle, "mvcRenderCommandName",
+				"/site_admin/select_site_initializer", "redirect",
+				_themeDisplay.getURLCurrent(), "parentGroupId",
 				String.valueOf(_group.getGroupId()));
 			dropdownItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "add-child-site"));
@@ -243,7 +256,7 @@ public class SiteActionDropdownItemsProvider {
 					"removeUserIds", _themeDisplay.getUserId()
 				).buildString());
 			dropdownItem.setLabel(
-				LanguageUtil.get(_httpServletRequest, "leave"));
+				LanguageUtil.get(_httpServletRequest, "leave-site"));
 		};
 	}
 
@@ -274,7 +287,21 @@ public class SiteActionDropdownItemsProvider {
 		_getViewSitePrivatePagesActionUnsafeConsumer() {
 
 		return dropdownItem -> {
-			dropdownItem.setHref(_group.getDisplayURL(_themeDisplay, true));
+			String href = _group.getDisplayURL(_themeDisplay, true, true);
+
+			if (Validator.isNull(href)) {
+				dropdownItem.setHref(
+					PortalUtil.getControlPanelPortletURL(
+						_httpServletRequest, _group,
+						LayoutAdminPortletKeys.GROUP_PAGES, 0, 0,
+						PortletRequest.RENDER_PHASE),
+					"privateLayout", Boolean.TRUE.toString());
+			}
+			else {
+				dropdownItem.setHref(href);
+			}
+
+			dropdownItem.setIcon("shortcut");
 			dropdownItem.setLabel(
 				LanguageUtil.format(
 					_httpServletRequest, "go-to-x",
@@ -288,8 +315,18 @@ public class SiteActionDropdownItemsProvider {
 		_getViewSitePublicPagesActionUnsafeConsumer() {
 
 		return dropdownItem -> {
-			dropdownItem.setHref(
-				_group.getDisplayURL(_themeDisplay, false, true));
+			String href = _group.getDisplayURL(_themeDisplay, false, true);
+
+			if (Validator.isNull(href)) {
+				href = String.valueOf(
+					PortalUtil.getControlPanelPortletURL(
+						_httpServletRequest, _group,
+						LayoutAdminPortletKeys.GROUP_PAGES, 0, 0,
+						PortletRequest.RENDER_PHASE));
+			}
+
+			dropdownItem.setHref(href);
+
 			dropdownItem.setIcon("shortcut");
 			dropdownItem.setLabel(
 				LanguageUtil.format(

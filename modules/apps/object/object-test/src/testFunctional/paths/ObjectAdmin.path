@@ -91,6 +91,11 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>EMPTY_STATE_MESSAGE</td>
+		<td>//*[contains(@class,'c-empty-state')]//*[contains(text(),'${key_text}')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>LABEL_DROPDOWN</td>
 		<td>//button[contains(@aria-controls,'clay-dropdown-menu-1')]//*[contains(@class,'lexicon-icon-ellipsis-v')]</td>
 		<td></td>
@@ -122,12 +127,12 @@
 	</tr>
 	<tr>
 		<td>ENTRY_CHOOSE_OPTION</td>
-		<td>//div[contains(text(),'Choose an Option') or contains(text(),'Escolha uma Opção')]</td>
+		<td>//button[contains(text(),'Choose an Option') or contains(text(),'Escolha uma Opção')]</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>ENTRY_LONG_VALUE_FIELD</td>
-		<td>xpath=(//input[contains(@name,'_com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_')])[7]</td>
+		<td>//input[contains(@class,'form-control') and contains(@name,'${key_objectFieldName}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -262,7 +267,7 @@
 	</tr>
 	<tr>
 		<td>SIDEBAR_ITEM</td>
-		<td>//*[contains(@class,'list-group-item')][*[normalize-space(text())='${folderLabel}']]</td>
+		<td>//*[contains(@class,'list-group-item')]//*[normalize-space(text())='${folderLabel}']</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -291,8 +296,8 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>RELATIONSHIPS_TYPE_DESCRIPTION</td>
-		<td>//div[text() = '${key_type}']/..//span[@class = 'text-small']</td>
+		<td>FIELD_DESCRIPTION</td>
+		<td>//span[contains(.,'${key_fieldLabel}')]//following-sibling::span[contains(.,'${key_descriptionLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -322,7 +327,7 @@
 	</tr>
 	<tr>
 		<td>OBJECT_STATUS</td>
-		<td>//*[@class='dnd-tr'][contains(.,'${key_label}')] //*[contains(@class,'label')]</td>
+		<td>//*[contains(@class, 'dnd-tr')][contains(.,'${key_label}')] //*[contains(@class,'status')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -372,7 +377,7 @@
 	</tr>
 	<tr>
 		<td>TAB_TYPE</td>
-		<td>//div[@class = 'form-group']//h4[@class = 'layout-tab__tab-types__title' and contains(text(),'${key_type}')]</td>
+		<td>//div[@class = 'form-group']//div[contains(@class,'layout-tab__tab-types__title') and contains(text(),'${key_type}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -411,18 +416,23 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>FOLDER_LABEL</td>
+		<td>//span[contains(@class,'view-object-definitions-title') and contains(text(),'${folderLabel}')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>VIEW_OBJECT_FIELD_LABEL</td>
-		<td>//div[(@class = 'dnd-td') and contains (.,'${key_fieldLabel}')]</td>
+		<td>//div[contains(@class, 'dnd-td') and contains (.,'${key_fieldLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>VIEW_OBJECT_FIELD_TYPE</td>
-		<td>//div[(@class = 'dnd-td') and contains (.,'${key_fieldType}')]</td>
+		<td>//div[contains(@class, 'dnd-td') and contains (.,'${key_fieldType}')]</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>VIEW_OBJECT_LAYOUT_LABEL</td>
-		<td>//div[(@class = 'dnd-td') and contains (.,'${key_layoutLabel}')]</td>
+		<td>//div[contains(@class, 'dnd-td') and contains (.,'${key_layoutLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -552,7 +562,7 @@
 	</tr>
 	<tr>
 		<td>VIEW_SELECTED_TAB_ON_OBJECT</td>
-		<td>//*[contains(@class,'nav-link')]//span[contains(@class,'navbar-text-truncate') and (contains(text(),'${key_selectedTab}'))]</td>
+		<td>//*[contains(@class,'nav-link')]//span[contains(text(),'${key_selectedTab}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -563,11 +573,6 @@
 	<tr>
 		<td>PLACEHOLDER_DELETE_RELATIONSHIP</td>
 		<td>//input[contains(@placeholder,'Confirm Relationship Name')]</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>DROPDOWN_DEFAULT_VALUE</td>
-		<td>//div[contains(@class,'form-group')]//label[contains(text(),'Default Value') or contains(text(),'Input as Value')]//..//div[contains(@class,'input-group-item')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -588,16 +593,6 @@
 	<tr>
 		<td>SELECT_CHOOSE_OPTION</td>
 		<td>//option[contains(text(),'${chooseOption}')]</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>CHOOSE_AN_OBJECT</td>
-		<td>//input[@placeholder="Choose an Object"]</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>CHOOSE_OBJECT_LABEL</td>
-		<td>//button[contains(text(),'${key_objectLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -627,12 +622,37 @@
 	</tr>
 	<tr>
 		<td>ENTRY_CHOOSE_OPTIONS_MULTIPICKLIST</td>
-		<td>//div[contains(text(),'Choose Options')]</td>
+		<td>//input[@placeholder='Choose Options']</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>PICKLIST_INPUT_AS_VALUE_OR_EXPRESSION</td>
 		<td>//div[contains(@class,'card-body')]//button[contains(text(), '${key_optionDefaulValue}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CLAY_GENERIC_BUTTON</td>
+		<td>//div[contains(@class,'form-group')][.//label[normalize-space(text())='${key_labelName}']]//button[@role='combobox']</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CLAY_GENERIC_DROPDOWN_ITEM</td>
+		<td>//button[contains(@class,'dropdown-item') and contains(@role,'option') and contains(.,'${key_optionName}') or contains(@role,'menuitem') and contains(.,'${key_optionName}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CLAY_GENERIC_SELECT_OPTION</td>
+		<td>//div[contains(@class,'card-body')]//button[contains(text(), '${key_currentOption}')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>GO_TO_FOLDER</td>
+		<td>//div[contains(@class, 'autofit-col-expand') and contains(., '${key_folderLabel}')]//*[contains(@title, 'Go to Folder')]</td>
+		<td></td>
+	</tr>
+	<tr>
+		<td>CLAY_MULTI_SELECT_INPUT</td>
+		<td>//label[contains(.,'${key_labelName}')]//..//div[contains(@class,'input-group-item')]//input</td>
 		<td></td>
 	</tr>
 </tbody>

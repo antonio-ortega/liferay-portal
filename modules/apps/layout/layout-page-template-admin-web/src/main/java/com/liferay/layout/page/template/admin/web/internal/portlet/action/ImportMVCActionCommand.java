@@ -90,13 +90,13 @@ public class ImportMVCActionCommand extends BaseMVCActionCommand {
 				Collections.emptyList();
 
 			try (SafeCloseable safeCloseable =
-					CheckUnlockedLayoutThreadLocal.setWithSafeCloseable(
-						false)) {
+					CheckUnlockedLayoutThreadLocal.
+						setCheckUnlockedLayoutWithSafeCloseable(false)) {
 
 				layoutsImporterResultEntries = _layoutsImporter.importFile(
 					themeDisplay.getUserId(), themeDisplay.getScopeGroupId(),
-					layoutPageTemplateCollectionId, file,
-					layoutsImportStrategy);
+					layoutPageTemplateCollectionId, file, layoutsImportStrategy,
+					true);
 			}
 
 			if (ListUtil.isEmpty(layoutsImporterResultEntries)) {

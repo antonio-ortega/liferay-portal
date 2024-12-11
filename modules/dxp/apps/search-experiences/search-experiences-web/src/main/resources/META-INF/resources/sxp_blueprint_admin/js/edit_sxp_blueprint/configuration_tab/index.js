@@ -39,7 +39,7 @@ function ConfigurationTab({
 	sortConfig,
 	touched,
 }) {
-	const {featureFlagLps153813, isCompanyAdmin} = useContext(ThemeContext);
+	const {isCompanyAdmin} = useContext(ThemeContext);
 
 	/**
 	 * Gets the `external` value using the `searchIndexes` array.
@@ -65,7 +65,7 @@ function ConfigurationTab({
 				: {
 						external: searchIndexes[0].external,
 						indexName: searchIndexes[0].name,
-				  }
+					}
 		);
 	};
 
@@ -222,7 +222,7 @@ function ConfigurationTab({
 						{_renderEditor('advancedConfig', advancedConfig)}
 					</ClayForm.Group>
 
-					{featureFlagLps153813 && isCompanyAdmin && (
+					{Liferay.FeatureFlags['LPS-153813'] && isCompanyAdmin && (
 						<ClayForm.Group>
 							<label>
 								{Liferay.Language.get('index-configuration')}

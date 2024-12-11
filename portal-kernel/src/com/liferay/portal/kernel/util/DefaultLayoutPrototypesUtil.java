@@ -43,7 +43,7 @@ public class DefaultLayoutPrototypesUtil {
 		}
 
 		Layout layout = LayoutLocalServiceUtil.addLayout(
-			group.getCreatorUserId(), group.getGroupId(),
+			null, group.getCreatorUserId(), group.getGroupId(),
 			layoutSet.isPrivateLayout(),
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, null, null, null,
 			null, LayoutConstants.TYPE_PORTLET, StringPool.BLANK, false,
@@ -81,17 +81,17 @@ public class DefaultLayoutPrototypesUtil {
 			Layout layout, String portletId, Map<String, String> preferences)
 		throws Exception {
 
-		PortletPreferences portletSetup =
+		PortletPreferences portletPreferences =
 			PortletPreferencesFactoryUtil.getLayoutPortletSetup(
 				layout, portletId);
 
 		for (Map.Entry<String, String> entry : preferences.entrySet()) {
-			portletSetup.setValue(entry.getKey(), entry.getValue());
+			portletPreferences.setValue(entry.getKey(), entry.getValue());
 		}
 
-		portletSetup.store();
+		portletPreferences.store();
 
-		return portletSetup;
+		return portletPreferences;
 	}
 
 	protected static void addResourcePermissions(

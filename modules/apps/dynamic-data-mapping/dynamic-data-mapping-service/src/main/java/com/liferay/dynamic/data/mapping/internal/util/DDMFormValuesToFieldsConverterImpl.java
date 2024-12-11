@@ -8,6 +8,7 @@ package com.liferay.dynamic.data.mapping.internal.util;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
@@ -22,6 +23,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.HashMap;
@@ -45,7 +47,7 @@ public class DDMFormValuesToFieldsConverterImpl
 			DDMStructure ddmStructure, DDMFormValues ddmFormValues)
 		throws PortalException {
 
-		DDMForm ddmForm = ddmStructure.getDDMForm();
+		DDMForm ddmForm = ddmStructure.getFullHierarchyDDMForm();
 
 		ddmFormValues.setDDMFormFieldValues(
 			DDMFormValuesConverterUtil.addMissingDDMFormFieldValues(
@@ -163,6 +165,30 @@ public class DDMFormValuesToFieldsConverterImpl
 		field.setName(ddmFormFieldValue.getName());
 
 		Value value = ddmFormFieldValue.getValue();
+
+		if (MapUtil.isEmpty(value.getValues())) {
+			LocalizedValue predefinedValue = ddmFormField.getPredefinedValue();
+
+			Map<Locale, String> predefinedValuesMap =
+				predefinedValue.getValues();
+
+			if (predefinedValuesMap.isEmpty()) {
+				LocalizedValue localizedValue = new LocalizedValue(
+					defaultLocale);
+
+				localizedValue.addString(defaultLocale, StringPool.BLANK);
+
+				ddmFormField.setPredefinedValue(localizedValue);
+			}
+
+			value = ddmFormField.getPredefinedValue();
+
+			Set<Locale> availableLocales =
+				ddmFormFieldAvailableLocales.computeIfAbsent(
+					ddmFormField.getName(), key -> new HashSet<>());
+
+			availableLocales.addAll(value.getAvailableLocales());
+		}
 
 		if (!value.isLocalized()) {
 			field.addValue(

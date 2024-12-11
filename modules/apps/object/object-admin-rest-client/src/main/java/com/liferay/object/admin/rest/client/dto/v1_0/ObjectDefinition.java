@@ -118,6 +118,27 @@ public class ObjectDefinition implements Cloneable, Serializable {
 
 	protected Boolean active;
 
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	public void setClassName(
+		UnsafeSupplier<String, Exception> classNameUnsafeSupplier) {
+
+		try {
+			className = classNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String className;
+
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -222,6 +243,27 @@ public class ObjectDefinition implements Cloneable, Serializable {
 	}
 
 	protected Boolean enableComments;
+
+	public Boolean getEnableIndexSearch() {
+		return enableIndexSearch;
+	}
+
+	public void setEnableIndexSearch(Boolean enableIndexSearch) {
+		this.enableIndexSearch = enableIndexSearch;
+	}
+
+	public void setEnableIndexSearch(
+		UnsafeSupplier<Boolean, Exception> enableIndexSearchUnsafeSupplier) {
+
+		try {
+			enableIndexSearch = enableIndexSearchUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean enableIndexSearch;
 
 	public Boolean getEnableLocalization() {
 		return enableLocalization;

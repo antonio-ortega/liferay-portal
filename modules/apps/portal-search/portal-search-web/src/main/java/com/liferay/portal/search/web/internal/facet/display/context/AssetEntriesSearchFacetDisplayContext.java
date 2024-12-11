@@ -17,26 +17,32 @@ import java.util.List;
 public class AssetEntriesSearchFacetDisplayContext
 	implements FacetDisplayContext, Serializable {
 
+	@Override
 	public List<BucketDisplayContext> getBucketDisplayContexts() {
 		return _bucketDisplayContexts;
 	}
 
+	@Override
 	public long getDisplayStyleGroupId() {
 		return _displayStyleGroupId;
 	}
 
+	@Override
 	public String getPaginationStartParameterName() {
 		return _paginationStartParameterName;
 	}
 
+	@Override
 	public String getParameterName() {
 		return _parameterName;
 	}
 
+	@Override
 	public String getParameterValue() {
 		return _parameterValue;
 	}
 
+	@Override
 	public List<String> getParameterValues() {
 		return _parameterValues;
 	}
@@ -47,10 +53,12 @@ public class AssetEntriesSearchFacetDisplayContext
 		return _typeFacetPortletInstanceConfiguration;
 	}
 
+	@Override
 	public boolean isNothingSelected() {
 		return _nothingSelected;
 	}
 
+	@Override
 	public boolean isRenderNothing() {
 		return _renderNothing;
 	}

@@ -11,27 +11,22 @@ import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTPreferences;
+import com.liferay.change.tracking.scheduler.PublishScheduler;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
-import com.liferay.change.tracking.service.CTCollectionService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.change.tracking.service.CTRemoteLocalService;
 import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
-import com.liferay.change.tracking.web.internal.configuration.CTConfiguration;
 import com.liferay.change.tracking.web.internal.constants.CTWebKeys;
 import com.liferay.change.tracking.web.internal.display.BasePersistenceRegistry;
 import com.liferay.change.tracking.web.internal.display.context.PublicationsDisplayContext;
 import com.liferay.change.tracking.web.internal.display.context.ViewChangesDisplayContext;
 import com.liferay.change.tracking.web.internal.helper.PublicationHelper;
-import com.liferay.change.tracking.web.internal.scheduler.PublishScheduler;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
@@ -39,28 +34,25 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
 import com.liferay.portlet.LiferayPortletUtil;
-
-import java.util.Map;
 
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Noor Najjar
  */
 @Component(
-	configurationPid = "com.liferay.change.tracking.web.internal.configuration.CTConfiguration",
 	property = {
 		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
 		"mvc.command.name=/change_tracking/view_change"
@@ -89,12 +81,8 @@ public class ViewChangeMVCRenderCommand implements MVCRenderCommand {
 		long ctCollectionId = ParamUtil.getLong(
 			renderRequest, "ctCollectionId");
 
-		long ctEntryId = ParamUtil.getLong(renderRequest, "ctEntryId");
-
 		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
 			ctCollectionId);
-
-		CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(ctEntryId);
 
 		try {
 			if ((ctCollection == null) ||
@@ -104,43 +92,6 @@ public class ViewChangeMVCRenderCommand implements MVCRenderCommand {
 
 				return "/publications/view_publications.jsp";
 			}
-
-			ViewChangesDisplayContext viewChangesDisplayContext =
-				new ViewChangesDisplayContext(
-					activeCtCollectionId, _basePersistenceRegistry,
-					_ctClosureFactory, ctCollection, _ctCollectionLocalService,
-					_getCTConfiguration(themeDisplay.getCompanyId()),
-					_ctDisplayRendererRegistry, _ctEntryLocalService,
-					_ctSchemaVersionLocalService, _groupLocalService, _language,
-					_portal,
-					new PublicationsDisplayContext(
-						_ctCollectionLocalService, _ctCollectionService,
-						_ctDisplayRendererRegistry, _ctEntryLocalService,
-						_ctPreferencesLocalService, _ctRemoteLocalService,
-						_portal.getHttpServletRequest(renderRequest), _language,
-						_publicationHelper, renderRequest, renderResponse),
-					_publishSchedulerSnapshot.get(), renderRequest,
-					renderResponse, _userLocalService);
-
-			renderRequest.setAttribute(
-				CTWebKeys.VIEW_CHANGES_DISPLAY_CONTEXT,
-				viewChangesDisplayContext);
-
-			if (ctEntry == null) {
-				return "/publications/view_changes.jsp";
-			}
-
-			LiferayPortletRequest liferayPortletRequest =
-				LiferayPortletUtil.getLiferayPortletRequest(renderRequest);
-
-			DynamicServletRequest dynamicServletRequest =
-				(DynamicServletRequest)
-					liferayPortletRequest.getHttpServletRequest();
-
-			dynamicServletRequest.setParameter(
-				"entry",
-				String.valueOf(ctEntry.getModelClassNameId()) + "-" +
-					String.valueOf(ctEntry.getModelClassPK()));
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
@@ -150,26 +101,59 @@ public class ViewChangeMVCRenderCommand implements MVCRenderCommand {
 			return "/publications/view_changes.jsp";
 		}
 
+		long ctEntryId = ParamUtil.getLong(renderRequest, "ctEntryId");
+
+		long modelClassNameId = 0;
+		long modelClassPK = 0;
+
+		if (ctEntryId == 0) {
+			modelClassNameId = ParamUtil.getLong(
+				renderRequest, "modelClassNameId");
+			modelClassPK = ParamUtil.getLong(renderRequest, "modelClassPK");
+		}
+		else {
+			CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(ctEntryId);
+
+			if (ctEntry == null) {
+				return "/publications/view_changes.jsp";
+			}
+
+			modelClassNameId = ctEntry.getModelClassNameId();
+			modelClassPK = ctEntry.getModelClassPK();
+		}
+
+		LiferayPortletRequest liferayPortletRequest =
+			LiferayPortletUtil.getLiferayPortletRequest(renderRequest);
+
+		DynamicServletRequest dynamicServletRequest =
+			(DynamicServletRequest)
+				liferayPortletRequest.getHttpServletRequest();
+
+		dynamicServletRequest.setParameter(
+			"entry",
+			String.valueOf(modelClassNameId) + "-" +
+				String.valueOf(modelClassPK));
+
+		ViewChangesDisplayContext viewChangesDisplayContext =
+			new ViewChangesDisplayContext(
+				activeCtCollectionId, _basePersistenceRegistry,
+				_ctClosureFactory, ctCollection, _ctCollectionLocalService,
+				_ctDisplayRendererRegistry, _ctEntryLocalService,
+				_ctSchemaVersionLocalService, _groupLocalService, _language,
+				_portal,
+				new PublicationsDisplayContext(
+					_ctCollectionLocalService, _ctDisplayRendererRegistry,
+					_ctPreferencesLocalService, _ctRemoteLocalService,
+					_portal.getHttpServletRequest(renderRequest), _language,
+					_publicationHelper, renderRequest, renderResponse),
+				_publishSchedulerSnapshot.get(), renderRequest, renderResponse,
+				_userLocalService, _workflowInstanceLinkLocalService,
+				_workflowTaskManager);
+
+		renderRequest.setAttribute(
+			CTWebKeys.VIEW_CHANGES_DISPLAY_CONTEXT, viewChangesDisplayContext);
+
 		return "/publications/view_change.jsp";
-	}
-
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_defaultCTConfiguration = ConfigurableUtil.createConfigurable(
-			CTConfiguration.class, properties);
-	}
-
-	private CTConfiguration _getCTConfiguration(long companyId) {
-		try {
-			return _configurationProvider.getCompanyConfiguration(
-				CTConfiguration.class, companyId);
-		}
-		catch (ConfigurationException configurationException) {
-			_log.error(configurationException);
-		}
-
-		return _defaultCTConfiguration;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -184,9 +168,6 @@ public class ViewChangeMVCRenderCommand implements MVCRenderCommand {
 	private BasePersistenceRegistry _basePersistenceRegistry;
 
 	@Reference
-	private ConfigurationProvider _configurationProvider;
-
-	@Reference
 	private CTClosureFactory _ctClosureFactory;
 
 	@Reference
@@ -197,9 +178,6 @@ public class ViewChangeMVCRenderCommand implements MVCRenderCommand {
 	)
 	private ModelResourcePermission<CTCollection>
 		_ctCollectionModelResourcePermission;
-
-	@Reference
-	private CTCollectionService _ctCollectionService;
 
 	@Reference
 	private CTDisplayRendererRegistry _ctDisplayRendererRegistry;
@@ -216,8 +194,6 @@ public class ViewChangeMVCRenderCommand implements MVCRenderCommand {
 	@Reference
 	private CTSchemaVersionLocalService _ctSchemaVersionLocalService;
 
-	private volatile CTConfiguration _defaultCTConfiguration;
-
 	@Reference
 	private GroupLocalService _groupLocalService;
 
@@ -232,5 +208,11 @@ public class ViewChangeMVCRenderCommand implements MVCRenderCommand {
 
 	@Reference
 	private UserLocalService _userLocalService;
+
+	@Reference
+	private WorkflowInstanceLinkLocalService _workflowInstanceLinkLocalService;
+
+	@Reference
+	private WorkflowTaskManager _workflowTaskManager;
 
 }

@@ -14,9 +14,7 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetEntryTable;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
-import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
-import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -24,10 +22,12 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServ
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.mass.delete.MassDeleteCacheThreadLocal;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -36,11 +36,14 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -84,7 +87,7 @@ public class AssetDisplayPageEntryLocalServiceImpl
 			layoutPageTemplateEntryId);
 		assetDisplayPageEntry.setType(type);
 		assetDisplayPageEntry.setPlid(
-			_getPlid(groupId, classNameId, classPK, layoutPageTemplateEntryId));
+			_getPlid(classNameId, classPK, layoutPageTemplateEntryId));
 
 		assetDisplayPageEntry = assetDisplayPageEntryPersistence.update(
 			assetDisplayPageEntry);
@@ -120,8 +123,36 @@ public class AssetDisplayPageEntryLocalServiceImpl
 			long groupId, long classNameId, long classPK)
 		throws PortalException {
 
-		assetDisplayPageEntryPersistence.removeByG_C_C(
-			groupId, classNameId, classPK);
+		Map<Long, List<AssetDisplayPageEntry>>
+			partitionAssetDisplayPageEntries =
+				MassDeleteCacheThreadLocal.getMassDeleteCache(
+					StringBundler.concat(
+						AssetDisplayPageEntryLocalServiceImpl.class.getName(),
+						".fetchAssetDisplayPageEntry#", groupId, classNameId),
+					() -> MapUtil.toPartitionMap(
+						assetDisplayPageEntryPersistence.findByG_CN(
+							groupId, classNameId),
+						AssetDisplayPageEntry::getClassPK));
+
+		if (partitionAssetDisplayPageEntries == null) {
+			AssetDisplayPageEntry assetDisplayPageEntry =
+				assetDisplayPageEntryPersistence.fetchByG_C_C(
+					groupId, classNameId, classPK);
+
+			if (assetDisplayPageEntry != null) {
+				assetDisplayPageEntryPersistence.remove(assetDisplayPageEntry);
+			}
+		}
+		else {
+			List<AssetDisplayPageEntry> assetDisplayPageEntries =
+				partitionAssetDisplayPageEntries.remove(classPK);
+
+			ListUtil.isNotEmptyForEach(
+				assetDisplayPageEntries,
+				assetDisplayPageEntry ->
+					assetDisplayPageEntryPersistence.remove(
+						assetDisplayPageEntry));
+		}
 	}
 
 	@Override
@@ -223,7 +254,6 @@ public class AssetDisplayPageEntryLocalServiceImpl
 		assetDisplayPageEntry.setType(type);
 
 		long plid = _getPlid(
-			assetDisplayPageEntry.getGroupId(),
 			assetDisplayPageEntry.getClassNameId(),
 			assetDisplayPageEntry.getClassPK(), layoutPageTemplateEntryId);
 
@@ -247,8 +277,7 @@ public class AssetDisplayPageEntryLocalServiceImpl
 	}
 
 	private long _getPlid(
-		long groupId, long classNameId, long classPK,
-		long layoutPageTemplateEntryId) {
+		long classNameId, long classPK, long layoutPageTemplateEntryId) {
 
 		String className = _portal.getClassName(classNameId);
 
@@ -260,25 +289,9 @@ public class AssetDisplayPageEntryLocalServiceImpl
 			return LayoutConstants.DEFAULT_PLID;
 		}
 
-		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
-			layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
-				new InfoItemReference(className, classPK));
-
-		if (layoutDisplayPageObjectProvider == null) {
-			return LayoutConstants.DEFAULT_PLID;
-		}
-
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
 				layoutPageTemplateEntryId);
-
-		if (layoutPageTemplateEntry == null) {
-			layoutPageTemplateEntry =
-				_layoutPageTemplateEntryLocalService.
-					fetchDefaultLayoutPageTemplateEntry(
-						groupId, classNameId,
-						layoutDisplayPageObjectProvider.getClassTypeId());
-		}
 
 		if (layoutPageTemplateEntry != null) {
 			return layoutPageTemplateEntry.getPlid();
@@ -351,12 +364,12 @@ public class AssetDisplayPageEntryLocalServiceImpl
 			).withParentheses(
 			).or(
 				() -> {
-					if (defaultTemplate) {
-						return AssetDisplayPageEntryTable.INSTANCE.type.eq(
-							AssetDisplayPageConstants.TYPE_DEFAULT);
+					if (!defaultTemplate) {
+						return null;
 					}
 
-					return null;
+					return AssetDisplayPageEntryTable.INSTANCE.type.eq(
+						AssetDisplayPageConstants.TYPE_DEFAULT);
 				}
 			).withParentheses()
 		).and(

@@ -138,8 +138,8 @@ public class AddCollectionLayoutMVCActionCommand
 			Layout.class.getName(), actionRequest);
 
 		Layout layout = _layoutService.addLayout(
-			groupId, privateLayout, parentLayoutId, nameMap, new HashMap<>(),
-			new HashMap<>(), new HashMap<>(), new HashMap<>(),
+			null, groupId, privateLayout, parentLayoutId, nameMap,
+			new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(),
 			LayoutConstants.TYPE_COLLECTION,
 			typeSettingsUnicodeProperties.toString(), false, new HashMap<>(),
 			masterLayoutPlid, serviceContext);
@@ -250,7 +250,7 @@ public class AddCollectionLayoutMVCActionCommand
 
 			_layoutsImporter.importPageElement(
 				layout, layoutStructure, layoutStructure.getMainItemId(),
-				pageElementJSON, 0);
+				pageElementJSON, 0, true);
 		}
 	}
 

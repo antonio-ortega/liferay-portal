@@ -30,6 +30,7 @@ import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
 import com.liferay.portal.workflow.kaleo.model.KaleoNode;
 import com.liferay.portal.workflow.kaleo.service.KaleoConditionLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalService;
+import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionService;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionVersionLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalService;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskLocalService;
@@ -50,14 +51,15 @@ public class DefaultWorkflowDeployer implements WorkflowDeployer {
 
 	@Override
 	public WorkflowDefinition deploy(
-			String title, String name, String scope, Definition definition,
-			ServiceContext serviceContext)
+			String externalReferenceCode, String title, String name,
+			String scope, Definition definition, ServiceContext serviceContext)
 		throws PortalException {
 
 		_checkPermissions(serviceContext);
 
 		KaleoDefinition kaleoDefinition = _addOrUpdateKaleoDefinition(
-			title, name, scope, definition, serviceContext);
+			externalReferenceCode, title, name, scope, definition,
+			serviceContext);
 
 		KaleoDefinitionVersion kaleoDefinitionVersion =
 			_kaleoDefinitionVersionLocalService.
@@ -152,20 +154,21 @@ public class DefaultWorkflowDeployer implements WorkflowDeployer {
 
 	@Override
 	public WorkflowDefinition save(
-			String title, String name, String scope, Definition definition,
-			ServiceContext serviceContext)
+			String externalReferenceCode, String title, String name,
+			String scope, Definition definition, ServiceContext serviceContext)
 		throws PortalException {
 
 		KaleoDefinition kaleoDefinition = _addOrUpdateKaleoDefinition(
-			title, name, scope, definition, serviceContext);
+			externalReferenceCode, title, name, scope, definition,
+			serviceContext);
 
 		return _kaleoWorkflowModelConverter.toWorkflowDefinition(
 			kaleoDefinition);
 	}
 
 	private KaleoDefinition _addOrUpdateKaleoDefinition(
-			String title, String name, String scope, Definition definition,
-			ServiceContext serviceContext)
+			String externalReferenceCode, String title, String name,
+			String scope, Definition definition, ServiceContext serviceContext)
 		throws PortalException {
 
 		KaleoDefinition kaleoDefinition =
@@ -173,16 +176,15 @@ public class DefaultWorkflowDeployer implements WorkflowDeployer {
 				name, serviceContext);
 
 		if (kaleoDefinition == null) {
-			kaleoDefinition = _kaleoDefinitionLocalService.addKaleoDefinition(
-				name, title, definition.getDescription(),
+			kaleoDefinition = _kaleoDefinitionService.addKaleoDefinition(
+				externalReferenceCode, name, title, definition.getDescription(),
 				definition.getContent(), scope, 1, serviceContext);
 		}
 		else {
-			kaleoDefinition =
-				_kaleoDefinitionLocalService.updatedKaleoDefinition(
-					kaleoDefinition.getKaleoDefinitionId(), title,
-					definition.getDescription(), definition.getContent(),
-					serviceContext);
+			kaleoDefinition = _kaleoDefinitionService.updateKaleoDefinition(
+				externalReferenceCode, kaleoDefinition.getKaleoDefinitionId(),
+				title, definition.getDescription(), definition.getContent(),
+				serviceContext);
 		}
 
 		return kaleoDefinition;
@@ -211,6 +213,9 @@ public class DefaultWorkflowDeployer implements WorkflowDeployer {
 
 	@Reference
 	private KaleoDefinitionLocalService _kaleoDefinitionLocalService;
+
+	@Reference
+	private KaleoDefinitionService _kaleoDefinitionService;
 
 	@Reference
 	private KaleoDefinitionVersionLocalService

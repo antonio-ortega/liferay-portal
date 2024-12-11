@@ -6,16 +6,20 @@
 package com.liferay.headless.admin.user.internal.resource.v1_0;
 
 import com.liferay.account.constants.AccountActionKeys;
+import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountGroupRel;
 import com.liferay.account.service.AccountGroupRelService;
 import com.liferay.account.service.AccountGroupService;
+import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
 import com.liferay.headless.admin.user.dto.v1_0.AccountGroup;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.admin.user.internal.odata.entity.v1_0.AccountGroupEntityModel;
 import com.liferay.headless.admin.user.resource.v1_0.AccountGroupResource;
+import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
@@ -26,9 +30,11 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -172,9 +178,42 @@ public class AccountGroupResourceImpl extends BaseAccountGroupResourceImpl {
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
 		throws Exception {
 
-		return _entityModel;
+		return new AccountGroupEntityModel(
+			EntityFieldsUtil.getEntityFields(
+				_portal.getClassNameId(
+					com.liferay.account.model.AccountGroup.class.getName()),
+				contextCompany.getCompanyId(), _expandoBridgeIndexer,
+				_expandoColumnLocalService, _expandoTableLocalService));
 	}
 
+	@Override
+	public AccountGroup patchAccountGroup(
+			Long accountGroupId, AccountGroup accountGroup)
+		throws Exception {
+
+		com.liferay.account.model.AccountGroup serviceBuilderAccountGroup =
+			_accountGroupService.getAccountGroup(accountGroupId);
+
+		return _updateAccountGroup(accountGroup, serviceBuilderAccountGroup);
+	}
+
+	@Override
+	public AccountGroup patchAccountGroupByExternalReferenceCode(
+			String externalReferenceCode, AccountGroup accountGroup)
+		throws Exception {
+
+		com.liferay.account.model.AccountGroup serviceBuilderAccountGroup =
+			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (serviceBuilderAccountGroup == null) {
+			throw new NoSuchGroupException();
+		}
+
+		return _updateAccountGroup(accountGroup, serviceBuilderAccountGroup);
+	}
+
+	@Override
 	public AccountGroup postAccountGroup(AccountGroup accountGroup)
 		throws Exception {
 
@@ -211,6 +250,19 @@ public class AccountGroupResourceImpl extends BaseAccountGroupResourceImpl {
 			Long accountGroupId, AccountGroup accountGroup)
 		throws Exception {
 
+		if (accountGroupId <= 0) {
+			com.liferay.account.model.AccountGroup serviceBuilderAccountGroup =
+				_accountGroupService.addAccountGroup(
+					contextUser.getUserId(), accountGroup.getDescription(),
+					accountGroup.getName(),
+					_createServiceContext(accountGroup));
+
+			return _toAccountGroup(
+				_accountGroupService.updateExternalReferenceCode(
+					serviceBuilderAccountGroup.getAccountGroupId(),
+					accountGroup.getExternalReferenceCode()));
+		}
+
 		_accountGroupService.updateExternalReferenceCode(
 			accountGroupId, accountGroup.getExternalReferenceCode());
 
@@ -225,10 +277,16 @@ public class AccountGroupResourceImpl extends BaseAccountGroupResourceImpl {
 			String externalReferenceCode, AccountGroup accountGroup)
 		throws Exception {
 
+		com.liferay.account.model.AccountGroup serviceBuilderAccountGroup =
+			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (serviceBuilderAccountGroup == null) {
+			return putAccountGroup(0L, accountGroup);
+		}
+
 		return putAccountGroup(
-			DTOConverterUtil.getModelPrimaryKey(
-				_accountGroupResourceDTOConverter, externalReferenceCode),
-			accountGroup);
+			serviceBuilderAccountGroup.getAccountGroupId(), accountGroup);
 	}
 
 	private ServiceContext _createServiceContext(AccountGroup accountGroup)
@@ -341,6 +399,26 @@ public class AccountGroupResourceImpl extends BaseAccountGroupResourceImpl {
 			_getDTOConverterContext(accountGroup.getAccountGroupId()));
 	}
 
+	private AccountGroup _updateAccountGroup(
+			AccountGroup accountGroup,
+			com.liferay.account.model.AccountGroup serviceBuilderAccountGroup)
+		throws Exception {
+
+		serviceBuilderAccountGroup = _accountGroupService.updateAccountGroup(
+			serviceBuilderAccountGroup.getAccountGroupId(),
+			GetterUtil.getString(
+				accountGroup.getDescription(),
+				serviceBuilderAccountGroup.getDescription()),
+			GetterUtil.getString(
+				accountGroup.getName(), serviceBuilderAccountGroup.getName()),
+			_createServiceContext(accountGroup));
+
+		return _toAccountGroup(
+			_accountGroupService.updateExternalReferenceCode(
+				serviceBuilderAccountGroup.getAccountGroupId(),
+				accountGroup.getExternalReferenceCode()));
+	}
+
 	@Reference(
 		target = "(model.class.name=com.liferay.account.model.AccountGroup)"
 	)
@@ -362,6 +440,16 @@ public class AccountGroupResourceImpl extends BaseAccountGroupResourceImpl {
 	@Reference(target = DTOConverterConstants.ACCOUNT_RESOURCE_DTO_CONVERTER)
 	private DTOConverter<AccountEntry, Account> _accountResourceDTOConverter;
 
-	private final EntityModel _entityModel = new AccountGroupEntityModel();
+	@Reference
+	private ExpandoBridgeIndexer _expandoBridgeIndexer;
+
+	@Reference
+	private ExpandoColumnLocalService _expandoColumnLocalService;
+
+	@Reference
+	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Reference
+	private Portal _portal;
 
 }

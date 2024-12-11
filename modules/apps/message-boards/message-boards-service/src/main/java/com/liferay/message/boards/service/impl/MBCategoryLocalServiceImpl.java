@@ -67,12 +67,12 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 
 	@Override
 	public MBCategory addCategory(
-			long userId, long parentCategoryId, String name, String description,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long parentCategoryId,
+			String name, String description, ServiceContext serviceContext)
 		throws PortalException {
 
 		return mbCategoryLocalService.addCategory(
-			userId, parentCategoryId, name, description,
+			externalReferenceCode, userId, parentCategoryId, name, description,
 			MBCategoryConstants.DEFAULT_DISPLAY_STYLE, null, null, null, 0,
 			false, null, null, 0, null, false, null, 0, false, null, null,
 			false, false, serviceContext);
@@ -80,14 +80,15 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 
 	@Override
 	public MBCategory addCategory(
-			long userId, long parentCategoryId, String name, String description,
-			String displayStyle, String emailAddress, String inProtocol,
-			String inServerName, int inServerPort, boolean inUseSSL,
-			String inUserName, String inPassword, int inReadInterval,
-			String outEmailAddress, boolean outCustom, String outServerName,
-			int outServerPort, boolean outUseSSL, String outUserName,
-			String outPassword, boolean allowAnonymous,
-			boolean mailingListActive, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long parentCategoryId,
+			String name, String description, String displayStyle,
+			String emailAddress, String inProtocol, String inServerName,
+			int inServerPort, boolean inUseSSL, String inUserName,
+			String inPassword, int inReadInterval, String outEmailAddress,
+			boolean outCustom, String outServerName, int outServerPort,
+			boolean outUseSSL, String outUserName, String outPassword,
+			boolean allowAnonymous, boolean mailingListActive,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		// Category
@@ -105,6 +106,7 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 		MBCategory category = mbCategoryPersistence.create(categoryId);
 
 		category.setUuid(serviceContext.getUuid());
+		category.setExternalReferenceCode(externalReferenceCode);
 		category.setGroupId(groupId);
 		category.setCompanyId(user.getCompanyId());
 		category.setUserId(user.getUserId());
@@ -304,8 +306,21 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 		mbCategoryLocalService.deleteMBCategory(category);
 	}
 
+	@Override
+	public void deleteCategoryByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		mbCategoryLocalService.deleteCategory(
+			mbCategoryPersistence.findByERC_G(externalReferenceCode, groupId));
+	}
+
+	@Override
 	public MBCategory fetchMBCategory(long groupId, String friendlyURL) {
-		return mbCategoryPersistence.fetchByG_F(groupId, friendlyURL);
+		return mbCategoryPersistence.fetchByG_F(
+			groupId,
+			_friendlyURLNormalizer.normalizeWithEncodingPeriodsAndSlashes(
+				friendlyURL));
 	}
 
 	@Override
@@ -546,7 +561,10 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 	public MBCategory getMBCategory(long groupId, String friendlyURL)
 		throws PortalException {
 
-		return mbCategoryPersistence.findByG_F(groupId, friendlyURL);
+		return mbCategoryPersistence.findByG_F(
+			groupId,
+			_friendlyURLNormalizer.normalizeWithEncodingPeriodsAndSlashes(
+				friendlyURL));
 	}
 
 	@Override
@@ -938,7 +956,9 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 			name = String.valueOf(categoryId);
 		}
 		else {
-			name = _friendlyURLNormalizer.normalizeWithPeriodsAndSlashes(name);
+			name =
+				_friendlyURLNormalizer.normalizeWithEncodingPeriodsAndSlashes(
+					name);
 		}
 
 		name = ModelHintsUtil.trimString(
@@ -949,8 +969,16 @@ public class MBCategoryLocalServiceImpl extends MBCategoryLocalServiceBaseImpl {
 		MBCategory mbCategory = mbCategoryPersistence.fetchByG_F(
 			groupId, friendlyURL);
 
+		if (mbCategory == null) {
+			return friendlyURL;
+		}
+
+		if (!StringUtil.endsWith(friendlyURL, StringPool.DASH)) {
+			name = name + StringPool.DASH;
+		}
+
 		for (int i = 1; mbCategory != null; i++) {
-			friendlyURL = name + StringPool.DASH + i;
+			friendlyURL = name + i;
 
 			mbCategory = mbCategoryPersistence.fetchByG_F(groupId, friendlyURL);
 		}

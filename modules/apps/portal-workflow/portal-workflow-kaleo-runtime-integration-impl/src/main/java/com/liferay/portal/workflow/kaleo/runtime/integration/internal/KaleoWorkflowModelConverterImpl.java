@@ -124,8 +124,12 @@ public class KaleoWorkflowModelConverterImpl
 			}
 		}
 
+		defaultWorkflowDefinition.setContentAsXML(
+			kaleoDefinition.getContentAsXML());
 		defaultWorkflowDefinition.setDescription(
 			kaleoDefinition.getDescription());
+		defaultWorkflowDefinition.setExternalReferenceCode(
+			kaleoDefinition.getExternalReferenceCode());
 		defaultWorkflowDefinition.setModifiedDate(
 			kaleoDefinition.getModifiedDate());
 		defaultWorkflowDefinition.setName(kaleoDefinition.getName());
@@ -209,6 +213,9 @@ public class KaleoWorkflowModelConverterImpl
 		}
 
 		defaultWorkflowDefinition.setContent(content);
+
+		defaultWorkflowDefinition.setContentAsXML(
+			kaleoDefinitionVersion.getContentAsXML());
 		defaultWorkflowDefinition.setCreateDate(
 			kaleoDefinitionVersion.getCreateDate());
 		defaultWorkflowDefinition.setDescription(

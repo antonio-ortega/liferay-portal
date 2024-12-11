@@ -4,8 +4,13 @@ import FormAbandonmentCard from 'assets/form/hocs/FormAbandonmentCard';
 import FormMetricCard from 'assets/form/components/FormMetricCard';
 import LocationsCard from 'assets/form/hocs/LocationsCard';
 import React from 'react';
-import TouchpointsListCard from 'assets/hocs/TouchpointsListCard';
-import {ENABLE_FORM_ABANDONMENT} from 'shared/util/constants';
+import {
+	Accessor,
+	AssetAppearsOnCard,
+	EmptyStateLink,
+	EmptyStateText
+} from 'assets/components/AssetAppearsOnCard';
+import {AssetTypes, ENABLE_FORM_ABANDONMENT} from 'shared/util/constants';
 import {MetricName} from 'shared/types/MetricName';
 import {Name} from 'shared/components/audience-report/types';
 
@@ -67,10 +72,14 @@ const Overview = () => (
 
 		<div className='row'>
 			<div className='col-sm-12'>
-				<TouchpointsListCard
-					assetType='FORM'
-					label={Liferay.Language.get('asset-appears-on')}
-					legacyDropdownRangeKey={false}
+				<AssetAppearsOnCard
+					accessors={[
+						Accessor.SubmissionsMetric,
+						Accessor.ViewsMetric
+					]}
+					assetType={AssetTypes.Form}
+					emptyStateLink={EmptyStateLink.Form}
+					emptyStateText={EmptyStateText.Form}
 				/>
 			</div>
 		</div>

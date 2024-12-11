@@ -60,9 +60,11 @@ exports[`InterestTopics should render 1`] = `
             <br />
             Liferay Analytics Cloud automatically associates registered touchpoints with keywords based on their meta tags, titles and descriptions.
           </p>
-          <h4>
+          <div
+            class="h4"
+          >
             Keywords Blocklist
-          </h4>
+          </div>
           <p>
             Keywords can be excluded by adding them to a blocklist. Manage the keywords that you do not want listed in Liferay Analytics Cloud, and do not want them to be used to generate content recommendation in Liferay DXP.
           </p>
@@ -122,7 +124,7 @@ exports[`InterestTopics should render 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#order-arrow-ascending"
+                        href="#order-arrow-ascending"
                       />
                     </svg>
                   </a>
@@ -157,7 +159,7 @@ exports[`InterestTopics should render 1`] = `
                           role="presentation"
                         >
                           <use
-                            xlink:href="#search"
+                            href="#search"
                           />
                         </svg>
                       </button>
@@ -213,7 +215,7 @@ exports[`InterestTopics should render 1`] = `
                         role="presentation"
                       >
                         <use
-                          xlink:href="#order-arrow-up"
+                          href="#order-arrow-up"
                         />
                       </svg>
                     </span>
@@ -259,11 +261,11 @@ exports[`InterestTopics should render 1`] = `
                 <td
                   class="table-cell-expand"
                 >
-                  <h4
-                    class="table-title text-truncate"
+                  <div
+                    class="h4 table-title text-truncate"
                   >
                     bar-0
-                  </h4>
+                  </div>
                 </td>
                 <td>
                   Dec 3, 2019
@@ -282,7 +284,7 @@ exports[`InterestTopics should render 1`] = `
                         role="presentation"
                       >
                         <use
-                          xlink:href="#trash"
+                          href="#trash"
                         />
                       </svg>
                     </button>
@@ -314,7 +316,7 @@ exports[`InterestTopics should render 1`] = `
                   role="presentation"
                 >
                   <use
-                    xlink:href="#caret-bottom"
+                    href="#caret-bottom"
                   />
                 </svg>
               </button>
@@ -340,7 +342,7 @@ exports[`InterestTopics should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-left-small"
+                      href="#angle-left-small"
                     />
                   </svg>
                 </a>
@@ -368,7 +370,7 @@ exports[`InterestTopics should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-right-small"
+                      href="#angle-right-small"
                     />
                   </svg>
                 </a>
@@ -389,11 +391,11 @@ exports[`InterestTopics should render page not found puts a invalid page 1`] = `
   <div
     class="no-results-content"
   >
-    <h4
-      class="no-results-title"
+    <div
+      class="h4 no-results-title"
     >
       Page Not Found
-    </h4>
+    </div>
     <a
       class="button-root btn btn-secondary"
       href="/workspace/23/settings/definitions/interest-topics"
@@ -419,15 +421,15 @@ exports[`InterestTopics should render with a member-specific message to add keyw
         role="presentation"
       >
         <use
-          xlink:href="#ac-satellite"
+          href="#ac-satellite"
         />
       </svg>
     </div>
-    <h4
-      class="no-results-title"
+    <div
+      class="h4 no-results-title"
     >
       No Keywords Found
-    </h4>
+    </div>
     <div
       class="no-results-description"
     >
@@ -452,15 +454,15 @@ exports[`InterestTopics should render with a message to add keywords if there ar
         role="presentation"
       >
         <use
-          xlink:href="#ac-satellite"
+          href="#ac-satellite"
         />
       </svg>
     </div>
-    <h4
-      class="no-results-title"
+    <div
+      class="h4 no-results-title"
     >
       No Keywords Found
-    </h4>
+    </div>
     <div
       class="no-results-description"
     >
@@ -468,9 +470,15 @@ exports[`InterestTopics should render with a message to add keywords if there ar
       <a
         class="d-block mb-3"
         href="https://learn.liferay.com/analytics-cloud/latest/en/workspace-data/definitions/managing-interest-topics.html"
+        rel="noreferrer noopener"
         target="_blank"
       >
         Learn more about interest topics.
+        <span
+          class="sr-only"
+        >
+          (Opens a new window)
+        </span>
       </a>
     </div>
   </div>
@@ -492,15 +500,15 @@ exports[`InterestTopics should render with an empty state 1`] = `
         role="presentation"
       >
         <use
-          xlink:href="#ac-no-results-found"
+          href="#ac-no-results-found"
         />
       </svg>
     </div>
-    <h4
-      class="no-results-title"
+    <div
+      class="h4 no-results-title"
     >
       There are no results found.
-    </h4>
+    </div>
     <div
       class="no-results-description"
     >

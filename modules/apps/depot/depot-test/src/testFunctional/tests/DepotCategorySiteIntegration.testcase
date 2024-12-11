@@ -1,7 +1,9 @@
-@component-name = "portal-document-management"
+@component-name = "portal-content-management"
 definition {
 
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Depot";
 
@@ -9,6 +11,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 
 		HeadlessSite.addSite(siteName = "Site Name");
 
@@ -52,7 +56,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot category can be used to search for assets stored in the connected site. Skip the instance for performance improvement."
-	@priority = 5
+	@priority = 4
 	test AssetsCanBeSearchedByCategory {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -140,7 +144,7 @@ definition {
 	}
 
 	@description = "This ensures that assets stored in a site can be searched by a depot category after disconnecting the site."
-	@priority = 4
+	@priority = 3
 	test AssetsCanBeSearchedByCategoryFromDisconnectedSite {
 		var categoryId = JSONCategory.addCategory(
 			groupName = "Test Depot Name",
@@ -252,8 +256,12 @@ definition {
 	}
 
 	@description = "This ensures that a depot category can be selected in Category Navigation on a connected site."
-	@priority = 5
+	@priority = 4
 	test CanSelectCategoryInCategoriesNavigation {
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		for (var portletName : list "Asset Publisher,Category Filter") {
 			JSONLayout.addWidgetToPublicLayout(
 				groupName = "Site Name",

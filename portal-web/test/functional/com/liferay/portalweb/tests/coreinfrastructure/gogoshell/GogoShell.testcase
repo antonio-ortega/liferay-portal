@@ -1,4 +1,4 @@
-@component-name = "portal-gogo-shell"
+@component-name = "portal-core-infra"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -29,7 +29,7 @@ definition {
 	test AccessGogoShellCommandViaPortlet {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		ApplicationsMenu.gotoPortlet(
 			category = "System",
@@ -42,7 +42,7 @@ definition {
 
 		GogoShell.executeCommand(commandName = "system:check");
 
-		for (var outputContent : list "Declarative Service Soft Circular Dependency System Checker check result: No issues were found,Declarative Service Unsatisfied Component Checker check result: No issues were found,Spring Extender Unavailable Component System Checker check result: No issues were found") {
+		for (var outputContent : list "Declarative Service Soft Circular Dependency System Checker check result: No issues were found,Declarative Service Unsatisfied Component System Checker check result: No issues were found,Spring Extender Unavailable Component System Checker check result: No issues were found") {
 			GogoShell.viewOutput(outputContent = ${outputContent});
 		}
 	}
@@ -51,8 +51,8 @@ definition {
 	@priority = 3
 	test CanRunDisconnectCommandViaTelnet {
 		property test.assert.warning.exceptions = "true";
-		property test.liferay.virtual.instance = "true";
-		property test.run.type = "single";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "sequential";
 
 		GogoShell.executeCommandViaTelnet(
 			command = "disconnect",
@@ -63,8 +63,8 @@ definition {
 	@description = "This is a use case for LPS-83660."
 	@priority = 3
 	test GogoShellCommandDisconnectNotSupported {
-		property test.liferay.virtual.instance = "true";
-		property test.run.type = "single";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "sequential";
 
 		GogoShell.openGogoShellAdmin();
 
@@ -78,7 +78,7 @@ definition {
 	@priority = 4
 	test GogoShellPortletOnlyOnMainInstance {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		HeadlessPortalInstanceAPI.addPortalInstance(
 			domain = "www.able.com",
@@ -94,7 +94,7 @@ definition {
 		AssertElementPresent(locator1 = "GogoShell#COMMAND_FIELD");
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@www.able.com",
 			virtualHostsURL = "http://www.able.com:8080");
 
@@ -107,10 +107,10 @@ definition {
 	}
 
 	@priority = 4
-	test OmniAdminCanAccessGogoShellCommandViaPortlet {
+	test OmniadminCanAccessGogoShellCommandViaPortlet {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -142,7 +142,7 @@ definition {
 	test SiteAdminCannotAccessGogoShellPortlet {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
@@ -155,6 +155,10 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 		User.openUsersAdmin();
 
 		var siteName = TestCase.getSiteName(siteName = ${siteName});
@@ -162,6 +166,10 @@ definition {
 		User.editUserSiteCP(
 			siteName = ${siteName},
 			userScreenName = "usersn");
+
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
 		Site.openSiteMembershipsAdmin(siteURLKey = "guest");
 

@@ -22,7 +22,7 @@ const OperatorSelect: React.FC<IOperatorSelectProps> = ({
 }) => {
 	if (dataType === DataTypes.Boolean) {
 		return (
-			<Form.GroupItem className='conjunction' label shrink>
+			<Form.GroupItem className='conjunction ml-1 mr-1' label shrink>
 				{Liferay.Language.get('is')}
 			</Form.GroupItem>
 		);
@@ -32,7 +32,12 @@ const OperatorSelect: React.FC<IOperatorSelectProps> = ({
 		<Form.GroupItem shrink>
 			<Picker
 				className='operator-input'
-				items={getOperatorOptions(dataType)}
+				items={
+					getOperatorOptions(dataType) as {
+						label: string;
+						value: string;
+					}[]
+				}
 				onSelectionChange={newOperatorName => {
 					let criterion: Criterion = {
 						operatorName: newOperatorName as Criterion['operatorName']

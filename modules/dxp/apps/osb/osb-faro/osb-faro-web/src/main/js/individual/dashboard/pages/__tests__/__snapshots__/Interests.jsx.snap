@@ -17,11 +17,11 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <h5
+            <div
               class="card-title"
             >
               Interest Topics
-            </h5>
+            </div>
           </div>
           <div
             class="d-flex flex-column flex-grow-1 justify-content-between"
@@ -67,7 +67,7 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#search"
+                                href="#search"
                               />
                             </svg>
                           </button>
@@ -120,7 +120,7 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                             role="presentation"
                           >
                             <use
-                              xlink:href="#order-arrow-down"
+                              href="#order-arrow-down"
                             />
                           </svg>
                         </span>
@@ -189,11 +189,11 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                     <td
                       class="table-column-text-end"
                     >
-                      <h4
-                        class="table-title text-truncate"
+                      <div
+                        class="h4 table-title text-truncate"
                       >
                         66.67%
-                      </h4>
+                      </div>
                     </td>
                   </tr>
                   <tr
@@ -251,11 +251,11 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                     <td
                       class="table-column-text-end"
                     >
-                      <h4
-                        class="table-title text-truncate"
+                      <div
+                        class="h4 table-title text-truncate"
                       >
                         66.67%
-                      </h4>
+                      </div>
                     </td>
                   </tr>
                   <tr
@@ -313,11 +313,11 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                     <td
                       class="table-column-text-end"
                     >
-                      <h4
-                        class="table-title text-truncate"
+                      <div
+                        class="h4 table-title text-truncate"
                       >
                         66.67%
-                      </h4>
+                      </div>
                     </td>
                   </tr>
                   <tr
@@ -375,11 +375,11 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                     <td
                       class="table-column-text-end"
                     >
-                      <h4
-                        class="table-title text-truncate"
+                      <div
+                        class="h4 table-title text-truncate"
                       >
                         66.67%
-                      </h4>
+                      </div>
                     </td>
                   </tr>
                   <tr
@@ -437,11 +437,11 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                     <td
                       class="table-column-text-end"
                     >
-                      <h4
-                        class="table-title text-truncate"
+                      <div
+                        class="h4 table-title text-truncate"
                       >
                         33.33%
-                      </h4>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -469,7 +469,7 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#caret-bottom"
+                        href="#caret-bottom"
                       />
                     </svg>
                   </button>
@@ -495,7 +495,7 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                         role="presentation"
                       >
                         <use
-                          xlink:href="#angle-left-small"
+                          href="#angle-left-small"
                         />
                       </svg>
                     </a>
@@ -542,7 +542,7 @@ exports[`Individuals Dashboard Individuals Interests renders 1`] = `
                         role="presentation"
                       >
                         <use
-                          xlink:href="#angle-right-small"
+                          href="#angle-right-small"
                         />
                       </svg>
                     </a>
@@ -567,7 +567,7 @@ exports[`Individuals Dashboard Individuals Interests renders with data source em
       class="children-wrapper"
     >
       <div
-        class="no-results-root flex-grow-1 display-card"
+        class="no-results-root display-card flex-grow-1"
       >
         <div
           class="no-results-content"
@@ -580,15 +580,15 @@ exports[`Individuals Dashboard Individuals Interests renders with data source em
               role="presentation"
             >
               <use
-                xlink:href="#ac-satellite"
+                href="#ac-satellite"
               />
             </svg>
           </div>
-          <h4
-            class="no-results-title"
+          <div
+            class="h4 no-results-title"
           >
             No Sites Synced from Data Sources
-          </h4>
+          </div>
           <div
             class="no-results-description"
           >
@@ -596,9 +596,15 @@ exports[`Individuals Dashboard Individuals Interests renders with data source em
             <a
               class="d-block mb-3"
               href="https://learn.liferay.com/analytics-cloud/latest/en/getting-started/connecting-liferay-dxp-to-analytics-cloud.html"
+              rel="noreferrer noopener"
               target="_blank"
             >
               Access our documentation to learn more.
+              <span
+                class="sr-only"
+              >
+                (Opens a new window)
+              </span>
             </a>
             <a
               class="button-root btn btn-primary"

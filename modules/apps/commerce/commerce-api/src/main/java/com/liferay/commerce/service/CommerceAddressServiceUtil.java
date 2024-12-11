@@ -7,6 +7,7 @@ package com.liferay.commerce.service;
 
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -82,18 +83,18 @@ public class CommerceAddressServiceUtil {
 		getService().deleteCommerceAddress(commerceAddressId);
 	}
 
-	public static CommerceAddress fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CommerceAddress fetchCommerceAddress(long commerceAddressId)
 		throws PortalException {
 
 		return getService().fetchCommerceAddress(commerceAddressId);
+	}
+
+	public static CommerceAddress fetchCommerceAddressByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().fetchCommerceAddressByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static List<CommerceAddress> getBillingCommerceAddresses(
@@ -113,12 +114,14 @@ public class CommerceAddressServiceUtil {
 	}
 
 	public static List<CommerceAddress> getBillingCommerceAddresses(
-			long companyId, String className, long classPK, String keywords,
-			int start, int end, com.liferay.portal.kernel.search.Sort sort)
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords, int start, int end,
+			com.liferay.portal.kernel.search.Sort sort)
 		throws PortalException {
 
 		return getService().getBillingCommerceAddresses(
-			companyId, className, classPK, keywords, start, end, sort);
+			companyId, className, classPK, commerceChannelId, keywords, start,
+			end, sort);
 	}
 
 	public static List<CommerceAddress> getBillingCommerceAddressesCount(
@@ -130,11 +133,12 @@ public class CommerceAddressServiceUtil {
 	}
 
 	public static int getBillingCommerceAddressesCount(
-			long companyId, String className, long classPK, String keywords)
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords)
 		throws PortalException {
 
 		return getService().getBillingCommerceAddressesCount(
-			companyId, className, classPK, keywords);
+			companyId, className, classPK, commerceChannelId, keywords);
 	}
 
 	public static CommerceAddress getCommerceAddress(long commerceAddressId)
@@ -245,12 +249,14 @@ public class CommerceAddressServiceUtil {
 	}
 
 	public static List<CommerceAddress> getShippingCommerceAddresses(
-			long companyId, String className, long classPK, String keywords,
-			int start, int end, com.liferay.portal.kernel.search.Sort sort)
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords, int start, int end,
+			com.liferay.portal.kernel.search.Sort sort)
 		throws PortalException {
 
 		return getService().getShippingCommerceAddresses(
-			companyId, className, classPK, keywords, start, end, sort);
+			companyId, className, classPK, commerceChannelId, keywords, start,
+			end, sort);
 	}
 
 	public static List<CommerceAddress> getShippingCommerceAddressesCount(
@@ -262,11 +268,12 @@ public class CommerceAddressServiceUtil {
 	}
 
 	public static int getShippingCommerceAddressesCount(
-			long companyId, String className, long classPK, String keywords)
+			long companyId, String className, long classPK,
+			long commerceChannelId, String keywords)
 		throws PortalException {
 
 		return getService().getShippingCommerceAddressesCount(
-			companyId, className, classPK, keywords);
+			companyId, className, classPK, commerceChannelId, keywords);
 	}
 
 	/**
@@ -326,13 +333,11 @@ public class CommerceAddressServiceUtil {
 	}
 
 	public static CommerceAddressService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceAddressService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceAddressService _service;
+	private static final Snapshot<CommerceAddressService> _serviceSnapshot =
+		new Snapshot<>(
+			CommerceAddressServiceUtil.class, CommerceAddressService.class);
 
 }

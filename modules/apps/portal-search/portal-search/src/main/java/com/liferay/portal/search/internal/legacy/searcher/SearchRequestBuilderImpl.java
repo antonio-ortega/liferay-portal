@@ -10,6 +10,7 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.aggregation.Aggregation;
 import com.liferay.portal.search.aggregation.pipeline.PipelineAggregation;
+import com.liferay.portal.search.collapse.Collapse;
 import com.liferay.portal.search.filter.ComplexQueryPart;
 import com.liferay.portal.search.groupby.GroupByRequest;
 import com.liferay.portal.search.highlight.Highlight;
@@ -175,6 +176,14 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 		_addFederatedSearchRequests(_buildFederatedSearchRequests());
 
 		return _withSearchRequestGet(Function.identity());
+	}
+
+	@Override
+	public SearchRequestBuilder collapse(Collapse collapse) {
+		_withSearchRequestImpl(
+			searchRequestImpl -> searchRequestImpl.setCollapse(collapse));
+
+		return this;
 	}
 
 	@Override
@@ -455,6 +464,17 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 	}
 
 	@Override
+	public SearchRequestBuilder retainFacetSelections(
+		boolean retainFacetSelections) {
+
+		_withSearchRequestImpl(
+			searchRequestImpl -> searchRequestImpl.setRetainFacetSelections(
+				retainFacetSelections));
+
+		return this;
+	}
+
+	@Override
 	public SearchRequestBuilder size(Integer size) {
 		_withSearchRequestImpl(
 			searchRequestImpl -> searchRequestImpl.setSize(size));
@@ -475,6 +495,15 @@ public class SearchRequestBuilderImpl implements SearchRequestBuilder {
 		_withSearchRequestImpl(
 			searchRequestImpl -> searchRequestImpl.setStatsRequests(
 				statsRequests));
+
+		return this;
+	}
+
+	@Override
+	public SearchRequestBuilder storedFields(String... storedFields) {
+		_withSearchRequestImpl(
+			searchRequestImpl -> searchRequestImpl.setStoredFields(
+				storedFields));
 
 		return this;
 	}

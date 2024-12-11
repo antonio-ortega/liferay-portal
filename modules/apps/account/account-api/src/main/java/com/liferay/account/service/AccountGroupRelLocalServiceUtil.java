@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -285,6 +286,14 @@ public class AccountGroupRelLocalServiceUtil {
 	}
 
 	public static List<AccountGroupRel> getAccountGroupRels(
+		long[] accountGroupIds, String className, long classPK, String keywords,
+		int start, int end) {
+
+		return getService().getAccountGroupRels(
+			accountGroupIds, className, classPK, keywords, start, end);
+	}
+
+	public static List<AccountGroupRel> getAccountGroupRels(
 		String className, long classPK) {
 
 		return getService().getAccountGroupRels(className, classPK);
@@ -296,13 +305,6 @@ public class AccountGroupRelLocalServiceUtil {
 
 		return getService().getAccountGroupRels(
 			className, classPK, start, end, orderByComparator);
-	}
-
-	public static List<AccountGroupRel> getAccountGroupRels(
-		String className, long classPK, String keywords, int start, int end) {
-
-		return getService().getAccountGroupRels(
-			className, classPK, keywords, start, end);
 	}
 
 	public static List<AccountGroupRel> getAccountGroupRelsByAccountGroupId(
@@ -326,6 +328,14 @@ public class AccountGroupRelLocalServiceUtil {
 	 */
 	public static int getAccountGroupRelsCount() {
 		return getService().getAccountGroupRelsCount();
+	}
+
+	public static int getAccountGroupRelsCount(
+		long[] accountGroupIds, String className, long classPK,
+		String keywords) {
+
+		return getService().getAccountGroupRelsCount(
+			accountGroupIds, className, classPK, keywords);
 	}
 
 	public static int getAccountGroupRelsCount(String className, long classPK) {
@@ -387,13 +397,12 @@ public class AccountGroupRelLocalServiceUtil {
 	}
 
 	public static AccountGroupRelLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(AccountGroupRelLocalService service) {
-		_service = service;
-	}
-
-	private static volatile AccountGroupRelLocalService _service;
+	private static final Snapshot<AccountGroupRelLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			AccountGroupRelLocalServiceUtil.class,
+			AccountGroupRelLocalService.class);
 
 }

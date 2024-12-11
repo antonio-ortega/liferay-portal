@@ -50,10 +50,13 @@ public class CPDefinitionKeywordQueryContributor
 			keywordQueryContributorHelper.getSearchContext();
 
 		_queryHelper.addSearchTerm(
-			booleanQuery, searchContext, CPField.ASSET_CATEGORY_NAMES, false);
+			booleanQuery, searchContext, CPField.ASSET_CATEGORY_NAMES + ".text",
+			false);
 		_queryHelper.addSearchTerm(
 			booleanQuery, searchContext, CPField.EXTERNAL_REFERENCE_CODE,
 			false);
+		_queryHelper.addSearchTerm(
+			booleanQuery, searchContext, CPField.GTINS, false);
 		_queryHelper.addSearchLocalizedTerm(
 			booleanQuery, searchContext, CPField.SHORT_DESCRIPTION, false);
 		_queryHelper.addSearchTerm(

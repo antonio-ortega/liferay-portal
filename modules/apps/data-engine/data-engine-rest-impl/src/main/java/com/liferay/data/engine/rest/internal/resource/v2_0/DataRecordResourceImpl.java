@@ -140,13 +140,6 @@ public class DataRecordResourceImpl extends BaseDataRecordResourceImpl {
 			Long dataRecordCollectionId, Pagination pagination)
 		throws Exception {
 
-		if (pagination.getPageSize() > 250) {
-			throw new ValidationException(
-				_language.format(
-					contextAcceptLanguage.getPreferredLocale(),
-					"page-size-is-greater-than-x", 250));
-		}
-
 		DataRecordCollectionPermissionUtil.check(
 			PermissionThreadLocal.getPermissionChecker(),
 			_ddlRecordSetLocalService.getDDLRecordSet(dataRecordCollectionId),
@@ -154,7 +147,8 @@ public class DataRecordResourceImpl extends BaseDataRecordResourceImpl {
 
 		DataRecordExporter dataRecordExporter = new DataRecordExporter(
 			_ddlRecordSetLocalService, _ddmFormFieldTypeServicesRegistry,
-			_ddmStructureLayoutLocalService, _spiDDMFormRuleConverter);
+			_ddmStructureLayoutLocalService, _ddmStructureLocalService,
+			_spiDDMFormRuleConverter);
 
 		return dataRecordExporter.export(
 			transform(
@@ -169,13 +163,6 @@ public class DataRecordResourceImpl extends BaseDataRecordResourceImpl {
 			Long dataRecordCollectionId, Long dataListViewId, String keywords,
 			Pagination pagination, Sort[] sorts)
 		throws Exception {
-
-		if (pagination.getPageSize() > 250) {
-			throw new ValidationException(
-				_language.format(
-					contextAcceptLanguage.getPreferredLocale(),
-					"page-size-is-greater-than-x", 250));
-		}
 
 		DataRecordCollectionPermissionUtil.check(
 			PermissionThreadLocal.getPermissionChecker(),
@@ -297,7 +284,7 @@ public class DataRecordResourceImpl extends BaseDataRecordResourceImpl {
 		DDLRecordSet ddlRecordSet = _ddlRecordSetLocalService.getRecordSet(
 			dataRecordCollectionId);
 
-		dataRecord.setDataRecordCollectionId(dataRecordCollectionId);
+		dataRecord.setDataRecordCollectionId(() -> dataRecordCollectionId);
 
 		DDMStructure ddmStructure = ddlRecordSet.getDDMStructure();
 
@@ -338,9 +325,9 @@ public class DataRecordResourceImpl extends BaseDataRecordResourceImpl {
 
 		DDLRecordSet ddlRecordSet = ddlRecord.getRecordSet();
 
-		dataRecord.setDataRecordCollectionId(ddlRecordSet.getRecordSetId());
+		dataRecord.setDataRecordCollectionId(ddlRecordSet::getRecordSetId);
 
-		dataRecord.setId(dataRecordId);
+		dataRecord.setId(() -> dataRecordId);
 
 		DDMStructure ddmStructure = ddlRecordSet.getDDMStructure();
 
@@ -524,11 +511,13 @@ public class DataRecordResourceImpl extends BaseDataRecordResourceImpl {
 
 		return new DataRecord() {
 			{
-				dataRecordCollectionId = ddlRecordSet.getRecordSetId();
-				dataRecordValues = dataStorage.get(
-					ddmStructure.getStructureId(), ddlRecord.getDDMStorageId());
-				id = ddlRecord.getRecordId();
-				status = ddlRecord.getStatus();
+				setDataRecordCollectionId(ddlRecordSet::getRecordSetId);
+				setDataRecordValues(
+					() -> dataStorage.get(
+						ddmStructure.getStructureId(),
+						ddlRecord.getDDMStorageId()));
+				setId(ddlRecord::getRecordId);
+				setStatus(ddlRecord::getStatus);
 			}
 		};
 	}

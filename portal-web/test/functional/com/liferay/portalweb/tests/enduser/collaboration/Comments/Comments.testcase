@@ -1,4 +1,4 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
@@ -29,7 +29,7 @@ definition {
 	}
 
 	@description = "This ensures that the comment of an asset can be subscribed automatically when the setting is true."
-	@priority = 5
+	@priority = 4
 	test CanConfigureDiscussionSubscribeAtInstanceLevel {
 		Comments.openToCommentsConfiguration();
 
@@ -57,7 +57,7 @@ definition {
 	}
 
 	@description = "This ensures that the comment of an asset will not be subscribed automatically when the setting is false."
-	@priority = 5
+	@priority = 4
 	test CanConfigureDiscussionSubscribeAtSystemLevel {
 		Comments.openToCommentsConfiguration();
 
@@ -303,7 +303,7 @@ definition {
 	}
 
 	@description = "This ensures that changing the comments configuraton in one instance does not affect the value in another instance."
-	@priority = 5
+	@priority = 4
 	test InstanceLevelConfigurationsAreIndependentFromOneAnother {
 		HeadlessPortalInstanceAPI.addPortalInstance(
 			domain = "www.able.com",
@@ -317,13 +317,13 @@ definition {
 		Comments.configureCommentEditable(commentEditable = "true");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "test@www.able.com");
 
 		JSONUser.addUser(
 			creatorEmailAddress = "test@www.able.com",
-			creatorPassword = "test",
+			creatorPassword = PropsUtil.get("default.admin.password"),
 			portalInstanceName = "www.able.com",
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "userea@www.able.com",
@@ -335,7 +335,7 @@ definition {
 
 		UserNavigator.gotoUser(userScreenName = "usersn");
 
-		User.editPassword(newPassword = "test");
+		User.editPassword(newPassword = PropsUtil.get("default.admin.password"));
 
 		Navigator.openURL(baseURL = "http://www.able.com:8080");
 
@@ -365,7 +365,7 @@ definition {
 		User.logoutPG(specificURL = "http://www.able.com:8080");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "userea@www.able.com");
 

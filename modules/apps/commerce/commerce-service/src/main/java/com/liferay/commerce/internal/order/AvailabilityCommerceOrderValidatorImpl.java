@@ -50,7 +50,7 @@ public class AvailabilityCommerceOrderValidatorImpl
 	@Override
 	public CommerceOrderValidatorResult validate(
 			Locale locale, CommerceOrder commerceOrder, CPInstance cpInstance,
-			BigDecimal quantity)
+			String json, BigDecimal quantity, boolean child)
 		throws PortalException {
 
 		if (!_cpAvailabilityChecker.isPurchasable(cpInstance)) {
@@ -61,6 +61,7 @@ public class AvailabilityCommerceOrderValidatorImpl
 		}
 
 		if (!_cpAvailabilityChecker.isAvailable(
+				commerceOrder.getCommerceAccountId(),
 				commerceOrder.getGroupId(), cpInstance, StringPool.BLANK,
 				quantity)) {
 
@@ -91,13 +92,14 @@ public class AvailabilityCommerceOrderValidatorImpl
 			_commerceInventoryBookedQuantityLocalService.
 				fetchCommerceInventoryBookedQuantity(
 					commerceOrderItem.getCommerceInventoryBookedQuantityId());
-
+		CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
 		BigDecimal quantity = commerceOrderItem.getQuantity();
 
-		if (!_cpAvailabilityChecker.isAvailable(
+		if ((commerceInventoryBookedQuantity == null) &&
+			!_cpAvailabilityChecker.isAvailable(
+				commerceOrder.getCommerceAccountId(),
 				commerceOrderItem.getGroupId(), cpInstance,
-				commerceOrderItem.getUnitOfMeasureKey(), quantity) &&
-			(commerceInventoryBookedQuantity == null)) {
+				commerceOrderItem.getUnitOfMeasureKey(), quantity)) {
 
 			return new CommerceOrderValidatorResult(
 				commerceOrderItem.getCommerceOrderItemId(), false,

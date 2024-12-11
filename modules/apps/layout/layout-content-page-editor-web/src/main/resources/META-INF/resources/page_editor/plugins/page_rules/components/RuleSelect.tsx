@@ -5,45 +5,68 @@
 
 import ClayButton from '@clayui/button';
 import {Option, Picker} from '@clayui/core';
-import {InternalDispatch} from '@clayui/shared';
 import classNames from 'classnames';
-import React from 'react';
+import React, {MutableRefObject, useEffect} from 'react';
+
+import {getSelectOptions} from '../../../common/getSelectOptions';
 
 const TriggerLabel = React.forwardRef<HTMLButtonElement, any>(
-	({children, className: _className, onClick, ...otherProps}, ref) => (
-		<ClayButton
-			className={classNames(
-				'page-editor__rule-builder-select form-control form-control-select form-control-sm'
-			)}
-			displayType="secondary"
-			onClick={onClick}
-			ref={ref}
-			size="sm"
-			{...otherProps}
-		>
-			{children}
-		</ClayButton>
-	)
+	(
+		{children, className: _className, onClick, triggerRef, ...otherProps},
+		ref
+	) => {
+		useEffect(() => {
+			if (ref && triggerRef) {
+
+				// @ts-ignore
+
+				triggerRef.current = ref.current;
+			}
+		});
+
+		return (
+			<ClayButton
+				className={classNames(
+					'page-editor__rule-builder-select form-control form-control-select form-control-sm'
+				)}
+				displayType="secondary"
+				onClick={onClick}
+				ref={ref}
+				size="sm"
+				{...otherProps}
+			>
+				{children}
+			</ClayButton>
+		);
+	}
 );
 
-interface RuleSelectProps {
-	items: {label: string; value: string}[];
-	onSelectionChange: InternalDispatch<React.Key>;
-	selectedKey?: string;
+interface RuleSelectProps<T> {
+	'aria-label'?: string;
+	'items': ReadonlyArray<{label: string; value: T}>;
+	'onSelectionChange': (selection: T) => void;
+	'selectedKey'?: string;
+	'triggerRef'?: MutableRefObject<HTMLButtonElement | undefined>;
 }
 
-export default function RuleSelect({
+export default function RuleSelect<T extends string>({
 	items,
 	onSelectionChange,
 	selectedKey,
-}: RuleSelectProps) {
+	triggerRef,
+	...otherProps
+}: RuleSelectProps<T>) {
 	return (
 		<Picker
 			as={TriggerLabel}
-			items={items}
-			onSelectionChange={onSelectionChange}
+			items={getSelectOptions(items)}
+			onSelectionChange={(selection: React.Key) =>
+				onSelectionChange(selection as T)
+			}
 			placeholder={Liferay.Language.get('select')}
 			selectedKey={selectedKey}
+			triggerRef={triggerRef}
+			{...otherProps}
 		>
 			{(item) => <Option key={item.value}>{item.label}</Option>}
 		</Picker>

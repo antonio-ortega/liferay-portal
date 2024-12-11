@@ -120,7 +120,7 @@ public class DiscontinuedLabelFragmentRenderer implements FragmentRenderer {
 			Object infoItem = httpServletRequest.getAttribute(
 				InfoDisplayWebKeys.INFO_ITEM);
 
-			if ((infoItem == null) || !(infoItem instanceof CPDefinition)) {
+			if (!(infoItem instanceof CPDefinition)) {
 				if (_isEditMode(httpServletRequest)) {
 					_printPortletMessageInfo(
 						httpServletRequest, httpServletResponse,
@@ -171,13 +171,13 @@ public class DiscontinuedLabelFragmentRenderer implements FragmentRenderer {
 			long groupId, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
+		long accountEntryId = 0;
+
 		AccountEntry accountEntry =
 			_commerceAccountHelper.getCurrentAccountEntry(
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
 				httpServletRequest);
-
-		long accountEntryId = 0;
 
 		if (accountEntry != null) {
 			accountEntryId = accountEntry.getAccountEntryId();

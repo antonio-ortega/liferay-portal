@@ -157,7 +157,7 @@ definition {
 
 		Translations.viewTargetFields(
 			webContentContent = "Contenido del inodoro",
-			webContentDescription = "Descripción del inodoro",
+			webContentDescription = "Descripción del WC",
 			webContentTitle = "Título del artículo");
 
 		PortletEntry.publish();
@@ -171,7 +171,7 @@ definition {
 
 		Translations.viewTargetFields(
 			webContentContent = "Contenido del inodoro",
-			webContentDescription = "Descripción del inodoro",
+			webContentDescription = "Descripción del WC",
 			webContentTitle = "Título del artículo");
 	}
 

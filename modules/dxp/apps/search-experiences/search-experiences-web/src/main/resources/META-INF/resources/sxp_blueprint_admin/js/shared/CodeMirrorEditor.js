@@ -3,36 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import 'codemirror/addon/display/autorefresh';
-
-import 'codemirror/addon/edit/closebrackets';
-
-import 'codemirror/addon/edit/closetag';
-
-import 'codemirror/addon/edit/matchbrackets';
-
-import 'codemirror/addon/fold/brace-fold';
-
-import 'codemirror/addon/fold/comment-fold';
-
-import 'codemirror/addon/fold/foldcode';
-
-import 'codemirror/addon/fold/foldgutter.css';
-
-import 'codemirror/addon/fold/foldgutter';
-
-import 'codemirror/addon/fold/indent-fold';
-
-import 'codemirror/addon/hint/show-hint.css';
-
-import 'codemirror/addon/hint/show-hint';
-
-import 'codemirror/lib/codemirror.css';
-
-import 'codemirror/mode/javascript/javascript';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {CodeMirror} from '@liferay/frontend-js-codemirror-web';
 import getCN from 'classnames';
-import CodeMirror from 'codemirror';
 import React, {useContext, useEffect, useRef} from 'react';
 
 import useAsyncCall from '../hooks/useAsyncCall';
@@ -251,9 +224,8 @@ export function getCodeMirrorHints(cm, autocompleteSchema, availableLanguages) {
 					Array.isArray(item.type) ? item.type.join('|') : item.type
 				}`,
 				render: (element, cm, data) => {
-					const [propertyName, propertyType] = data.displayText.split(
-						'#'
-					);
+					const [propertyName, propertyType] =
+						data.displayText.split('#');
 
 					const name = document.createElement('span');
 					name.className = CSS_CLASS_HINT_NAME;

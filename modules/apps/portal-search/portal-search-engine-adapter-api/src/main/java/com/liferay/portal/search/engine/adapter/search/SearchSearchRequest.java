@@ -7,6 +7,7 @@ package com.liferay.portal.search.engine.adapter.search;
 
 import com.liferay.portal.kernel.search.GroupBy;
 import com.liferay.portal.kernel.search.Stats;
+import com.liferay.portal.search.collapse.Collapse;
 import com.liferay.portal.search.groupby.GroupByRequest;
 import com.liferay.portal.search.highlight.Highlight;
 import com.liferay.portal.search.sort.Sort;
@@ -42,6 +43,10 @@ public class SearchSearchRequest
 
 	public String getAlternateUidFieldName() {
 		return _alternateUidFieldName;
+	}
+
+	public Collapse getCollapse() {
+		return _collapse;
 	}
 
 	public Boolean getFetchSource() {
@@ -142,6 +147,10 @@ public class SearchSearchRequest
 		return _stats;
 	}
 
+	public String[] getStoredFields() {
+		return _storedFields;
+	}
+
 	public Boolean getVersion() {
 		return _version;
 	}
@@ -184,6 +193,10 @@ public class SearchSearchRequest
 
 	public void setAlternateUidFieldName(String alternateUidFieldName) {
 		_alternateUidFieldName = alternateUidFieldName;
+	}
+
+	public void setCollapse(Collapse collapse) {
+		_collapse = collapse;
 	}
 
 	public void setFetchSource(Boolean fetchSource) {
@@ -298,12 +311,17 @@ public class SearchSearchRequest
 		_stats = stats;
 	}
 
+	public void setStoredFields(String... storedFields) {
+		_storedFields = storedFields;
+	}
+
 	public void setVersion(Boolean version) {
 		_version = version;
 	}
 
 	private boolean _allFieldsSelected;
 	private String _alternateUidFieldName;
+	private Collapse _collapse;
 	private Boolean _fetchSource;
 	private String[] _fetchSourceExcludes;
 	private String[] _fetchSourceIncludes;
@@ -328,6 +346,7 @@ public class SearchSearchRequest
 	private List<Sort> _sorts = new ArrayList<>();
 	private Integer _start;
 	private Map<String, Stats> _stats;
+	private String[] _storedFields;
 	private Boolean _version;
 
 }

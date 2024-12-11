@@ -3,7 +3,7 @@
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" change-tracking-enabled="true" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.saved.content">
 	<namespace>SavedContentEntry</namespace>
-	<entity local-service="true" name="SavedContentEntry" remote-service="false">
+	<entity local-service="true" name="SavedContentEntry" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -38,12 +38,27 @@
 			<finder-column name="groupId" />
 			<finder-column name="userId" />
 		</finder>
+		<finder name="G_CN" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="classNameId" />
+		</finder>
 		<finder name="U_C" return-type="Collection">
 			<finder-column name="userId" />
 			<finder-column name="classNameId" />
 		</finder>
+		<finder name="G_C_C" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="classNameId" />
+			<finder-column name="classPK" />
+		</finder>
 		<finder name="C_C_C" return-type="Collection">
 			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+			<finder-column name="classPK" />
+		</finder>
+		<finder name="G_U_C_C" return-type="SavedContentEntry" unique="true">
+			<finder-column name="groupId" />
+			<finder-column name="userId" />
 			<finder-column name="classNameId" />
 			<finder-column name="classPK" />
 		</finder>
@@ -54,4 +69,7 @@
 			<finder-column arrayable-operator="OR" name="classPK" />
 		</finder>
 	</entity>
+	<exceptions>
+		<exception>DuplicateSavedContentEntry</exception>
+	</exceptions>
 </service-builder>

@@ -27,20 +27,21 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +62,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -100,10 +99,16 @@ public abstract class BaseDiscountResourceTestCase {
 
 		_discountResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		DiscountResource.Builder builder = DiscountResource.builder();
 
 		discountResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +122,32 @@ public abstract class BaseDiscountResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Discount discount1 = randomDiscount();
+
+		String json = objectMapper.writeValueAsString(discount1);
+
+		Discount discount2 = DiscountSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(discount1, discount2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Discount discount = randomDiscount();
+
+		String json1 = objectMapper.writeValueAsString(discount);
+		String json2 = DiscountSerDes.toJSON(discount);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +162,6 @@ public abstract class BaseDiscountResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Discount discount1 = randomDiscount();
-
-		String json = objectMapper.writeValueAsString(discount1);
-
-		Discount discount2 = DiscountSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(discount1, discount2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Discount discount = randomDiscount();
-
-		String json1 = objectMapper.writeValueAsString(discount);
-		String json2 = DiscountSerDes.toJSON(discount);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -228,9 +224,9 @@ public abstract class BaseDiscountResourceTestCase {
 
 	@Test
 	public void testGetDiscountsPageWithPagination() throws Exception {
-		Page<Discount> totalPage = discountResource.getDiscountsPage(null);
+		Page<Discount> discountPage = discountResource.getDiscountsPage(null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(discountPage.getTotalCount());
 
 		Discount discount1 = testGetDiscountsPage_addDiscount(randomDiscount());
 
@@ -238,29 +234,59 @@ public abstract class BaseDiscountResourceTestCase {
 
 		Discount discount3 = testGetDiscountsPage_addDiscount(randomDiscount());
 
-		Page<Discount> page1 = discountResource.getDiscountsPage(
-			Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Discount> discounts1 = (List<Discount>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			discounts1.toString(), totalCount + 2, discounts1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Discount> page1 = discountResource.getDiscountsPage(
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<Discount> page2 = discountResource.getDiscountsPage(
-			Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(discount1, (List<Discount>)page1.getItems());
 
-		List<Discount> discounts2 = (List<Discount>)page2.getItems();
+			Page<Discount> page2 = discountResource.getDiscountsPage(
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(discounts2.toString(), 1, discounts2.size());
+			assertContains(discount2, (List<Discount>)page2.getItems());
 
-		Page<Discount> page3 = discountResource.getDiscountsPage(
-			Pagination.of(1, totalCount + 3));
+			Page<Discount> page3 = discountResource.getDiscountsPage(
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertContains(discount1, (List<Discount>)page3.getItems());
-		assertContains(discount2, (List<Discount>)page3.getItems());
-		assertContains(discount3, (List<Discount>)page3.getItems());
+			assertContains(discount3, (List<Discount>)page3.getItems());
+		}
+		else {
+			Page<Discount> page1 = discountResource.getDiscountsPage(
+				Pagination.of(1, totalCount + 2));
+
+			List<Discount> discounts1 = (List<Discount>)page1.getItems();
+
+			Assert.assertEquals(
+				discounts1.toString(), totalCount + 2, discounts1.size());
+
+			Page<Discount> page2 = discountResource.getDiscountsPage(
+				Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Discount> discounts2 = (List<Discount>)page2.getItems();
+
+			Assert.assertEquals(discounts2.toString(), 1, discounts2.size());
+
+			Page<Discount> page3 = discountResource.getDiscountsPage(
+				Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(discount1, (List<Discount>)page3.getItems());
+			assertContains(discount2, (List<Discount>)page3.getItems());
+			assertContains(discount3, (List<Discount>)page3.getItems());
+		}
 	}
 
 	protected Discount testGetDiscountsPage_addDiscount(Discount discount)
@@ -283,6 +309,8 @@ public abstract class BaseDiscountResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject discountsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/discounts");
@@ -294,6 +322,27 @@ public abstract class BaseDiscountResourceTestCase {
 
 		discountsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/discounts");
+
+		Assert.assertEquals(
+			totalCount + 2, discountsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			discount1,
+			Arrays.asList(
+				DiscountSerDes.toDTOs(discountsJSONObject.getString("items"))));
+		assertContains(
+			discount2,
+			Arrays.asList(
+				DiscountSerDes.toDTOs(discountsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		discountsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminPricing_v1_0",
 			"JSONObject/discounts");
 
 		Assert.assertEquals(
@@ -388,6 +437,8 @@ public abstract class BaseDiscountResourceTestCase {
 		Discount discount =
 			testGraphQLGetDiscountByExternalReferenceCode_addDiscount();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				discount,
@@ -409,6 +460,33 @@ public abstract class BaseDiscountResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/discountByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertTrue(
+			equals(
+				discount,
+				DiscountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v1_0",
+								new GraphQLField(
+									"discountByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													discount.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v1_0",
+						"Object/discountByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -417,6 +495,8 @@ public abstract class BaseDiscountResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -434,6 +514,27 @@ public abstract class BaseDiscountResourceTestCase {
 						getGraphQLFields())),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"discountByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
 	}
 
 	protected Discount
@@ -446,6 +547,59 @@ public abstract class BaseDiscountResourceTestCase {
 	@Test
 	public void testPatchDiscountByExternalReferenceCode() throws Exception {
 		Assert.assertTrue(false);
+	}
+
+	@Test
+	public void testPutDiscountByExternalReferenceCode() throws Exception {
+		Discount postDiscount =
+			testPutDiscountByExternalReferenceCode_addDiscount();
+
+		Discount randomDiscount = randomDiscount();
+
+		Discount putDiscount =
+			discountResource.putDiscountByExternalReferenceCode(
+				postDiscount.getExternalReferenceCode(), randomDiscount);
+
+		assertEquals(randomDiscount, putDiscount);
+		assertValid(putDiscount);
+
+		Discount getDiscount =
+			discountResource.getDiscountByExternalReferenceCode(
+				putDiscount.getExternalReferenceCode());
+
+		assertEquals(randomDiscount, getDiscount);
+		assertValid(getDiscount);
+
+		Discount newDiscount =
+			testPutDiscountByExternalReferenceCode_createDiscount();
+
+		putDiscount = discountResource.putDiscountByExternalReferenceCode(
+			newDiscount.getExternalReferenceCode(), newDiscount);
+
+		assertEquals(newDiscount, putDiscount);
+		assertValid(putDiscount);
+
+		getDiscount = discountResource.getDiscountByExternalReferenceCode(
+			putDiscount.getExternalReferenceCode());
+
+		assertEquals(newDiscount, getDiscount);
+
+		Assert.assertEquals(
+			newDiscount.getExternalReferenceCode(),
+			putDiscount.getExternalReferenceCode());
+	}
+
+	protected Discount testPutDiscountByExternalReferenceCode_createDiscount()
+		throws Exception {
+
+		return randomDiscount();
+	}
+
+	protected Discount testPutDiscountByExternalReferenceCode_addDiscount()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -470,7 +624,10 @@ public abstract class BaseDiscountResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteDiscount() throws Exception {
-		Discount discount = testGraphQLDeleteDiscount_addDiscount();
+
+		// No namespace
+
+		Discount discount1 = testGraphQLDeleteDiscount_addDiscount();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -479,23 +636,60 @@ public abstract class BaseDiscountResourceTestCase {
 						"deleteDiscount",
 						new HashMap<String, Object>() {
 							{
-								put("id", discount.getId());
+								put("id", discount1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteDiscount"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"discount",
 					new HashMap<String, Object>() {
 						{
-							put("id", discount.getId());
+							put("id", discount1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Discount discount2 = testGraphQLDeleteDiscount_addDiscount();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"deleteDiscount",
+							new HashMap<String, Object>() {
+								{
+									put("id", discount2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminPricing_v1_0",
+				"Object/deleteDiscount"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminPricing_v1_0",
+					new GraphQLField(
+						"discount",
+						new HashMap<String, Object>() {
+							{
+								put("id", discount2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Discount testGraphQLDeleteDiscount_addDiscount()
@@ -524,6 +718,8 @@ public abstract class BaseDiscountResourceTestCase {
 	public void testGraphQLGetDiscount() throws Exception {
 		Discount discount = testGraphQLGetDiscount_addDiscount();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				discount,
@@ -539,11 +735,35 @@ public abstract class BaseDiscountResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/discount"))));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertTrue(
+			equals(
+				discount,
+				DiscountSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminPricing_v1_0",
+								new GraphQLField(
+									"discount",
+									new HashMap<String, Object>() {
+										{
+											put("id", discount.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminPricing_v1_0",
+						"Object/discount"))));
 	}
 
 	@Test
 	public void testGraphQLGetDiscountNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -557,6 +777,25 @@ public abstract class BaseDiscountResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminPricing_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminPricing_v1_0",
+						new GraphQLField(
+							"discount",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1258,6 +1497,10 @@ public abstract class BaseDiscountResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1402,20 +1645,20 @@ public abstract class BaseDiscountResourceTestCase {
 
 		if (entityFieldName.equals("displayDate")) {
 			if (operator.equals("between")) {
+				Date date = discount.getDisplayDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(discount.getDisplayDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(discount.getDisplayDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1433,21 +1676,20 @@ public abstract class BaseDiscountResourceTestCase {
 
 		if (entityFieldName.equals("expirationDate")) {
 			if (operator.equals("between")) {
+				Date date = discount.getExpirationDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							discount.getExpirationDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(discount.getExpirationDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1718,7 +1960,8 @@ public abstract class BaseDiscountResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1780,21 +2023,21 @@ public abstract class BaseDiscountResourceTestCase {
 	}
 
 	protected DiscountResource discountResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1803,11 +2046,16 @@ public abstract class BaseDiscountResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1839,6 +2087,24 @@ public abstract class BaseDiscountResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1860,16 +2126,6 @@ public abstract class BaseDiscountResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

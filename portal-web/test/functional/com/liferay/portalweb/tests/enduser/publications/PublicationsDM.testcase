@@ -28,8 +28,6 @@ definition {
 	@description = "This is the use case for LPS-161041. Can view changes to a document across multiple publications"
 	@priority = 4
 	test CanViewDocumentFolderAndFileOverMultiplePublications {
-		property custom.properties = "feature.flag.LPS-161033=true";
-
 		task ("Add new document folder and file on new added site") {
 			HeadlessSite.addSite(siteName = "Site Name");
 
@@ -134,8 +132,6 @@ definition {
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
-		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
 		DMDocument.checkoutCP(dmDocumentTitle = "DM Document Title");
 
 		Refresh();
@@ -211,6 +207,52 @@ definition {
 			changeTitle = "DM Folder 1 Name",
 			changeType = "Deleted",
 			changeUser = "Test Test");
+	}
+
+	@description = "This is the use case for LPS-199845. Deletion Modification Conflict for DDM Structures should not be edited"
+	@priority = 3
+	test DeletionModificationConflictForDDMStructuresShouldNotBeEdited {
+		WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
+
+		NavItem.gotoStructures();
+
+		WebContentStructures.addCP(structureName = "WC Structure Title");
+
+		DataEngine.addField(
+			fieldFieldLabel = "Text",
+			fieldName = "Text");
+
+		WebContentStructures.saveCP();
+
+		JSONPublications.addPublication(publicationName = "Publication Name");
+
+		JSONPublications.selectPublication(publicationName = "Publication Name");
+
+		WebContentNavigator.gotoEditStructure(structureName = "WC Structure Title");
+
+		WebContentStructures.addName(structureName = "WC Structure Title Edit");
+
+		WebContentStructures.saveCP();
+
+		Publications.workOnProduction();
+
+		WebContentStructures.deleteCP(structureName = "WC Structure Title");
+
+		PublicationsNavigator.openPublicationsAdmin();
+
+		PublicationsNavigator.gotoPublicationEllipsisItem(
+			menuItem = "Publish",
+			publicationName = "Publication Name");
+
+		AssertElementPresent(
+			key_changeCategory = "Dynamic Data Mapping Structure Layout",
+			key_changeTitle = "Dynamic Data Mapping Structure Layout",
+			locator1 = "PublicationsChanges#DISCARD_CHANGE_BUTTON");
+
+		AssertElementNotPresent(
+			key_changeCategory = "Dynamic Data Mapping Structure Layout",
+			key_changeTitle = "Dynamic Data Mapping Structure Layout",
+			locator1 = "PublicationsChanges#PUBLICATIONS_CHANGE_DROPDOWN");
 	}
 
 	@priority = 4
@@ -396,85 +438,6 @@ definition {
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_1.jpg");
 
 		DMDocument.viewCP(dmDocumentTitle = "Document_1.jpg");
-	}
-
-	@priority = 4
-	test ResolveConflictingPublicationsByDiscarding {
-		HeadlessSite.addSite(siteName = "Site Name");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Site Name",
-			mimeType = "text/plain",
-			sourceFileName = "Document_1.txt");
-
-		JSONPublications.addPublication(publicationName = "Publication Name");
-
-		JSONPublications.selectPublication(publicationName = "Publication Name");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
-
-		DMDocument.editCP(
-			dmDocumentDescription = "DM Document Description1",
-			dmDocumentDescriptionEdit = "DM Document Description Edit",
-			dmDocumentTitle = "DM Document Title",
-			dmDocumentTitleEdit = "DM Document Title Edit");
-
-		DMDocument.viewEditCP(
-			dmDocumentTitleEdit = "DM Document Title Edit",
-			dmDocumentVersionNumber = "1.1");
-
-		JSONPublications.addPublication(publicationName = "Publication Name 2");
-
-		JSONPublications.selectPublication(publicationName = "Publication Name 2");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
-
-		DMDocument.editCP(
-			dmDocumentDescription = "DM Document Description1",
-			dmDocumentDescriptionEdit = "DM Document 2 Description Edit",
-			dmDocumentTitle = "DM Document Title",
-			dmDocumentTitleEdit = "DM Document 2 Title Edit");
-
-		DMDocument.viewEditCP(
-			dmDocumentTitleEdit = "DM Document 2 Title Edit",
-			dmDocumentVersionNumber = "1.1");
-
-		Publications.publishPublication(
-			gotoPublicationsAdmin = "true",
-			publicationName = "Publication Name 2");
-
-		PublicationsNavigator.gotoPublish(
-			gotoPublicationsAdmin = "true",
-			publicationName = "Publication Name");
-
-		Publications.viewNeedsManualResolution(
-			entryTitle = "DM Document Title Edit",
-			warningMessage = "Entity Recently Updated");
-
-		PublicationsNavigator.gotoViewConflictingChangeDetails(entryTitle = "DM Document Title Edit");
-
-		PublicationsChangeDetails.viewConflictingChangeDetails(
-			columnName = "Title",
-			columnValueInProduction = "DM Document 2 Title Edit",
-			columnValueInPublication = "DM Document Title Edit",
-			diffRemovedValue = 2,
-			modificationConflict = "true",
-			publicationName = "Publication Name");
-
-		IFrame.closeFrame();
-
-		PublicationsChanges.discardChanges(
-			changeCategory = "Asset",
-			changeTitle = "DM Document Title Edit",
-			conflictingChanges = "true",
-			entryTitle = "DM Document Title Edit");
-
-		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
-
-		DMDocument.viewEditCP(
-			dmDocumentTitleEdit = "DM Document 2 Title Edit",
-			dmDocumentVersionNumber = "1.1");
 	}
 
 	@priority = 4

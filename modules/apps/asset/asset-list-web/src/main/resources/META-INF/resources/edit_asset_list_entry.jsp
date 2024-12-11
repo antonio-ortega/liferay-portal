@@ -64,7 +64,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 				<span aria-hidden="true" class="loading-animation loading-animation-sm mt-4"></span>
 
 				<react:component
-					module="js/components/VariationsNav/index"
+					module="{VariationsNav} from asset-list-web"
 					props="<%= editAssetListDisplayContext.getData() %>"
 				/>
 			</div>
@@ -85,7 +85,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 	</clay:row>
 </clay:container-fluid>
 
-<script>
+<aui:script>
 	<portlet:actionURL name="/asset_list/add_asset_list_entry_variation" var="addAssetListEntryVariationURL">
 		<portlet:param name="assetListEntryId" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryId()) %>" />
 		<portlet:param name="type" value="<%= String.valueOf(editAssetListDisplayContext.getAssetListEntryType()) %>" />
@@ -105,8 +105,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 				});
 			},
 			selectEventName: '<portlet:namespace />selectEntity',
-			title:
-				'<liferay-ui:message arguments="personalized-variation" key="new-x" />',
+			title: '<liferay-ui:message arguments="personalized-variation" key="new-x" />',
 			url: '<%= editAssetListDisplayContext.getSelectSegmentsEntryURL() %>',
 		});
 	}
@@ -160,4 +159,4 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 			submitForm(form);
 		}
 	}
-</script>
+</aui:script>

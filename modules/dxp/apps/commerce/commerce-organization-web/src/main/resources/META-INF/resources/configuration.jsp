@@ -38,7 +38,7 @@ Organization rootOrganization = commerceOrganizationDisplayContext.getRootOrgani
 				<span aria-hidden="true" class="loading-animation loading-animation-sm"></span>
 
 				<react:component
-					module="js/configuration"
+					module="{configuration} from commerce-organization-web"
 					props='<%=
 						HashMapBuilder.<String, Object>put(
 							"apiUrl", "/o/headless-admin-user/v1.0/organizations?flatten=true"
@@ -47,9 +47,9 @@ Organization rootOrganization = commerceOrganizationDisplayContext.getRootOrgani
 						).put(
 							"initialValue", (rootOrganization == null) ? 0 : rootOrganization.getOrganizationId()
 						).put(
-							"inputName", liferayPortletResponse.getNamespace() + "preferences--rootOrganizationId--"
+							"inputName", liferayPortletResponse.getNamespace() + "preferences--rootOrganizationExternalReferenceCode--"
 						).put(
-							"itemsKey", "id"
+							"itemsKey", "externalReferenceCode"
 						).put(
 							"itemsLabel", "name"
 						).put(

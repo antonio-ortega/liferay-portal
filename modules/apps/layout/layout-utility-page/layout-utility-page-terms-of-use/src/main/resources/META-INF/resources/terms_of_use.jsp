@@ -41,7 +41,7 @@
 						updateLanguageFormAction = HttpComponentsUtil.addParameter(updateLanguageFormAction, "redirect", updateLanguageRedirect);
 						%>
 
-						<liferay-ui:language
+						<liferay-site-navigation:language
 							formAction="<%= updateLanguageFormAction %>"
 							languageId="<%= themeDisplay.getLanguageId() %>"
 							languageIds="<%= LocaleUtil.toLanguageIds(LanguageUtil.getAvailableLocales(themeDisplay.getCompanyGroupId())) %>"
@@ -91,7 +91,7 @@
 					<clay:button
 						displayType="secondary"
 						label="i-disagree"
-						propsTransformer="js/DisagreeButtonPropsTransformer"
+						propsTransformer="{DisagreeButtonPropsTransformer} from layout-utility-page-terms-of-use"
 						type="button"
 					/>
 				</div>

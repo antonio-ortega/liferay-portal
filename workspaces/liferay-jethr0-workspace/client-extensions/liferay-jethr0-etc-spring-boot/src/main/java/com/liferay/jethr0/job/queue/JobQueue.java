@@ -16,12 +16,15 @@ import com.liferay.jethr0.job.prioritizer.JobPrioritizerEntity;
 import com.liferay.jethr0.job.repository.JobComparatorEntityRepository;
 import com.liferay.jethr0.job.repository.JobEntityRepository;
 import com.liferay.jethr0.job.repository.JobPrioritizerEntityRepository;
+import com.liferay.jethr0.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -87,7 +90,8 @@ public class JobQueue {
 
 		addJobEntities(
 			_jobEntityRepository.getByState(
-				JobEntity.State.QUEUED, JobEntity.State.RUNNING));
+				JobEntity.State.OPENED, JobEntity.State.QUEUED,
+				JobEntity.State.RUNNING));
 
 		update();
 	}
@@ -104,12 +108,19 @@ public class JobQueue {
 		}
 
 		_jobEntities.removeAll(jobEntities);
+
+		_createJobQueueOrderEntity();
+	}
+
+	public void removeJobEntity(JobEntity jobEntity) {
+		removeJobEntities(Collections.singleton(jobEntity));
 	}
 
 	@Scheduled(cron = "${liferay.jethr0.job.queue.update.cron}")
 	public void scheduledUpdate() {
 		if (_log.isInfoEnabled()) {
-			_log.info("Updating job queue");
+			_log.info(
+				"Updating job queue at " + StringUtil.toString(new Date()));
 		}
 
 		update();
@@ -157,6 +168,8 @@ public class JobQueue {
 				Comparator.comparingInt(JobComparatorEntity::getPosition));
 
 			_jobEntities.sort(new PrioritizedJobComparator());
+
+			_createJobQueueOrderEntity();
 		}
 	}
 
@@ -200,6 +213,29 @@ public class JobQueue {
 		}
 	}
 
+	private void _createJobQueueOrderEntity() {
+		synchronized (_jobEntities) {
+			List<Long> jobIds = new ArrayList<>();
+
+			for (JobEntity jobEntity : _jobEntities) {
+				jobIds.add(jobEntity.getId());
+			}
+
+			JobPrioritizerEntity jobPrioritizerEntity =
+				getJobPrioritizerEntity();
+
+			if (Objects.equals(
+					jobIds, jobPrioritizerEntity.getPrioritizedJobIds())) {
+
+				return;
+			}
+
+			jobPrioritizerEntity.setPrioritizedJobIds(jobIds);
+
+			_jobPrioritizerEntityRepository.update(jobPrioritizerEntity);
+		}
+	}
+
 	private JobPrioritizerEntity _getDefaultJobPrioritizerEntity() {
 		JobPrioritizerEntity jobPrioritizerEntity =
 			_jobPrioritizerEntityRepository.getByName(_liferayJobPrioritizer);
@@ -211,6 +247,8 @@ public class JobQueue {
 		jobPrioritizerEntity = _jobPrioritizerEntityRepository.create(
 			_liferayJobPrioritizer);
 
+		_jobComparatorEntityRepository.create(
+			jobPrioritizerEntity, 0, JobComparatorEntity.Type.BLESSED, null);
 		_jobComparatorEntityRepository.create(
 			jobPrioritizerEntity, 1, JobComparatorEntity.Type.JOB_START_DATE,
 			null);

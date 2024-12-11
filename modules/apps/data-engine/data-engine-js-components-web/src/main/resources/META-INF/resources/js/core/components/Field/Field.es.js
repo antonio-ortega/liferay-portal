@@ -5,14 +5,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import React, {
-	Suspense,
-	lazy,
-	useCallback,
-	useContext,
-	useRef,
-	useState,
-} from 'react';
+import {loadModule} from 'frontend-js-web';
+import React, {useContext, useRef, useState} from 'react';
 
 import {sub} from '../../../utils/strings';
 import {useFormState} from '../../hooks/useForm.es';
@@ -30,61 +24,30 @@ const getModule = (fieldTypes, fieldType) => {
 	return field;
 };
 
-const load = (fieldModule) => {
-	return new Promise((resolve, reject) => {
-		Liferay.Loader.require(
-			[fieldModule],
-			(Field) => resolve(Field),
-			(error) => reject({error, network: true})
-		);
-	});
-};
-
-/**
- * @see https://github.com/metal/metal.js/blob/master/packages/metal-component/src/Component.js#L517-L519
- */
-const isMetalComponentConstructor = (fn) => {
-	return fn && fn.prototype && fn.prototype['__metal_component__'];
-};
-
-const useLazy = () => {
+const useLazy = (fieldModule) => {
 	const {components} = useStorage();
 
-	return useCallback(
-		(fieldModule) => {
-			if (!components.has(fieldModule)) {
-				const Component = lazy(() => {
-					return load(fieldModule)
-						.then((instance) => {
-							if (!(instance && instance.default)) {
-								return null;
-							}
+	const hasFieldInStorage = components.has(fieldModule);
 
-							if (isMetalComponentConstructor(instance.default)) {
-								console.error(
-									'Metal is no longer supported',
-									instance
-								);
+	const [loading, setLoading] = useState(!hasFieldInStorage);
 
-								return null;
-							}
+	if (!hasFieldInStorage) {
+		loadModule(fieldModule)
+			.then((instance) => {
+				if (instance) {
+					components.set(fieldModule, instance);
+				}
 
-							return instance;
-						})
-						.catch((error) => {
-							components.delete(fieldModule);
+				setLoading(false);
+			})
+			.catch((error) => {
+				components.delete(fieldModule);
 
-							throw error;
-						});
-				});
+				throw error;
+			});
+	}
 
-				components.set(fieldModule, Component);
-			}
-
-			return components.get(fieldModule);
-		},
-		[components]
-	);
+	return [components.get(fieldModule), loading];
 };
 
 class FieldEventStruct {
@@ -141,9 +104,11 @@ const FieldLazy = ({
 		field.type
 	);
 
-	const ComponentLazy = useLazy()(javaScriptModule);
+	const [ComponentLazy, loading] = useLazy(javaScriptModule);
 
-	return (
+	return loading ? (
+		<ClayLoadingIndicator />
+	) : !ComponentLazy ? null : (
 		<ComponentLazy
 			itemPath={itemPath}
 			onBlur={(event) => {
@@ -237,22 +202,27 @@ export function Field({field, itemPath, loc, ...otherProps}) {
 	return (
 		<ErrorBoundary onError={setHasError}>
 			<AutoFocus>
-				<div className="ddm-field" data-field-name={field.fieldName}>
-					<Suspense fallback={<ClayLoadingIndicator />}>
-						<ParentFieldContext.Provider
-							value={getRootParentField(field, loc, parentField)}
-						>
-							<FieldLazy
-								field={{
-									...field,
-									readOnly: getReadOnly(field),
-								}}
-								fieldTypes={fieldTypes}
-								itemPath={itemPath}
-								{...otherProps}
-							/>
-						</ParentFieldContext.Provider>
-					</Suspense>
+				<div
+					className="ddm-field"
+					data-ddm-localizable-field-id={
+						(field.localizable && field.instanceId) || null
+					}
+					data-field-name={field.fieldName}
+					data-qa-id={field.fieldName}
+				>
+					<ParentFieldContext.Provider
+						value={getRootParentField(field, loc, parentField)}
+					>
+						<FieldLazy
+							field={{
+								...field,
+								readOnly: getReadOnly(field),
+							}}
+							fieldTypes={fieldTypes}
+							itemPath={itemPath}
+							{...otherProps}
+						/>
+					</ParentFieldContext.Provider>
 				</div>
 			</AutoFocus>
 		</ErrorBoundary>

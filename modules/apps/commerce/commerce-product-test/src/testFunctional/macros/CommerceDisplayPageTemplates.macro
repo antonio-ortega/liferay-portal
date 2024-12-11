@@ -1,6 +1,7 @@
 definition {
 
-	macro addFragment {
+	@summary = "Default summary"
+	macro addFragment(fragmentName = null, index = null, collectionName = null) {
 		PageEditor.assertFragmentSidebarLoaded();
 
 		PageEditor.gotoTab(tabName = "Fragments and Widgets");
@@ -41,7 +42,8 @@ definition {
 		PageEditor.waitForAutoSave();
 	}
 
-	macro addMappedDisplayPageTemplateEntry {
+	@summary = "Default summary"
+	macro addMappedDisplayPageTemplateEntry(groupName = null, fragmentName = null, displayPageName = null, siteURLKey = null, menuItem = null, contentType = null, fieldsList = null) {
 		task ("Given a new ${contentType} type display page template with fragment created") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = ${contentType},
@@ -66,7 +68,8 @@ definition {
 		}
 	}
 
-	macro checkCollectionDisplayProductSpecificationsPresent {
+	@summary = "Default summary"
+	macro checkCollectionDisplayProductSpecificationsPresent(product = null) {
 		var productSpecifications = CommerceJSONProductsAPI._getCommerceProductSpecifications(productName = ${product});
 
 		for (var productSpecification : list ${productSpecifications}) {
@@ -82,7 +85,8 @@ definition {
 		}
 	}
 
-	macro configureProductCardFragment {
+	@summary = "Default summary"
+	macro configureProductCardFragment(fragmentName = null, checkList = null, uncheckList = null) {
 		if (!(isSet(index))) {
 			var index = 1;
 		}
@@ -90,6 +94,8 @@ definition {
 		PageEditor.clickConfigurableField(
 			fragmentName = ${fragmentName},
 			index = ${index});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		Navigator.gotoNavTab(navTab = "General");
 
@@ -110,7 +116,8 @@ definition {
 		}
 	}
 
-	macro editCollectionDisplay {
+	@summary = "Default summary"
+	macro editCollectionDisplay(deviceType = null, listItemStyle = null, infoListProviderName = null, depotName = null, fragmentName = null, columnNumber = null, styleDisplay = null, assetListName = null, infoItemRelatedListProviderName = null) {
 		if (!(isSet(index))) {
 			var index = 1;
 		}
@@ -133,6 +140,8 @@ definition {
 			PageEditor.clickConfigurableField(
 				fragmentName = ${fragmentName},
 				index = ${index});
+
+			PageEditor.gotoTab(tabName = "Browser");
 		}
 
 		if (isSet(deviceType) && (${deviceType} != "Desktop")) {
@@ -195,6 +204,8 @@ definition {
 					fragmentName = ${fragmentName},
 					index = ${index});
 
+				PageEditor.gotoTab(tabName = "Browser");
+
 				PageEditor.viewItemSelectorText(
 					fieldLabel = "Collection",
 					text = ${infoListProviderName});
@@ -247,7 +258,8 @@ definition {
 		}
 	}
 
-	macro editDynamicField {
+	@summary = "Default summary"
+	macro editDynamicField(field = null, fragmentName = null, valueElementType = null, label = null, labelElementType = null) {
 		if (!(isSet(index))) {
 			var index = 1;
 		}
@@ -255,6 +267,8 @@ definition {
 		PageEditor.clickConfigurableField(
 			fragmentName = ${fragmentName},
 			index = ${index});
+
+		PageEditor.gotoTab(tabName = "Browser");
 
 		Navigator.gotoNavTab(navTab = "General");
 
@@ -287,7 +301,8 @@ definition {
 		}
 	}
 
-	macro mapEditableTextToField {
+	@summary = "Default summary"
+	macro mapEditableTextToField(field = null, fragmentName = null, index = null, className = null, source = null) {
 		if (${index} == 1) {
 			var contributed = "false";
 		}
@@ -321,7 +336,8 @@ definition {
 		PageEditor.waitForAutoSave();
 	}
 
-	macro mapFragmentsToFields {
+	@summary = "Default summary"
+	macro mapFragmentsToFields(fragmentName = null, displayPageName = null, siteURLKey = null, fieldsList = null) {
 		Variables.assertDefined(parameterList = "${displayPageName},${fieldsList},${fragmentName},${siteURLKey}");
 
 		if (!(isSet(collectionName))) {
@@ -351,7 +367,8 @@ definition {
 		PageEditor.publish();
 	}
 
-	macro viewDynamicFieldContent {
+	@summary = "Default summary"
+	macro viewDynamicFieldContent(fieldLabel = null, fieldValue = null) {
 		Variables.assertDefined(parameterList = ${fieldValue});
 
 		if (!(isSet(index))) {
@@ -383,7 +400,8 @@ definition {
 			value1 = ${fieldValue});
 	}
 
-	macro viewDynamicFields {
+	@summary = "Default summary"
+	macro viewDynamicFields() {
 		Variables.assertDefined(parameterList = ${valuesList});
 
 		if (!(isSet(elementsList))) {
@@ -431,7 +449,8 @@ definition {
 		}
 	}
 
-	macro viewMappedFragmentsText {
+	@summary = "Default summary"
+	macro viewMappedFragmentsText(fragmentsTextList = null) {
 		if (!(isSet(index))) {
 			var index = 1;
 		}

@@ -61,10 +61,9 @@ SearchContainer<User> searchContainer = editUserGroupAssignmentsManagementToolba
 	additionalProps="<%= editUserGroupAssignmentsManagementToolbarDisplayContext.getAdditionalProps() %>"
 	clearResultsURL="<%= editUserGroupAssignmentsManagementToolbarDisplayContext.getClearResultsURL() %>"
 	creationMenu="<%= editUserGroupAssignmentsManagementToolbarDisplayContext.getCreationMenu() %>"
-	filterDropdownItems="<%= editUserGroupAssignmentsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= searchContainer.getTotal() %>"
 	orderDropdownItems="<%= editUserGroupAssignmentsManagementToolbarDisplayContext.getOrderByDropdownItems() %>"
-	propsTransformer="js/EditUserGroupAssignmentsManagementToolbarPropsTransformer"
+	propsTransformer="{EditUserGroupAssignmentsManagementToolbarPropsTransformer} from user-groups-admin-web"
 	searchActionURL="<%= editUserGroupAssignmentsManagementToolbarDisplayContext.getSearchActionURL() %>"
 	searchContainerId="users"
 	searchFormName="searchFm"
@@ -112,11 +111,11 @@ SearchContainer<User> searchContainer = editUserGroupAssignmentsManagementToolba
 					<liferay-ui:search-container-column-text
 						colspan="<%= 2 %>"
 					>
-						<h5><%= user2.getFullName() %></h5>
+						<div class="h5"><%= user2.getFullName() %></div>
 
-						<h6 class="text-default">
+						<div class="h6 text-default">
 							<span><%= user2.getScreenName() %></span>
-						</h6>
+						</div>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-jsp
@@ -126,7 +125,7 @@ SearchContainer<User> searchContainer = editUserGroupAssignmentsManagementToolba
 				<c:when test='<%= displayStyle.equals("icon") %>'>
 					<liferay-ui:search-container-column-text>
 						<clay:user-card
-							propsTransformer="js/UserDropdownDefaultPropsTransformer"
+							propsTransformer="{UserDropdownDefaultPropsTransformer} from user-groups-admin-web"
 							userCard="<%= new UserVerticalCard(renderRequest, renderResponse, userSearchContainer.getRowChecker(), user2) %>"
 						/>
 					</liferay-ui:search-container-column-text>

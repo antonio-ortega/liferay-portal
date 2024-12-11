@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -325,13 +326,6 @@ public class CPInstanceLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static CPInstance fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CPInstance fetchCPInstance(long CPInstanceId) {
 		return getService().fetchCPInstance(CPInstanceId);
 	}
@@ -467,6 +461,14 @@ public class CPInstanceLocalServiceUtil {
 
 	public static List<CPInstance> getCPInstances(long companyId, String sku) {
 		return getService().getCPInstances(companyId, sku);
+	}
+
+	public static List<CPInstance> getCPInstances(
+		String replacementCPInstanceUuid, long replacementCProductId,
+		int status) {
+
+		return getService().getCPInstances(
+			replacementCPInstanceUuid, replacementCProductId, status);
 	}
 
 	/**
@@ -635,10 +637,31 @@ public class CPInstanceLocalServiceUtil {
 
 	public static com.liferay.portal.kernel.search.BaseModelSearchResult
 		<CPInstance> searchCPInstances(
+				long companyId, String cpInstanceUuid, long cProductId,
+				String keywords, int status, int start, int end,
+				com.liferay.portal.kernel.search.Sort sort)
+			throws PortalException {
+
+		return getService().searchCPInstances(
+			companyId, cpInstanceUuid, cProductId, keywords, status, start, end,
+			sort);
+	}
+
+	public static com.liferay.portal.kernel.search.BaseModelSearchResult
+		<CPInstance> searchCPInstances(
 				com.liferay.portal.kernel.search.SearchContext searchContext)
 			throws PortalException {
 
 		return getService().searchCPInstances(searchContext);
+	}
+
+	public static int searchCPInstancesCount(
+			long companyId, String cpInstanceUuid, long cProductId,
+			String keywords, int status)
+		throws PortalException {
+
+		return getService().searchCPInstancesCount(
+			companyId, cpInstanceUuid, cProductId, keywords, status);
 	}
 
 	/**
@@ -758,13 +781,11 @@ public class CPInstanceLocalServiceUtil {
 	}
 
 	public static CPInstanceLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPInstanceLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CPInstanceLocalService _service;
+	private static final Snapshot<CPInstanceLocalService> _serviceSnapshot =
+		new Snapshot<>(
+			CPInstanceLocalServiceUtil.class, CPInstanceLocalService.class);
 
 }

@@ -3,6 +3,7 @@ import autobind from 'autobind-decorator';
 import BaseTabsPage, {
 	tabIds
 } from 'settings/components/data-source/BaseTabsPage';
+import ClayLink from '@clayui/link';
 import OAuthForm from 'settings/components/data-source/OAuthForm';
 import React from 'react';
 import URLConstants from 'shared/util/url-constants';
@@ -52,10 +53,6 @@ export class SalesforceAuthorization extends React.Component {
 			name: dataSourceName,
 			status: DataSourceStatuses.Active,
 			url
-		}).then(response => {
-			analytics.track('Created Salesforce Datasource');
-
-			return response;
 		});
 	}
 
@@ -120,12 +117,12 @@ export class SalesforceAuthorization extends React.Component {
 						),
 						[
 							Liferay.Language.get('salesforce'),
-							<a
+							<ClayLink
 								href={URLConstants.SalesforceAddDocumentation}
 								key='documentationLink'
 							>
 								{Liferay.Language.get('documentation-fragment')}
-							</a>
+							</ClayLink>
 						],
 						false
 					)}

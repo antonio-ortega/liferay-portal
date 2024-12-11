@@ -16,7 +16,6 @@ import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.odata.entity.DoubleEntityField;
@@ -130,7 +129,7 @@ public class CountryResourceImpl extends BaseCountryResourceImpl {
 				titleMap.put(_language.getLanguageId(locale), null);
 			}
 
-			country.setTitle_i18n(titleMap);
+			country.setTitle_i18n(() -> titleMap);
 		}
 
 		_countryLocalService.updateCountryLocalizations(
@@ -142,6 +141,7 @@ public class CountryResourceImpl extends BaseCountryResourceImpl {
 				GetterUtil.getBoolean(country.getGroupFilterEnabled())));
 	}
 
+	@Override
 	public Country putCountry(Long countryId, Country country)
 		throws Exception {
 
@@ -163,7 +163,7 @@ public class CountryResourceImpl extends BaseCountryResourceImpl {
 				titleMap.put(_language.getLanguageId(locale), null);
 			}
 
-			country.setTitle_i18n(titleMap);
+			country.setTitle_i18n(() -> titleMap);
 		}
 
 		_countryLocalService.updateCountryLocalizations(
@@ -203,8 +203,8 @@ public class CountryResourceImpl extends BaseCountryResourceImpl {
 
 	private static final EntityModel _entityModel =
 		() -> EntityModel.toEntityFieldsMap(
-			new StringEntityField("name", locale -> "name"),
-			new DoubleEntityField("position", locale -> "position"));
+			new DoubleEntityField("position", locale -> "position"),
+			new StringEntityField("name", locale -> "name"));
 
 	@Reference
 	private CountryLocalService _countryLocalService;
@@ -220,8 +220,5 @@ public class CountryResourceImpl extends BaseCountryResourceImpl {
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private Localization _localization;
 
 }

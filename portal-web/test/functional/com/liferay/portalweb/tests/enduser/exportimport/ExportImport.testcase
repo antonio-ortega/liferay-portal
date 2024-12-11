@@ -1,10 +1,10 @@
-@component-name = "portal-staging"
+@component-name = "portal-headless"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Export/Import Framework";
+	property testray.main.component.name = "Export/Import";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -441,10 +441,7 @@ definition {
 		}
 
 		task ("When: User adds a new virtual instance") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			PortalInstances.addCP(
 				mailDomain = "www.able.com",
@@ -454,7 +451,7 @@ definition {
 
 		task ("And: Import the exported LAR file") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 
@@ -504,10 +501,7 @@ definition {
 		}
 
 		task ("When: User adds a new virtual instance") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			PortalInstances.addCP(
 				mailDomain = "www.able.com",
@@ -519,7 +513,7 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@www.able.com",
 				virtualHostsURL = "http://www.able.com:8080");
 
@@ -898,9 +892,9 @@ definition {
 	@priority = 3
 	test ExportImportPortletWithADT {
 		task ("Given: User adds a Blog ADT template then a new page") {
-			ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
+			WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
 
-			ApplicationDisplayTemplates.addCP(
+			WidgetTemplates.addCP(
 				adtFile = "adt_blogs_basic.ftl",
 				adtType = "Blogs");
 
@@ -923,7 +917,7 @@ definition {
 		task ("And: Configure the ADT template for the blog portlet") {
 			Navigator.gotoPage(pageName = "Test Page Name");
 
-			ApplicationDisplayTemplates.selectPortletADT(
+			WidgetTemplates.selectPortletADT(
 				portletName = "Blogs",
 				templateName = "Blogs Test ADT");
 
@@ -977,8 +971,11 @@ definition {
 	@priority = 3
 	test ExportImportPrivatePage {
 		property portal.acceptance = "true";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 		property testray.component.names = "Training";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Given: User adds a new private page") {
 			Navigator.openURL();
@@ -1029,6 +1026,10 @@ definition {
 	@description = "This is a use case for LPS-84201. Verify if asset publisher's scope settings can be export/import."
 	@priority = 3
 	test ExportImportSiteWithAssetPublisherScopeSetting {
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		task ("Given: User adds a new site with a page, then adds an AP widget to it") {
 			HeadlessSite.addSite(siteName = "Site Name A");
 
@@ -1330,7 +1331,7 @@ definition {
 	@description = "Verify is possible export/import a Smoke template."
 	@priority = 4
 	test ExportImportSmoke {
-		property app.server.types = "jboss,tomcat,weblogic,websphere,wildfly";
+		property app.server.types = "jboss,tomcat,weblogic,wildfly";
 		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
@@ -1682,10 +1683,7 @@ definition {
 				userLastName = "userln",
 				userScreenName = "usersn");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			User.editPasswordCP(
 				userEmailAddress = "userea@liferay.com",

@@ -18,6 +18,7 @@
 				<action-key>MANAGE_ORGANIZATIONS</action-key>
 				<action-key>MANAGE_USERS</action-key>
 				<action-key>UPDATE</action-key>
+				<action-key>UPDATE_ORGANIZATIONS</action-key>
 				<action-key>VIEW</action-key>
 				<action-key>VIEW_ACCOUNT_GROUPS</action-key>
 				<action-key>VIEW_ACCOUNT_ROLES</action-key>
@@ -69,6 +70,7 @@
 				<action-key>MANAGE_ACCOUNTS</action-key>
 				<action-key>MANAGE_AVAILABLE_ACCOUNTS</action-key>
 				<action-key>MANAGE_SUBORGANIZATIONS_ACCOUNTS</action-key>
+				<action-key>UPDATE_SUBORGANIZATIONS_ACCOUNTS</action-key>
 			</supports>
 			<guest-unsupported>
 				<action-key>MANAGE_ACCOUNTS</action-key>

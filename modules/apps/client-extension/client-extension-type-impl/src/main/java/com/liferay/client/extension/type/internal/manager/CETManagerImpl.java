@@ -49,7 +49,7 @@ public class CETManagerImpl implements CETManager {
 		throws PortalException {
 
 		CET cet = _cetFactory.create(
-			cetConfiguration, companyId, externalReferenceCode);
+			cetConfiguration, companyId, externalReferenceCode, true);
 
 		Map<String, CET> cetsMap = _getCETsMap(cet.getCompanyId());
 
@@ -82,7 +82,7 @@ public class CETManagerImpl implements CETManager {
 
 		if (clientExtensionEntry != null) {
 			try {
-				return _cetFactory.create(clientExtensionEntry);
+				return _cetFactory.create(clientExtensionEntry, true);
 			}
 			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
@@ -95,7 +95,17 @@ public class CETManagerImpl implements CETManager {
 
 		Map<String, CET> cetsMap = _getCETsMap(companyId);
 
-		return cetsMap.get(externalReferenceCode);
+		CET cet = cetsMap.get(externalReferenceCode);
+
+		if (cet == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"No CET found for external reference code " +
+						externalReferenceCode);
+			}
+		}
+
+		return cet;
 	}
 
 	@Override
@@ -154,7 +164,7 @@ public class CETManagerImpl implements CETManager {
 					companyId, QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
 
 			try {
-				CET cet = _cetFactory.create(clientExtensionEntry);
+				CET cet = _cetFactory.create(clientExtensionEntry, true);
 
 				if (_isInclude(cet, keywords, type)) {
 					cets.add(cet);

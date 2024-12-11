@@ -14,6 +14,7 @@ import com.liferay.content.dashboard.item.ContentDashboardItemVersion;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
 import com.liferay.content.dashboard.web.internal.constants.ContentDashboardPortletKeys;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryRegistry;
+import com.liferay.content.dashboard.web.internal.item.filter.ContentDashboardItemFilterProviderRegistry;
 import com.liferay.content.dashboard.web.internal.search.request.ContentDashboardSearchContextBuilder;
 import com.liferay.content.dashboard.web.internal.searcher.ContentDashboardSearchRequestBuilderFactory;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
@@ -36,7 +37,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.configuration.DefaultSearchResultPermissionFilterConfiguration;
 import com.liferay.portal.search.searcher.SearchResponse;
@@ -294,7 +294,8 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 			_contentDashboardSearchRequestBuilderFactory.builder(
 				new ContentDashboardSearchContextBuilder(
 					_portal.getHttpServletRequest(resourceRequest),
-					_assetCategoryLocalService, _assetVocabularyLocalService
+					_assetCategoryLocalService, _assetVocabularyLocalService,
+					_contentDashboardItemFilterProviderRegistry
 				).withEnd(
 					end
 				).withSort(
@@ -384,6 +385,10 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 		_contentDashboardItemFactoryRegistry;
 
 	@Reference
+	private ContentDashboardItemFilterProviderRegistry
+		_contentDashboardItemFilterProviderRegistry;
+
+	@Reference
 	private ContentDashboardSearchRequestBuilderFactory
 		_contentDashboardSearchRequestBuilderFactory;
 
@@ -398,9 +403,6 @@ public class GetContentDashboardItemsXlsMVCResourceCommand
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private Props _props;
 
 	@Reference
 	private Searcher _searcher;

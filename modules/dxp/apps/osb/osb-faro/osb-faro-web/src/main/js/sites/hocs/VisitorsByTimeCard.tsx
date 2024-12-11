@@ -1,10 +1,11 @@
+import BaseCard from 'shared/components/base-card';
 import BasePage from 'shared/components/base-page';
 import Card from 'shared/components/Card';
-import CardWithRangeKey from 'shared/hoc/CardWithRangeKey';
 import ChartTooltip, {
 	Alignments,
 	Weights
 } from 'shared/components/chart-tooltip';
+import ClayLink from '@clayui/link';
 import HeatmapChart from 'shared/components/HeatmapChart';
 import PropTypes from 'prop-types';
 import React, {useContext} from 'react';
@@ -18,6 +19,7 @@ import {
 	mapPropsToOptions,
 	mapResultToProps
 } from './mappers/visitors-by-time-query';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {sub} from 'shared/util/lang';
 import {withEmpty, withError, withLoading} from 'shared/hoc';
 
@@ -79,7 +81,7 @@ const HeatmapChartWithData = compose<any>(
 					)}
 				</span>
 
-				<a
+				<ClayLink
 					href={URLConstants.SitesDashboardVisitorsByDayAndTime}
 					key='DOCUMENTATION'
 					target='_blank'
@@ -87,7 +89,7 @@ const HeatmapChartWithData = compose<any>(
 					{Liferay.Language.get(
 						'learn-more-about-visitors-by-day-and-time'
 					)}
-				</a>
+				</ClayLink>
 			</>
 		),
 		title: Liferay.Language.get(
@@ -96,8 +98,7 @@ const HeatmapChartWithData = compose<any>(
 	})
 )(HeatmapChart);
 
-interface IVisitorsByTimeCardProps {
-	className: string;
+interface IVisitorsByTimeCardProps extends React.HTMLAttributes<HTMLElement> {
 	label: string;
 }
 
@@ -110,10 +111,11 @@ const VisitorsByTimeCard: React.FC<IVisitorsByTimeCardProps> = ({
 	);
 
 	return (
-		<CardWithRangeKey
+		<BaseCard
 			className={className}
 			label={label}
 			legacyDropdownRangeKey={false}
+			reportContainer={ReportContainer.VisitorsByTimeCard}
 		>
 			{({rangeSelectors}) => (
 				<Card.Body>
@@ -126,7 +128,7 @@ const VisitorsByTimeCard: React.FC<IVisitorsByTimeCardProps> = ({
 					/>
 				</Card.Body>
 			)}
-		</CardWithRangeKey>
+		</BaseCard>
 	);
 };
 

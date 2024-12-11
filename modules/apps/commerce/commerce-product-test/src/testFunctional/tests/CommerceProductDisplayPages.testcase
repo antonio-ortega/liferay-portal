@@ -3,11 +3,14 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -44,7 +47,7 @@ definition {
 		}
 
 		task ("Then I should be redirected to the product detail page") {
-			ControlMenu.viewHeaderTitle(headerTitle = "Product Detail");
+			ControlMenu.viewHeaderTitle(headerTitle = "Product Detail Restricted Page");
 
 			AssertLocation.assertPartialLocation(value1 = "web/minium/p/u-joint");
 
@@ -178,7 +181,7 @@ definition {
 		}
 
 		task ("When the user removes the Override Default Product Display Page") {
-			CommerceEntry.deleteCommerceEntry(key_value = "Bearings");
+			CommerceEntry.deleteCommerceEntry(entryName = "Bearings");
 		}
 
 		task ("Then the product display page override should no longer be present") {

@@ -7,7 +7,7 @@ import ClayLabel from '@clayui/label';
 import {
 	Panel,
 	PanelSimpleBody,
-	getLocalizableLabel,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import React from 'react';
 
@@ -30,7 +30,7 @@ export function ObjectLayoutField({
 	tabIndex,
 }: ObjectLayoutFieldProps) {
 	const [
-		{creationLanguageId, objectFieldTypes, objectFields},
+		{creationLanguageId, objectFieldBusinessTypes, objectFields},
 		dispatch,
 	] = useLayoutContext();
 
@@ -38,7 +38,7 @@ export function ObjectLayoutField({
 		({name}) => name === objectFieldName
 	)!;
 
-	const objectFieldType = objectFieldTypes.find(
+	const objectFieldBusinessTypeInfo = objectFieldBusinessTypes.find(
 		({businessType}) => businessType === objectField.businessType
 	);
 
@@ -62,14 +62,14 @@ export function ObjectLayoutField({
 							}}
 						/>
 					}
-					title={getLocalizableLabel(
+					title={stringUtils.getLocalizableLabel(
 						creationLanguageId,
 						objectField.label,
 						objectField.name
 					)}
 				>
 					<small className="text-secondary">
-						{objectFieldType?.label} |{' '}
+						{objectFieldBusinessTypeInfo?.label} |{' '}
 					</small>
 
 					<ClayLabel
@@ -83,7 +83,8 @@ export function ObjectLayoutField({
 							: Liferay.Language.get('optional')}
 					</ClayLabel>
 
-					{(objectField.readOnly === 'true' ||
+					{(objectField.businessType === 'AutoIncrement' ||
+						objectField.readOnly === 'true' ||
 						objectField.readOnly === 'conditional') && (
 						<ClayLabel
 							className="label-inside-custom-select"

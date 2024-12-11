@@ -176,7 +176,7 @@ public class DefaultPortalKaleoManager
 			User guestUser = userLocalService.getGuestUser(companyId);
 
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				serviceContext.getCompanyId(), guestUser.getUserId(),
+				null, serviceContext.getCompanyId(), guestUser.getUserId(),
 				_getLocalizedTitle(companyId, definitionName), definitionName,
 				FileUtil.getBytes(inputStream));
 		}
@@ -209,7 +209,7 @@ public class DefaultPortalKaleoManager
 			}
 
 			roleLocalService.addRole(
-				guestUser.getUserId(), null, 0, name, null,
+				null, guestUser.getUserId(), null, 0, name, null,
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), entry.getValue()
 				).build(),

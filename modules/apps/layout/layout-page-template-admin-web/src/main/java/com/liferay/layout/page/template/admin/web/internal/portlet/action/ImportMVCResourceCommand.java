@@ -10,7 +10,6 @@ import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.importer.LayoutsImporterResultEntry;
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManager;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -138,7 +137,7 @@ public class ImportMVCResourceCommand extends BaseMVCResourceCommand {
 			List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
 				_layoutsImporter.importFile(
 					userId, groupId, layoutPageTemplateCollectionId, file,
-					layoutsImportStrategy);
+					layoutsImportStrategy, true);
 
 			JSONObject importResultsJSONObject =
 				_jsonFactory.createJSONObject();
@@ -170,18 +169,20 @@ public class ImportMVCResourceCommand extends BaseMVCResourceCommand {
 							}
 
 							if (Validator.isNotNull(
-									layoutsImporterResultEntry.
-										getErrorMessage())) {
+									layoutsImporterResultEntry.getErrorMessage(
+										locale))) {
 
 								return Collections.singletonList(
-									layoutsImporterResultEntry.
-										getErrorMessage());
+									layoutsImporterResultEntry.getErrorMessage(
+										locale));
 							}
 
 							return Collections.emptyList();
 						}
 					).put(
 						"name", layoutsImporterResultEntry.getName()
+					).put(
+						"type", layoutsImporterResultEntry.getType()
 					));
 
 				importResultsJSONObject.put(key, jsonArray);
@@ -201,9 +202,6 @@ public class ImportMVCResourceCommand extends BaseMVCResourceCommand {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ImportMVCResourceCommand.class);
-
-	@Reference
-	private FeatureFlagManager _featureFlagManager;
 
 	@Reference
 	private JSONFactory _jsonFactory;

@@ -15,4 +15,43 @@
 			margin-bottom: 1.5rem;
 		}
 	}
+
+	&-object-field-type-option {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&-picklist {
+		&-container {
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+		}
+
+		&-manage-button {
+			align-items: center;
+			display: flex;
+			gap: 0.5rem;
+			width: max-content;
+		}
+
+		&-select-field {
+			margin-bottom: unset;
+			width: 100%;
+
+			&:not(.has-error) div:first-child {
+				margin-top: unset;
+			}
+		}
+
+		&-single-select {
+			align-items: end;
+			display: flex;
+			gap: 1rem;
+
+			&-error {
+				align-items: center;
+			}
+		}
+	}
 }

@@ -32,15 +32,15 @@ renderResponse.setTitle(viewKBSuggestionDisplayContext.getKBCommentTitle());
 				</div>
 
 				<div class="card-col-content card-col-gutters">
-					<h5 class="text-default">
+					<div class="h5 text-default">
 						<%= HtmlUtil.escape(viewKBSuggestionDisplayContext.getModifiedDateLabel()) %>
-					</h5>
+					</div>
 
-					<h4>
+					<div class="h4">
 						<%= HtmlUtil.escape(viewKBSuggestionDisplayContext.getKBCommentTitle()) %>
-					</h4>
+					</div>
 
-					<h5>
+					<div class="h5">
 						<span class="kb-comment-status text-default">
 							<liferay-ui:message key="<%= viewKBSuggestionDisplayContext.getKBCommentStatusLabel() %>" />
 						</span>
@@ -48,7 +48,7 @@ renderResponse.setTitle(viewKBSuggestionDisplayContext.getKBCommentTitle());
 						<a href="<%= viewKBSuggestionDisplayContext.getKBArticleURL() %>">
 							<%= HtmlUtil.escape(viewKBSuggestionDisplayContext.getKBArticleTitle()) %>
 						</a>
-					</h5>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -79,7 +79,7 @@ renderResponse.setTitle(viewKBSuggestionDisplayContext.getKBCommentTitle());
 	</c:if>
 </clay:container-fluid>
 
-<script>
+<aui:script>
 	var deleteButtonElement = document.getElementById(
 		'<portlet:namespace />deleteButton'
 	);
@@ -97,4 +97,4 @@ renderResponse.setTitle(viewKBSuggestionDisplayContext.getKBCommentTitle());
 			});
 		});
 	}
-</script>
+</aui:script>

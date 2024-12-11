@@ -1,0 +1,209 @@
+{
+	"configuration": {
+		"className": "com.liferay.headless.admin.list.type.dto.v1_0.ListTypeDefinition",
+		"parameters": {
+			"containsHeaders": "true",
+			"createStrategy": "UPSERT",
+			"onErrorFail": "false",
+			"taskItemDelegateName": "DEFAULT",
+			"updateStrategy": "UPDATE"
+		}
+	},
+	"items": [
+		{
+			"externalReferenceCode": "J3Y7_PRIORITIES",
+			"listTypeEntries": [
+				{
+					"externalReferenceCode": "CRITICAL",
+					"key": "critical",
+					"name": "Critical"
+				},
+				{
+					"externalReferenceCode": "MAJOR",
+					"key": "major",
+					"name": "Major"
+				},
+				{
+					"externalReferenceCode": "MINOR",
+					"key": "minor",
+					"name": "Minor"
+				},
+				{
+					"externalReferenceCode": "MODERATE",
+					"key": "moderate",
+					"name": "Moderate"
+				},
+				{
+					"externalReferenceCode": "UNASSIGNED",
+					"key": "unassigned",
+					"name": "Unassigned"
+				}
+			],
+			"name": "J3Y7 Priorities"
+		},
+		{
+			"externalReferenceCode": "J3Y7_REGIONS",
+			"listTypeEntries": [
+				{
+					"externalReferenceCode": "APAC",
+					"key": "aPAC",
+					"name": "APAC"
+				},
+				{
+					"externalReferenceCode": "EMEA",
+					"key": "eMEA",
+					"name": "EMEA"
+				},
+				{
+					"externalReferenceCode": "LATAM",
+					"key": "lATAM",
+					"name": "LATAM"
+				},
+				{
+					"externalReferenceCode": "NORAM",
+					"key": "nORAM",
+					"name": "NORAM"
+				}
+			],
+			"name": "J3Y7 Regions"
+		},
+		{
+			"externalReferenceCode": "J3Y7_RESOLUTIONS",
+			"listTypeEntries": [
+				{
+					"externalReferenceCode": "APPROVED",
+					"key": "approved",
+					"name": "Approved"
+				},
+				{
+					"externalReferenceCode": "DONE",
+					"key": "done",
+					"name": "Done"
+				},
+				{
+					"externalReferenceCode": "DUPLICATE",
+					"key": "duplicate",
+					"name": "Duplicate"
+				},
+				{
+					"externalReferenceCode": "EXPIRED",
+					"key": "expired",
+					"name": "Expired"
+				},
+				{
+					"externalReferenceCode": "FIXED",
+					"key": "fixed",
+					"name": "Fixed"
+				},
+				{
+					"externalReferenceCode": "REJECTED",
+					"key": "rejected",
+					"name": "Rejected"
+				},
+				{
+					"externalReferenceCode": "UNRESOLVED",
+					"key": "unresolved",
+					"name": "Unresolved"
+				}
+			],
+			"name": "J3Y7 Resolutions"
+		},
+		{
+			"externalReferenceCode": "J3Y7_STATUSES",
+			"listTypeEntries": [
+				{
+					"externalReferenceCode": "ANSWERED",
+					"key": "answered",
+					"name": "Answered"
+				},
+				{
+					"externalReferenceCode": "CLOSED",
+					"key": "closed",
+					"name": "Closed"
+				},
+				{
+					"externalReferenceCode": "ESCALATED",
+					"key": "escalated",
+					"name": "Escalated"
+				},
+				{
+					"externalReferenceCode": "IN_PROGRESS",
+					"key": "inProgress",
+					"name": "In Progress"
+				},
+				{
+					"externalReferenceCode": "IN_REVIEW",
+					"key": "inReview",
+					"name": "In Review"
+				},
+				{
+					"externalReferenceCode": "OPEN",
+					"key": "open",
+					"name": "Open"
+				},
+				{
+					"externalReferenceCode": "QUEUED",
+					"key": "queued",
+					"name": "Queued"
+				},
+				{
+					"externalReferenceCode": "VERIFYING",
+					"key": "verifying",
+					"name": "Verifying"
+				},
+				{
+					"externalReferenceCode": "WAITING",
+					"key": "waiting",
+					"name": "Waiting"
+				}
+			],
+			"name": "J3Y7 Statuses"
+		},
+		{
+			"externalReferenceCode": "J3Y7_TYPES",
+			"listTypeEntries": [
+				{
+					"externalReferenceCode": "ACCOUNT_ISSUE",
+					"key": "accountIssue",
+					"name": "Account Issue"
+				},
+				{
+					"externalReferenceCode": "APPLICATION",
+					"key": "application",
+					"name": "Application"
+				},
+				{
+					"externalReferenceCode": "CREDIT_LIMIT",
+					"key": "creditLimitIncrease",
+					"name": "Credit Limit Increase"
+				},
+				{
+					"externalReferenceCode": "DELIVERY_ISSUE",
+					"key": "deliveryIssue",
+					"name": "Delivery Issue"
+				},
+				{
+					"externalReferenceCode": "ORDER_ISSUE",
+					"key": "orderIssue",
+					"name": "Order Issue"
+				},
+				{
+					"externalReferenceCode": "OTHER",
+					"key": "other",
+					"name": "Other"
+				},
+				{
+					"externalReferenceCode": "PRODUCT_ISSUE",
+					"key": "productIssue",
+					"name": "Product Issue"
+				},
+				{
+					"externalReferenceCode": "SITE_ISSUE",
+					"key": "siteIssue",
+					"name": "Site Issue"
+				}
+			],
+			"name": "J3Y7 Types"
+		}
+	]
+}

@@ -38,21 +38,6 @@ String ppid = ParamUtil.getString(request, "p_p_id");
 		AssetRendererFactory<?> assetRendererFactory = displayPageLayoutTypeControllerDisplayContext.getAssetRendererFactory();
 		%>
 
-		<c:if test="<%= !displayPageLayoutTypeControllerDisplayContext.isDefaultDisplayPage() %>">
-			<liferay-util:html-top>
-
-				<%
-				String canonicalURL = displayPageLayoutTypeControllerDisplayContext.getCanonicalURL();
-				%>
-
-				<c:if test="<%= Validator.isNotNull(canonicalURL) %>">
-					<link href="<%= canonicalURL %>" rel="canonical" />
-				</c:if>
-
-				<meta content="noindex" name="robots" />
-			</liferay-util:html-top>
-		</c:if>
-
 		<c:if test="<%= assetRendererFactory != null %>">
 			<liferay-ui:success key='<%= assetRendererFactory.getPortletId() + "requestProcessed" %>' message="your-request-processed-successfully" />
 		</c:if>
@@ -70,10 +55,17 @@ String ppid = ParamUtil.getString(request, "p_p_id");
 					</clay:container-fluid>
 				</div>
 			</c:when>
+			<c:when test="<%= layout.getMasterLayoutPlid() > 0 %>">
+				<div>
+					<liferay-layout:render-fragment-layout
+						showPreview="<%= true %>"
+					/>
+				</div>
+			</c:when>
 			<c:otherwise>
 				<div class="layout-content portlet-layout" id="main-content" role="main">
 					<liferay-layout:render-fragment-layout />
-				<div>
+				</div>
 			</c:otherwise>
 		</c:choose>
 	</c:otherwise>

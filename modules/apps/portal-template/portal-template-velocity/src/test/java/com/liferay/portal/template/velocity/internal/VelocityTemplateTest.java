@@ -15,7 +15,9 @@ import com.liferay.portal.kernel.template.TemplateException;
 import com.liferay.portal.kernel.template.TemplateResource;
 import com.liferay.portal.kernel.template.TemplateResourceCache;
 import com.liferay.portal.kernel.template.TemplateResourceLoader;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.JavaDetector;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.template.ClassLoaderResourceParser;
@@ -62,14 +64,11 @@ public class VelocityTemplateTest {
 		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
-	public static void setUpClass() throws Exception {
+	public static void setUpClass() {
 		VelocityManager velocityManager = new VelocityManager();
 
 		_templateResourceCache =
-			velocityManager.new VelocityTemplateResourceCache(
-				ConfigurableUtil.createConfigurable(
-					VelocityEngineConfiguration.class,
-					Collections.emptyMap())) {
+			velocityManager.new VelocityTemplateResourceCache() {
 
 				@Override
 				public boolean isEnabled() {
@@ -108,14 +107,19 @@ public class VelocityTemplateTest {
 			ConfigurableUtil.createConfigurable(
 				VelocityEngineConfiguration.class, Collections.emptyMap());
 
-		_templateContextHelper = new MockTemplateContextHelper();
-
-		_velocityEngine = new VelocityEngine();
-
-		boolean cacheEnabled = false;
-
 		ExtendedProperties extendedProperties = new FastExtendedProperties();
 
+		extendedProperties.setProperty(
+			RuntimeConstants.INTROSPECTOR_RESTRICT_CLASSES,
+			StringUtil.merge(
+				_filterRestrictedClasses(
+					velocityEngineConfiguration.restrictedClasses())));
+		extendedProperties.setProperty(
+			RuntimeConstants.INTROSPECTOR_RESTRICT_PACKAGES,
+			StringUtil.merge(velocityEngineConfiguration.restrictedPackages()));
+		extendedProperties.setProperty(
+			RuntimeConstants.UBERSPECT_CLASSNAME,
+			LiferaySecureUberspector.class.getName());
 		extendedProperties.setProperty(
 			VelocityEngine.DIRECTIVE_IF_TOSTRING_NULLCHECK,
 			String.valueOf(
@@ -124,34 +128,10 @@ public class VelocityTemplateTest {
 			VelocityEngine.EVENTHANDLER_METHODEXCEPTION,
 			LiferayMethodExceptionEventHandler.class.getName());
 		extendedProperties.setProperty(
-			RuntimeConstants.INTROSPECTOR_RESTRICT_CLASSES,
-			StringUtil.merge(velocityEngineConfiguration.restrictedClasses()));
-		extendedProperties.setProperty(
-			"liferay." + RuntimeConstants.INTROSPECTOR_RESTRICT_CLASSES +
-				".methods",
-			velocityEngineConfiguration.restrictedMethods());
-		extendedProperties.setProperty(
-			RuntimeConstants.INTROSPECTOR_RESTRICT_PACKAGES,
-			StringUtil.merge(velocityEngineConfiguration.restrictedPackages()));
-		extendedProperties.setProperty(
 			VelocityEngine.RESOURCE_LOADER, "liferay");
-		extendedProperties.setProperty(
-			"liferay." + VelocityEngine.RESOURCE_LOADER + ".cache",
-			String.valueOf(cacheEnabled));
-		extendedProperties.setProperty(
-			"liferay." + VelocityEngine.RESOURCE_LOADER + ".class",
-			LiferayResourceLoader.class.getName());
 		extendedProperties.setProperty(
 			VelocityEngine.RESOURCE_MANAGER_CLASS,
 			LiferayResourceManager.class.getName());
-		extendedProperties.setProperty(
-			"liferay." + VelocityEngine.RESOURCE_MANAGER_CLASS +
-				".resourceModificationCheckInterval",
-			velocityEngineConfiguration.resourceModificationCheckInterval() +
-				"");
-		extendedProperties.setProperty(
-			VelocityManager.VelocityTemplateResourceLoader.class.getName(),
-			_templateResourceLoader);
 		extendedProperties.setProperty(
 			VelocityEngine.RUNTIME_LOG_LOGSYSTEM_CLASS,
 			velocityEngineConfiguration.logger());
@@ -159,17 +139,26 @@ public class VelocityTemplateTest {
 			VelocityEngine.RUNTIME_LOG_LOGSYSTEM + ".log4j.category",
 			velocityEngineConfiguration.loggerCategory());
 		extendedProperties.setProperty(
-			RuntimeConstants.UBERSPECT_CLASSNAME,
-			LiferaySecureUberspector.class.getName());
-		extendedProperties.setProperty(
 			VelocityEngine.VM_LIBRARY,
 			StringUtil.merge(velocityEngineConfiguration.velocimacroLibrary()));
 		extendedProperties.setProperty(
-			VelocityEngine.VM_LIBRARY_AUTORELOAD,
-			String.valueOf(!cacheEnabled));
+			VelocityEngine.VM_LIBRARY_AUTORELOAD, Boolean.TRUE.toString());
 		extendedProperties.setProperty(
 			VelocityEngine.VM_PERM_ALLOW_INLINE_REPLACE_GLOBAL,
-			String.valueOf(!cacheEnabled));
+			Boolean.TRUE.toString());
+		extendedProperties.setProperty(
+			VelocityManager.VelocityTemplateResourceLoader.class.getName(),
+			_templateResourceLoader);
+		extendedProperties.setProperty(
+			"liferay." + RuntimeConstants.INTROSPECTOR_RESTRICT_CLASSES +
+				".methods",
+			velocityEngineConfiguration.restrictedMethods());
+		extendedProperties.setProperty(
+			"liferay." + VelocityEngine.RESOURCE_LOADER + ".cache",
+			Boolean.FALSE.toString());
+		extendedProperties.setProperty(
+			"liferay." + VelocityEngine.RESOURCE_LOADER + ".class",
+			LiferayResourceLoader.class.getName());
 
 		_velocityEngine.setExtendedProperties(extendedProperties);
 
@@ -380,6 +369,19 @@ public class VelocityTemplateTest {
 		Assert.assertEquals(_TEST_VALUE, result);
 	}
 
+	private String[] _filterRestrictedClasses(String[] restrictedClasses) {
+		if (JavaDetector.isJDK21()) {
+
+			// TODO: remove java.lang.Compiler from
+			// VelocityEngineConfiguration.restrictedClasses() and this method
+			// once fully upgraded to JDK21
+
+			return ArrayUtil.remove(restrictedClasses, "java.lang.Compiler");
+		}
+
+		return restrictedClasses;
+	}
+
 	private static final String _TEMPLATE_FILE_NAME = "test.vm";
 
 	private static final String _TEST_KEY = "TEST_KEY";
@@ -398,8 +400,9 @@ public class VelocityTemplateTest {
 	private static ServiceRegistration<TemplateResourceParser>
 		_templateResourceParserServiceRegistration;
 
-	private TemplateContextHelper _templateContextHelper;
-	private VelocityEngine _velocityEngine;
+	private final TemplateContextHelper _templateContextHelper =
+		new MockTemplateContextHelper();
+	private final VelocityEngine _velocityEngine = new VelocityEngine();
 
 	private static class MockTemplateContextHelper
 		extends TemplateContextHelper {

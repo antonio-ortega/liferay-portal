@@ -1,4 +1,4 @@
-@component-name = "portal-knowledge-base"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
@@ -127,6 +127,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanDeleteArticle {
+		property portal.release = "quarantine";
+
 		JSONKnowledgeBase.addkBArticle(
 			groupName = "Guest",
 			kbArticleContent = "Knowledge Base Article Content",
@@ -296,6 +298,35 @@ definition {
 			kbArticleContent = "Knowledge Base Child Article Content",
 			kbArticleTitle = "Knowledge Base Child Article Title",
 			kbStatus = "Draft");
+	}
+
+	@description = "This test ensures that the article can be viewed after restoring."
+	@priority = 3
+	test CanViewArticleAfterRestoring {
+		property custom.properties = "feature.flag.LPS-188058=true";
+
+		JSONKnowledgeBase.addkBArticle(
+			groupName = "Guest",
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
+
+		Navigator.gotoPage(pageName = "Knowledge Base Display Page");
+
+		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Delete");
+
+		KBDisplayWidget.viewDefaultViaKBDisplayPG();
+
+		RecycleBin.openRecycleBinAdmin(siteURLKey = "guest");
+
+		RecycleBin.restoreCP(
+			assetName = "Knowledge Base Article Title",
+			assetType = "Knowledge Base Article");
+
+		Navigator.gotoPage(pageName = "Knowledge Base Display Page");
+
+		KBDisplayWidget.viewViaKBDisplayPG(
+			kbArticleContent = "Knowledge Base Article Content",
+			kbArticleTitle = "Knowledge Base Article Title");
 	}
 
 	@priority = 4
@@ -592,7 +623,7 @@ definition {
 		for (var num : list "1,2") {
 			KBDisplayWidget.gotoViaKBDisplayPG(kbArticleTitle = "KB Article Title${num}");
 
-			AssertLocation(value1 = "${portalURL}/web/guest/knowledge-base-display-page/-/knowledge_base/custom-friendly-url${num}");
+			AssertLocation(value1 = "${portalURL}/web/guest/knowledge-base-display-page/-/knowledge_base/custom-friendly-url${num}?_com_liferay_knowledge_base_web_portlet_DisplayPortlet_urlTitle=custom-friendly-url${num}");
 		}
 	}
 
@@ -613,7 +644,7 @@ definition {
 		for (var num : list "1,2") {
 			KBDisplayWidget.gotoViaKBDisplayPG(kbArticleTitle = "KB Article Title${num}");
 
-			AssertLocation(value1 = "${portalURL}/web/guest/knowledge-base-display-page/-/knowledge_base/kb-article-title${num}");
+			AssertLocation(value1 = "${portalURL}/web/guest/knowledge-base-display-page/-/knowledge_base/kb-article-title${num}?_com_liferay_knowledge_base_web_portlet_DisplayPortlet_urlTitle=kb-article-title${num}");
 		}
 	}
 

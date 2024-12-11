@@ -1,6 +1,7 @@
 definition {
 
-	macro emptyRecycleBin {
+	@summary = "Default summary"
+	macro emptyRecycleBin(grandParentGroupName = null, parentGroupName = null) {
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (!(isSet(groupName))) {
@@ -16,7 +17,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		var groupId = JSONGroupAPI._getGroupIdByName(

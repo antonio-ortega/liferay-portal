@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -232,6 +233,14 @@ public class AssetCategoryPropertyLocalServiceUtil {
 		return getService().fetchAssetCategoryProperty(categoryPropertyId);
 	}
 
+	public static AssetCategoryProperty
+		fetchAssetCategoryPropertyByExternalReferenceCode(
+			String externalReferenceCode, long companyId) {
+
+		return getService().fetchAssetCategoryPropertyByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
 	public static AssetCategoryProperty fetchCategoryProperty(
 		long categoryId, String key) {
 
@@ -282,6 +291,15 @@ public class AssetCategoryPropertyLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getAssetCategoryProperty(categoryPropertyId);
+	}
+
+	public static AssetCategoryProperty
+			getAssetCategoryPropertyByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().getAssetCategoryPropertyByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static List<AssetCategoryProperty> getCategoryProperties() {
@@ -372,13 +390,12 @@ public class AssetCategoryPropertyLocalServiceUtil {
 	}
 
 	public static AssetCategoryPropertyLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(AssetCategoryPropertyLocalService service) {
-		_service = service;
-	}
-
-	private static volatile AssetCategoryPropertyLocalService _service;
+	private static final Snapshot<AssetCategoryPropertyLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			AssetCategoryPropertyLocalServiceUtil.class,
+			AssetCategoryPropertyLocalService.class);
 
 }

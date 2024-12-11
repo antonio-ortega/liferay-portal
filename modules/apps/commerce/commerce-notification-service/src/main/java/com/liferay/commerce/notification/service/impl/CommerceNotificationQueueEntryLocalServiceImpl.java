@@ -41,11 +41,13 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	property = "model.class.name=com.liferay.commerce.notification.model.CommerceNotificationQueueEntry",
 	service = AopService.class
 )
+@Deprecated
 public class CommerceNotificationQueueEntryLocalServiceImpl
 	extends CommerceNotificationQueueEntryLocalServiceBaseImpl {
 
@@ -242,7 +244,8 @@ public class CommerceNotificationQueueEntryLocalServiceImpl
 							commerceNotificationQueueEntry.
 								getCommerceNotificationQueueEntryId(),
 							QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-							new CommerceNotificationAttachmentCreateDateComparator());
+							CommerceNotificationAttachmentCreateDateComparator.
+								getInstance(false));
 
 			for (CommerceNotificationAttachment commerceNotificationAttachment :
 					commerceNotificationAttachments) {

@@ -55,7 +55,7 @@ public class ScopeSearchFacetDisplayContextBuilder {
 			new ScopeSearchFacetDisplayContext();
 
 		scopeSearchFacetDisplayContext.setBucketDisplayContexts(
-			buildBucketDisplayContexts(getTermCollectors()));
+			_buildBucketDisplayContexts(getTermCollectors()));
 		scopeSearchFacetDisplayContext.setDisplayStyleGroupId(
 			getDisplayStyleGroupId());
 		scopeSearchFacetDisplayContext.setNothingSelected(isNothingSelected());
@@ -150,6 +150,7 @@ public class ScopeSearchFacetDisplayContextBuilder {
 		bucketDisplayContext.setFilterValue(String.valueOf(groupId));
 		bucketDisplayContext.setFrequency(count);
 		bucketDisplayContext.setFrequencyVisible(_showCounts);
+		bucketDisplayContext.setLocale(_locale);
 		bucketDisplayContext.setSelected(selected);
 
 		return bucketDisplayContext;
@@ -173,42 +174,6 @@ public class ScopeSearchFacetDisplayContextBuilder {
 		long groupId = GetterUtil.getLong(termCollector.getTerm());
 
 		return buildBucketDisplayContext(groupId, count, isSelected(groupId));
-	}
-
-	protected List<BucketDisplayContext> buildBucketDisplayContexts(
-		List<TermCollector> termCollectors) {
-
-		if (termCollectors.isEmpty()) {
-			return getEmptySearchResultBucketDisplayContexts();
-		}
-
-		List<BucketDisplayContext> bucketDisplayContexts = new ArrayList<>(
-			termCollectors.size());
-
-		int limit = termCollectors.size();
-
-		if ((_maxTerms > 0) && (limit > _maxTerms)) {
-			limit = _maxTerms;
-		}
-
-		for (int i = 0; i < limit; i++) {
-			TermCollector termCollector = termCollectors.get(i);
-
-			int count = termCollector.getFrequency();
-
-			if (_countThreshold <= count) {
-				bucketDisplayContexts.add(
-					buildBucketDisplayContext(termCollector, count));
-			}
-		}
-
-		if (_order != null) {
-			bucketDisplayContexts.sort(
-				BucketDisplayContextComparatorFactoryUtil.
-					getBucketDisplayContextComparator(_order));
-		}
-
-		return bucketDisplayContexts;
 	}
 
 	protected long getDisplayStyleGroupId() {
@@ -288,6 +253,42 @@ public class ScopeSearchFacetDisplayContextBuilder {
 		}
 
 		return false;
+	}
+
+	private List<BucketDisplayContext> _buildBucketDisplayContexts(
+		List<TermCollector> termCollectors) {
+
+		if (termCollectors.isEmpty()) {
+			return getEmptySearchResultBucketDisplayContexts();
+		}
+
+		List<BucketDisplayContext> bucketDisplayContexts = new ArrayList<>(
+			termCollectors.size());
+
+		int limit = termCollectors.size();
+
+		if ((_maxTerms > 0) && (limit > _maxTerms)) {
+			limit = _maxTerms;
+		}
+
+		for (int i = 0; i < limit; i++) {
+			TermCollector termCollector = termCollectors.get(i);
+
+			int count = termCollector.getFrequency();
+
+			if (_countThreshold <= count) {
+				bucketDisplayContexts.add(
+					buildBucketDisplayContext(termCollector, count));
+			}
+		}
+
+		if (_order != null) {
+			bucketDisplayContexts.sort(
+				BucketDisplayContextComparatorFactoryUtil.
+					getBucketDisplayContextComparator(_order));
+		}
+
+		return bucketDisplayContexts;
 	}
 
 	private String _getDescriptiveName(long groupId) {

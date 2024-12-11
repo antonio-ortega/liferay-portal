@@ -8,6 +8,7 @@ import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
+import classNames from 'classnames';
 
 // @ts-ignore
 
@@ -15,7 +16,38 @@ import {ClassicEditor, IEditor} from 'frontend-editor-ckeditor-web';
 import {FieldBase} from 'frontend-js-components-web';
 import React, {useEffect, useRef, useState} from 'react';
 
+import {sanitizeHTML} from '../utils/sanitizeHTML';
+
 import './RichTextLocalized.scss';
+
+interface LabelSymbolObject {
+	label: Liferay.Language.Locale;
+	symbol: string;
+}
+
+interface OnSetDataEvent {
+	data: {
+		dataValue: string;
+	};
+	editor: CKEDITOR.editor;
+}
+interface RichTextLocalizedProps
+	extends React.InputHTMLAttributes<HTMLInputElement> {
+	ariaLabels?: {
+		default: string;
+		openLocalizations: string;
+		translated: string;
+		untranslated: string;
+	};
+	editorConfig: CKEDITOR.config;
+	helpMessage?: string;
+	label: string;
+	onSelectedLocaleChange: (val: LabelSymbolObject) => void;
+	onTranslationsChange: (val: LocalizedValue<string>) => void;
+	readOnly?: boolean;
+	selectedLocale: Liferay.Language.Locale;
+	translations: LocalizedValue<string>;
+}
 
 const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
 
@@ -38,9 +70,10 @@ export function RichTextLocalized({
 	label,
 	onSelectedLocaleChange,
 	onTranslationsChange,
+	readOnly = false,
 	selectedLocale,
 	translations,
-}: IProps) {
+}: RichTextLocalizedProps) {
 	const editorRef = useRef<IEditor>(null);
 
 	const [active, setActive] = useState(false);
@@ -60,13 +93,21 @@ export function RichTextLocalized({
 				editor.setData(translations[selectedLocale] as string);
 			}
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedLocale]);
 
 	return (
-		<FieldBase helpMessage={helpMessage} label={label}>
-			<div className="lfr-notification__rich-text-localized">
-				<div className="lfr-notification__rich-text-localized-editor">
+		<FieldBase
+			className={classNames({
+				'lfr-objects__rich-text-localized-readonly': readOnly,
+			})}
+			disabled={readOnly}
+			helpMessage={helpMessage}
+			label={label}
+		>
+			<div className="lfr-objects__rich-text-localized">
+				<div className="lfr-objects__rich-text-localized-editor">
 					<ClassicEditor
 						contents={translations[selectedLocale] as string}
 						editorConfig={editorConfig}
@@ -77,13 +118,30 @@ export function RichTextLocalized({
 								[selectedLocale]: content,
 							});
 						}}
+						onSetData={(event: OnSetDataEvent) => {
+							const editor = event.editor;
+
+							if (editor.mode === 'source') {
+								const value = event.data.dataValue;
+
+								const sanitizedValue = sanitizeHTML(value);
+
+								onTranslationsChange({
+									...translations,
+									[selectedLocale]: sanitizedValue,
+								});
+
+								event.data.dataValue = sanitizedValue;
+							}
+						}}
+						readOnly={readOnly}
 						ref={editorRef}
 					/>
 				</div>
 
 				<ClayDropDown
 					active={active}
-					className="lfr-notification__rich-text-localized-flag"
+					className="lfr-objects__rich-text-localized-flag"
 					onActiveChange={setActive}
 					trigger={
 						<ClayButton
@@ -144,16 +202,16 @@ export function RichTextLocalized({
 														defaultLanguage.label
 															? 'info'
 															: value
-															? 'success'
-															: 'warning'
+																? 'success'
+																: 'warning'
 													}
 												>
 													{locale.label ===
 													defaultLanguage.label
 														? ariaLabels.default
 														: value
-														? ariaLabels.translated
-														: ariaLabels.untranslated}
+															? ariaLabels.translated
+															: ariaLabels.untranslated}
 												</ClayLabel>
 											</ClayLayout.ContentSection>
 										</ClayLayout.ContentCol>
@@ -166,23 +224,4 @@ export function RichTextLocalized({
 			</div>
 		</FieldBase>
 	);
-}
-interface IItem {
-	label: Liferay.Language.Locale;
-	symbol: string;
-}
-interface IProps extends React.InputHTMLAttributes<HTMLInputElement> {
-	ariaLabels?: {
-		default: string;
-		openLocalizations: string;
-		translated: string;
-		untranslated: string;
-	};
-	editorConfig: CKEDITOR.config;
-	helpMessage?: string;
-	label: string;
-	onSelectedLocaleChange: (val: IItem) => void;
-	onTranslationsChange: (val: LocalizedValue<string>) => void;
-	selectedLocale: Liferay.Language.Locale;
-	translations: LocalizedValue<string>;
 }

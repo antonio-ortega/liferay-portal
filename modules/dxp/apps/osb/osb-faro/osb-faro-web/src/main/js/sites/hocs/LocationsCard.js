@@ -4,6 +4,7 @@ import getLocationsMapper, {
 import SessionLocationsQuery from 'shared/queries/SessionLocationsQuery';
 import URLConstants from 'shared/util/url-constants';
 import {graphql} from '@apollo/react-hoc';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {withLocationsCard} from 'cerebro-shared/hocs/LocationsCard';
 
 /**
@@ -34,6 +35,7 @@ export default withLocationsCard(
 			'learn-more-about-sessions-by-location'
 		),
 		documentationUrl: URLConstants.SitesDashboardPagesSessionsByLocation,
+		reportContainer: ReportContainer.SessionsByLocationCard,
 		title: Liferay.Language.get(
 			'there-are-no-sessions-on-the-selected-period'
 		)

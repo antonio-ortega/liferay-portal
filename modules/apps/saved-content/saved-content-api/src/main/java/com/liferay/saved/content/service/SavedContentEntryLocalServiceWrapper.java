@@ -32,6 +32,16 @@ public class SavedContentEntryLocalServiceWrapper
 		_savedContentEntryLocalService = savedContentEntryLocalService;
 	}
 
+	@Override
+	public SavedContentEntry addSavedContentEntry(
+			long userId, long groupId, String className, long classPK,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _savedContentEntryLocalService.addSavedContentEntry(
+			userId, groupId, className, classPK, serviceContext);
+	}
+
 	/**
 	 * Adds the saved content entry to the database. Also notifies the appropriate model listeners.
 	 *
@@ -84,6 +94,20 @@ public class SavedContentEntryLocalServiceWrapper
 
 		return _savedContentEntryLocalService.deletePersistedModel(
 			persistedModel);
+	}
+
+	@Override
+	public void deleteSavedContentEntries(
+		long groupId, long classNameId, long classPK) {
+
+		_savedContentEntryLocalService.deleteSavedContentEntries(
+			groupId, classNameId, classPK);
+	}
+
+	@Override
+	public void deleteSavedContentEntriesByUserId(long userId) {
+		_savedContentEntryLocalService.deleteSavedContentEntriesByUserId(
+			userId);
 	}
 
 	/**
@@ -233,10 +257,43 @@ public class SavedContentEntryLocalServiceWrapper
 	}
 
 	@Override
+	public SavedContentEntry fetchSavedContentEntry(
+		long userId, long groupId, String className, long classPK) {
+
+		return _savedContentEntryLocalService.fetchSavedContentEntry(
+			userId, groupId, className, classPK);
+	}
+
+	/**
+	 * Returns the saved content entry matching the UUID and group.
+	 *
+	 * @param uuid the saved content entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching saved content entry, or <code>null</code> if a matching saved content entry could not be found
+	 */
+	@Override
+	public SavedContentEntry fetchSavedContentEntryByUuidAndGroupId(
+		String uuid, long groupId) {
+
+		return _savedContentEntryLocalService.
+			fetchSavedContentEntryByUuidAndGroupId(uuid, groupId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
 		return _savedContentEntryLocalService.getActionableDynamicQuery();
+	}
+
+	@Override
+	public com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
+		getExportActionableDynamicQuery(
+			com.liferay.exportimport.kernel.lar.PortletDataContext
+				portletDataContext) {
+
+		return _savedContentEntryLocalService.getExportActionableDynamicQuery(
+			portletDataContext);
 	}
 
 	@Override
@@ -288,6 +345,43 @@ public class SavedContentEntryLocalServiceWrapper
 	}
 
 	/**
+	 * Returns all the saved content entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the saved content entries
+	 * @param companyId the primary key of the company
+	 * @return the matching saved content entries, or an empty list if no matches were found
+	 */
+	@Override
+	public java.util.List<SavedContentEntry>
+		getSavedContentEntriesByUuidAndCompanyId(String uuid, long companyId) {
+
+		return _savedContentEntryLocalService.
+			getSavedContentEntriesByUuidAndCompanyId(uuid, companyId);
+	}
+
+	/**
+	 * Returns a range of saved content entries matching the UUID and company.
+	 *
+	 * @param uuid the UUID of the saved content entries
+	 * @param companyId the primary key of the company
+	 * @param start the lower bound of the range of saved content entries
+	 * @param end the upper bound of the range of saved content entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the range of matching saved content entries, or an empty list if no matches were found
+	 */
+	@Override
+	public java.util.List<SavedContentEntry>
+		getSavedContentEntriesByUuidAndCompanyId(
+			String uuid, long companyId, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator<SavedContentEntry>
+				orderByComparator) {
+
+		return _savedContentEntryLocalService.
+			getSavedContentEntriesByUuidAndCompanyId(
+				uuid, companyId, start, end, orderByComparator);
+	}
+
+	/**
 	 * Returns the number of saved content entries.
 	 *
 	 * @return the number of saved content entries
@@ -310,6 +404,33 @@ public class SavedContentEntryLocalServiceWrapper
 
 		return _savedContentEntryLocalService.getSavedContentEntry(
 			savedContentEntryId);
+	}
+
+	@Override
+	public SavedContentEntry getSavedContentEntry(
+			long userId, long groupId, String className, long classPK)
+		throws com.liferay.saved.content.exception.
+			NoSuchSavedContentEntryException {
+
+		return _savedContentEntryLocalService.getSavedContentEntry(
+			userId, groupId, className, classPK);
+	}
+
+	/**
+	 * Returns the saved content entry matching the UUID and group.
+	 *
+	 * @param uuid the saved content entry's UUID
+	 * @param groupId the primary key of the group
+	 * @return the matching saved content entry
+	 * @throws PortalException if a matching saved content entry could not be found
+	 */
+	@Override
+	public SavedContentEntry getSavedContentEntryByUuidAndGroupId(
+			String uuid, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _savedContentEntryLocalService.
+			getSavedContentEntryByUuidAndGroupId(uuid, groupId);
 	}
 
 	/**

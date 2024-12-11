@@ -1,0 +1,112 @@
+definition {
+
+	@summary = "Default summary"
+	macro addProducts() {
+		ObjectAdmin.openObjectAdmin();
+
+		ObjectPortlet.selectCustomObject(label = "Account Subscription Group");
+
+		CreateObject.checkToggleActive();
+
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
+
+		CustomerPortal.checkToggleHideWidget();
+
+		CreateObject.saveObject();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Object",
+			panel = "Control Panel",
+			portlet = "Account Subscription Groups");
+
+		Click(locator1 = "CP2NavigationMenu#BUTTON_ADD");
+
+		Type(
+			field = "Account Key",
+			locator1 = "CP2NavigationMenu#FIELD_SUBSCRIPTION_GROUPS",
+			value1 = "ERC-001");
+
+		Click(locator1 = "CP2NavigationMenu#SELECT_HAS_ACTIVATION");
+
+		Type(
+			field = "Name",
+			locator1 = "CP2NavigationMenu#FIELD_SUBSCRIPTION_GROUPS",
+			value1 = "Enterprise Search");
+
+		Click(locator1 = "CP2NavigationMenu#BUTTON_SAVE");
+	}
+
+	@summary = "Default summary"
+	macro assertStatusOptions(statusList = null) {
+		Click(
+			locator1 = "CP2NavigationMenu#STATUS_BUTTON",
+			title = "Active");
+
+		for (var status : list ${statusList}) {
+			var status = ${status};
+
+			AssertVisible(locator1 = "CP2NavigationMenu#STATUS_OPTIONS");
+		}
+	}
+
+	@summary = "Default summary"
+	macro cancelTeamMembersInvitation() {
+		Click(locator1 = "CP2NavigationMenu#INVITE_MEMBERS_CANCEL_BUTTON");
+	}
+
+	@summary = "Default summary"
+	macro clickOnHideButton() {
+		Click(locator1 = "CP2NavigationMenu#HIDE_BUTTON");
+	}
+
+	@summary = "Default summary"
+	macro clickOnProductButton(product = null) {
+		Click(
+			locator1 = "CP2NavigationMenu#PRODUCT",
+			product = ${product});
+	}
+
+	@summary = "Default summary"
+	macro clickOnShowButton() {
+		Click(locator1 = "CP2NavigationMenu#SHOW_BUTTON");
+	}
+
+	@summary = "Default summary"
+	macro goToCP2(site = null) {
+		Refresh();
+
+		Click(locator1 = "CP2NavigationMenu#APPLICATIONS_MENU_ACCOUNTS");
+
+		Click(
+			key_site = ${site},
+			locator1 = "ApplicationsMenu#SITE_LINK");
+	}
+
+	@summary = "Default summary"
+	macro goToProductActivation() {
+		Click(locator1 = "CP2NavigationMenu#PRODUCT_ACTIVATION");
+	}
+
+	@summary = "Default summary"
+	macro goToTeamMembers() {
+		Click(locator1 = "CP2NavigationMenu#TEAM_MEMBERS");
+	}
+
+	@summary = "Default summary"
+	macro openLastIdCreated() {
+		var idCreated = selenium.getText("RaylifeRetrieveEmail#ID_CREATED");
+
+		Click(
+			locator1 = "RaylifeRetrieveEmail#ID_CREATED",
+			value1 = ${idCreated});
+
+		WaitForElementPresent(locator1 = "RaylifeRetrieveEmail#QUOTE_RETRIEVE_LINK");
+
+		var openURL = selenium.getAttribute("RaylifeRetrieveEmail#SITE_LINK");
+
+		Navigator.openSpecificURL(url = ${openURL});
+	}
+
+}

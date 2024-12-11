@@ -38,14 +38,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Bruno Basto
  */
-@Component(
-	property = {
-		"osgi.http.whiteboard.context.path=/favicon",
-		"osgi.http.whiteboard.servlet.name=com.liferay.frontend.theme.favicon.servlet.internal.FaviconServlet",
-		"osgi.http.whiteboard.servlet.pattern=/favicon/*"
-	},
-	service = Servlet.class
-)
+@Component(property = "servlet.type=favicon", service = Servlet.class)
 public class FaviconServlet extends HttpServlet {
 
 	@Override
@@ -144,8 +137,11 @@ public class FaviconServlet extends HttpServlet {
 				0, fileEntryFriendlyURL.indexOf(CharPool.SLASH, 1));
 		}
 		else {
-			groupFriendlyURL = groupFriendlyURL.substring(
-				0, groupFriendlyURL.indexOf(CharPool.SLASH, 1));
+			pos = groupFriendlyURL.indexOf(CharPool.SLASH, 1);
+
+			if (pos > 0) {
+				groupFriendlyURL = groupFriendlyURL.substring(0, pos);
+			}
 		}
 
 		Group group = _groupLocalService.fetchFriendlyURLGroup(

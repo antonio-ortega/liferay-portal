@@ -9,11 +9,11 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.configuration.CategoryFacetFieldConfiguration;
 import com.liferay.portal.search.web.internal.category.facet.configuration.CategoryFacetPortletInstanceConfiguration;
 
 import java.io.Serializable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -36,15 +36,9 @@ public class AssetCategoriesSearchFacetDisplayContext
 				CategoryFacetPortletInstanceConfiguration.class,
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY));
-
-		CategoryFacetFieldConfiguration categoryFacetFieldConfiguration =
-			ConfigurationProviderUtil.getSystemConfiguration(
-				CategoryFacetFieldConfiguration.class);
-
-		_legacyFieldSelected = _isLegacyFieldSelected(
-			categoryFacetFieldConfiguration.categoryFacetField());
 	}
 
+	@Override
 	public List<BucketDisplayContext> getBucketDisplayContexts() {
 		return _bucketDisplayContexts;
 	}
@@ -52,7 +46,14 @@ public class AssetCategoriesSearchFacetDisplayContext
 	public List<BucketDisplayContext> getBucketDisplayContexts(
 		String vocabularyName) {
 
-		return _bucketDisplayContextsMap.get(vocabularyName);
+		List<BucketDisplayContext> bucketDisplayContexts =
+			_bucketDisplayContextsMap.get(vocabularyName);
+
+		if (bucketDisplayContexts == null) {
+			return new ArrayList<>();
+		}
+
+		return bucketDisplayContexts;
 	}
 
 	public CategoryFacetPortletInstanceConfiguration
@@ -61,6 +62,7 @@ public class AssetCategoriesSearchFacetDisplayContext
 		return _categoryFacetPortletInstanceConfiguration;
 	}
 
+	@Override
 	public long getDisplayStyleGroupId() {
 		if (_displayStyleGroupId != 0) {
 			return _displayStyleGroupId;
@@ -80,18 +82,22 @@ public class AssetCategoriesSearchFacetDisplayContext
 		return _displayStyleGroupId;
 	}
 
+	@Override
 	public String getPaginationStartParameterName() {
 		return _paginationStartParameterName;
 	}
 
+	@Override
 	public String getParameterName() {
 		return _parameterName;
 	}
 
+	@Override
 	public String getParameterValue() {
 		return _parameterValue;
 	}
 
+	@Override
 	public List<String> getParameterValues() {
 		return _parameterValues;
 	}
@@ -104,14 +110,12 @@ public class AssetCategoriesSearchFacetDisplayContext
 		return _cloud;
 	}
 
-	public boolean isLegacyFieldSelected() {
-		return _legacyFieldSelected;
-	}
-
+	@Override
 	public boolean isNothingSelected() {
 		return _nothingSelected;
 	}
 
+	@Override
 	public boolean isRenderNothing() {
 		return _renderNothing;
 	}
@@ -162,14 +166,6 @@ public class AssetCategoriesSearchFacetDisplayContext
 		_vocabularyNames = vocabularyNames;
 	}
 
-	private boolean _isLegacyFieldSelected(String fieldName) {
-		if (fieldName.equals("assetCategoryIds")) {
-			return true;
-		}
-
-		return false;
-	}
-
 	private List<BucketDisplayContext> _bucketDisplayContexts;
 	private Map<String, List<BucketDisplayContext>> _bucketDisplayContextsMap;
 	private final CategoryFacetPortletInstanceConfiguration
@@ -177,7 +173,6 @@ public class AssetCategoriesSearchFacetDisplayContext
 	private boolean _cloud;
 	private long _displayStyleGroupId;
 	private final HttpServletRequest _httpServletRequest;
-	private final boolean _legacyFieldSelected;
 	private boolean _nothingSelected;
 	private String _paginationStartParameterName;
 	private String _parameterName;

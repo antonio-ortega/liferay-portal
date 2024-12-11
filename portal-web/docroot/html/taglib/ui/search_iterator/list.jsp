@@ -11,7 +11,7 @@
 
 <%
 if (searchResultCssClass == null) {
-	searchResultCssClass = "show-quick-actions-on-hover table table-autofit table-heading-nowrap table-list";
+	searchResultCssClass = "show-quick-actions-on-hover table table-autofit table-head-bordered table-heading-nowrap table-hover table-list table-striped";
 }
 
 List<ResultRowSplitterEntry> resultRowSplitterEntries = new ArrayList<ResultRowSplitterEntry>();
@@ -36,7 +36,7 @@ if (fixedHeader) {
 }
 %>
 
-<div class="table-responsive">
+<div class="table-responsive" id="<%= namespace + id %>tableResponsive">
 	<table class="<%= searchResultCssClass %>">
 		<c:if test="<%= Validator.isNotNull(summary) %>">
 			<caption class="sr-only"><%= summary %></caption>
@@ -185,7 +185,7 @@ if (fixedHeader) {
 				<c:if test="<%= fixedHeader %>">
 					<tr aria-hidden="true" class="hide lfr-search-iterator-fixed-header" id="<%= namespace + id %>fixedHeader">
 						<th>
-							<div class="lfr-search-iterator-fixed-header-inner-wrapper">
+							<div class="lfr-search-iterator-fixed-header-inner-wrapper" id="<%= namespace + id %>innerWrapper">
 								<table>
 									<thead>
 										<tr>
@@ -276,7 +276,7 @@ if (fixedHeader) {
 					}
 				%>
 
-					<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "active" : StringPool.BLANK %>" data-qa-id="row" id="<%= rowElementId %>" <%= AUIUtil.buildData(data) %>>
+					<tr aria-label="<%= searchContainerRowAriaLabel %>" class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "active" : StringPool.BLANK %>" data-qa-id="row" id="<%= rowElementId %>" <%= AUIUtil.buildData(data) %> tabindex="<%= searchContainerRowTabIndex %>">
 
 						<%
 						for (int j = 0; j < entries.size(); j++) {
@@ -320,24 +320,11 @@ if (fixedHeader) {
 						%>
 
 							<td class="<%= columnClassName %>" colspan="<%= entry.getColspan() %>">
-								<c:choose>
-									<c:when test="<%= truncate %>">
-										<span class="text-truncate">
 
-											<%
-											entry.print(pageContext.getOut(), request, response);
-											%>
+								<%
+								entry.print(pageContext.getOut(), request, response);
+								%>
 
-										</span>
-									</c:when>
-									<c:otherwise>
-
-										<%
-										entry.print(pageContext.getOut(), request, response);
-										%>
-
-									</c:otherwise>
-								</c:choose>
 							</td>
 
 						<%

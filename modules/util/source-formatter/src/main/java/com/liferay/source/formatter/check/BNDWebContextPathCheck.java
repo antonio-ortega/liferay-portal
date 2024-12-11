@@ -47,7 +47,8 @@ public class BNDWebContextPathCheck extends BaseFileCheck {
 
 		String moduleName = BNDSourceUtil.getModuleName(absolutePath);
 
-		if (moduleName.contains("-import-") ||
+		if (moduleName.contains("-default-") ||
+			moduleName.contains("-import-") ||
 			moduleName.contains("-private-")) {
 
 			return;
@@ -65,7 +66,8 @@ public class BNDWebContextPathCheck extends BaseFileCheck {
 				 !webContextPath.equals("/" + moduleName)) {
 
 			addMessage(
-				fileName, "Incorrect Web-ContextPath '" + webContextPath + "'");
+				fileName,
+				"Incorrect Web-ContextPath \"" + webContextPath + "\"");
 		}
 	}
 

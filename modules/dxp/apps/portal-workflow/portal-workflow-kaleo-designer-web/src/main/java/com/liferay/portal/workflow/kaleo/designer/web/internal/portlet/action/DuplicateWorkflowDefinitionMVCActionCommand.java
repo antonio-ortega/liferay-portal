@@ -63,12 +63,12 @@ public class DuplicateWorkflowDefinitionMVCActionCommand
 
 		if ((workflowDefinition != null) && workflowDefinition.isActive()) {
 			workflowDefinitionManager.deployWorkflowDefinition(
-				themeDisplay.getCompanyId(), themeDisplay.getUserId(),
+				null, themeDisplay.getCompanyId(), themeDisplay.getUserId(),
 				getTitle(actionRequest, titleMap), name, content.getBytes());
 		}
 		else {
 			workflowDefinitionManager.saveWorkflowDefinition(
-				themeDisplay.getCompanyId(), themeDisplay.getUserId(),
+				null, themeDisplay.getCompanyId(), themeDisplay.getUserId(),
 				getTitle(actionRequest, titleMap), name, content.getBytes());
 		}
 
@@ -95,7 +95,7 @@ public class DuplicateWorkflowDefinitionMVCActionCommand
 		ThemeDisplay themeDisplay, String name) {
 
 		try {
-			return workflowDefinitionManager.getLatestWorkflowDefinition(
+			return workflowDefinitionManager.liberalGetLatestWorkflowDefinition(
 				themeDisplay.getCompanyId(), name);
 		}
 		catch (WorkflowException workflowException) {

@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -315,6 +316,12 @@ public class ObjectValidationRuleSettingLocalServiceUtil {
 		return getService().getObjectValidationRuleSettingsCount();
 	}
 
+	public static int getObjectValidationRuleSettingsCount(
+		String name, String value) {
+
+		return getService().getObjectValidationRuleSettingsCount(name, value);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -351,15 +358,12 @@ public class ObjectValidationRuleSettingLocalServiceUtil {
 	}
 
 	public static ObjectValidationRuleSettingLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		ObjectValidationRuleSettingLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile ObjectValidationRuleSettingLocalService _service;
+	private static final Snapshot<ObjectValidationRuleSettingLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			ObjectValidationRuleSettingLocalServiceUtil.class,
+			ObjectValidationRuleSettingLocalService.class);
 
 }

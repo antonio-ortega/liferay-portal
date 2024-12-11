@@ -62,29 +62,29 @@
 											<liferay-ui:search-container-column-text
 												colspan="<%= 2 %>"
 											>
-												<h5>
+												<div class="h5">
 													<aui:a href="<%= (childGroup.getGroupId() != scopeGroupId) ? childGroup.getDisplayURL(themeDisplay) : null %>">
 														<%= childGroup.getDescriptiveName(locale) %>
 													</aui:a>
-												</h5>
+												</div>
 
-												<h6 class="text-default">
+												<div class="h6 text-default">
 													<%= HtmlUtil.escape(childGroup.getDescription(locale)) %>
-												</h6>
+												</div>
 
-												<h6 class="text-default">
+												<div class="h6 text-default">
 													<liferay-asset:asset-tags-summary
 														className="<%= Group.class.getName() %>"
 														classPK="<%= childGroup.getGroupId() %>"
 													/>
-												</h6>
+												</div>
 
-												<h6 class="text-default">
+												<div class="h6 text-default">
 													<liferay-asset:asset-categories-summary
 														className="<%= Group.class.getName() %>"
 														classPK="<%= childGroup.getGroupId() %>"
 													/>
-												</h6>
+												</div>
 											</liferay-ui:search-container-column-text>
 										</c:otherwise>
 									</c:choose>

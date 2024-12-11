@@ -24,6 +24,7 @@ import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayConte
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import javax.portlet.RenderRequest;
@@ -50,7 +51,7 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 			new AssetTagsSearchFacetDisplayContext();
 
 		assetTagsSearchFacetDisplayContext.setBucketDisplayContexts(
-			buildBucketDisplayContexts());
+			_buildBucketDisplayContexts());
 		assetTagsSearchFacetDisplayContext.setCloudWithCount(
 			_isCloudWithCount());
 		assetTagsSearchFacetDisplayContext.setDisplayStyleGroupId(
@@ -97,6 +98,10 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 
 	public void setFrequencyThreshold(int frequencyThreshold) {
 		_frequencyThreshold = frequencyThreshold;
+	}
+
+	public void setLocale(Locale locale) {
+		_locale = locale;
 	}
 
 	public void setMaxTerms(int maxTerms) {
@@ -148,6 +153,7 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 		bucketDisplayContext.setFrequency(frequency);
 
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setLocale(_locale);
 
 		int popularity = (int)getPopularity(
 			frequency, minCount, maxCount, multiplier);
@@ -159,7 +165,78 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 		return bucketDisplayContext;
 	}
 
-	protected List<BucketDisplayContext> buildBucketDisplayContexts() {
+	protected List<BucketDisplayContext>
+		getEmptySearchResultBucketDisplayContexts() {
+
+		if (_selectedTags.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		BucketDisplayContext bucketDisplayContext = new BucketDisplayContext();
+
+		bucketDisplayContext.setBucketText(_selectedTags.get(0));
+		bucketDisplayContext.setFilterValue(_selectedTags.get(0));
+		bucketDisplayContext.setFrequency(0);
+		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setPopularity(0);
+		bucketDisplayContext.setSelected(true);
+
+		return Collections.singletonList(bucketDisplayContext);
+	}
+
+	protected String getFirstParameterValue() {
+		if (_selectedTags.isEmpty()) {
+			return StringPool.BLANK;
+		}
+
+		return _selectedTags.get(0);
+	}
+
+	protected double getPopularity(
+		int frequency, int minCount, int maxCount, double multiplier) {
+
+		double popularity = maxCount - (maxCount - (frequency - minCount));
+
+		return 1 + (popularity * multiplier);
+	}
+
+	protected List<TermCollector> getTermCollectors() {
+		if (_facet == null) {
+			return Collections.emptyList();
+		}
+
+		FacetCollector facetCollector = _facet.getFacetCollector();
+
+		return facetCollector.getTermCollectors();
+	}
+
+	protected boolean isNothingSelected() {
+		if (_selectedTags.isEmpty()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	protected boolean isRenderNothing() {
+		List<TermCollector> termCollectors = getTermCollectors();
+
+		if (isNothingSelected() && termCollectors.isEmpty()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	protected boolean isSelected(String value) {
+		if (_selectedTags.contains(value)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private List<BucketDisplayContext> _buildBucketDisplayContexts() {
 		List<TermCollector> termCollectors = getTermCollectors();
 
 		if (termCollectors.isEmpty()) {
@@ -241,77 +318,6 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 		return bucketDisplayContexts;
 	}
 
-	protected List<BucketDisplayContext>
-		getEmptySearchResultBucketDisplayContexts() {
-
-		if (_selectedTags.isEmpty()) {
-			return Collections.emptyList();
-		}
-
-		BucketDisplayContext bucketDisplayContext = new BucketDisplayContext();
-
-		bucketDisplayContext.setBucketText(_selectedTags.get(0));
-		bucketDisplayContext.setFilterValue(_selectedTags.get(0));
-		bucketDisplayContext.setFrequency(0);
-		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
-		bucketDisplayContext.setPopularity(0);
-		bucketDisplayContext.setSelected(true);
-
-		return Collections.singletonList(bucketDisplayContext);
-	}
-
-	protected String getFirstParameterValue() {
-		if (_selectedTags.isEmpty()) {
-			return StringPool.BLANK;
-		}
-
-		return _selectedTags.get(0);
-	}
-
-	protected double getPopularity(
-		int frequency, int minCount, int maxCount, double multiplier) {
-
-		double popularity = maxCount - (maxCount - (frequency - minCount));
-
-		return 1 + (popularity * multiplier);
-	}
-
-	protected List<TermCollector> getTermCollectors() {
-		if (_facet == null) {
-			return Collections.emptyList();
-		}
-
-		FacetCollector facetCollector = _facet.getFacetCollector();
-
-		return facetCollector.getTermCollectors();
-	}
-
-	protected boolean isNothingSelected() {
-		if (_selectedTags.isEmpty()) {
-			return true;
-		}
-
-		return false;
-	}
-
-	protected boolean isRenderNothing() {
-		List<TermCollector> termCollectors = getTermCollectors();
-
-		if (isNothingSelected() && termCollectors.isEmpty()) {
-			return true;
-		}
-
-		return false;
-	}
-
-	protected boolean isSelected(String value) {
-		if (_selectedTags.contains(value)) {
-			return true;
-		}
-
-		return false;
-	}
-
 	private String _getFacetLabel() {
 		if (_facet != null) {
 			FacetConfiguration facetConfiguration =
@@ -339,6 +345,7 @@ public class AssetTagsSearchFacetDisplayContextBuilder {
 	private Facet _facet;
 	private boolean _frequenciesVisible;
 	private int _frequencyThreshold;
+	private Locale _locale;
 	private int _maxTerms;
 	private String _order;
 	private String _paginationStartParameterName;

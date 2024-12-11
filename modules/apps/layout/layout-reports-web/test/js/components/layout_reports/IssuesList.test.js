@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {render} from '@testing-library/react';
+import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
@@ -150,14 +150,6 @@ const renderIssuesList = ({
 };
 
 describe('IssuesList', () => {
-	beforeAll(() => {
-		Liferay.FeatureFlags['LPS-187284'] = true;
-	});
-
-	afterAll(() => {
-		Liferay.FeatureFlags['LPS-187284'] = false;
-	});
-
 	it('renders accessibility and seo sections with issues count', () => {
 		const {getByText} = renderIssuesList({
 			layoutReportsIssues: mockLayoutReportsIssues,
@@ -255,5 +247,22 @@ describe('IssuesList', () => {
 		userEvent.click(button);
 
 		expect(loadIssues).toBeCalled();
+	});
+
+	it('does not show launch button when there is cached data', () => {
+		renderIssuesList({
+			layoutReportsIssues: mockLayoutReportsIssuesSEODetails,
+		});
+
+		expect(screen.queryByText('launch')).not.toBeInTheDocument();
+	});
+
+	it('shows launch button when there is no cached data', () => {
+		renderIssuesList({
+			languageId: 'es-ES',
+			layoutReportsIssues: mockLayoutReportsIssuesSEODetails,
+		});
+
+		expect(screen.getByText('launch')).toBeInTheDocument();
 	});
 });

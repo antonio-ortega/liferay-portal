@@ -1,6 +1,7 @@
 definition {
 
-	macro addNewNotificationTemplate {
+	@summary = "Default summary"
+	macro addNewNotificationTemplate(notificationType = null) {
 		Notifications.goToNotificationTemplateAdmin();
 
 		LexiconEntry.gotoAdd();
@@ -13,21 +14,25 @@ definition {
 		}
 	}
 
-	macro addNotificationTemplateAttachment {
-		Click(
-			key_dataSource = "Select a Data Source",
-			locator1 = "ObjectNotifications#DATA_SOURCE_ATTACHMENTS");
+	@summary = "Default summary"
+	macro addNotificationTemplateAttachment(objectLabel = null) {
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Data Source",
+			optionName = ${objectLabel});
 
-		Click(
-			key_optionName = ${objectLabel},
-			locator1 = "ObjectAdmin#LAYOUT_ADD_FIELD_OPTION");
+		if (!(isSet(fieldLabel))) {
+			var fieldLabel = "";
+		}
 
 		Click(locator1 = "ObjectNotifications#FIELD_ATTACHMENTS_OBJECT");
 
-		Click(locator1 = "ObjectNotifications#FIELD_ATTACHMENTS_OBJECT_SELECT_FIELD");
+		Click(
+			key_fieldLabel = ${fieldLabel},
+			locator1 = "ObjectNotifications#FIELD_ATTACHMENTS_OBJECT_SELECT_FIELD");
 	}
 
-	macro addNotificationViaAPI {
+	@summary = "Default summary"
+	macro addNotificationViaAPI(cc = null, userPassword = null, bcc = null, subject = null, fromName = null, userEmailAddress = null, fromAddress = null, to = null, body = null, type = null) {
 		JSONNotifications.addEntryNotificationQueue(
 			bcc = ${bcc},
 			body = ${body},
@@ -41,50 +46,51 @@ definition {
 			userPassword = ${userPassword});
 	}
 
-	macro configureEmailNotificationTemplate {
+	@summary = "Default summary"
+	macro configureEmailNotificationTemplate(cc = null, bcc = null, emailBody = null, subject = null, name = null, fromName = null, description = null, fromAddress = null, entryTo = null) {
 		Type(
-			key_text = "Name",
-			locator1 = "TextInput#ANY",
+			inputFieldId = "name",
+			locator1 = "TextInput#INPUT_ID",
 			value1 = ${name});
 
 		Type(
-			key_text = "To",
-			locator1 = "TextInput#ANY",
+			inputFieldId = "primaryRecipients",
+			locator1 = "TextInput#INPUT_ID",
 			value1 = ${entryTo});
 
 		Type(
-			key_text = "From Address",
-			locator1 = "TextInput#ANY",
+			inputFieldId = "fromAddress",
+			locator1 = "TextInput#INPUT_ID",
 			value1 = ${fromAddress});
 
 		Type(
-			key_text = "From Name",
-			locator1 = "TextInput#ANY",
+			inputFieldId = "fromName",
+			locator1 = "TextInput#INPUT_ID",
 			value1 = ${fromName});
 
 		Type(
-			key_text = "Subject",
-			locator1 = "TextInput#ANY",
+			inputFieldId = "subject",
+			locator1 = "TextInput#INPUT_ID",
 			value1 = ${subject});
 
 		if (isSet(bcc)) {
 			Type(
-				key_text = "BCC",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "secondaryRecipientsBCC",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${bcc});
 		}
 
 		if (isSet(cc)) {
 			Type(
-				key_text = "CC",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "secondaryRecipientsCC",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${cc});
 		}
 
 		if (isSet(description)) {
 			Type(
-				key_text = "description",
-				locator1 = "TextArea#ANY",
+				key_fieldId = "description",
+				locator1 = "TextArea#ANY_ID",
 				value1 = ${description});
 		}
 
@@ -93,7 +99,8 @@ definition {
 			value1 = ${emailBody});
 	}
 
-	macro configureUserNotificationTemplate {
+	@summary = "Default summary"
+	macro configureUserNotificationTemplate(recipientType = null, subject = null, name = null, description = null, userName = null, indexRecipient = null) {
 		Type(
 			key_text = "Name",
 			locator1 = "TextInput#ANY",
@@ -112,11 +119,14 @@ definition {
 		}
 
 		if (isSet(recipientType)) {
-			Click(locator1 = "ObjectAction#SELECT_OPTION_TYPE");
+			Click(
+				key_labelName = "Recipients",
+				locator1 = "ObjectAdmin#CLAY_GENERIC_BUTTON");
 
 			Click(
-				key_recipientType = ${recipientType},
-				locator1 = "ObjectNotifications#RECIPIENT_TYPE");
+				index = ${indexRecipient},
+				locator1 = "MenuItem#DROPDOWN_MENU_ITEM_SPECIFIC",
+				value1 = ${recipientType});
 
 			if (${recipientType} == "User") {
 				Type(
@@ -132,13 +142,15 @@ definition {
 		}
 	}
 
-	macro deleteNotificationEntry {
+	@summary = "Default summary"
+	macro deleteNotificationEntry(triggerBy = null) {
 		Click(
 			key_text = ${triggerBy},
 			locator1 = "ObjectNotifications#DELETE_NOTIFICATION_IN_QUEUE");
 	}
 
-	macro deleteNotificationTemplate {
+	@summary = "Default summary"
+	macro deleteNotificationTemplate(templateName = null) {
 		Click(
 			key_objectLabel = ${templateName},
 			locator1 = "ObjectAdmin#OBJECT_KEBAB_MENU");
@@ -148,64 +160,65 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
-	macro editNotificationTemplate {
+	@summary = "Default summary"
+	macro editNotificationTemplate(cc = null, notificationTemplateName = null, bcc = null, emailBody = null, subject = null, name = null, fromName = null, description = null, fromAddress = null, entryTo = null, externalReferenceCode = null) {
 		Click(
 			key_name = ${notificationTemplateName},
 			locator1 = "ObjectAdmin#TABLE_LIST_TITLE");
 
 		if (isSet(name)) {
 			Type(
-				key_text = "Name",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "name",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${name});
 		}
 
 		if (isSet(description)) {
 			Type(
-				key_text = "description",
-				locator1 = "TextArea#ANY",
+				key_fieldId = "description",
+				locator1 = "TextArea#ANY_ID",
 				value1 = ${description});
 		}
 
 		if (isSet(cc)) {
 			Type(
-				key_text = "CC",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "secondaryRecipientsCC",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${cc});
 		}
 
 		if (isSet(bcc)) {
 			Type(
-				key_text = "BCC",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "secondaryRecipientsBCC",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${bcc});
 		}
 
 		if (isSet(entryTo)) {
 			Type(
-				key_text = "To",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "primaryRecipients",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${entryTo});
 		}
 
 		if (isSet(fromAddress)) {
 			Type(
-				key_text = "From Address",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "fromAddress",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${fromAddress});
 		}
 
 		if (isSet(fromName)) {
 			Type(
-				key_text = "From Name",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "fromName",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${fromName});
 		}
 
 		if (isSet(subject)) {
 			Type(
-				key_text = "Subject",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "subject",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${subject});
 		}
 
@@ -220,7 +233,8 @@ definition {
 		}
 	}
 
-	macro resendNotificationInTheQueue {
+	@summary = "Default summary"
+	macro resendNotificationInTheQueue(triggerBy = null) {
 		Click(
 			key_text = ${triggerBy},
 			locator1 = "Icon#ANY_VERTICAL_ELLIPSIS");
@@ -228,53 +242,46 @@ definition {
 		MenuItem.clickNoError(menuItem = "Resend");
 	}
 
-	macro selectEntity {
-		Click(locator1 = "ObjectCustomViews#SELECT_AUTO_COMPLETE");
-
-		Click(
-			key_optionName = ${entityName},
-			locator1 = "ObjectAdmin#LAYOUT_ADD_FIELD_OPTION");
-	}
-
-	macro viewEmailNotificationTemplateDetails {
+	@summary = "Default summary"
+	macro viewEmailNotificationTemplateDetails(cc = null, bcc = null, emailBody = null, subject = null, name = null, fromName = null, description = null, fromAddress = null, notificationType = null, entryTo = null, externalReferenceCode = null) {
 		Click(
 			key_name = ${name},
 			locator1 = "ObjectAdmin#TABLE_LIST_TITLE");
 
 		if (${notificationType} == "Email") {
 			AssertTextEquals(
-				key_text = "Name",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "name",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${name});
 
 			AssertTextEquals(
-				key_text = "From Address",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "fromAddress",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${fromAddress});
 
 			AssertTextEquals(
-				key_text = "From Name",
-				locator1 = "TextInput#ANY",
+				inputFieldId = "fromName",
+				locator1 = "TextInput#INPUT_ID",
 				value1 = ${fromName});
 
 			if (isSet(bcc)) {
 				AssertTextEquals(
-					key_text = "BCC",
-					locator1 = "TextInput#ANY",
+					inputFieldId = "secondaryRecipientsBCC",
+					locator1 = "TextInput#INPUT_ID",
 					value1 = ${bcc});
 			}
 
 			if (isSet(cc)) {
 				AssertTextEquals(
-					key_text = "CC",
-					locator1 = "TextInput#ANY",
+					inputFieldId = "secondaryRecipientsCC",
+					locator1 = "TextInput#INPUT_ID",
 					value1 = ${cc});
 			}
 
 			if (isSet(description)) {
 				AssertTextEquals(
-					key_text = "description",
-					locator1 = "TextArea#ANY",
+					key_fieldId = "description",
+					locator1 = "TextArea#ANY_ID",
 					value1 = ${description});
 			}
 
@@ -290,8 +297,8 @@ definition {
 
 			if (isSet(entryTo)) {
 				AssertTextEquals(
-					key_text = "To",
-					locator1 = "TextInput#ANY",
+					inputFieldId = "primaryRecipients",
+					locator1 = "TextInput#INPUT_ID",
 					value1 = ${entryTo});
 			}
 
@@ -303,14 +310,15 @@ definition {
 
 			if (isSet(subject)) {
 				AssertTextEquals(
-					key_text = "Subject",
-					locator1 = "TextInput#ANY",
+					inputFieldId = "subject",
+					locator1 = "TextInput#INPUT_ID",
 					value1 = ${subject});
 			}
 		}
 	}
 
-	macro viewUserNotificationTemplateDetails {
+	@summary = "Default summary"
+	macro viewUserNotificationTemplateDetails(recipientType = null, subject = null, name = null, description = null, externalReferenceCode = null) {
 		Click(
 			key_name = ${name},
 			locator1 = "ObjectAdmin#TABLE_LIST_TITLE");
@@ -332,9 +340,10 @@ definition {
 			locator1 = "TextArea#ANY",
 			value1 = ${subject});
 
-		AssertElementPresent(
-			key_recipientType = ${recipientType},
-			locator1 = "ObjectNotifications#RECIPIENT_TYPE");
+		AssertTextEquals(
+			key_labelName = "Recipients",
+			locator1 = "ObjectAdmin#CLAY_GENERIC_BUTTON",
+			value1 = ${recipientType});
 
 		if (isSet(externalReferenceCode)) {
 			AssertElementPresent(

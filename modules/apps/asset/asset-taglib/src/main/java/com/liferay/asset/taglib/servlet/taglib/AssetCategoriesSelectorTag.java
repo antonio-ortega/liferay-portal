@@ -19,19 +19,24 @@ import com.liferay.depot.util.SiteConnectedGroupGroupProviderUtil;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.learn.LearnMessage;
 import com.liferay.learn.LearnMessageUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.portlet.PortletProvider;
-import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutPrototypeLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -110,6 +115,10 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 		return _singleSelect;
 	}
 
+	public boolean isUseDataCategoriesAttribute() {
+		return _useDataCategoriesAttribute;
+	}
+
 	public void setCategoryIds(String categoryIds) {
 		_categoryIds = categoryIds;
 	}
@@ -167,6 +176,12 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 		_singleSelect = singleSelect;
 	}
 
+	public void setUseDataCategoriesAttribute(
+		boolean useDataCategoriesAttribute) {
+
+		_useDataCategoriesAttribute = useDataCategoriesAttribute;
+	}
+
 	public void setVisibilityTypes(int[] visibilityTypes) {
 		_visibilityTypes = visibilityTypes;
 	}
@@ -188,17 +203,18 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 		_showOnlyRequiredVocabularies = false;
 		_showRequiredLabel = true;
 		_singleSelect = false;
+		_useDataCategoriesAttribute = false;
 		_visibilityTypes = _VISIBILITY_TYPES;
 	}
 
 	protected List<String[]> getCategoryIdsTitles() {
+		List<String[]> categoryIdsTitles = new ArrayList<>();
+
 		HttpServletRequest httpServletRequest = getRequest();
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
-
-		List<String[]> categoryIdsTitles = new ArrayList<>();
 
 		String categoryIds = StringPool.BLANK;
 
@@ -260,13 +276,6 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 		return categoryIdsTitles;
 	}
 
-	protected String getEventName() {
-		String portletId = PortletProviderUtil.getPortletId(
-			AssetCategory.class.getName(), PortletProvider.Action.BROWSE);
-
-		return PortalUtil.getPortletNamespace(portletId) + "selectCategory";
-	}
-
 	protected long[] getGroupIds() {
 		HttpServletRequest httpServletRequest = getRequest();
 
@@ -278,7 +287,7 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 			if (ArrayUtil.isEmpty(_groupIds)) {
 				return SiteConnectedGroupGroupProviderUtil.
 					getCurrentAndAncestorSiteAndDepotGroupIds(
-						themeDisplay.getScopeGroupId());
+						_getGroupId(themeDisplay.getScopeGroup()));
 			}
 
 			return SiteConnectedGroupGroupProviderUtil.
@@ -321,7 +330,7 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 		return PortletURLBuilder.create(
 			itemSelector.getItemSelectorURL(
 				requestBackedPortletURLFactory, themeDisplay.getScopeGroup(),
-				themeDisplay.getScopeGroupId(), getEventName(),
+				themeDisplay.getScopeGroupId(), "selectCategory",
 				itemSelectorCriterion)
 		).setParameter(
 			"showAddCategoryButton", true
@@ -358,7 +367,8 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 				).put(
 					"required",
 					vocabulary.isRequired(
-						PortalUtil.getClassNameId(_className), _classTypePK) &&
+						PortalUtil.getClassNameId(_className), _classTypePK,
+						themeDisplay.getScopeGroupId()) &&
 					_showRequiredLabel
 				).put(
 					"selectedCategories", selectedCategoryIds
@@ -411,7 +421,7 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 			httpServletRequest.setAttribute(
 				"liferay-asset:asset-categories-selector:data",
 				HashMapBuilder.<String, Object>put(
-					"eventName", getEventName()
+					"eventName", "selectCategory"
 				).put(
 					"groupIds", ListUtil.fromArray(getGroupIds())
 				).put(
@@ -441,12 +451,36 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 				).put(
 					"showLabel", isShowLabel()
 				).put(
+					"useDataCategoriesAttribute", isUseDataCategoriesAttribute()
+				).put(
 					"vocabularies", getVocabularies()
 				).build());
 		}
 		catch (Exception exception) {
 			_log.error(exception);
 		}
+	}
+
+	private long _getGroupId(Group group) throws PortalException {
+		if (group.isLayoutPrototype()) {
+			LayoutPrototype layoutPrototype =
+				LayoutPrototypeLocalServiceUtil.getLayoutPrototype(
+					group.getClassPK());
+
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
+				LayoutPageTemplateEntryLocalServiceUtil.
+					fetchFirstLayoutPageTemplateEntry(
+						layoutPrototype.getLayoutPrototypeId());
+
+			if ((layoutPageTemplateEntry != null) &&
+				(layoutPageTemplateEntry.getGroupId() > 0)) {
+
+				group = GroupLocalServiceUtil.getGroup(
+					layoutPageTemplateEntry.getGroupId());
+			}
+		}
+
+		return group.getGroupId();
 	}
 
 	private String _getId() {
@@ -517,7 +551,8 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 			vocabulary -> {
 				if (_showOnlyRequiredVocabularies &&
 					!vocabulary.isRequired(
-						PortalUtil.getClassNameId(_className), _classTypePK)) {
+						PortalUtil.getClassNameId(_className), _classTypePK,
+						themeDisplay.getScopeGroupId())) {
 
 					return false;
 				}
@@ -548,6 +583,7 @@ public class AssetCategoriesSelectorTag extends IncludeTag {
 	private boolean _showOnlyRequiredVocabularies;
 	private boolean _showRequiredLabel = true;
 	private boolean _singleSelect;
+	private boolean _useDataCategoriesAttribute;
 	private int[] _visibilityTypes = _VISIBILITY_TYPES;
 
 }

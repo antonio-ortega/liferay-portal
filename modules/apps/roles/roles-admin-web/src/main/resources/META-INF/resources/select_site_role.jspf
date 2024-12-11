@@ -60,7 +60,11 @@ if (step == 2) {
 	selectRoleManagementToolbarDisplayContext.setGroupId(groupId);
 }
 
-PortletURL portletURL = selectRoleManagementToolbarDisplayContext.getPortletURL();
+PortletURL portletURL = PortletURLBuilder.create(
+	selectRoleManagementToolbarDisplayContext.getPortletURL()
+).setKeywords(
+	StringPool.BLANK
+).buildPortletURL();
 
 SearchContainer<Role> roleSearchContainer = selectRoleManagementToolbarDisplayContext.getRoleSearchContainer(filterManageableRoles, groupId);
 %>
@@ -85,7 +89,7 @@ SearchContainer<Role> roleSearchContainer = selectRoleManagementToolbarDisplayCo
 			</div>
 
 			<liferay-ui:search-container
-				searchContainer="<%= new GroupSearch(renderRequest, portletURL) %>"
+				searchContainer="<%= new GroupSearch(renderRequest, selectRoleManagementToolbarDisplayContext.getPortletURL()) %>"
 				total="<%= groups.size() %>"
 			>
 				<liferay-ui:search-container-results
@@ -128,12 +132,10 @@ SearchContainer<Role> roleSearchContainer = selectRoleManagementToolbarDisplayCo
 				/>
 			</liferay-ui:search-container>
 
-			<aui:script require="frontend-js-web/index as frontendJsWeb">
-				var {delegate} = frontendJsWeb;
-
+			<aui:script sandbox="<%= true %>">
 				var form = document.<portlet:namespace />selectSiteRoleFm;
 
-				delegate(form, 'click', '.group-selector-button', (event) => {
+				Liferay.Util.delegate(form, 'click', '.group-selector-button', (event) => {
 					Liferay.Util.postForm(form, {
 						data: {
 							groupId: event.delegateTarget.dataset.groupid,

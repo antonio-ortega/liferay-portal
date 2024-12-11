@@ -208,13 +208,13 @@ public class CommerceTierPriceEntryServiceImpl
 	}
 
 	@Override
-	public CommerceTierPriceEntry fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
+	public CommerceTierPriceEntry fetchCommerceTierPriceEntry(
+			long commerceTierPriceEntryId)
 		throws PortalException {
 
 		CommerceTierPriceEntry commerceTierPriceEntry =
-			commerceTierPriceEntryLocalService.fetchByExternalReferenceCode(
-				externalReferenceCode, companyId);
+			commerceTierPriceEntryLocalService.fetchCommerceTierPriceEntry(
+				commerceTierPriceEntryId);
 
 		if (commerceTierPriceEntry != null) {
 			CommercePriceEntry commercePriceEntry =
@@ -228,26 +228,16 @@ public class CommerceTierPriceEntryServiceImpl
 		return commerceTierPriceEntry;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
 	@Override
-	public List<CommerceTierPriceEntry> fetchCommerceTierPriceEntries(
-			long companyId, int start, int end)
-		throws PortalException {
-
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public CommerceTierPriceEntry fetchCommerceTierPriceEntry(
-			long commerceTierPriceEntryId)
+	public CommerceTierPriceEntry
+			fetchCommerceTierPriceEntryByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		CommerceTierPriceEntry commerceTierPriceEntry =
-			commerceTierPriceEntryLocalService.fetchCommerceTierPriceEntry(
-				commerceTierPriceEntryId);
+			commerceTierPriceEntryLocalService.
+				fetchCommerceTierPriceEntryByExternalReferenceCode(
+					externalReferenceCode, companyId);
 
 		if (commerceTierPriceEntry != null) {
 			CommercePriceEntry commercePriceEntry =

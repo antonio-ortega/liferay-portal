@@ -11,29 +11,40 @@ import com.liferay.notification.model.NotificationRecipient;
 import com.liferay.notification.model.NotificationRecipientSetting;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.model.UserConstants;
+import com.liferay.portal.kernel.model.UserGroupRoleModel;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Feliphe Marinho
  */
-@Component(
-	property = "recipient.type=" + NotificationRecipientConstants.TYPE_ROLE,
-	service = UsersProvider.class
-)
-public class RoleUsersProvider
-	extends BaseUsersProvider implements UsersProvider {
+public class RoleUsersProvider implements UsersProvider {
+
+	public RoleUsersProvider(
+		PermissionCheckerFactory permissionCheckerFactory,
+		RoleLocalService roleLocalService,
+		UserGroupRoleLocalService userGroupRoleLocalService,
+		UserLocalService userLocalService) {
+
+		_permissionCheckerFactory = permissionCheckerFactory;
+		_roleLocalService = roleLocalService;
+		_userGroupRoleLocalService = userGroupRoleLocalService;
+		_userLocalService = userLocalService;
+	}
 
 	@Override
 	public String getRecipientType() {
@@ -59,11 +70,26 @@ public class RoleUsersProvider
 				notificationRecipientSetting.getCompanyId(),
 				notificationRecipientSetting.getValue());
 
-			for (long userId :
-					_userLocalService.getRoleUserIds(
-						role.getRoleId(), UserConstants.TYPE_REGULAR)) {
+			if ((role.getType() == RoleConstants.TYPE_ORGANIZATION) ||
+				(role.getType() == RoleConstants.TYPE_SITE)) {
 
-				userIds.add(userId);
+				userIds.addAll(
+					ListUtil.toList(
+						_userGroupRoleLocalService.
+							getUserGroupRolesByGroupAndRole(
+								notificationContext.getGroupId(),
+								role.getRoleId()),
+						UserGroupRoleModel::getUserId));
+
+				continue;
+			}
+
+			for (User user :
+					_userLocalService.getInheritedRoleUsers(
+						role.getRoleId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+						null)) {
+
+				userIds.add(user.getUserId());
 			}
 		}
 
@@ -72,9 +98,11 @@ public class RoleUsersProvider
 			userId -> {
 				User user = _userLocalService.getUser(userId);
 
-				if (!hasViewPermission(
+				if (!ModelResourcePermissionUtil.contains(
+						_permissionCheckerFactory.create(user),
+						notificationContext.getGroupId(),
 						notificationContext.getClassName(),
-						notificationContext.getClassPK(), user)) {
+						notificationContext.getClassPK(), ActionKeys.VIEW)) {
 
 					return null;
 				}
@@ -83,10 +111,9 @@ public class RoleUsersProvider
 			});
 	}
 
-	@Reference
-	private RoleLocalService _roleLocalService;
-
-	@Reference
-	private UserLocalService _userLocalService;
+	private final PermissionCheckerFactory _permissionCheckerFactory;
+	private final RoleLocalService _roleLocalService;
+	private final UserGroupRoleLocalService _userGroupRoleLocalService;
+	private final UserLocalService _userLocalService;
 
 }

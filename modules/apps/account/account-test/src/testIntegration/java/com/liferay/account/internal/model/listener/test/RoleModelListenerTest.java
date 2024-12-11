@@ -10,7 +10,6 @@ import com.liferay.account.constants.AccountRoleConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountRole;
 import com.liferay.account.model.AccountRoleTable;
-import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.account.service.test.util.AccountEntryTestUtil;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
@@ -58,13 +57,15 @@ public class RoleModelListenerTest {
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		_company = CompanyTestUtil.addCompany();
+		_company = _companyLocalService.getCompany(
+			TestPropsValues.getCompanyId());
 	}
 
 	@Test
 	public void testAddAccountScopedRole() throws Exception {
 		Role role = _roleLocalService.addRole(
-			TestPropsValues.getUserId(), AccountRole.class.getName(),
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			AccountRole.class.getName(),
 			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
@@ -115,7 +116,8 @@ public class RoleModelListenerTest {
 		throws Exception {
 
 		Role role = _roleLocalService.addRole(
-			TestPropsValues.getUserId(), AccountRole.class.getName(),
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			AccountRole.class.getName(),
 			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
@@ -184,8 +186,9 @@ public class RoleModelListenerTest {
 		AccountEntry accountEntry = AccountEntryTestUtil.addAccountEntry();
 
 		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
-			TestPropsValues.getUserId(), accountEntry.getAccountEntryId(),
-			RandomTestUtil.randomString(), null, null);
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
+			null, null);
 
 		try {
 			_roleLocalService.deleteRole(accountRole.getRoleId());
@@ -207,16 +210,43 @@ public class RoleModelListenerTest {
 		}
 	}
 
+	@Test
+	public void testUpdateRoleExternalReferenceCode() throws Exception {
+		Role role = _roleLocalService.addRole(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			AccountRole.class.getName(),
+			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+			RandomTestUtil.randomString(),
+			RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(), RoleConstants.TYPE_ACCOUNT,
+			null, null);
+
+		AccountRole accountRole =
+			_accountRoleLocalService.fetchAccountRoleByRoleId(role.getRoleId());
+
+		Assert.assertEquals(
+			accountRole.getExternalReferenceCode(),
+			role.getExternalReferenceCode());
+
+		role.setExternalReferenceCode(RandomTestUtil.randomString());
+
+		Role updateRole = _roleLocalService.updateRole(role);
+
+		accountRole = _accountRoleLocalService.fetchAccountRoleByRoleId(
+			role.getRoleId());
+
+		Assert.assertEquals(
+			accountRole.getExternalReferenceCode(),
+			updateRole.getExternalReferenceCode());
+	}
+
 	private static Company _company;
 
 	@Inject
-	private AccountEntryLocalService _accountEntryLocalService;
+	private static CompanyLocalService _companyLocalService;
 
 	@Inject
 	private AccountRoleLocalService _accountRoleLocalService;
-
-	@Inject
-	private CompanyLocalService _companyLocalService;
 
 	@Inject
 	private RoleLocalService _roleLocalService;

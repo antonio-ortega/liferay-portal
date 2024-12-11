@@ -9,6 +9,7 @@ import com.liferay.portal.kernel.search.Field;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author André de Oliveira
@@ -33,12 +34,31 @@ public class NestedDDMFieldArrayUtil {
 		return field;
 	}
 
+	public static Field createSortableStringField(
+		String name, String valueFieldName, Object value) {
+
+		Field field = createField(name, valueFieldName, value);
+
+		String sortableValueFieldName = Field.getSortableFieldName(
+			valueFieldName + "_String");
+
+		if (value instanceof String) {
+			field.addField(new Field(sortableValueFieldName, (String)value));
+		}
+		else {
+			field.addField(new Field(sortableValueFieldName, (String[])value));
+		}
+
+		return field;
+	}
+
 	public static Object getFieldValue(
 		String name, List<Map<String, Object>> maps) {
 
 		for (Map<String, Object> map : maps) {
-			if (name.equals(map.get("ddmFieldName"))) {
-				Object fieldValue = map.get(map.get("ddmValueFieldName"));
+			if (Objects.equals(name, _getValue(map.get("ddmFieldName")))) {
+				Object fieldValue = _getValue(
+					map.get(_getValue(map.get("ddmValueFieldName"))));
 
 				if (fieldValue != null) {
 					return fieldValue;
@@ -47,6 +67,18 @@ public class NestedDDMFieldArrayUtil {
 		}
 
 		return null;
+	}
+
+	private static Object _getValue(Object object) {
+		if (object instanceof List) {
+			List<?> list = (List<?>)object;
+
+			if (list.size() == 1) {
+				return list.get(0);
+			}
+		}
+
+		return object;
 	}
 
 }

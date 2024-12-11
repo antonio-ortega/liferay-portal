@@ -26,19 +26,20 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -96,10 +97,16 @@ public abstract class BaseTransitionResourceTestCase {
 
 		_transitionResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		TransitionResource.Builder builder = TransitionResource.builder();
 
 		transitionResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -113,7 +120,32 @@ public abstract class BaseTransitionResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Transition transition1 = randomTransition();
+
+		String json = objectMapper.writeValueAsString(transition1);
+
+		Transition transition2 = TransitionSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(transition1, transition2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Transition transition = randomTransition();
+
+		String json1 = objectMapper.writeValueAsString(transition);
+		String json2 = TransitionSerDes.toJSON(transition);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -128,40 +160,6 @@ public abstract class BaseTransitionResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Transition transition1 = randomTransition();
-
-		String json = objectMapper.writeValueAsString(transition1);
-
-		Transition transition2 = TransitionSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(transition1, transition2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Transition transition = randomTransition();
-
-		String json1 = objectMapper.writeValueAsString(transition);
-		String json2 = TransitionSerDes.toJSON(transition);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -198,7 +196,7 @@ public abstract class BaseTransitionResourceTestCase {
 			transitionResource.getWorkflowInstanceNextTransitionsPage(
 				workflowInstanceId, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantWorkflowInstanceId != null) {
 			Transition irrelevantTransition =
@@ -206,13 +204,13 @@ public abstract class BaseTransitionResourceTestCase {
 					irrelevantWorkflowInstanceId, randomIrrelevantTransition());
 
 			page = transitionResource.getWorkflowInstanceNextTransitionsPage(
-				irrelevantWorkflowInstanceId, Pagination.of(1, 2));
+				irrelevantWorkflowInstanceId,
+				Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantTransition),
-				(List<Transition>)page.getItems());
+			assertContains(
+				irrelevantTransition, (List<Transition>)page.getItems());
 			assertValid(
 				page,
 				testGetWorkflowInstanceNextTransitionsPage_getExpectedActions(
@@ -230,11 +228,10 @@ public abstract class BaseTransitionResourceTestCase {
 		page = transitionResource.getWorkflowInstanceNextTransitionsPage(
 			workflowInstanceId, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(transition1, transition2),
-			(List<Transition>)page.getItems());
+		assertContains(transition1, (List<Transition>)page.getItems());
+		assertContains(transition2, (List<Transition>)page.getItems());
 		assertValid(
 			page,
 			testGetWorkflowInstanceNextTransitionsPage_getExpectedActions(
@@ -258,6 +255,12 @@ public abstract class BaseTransitionResourceTestCase {
 		Long workflowInstanceId =
 			testGetWorkflowInstanceNextTransitionsPage_getWorkflowInstanceId();
 
+		Page<Transition> transitionPage =
+			transitionResource.getWorkflowInstanceNextTransitionsPage(
+				workflowInstanceId, null);
+
+		int totalCount = GetterUtil.getInteger(transitionPage.getTotalCount());
+
 		Transition transition1 =
 			testGetWorkflowInstanceNextTransitionsPage_addTransition(
 				workflowInstanceId, randomTransition());
@@ -270,31 +273,69 @@ public abstract class BaseTransitionResourceTestCase {
 			testGetWorkflowInstanceNextTransitionsPage_addTransition(
 				workflowInstanceId, randomTransition());
 
-		Page<Transition> page1 =
-			transitionResource.getWorkflowInstanceNextTransitionsPage(
-				workflowInstanceId, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Transition> transitions1 = (List<Transition>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(transitions1.toString(), 2, transitions1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Transition> page1 =
+				transitionResource.getWorkflowInstanceNextTransitionsPage(
+					workflowInstanceId,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<Transition> page2 =
-			transitionResource.getWorkflowInstanceNextTransitionsPage(
-				workflowInstanceId, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(transition1, (List<Transition>)page1.getItems());
 
-		List<Transition> transitions2 = (List<Transition>)page2.getItems();
+			Page<Transition> page2 =
+				transitionResource.getWorkflowInstanceNextTransitionsPage(
+					workflowInstanceId,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(transitions2.toString(), 1, transitions2.size());
+			assertContains(transition2, (List<Transition>)page2.getItems());
 
-		Page<Transition> page3 =
-			transitionResource.getWorkflowInstanceNextTransitionsPage(
-				workflowInstanceId, Pagination.of(1, 3));
+			Page<Transition> page3 =
+				transitionResource.getWorkflowInstanceNextTransitionsPage(
+					workflowInstanceId,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(transition1, transition2, transition3),
-			(List<Transition>)page3.getItems());
+			assertContains(transition3, (List<Transition>)page3.getItems());
+		}
+		else {
+			Page<Transition> page1 =
+				transitionResource.getWorkflowInstanceNextTransitionsPage(
+					workflowInstanceId, Pagination.of(1, totalCount + 2));
+
+			List<Transition> transitions1 = (List<Transition>)page1.getItems();
+
+			Assert.assertEquals(
+				transitions1.toString(), totalCount + 2, transitions1.size());
+
+			Page<Transition> page2 =
+				transitionResource.getWorkflowInstanceNextTransitionsPage(
+					workflowInstanceId, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Transition> transitions2 = (List<Transition>)page2.getItems();
+
+			Assert.assertEquals(
+				transitions2.toString(), 1, transitions2.size());
+
+			Page<Transition> page3 =
+				transitionResource.getWorkflowInstanceNextTransitionsPage(
+					workflowInstanceId, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(transition1, (List<Transition>)page3.getItems());
+			assertContains(transition2, (List<Transition>)page3.getItems());
+			assertContains(transition3, (List<Transition>)page3.getItems());
+		}
 	}
 
 	protected Transition
@@ -332,7 +373,7 @@ public abstract class BaseTransitionResourceTestCase {
 			transitionResource.getWorkflowTaskNextTransitionsPage(
 				workflowTaskId, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantWorkflowTaskId != null) {
 			Transition irrelevantTransition =
@@ -340,13 +381,13 @@ public abstract class BaseTransitionResourceTestCase {
 					irrelevantWorkflowTaskId, randomIrrelevantTransition());
 
 			page = transitionResource.getWorkflowTaskNextTransitionsPage(
-				irrelevantWorkflowTaskId, Pagination.of(1, 2));
+				irrelevantWorkflowTaskId,
+				Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantTransition),
-				(List<Transition>)page.getItems());
+			assertContains(
+				irrelevantTransition, (List<Transition>)page.getItems());
 			assertValid(
 				page,
 				testGetWorkflowTaskNextTransitionsPage_getExpectedActions(
@@ -364,11 +405,10 @@ public abstract class BaseTransitionResourceTestCase {
 		page = transitionResource.getWorkflowTaskNextTransitionsPage(
 			workflowTaskId, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(transition1, transition2),
-			(List<Transition>)page.getItems());
+		assertContains(transition1, (List<Transition>)page.getItems());
+		assertContains(transition2, (List<Transition>)page.getItems());
 		assertValid(
 			page,
 			testGetWorkflowTaskNextTransitionsPage_getExpectedActions(
@@ -392,6 +432,12 @@ public abstract class BaseTransitionResourceTestCase {
 		Long workflowTaskId =
 			testGetWorkflowTaskNextTransitionsPage_getWorkflowTaskId();
 
+		Page<Transition> transitionPage =
+			transitionResource.getWorkflowTaskNextTransitionsPage(
+				workflowTaskId, null);
+
+		int totalCount = GetterUtil.getInteger(transitionPage.getTotalCount());
+
 		Transition transition1 =
 			testGetWorkflowTaskNextTransitionsPage_addTransition(
 				workflowTaskId, randomTransition());
@@ -404,31 +450,69 @@ public abstract class BaseTransitionResourceTestCase {
 			testGetWorkflowTaskNextTransitionsPage_addTransition(
 				workflowTaskId, randomTransition());
 
-		Page<Transition> page1 =
-			transitionResource.getWorkflowTaskNextTransitionsPage(
-				workflowTaskId, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Transition> transitions1 = (List<Transition>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(transitions1.toString(), 2, transitions1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Transition> page1 =
+				transitionResource.getWorkflowTaskNextTransitionsPage(
+					workflowTaskId,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<Transition> page2 =
-			transitionResource.getWorkflowTaskNextTransitionsPage(
-				workflowTaskId, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(transition1, (List<Transition>)page1.getItems());
 
-		List<Transition> transitions2 = (List<Transition>)page2.getItems();
+			Page<Transition> page2 =
+				transitionResource.getWorkflowTaskNextTransitionsPage(
+					workflowTaskId,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(transitions2.toString(), 1, transitions2.size());
+			assertContains(transition2, (List<Transition>)page2.getItems());
 
-		Page<Transition> page3 =
-			transitionResource.getWorkflowTaskNextTransitionsPage(
-				workflowTaskId, Pagination.of(1, 3));
+			Page<Transition> page3 =
+				transitionResource.getWorkflowTaskNextTransitionsPage(
+					workflowTaskId,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(transition1, transition2, transition3),
-			(List<Transition>)page3.getItems());
+			assertContains(transition3, (List<Transition>)page3.getItems());
+		}
+		else {
+			Page<Transition> page1 =
+				transitionResource.getWorkflowTaskNextTransitionsPage(
+					workflowTaskId, Pagination.of(1, totalCount + 2));
+
+			List<Transition> transitions1 = (List<Transition>)page1.getItems();
+
+			Assert.assertEquals(
+				transitions1.toString(), totalCount + 2, transitions1.size());
+
+			Page<Transition> page2 =
+				transitionResource.getWorkflowTaskNextTransitionsPage(
+					workflowTaskId, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Transition> transitions2 = (List<Transition>)page2.getItems();
+
+			Assert.assertEquals(
+				transitions2.toString(), 1, transitions2.size());
+
+			Page<Transition> page3 =
+				transitionResource.getWorkflowTaskNextTransitionsPage(
+					workflowTaskId, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(transition1, (List<Transition>)page3.getItems());
+			assertContains(transition2, (List<Transition>)page3.getItems());
+			assertContains(transition3, (List<Transition>)page3.getItems());
+		}
 	}
 
 	protected Transition testGetWorkflowTaskNextTransitionsPage_addTransition(
@@ -754,6 +838,10 @@ public abstract class BaseTransitionResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1018,7 +1106,8 @@ public abstract class BaseTransitionResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1069,21 +1158,21 @@ public abstract class BaseTransitionResourceTestCase {
 	}
 
 	protected TransitionResource transitionResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1092,11 +1181,16 @@ public abstract class BaseTransitionResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1128,6 +1222,24 @@ public abstract class BaseTransitionResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1149,16 +1261,6 @@ public abstract class BaseTransitionResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

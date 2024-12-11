@@ -5,7 +5,9 @@
 
 package com.liferay.portal.workflow.kaleo.internal.upgrade.registry;
 
+import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.BaseUuidUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
@@ -42,6 +44,8 @@ import com.liferay.portal.workflow.kaleo.internal.upgrade.v2_0_0.util.KaleoTrans
 import com.liferay.portal.workflow.kaleo.internal.upgrade.v2_0_1.UpgradeMessageBoardsClassName;
 import com.liferay.portal.workflow.kaleo.internal.upgrade.v3_1_1.KaleoNotificationUpgradeProcess;
 import com.liferay.portal.workflow.kaleo.internal.upgrade.v3_2_0.KaleoInstanceUpgradeProcess;
+import com.liferay.portal.workflow.kaleo.internal.upgrade.v4_0_0.KaleoDefinitionContentUpgradeProcess;
+import com.liferay.portal.workflow.kaleo.internal.upgrade.v4_0_1.DDLFormRecordToDDMFormInstanceRecordUpgradeClassNames;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -168,6 +172,39 @@ public class KaleoServiceUpgradeStepRegistrator
 			"3.5.1", "3.5.2",
 			UpgradeProcessFactory.alterColumnType(
 				"KaleoAction", "scriptLanguage", "VARCHAR(255) null"));
+
+		registry.register(
+			"3.5.2", "4.0.0", new KaleoDefinitionContentUpgradeProcess());
+
+		registry.register(
+			"4.0.0", "4.0.1",
+			new DDLFormRecordToDDMFormInstanceRecordUpgradeClassNames());
+
+		registry.register(
+			"4.0.1", "4.1.0",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {
+						{"KaleoDefinition", "kaleoDefinitionId"}
+					};
+				}
+
+			});
+
+		registry.register(
+			"4.1.0", "4.2.0",
+			new BaseUuidUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {
+						{"KaleoDefinition", "kaleoDefinitionId"}
+					};
+				}
+
+			});
 	}
 
 }

@@ -4,7 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Discovery";
+	property testray.main.component.name = "Headless Discovery Application";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -215,12 +215,12 @@ definition {
 		}
 
 		task ("Then in items of the page I do not see name nor id values") {
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				locator1 = "OpenAPI#RESPONSE_BODY",
 				method = "getManager",
 				value1 = "\"id\": ${staticManagerId}");
 
-			AssertTextNotEquals.assertNotPartialText(
+			AssertTextNotEquals.assertNotPartialMatch(
 				locator1 = "OpenAPI#RESPONSE_BODY",
 				method = "getManager",
 				value1 = "\"name\": \"Jane\"");

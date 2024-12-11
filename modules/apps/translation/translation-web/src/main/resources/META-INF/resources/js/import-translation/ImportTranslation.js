@@ -28,9 +28,8 @@ export default function ImportTranslation({
 }) {
 	const [importFiles, setImportFiles] = useState([]);
 	const [errorMessage, setErrorMessage] = useState(initialErrorMessage);
-	const [publishButtonDisabled, setPublishButtonDisabled] = useState(
-		workflowPending
-	);
+	const [publishButtonDisabled, setPublishButtonDisabled] =
+		useState(workflowPending);
 	const [saveButtonDisabled, setSaveButtonDisabled] = useState();
 	const [workflowAction, setWorkflowAction] = useState(workflowActionPublish);
 
@@ -62,10 +61,7 @@ export default function ImportTranslation({
 			/>
 
 			<ClayLayout.ContainerFluid className="container-view">
-				<ClayLayout.Sheet
-					className="translation-import-body-form"
-					size="lg"
-				>
+				<ClayLayout.Sheet size="lg">
 					<input
 						defaultValue={redirect}
 						name={`${portletNamespace}redirect`}

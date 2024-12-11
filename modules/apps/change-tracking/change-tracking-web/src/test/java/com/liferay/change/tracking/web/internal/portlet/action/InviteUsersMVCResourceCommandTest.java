@@ -6,7 +6,7 @@
 package com.liferay.change.tracking.web.internal.portlet.action;
 
 import com.liferay.change.tracking.constants.CTActionKeys;
-import com.liferay.change.tracking.web.internal.constants.PublicationRoleConstants;
+import com.liferay.change.tracking.constants.PublicationRoleConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -39,6 +39,9 @@ public class InviteUsersMVCResourceCommandTest {
 		Assert.assertTrue(
 			ArrayUtil.contains(modelResourceActions, ActionKeys.VIEW));
 		Assert.assertFalse(
+			ArrayUtil.contains(
+				modelResourceActions, CTActionKeys.INVITE_USERS));
+		Assert.assertFalse(
 			ArrayUtil.contains(modelResourceActions, CTActionKeys.PUBLISH));
 	}
 
@@ -54,6 +57,9 @@ public class InviteUsersMVCResourceCommandTest {
 		Assert.assertTrue(
 			ArrayUtil.contains(modelResourceActions, ActionKeys.VIEW));
 		Assert.assertTrue(
+			ArrayUtil.contains(
+				modelResourceActions, CTActionKeys.INVITE_USERS));
+		Assert.assertTrue(
 			ArrayUtil.contains(modelResourceActions, CTActionKeys.PUBLISH));
 	}
 
@@ -68,6 +74,9 @@ public class InviteUsersMVCResourceCommandTest {
 			ArrayUtil.contains(modelResourceActions, ActionKeys.UPDATE));
 		Assert.assertTrue(
 			ArrayUtil.contains(modelResourceActions, ActionKeys.VIEW));
+		Assert.assertFalse(
+			ArrayUtil.contains(
+				modelResourceActions, CTActionKeys.INVITE_USERS));
 		Assert.assertTrue(
 			ArrayUtil.contains(modelResourceActions, CTActionKeys.PUBLISH));
 	}
@@ -83,6 +92,9 @@ public class InviteUsersMVCResourceCommandTest {
 			ArrayUtil.contains(modelResourceActions, ActionKeys.UPDATE));
 		Assert.assertTrue(
 			ArrayUtil.contains(modelResourceActions, ActionKeys.VIEW));
+		Assert.assertFalse(
+			ArrayUtil.contains(
+				modelResourceActions, CTActionKeys.INVITE_USERS));
 		Assert.assertFalse(
 			ArrayUtil.contains(modelResourceActions, CTActionKeys.PUBLISH));
 	}

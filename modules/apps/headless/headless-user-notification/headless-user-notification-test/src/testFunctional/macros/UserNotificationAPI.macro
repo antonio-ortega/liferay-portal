@@ -1,7 +1,9 @@
 definition {
 
-	macro _curlNotificationTemplates {
+	@summary = "Default summary"
+	macro _curlNotificationTemplates(notificationTemplateId = null) {
 		var portalURL = JSONCompany.getPortalURL();
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		if (isSet(notificationTemplateId)) {
 			var api = "notification-templates/${notificationTemplateId}";
@@ -12,7 +14,7 @@ definition {
 
 		var curl = '''
 			${portalURL}/o/notification/v1.0/${api} \
-				-u test@liferay.com:test \
+				-u test@liferay.com:${userPassword} \
 				-H accept: application/json \
 				-H 'Content-Type: application/json' \
 		''';
@@ -20,8 +22,10 @@ definition {
 		return ${curl};
 	}
 
-	macro _curlUserNotifications {
+	@summary = "Default summary"
+	macro _curlUserNotifications(parameter = null, userAccountId = null, userNotificationId = null) {
 		var portalURL = JSONCompany.getPortalURL();
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		if (isSet(userNotificationId)) {
 			var api = "user-notifications/${userNotificationId}";
@@ -41,19 +45,21 @@ definition {
 			${portalURL}/o/headless-user-notification/v1.0/${api} \
 				-H accept: application/json \
 				-H 'Content-Type: application/json' \
-				-u test@liferay.com:test \
+				-u test@liferay.com:${userPassword} \
 		''';
 
 		return ${curl};
 	}
 
-	macro deleteNotificationTemplate {
+	@summary = "Default summary"
+	macro deleteNotificationTemplate(staticNotificationTemplateId = null) {
 		var curl = UserNotificationAPI._curlNotificationTemplates(notificationTemplateId = ${staticNotificationTemplateId});
 
 		JSONCurlUtil.delete(${curl});
 	}
 
-	macro getUserAccountUserNotifications {
+	@summary = "Default summary"
+	macro getUserAccountUserNotifications(userAccountId = null) {
 		Variables.assertDefined(parameterList = ${userAccountId});
 
 		var curl = UserNotificationAPI._curlUserNotifications(userAccountId = ${userAccountId});
@@ -63,7 +69,8 @@ definition {
 		return ${response};
 	}
 
-	macro getUserNotifications {
+	@summary = "Default summary"
+	macro getUserNotifications() {
 		var curl = UserNotificationAPI._curlUserNotifications();
 
 		var response = JSONCurlUtil.get(${curl});
@@ -71,7 +78,8 @@ definition {
 		return ${response};
 	}
 
-	macro postNotificationTemplate {
+	@summary = "Default summary"
+	macro postNotificationTemplate(recipientType = null, en_US = null, userScreenName = null, name = null, term = null, type = null, externalReferenceCode = null) {
 		Variables.assertDefined(parameterList = "${name},${recipientType},${en_US},${type}");
 
 		if (${recipientType} == "term") {
@@ -126,7 +134,8 @@ definition {
 		return ${staticNotificationTemplateId};
 	}
 
-	macro putUserNotificationReadOrUnread {
+	@summary = "Default summary"
+	macro putUserNotificationReadOrUnread(parameter = null) {
 		Variables.assertDefined(parameterList = ${parameter});
 
 		var response = UserNotificationAPI.getUserNotifications();

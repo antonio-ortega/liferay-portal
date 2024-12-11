@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -50,7 +49,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Andrea Sbarra
  */
-@FeatureFlags("COMMERCE-11287")
 @RunWith(Arquillian.class)
 public class CommerceInventoryWarehouseItemLocalServiceTest {
 
@@ -80,7 +78,8 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 				HashMapBuilder.put(
 					LocaleUtil.getDefault(), "NOME"
 				).build(),
-				2, true, 0.0, BigDecimal.ONE, _cpInstance.getSku());
+				2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE,
+				_cpInstance.getSku());
 	}
 
 	@After
@@ -159,7 +158,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "NAME-1"
 			).build(),
-			2, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+			2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
 
 		_cpInstanceUnitOfMeasureLocalService.addCPInstanceUnitOfMeasure(
 			_user.getUserId(), _cpInstance.getCPInstanceId(), true,
@@ -167,7 +166,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "NAME-2"
 			).build(),
-			2, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+			2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
 
 		CommerceInventoryWarehouse commerceInventoryWarehouseActive =
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
@@ -290,7 +289,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "NAME-1"
 			).build(),
-			2, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+			2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
 
 		_cpInstanceUnitOfMeasureLocalService.addCPInstanceUnitOfMeasure(
 			_user.getUserId(), _cpInstance.getCPInstanceId(), true,
@@ -298,7 +297,7 @@ public class CommerceInventoryWarehouseItemLocalServiceTest {
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), "NAME-2"
 			).build(),
-			2, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
+			2, BigDecimal.ZERO, true, 0.0, BigDecimal.ONE, cpInstance.getSku());
 
 		CommerceInventoryWarehouse commerceInventoryWarehouseActive =
 			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(

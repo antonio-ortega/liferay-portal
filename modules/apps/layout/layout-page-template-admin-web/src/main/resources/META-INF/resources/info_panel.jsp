@@ -8,7 +8,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-DisplayPageTemplateInfoPanelDisplayContext displayPageTemplateInfoPanelDisplayContext = new DisplayPageTemplateInfoPanelDisplayContext(request, renderRequest, renderResponse);
+DisplayPageTemplateInfoPanelDisplayContext displayPageTemplateInfoPanelDisplayContext = new DisplayPageTemplateInfoPanelDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
 
 List<LayoutPageTemplateCollection> layoutPageTemplateCollections = displayPageTemplateInfoPanelDisplayContext.getLayoutPageTemplateCollections();
 List<LayoutPageTemplateEntry> layoutPageTemplateEntries = displayPageTemplateInfoPanelDisplayContext.getLayoutPageTemplateEntries();
@@ -30,11 +30,11 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(DateFormat.MEDIUM,
 				<clay:content-col
 					expand="<%= true %>"
 				>
-					<h1 class="component-title mb-1">
+					<h1 class="c-mb-1 component-title">
 						<%= HtmlUtil.escape(layoutPageTemplateEntry.getName()) %>
 					</h1>
 
-					<h2 class="component-subtitle font-weight-normal mb-1">
+					<h2 class="c-mb-1 component-subtitle font-weight-normal">
 						<liferay-ui:message key="display-page-template" />
 					</h2>
 				</clay:content-col>
@@ -61,8 +61,21 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(DateFormat.MEDIUM,
 		</div>
 
 		<div class="sidebar-body">
-			<div class="mb-4">
-				<p class="font-weight-semi-bold mb-1 text-3">
+			<clay:button
+				additionalProps='<%=
+					HashMapBuilder.<String, Object>put(
+						"permissionsURL", displayPageTemplateInfoPanelDisplayContext.getPermissionsLayoutPageTemplateEntryURL(layoutPageTemplateEntry)
+					).build()
+				%>'
+				cssClass="c-mb-4"
+				displayType="secondary"
+				label="manage-permissions"
+				propsTransformer="{ManagePermissionsPropsTransformer} from layout-page-template-admin-web"
+				small="<%= true %>"
+			/>
+
+			<div class="c-mb-4">
+				<p class="c-mb-1 font-weight-semi-bold text-3">
 					<liferay-ui:message key="location" />
 				</p>
 
@@ -70,12 +83,12 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(DateFormat.MEDIUM,
 					<clay:icon
 						symbol="folder"
 					/>
-					<%= StringUtil.merge(displayPageTemplateInfoPanelDisplayContext.getLayoutPageTemplateCollectionPath(ParamUtil.getLong(request, "layoutPageTemplateCollectionId")), " > ") %>
+					<%= StringUtil.merge(displayPageTemplateInfoPanelDisplayContext.getLayoutPageTemplateCollectionPath(), " > ") %>
 				</p>
 			</div>
 
-			<div class="mb-4">
-				<p class="font-weight-semi-bold mb-0 text-3">
+			<div class="c-mb-4">
+				<p class="c-mb-0 font-weight-semi-bold text-3">
 					<liferay-ui:message key="content-type" />
 				</p>
 
@@ -86,7 +99,7 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(DateFormat.MEDIUM,
 			</div>
 
 			<c:if test="<%= !displayPageTemplateInfoPanelDisplayContext.getSubtypeLabel(layoutPageTemplateEntry).isEmpty() %>">
-				<div class="mb-4">
+				<div class="c-mb-4">
 					<p class="font-weight-semi-bold mb-0 text-3">
 						<liferay-ui:message key="subtype" />
 					</p>
@@ -98,23 +111,23 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(DateFormat.MEDIUM,
 				</div>
 			</c:if>
 
-			<div class="mb-4">
-				<p class="font-weight-semi-bold mb-1 text-3">
+			<div class="c-mb-4">
+				<p class="c-mb-1 font-weight-semi-bold text-3">
 					<liferay-ui:message key="created" />
 				</p>
 
 				<p class="sidebar-dd text-secondary">
-					<%= dateTimeFormat.format(layoutPageTemplateEntry.getCreateDate()) %>
+					<liferay-ui:message arguments="<%= new Object[] {dateTimeFormat.format(layoutPageTemplateEntry.getCreateDate()), HtmlUtil.escape(layoutPageTemplateEntry.getUserName())} %>" key="x-by-x" translateArguments="<%= false %>" />
 				</p>
 			</div>
 
-			<div class="mb-4">
-				<p class="font-weight-semi-bold mb-1 text-3">
+			<div class="c-mb-4">
+				<p class="c-mb-1 font-weight-semi-bold text-3">
 					<liferay-ui:message key="modified" />
 				</p>
 
 				<p class="sidebar-dd text-secondary">
-					<liferay-ui:message arguments="<%= new Object[] {dateTimeFormat.format(layoutPageTemplateEntry.getModifiedDate()), HtmlUtil.escape(layoutPageTemplateEntry.getUserName())} %>" key="x-by-x" translateArguments="<%= false %>" />
+					<liferay-ui:message arguments="<%= new Object[] {dateTimeFormat.format(layoutPageTemplateEntry.getModifiedDate()), displayPageTemplateInfoPanelDisplayContext.getUserName(layoutPageTemplateEntry.getStatusByUserId())} %>" key="x-by-x" translateArguments="<%= false %>" />
 				</p>
 			</div>
 		</div>
@@ -132,11 +145,11 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(DateFormat.MEDIUM,
 				<clay:content-col
 					expand="<%= true %>"
 				>
-					<h1 class="component-title mb-1">
+					<h1 class="c-mb-1 component-title">
 						<%= (layoutPageTemplateCollection != null) ? HtmlUtil.escape(layoutPageTemplateCollection.getName()) : LanguageUtil.get(request, "home") %>
 					</h1>
 
-					<h2 class="component-subtitle font-weight-normal mb-1">
+					<h2 class="c-mb-1 component-subtitle font-weight-normal">
 						<liferay-ui:message key="folder" />
 					</h2>
 				</clay:content-col>
@@ -144,8 +157,39 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(DateFormat.MEDIUM,
 		</div>
 
 		<div class="sidebar-body">
-			<div class="mb-4">
-				<p class="font-weight-semi-bold mb-1 text-3">
+			<c:if test="<%= layoutPageTemplateCollection != null %>">
+				<clay:button
+					additionalProps='<%=
+						HashMapBuilder.<String, Object>put(
+							"permissionsURL", displayPageTemplateInfoPanelDisplayContext.getPermissionsLayoutPageTemplateEntryCollectionURL(layoutPageTemplateCollection)
+						).build()
+					%>'
+					cssClass="c-mb-4"
+					displayType="secondary"
+					label="manage-permissions"
+					propsTransformer="{ManagePermissionsPropsTransformer} from layout-page-template-admin-web"
+					small="<%= true %>"
+				/>
+			</c:if>
+
+			<c:if test="<%= layoutPageTemplateCollection != null %>">
+				<div class="c-mb-4">
+					<p class="c-mb-0 font-weight-semi-bold text-3">
+						<liferay-ui:message key="location" />
+					</p>
+
+					<p class="sidebar-dd text-secondary">
+						<clay:icon
+							symbol="folder"
+						/>
+
+						<%= StringUtil.merge(displayPageTemplateInfoPanelDisplayContext.getLayoutPageTemplateCollectionPath(), " > ") %>
+					</p>
+				</div>
+			</c:if>
+
+			<div class="c-mb-4">
+				<p class="c-mb-0 font-weight-semi-bold text-3">
 					<liferay-ui:message key="number-of-items" />
 				</p>
 
@@ -163,33 +207,9 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(DateFormat.MEDIUM,
 			</div>
 
 			<c:if test="<%= layoutPageTemplateCollection != null %>">
-				<div class="mb-4">
-					<p class="font-weight-semi-bold mb-0 text-3">
-						<liferay-ui:message key="location" />
-					</p>
-
-					<p class="sidebar-dd text-secondary">
-						<clay:icon
-							symbol="folder"
-						/>
-
-						<%= StringUtil.merge(displayPageTemplateInfoPanelDisplayContext.getLayoutPageTemplateCollectionPath(layoutPageTemplateCollection.getParentLayoutPageTemplateCollectionId()), " > ") %>
-					</p>
-				</div>
-
-				<div class="mb-4">
-					<p class="font-weight-semi-bold mb-0 text-3">
+				<div class="c-mb-4">
+					<p class="c-mb-0 font-weight-semi-bold text-3">
 						<liferay-ui:message key="created" />
-					</p>
-
-					<p class="sidebar-dd text-secondary">
-						<%= dateTimeFormat.format(layoutPageTemplateCollection.getCreateDate()) %>
-					</p>
-				</div>
-
-				<div class="mb-4">
-					<p class="font-weight-semi-bold mb-0 text-3">
-						<liferay-ui:message key="modified" />
 					</p>
 
 					<p class="sidebar-dd text-secondary">
@@ -197,9 +217,19 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(DateFormat.MEDIUM,
 					</p>
 				</div>
 
-				<div class="mb-4">
+				<div class="c-mb-4">
+					<p class="c-mb-0 font-weight-semi-bold text-3">
+						<liferay-ui:message key="modified" />
+					</p>
+
+					<p class="sidebar-dd text-secondary">
+						<liferay-ui:message arguments="<%= new Object[] {dateTimeFormat.format(layoutPageTemplateCollection.getModifiedDate()), HtmlUtil.escape(layoutPageTemplateCollection.getUserName())} %>" key="x-by-x" translateArguments="<%= false %>" />
+					</p>
+				</div>
+
+				<div class="c-mb-4">
 					<c:if test="<%= !layoutPageTemplateCollection.getDescription().isEmpty() %>">
-						<p class="font-weight-semi-bold mb-0 text-3">
+						<p class="c-mb-0 font-weight-semi-bold text-3">
 							<liferay-ui:message key="description" />
 						</p>
 

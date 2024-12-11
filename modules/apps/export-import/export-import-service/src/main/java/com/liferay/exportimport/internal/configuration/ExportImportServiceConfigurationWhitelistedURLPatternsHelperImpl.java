@@ -14,7 +14,6 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.settings.SettingsLocatorHelper;
 import com.liferay.portal.kernel.util.ArrayUtil;
 
 import java.util.Collections;
@@ -115,6 +114,7 @@ public class ExportImportServiceConfigurationWhitelistedURLPatternsHelperImpl
 			URLPatternMapperFactory.create(whitelistedURLPatternsMap));
 	}
 
+	@Override
 	public void rebuildURLPatternMappers() {
 		_companyLocalService.forEachCompanyId(
 			companyId -> {
@@ -163,9 +163,6 @@ public class ExportImportServiceConfigurationWhitelistedURLPatternsHelperImpl
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;
-
-	@Reference
-	private SettingsLocatorHelper _settingsLocatorHelper;
 
 	private final Map<Long, URLPatternMapper<Boolean>> _urlPatternMappers =
 		Collections.synchronizedMap(new HashMap<>());

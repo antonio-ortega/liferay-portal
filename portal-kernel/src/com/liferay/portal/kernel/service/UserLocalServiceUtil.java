@@ -671,10 +671,8 @@ public class UserLocalServiceUtil {
 	 * the confirmation email.
 	 *
 	 * @param user the user
-	 * @param serviceContext the service context to be applied. You can specify
-	 an unencrypted custom password for the user via attribute
-	 <code>passwordUnencrypted</code>. You automatically generate a
-	 password for the user by setting attribute
+	 * @param serviceContext the service context to be applied. You
+	 automatically generate a password for the user by setting attribute
 	 <code>autoPassword</code> to <code>true</code>. You can send a
 	 confirmation email to the user by setting attribute
 	 <code>sendEmail</code> to <code>true</code>.
@@ -704,23 +702,6 @@ public class UserLocalServiceUtil {
 	 */
 	public static User createUser(long userId) {
 		return getService().createUser(userId);
-	}
-
-	/**
-	 * Decrypts the user's primary key and password from their encrypted forms.
-	 * Used for decrypting a user's credentials from the values stored in an
-	 * automatic login cookie.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param name the encrypted primary key of the user
-	 * @param password the encrypted password of the user
-	 * @return the user's primary key and password
-	 */
-	public static com.liferay.portal.kernel.util.KeyValuePair decryptUserId(
-			long companyId, String name, String password)
-		throws PortalException {
-
-		return getService().decryptUserId(companyId, name, password);
 	}
 
 	public static void deleteGroupUser(long groupId, long userId) {
@@ -1910,6 +1891,19 @@ public class UserLocalServiceUtil {
 			companyId, status, start, end, orderByComparator);
 	}
 
+	public static List<User> getUsersByRoleId(long roleId, int start, int end)
+		throws PortalException {
+
+		return getService().getUsersByRoleId(roleId, start, end);
+	}
+
+	public static List<User> getUsersByRoleName(
+			long companyId, String roleName, int start, int end)
+		throws PortalException {
+
+		return getService().getUsersByRoleName(companyId, roleName, start, end);
+	}
+
 	/**
 	 * Returns the number of users.
 	 *
@@ -2220,18 +2214,20 @@ public class UserLocalServiceUtil {
 	}
 
 	public static List<User> searchBySocial(
-		long companyId, long[] groupIds, String keywords, int start, int end) {
+		long companyId, long[] groupIds, long[] userGroupIds, String keywords,
+		int start, int end) {
 
 		return getService().searchBySocial(
-			companyId, groupIds, keywords, start, end);
+			companyId, groupIds, userGroupIds, keywords, start, end);
 	}
 
 	public static List<User> searchBySocial(
-		long companyId, long[] groupIds, String keywords, int start, int end,
-		OrderByComparator<User> orderByComparator) {
+		long companyId, long[] groupIds, long[] userGroupIds, String keywords,
+		int start, int end, OrderByComparator<User> orderByComparator) {
 
 		return getService().searchBySocial(
-			companyId, groupIds, keywords, start, end, orderByComparator);
+			companyId, groupIds, userGroupIds, keywords, start, end,
+			orderByComparator);
 	}
 
 	public static List<User> searchBySocial(
@@ -2367,22 +2363,17 @@ public class UserLocalServiceUtil {
 			user, emailAddress, serviceContext);
 	}
 
-	/**
-	 * Sends the password email to the user with the email address. The content
-	 * of this email can be specified in <code>portal.properties</code> with the
-	 * <code>admin.email.password</code> keys.
-	 *
-	 * @param companyId the primary key of the user's company
-	 * @param emailAddress the user's email address
-	 * @param fromName the name of the individual that the email should be from
-	 * @param fromAddress the address of the individual that the email should be
-	 from
-	 * @param subject the email subject. If <code>null</code>, the subject
-	 specified in <code>portal.properties</code> will be used.
-	 * @param body the email body. If <code>null</code>, the body specified in
-	 <code>portal.properties</code> will be used.
-	 * @param serviceContext the service context to be applied
-	 */
+	public static boolean sendEmailUserCreationAttempt(
+			long companyId, String emailAddress, String fromName,
+			String fromAddress, String subject, String body,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().sendEmailUserCreationAttempt(
+			companyId, emailAddress, fromName, fromAddress, subject, body,
+			serviceContext);
+	}
+
 	public static boolean sendPassword(
 			long companyId, String emailAddress, String fromName,
 			String fromAddress, String subject, String body,
@@ -2469,6 +2460,17 @@ public class UserLocalServiceUtil {
 		throws PortalException {
 
 		return getService().sendPasswordByUserId(userId);
+	}
+
+	public static boolean sendPasswordLockout(
+			long companyId, String emailAddress, String fromName,
+			String fromAddress, String subject, String body,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().sendPasswordLockout(
+			companyId, emailAddress, fromName, fromAddress, subject, body,
+			serviceContext);
 	}
 
 	public static void setGroupUsers(long groupId, long[] userIds) {
@@ -2703,6 +2705,22 @@ public class UserLocalServiceUtil {
 			userId, emailAddressVerified);
 	}
 
+	public static User updateExternalReferenceCode(
+			long userId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().updateExternalReferenceCode(
+			userId, externalReferenceCode);
+	}
+
+	public static User updateExternalReferenceCode(
+			User user, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().updateExternalReferenceCode(
+			user, externalReferenceCode);
+	}
+
 	/**
 	 * Updates the user's Facebook ID.
 	 *
@@ -2813,6 +2831,12 @@ public class UserLocalServiceUtil {
 		return getService().updateJobTitle(userId, jobTitle);
 	}
 
+	public static User updateLanguageId(long userId, String languageId)
+		throws PortalException {
+
+		return getService().updateLanguageId(userId, languageId);
+	}
+
 	/**
 	 * Updates the user's last login with the current time and the IP address.
 	 *
@@ -2824,6 +2848,12 @@ public class UserLocalServiceUtil {
 		throws PortalException {
 
 		return getService().updateLastLogin(userId, loginIP);
+	}
+
+	public static User updateLastLogin(User user, String loginIP)
+		throws PortalException {
+
+		return getService().updateLastLogin(user, loginIP);
 	}
 
 	/**
@@ -3065,6 +3095,13 @@ public class UserLocalServiceUtil {
 		throws PortalException {
 
 		return getService().updateStatus(userId, status, serviceContext);
+	}
+
+	public static User updateStatus(
+			User user, int status, ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateStatus(user, status, serviceContext);
 	}
 
 	/**

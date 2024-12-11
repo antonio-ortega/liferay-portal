@@ -5,7 +5,6 @@
 
 package com.liferay.headless.commerce.admin.channel.internal.resource.v1_0;
 
-import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.shipping.engine.fixed.exception.NoSuchShippingFixedOptionException;
 import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOption;
 import com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOptionQualifier;
@@ -121,9 +120,10 @@ public class ShippingFixedOptionTermResourceImpl
 		}
 		else {
 			commerceTerm =
-				_commerceTermEntryService.fetchByExternalReferenceCode(
-					contextCompany.getCompanyId(),
-					shippingFixedOptionTerm.getTermExternalReferenceCode());
+				_commerceTermEntryService.
+					fetchCommerceTermEntryByExternalReferenceCode(
+						contextCompany.getCompanyId(),
+						shippingFixedOptionTerm.getTermExternalReferenceCode());
 		}
 
 		return commerceTerm;
@@ -144,12 +144,6 @@ public class ShippingFixedOptionTermResourceImpl
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 				contextUser));
 	}
-
-	@Reference(
-		target = "(model.class.name=com.liferay.commerce.product.model.CommerceChannel)"
-	)
-	private ModelResourcePermission<CommerceChannel>
-		_commerceChannelModelResourcePermission;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.commerce.shipping.engine.fixed.model.CommerceShippingFixedOptionQualifier)"

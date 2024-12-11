@@ -24,16 +24,10 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 public interface CTConfiguration {
 
 	@Meta.AD(
-		deflt = "1000", description = "context-view-limit-count-help",
-		name = "context-view-limit-count", required = false
+		description = "show-all-data-when-reviewing-changes-help",
+		name = "show-all-data-when-reviewing-changes", required = false
 	)
-	public int contextViewLimitCount();
-
-	@Meta.AD(
-		deflt = "true", description = "context-view-include-production-help",
-		name = "context-view-include-production", required = false
-	)
-	public boolean contextViewIncludeProduction();
+	public boolean showAllData();
 
 	@Meta.AD(
 		description = "hidden-applications-help", name = "hidden-applications",
@@ -42,20 +36,14 @@ public interface CTConfiguration {
 	public String[] hiddenApplications();
 
 	@Meta.AD(
-		deflt = "com_liferay_dispatch_web_internal_portlet_DispatchPortlet, com_liferay_my_account_web_portlet_MyAccountPortlet, com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet, com_liferay_oauth_client_admin_web_internal_portlet_OAuthClientAdminPortlet, com_liferay_oauth2_provider_web_internal_portlet_OAuth2AdminPortlet, com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet, com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet, com_liferay_password_policies_admin_web_portlet_PasswordPoliciesAdminPortlet, com_liferay_portal_language_override_web_internal_portlet_PLOPortlet, com_liferay_search_experiences_web_internal_blueprint_admin_portlet_SXPBlueprintAdminPortlet",
+		deflt = "com_liferay_dispatch_web_internal_portlet_DispatchPortlet, com_liferay_my_account_web_portlet_MyAccountPortlet, com_liferay_notification_web_internal_portlet_NotificationTemplatesPortlet, com_liferay_oauth_client_admin_web_internal_portlet_OAuthClientAdminPortlet, com_liferay_oauth2_provider_web_internal_portlet_OAuth2AdminPortlet, com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet, com_liferay_object_web_internal_list_type_portlet_portlet_ListTypeDefinitionsPortlet, com_liferay_password_policies_admin_web_portlet_PasswordPoliciesAdminPortlet, com_liferay_portal_language_override_web_internal_portlet_PLOPortlet, com_liferay_portal_search_tuning_rankings_web_internal_portlet_ResultRankingsPortlet, com_liferay_portal_search_tuning_synonyms_web_internal_portlet_SynonymsPortlet, com_liferay_search_experiences_web_internal_blueprint_admin_portlet_SXPBlueprintAdminPortlet, com_liferay_users_admin_web_portlet_UsersAdminPortlet",
 		description = "production-only-application-help",
 		name = "production-only-application", required = false
 	)
 	public String[] productionOnlyApplication();
 
 	@Meta.AD(
-		deflt = "true", description = "show-all-items-enabled-help",
-		name = "show-all-items-enabled", required = false
-	)
-	public boolean showAllItemsEnabled();
-
-	@Meta.AD(
-		deflt = "com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet, com_liferay_address_web_internal_portlet_CountriesManagementAdminPortlet, com_liferay_users_admin_web_portlet_UsersAdminPortlet",
+		deflt = "com_liferay_account_admin_web_internal_portlet_AccountEntriesAdminPortlet, com_liferay_batch_planner_web_internal_portlet_BatchPlannerPortlet",
 		description = "unsupported-application-help",
 		name = "unsupported-application", required = false
 	)

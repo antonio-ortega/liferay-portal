@@ -102,10 +102,12 @@ html#{$cadmin-selector} .cadmin .page-editor__fragments-widgets__tab {
 	&-list-item {
 		color: $cadmin-secondary-d2;
 		cursor: grab;
-		height: 32px;
-		padding: 0 12px;
 		transition: transform ease 0.3s;
 		width: 100%;
+
+		> div {
+			padding: 8px 12px;
+		}
 
 		&:focus-visible,
 		&--active {
@@ -119,7 +121,8 @@ html#{$cadmin-selector} .cadmin .page-editor__fragments-widgets__tab {
 		&:hover:not(.disabled),
 		&:focus-visible,
 		&--active {
-			box-shadow: 0 0 0 2px $cadmin-primary-l1,
+			box-shadow:
+				0 0 0 2px $cadmin-primary-l1,
 				0 4px 8px fade_out($cadmin-gray-900, 0.9);
 			outline: 0;
 			transform: translateX(-4px);

@@ -12,6 +12,8 @@ import com.liferay.headless.batch.engine.client.serdes.v1_0.ImportTaskSerDes;
 
 import java.io.File;
 
+import java.net.URL;
+
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -84,27 +86,31 @@ public interface ImportTaskResource {
 	public ImportTask postImportTask(
 			String className, String callbackURL, String createStrategy,
 			String externalReferenceCode, String fieldNameMapping,
-			String importStrategy, String taskItemDelegateName, Object object)
+			String importStrategy, String restrictedFieldNames,
+			String taskItemDelegateName, Object object)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postImportTaskHttpResponse(
 			String className, String callbackURL, String createStrategy,
 			String externalReferenceCode, String fieldNameMapping,
-			String importStrategy, String taskItemDelegateName, Object object)
+			String importStrategy, String restrictedFieldNames,
+			String taskItemDelegateName, Object object)
 		throws Exception;
 
 	public ImportTask postFormDataImportTask(
 			String className, String callbackURL, String createStrategy,
 			String externalReferenceCode, String fieldNameMapping,
-			String importStrategy, String taskItemDelegateName,
-			ImportTask importTask, Map<String, File> multipartFiles)
+			String importStrategy, String restrictedFieldNames,
+			String taskItemDelegateName, ImportTask importTask,
+			Map<String, File> multipartFiles)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postFormDataImportTaskHttpResponse(
 			String className, String callbackURL, String createStrategy,
 			String externalReferenceCode, String fieldNameMapping,
-			String importStrategy, String taskItemDelegateName,
-			ImportTask importTask, Map<String, File> multipartFiles)
+			String importStrategy, String restrictedFieldNames,
+			String taskItemDelegateName, ImportTask importTask,
+			Map<String, File> multipartFiles)
 		throws Exception;
 
 	public ImportTask putImportTask(
@@ -202,6 +208,10 @@ public interface ImportTaskResource {
 			_scheme = scheme;
 
 			return this;
+		}
+
+		public Builder endpoint(URL url) {
+			return endpoint(url.getHost(), url.getPort(), url.getProtocol());
 		}
 
 		public Builder header(String key, String value) {
@@ -831,13 +841,14 @@ public interface ImportTaskResource {
 		public ImportTask postImportTask(
 				String className, String callbackURL, String createStrategy,
 				String externalReferenceCode, String fieldNameMapping,
-				String importStrategy, String taskItemDelegateName,
-				Object object)
+				String importStrategy, String restrictedFieldNames,
+				String taskItemDelegateName, Object object)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse = postImportTaskHttpResponse(
 				className, callbackURL, createStrategy, externalReferenceCode,
-				fieldNameMapping, importStrategy, taskItemDelegateName, object);
+				fieldNameMapping, importStrategy, restrictedFieldNames,
+				taskItemDelegateName, object);
 
 			String content = httpResponse.getContent();
 
@@ -901,8 +912,8 @@ public interface ImportTaskResource {
 		public HttpInvoker.HttpResponse postImportTaskHttpResponse(
 				String className, String callbackURL, String createStrategy,
 				String externalReferenceCode, String fieldNameMapping,
-				String importStrategy, String taskItemDelegateName,
-				Object object)
+				String importStrategy, String restrictedFieldNames,
+				String taskItemDelegateName, Object object)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -954,6 +965,12 @@ public interface ImportTaskResource {
 					"importStrategy", String.valueOf(importStrategy));
 			}
 
+			if (restrictedFieldNames != null) {
+				httpInvoker.parameter(
+					"restrictedFieldNames",
+					String.valueOf(restrictedFieldNames));
+			}
+
 			if (taskItemDelegateName != null) {
 				httpInvoker.parameter(
 					"taskItemDelegateName",
@@ -976,15 +993,17 @@ public interface ImportTaskResource {
 		public ImportTask postFormDataImportTask(
 				String className, String callbackURL, String createStrategy,
 				String externalReferenceCode, String fieldNameMapping,
-				String importStrategy, String taskItemDelegateName,
-				ImportTask importTask, Map<String, File> multipartFiles)
+				String importStrategy, String restrictedFieldNames,
+				String taskItemDelegateName, ImportTask importTask,
+				Map<String, File> multipartFiles)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postFormDataImportTaskHttpResponse(
 					className, callbackURL, createStrategy,
 					externalReferenceCode, fieldNameMapping, importStrategy,
-					taskItemDelegateName, importTask, multipartFiles);
+					restrictedFieldNames, taskItemDelegateName, importTask,
+					multipartFiles);
 
 			String content = httpResponse.getContent();
 
@@ -1048,8 +1067,9 @@ public interface ImportTaskResource {
 		public HttpInvoker.HttpResponse postFormDataImportTaskHttpResponse(
 				String className, String callbackURL, String createStrategy,
 				String externalReferenceCode, String fieldNameMapping,
-				String importStrategy, String taskItemDelegateName,
-				ImportTask importTask, Map<String, File> multipartFiles)
+				String importStrategy, String restrictedFieldNames,
+				String taskItemDelegateName, ImportTask importTask,
+				Map<String, File> multipartFiles)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1105,6 +1125,12 @@ public interface ImportTaskResource {
 			if (importStrategy != null) {
 				httpInvoker.parameter(
 					"importStrategy", String.valueOf(importStrategy));
+			}
+
+			if (restrictedFieldNames != null) {
+				httpInvoker.parameter(
+					"restrictedFieldNames",
+					String.valueOf(restrictedFieldNames));
 			}
 
 			if (taskItemDelegateName != null) {

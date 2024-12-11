@@ -23,17 +23,19 @@ import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.InstancePool;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.webdav.WebDAVException;
 import com.liferay.portal.kernel.webdav.WebDAVRequest;
 import com.liferay.portal.kernel.webdav.WebDAVStorage;
 import com.liferay.portal.kernel.webdav.WebDAVUtil;
 import com.liferay.portal.kernel.webdav.methods.Method;
-import com.liferay.portal.kernel.webdav.methods.MethodFactory;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.webdav.methods.MethodFactoryUtil;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  * @author Brian Wing Shun Chan
@@ -95,13 +97,15 @@ public class WebDAVServlet extends HttpServlet {
 				permissionChecker = PermissionCheckerFactoryUtil.create(user);
 
 				PermissionThreadLocal.setPermissionChecker(permissionChecker);
+
+				HttpSession httpSession = httpServletRequest.getSession();
+
+				httpSession.setAttribute(WebKeys.USER, user);
 			}
 
 			// Get the method instance
 
-			MethodFactory methodFactory = storage.getMethodFactory();
-
-			Method method = methodFactory.create(httpServletRequest);
+			Method method = MethodFactoryUtil.create(httpServletRequest);
 
 			// Process the method
 
@@ -167,14 +171,14 @@ public class WebDAVServlet extends HttpServlet {
 	}
 
 	protected WebDAVStorage getStorage(HttpServletRequest httpServletRequest) {
+		WebDAVStorage storage = null;
+
 		String pathInfo = WebDAVUtil.stripManualCheckInRequiredPath(
 			httpServletRequest.getPathInfo());
 
 		pathInfo = WebDAVUtil.stripOfficeExtension(pathInfo);
 
 		String[] pathArray = WebDAVUtil.getPathArray(pathInfo, true);
-
-		WebDAVStorage storage = null;
 
 		if (pathArray.length == 0) {
 			storage = (WebDAVStorage)InstancePool.get(

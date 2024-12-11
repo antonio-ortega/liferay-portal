@@ -13,6 +13,7 @@ import URLConstants from 'shared/util/url-constants';
 import {compositionListColumns} from 'shared/util/table-columns';
 import {COUNT} from 'shared/util/pagination';
 import {OrderByDirections} from 'shared/util/constants';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {Routes, toRoute} from 'shared/util/router';
 import {useParams} from 'react-router-dom';
 import {useQuery} from '@apollo/react-hooks';
@@ -71,7 +72,11 @@ const InterestsCard: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 	];
 
 	return (
-		<Card className='interests-card-root' minHeight={536}>
+		<Card
+			className='interests-card-root'
+			minHeight={536}
+			reportContainer={ReportContainer.TopInterestsAsOfYesterdayCard}
+		>
 			<Card.Header>
 				<Card.Title>
 					{Liferay.Language.get('top-interests-as-of-yesterday')}
@@ -92,7 +97,7 @@ const InterestsCard: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 								)}
 							</span>
 
-							<a
+							<ClayLink
 								href={
 									URLConstants.IndividualsDashboardInterestsDocumentation
 								}
@@ -102,7 +107,7 @@ const InterestsCard: React.FC<React.HTMLAttributes<HTMLElement>> = () => {
 								{Liferay.Language.get(
 									'learn-more-about-interests'
 								)}
-							</a>
+							</ClayLink>
 						</>
 					}
 					showIcon={false}

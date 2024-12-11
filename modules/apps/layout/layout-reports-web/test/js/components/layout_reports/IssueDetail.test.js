@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {cleanup, render} from '@testing-library/react';
+import {cleanup, render, screen} from '@testing-library/react';
 import React from 'react';
 
 import '@testing-library/jest-dom/extend-expect';
 
-import IssueDetail from '../../../../src/main/resources/META-INF/resources/js/components/layout_reports/IssueDetail';
-import {StoreContextProvider} from '../../../../src/main/resources/META-INF/resources/js/context/StoreContext';
+import {IssueDetail} from '../../../../src/main/resources/META-INF/resources/js/components/ItemDetail';
 
 const MOCK_ISSUES = {
 	aspectRatio: {
@@ -41,8 +40,7 @@ const MOCK_ISSUES = {
 			},
 		],
 		key: 'invalid-canonical-url',
-		tips:
-			'In a Liferay site, canonical URLs are automatically generated...',
+		tips: 'In a Liferay site, canonical URLs are automatically generated...',
 		title: 'Invalid Canonical URL',
 		total: '1',
 	},
@@ -237,16 +235,7 @@ const MOCK_ISSUES = {
 	},
 };
 
-const renderIssueDetail = (selectedItem) =>
-	render(
-		<StoreContextProvider
-			value={{
-				selectedItem,
-			}}
-		>
-			<IssueDetail />
-		</StoreContextProvider>
-	);
+const renderIssueDetail = (issue) => render(<IssueDetail issue={issue} />);
 
 const checkContentOfElement = (issue) => {
 	const {getByText} = renderIssueDetail(issue);
@@ -417,5 +406,47 @@ describe('IssueDetail', () => {
 
 	it('renders correct content for Title Element issues', () => {
 		checkContentOfElement(MOCK_ISSUES.titleElement);
+	});
+
+	it('does not view more button if there are less than 10 elements', () => {
+		const failingElements = [];
+
+		for (let i = 0; i < 9; i++) {
+			failingElements.push(`Failure ${i}`);
+		}
+
+		const issue = {
+			description: 'Example with less than 10 items',
+			failingElements,
+			key: 'example-with-less-than-10-items',
+			tips: 'Example',
+			title: 'Example',
+			total: '9',
+		};
+
+		renderIssueDetail(issue);
+
+		expect(screen.queryByText('view-more')).not.toBeInTheDocument();
+	});
+
+	it('renders view more button if there are more than 10 elements', () => {
+		const failingElements = [];
+
+		for (let i = 0; i < 15; i++) {
+			failingElements.push(`Failure ${i}`);
+		}
+
+		const issue = {
+			description: 'Example with more than 10 items',
+			failingElements,
+			key: 'example-with-more-than-10-items',
+			tips: 'Example',
+			title: 'Example',
+			total: '15',
+		};
+
+		renderIssueDetail(issue);
+
+		expect(screen.getByText('view-more')).toBeInTheDocument();
 	});
 });

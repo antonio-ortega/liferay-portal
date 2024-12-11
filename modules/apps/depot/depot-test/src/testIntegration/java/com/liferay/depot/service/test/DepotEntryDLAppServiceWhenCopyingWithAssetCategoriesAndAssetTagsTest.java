@@ -35,7 +35,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -115,7 +114,7 @@ public class
 			RandomTestUtil.randomString(), _depotGroup.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, _FILE_NAME,
 			ContentTypes.TEXT_PLAIN, _FILE_NAME, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null,
+			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null, null,
 			serviceContext);
 
 		String className = DLFileEntryConstants.getClassName();
@@ -162,13 +161,13 @@ public class
 			RandomTestUtil.randomString(), _depotGroup.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, _FILE_NAME,
 			ContentTypes.TEXT_PLAIN, _FILE_NAME, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null,
+			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null, null,
 			serviceContext);
 
 		String className = DLFileEntryConstants.getClassName();
 
 		Assert.assertArrayEquals(
-			new String[] {StringUtil.toLowerCase(assetTagName)},
+			new String[] {assetTagName},
 			_assetTagLocalService.getTagNames(
 				className, fileEntry1.getFileEntryId()));
 
@@ -203,7 +202,7 @@ public class
 			RandomTestUtil.randomString(), _depotGroup.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, _FILE_NAME,
 			ContentTypes.TEXT_PLAIN, _FILE_NAME, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null,
+			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null, null,
 			serviceContext);
 
 		String className = DLFileEntryConstants.getClassName();
@@ -246,13 +245,13 @@ public class
 			RandomTestUtil.randomString(), _depotGroup.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, _FILE_NAME,
 			ContentTypes.TEXT_PLAIN, _FILE_NAME, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null,
+			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null, null,
 			serviceContext);
 
 		String className = DLFileEntryConstants.getClassName();
 
 		Assert.assertArrayEquals(
-			new String[] {StringUtil.toLowerCase(assetTagName)},
+			new String[] {assetTagName},
 			_assetTagLocalService.getTagNames(
 				className, fileEntry1.getFileEntryId()));
 
@@ -295,7 +294,7 @@ public class
 			RandomTestUtil.randomString(), _depotGroup.getGroupId(),
 			_depotParentFolder.getFolderId(), _FILE_NAME,
 			ContentTypes.TEXT_PLAIN, _FILE_NAME, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null,
+			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null, null,
 			serviceContext);
 
 		Folder folder = _dlAppService.copyFolder(
@@ -349,7 +348,7 @@ public class
 			RandomTestUtil.randomString(), _depotGroup.getGroupId(),
 			_depotParentFolder.getFolderId(), _FILE_NAME,
 			ContentTypes.TEXT_PLAIN, _FILE_NAME, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null,
+			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null, null,
 			serviceContext);
 
 		Folder folder = _dlAppService.copyFolder(
@@ -387,7 +386,7 @@ public class
 		long userId = TestPropsValues.getUserId();
 
 		_assetTagLocalService.addTag(
-			userId, groupId, assetTagName,
+			null, userId, groupId, assetTagName,
 			ServiceContextTestUtil.getServiceContext(groupId, userId));
 	}
 

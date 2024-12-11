@@ -59,6 +59,8 @@ if (ddlDisplayContext.isAdminPortlet()) {
 	<portlet:param name="mvcPath" value="/edit_record_set.jsp" />
 </portlet:actionURL>
 
+<%@ include file="/deprecated_warning.jspf" %>
+
 <clay:container-fluid
 	cssClass="container-form-lg"
 >
@@ -121,7 +123,7 @@ if (ddlDisplayContext.isAdminPortlet()) {
 							<aui:option><liferay-ui:message key="no-workflow" /></aui:option>
 
 							<%
-							List<WorkflowDefinition> workflowDefinitions = WorkflowDefinitionManagerUtil.getActiveWorkflowDefinitions(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+							List<WorkflowDefinition> workflowDefinitions = WorkflowDefinitionManagerUtil.liberalGetActiveWorkflowDefinitions(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 							for (WorkflowDefinition workflowDefinition : workflowDefinitions) {
 								boolean selected = false;
@@ -204,7 +206,7 @@ if (ddlDisplayContext.isAdminPortlet()) {
 				"selectEventName", "<portlet:namespace />selectDDMStructure"
 			).build()
 		%>'
-		module="js/EditRecordSetStructureSelector"
+		module="{EditRecordSetStructureSelector} from dynamic-data-lists-web"
 	/>
 
 	function <portlet:namespace />saveRecordSet() {

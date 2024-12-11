@@ -65,27 +65,6 @@ public class CPDefinitionVirtualSettingServiceImpl
 	}
 
 	@Override
-	public CPDefinitionVirtualSetting addCPDefinitionVirtualSetting(
-			String className, long classPK, long fileEntryId, String url,
-			int activationStatus, long duration, int maxUsages,
-			boolean useSample, long sampleFileEntryId, String sampleURL,
-			boolean termsOfUseRequired,
-			Map<Locale, String> termsOfUseContentMap,
-			long termsOfUseJournalArticleResourcePrimKey,
-			ServiceContext serviceContext)
-		throws PortalException {
-
-		_checkPermission(className, classPK, ActionKeys.UPDATE);
-
-		return cpDefinitionVirtualSettingLocalService.
-			addCPDefinitionVirtualSetting(
-				className, classPK, fileEntryId, url, activationStatus,
-				duration, maxUsages, useSample, sampleFileEntryId, sampleURL,
-				termsOfUseRequired, termsOfUseContentMap,
-				termsOfUseJournalArticleResourcePrimKey, serviceContext);
-	}
-
-	@Override
 	public CPDefinitionVirtualSetting deleteCPDefinitionVirtualSetting(
 			String className, long classPK)
 		throws PortalException {
@@ -108,6 +87,22 @@ public class CPDefinitionVirtualSettingServiceImpl
 		if (cpDefinitionVirtualSetting != null) {
 			_checkPermission(className, classPK, ActionKeys.VIEW);
 		}
+
+		return cpDefinitionVirtualSetting;
+	}
+
+	@Override
+	public CPDefinitionVirtualSetting getCPDefinitionVirtualSetting(
+			long cpDefinitionVirtualSettingId)
+		throws PortalException {
+
+		CPDefinitionVirtualSetting cpDefinitionVirtualSetting =
+			cpDefinitionVirtualSettingLocalService.
+				getCPDefinitionVirtualSetting(cpDefinitionVirtualSettingId);
+
+		_checkPermission(
+			cpDefinitionVirtualSetting.getClassName(),
+			cpDefinitionVirtualSetting.getClassPK(), ActionKeys.VIEW);
 
 		return cpDefinitionVirtualSetting;
 	}

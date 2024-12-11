@@ -3,6 +3,17 @@
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" package-path="com.liferay.portal.tools.service.builder.test">
 	<namespace>SBTest</namespace>
+	<entity local-service="false" name="AutoEscapeEntry" remote-service="false">
+
+		<!-- PK fields -->
+
+		<column name="autoEscapeEntryId" primary="true" type="long" />
+
+		<!-- Other fields -->
+
+		<column name="autoEscapeDisabledColumn" type="String" />
+		<column name="autoEscapeEnabledColumn" type="String" />
+	</entity>
 	<entity local-service="false" name="BigDecimalEntry" remote-service="false">
 
 		<!-- PK fields -->
@@ -144,12 +155,32 @@
 		<!-- Audit fields -->
 
 		<column name="companyId" type="long" />
+		<column name="userId" type="long" />
+		<column name="userName" type="String" />
+
+		<!-- Other fields -->
+
+		<column name="column1" type="int" />
 	</entity>
 	<entity external-reference-code="group" local-service="true" name="ERCGroupEntry" remote-service="false" uuid="true">
 
 		<!-- PK fields -->
 
 		<column name="ercGroupEntryId" primary="true" type="long" />
+
+		<!-- Group instance -->
+
+		<column name="groupId" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+	</entity>
+	<entity external-reference-code="group" local-service="true" name="ERCVersionedEntry" remote-service="false" uuid="true" versioned="true">
+
+		<!-- PK fields -->
+
+		<column name="ercVersionedEntryId" primary="true" type="long" />
 
 		<!-- Group instance -->
 
@@ -177,6 +208,70 @@
 		</finder>
 	</entity>
 	<entity local-service="true" name="GenericMethodsEntry" remote-service="false" />
+	<entity change-tracking-enabled="true" external-reference-code="company" local-service="false" mvcc-enabled="true" name="IndexEntry" remote-service="false">
+
+		<!-- PK fields -->
+
+		<column name="indexEntryId" primary="true" type="long" />
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long" />
+
+		<!-- Other fields -->
+
+		<column name="ownerId" type="long" />
+		<column name="ownerType" type="int" />
+		<column name="plid" type="long" />
+		<column name="portletId" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="OwnerId" return-type="Collection">
+			<finder-column name="ownerId" />
+		</finder>
+		<finder name="Plid" return-type="Collection">
+			<finder-column name="plid" />
+		</finder>
+		<finder name="PortletId" return-type="Collection">
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="O_P" return-type="Collection">
+			<finder-column name="ownerType" />
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="P_P" return-type="Collection">
+			<finder-column name="plid" />
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="O_O_P" return-type="Collection">
+			<finder-column name="ownerId" />
+			<finder-column name="ownerType" />
+			<finder-column name="plid" />
+		</finder>
+		<finder name="O_O_PI" return-type="Collection">
+			<finder-column name="ownerId" />
+			<finder-column name="ownerType" />
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="O_P_P" return-type="Collection">
+			<finder-column name="ownerType" />
+			<finder-column name="plid" />
+			<finder-column name="portletId" />
+		</finder>
+		<finder name="C_O_O_LikeP" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="ownerId" />
+			<finder-column name="ownerType" />
+			<finder-column comparator="LIKE" name="portletId" />
+		</finder>
+		<finder name="O_O_P_P" return-type="IndexEntry" unique="true">
+			<finder-column name="ownerId" />
+			<finder-column name="ownerType" />
+			<finder-column name="plid" />
+			<finder-column name="portletId" />
+		</finder>
+	</entity>
 	<entity local-service="true" name="LazyBlobEntry" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
@@ -351,6 +446,35 @@
 
 		<finder name="Name" return-type="NullConvertibleEntry" unique="true">
 			<finder-column name="name" />
+		</finder>
+	</entity>
+	<entity local-service="true" name="PermissionCheckFinderEntry" remote-service="false">
+
+		<!-- PK fields -->
+
+		<column name="permissionCheckFinderEntryId" primary="true" type="long" />
+
+		<!-- Group instance -->
+
+		<column name="groupId" type="long" />
+
+		<!-- Other fields -->
+
+		<column name="integer" type="int" />
+		<column name="name" type="String" />
+		<column name="type" type="String" />
+
+		<!-- Order -->
+
+		<order by="asc">
+			<order-column name="integer" />
+			<order-column name="type" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="GroupId" return-type="Collection">
+			<finder-column name="groupId" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="RedundantIndexEntry" remote-service="false">

@@ -7,24 +7,29 @@ import {LayoutData} from '../../types/layout_data/LayoutData';
 import addFragmentEntryLinks from '../actions/addFragmentEntryLinks';
 import addItem from '../actions/addItem';
 import addRule from '../actions/addRule';
+import addStepper from '../actions/addStepper';
 import deleteItem from '../actions/deleteItem';
 import deleteRule from '../actions/deleteRule';
 import duplicateItem from '../actions/duplicateItem';
-import moveItem from '../actions/moveItem';
+import moveItems from '../actions/moveItems';
+import moveStepper from '../actions/moveStepper';
+import pasteItems from '../actions/pasteItems';
 import {
 	ADD_FRAGMENT_ENTRY_LINKS,
 	ADD_ITEM,
 	ADD_RULE,
+	ADD_STEPPER,
 	DELETE_ITEM,
 	DELETE_RULE,
 	DUPLICATE_ITEM,
 	MOVE_ITEM,
+	MOVE_STEPPER,
+	PASTE_ITEM,
 	UPDATE_COLLECTION_DISPLAY_COLLECTION,
 	UPDATE_COL_SIZE,
 	UPDATE_FORM_ITEM_CONFIG,
 	UPDATE_FRAGMENT_ENTRY_LINK_CONFIGURATION,
 	UPDATE_ITEM_CONFIG,
-	UPDATE_ITEM_LOCAL_CONFIG,
 	UPDATE_PREVIEW_IMAGE,
 	UPDATE_ROW_COLUMNS,
 	UPDATE_RULE,
@@ -34,7 +39,6 @@ import updateCollectionDisplayCollection from '../actions/updateCollectionDispla
 import updateFormItemConfig from '../actions/updateFormItemConfig';
 import updateFragmentEntryLinkConfiguration from '../actions/updateFragmentEntryLinkConfiguration';
 import updateItemConfig from '../actions/updateItemConfig';
-import updateItemLocalConfig from '../actions/updateItemLocalConfig';
 import updatePreviewImage from '../actions/updatePreviewImage';
 import updateRowColumns from '../actions/updateRowColumns';
 import updateRule from '../actions/updateRule';
@@ -43,6 +47,7 @@ import {setIn} from '../utils/setIn';
 export const INITIAL_STATE: LayoutData = {
 	deletedItems: [],
 	items: {},
+	pageRules: [],
 	rootItems: {dropZone: '', main: ''},
 	version: '0',
 };
@@ -53,16 +58,18 @@ export default function layoutDataReducer(
 		| ReturnType<typeof addFragmentEntryLinks>
 		| ReturnType<typeof addItem>
 		| ReturnType<typeof addRule>
+		| ReturnType<typeof addStepper>
 		| ReturnType<typeof deleteItem>
 		| ReturnType<typeof deleteRule>
 		| ReturnType<typeof duplicateItem>
-		| ReturnType<typeof moveItem>
+		| ReturnType<typeof pasteItems>
+		| ReturnType<typeof moveItems>
+		| ReturnType<typeof moveStepper>
 		| ReturnType<typeof updateCollectionDisplayCollection>
 		| ReturnType<typeof updateColSize>
 		| ReturnType<typeof updateFormItemConfig>
 		| ReturnType<typeof updateFragmentEntryLinkConfiguration>
 		| ReturnType<typeof updateItemConfig>
-		| ReturnType<typeof updateItemLocalConfig>
 		| ReturnType<typeof updatePreviewImage>
 		| ReturnType<typeof updateRowColumns>
 		| ReturnType<typeof updateRule>
@@ -71,10 +78,13 @@ export default function layoutDataReducer(
 		case ADD_FRAGMENT_ENTRY_LINKS:
 		case ADD_ITEM:
 		case ADD_RULE:
+		case ADD_STEPPER:
 		case DELETE_ITEM:
 		case DELETE_RULE:
 		case DUPLICATE_ITEM:
+		case PASTE_ITEM:
 		case MOVE_ITEM:
+		case MOVE_STEPPER:
 		case UPDATE_COL_SIZE:
 		case UPDATE_COLLECTION_DISPLAY_COLLECTION:
 		case UPDATE_FRAGMENT_ENTRY_LINK_CONFIGURATION:
@@ -82,28 +92,35 @@ export default function layoutDataReducer(
 		case UPDATE_RULE:
 			return action.layoutData;
 
-		case UPDATE_FORM_ITEM_CONFIG:
-		case UPDATE_ITEM_CONFIG: {
-			const {itemId, layoutData: nextLayoutData} = action;
+		case UPDATE_FORM_ITEM_CONFIG: {
+			const {itemIds, layoutData: nextLayoutData} = action;
+			const [itemId] = itemIds;
 
 			const nextItem = nextLayoutData.items[itemId] || {};
-			const previousItem = layoutData.items[itemId] || {};
 
-			return setIn(nextLayoutData, ['items', itemId, 'config'], {
-				...(action.overridePreviousConfig ? {} : previousItem.config),
-				...nextItem.config,
-			});
+			return setIn(
+				nextLayoutData,
+				['items', itemId, 'config'],
+				nextItem.config
+			);
 		}
 
-		case UPDATE_ITEM_LOCAL_CONFIG: {
-			const {itemConfig, itemId} = action;
+		case UPDATE_ITEM_CONFIG: {
+			const {itemIds, layoutData} = action;
 
-			const item = layoutData.items[itemId] || {};
+			let nextLayoutData = layoutData;
 
-			return setIn(layoutData, ['items', itemId, 'config'], {
-				...(action.overridePreviousConfig ? {} : item.config),
-				...itemConfig,
-			});
+			for (const itemId of itemIds) {
+				const nextItem = nextLayoutData.items[itemId] || {};
+
+				nextLayoutData = setIn(
+					nextLayoutData,
+					['items', itemId, 'config'],
+					nextItem.config
+				);
+			}
+
+			return nextLayoutData;
 		}
 
 		case UPDATE_PREVIEW_IMAGE: {

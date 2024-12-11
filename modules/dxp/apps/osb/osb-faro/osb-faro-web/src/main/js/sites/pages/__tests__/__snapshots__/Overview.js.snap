@@ -15,16 +15,17 @@ exports[`Sites Dashboard Overview render 1`] = `
       >
         <div
           class="card card-root analytics-metrics-card"
+          id="container.report.siteActivityCard"
           style="min-height: 605px;"
         >
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <h5
+            <div
               class="card-title"
             >
               Test Channel Activities
-            </h5>
+            </div>
             <div
               class="d-flex"
             >
@@ -82,19 +83,24 @@ exports[`Sites Dashboard Overview render 1`] = `
       >
         <div
           class="card card-root top-pages-card-root table-tabs-root"
+          id="container.report.topPagesCard"
         >
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <h5
+            <div
               class="card-title"
             >
               Top Pages
-            </h5>
-            <span
-              aria-hidden="true"
-              class="loading-root loading-animation"
-            />
+            </div>
+            <div
+              class="d-flex"
+            >
+              <span
+                aria-hidden="true"
+                class="loading-root loading-animation"
+              />
+            </div>
           </div>
           <div
             class="card-body w-100 d-flex flex-column flex-grow-1 no-padding"
@@ -161,7 +167,7 @@ exports[`Sites Dashboard Overview render 1`] = `
           >
             <a
               class="button-root btn btn-outline-borderless btn-sm btn-outline-secondary"
-              href="/workspace/23/123123/sites/pages?rangeKey=30"
+              href="/workspace/23/123123/sites/pages?rangeKey=30&field=visitorsMetric&sortOrder=DESC"
             >
               View Pages
               <svg
@@ -169,7 +175,7 @@ exports[`Sites Dashboard Overview render 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#angle-right-small"
+                  href="#angle-right-small"
                 />
               </svg>
             </a>
@@ -181,19 +187,24 @@ exports[`Sites Dashboard Overview render 1`] = `
       >
         <div
           class="card card-root acquisitions-card-root table-tabs-root"
+          id="container.report.acquisitionsCard"
         >
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <h5
+            <div
               class="card-title"
             >
               Acquisitions
-            </h5>
-            <span
-              aria-hidden="true"
-              class="loading-root loading-animation"
-            />
+            </div>
+            <div
+              class="d-flex"
+            >
+              <span
+                aria-hidden="true"
+                class="loading-root loading-animation"
+              />
+            </div>
           </div>
           <div
             class="card-body w-100 d-flex flex-column flex-grow-1 no-padding"
@@ -268,19 +279,24 @@ exports[`Sites Dashboard Overview render 1`] = `
       >
         <div
           class="card card-root visitors-by-time-card"
+          id="container.report.visitorsByTimeCard"
         >
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <h5
+            <div
               class="card-title"
             >
               Visitors by Day and Time
-            </h5>
-            <span
-              aria-hidden="true"
-              class="loading-root loading-animation"
-            />
+            </div>
+            <div
+              class="d-flex"
+            >
+              <span
+                aria-hidden="true"
+                class="loading-root loading-animation"
+              />
+            </div>
           </div>
           <div
             class="card-body"
@@ -297,19 +313,24 @@ exports[`Sites Dashboard Overview render 1`] = `
       >
         <div
           class="card card-root search-terms-card-root"
+          id="container.report.searchTermsCard"
         >
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <h5
+            <div
               class="card-title"
             >
               Search Terms
-            </h5>
-            <span
-              aria-hidden="true"
-              class="loading-root loading-animation"
-            />
+            </div>
+            <div
+              class="d-flex"
+            >
+              <span
+                aria-hidden="true"
+                class="loading-root loading-animation"
+              />
+            </div>
           </div>
           <div
             class="table-responsive table-root flex-grow-1"
@@ -341,6 +362,24 @@ exports[`Sites Dashboard Overview render 1`] = `
               />
             </div>
           </div>
+          <div
+            class="card-footer"
+          >
+            <a
+              class="button-root btn btn-outline-borderless btn-sm btn-outline-secondary"
+              href="/workspace/23/123123/sites/search-terms?rangeKey=30"
+            >
+              All Search Terms
+              <svg
+                class="lexicon-icon lexicon-icon-angle-right-small icon-root ml-2"
+                role="presentation"
+              >
+                <use
+                  href="#angle-right-small"
+                />
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
       <div
@@ -348,19 +387,24 @@ exports[`Sites Dashboard Overview render 1`] = `
       >
         <div
           class="card card-root interests-card-root"
+          id="container.report.interestsCard"
         >
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <h5
+            <div
               class="card-title"
             >
               Interests
-            </h5>
-            <span
-              aria-hidden="true"
-              class="loading-root loading-animation"
-            />
+            </div>
+            <div
+              class="d-flex"
+            >
+              <span
+                aria-hidden="true"
+                class="loading-root loading-animation"
+              />
+            </div>
           </div>
           <div
             class="table-responsive table-root flex-grow-1"
@@ -397,7 +441,7 @@ exports[`Sites Dashboard Overview render 1`] = `
           >
             <a
               class="button-root btn btn-outline-borderless btn-sm btn-outline-secondary"
-              href="/workspace/23/123123/sites/interests?rangeEnd=null&rangeKey=30&rangeStart=null"
+              href="/workspace/23/123123/sites/interests?rangeKey=30"
             >
               All Interests
               <svg
@@ -405,7 +449,7 @@ exports[`Sites Dashboard Overview render 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#angle-right-small"
+                  href="#angle-right-small"
                 />
               </svg>
             </a>
@@ -423,16 +467,17 @@ exports[`Sites Dashboard Overview render 1`] = `
       >
         <div
           class="card card-root analytics-locations-card"
+          id="container.report.sessionsByLocationCard"
           style="min-height: 536px;"
         >
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <h5
+            <div
               class="card-title"
             >
               Sessions by Location
-            </h5>
+            </div>
             <div
               class="d-flex"
             >
@@ -457,16 +502,17 @@ exports[`Sites Dashboard Overview render 1`] = `
       >
         <div
           class="card card-root analytics-devices-card"
+          id="container.report.sessionTechnologyCard"
           style="min-height: 536px;"
         >
           <div
             class="card-header align-items-center d-flex justify-content-between"
           >
-            <h5
+            <div
               class="card-title"
             >
               Session Technology
-            </h5>
+            </div>
             <div
               class="d-flex"
             >
@@ -495,17 +541,18 @@ exports[`Sites Dashboard Overview render 1`] = `
       >
         <div
           class="card card-root cohort-analysis-card-root"
+          id="container.report.cohortAnalysisCard"
         >
           <div
             aria-hidden="true"
             class="card-header"
             data-aria-hidden="true"
           >
-            <h5
+            <div
               class="card-title"
             >
               Cohort Analysis
-            </h5>
+            </div>
           </div>
           <div
             class="card-body"
@@ -518,6 +565,7 @@ exports[`Sites Dashboard Overview render 1`] = `
               >
                 <button
                   aria-activedescendant="visitors"
+                  aria-controls="clay-id-2"
                   aria-expanded="true"
                   aria-haspopup="listbox"
                   aria-owns="clay-id-2"

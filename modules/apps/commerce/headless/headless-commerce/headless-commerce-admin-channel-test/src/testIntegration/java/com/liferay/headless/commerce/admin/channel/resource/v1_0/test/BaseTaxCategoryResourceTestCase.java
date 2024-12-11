@@ -26,11 +26,10 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -40,6 +39,7 @@ import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -97,10 +97,16 @@ public abstract class BaseTaxCategoryResourceTestCase {
 
 		_taxCategoryResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		TaxCategoryResource.Builder builder = TaxCategoryResource.builder();
 
 		taxCategoryResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,7 +120,32 @@ public abstract class BaseTaxCategoryResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		TaxCategory taxCategory1 = randomTaxCategory();
+
+		String json = objectMapper.writeValueAsString(taxCategory1);
+
+		TaxCategory taxCategory2 = TaxCategorySerDes.toDTO(json);
+
+		Assert.assertTrue(equals(taxCategory1, taxCategory2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		TaxCategory taxCategory = randomTaxCategory();
+
+		String json1 = objectMapper.writeValueAsString(taxCategory);
+		String json2 = TaxCategorySerDes.toJSON(taxCategory);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -129,40 +160,6 @@ public abstract class BaseTaxCategoryResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		TaxCategory taxCategory1 = randomTaxCategory();
-
-		String json = objectMapper.writeValueAsString(taxCategory1);
-
-		TaxCategory taxCategory2 = TaxCategorySerDes.toDTO(json);
-
-		Assert.assertTrue(equals(taxCategory1, taxCategory2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		TaxCategory taxCategory = randomTaxCategory();
-
-		String json1 = objectMapper.writeValueAsString(taxCategory);
-		String json2 = TaxCategorySerDes.toJSON(taxCategory);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -212,10 +209,10 @@ public abstract class BaseTaxCategoryResourceTestCase {
 
 	@Test
 	public void testGetTaxCategoriesPageWithPagination() throws Exception {
-		Page<TaxCategory> totalPage = taxCategoryResource.getTaxCategoriesPage(
-			null, null);
+		Page<TaxCategory> taxCategoryPage =
+			taxCategoryResource.getTaxCategoriesPage(null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(taxCategoryPage.getTotalCount());
 
 		TaxCategory taxCategory1 = testGetTaxCategoriesPage_addTaxCategory(
 			randomTaxCategory());
@@ -226,30 +223,66 @@ public abstract class BaseTaxCategoryResourceTestCase {
 		TaxCategory taxCategory3 = testGetTaxCategoriesPage_addTaxCategory(
 			randomTaxCategory());
 
-		Page<TaxCategory> page1 = taxCategoryResource.getTaxCategoriesPage(
-			null, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<TaxCategory> taxCategories1 = (List<TaxCategory>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			taxCategories1.toString(), totalCount + 2, taxCategories1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<TaxCategory> page1 = taxCategoryResource.getTaxCategoriesPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<TaxCategory> page2 = taxCategoryResource.getTaxCategoriesPage(
-			null, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(taxCategory1, (List<TaxCategory>)page1.getItems());
 
-		List<TaxCategory> taxCategories2 = (List<TaxCategory>)page2.getItems();
+			Page<TaxCategory> page2 = taxCategoryResource.getTaxCategoriesPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(
-			taxCategories2.toString(), 1, taxCategories2.size());
+			assertContains(taxCategory2, (List<TaxCategory>)page2.getItems());
 
-		Page<TaxCategory> page3 = taxCategoryResource.getTaxCategoriesPage(
-			null, Pagination.of(1, totalCount + 3));
+			Page<TaxCategory> page3 = taxCategoryResource.getTaxCategoriesPage(
+				null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertContains(taxCategory1, (List<TaxCategory>)page3.getItems());
-		assertContains(taxCategory2, (List<TaxCategory>)page3.getItems());
-		assertContains(taxCategory3, (List<TaxCategory>)page3.getItems());
+			assertContains(taxCategory3, (List<TaxCategory>)page3.getItems());
+		}
+		else {
+			Page<TaxCategory> page1 = taxCategoryResource.getTaxCategoriesPage(
+				null, Pagination.of(1, totalCount + 2));
+
+			List<TaxCategory> taxCategories1 =
+				(List<TaxCategory>)page1.getItems();
+
+			Assert.assertEquals(
+				taxCategories1.toString(), totalCount + 2,
+				taxCategories1.size());
+
+			Page<TaxCategory> page2 = taxCategoryResource.getTaxCategoriesPage(
+				null, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<TaxCategory> taxCategories2 =
+				(List<TaxCategory>)page2.getItems();
+
+			Assert.assertEquals(
+				taxCategories2.toString(), 1, taxCategories2.size());
+
+			Page<TaxCategory> page3 = taxCategoryResource.getTaxCategoriesPage(
+				null, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(taxCategory1, (List<TaxCategory>)page3.getItems());
+			assertContains(taxCategory2, (List<TaxCategory>)page3.getItems());
+			assertContains(taxCategory3, (List<TaxCategory>)page3.getItems());
+		}
 	}
 
 	protected TaxCategory testGetTaxCategoriesPage_addTaxCategory(
@@ -273,6 +306,8 @@ public abstract class BaseTaxCategoryResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject taxCategoriesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/taxCategories");
@@ -286,6 +321,29 @@ public abstract class BaseTaxCategoryResourceTestCase {
 
 		taxCategoriesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/taxCategories");
+
+		Assert.assertEquals(
+			totalCount + 2, taxCategoriesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			taxCategory1,
+			Arrays.asList(
+				TaxCategorySerDes.toDTOs(
+					taxCategoriesJSONObject.getString("items"))));
+		assertContains(
+			taxCategory2,
+			Arrays.asList(
+				TaxCategorySerDes.toDTOs(
+					taxCategoriesJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		taxCategoriesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminChannel_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminChannel_v1_0",
 			"JSONObject/taxCategories");
 
 		Assert.assertEquals(
@@ -329,6 +387,8 @@ public abstract class BaseTaxCategoryResourceTestCase {
 	public void testGraphQLGetTaxCategory() throws Exception {
 		TaxCategory taxCategory = testGraphQLGetTaxCategory_addTaxCategory();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				taxCategory,
@@ -344,11 +404,35 @@ public abstract class BaseTaxCategoryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/taxCategory"))));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		Assert.assertTrue(
+			equals(
+				taxCategory,
+				TaxCategorySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminChannel_v1_0",
+								new GraphQLField(
+									"taxCategory",
+									new HashMap<String, Object>() {
+										{
+											put("id", taxCategory.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminChannel_v1_0",
+						"Object/taxCategory"))));
 	}
 
 	@Test
 	public void testGraphQLGetTaxCategoryNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -362,6 +446,25 @@ public abstract class BaseTaxCategoryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminChannel_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminChannel_v1_0",
+						new GraphQLField(
+							"taxCategory",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -678,6 +781,10 @@ public abstract class BaseTaxCategoryResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -778,7 +885,8 @@ public abstract class BaseTaxCategoryResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -825,21 +933,21 @@ public abstract class BaseTaxCategoryResourceTestCase {
 	}
 
 	protected TaxCategoryResource taxCategoryResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -848,11 +956,16 @@ public abstract class BaseTaxCategoryResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -884,6 +997,24 @@ public abstract class BaseTaxCategoryResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -905,16 +1036,6 @@ public abstract class BaseTaxCategoryResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

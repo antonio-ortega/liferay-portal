@@ -34,11 +34,7 @@ JournalPreviewArticleContentTemplateDisplayContext journalPreviewArticleContentT
 				<div class="form-group-sm journal-article-button-row mb-0 tbar-section text-right">
 					<clay:button
 						cssClass="selector-button"
-						data-id='<%=
-							HashMapBuilder.<String, Object>put(
-								"ddmtemplateid", journalPreviewArticleContentTemplateDisplayContext.getDDMTemplateId()
-							).build()
-						%>'
+						data-value="<%= journalPreviewArticleContentTemplateDisplayContext.getDDMTemplateJSON() %>"
 						displayType="secondary"
 						label="apply"
 						type="submit"
@@ -56,7 +52,7 @@ JournalPreviewArticleContentTemplateDisplayContext journalPreviewArticleContentT
 	/>
 </div>
 
-<script>
+<aui:script>
 	function previewArticleContentTemplate() {
 		var ddmTemplateId = document.getElementById(
 			'<portlet:namespace />ddmTemplateId'
@@ -67,4 +63,4 @@ JournalPreviewArticleContentTemplateDisplayContext journalPreviewArticleContentT
 			'<%= journalPreviewArticleContentTemplateDisplayContext.getPortletURL() %>'
 		);
 	}
-</script>
+</aui:script>

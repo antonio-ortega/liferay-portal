@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ILearnResourceContext} from 'frontend-js-components-web';
 import {Edge, Elements, Node} from 'react-flow-renderer';
 
 import {TYPES} from './ModelBuilderContext/typesEnum';
@@ -35,9 +36,15 @@ export type DropDownItems = {
 export type TAction =
 	| {
 			payload: {
+				dbTableName: string;
+				dispatch: React.Dispatch<TAction>;
+				elements: Elements<
+					ObjectDefinitionNodeData | ObjectRelationshipEdgeData[]
+				>;
+				leftSidebarItems: LeftSidebarItem[];
 				newObjectDefinition: ObjectDefinition;
-				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				selectedObjectFolderName: string;
+				objectFolders: ObjectFolder[];
+				selectedObjectFolder: ObjectFolder;
 			};
 			type: TYPES.ADD_OBJECT_DEFINITION_TO_OBJECT_FOLDER;
 	  }
@@ -46,7 +53,7 @@ export type TAction =
 				newObjectField: ObjectField;
 				objectDefinitionExternalReferenceCode: string;
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
+				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData[]>[];
 				selectedObjectDefinitionNode: Node<ObjectDefinitionNodeData>;
 			};
 			type: TYPES.ADD_OBJECT_FIELD;
@@ -56,7 +63,7 @@ export type TAction =
 				hiddenObjectFolderObjectDefinitionNodes: boolean;
 				leftSidebarItem: LeftSidebarItem;
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
+				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData[]>[];
 			};
 			type: TYPES.BULK_CHANGE_NODE_VIEW;
 	  }
@@ -66,7 +73,7 @@ export type TAction =
 				objectDefinitionId: number;
 				objectDefinitionName: string;
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
+				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData[]>[];
 				selectedSidebarItem: LeftSidebarItem;
 			};
 			type: TYPES.CHANGE_NODE_VIEW;
@@ -74,36 +81,53 @@ export type TAction =
 	| {
 			payload: {
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
-				selectedObjectDefinitionNode: Node<
-					ObjectDefinitionNodeData
-				> | null;
+				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData[]>[];
+				selectedObjectDefinitionNode: Node<ObjectDefinitionNodeData> | null;
 				selectedObjectField: ObjectFieldNodeRow;
 			};
 			type: TYPES.DELETE_OBJECT_FIELD;
 	  }
 	| {
 			payload: {
+				dispatch: React.Dispatch<TAction>;
 				objectFolders: ObjectFolder[];
 				rightSidebarType?: RightSidebarType;
-				selectedObjectFolder: ObjectFolder;
-				selectedObjectRelationshipEdgeId?: number;
+				selectedObjectFolderName: string;
+				selectedObjectRelationshipId?: number;
 			};
 			type: TYPES.UPDATE_MODEL_BUILDER_STRUCTURE;
 	  }
 	| {
 			payload: {
+				deletedObjectDefinition: DeletedObjectDefinition | null;
+			};
+			type: TYPES.SET_DELETE_OBJECT_DEFINITION;
+	  }
+	| {
+			payload: {
 				newElements: Elements<
-					ObjectDefinitionNodeData | ObjectRelationshipEdgeData
+					ObjectDefinitionNodeData | ObjectRelationshipEdgeData[]
 				>;
 			};
 			type: TYPES.SET_ELEMENTS;
 	  }
 	| {
 			payload: {
+				nodeHandleConnectable: boolean;
+			};
+			type: TYPES.SET_NODE_HANDLE_CONNECTION;
+	  }
+	| {
+			payload: {
 				isLoadingObjectFolder: boolean;
 			};
 			type: TYPES.SET_LOADING_OBJECT_FOLDER;
+	  }
+	| {
+			payload: {
+				movedObjectDefinitionId?: number;
+			};
+			type: TYPES.SET_MOVED_OBJECT_DEFINITION;
 	  }
 	| {
 			payload: {
@@ -114,7 +138,7 @@ export type TAction =
 	| {
 			payload: {
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
+				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData[]>[];
 				selectedObjectDefinitionId: string;
 			};
 			type: TYPES.SET_SELECTED_OBJECT_DEFINITION_NODE;
@@ -126,15 +150,16 @@ export type TAction =
 					y: number;
 				};
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
+				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData[]>[];
 				updatedObjectDefinitionNodeId: number;
+				updatedObjectFolder: ObjectFolder;
 			};
 			type: TYPES.SET_SELECTED_OBJECT_DEFINITION_NODE_POSITION;
 	  }
 	| {
 			payload: {
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
+				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData[]>[];
 				selectedObjectDefinitionId: number;
 				selectedObjectField: ObjectFieldNodeRow;
 				selectedObjectFieldName: string;
@@ -143,11 +168,22 @@ export type TAction =
 	  }
 	| {
 			payload: {
-				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
+				updatedSelectedObjectFolder: ObjectFolder;
+			};
+			type: TYPES.SET_SELECTED_OBJECT_FOLDER_DETAILS;
+	  }
+	| {
+			payload: {
 				selectedObjectRelationshipId: number;
 			};
 			type: TYPES.SET_SELECTED_OBJECT_RELATIONSHIP_EDGE;
+	  }
+	| {
+			payload: {
+				objectDefinitionExternalReferenceCode: string;
+				showAllObjectFields: boolean;
+			};
+			type: TYPES.SET_SHOW_ALL_OBJECT_FIELDS;
 	  }
 	| {
 			payload: {
@@ -157,10 +193,16 @@ export type TAction =
 	  }
 	| {
 			payload: {
+				updatedShowSidebars: boolean;
+			};
+			type: TYPES.SET_SHOW_SIDEBARS;
+	  }
+	| {
+			payload: {
 				currentObjectFolderName: string;
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
 				objectDefinitionRelationshipEdges: Edge<
-					ObjectRelationshipEdgeData
+					ObjectRelationshipEdgeData[]
 				>[];
 				updatedObjectDefinition: Partial<ObjectDefinition>;
 			};
@@ -169,38 +211,47 @@ export type TAction =
 	| {
 			payload: {
 				objectDefinitionNodes: Node<ObjectDefinitionNodeData>[];
-				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData>[];
-				selectedObjectDefinitionNode: Node<
-					ObjectDefinitionNodeData
-				> | null;
+				objectRelationshipEdges: Edge<ObjectRelationshipEdgeData[]>[];
+				selectedObjectDefinitionNode: Node<ObjectDefinitionNodeData> | null;
 				updatedObjectField: ObjectField;
 			};
 			type: TYPES.UPDATE_OBJECT_FIELD_NODE_ROW;
+	  }
+	| {
+			payload: {
+				updatedModelBuilderModals: Partial<ModelBuilderModals>;
+			};
+			type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS;
 	  };
 
 export type TState = {
 	baseResourceURL: string;
+	deletedObjectDefinition: DeletedObjectDefinition | null;
 	editObjectDefinitionURL: string;
-	elements: Elements<ObjectDefinitionNodeData | ObjectRelationshipEdgeData>;
+	elements: Elements<ObjectDefinitionNodeData | ObjectRelationshipEdgeData[]>;
 	filterOperators: TFilterOperators;
 	forbiddenChars: string[];
 	forbiddenLastChars: string[];
 	forbiddenNames: string[];
 	isLoadingObjectFolder: boolean;
+	isRootDescendantNode: boolean;
+	learnResourceContext: ILearnResourceContext;
 	leftSidebarItems: LeftSidebarItem[];
+	modelBuilderModals: ModelBuilderModals;
+	movedObjectDefinitionId?: number;
+	nodeHandleConnectable: boolean;
 	objectDefinitionPermissionsURL: string;
-	objectDefinitions: ObjectDefinition[];
 	objectDefinitionsStorageTypes: LabelValueObject[];
 	objectFolderName: string;
 	objectFolders: ObjectFolder[];
-	objectWebLearnResources: ObjectWebLearnResources;
 	rightSidebarType: RightSidebarType;
 	selectedObjectDefinitionNode: Node<ObjectDefinitionNodeData> | null;
 	selectedObjectField?: ObjectFieldNodeRow;
 	selectedObjectFolder: ObjectFolder;
-	selectedObjectRelationship?: Edge<ObjectRelationshipEdgeData>;
+	selectedObjectRelationship?: ObjectRelationshipEdgeData | null;
 	showChangesSaved: boolean;
-	workflowStatusJSONArray: LabelValueObject[];
+	showSidebars: boolean;
+	workflowStatuses: LabelValueObject[];
 };
 
 export interface LeftSidebarItem {
@@ -212,27 +263,45 @@ export interface LeftSidebarItem {
 	type: 'objectFolder' | 'objectDefinition';
 }
 
+export type LeftSidebarKebabOption = {
+	label?: string;
+	onClick?: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+	symbolLeft?: string;
+	symbolRight?: string;
+	type?:
+		| 'checkbox'
+		| 'contextual'
+		| 'group'
+		| 'item'
+		| 'radio'
+		| 'radiogroup'
+		| 'divider';
+};
+
 export interface LeftSidebarObjectDefinitionItem {
 	externalReferenceCode?: string;
 	hiddenObjectDefinitionNode: boolean;
 	id: number;
+	kebabOptions: LeftSidebarKebabOption[];
 	label: string;
 	linked?: boolean;
 	name: string;
 	selected: boolean;
-	type: 'linkedObjectDefinition' | 'objectDefinition';
+	type:
+		| 'dummyObjectDefinition'
+		| 'linkedObjectDefinition'
+		| 'objectDefinition';
 }
 
 export interface ObjectRelationshipEdgeData {
 	defaultLanguageId?: Liferay.Language.Locale;
+	edge: boolean;
+	id: number;
 	label: string;
 	markerEndId: string;
 	markerStartId: string;
-	objectRelationshipId: number;
+	name: string;
 	selected: boolean;
-	selfObjectRelationships?: ObjectRelationship[];
-	sourceY: number;
-	targetY: number;
 	type: string;
 }
 

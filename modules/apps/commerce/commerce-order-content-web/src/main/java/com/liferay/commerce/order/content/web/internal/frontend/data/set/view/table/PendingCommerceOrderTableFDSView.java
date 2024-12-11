@@ -11,6 +11,7 @@ import com.liferay.frontend.data.set.view.table.BaseTableFDSView;
 import com.liferay.frontend.data.set.view.table.FDSTableSchema;
 import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilder;
 import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilderFactory;
+import com.liferay.frontend.data.set.view.table.StringFDSTableSchemaField;
 
 import java.util.Locale;
 
@@ -32,16 +33,22 @@ public class PendingCommerceOrderTableFDSView extends BaseTableFDSView {
 			_fdsTableSchemaBuilderFactory.create();
 
 		return fdsTableSchemaBuilder.add(
-			"date", "create-date",
-			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
+			"title", "order-id",
+			fdsTableSchemaField -> fdsTableSchemaField.setContentRenderer(
+				"actionLink")
 		).add(
-			"orderId", "order-id"
+			"name", "name"
 		).add(
 			"orderType", "order-type"
 		).add(
+			"externalReferenceCode", "erc"
+		).add(
 			"purchaseOrderNumber", "purchase-order-number"
 		).add(
-			"accountName", "account"
+			"date", "create-date",
+			fdsTableSchemaField -> fdsTableSchemaField.setSortable(true)
+		).add(
+			_addAccountNameStringFDSTableSchemaField()
 		).add(
 			"author", "created-by"
 		).add(
@@ -49,6 +56,23 @@ public class PendingCommerceOrderTableFDSView extends BaseTableFDSView {
 		).add(
 			"amount", "amount"
 		).build();
+	}
+
+	private StringFDSTableSchemaField
+		_addAccountNameStringFDSTableSchemaField() {
+
+		StringFDSTableSchemaField stringFDSTableSchemaField =
+			new StringFDSTableSchemaField();
+
+		stringFDSTableSchemaField.setFieldName(
+			"accountName"
+		).setLabel(
+			"account"
+		);
+
+		stringFDSTableSchemaField.setTruncate(true);
+
+		return stringFDSTableSchemaField;
 	}
 
 	@Reference

@@ -1470,6 +1470,17 @@ public class VerifyProperties {
 			"com.liferay.search.web"
 		},
 
+		// Session
+
+		{
+			"session.timeout.auto.extend", "auto-extend",
+			"com.liferay.frontend.js.web"
+		},
+		{
+			"session.timeout.auto.extend.offset", "auto-extend-offset",
+			"com.liferay.frontend.js.web"
+		},
+
 		// Site Map
 
 		{
@@ -1701,11 +1712,13 @@ public class VerifyProperties {
 		"com.liferay.portal.servlet.filters.monitoring.MonitoringFilter",
 		"com.liferay.portal.servlet.filters.secure.SecureFilter",
 		"com.liferay.portal.servlet.filters.sso.opensso.OpenSSOFilter",
+		"com.liferay.portal.servlet.filters.unsyncprintwriterpool." +
+			"UnsyncPrintWriterPoolFilter",
 		"com.liferay.portal.servlet.filters.validhtml.ValidHtmlFilter",
 		"com.liferay.portal.upload.UploadServletRequestImpl.max.size",
 		"com.liferay.portal.upload.UploadServletRequestImpl.temp.dir",
-		"commons.pool.enabled", "company.security.send.password",
-		"company.settings.form.configuration",
+		"commons.pool.enabled", "company.security.auth.requires.https",
+		"company.security.send.password", "company.settings.form.configuration",
 		"company.settings.form.identification",
 		"company.settings.form.miscellaneous", "company.settings.form.social",
 		"control.panel.home.portlet.id",
@@ -1735,7 +1748,7 @@ public class VerifyProperties {
 		"dl.file.entry.preview.auto.create.on.upgrade",
 		"dl.file.entry.preview.document.depth",
 		"dl.file.entry.previewable.processor.max.size",
-		"dl.file.entry.read.count.enabled",
+		"dl.file.entry.processors", "dl.file.entry.read.count.enabled",
 		"dl.file.entry.thumbnail.video.frame.percentage",
 		"dl.file.entry.type.ig.image.auto.create.on.upgrade",
 		"dl.file.entry.version.policy", "dl.file.extensions",
@@ -1816,6 +1829,7 @@ public class VerifyProperties {
 		"icq.login", "icq.password", "image.hook.impl",
 		"image.hook.file.system.root.dir", "index.dump.compression.enabled",
 		"index.filter.search.limit", "index.on.upgrade",
+		"index.permission.filter.search.amplification.factor",
 		"index.portal.field.analyzer.enabled", "index.search.engine.id",
 		"index.search.highlight.enabled", "index.search.writer.max.queue.size",
 		"index.read.only", "index.with.thread", "intraband.impl",
@@ -1849,8 +1863,7 @@ public class VerifyProperties {
 		"jdbc.default.minIdle", "jdbc.default.minPoolSize",
 		"jdbc.default.numHelperThreads", "jdbc.default.removeAbandonedTimeout",
 		"jdbc.default.testWhileIdle",
-		"jdbc.default.timeBetweenEvictionRunsMillis",
-		"jdbc.default.transactionIsolation", "jdbc.default.useEquals",
+		"jdbc.default.timeBetweenEvictionRunsMillis", "jdbc.default.useEquals",
 		"jdbc.default.validationQuery", "json.deserializer.strict.mode",
 		"journal.article.form.add", "journal.article.form.default.values",
 		"journal.article.form.update", "journal.article.form.translate",
@@ -1903,9 +1916,10 @@ public class VerifyProperties {
 		"layout.view.page[link_to_layout]", "layout.view.page[panel]",
 		"layout.view.page[url]", "ldap.clock.skew",
 		"ldap.ignore.user.search.filter.for.auth=true",
-		"library.download.url.resin.jar", "library.download.url.script-10.jar",
-		"liferay.lib.global.shared.dir", "liferay.web.portal.dir",
-		"look.and.feel.modifiable", "lucene.analyzer",
+		"learn.resources.cdn.enabled", "learn.resources.enabled",
+		"learn.resources.refresh.time", "library.download.url.resin.jar",
+		"library.download.url.script-10.jar", "liferay.lib.global.shared.dir",
+		"liferay.web.portal.dir", "look.and.feel.modifiable", "lucene.analyzer",
 		"lucene.cluster.index.loading.sync.timeout", "lucene.file.extractor",
 		"lucene.file.extractor.regexp.strip", "lucene.replicate.write",
 		"lucene.store.jdbc.auto.clean.up",
@@ -2010,6 +2024,7 @@ public class VerifyProperties {
 		"sites.form.add.miscellaneous", "sites.form.add.seo",
 		"sites.form.update.advanced", "sites.form.update.main",
 		"sites.form.update.miscellaneous", "sites.form.update.seo",
+		"spring.infrastructure.configs",
 		"sql.data.com.liferay.portal.kernel.model.Country.country.id",
 		"sql.data.com.liferay.portal.kernel.model.ListType.account.address",
 		"sql.data.com.liferay.portal.kernel.model.ListType.account.email." +
@@ -2033,7 +2048,7 @@ public class VerifyProperties {
 		"struts.portlet.ignored.parameters.regexp",
 		"struts.portlet.request.processor",
 		"table.mapper.cache.mapping.table.names", "tck.url",
-		"transaction.manager.impl",
+		"transaction.manager.impl", "transaction.isolation.counter",
 		"user.groups.copy.layouts.to.user.personal.site",
 		"user.groups.indexer.enabled", "users.form.add.identification",
 		"users.indexer.enabled", "users.form.add.main",
@@ -2050,9 +2065,9 @@ public class VerifyProperties {
 		"verify.process.concurrency.threshold", "webdav.storage.class",
 		"webdav.storage.show.edit.url", "webdav.storage.show.view.url",
 		"webdav.storage.tokens", "wiki.email.page.added.signature",
-		"wiki.email.page.updated.signature",
-		"xsl.template.secure.processing.enabled", "xss.allow",
-		"xuggler.enabled", "xuggler.jar.file", "xuggler.jar.url",
+		"wiki.email.page.updated.signature", "work.dir.override.enabled",
+		"xml.sitemap.index.enabled", "xsl.template.secure.processing.enabled",
+		"xss.allow", "xuggler.enabled", "xuggler.jar.file", "xuggler.jar.url",
 		"xuggler.jar.options", "xuggler.ffpreset.8x8dct", "xuggler.ffpreset.bf",
 		"xuggler.f.ffpreset.cmp", "xuggler.f.ffpreset.coder",
 		"xuggler.f.ffpreset.flags", "xuggler.f.ffpreset.flags2",
@@ -2068,6 +2083,7 @@ public class VerifyProperties {
 	private static final String[] _OBSOLETE_SYSTEM_KEYS = {
 		"com.liferay.petra.memory.FinalizeManager.thread.enabled",
 		"com.liferay.portal.kernel.memory.FinalizeManager.thread.enabled",
+		"com.liferay.portal.kernel.util.ServiceProxyFactory.timeout",
 		"com.liferay.util.axis.SimpleHTTPSender.regexp.pattern",
 		"com.liferay.util.Http.proxy.host", "com.liferay.util.Http.proxy.port",
 		"com.liferay.util.XSSUtil.regexp.pattern",
@@ -2249,7 +2265,15 @@ public class VerifyProperties {
 			"tags.asset.increment.view.counter.enabled",
 			"asset.entry.increment.view.counter.enabled"
 		},
-		{"sql.data.max.parameters", "database.max.parameters"}
+		{"sql.data.max.parameters", "database.max.parameters"},
+		{
+			"staging.groups.in.memory.filter.limit",
+			"cacheable.query.limit.LPD-28122"
+		},
+		{
+			"virtual.hosts.per.company.in.memory.filter.limit",
+			"cacheable.query.limit.LPD-27353"
+		}
 	};
 
 	private static final String[][] _RENAMED_SYSTEM_KEYS = {

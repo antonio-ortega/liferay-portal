@@ -1,6 +1,7 @@
 definition {
 
-	macro setClassNameId {
+	@summary = "Default summary"
+	macro setClassNameId(itemType = null) {
 		Variables.assertDefined(parameterList = ${itemType});
 
 		if (${itemType} == "Web Content Article") {
@@ -21,6 +22,9 @@ definition {
 		else if (${itemType} == "Object") {
 			var value = "com.liferay.object.model.ObjectEntry";
 		}
+		else if (${itemType} == "RSS Publisher") {
+			var value = "com.liferay.rss.web.internal.util.RSSFeed";
+		}
 		else if (${itemType} == "Search Results Template") {
 			var value = "com.liferay.portal.search.web.internal.result.display.context.SearchResultSummaryDisplayContext";
 		}
@@ -33,7 +37,8 @@ definition {
 		return ${classNameId};
 	}
 
-	macro setDescriptionMap {
+	@summary = "Default summary"
+	macro setDescriptionMap(description = null) {
 		if (isSet(description)) {
 			var descriptionMap = '''{"en_US":"${description}"}''';
 		}
@@ -44,7 +49,8 @@ definition {
 		return ${descriptionMap};
 	}
 
-	macro setGroupId {
+	@summary = "Default summary"
+	macro setGroupId(groupName = null) {
 		Variables.assertDefined(parameterList = ${groupName});
 
 		if (!(isSet(site))) {
@@ -58,7 +64,8 @@ definition {
 		return ${groupId};
 	}
 
-	macro setNameMap {
+	@summary = "Default summary"
+	macro setNameMap(name = null) {
 		var nameMap = '''{"en_US":"${name}"}''';
 
 		return ${nameMap};

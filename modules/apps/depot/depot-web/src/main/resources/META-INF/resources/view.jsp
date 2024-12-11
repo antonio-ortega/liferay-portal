@@ -15,7 +15,7 @@ DepotAdminManagementToolbarDisplayContext depotAdminManagementToolbarDisplayCont
 
 <clay:management-toolbar
 	managementToolbarDisplayContext="<%= depotAdminManagementToolbarDisplayContext %>"
-	propsTransformer="js/DepotAdminManagementToolbarPropsTransformer"
+	propsTransformer="{DepotAdminManagementToolbarPropsTransformer} from depot-web"
 />
 
 <div class="closed sidenav-container sidenav-right">
@@ -61,27 +61,27 @@ DepotAdminManagementToolbarDisplayContext depotAdminManagementToolbarDisplayCont
 							<liferay-ui:search-container-column-text
 								colspan="<%= 2 %>"
 							>
-								<h5>
+								<div class="h5">
 									<aui:a cssClass="selector-button" href="<%= depotAdminDisplayContext.getViewDepotURL(depotEntry) %>">
 										<%= HtmlUtil.escape(depotEntryGroup.getDescriptiveName(locale)) %>
 									</aui:a>
-								</h5>
+								</div>
 
-								<h6>
+								<div class="h6">
 
 									<%
 									int depotEntryConnectedGroupsCount = depotAdminDisplayContext.getDepotEntryConnectedGroupsCount(depotEntry);
 									%>
 
 									<liferay-ui:message arguments="<%= depotEntryConnectedGroupsCount %>" key='<%= (depotEntryConnectedGroupsCount != 1) ? "x-connected-sites" : "x-connected-site" %>' />
-								</h6>
+								</div>
 							</liferay-ui:search-container-column-text>
 
 							<liferay-ui:search-container-column-text>
 								<clay:dropdown-actions
 									aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 									dropdownItems="<%= depotAdminDisplayContext.getActionDropdownItems(depotEntry) %>"
-									propsTransformer="js/DepotEntryDropdownPropsTransformer"
+									propsTransformer="{DepotEntryDropdownPropsTransformer} from depot-web"
 								/>
 							</liferay-ui:search-container-column-text>
 						</c:when>
@@ -111,7 +111,7 @@ DepotAdminManagementToolbarDisplayContext depotAdminManagementToolbarDisplayCont
 								<clay:dropdown-actions
 									aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 									dropdownItems="<%= depotAdminDisplayContext.getActionDropdownItems(depotEntry) %>"
-									propsTransformer="js/DepotEntryDropdownPropsTransformer"
+									propsTransformer="{DepotEntryDropdownPropsTransformer} from depot-web"
 								/>
 							</liferay-ui:search-container-column-text>
 						</c:otherwise>
@@ -130,5 +130,5 @@ DepotAdminManagementToolbarDisplayContext depotAdminManagementToolbarDisplayCont
 
 <liferay-frontend:component
 	componentId="<%= DepotAdminWebKeys.DEPOT_ENTRY_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
-	module="js/DepotEntryDropdownDefaultEventHandler.es"
+	module="{DepotEntryDropdownDefaultEventHandler} from depot-web"
 />

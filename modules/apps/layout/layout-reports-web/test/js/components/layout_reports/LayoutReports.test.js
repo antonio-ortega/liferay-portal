@@ -3,19 +3,26 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {cleanup, render} from '@testing-library/react';
+import {cleanup, render, screen} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import '@testing-library/jest-dom/extend-expect';
 
 import LayoutReports from '../../../../src/main/resources/META-INF/resources/js/components/layout_reports/LayoutReports';
 import {StoreContextProvider} from '../../../../src/main/resources/META-INF/resources/js/context/StoreContext';
-import {layoutReportsIssues, pageURLs, selectedItem} from '../../mocks';
+import loadIssues from '../../../../src/main/resources/META-INF/resources/js/utils/loadIssues';
+import {layoutReportsIssues, pageURLs} from '../../mocks';
 
 jest.mock('frontend-js-web', () => ({
 	...jest.requireActual('frontend-js-web'),
 	sub: jest.fn((langKey, arg) => langKey.replace('x', arg)),
 }));
+
+jest.mock(
+	'../../../../src/main/resources/META-INF/resources/js/utils/loadIssues',
+	() => jest.fn(() => () => {})
+);
 
 const getLayoutReportsComponent = ({
 	error = null,
@@ -41,13 +48,14 @@ const getLayoutReportsComponent = ({
 				selectedItem,
 			}}
 		>
-			<LayoutReports eventTriggered={true} />
+			<LayoutReports />
 		</StoreContextProvider>
 	);
 };
 
 const languageSelectorIsInTheDocument = ({fn, useNot = false}) => {
 	['Home', 'en-US', 'http://localhost:8080'].forEach((str) => {
+
 		// eslint-disable-next-line @liferay/expect-assert
 		const expected = useNot ? expect(fn(str)).not : expect(fn(str));
 
@@ -102,24 +110,12 @@ describe('LayoutReports renders proper component', () => {
 		languageSelectorIsInTheDocument({fn: queryByText, useNot: true});
 	});
 
-	it('Renders issue detail if available', () => {
-		const {getByText} = render(
-			getLayoutReportsComponent({
-				selectedItem,
-			})
-		);
-
-		expect(getByText(selectedItem.tips)).toBeInTheDocument();
-
-		languageSelectorIsInTheDocument({fn: getByText});
-	});
-
 	it('Renders issues list if available', () => {
-		const {getByRole, getByText} = render(
+		const {getByText} = render(
 			getLayoutReportsComponent({layoutReportsIssues})
 		);
 
-		const alert = getByRole('alert');
+		const alert = document.querySelector('.alert');
 
 		expect(alert).toBeInTheDocument();
 		expect(
@@ -135,5 +131,51 @@ describe('LayoutReports renders proper component', () => {
 		const button = getByText('en-US').parentElement;
 
 		expect(button.disabled).toBe(true);
+	});
+
+	it('shows an alert with last load date and a button to reload when there is cached data', () => {
+		render(getLayoutReportsComponent({layoutReportsIssues}));
+
+		expect(
+			screen.getByText('showing-data-from-July 5, 2021 12:09 PM')
+		).toBeInTheDocument();
+
+		expect(screen.getByText('relaunch-to-update-data')).toBeInTheDocument();
+	});
+
+	it('calls loadIssues when clicking relaunch button', () => {
+		render(getLayoutReportsComponent({layoutReportsIssues}));
+
+		const button = screen.getByText('relaunch-to-update-data');
+
+		userEvent.click(button);
+
+		expect(loadIssues).toBeCalled();
+	});
+
+	it('does not render relaunch button if it is private page', () => {
+		render(
+			getLayoutReportsComponent({
+				layoutReportsIssues,
+				privateLayout: true,
+			})
+		);
+
+		expect(
+			screen.queryByText('relaunch-to-update-data')
+		).not.toBeInTheDocument();
+	});
+
+	it('does not render relaunch button if key is not configured', () => {
+		render(
+			getLayoutReportsComponent({
+				layoutReportsIssues,
+				validConnection: false,
+			})
+		);
+
+		expect(
+			screen.queryByText('relaunch-to-update-data')
+		).not.toBeInTheDocument();
 	});
 });

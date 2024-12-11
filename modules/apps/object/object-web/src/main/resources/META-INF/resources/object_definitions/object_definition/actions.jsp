@@ -8,24 +8,31 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String backURL = ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL()));
-
 ObjectDefinition objectDefinition = (ObjectDefinition)request.getAttribute(ObjectWebKeys.OBJECT_DEFINITION);
 
 ObjectDefinitionsActionsDisplayContext objectDefinitionsActionsDisplayContext = (ObjectDefinitionsActionsDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 portletDisplay.setShowBackIcon(true);
-portletDisplay.setURLBack(backURL);
+portletDisplay.setURLBack(
+	ParamUtil.getString(
+		request, "backURL",
+		URLBuilder.create(
+			String.valueOf(renderResponse.createRenderURL())
+		).setParameter(
+			"objectFolderName", objectDefinitionsActionsDisplayContext.getObjectFolderName()
+		).build()));
 
 renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 %>
 
 <div>
 	<react:component
-		module="js/components/ObjectAction/Actions"
+		module="{Actions} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"apiURL", objectDefinitionsActionsDisplayContext.getAPIURL()
+			).put(
+				"backURL", portletDisplay.getURLBack()
 			).put(
 				"creationMenu", objectDefinitionsActionsDisplayContext.getCreationMenu()
 			).put(
@@ -47,7 +54,7 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 
 <div>
 	<react:component
-		module="js/components/ExpressionBuilderModal"
+		module="{ExpressionBuilderModal} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"sidebarElements", objectDefinitionsActionsDisplayContext.getObjectActionCodeEditorElements()
@@ -58,6 +65,6 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 
 <div>
 	<react:component
-		module="js/components/ModalAddColumns"
+		module="{ModalSelectObjectFields} from object-web"
 	/>
 </div>

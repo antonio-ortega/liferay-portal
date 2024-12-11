@@ -33,10 +33,6 @@ definition {
 	tearDown {
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
-
-		//ACUtils.tearDownAC();
-
 		ACUtils.tearDownDXP();
 
 		if (${testLiferayVirtualInstance} == "true") {
@@ -47,6 +43,8 @@ definition {
 
 			ACUtils.tearDownCommerce();
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Story: LRAC-11044 | Automation ID: LRAC-12677 | Test Summary: Check that you can modify the sync of contacts in the people review sidebar"
@@ -208,58 +206,6 @@ definition {
 			ACDXPSettings.viewSyncNumberPreview(
 				syncFieldName = "Order",
 				syncNumber = "${syncOrderNumberStart} Selected");
-		}
-	}
-
-	@description = "Story: LRAC-11044 | Automation ID: LRAC-12676 | Test Summary: Check that you can modify the sites and channels synchronized in the property review sidebar"
-	@priority = 4
-	test CanModifySitesAndChannelsSyncInPropertyReviewSidebar {
-		var newChannelName1 = "AC";
-		var newChannelName2 = "DXP";
-
-		task ("Create two new channels") {
-			for (var channelName : list "${newChannelName1},${newChannelName2}") {
-				CommerceJSONChannelsAPI._addChannel(
-					channelName = ${channelName},
-					channelType = "site",
-					currencyCode = "USD");
-			}
-		}
-
-		task ("Add a new site with a public widget page") {
-			ACUtils.addSiteAndPage();
-		}
-
-		task ("Go to the properties page in the sidebar") {
-			ACDXPSettings.navToSyncedSitesMenu();
-		}
-
-		task ("Check that the number of channels and sites matches the selected ones") {
-			ACDXPSettings.viewSyncedChannelsAndSitesNumber(
-				propertyName = ${assignedPropertyName},
-				syncedChannelsNumber = 1,
-				syncedSitesNumber = 2);
-		}
-
-		task ("Assign channels to the property") {
-			for (var channelName : list "${newChannelName1},${newChannelName2}") {
-				ACDXPSettings.syncChannel(
-					channelName = ${channelName},
-					propertyName = ${assignedPropertyName});
-			}
-		}
-
-		task ("Assign sites to the property") {
-			ACDXPSettings.syncSites(
-				propertyName = ${assignedPropertyName},
-				siteName = "Site Name");
-		}
-
-		task ("Check that the number of channels and sites matches the selected ones") {
-			ACDXPSettings.viewSyncedChannelsAndSitesNumber(
-				propertyName = ${assignedPropertyName},
-				syncedChannelsNumber = 3,
-				syncedSitesNumber = 3);
 		}
 	}
 

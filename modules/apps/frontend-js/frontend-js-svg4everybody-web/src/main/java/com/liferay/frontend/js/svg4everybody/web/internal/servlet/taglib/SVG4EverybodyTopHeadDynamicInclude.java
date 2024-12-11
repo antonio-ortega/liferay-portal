@@ -11,6 +11,7 @@ import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.ThemeSpritemapCET;
 import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -27,6 +28,8 @@ import com.liferay.portal.url.builder.BundleScriptAbsolutePortalURLBuilder;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -100,7 +103,11 @@ public class SVG4EverybodyTopHeadDynamicInclude extends BaseDynamicInclude {
 				httpServletRequest);
 
 		for (String jsFileName : _JS_FILE_NAMES) {
-			printWriter.print("<script data-senna-track=\"permanent\" src=\"");
+			printWriter.print("<script");
+			printWriter.write(
+				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+					httpServletRequest));
+			printWriter.print(" data-senna-track=\"permanent\" src=\"");
 
 			BundleScriptAbsolutePortalURLBuilder
 				bundleScriptAbsolutePortalURLBuilder =
@@ -129,31 +136,42 @@ public class SVG4EverybodyTopHeadDynamicInclude extends BaseDynamicInclude {
 	}
 
 	private CET _getCET(
-		long classNameId, long classPK, long companyId, String type) {
+		long classNameId, long classPK, long companyId,
+		List<ClientExtensionEntryRel> clientExtensionEntryRels) {
 
-		ClientExtensionEntryRel clientExtensionEntryRel =
-			_clientExtensionEntryRelLocalService.fetchClientExtensionEntryRel(
-				classNameId, classPK, type);
+		for (ClientExtensionEntryRel clientExtensionEntryRel :
+				clientExtensionEntryRels) {
 
-		if (clientExtensionEntryRel == null) {
-			return null;
+			if ((clientExtensionEntryRel.getClassNameId() == classNameId) &&
+				(clientExtensionEntryRel.getClassPK() == classPK)) {
+
+				return _cetManager.getCET(
+					companyId,
+					clientExtensionEntryRel.getCETExternalReferenceCode());
+			}
 		}
 
-		return _cetManager.getCET(
-			companyId, clientExtensionEntryRel.getCETExternalReferenceCode());
+		return null;
 	}
 
 	private ThemeSpritemapCET _getThemeSpritemapCET(Layout layout) {
+		List<ClientExtensionEntryRel> clientExtensionEntryRels =
+			_clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
+				ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP);
+
+		if (clientExtensionEntryRels.isEmpty()) {
+			return null;
+		}
+
 		CET cet = _getCET(
 			_portal.getClassNameId(Layout.class), layout.getPlid(),
-			layout.getCompanyId(),
-			ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP);
+			layout.getCompanyId(), clientExtensionEntryRels);
 
 		if (cet == null) {
 			cet = _getCET(
 				_portal.getClassNameId(Layout.class),
 				layout.getMasterLayoutPlid(), layout.getCompanyId(),
-				ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP);
+				clientExtensionEntryRels);
 		}
 
 		if (cet == null) {
@@ -162,7 +180,7 @@ public class SVG4EverybodyTopHeadDynamicInclude extends BaseDynamicInclude {
 			cet = _getCET(
 				_portal.getClassNameId(LayoutSet.class),
 				layoutSet.getLayoutSetId(), layout.getCompanyId(),
-				ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP);
+				clientExtensionEntryRels);
 		}
 
 		if (cet != null) {

@@ -5,6 +5,8 @@
 
 package com.liferay.cookies.internal.manager;
 
+import com.google.common.net.InternetDomainName;
+
 import com.liferay.cookies.configuration.CookiesPreferenceHandlingConfiguration;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
@@ -153,6 +155,8 @@ public class CookiesManagerImpl implements CookiesManager {
 			}
 		}
 
+		cookie.setPath(_getContextPath(httpServletRequest));
+
 		// LEP-5175
 
 		cookie.setSecure(secure);
@@ -209,11 +213,11 @@ public class CookiesManagerImpl implements CookiesManager {
 			CookiesConstants.NAME_COOKIE_SUPPORT, "true");
 
 		cookieSupportCookie.setMaxAge(CookiesConstants.MAX_AGE);
-		cookieSupportCookie.setPath(StringPool.SLASH);
 
 		return addCookie(
-			CookiesConstants.CONSENT_TYPE_NECESSARY, cookieSupportCookie, null,
-			httpServletResponse, _portal.isSecure(httpServletRequest));
+			CookiesConstants.CONSENT_TYPE_NECESSARY, cookieSupportCookie,
+			httpServletRequest, httpServletResponse,
+			_portal.isSecure(httpServletRequest));
 	}
 
 	@Override
@@ -240,7 +244,7 @@ public class CookiesManagerImpl implements CookiesManager {
 			}
 
 			cookie.setMaxAge(0);
-			cookie.setPath(StringPool.SLASH);
+			cookie.setPath(_getContextPath(httpServletRequest));
 			cookie.setValue(StringPool.BLANK);
 
 			httpServletResponse.addCookie(cookie);
@@ -326,30 +330,29 @@ public class CookiesManagerImpl implements CookiesManager {
 			return host;
 		}
 
-		int x = host.lastIndexOf(CharPool.PERIOD);
+		InternetDomainName internetDomainName = InternetDomainName.from(host);
+
+		if (internetDomainName.isPublicSuffix()) {
+			return null;
+		}
+
+		if (internetDomainName.isTopPrivateDomain()) {
+			return internetDomainName.toString();
+		}
+
+		int x = host.indexOf(CharPool.PERIOD);
 
 		if (x <= 0) {
 			return null;
 		}
 
-		int y = host.lastIndexOf(CharPool.PERIOD, x - 1);
+		int y = host.indexOf(CharPool.PERIOD, x + 1);
 
 		if (y <= 0) {
-			return StringPool.PERIOD + host;
+			return host;
 		}
 
-		int z = host.lastIndexOf(CharPool.PERIOD, y - 1);
-
-		String domain = null;
-
-		if (z <= 0) {
-			domain = host.substring(y);
-		}
-		else {
-			domain = host.substring(z);
-		}
-
-		return domain;
+		return host.substring(x + 1);
 	}
 
 	@Override
@@ -486,6 +489,19 @@ public class CookiesManagerImpl implements CookiesManager {
 		}
 
 		return false;
+	}
+
+	private String _getContextPath(HttpServletRequest httpServletRequest) {
+		if (httpServletRequest != null) {
+			String contextPath = _portal.getPathContext(
+				_portal.getOriginalServletRequest(httpServletRequest));
+
+			if (Validator.isNotNull(contextPath)) {
+				return contextPath;
+			}
+		}
+
+		return StringPool.SLASH;
 	}
 
 	private Map<String, Cookie> _getCookiesMap(

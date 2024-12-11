@@ -6,6 +6,8 @@
 package com.liferay.portal.servlet;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -101,16 +103,23 @@ public class NetvibesServlet extends HttpServlet {
 			PropsValues.WIDGET_SERVLET_MAPPING);
 		widgetURL = HtmlUtil.escapeJS(widgetURL);
 
-		StringBundler sb = new StringBundler(26);
+		StringBundler sb = new StringBundler(30);
 
 		sb.append("<!DOCTYPE html>");
 		sb.append("<html>");
 		sb.append("<head>");
 		sb.append("<link href=\"");
 		sb.append(_NETVIBES_CSS);
-		sb.append("\" rel=\"stylesheet\" type=\"text/css\" ");
+		sb.append(StringPool.QUOTE);
+		sb.append(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
+		sb.append(" rel=\"stylesheet\" type=\"text/css\" ");
 		sb.append("/>");
-		sb.append("<script src=\"");
+		sb.append("<script");
+		sb.append(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(null));
+		sb.append(" src=\"");
 		sb.append(_NETVIBES_JS);
 		sb.append("\" ");
 		sb.append("type=\"text/javascript\"></script>");

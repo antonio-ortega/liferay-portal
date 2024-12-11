@@ -1,8 +1,10 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
 	property portal.acceptance = "true";
-	property portal.release = "true";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Wiki";
 
@@ -10,6 +12,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 
 		HeadlessSite.addSite(siteName = "Site Name");
 
@@ -83,7 +87,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-73992. It asserts removed wiki attachment file can not be viewed after publishing."
-	@priority = 5
+	@priority = 4
 	@refactordone
 	test CannotViewRemovedAttachmentAfterPublishing {
 		JSONLayout.addWidgetToPublicLayout(
@@ -292,7 +296,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-73471. It asserts the renamed child page can be viewed after publishing."
-	@priority = 5
+	@priority = 3
 	@refactordone
 	test CanViewRenamedChildPageAfterPublishing {
 		JSONWiki.addWikiPage(

@@ -85,7 +85,7 @@ public class JSPDefineObjectsCheck extends BaseFileCheck {
 			}
 
 			addMessage(
-				fileName, "Use '" + tag + ":defineObjects' or rename var",
+				fileName, "Use \"" + tag + ":defineObjects\" or rename var",
 				getLineNumber(content, x));
 		}
 	}
@@ -246,6 +246,6 @@ public class JSPDefineObjectsCheck extends BaseFileCheck {
 	private static final Pattern _defineObjectsPattern = Pattern.compile(
 		"\n\t*(<.*:defineObjects />)(\n|$)");
 	private static final Pattern _missingEmptyLineBetweenDefineOjbectsPattern =
-		Pattern.compile("<.*:defineObjects />\n<.*:defineObjects />\n");
+		Pattern.compile("<.*:defineObjects />\n<.*:defineObjects />(\n|$)");
 
 }

@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -171,9 +172,26 @@ public interface KBArticleLocalService
 	 * @throws PortalException if a kb article with the primary key could not be found
 	 */
 	@Indexable(type = IndexableType.DELETE)
+	@SystemEvent(
+		action = SystemEventConstants.ACTION_SKIP,
+		type = SystemEventConstants.TYPE_DELETE
+	)
 	public KBArticle deleteKBArticle(long kbArticleId) throws PortalException;
 
+	@SystemEvent(
+		action = SystemEventConstants.ACTION_SKIP,
+		type = SystemEventConstants.TYPE_DELETE
+	)
+	public KBArticle deleteKBArticle(
+			long userId, long resourcePrimKey, int version)
+		throws PortalException;
+
 	public void deleteKBArticles(long groupId, long parentResourcePrimKey)
+		throws PortalException;
+
+	public void deleteKBArticles(
+			long groupId, long parentResourcePrimKey,
+			boolean includeTrashedEntries)
 		throws PortalException;
 
 	public void deleteKBArticles(long[] resourcePrimKeys)
@@ -308,6 +326,9 @@ public interface KBArticleLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public KBArticle fetchLatestKBArticleByUrlTitle(
 		long groupId, long kbFolderId, String urlTitle, int status);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public PersistedModel fetchPersistedModel(Serializable primaryKeyObj);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
@@ -459,7 +480,15 @@ public interface KBArticleLocalService
 		long groupId, long kbFolderId, int status);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public KBArticle getLatestKBArticle(long resourcePrimKey)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public KBArticle getLatestKBArticle(long resourcePrimKey, int status)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public KBArticle getLatestKBArticle(long resourcePrimKey, int[] statuses)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -512,13 +541,44 @@ public interface KBArticleLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public boolean hasKBArticleLock(long userId, long resourcePrimKey);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public void incrementViewCount(
 			long userId, long resourcePrimKey, int increment)
+		throws PortalException;
+
+	public Lock lockKBArticle(long userId, long resourcePrimKey)
+		throws PortalException;
+
+	public void moveDependentKBArticlesToTrash(
+			long parentResourcePrimKey, long trashEntryId)
+		throws PortalException;
+
+	public void moveDependentKBArticleToTrash(
+			KBArticle kbArticle, long trashEntryId)
 		throws PortalException;
 
 	public void moveKBArticle(
 			long userId, long resourcePrimKey, long parentResourceClassNameId,
 			long parentResourcePrimKey, double priority)
+		throws PortalException;
+
+	public void moveKBArticleFromTrash(
+			long userId, long resourcePrimKey, long parentResourceClassNameId,
+			long parentResourcePrimKey)
+		throws PortalException;
+
+	public KBArticle moveKBArticleToTrash(long userId, long resourcePrimKey)
+		throws PortalException;
+
+	public void restoreDependentKBArticleFromTrash(KBArticle kbArticle)
+		throws PortalException;
+
+	public void restoreDependentKBArticlesFromTrash(long parentResourcePrimKey)
+		throws PortalException;
+
+	public void restoreKBArticleFromTrash(long userId, long resourcePrimKey)
 		throws PortalException;
 
 	public KBArticle revertKBArticle(
@@ -539,10 +599,23 @@ public interface KBArticleLocalService
 			long userId, long groupId, long resourcePrimKey)
 		throws PortalException;
 
+	public void unlockKBArticle(long userId, long resourcePrimKey);
+
+	public void unlockKBArticle(
+		long userId, long resourcePrimKey, boolean force);
+
 	public void unsubscribeGroupKBArticles(long userId, long groupId)
 		throws PortalException;
 
 	public void unsubscribeKBArticle(long userId, long resourcePrimKey)
+		throws PortalException;
+
+	public KBArticle updateAndUnlockKBArticle(
+			long userId, long resourcePrimKey, String title, String content,
+			String description, String[] sections, String sourceURL,
+			Date displayDate, Date expirationDate, Date reviewDate,
+			String[] selectedFileNames, long[] removeFileEntryIds,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**

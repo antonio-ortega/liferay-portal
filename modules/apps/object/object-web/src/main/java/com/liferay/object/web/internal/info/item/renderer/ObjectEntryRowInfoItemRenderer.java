@@ -10,6 +10,7 @@ import com.liferay.info.item.renderer.InfoItemRenderer;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectWebKeys;
+import com.liferay.object.info.item.util.ObjectEntryInfoItemUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -132,7 +133,7 @@ public class ObjectEntryRowInfoItemRenderer
 					false, null, null, null, null, themeDisplay.getLocale(),
 					null, themeDisplay.getUser()),
 				externalReferenceCode, _objectDefinition,
-				ObjectEntryUtil.getScopeKey(
+				ObjectEntryInfoItemUtil.getScopeKey(
 					themeDisplay.getScopeGroupId(), _objectDefinition,
 					_objectScopeProviderRegistry));
 		}
@@ -153,7 +154,7 @@ public class ObjectEntryRowInfoItemRenderer
 
 			Object value = ObjectEntryUtil.getValue(
 				themeDisplay.getLocale(), objectField,
-				themeDisplay.getTimeZone(), objectEntry.getProperties());
+				objectEntry.getProperties());
 
 			if (value == null) {
 				values.put(objectField.getName(), StringPool.BLANK);

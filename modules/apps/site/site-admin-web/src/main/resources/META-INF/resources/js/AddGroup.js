@@ -6,18 +6,20 @@
 import {fetch, getOpener, openToast} from 'frontend-js-web';
 
 export default function ({namespace}) {
+	const addGroupForm = document.querySelector('.add-group-form');
+
+	addGroupForm.classList.remove('d-none');
+
 	const loading = document.querySelector('.add-group-loading');
 	const container = document.querySelector('.add-group-container');
 	const content = document.querySelector(
 		'.add-group-form .add-group-content'
 	);
-	const footer = document.querySelector('.add-group-form .sheet-footer');
+	const footer = document.querySelector('.add-group-form .modal-footer');
 	const form = document.getElementById(`${namespace}fm`);
 	const formInput = document.getElementById(`${namespace}name`);
 
-	setTimeout(() => {
-		formInput.focus();
-	}, 100);
+	formInput.focus();
 
 	form.addEventListener('submit', (event) => {
 		event.preventDefault();

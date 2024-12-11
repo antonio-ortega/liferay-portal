@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -54,14 +55,17 @@ public class CommerceVirtualOrderItemLocalServiceUtil {
 	}
 
 	public static CommerceVirtualOrderItem addCommerceVirtualOrderItem(
-			long commerceOrderItemId, long fileEntryId, String url,
-			int activationStatus, long duration, int usages, int maxUsages,
+			long commerceOrderItemId,
+			List
+				<com.liferay.commerce.product.type.virtual.model.
+					CPDVirtualSettingFileEntry> cpdVirtualSettingFileEntries,
+			int activationStatus, long duration, int maxUsages,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addCommerceVirtualOrderItem(
-			commerceOrderItemId, fileEntryId, url, activationStatus, duration,
-			usages, maxUsages, serviceContext);
+			commerceOrderItemId, cpdVirtualSettingFileEntries, activationStatus,
+			duration, maxUsages, serviceContext);
 	}
 
 	public static CommerceVirtualOrderItem addCommerceVirtualOrderItem(
@@ -397,10 +401,13 @@ public class CommerceVirtualOrderItemLocalServiceUtil {
 		return getService().getExportActionableDynamicQuery(portletDataContext);
 	}
 
-	public static java.io.File getFile(long commerceVirtualOrderItemId)
+	public static java.io.File getFile(
+			long commerceVirtualOrderItemId,
+			long commerceVirtualOrderItemFileEntryId)
 		throws Exception {
 
-		return getService().getFile(commerceVirtualOrderItemId);
+		return getService().getFile(
+			commerceVirtualOrderItemId, commerceVirtualOrderItemFileEntryId);
 	}
 
 	public static
@@ -428,15 +435,6 @@ public class CommerceVirtualOrderItemLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
-	public static CommerceVirtualOrderItem
-			incrementCommerceVirtualOrderItemUsages(
-				long commerceVirtualOrderItemId)
-		throws PortalException {
-
-		return getService().incrementCommerceVirtualOrderItemUsages(
-			commerceVirtualOrderItemId);
-	}
-
 	public static void setActive(
 			long commerceVirtualOrderItemId, boolean active)
 		throws PortalException {
@@ -462,14 +460,13 @@ public class CommerceVirtualOrderItemLocalServiceUtil {
 	}
 
 	public static CommerceVirtualOrderItem updateCommerceVirtualOrderItem(
-			long commerceVirtualOrderItemId, long fileEntryId, String url,
-			int activationStatus, long duration, int usages, int maxUsages,
-			boolean active)
+			long commerceVirtualOrderItemId, int activationStatus,
+			long duration, int maxUsages, boolean active)
 		throws PortalException {
 
 		return getService().updateCommerceVirtualOrderItem(
-			commerceVirtualOrderItemId, fileEntryId, url, activationStatus,
-			duration, usages, maxUsages, active);
+			commerceVirtualOrderItemId, activationStatus, duration, maxUsages,
+			active);
 	}
 
 	public static CommerceVirtualOrderItem updateCommerceVirtualOrderItemDates(
@@ -481,15 +478,12 @@ public class CommerceVirtualOrderItemLocalServiceUtil {
 	}
 
 	public static CommerceVirtualOrderItemLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CommerceVirtualOrderItemLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile CommerceVirtualOrderItemLocalService _service;
+	private static final Snapshot<CommerceVirtualOrderItemLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceVirtualOrderItemLocalServiceUtil.class,
+			CommerceVirtualOrderItemLocalService.class);
 
 }

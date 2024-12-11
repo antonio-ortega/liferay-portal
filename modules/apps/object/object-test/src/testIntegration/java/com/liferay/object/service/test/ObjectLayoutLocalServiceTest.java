@@ -31,7 +31,7 @@ import com.liferay.object.service.persistence.ObjectLayoutBoxPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutColumnPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutRowPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutTabPersistence;
-import com.liferay.object.service.test.util.ObjectDefinitionTestUtil;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -72,8 +72,8 @@ public class ObjectLayoutLocalServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			_objectDefinitionLocalService);
+		_objectDefinition =
+			ObjectDefinitionTestUtil.addCustomObjectDefinition();
 	}
 
 	@Test
@@ -98,12 +98,12 @@ public class ObjectLayoutLocalServiceTest {
 				"Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_SITE, null, 1,
-				_objectDefinitionLocalService,
-				Arrays.asList(
+				Collections.singletonList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING,
-						RandomTestUtil.randomString(), StringUtil.randomId())));
+						RandomTestUtil.randomString(),
+						"x" + RandomTestUtil.randomString())));
 
 		AssertUtils.assertFailure(
 			ObjectDefinitionModifiableException.class,
@@ -117,8 +117,8 @@ public class ObjectLayoutLocalServiceTest {
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_objectDefinition.getObjectDefinitionId());
 
-		_objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			_objectDefinitionLocalService);
+		_objectDefinition =
+			ObjectDefinitionTestUtil.addCustomObjectDefinition();
 
 		_objectDefinition.setStorageType(RandomTestUtil.randomString());
 
@@ -153,8 +153,8 @@ public class ObjectLayoutLocalServiceTest {
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_objectDefinition.getObjectDefinitionId());
 
-		_objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			_objectDefinitionLocalService);
+		_objectDefinition =
+			ObjectDefinitionTestUtil.addCustomObjectDefinition();
 
 		_objectDefinition.setEnableCategorization(false);
 
@@ -170,12 +170,12 @@ public class ObjectLayoutLocalServiceTest {
 				objectLayoutTab.setNameMap(
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()));
+				objectLayoutTab.setPriority(0);
 				objectLayoutTab.setObjectLayoutBoxes(
 					Arrays.asList(
 						_addObjectLayoutBox(),
 						_addObjectLayoutBox(
 							ObjectLayoutBoxConstants.TYPE_CATEGORIZATION)));
-				objectLayoutTab.setPriority(0);
 
 				_objectLayoutLocalService.addObjectLayout(
 					TestPropsValues.getUserId(),
@@ -188,8 +188,8 @@ public class ObjectLayoutLocalServiceTest {
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_objectDefinition.getObjectDefinitionId());
 
-		_objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			_objectDefinitionLocalService);
+		_objectDefinition =
+			ObjectDefinitionTestUtil.addCustomObjectDefinition();
 
 		AssertUtils.assertFailure(
 			ObjectLayoutBoxCategorizationTypeException.class,
@@ -223,8 +223,8 @@ public class ObjectLayoutLocalServiceTest {
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_objectDefinition.getObjectDefinitionId());
 
-		_objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			_objectDefinitionLocalService);
+		_objectDefinition =
+			ObjectDefinitionTestUtil.addCustomObjectDefinition();
 
 		AssertUtils.assertFailure(
 			ObjectLayoutBoxCategorizationTypeException.class,
@@ -284,8 +284,8 @@ public class ObjectLayoutLocalServiceTest {
 		_objectDefinitionLocalService.deleteObjectDefinition(
 			_objectDefinition.getObjectDefinitionId());
 
-		_objectDefinition = ObjectDefinitionTestUtil.addCustomObjectDefinition(
-			_objectDefinitionLocalService);
+		_objectDefinition =
+			ObjectDefinitionTestUtil.addCustomObjectDefinition();
 
 		AssertUtils.assertFailure(
 			ObjectLayoutBoxCategorizationTypeException.class,
@@ -358,17 +358,17 @@ public class ObjectLayoutLocalServiceTest {
 
 		_objectDefinition =
 			ObjectDefinitionTestUtil.addModifiableSystemObjectDefinition(
-				TestPropsValues.getUserId(), null,
+				TestPropsValues.getUserId(), null, false,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"Test", null, null,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				ObjectDefinitionConstants.SCOPE_SITE, null, 1,
-				_objectDefinitionLocalService,
-				Arrays.asList(
+				Collections.singletonList(
 					ObjectFieldUtil.createObjectField(
 						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
 						ObjectFieldConstants.DB_TYPE_STRING,
-						RandomTestUtil.randomString(), StringUtil.randomId())));
+						RandomTestUtil.randomString(),
+						"x" + RandomTestUtil.randomString())));
 
 		objectLayout = _addObjectLayout();
 
@@ -483,7 +483,7 @@ public class ObjectLayoutLocalServiceTest {
 
 		_objectLayoutLocalService.updateObjectLayout(
 			objectLayout.getObjectLayoutId(), false, objectLayout.getNameMap(),
-			Arrays.asList(objectLayoutTab1));
+			Collections.singletonList(objectLayoutTab1));
 
 		screenNavigationCategories =
 			ScreenNavigationRegistryUtil.getScreenNavigationCategories(
@@ -493,22 +493,36 @@ public class ObjectLayoutLocalServiceTest {
 		Assert.assertTrue(screenNavigationCategories.isEmpty());
 	}
 
-	private long _addObjectField() throws Exception {
-		String name = RandomTestUtil.randomString();
+	private long _addObjectField(boolean system) throws Exception {
+		ObjectField objectField = null;
 
-		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
-			new TextObjectFieldBuilder(
-			).userId(
-				TestPropsValues.getUserId()
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(name)
-			).name(
-				StringUtil.randomId()
-			).objectDefinitionId(
-				_objectDefinition.getObjectDefinitionId()
-			).required(
-				true
-			).build());
+		if (system) {
+			objectField = _objectFieldLocalService.addSystemObjectField(
+				null, TestPropsValues.getUserId(), 0,
+				_objectDefinition.getObjectDefinitionId(),
+				ObjectFieldConstants.BUSINESS_TYPE_TEXT, null, null,
+				ObjectFieldConstants.DB_TYPE_STRING, false, false, null,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				false, "x" + RandomTestUtil.randomString(),
+				ObjectFieldConstants.READ_ONLY_FALSE, null, false, false,
+				Collections.emptyList());
+		}
+		else {
+			objectField = ObjectFieldUtil.addCustomObjectField(
+				new TextObjectFieldBuilder(
+				).userId(
+					TestPropsValues.getUserId()
+				).labelMap(
+					LocalizedMapUtil.getLocalizedMap(
+						RandomTestUtil.randomString())
+				).name(
+					"x" + RandomTestUtil.randomString()
+				).objectDefinitionId(
+					_objectDefinition.getObjectDefinitionId()
+				).required(
+					true
+				).build());
+		}
 
 		return objectField.getObjectFieldId();
 	}
@@ -544,11 +558,13 @@ public class ObjectLayoutLocalServiceTest {
 		return objectLayoutBox;
 	}
 
-	private ObjectLayoutColumn _addObjectLayoutColumn() throws Exception {
+	private ObjectLayoutColumn _addObjectLayoutColumn(boolean system)
+		throws Exception {
+
 		ObjectLayoutColumn objectLayoutColumn =
 			_objectLayoutColumnPersistence.create(0);
 
-		objectLayoutColumn.setObjectFieldId(_addObjectField());
+		objectLayoutColumn.setObjectFieldId(_addObjectField(system));
 		objectLayoutColumn.setPriority(0);
 
 		return objectLayoutColumn;
@@ -560,8 +576,8 @@ public class ObjectLayoutLocalServiceTest {
 		objectLayoutRow.setPriority(0);
 		objectLayoutRow.setObjectLayoutColumns(
 			Arrays.asList(
-				_addObjectLayoutColumn(), _addObjectLayoutColumn(),
-				_addObjectLayoutColumn(), _addObjectLayoutColumn()));
+				_addObjectLayoutColumn(false), _addObjectLayoutColumn(false),
+				_addObjectLayoutColumn(true), _addObjectLayoutColumn(true)));
 
 		return objectLayoutRow;
 	}

@@ -7,6 +7,7 @@ package com.liferay.commerce.product.type.virtual.order.service;
 
 import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 /**
  * Provides the remote service utility for CommerceVirtualOrderItem. This utility wraps
@@ -44,10 +45,13 @@ public class CommerceVirtualOrderItemServiceUtil {
 			commerceOrderItemId);
 	}
 
-	public static java.io.File getFile(long commerceVirtualOrderItemId)
+	public static java.io.File getFile(
+			long commerceVirtualOrderItemId,
+			long commerceVirtualOrderItemFileEntryId)
 		throws Exception {
 
-		return getService().getFile(commerceVirtualOrderItemId);
+		return getService().getFile(
+			commerceVirtualOrderItemId, commerceVirtualOrderItemFileEntryId);
 	}
 
 	/**
@@ -60,24 +64,22 @@ public class CommerceVirtualOrderItemServiceUtil {
 	}
 
 	public static CommerceVirtualOrderItem updateCommerceVirtualOrderItem(
-			long commerceVirtualOrderItemId, long fileEntryId, String url,
-			int activationStatus, long duration, int usages, int maxUsages,
-			boolean active)
+			long commerceVirtualOrderItemId, int activationStatus,
+			long duration, int maxUsages, boolean active)
 		throws PortalException {
 
 		return getService().updateCommerceVirtualOrderItem(
-			commerceVirtualOrderItemId, fileEntryId, url, activationStatus,
-			duration, usages, maxUsages, active);
+			commerceVirtualOrderItemId, activationStatus, duration, maxUsages,
+			active);
 	}
 
 	public static CommerceVirtualOrderItemService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceVirtualOrderItemService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceVirtualOrderItemService _service;
+	private static final Snapshot<CommerceVirtualOrderItemService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceVirtualOrderItemServiceUtil.class,
+			CommerceVirtualOrderItemService.class);
 
 }

@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.util.Portal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +40,7 @@ public class CTStoreCTEventListener implements CTEventListener {
 	@Override
 	public void onAfterPublish(long ctCollectionId) throws CTEventException {
 		List<CTEntry> ctEntries = _ctEntryLocalService.getCTEntries(
-			ctCollectionId, _ctsContentClassNameId);
+			ctCollectionId, _portal.getClassNameId(CTSContent.class.getName()));
 
 		if (ctEntries.isEmpty()) {
 			return;
@@ -77,7 +77,7 @@ public class CTStoreCTEventListener implements CTEventListener {
 							ctEntry.getModelClassPK());
 
 					if (ctsContent != null) {
-						Store store = _storeServiceTrackerMap.getService(
+						Store store = _serviceTrackerMap.getService(
 							ctsContent.getStoreType());
 
 						store.deleteFile(
@@ -106,7 +106,7 @@ public class CTStoreCTEventListener implements CTEventListener {
 						_ctsContentLocalService.getCTSContent(
 							ctEntry.getModelClassPK());
 
-					Store store = _storeServiceTrackerMap.getService(
+					Store store = _serviceTrackerMap.getService(
 						ctsContent.getStoreType());
 
 					store.addFile(
@@ -126,7 +126,8 @@ public class CTStoreCTEventListener implements CTEventListener {
 	public void onBeforeRemove(long ctCollectionId) throws CTEventException {
 		List<Long> ctsContentIds =
 			_ctEntryLocalService.getExclusiveModelClassPKs(
-				ctCollectionId, _ctsContentClassNameId);
+				ctCollectionId,
+				_portal.getClassNameId(CTSContent.class.getName()));
 
 		if (ctsContentIds.isEmpty()) {
 			return;
@@ -148,10 +149,7 @@ public class CTStoreCTEventListener implements CTEventListener {
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_ctsContentClassNameId = _classNameLocalService.getClassNameId(
-			CTSContent.class);
-
-		_storeServiceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
 			bundleContext, Store.class, "store.type");
 	}
 
@@ -159,16 +157,14 @@ public class CTStoreCTEventListener implements CTEventListener {
 		CTStoreCTEventListener.class);
 
 	@Reference
-	private ClassNameLocalService _classNameLocalService;
-
-	@Reference
 	private CTEntryLocalService _ctEntryLocalService;
-
-	private long _ctsContentClassNameId;
 
 	@Reference
 	private CTSContentLocalService _ctsContentLocalService;
 
-	private ServiceTrackerMap<String, Store> _storeServiceTrackerMap;
+	@Reference
+	private Portal _portal;
+
+	private ServiceTrackerMap<String, Store> _serviceTrackerMap;
 
 }

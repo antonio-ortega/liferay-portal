@@ -6,6 +6,10 @@
 package com.liferay.fragment.entry.processor.internal.util.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
@@ -50,6 +54,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -93,6 +98,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 /**
  * @author Rubén Pulido
@@ -110,6 +116,12 @@ public class FragmentEntryProcessorHelperTest {
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
+
+		_layout = LayoutTestUtil.addTypePortletLayout(_group.getGroupId());
+
+		_themeDisplay = ContentLayoutTestUtil.getThemeDisplay(
+			_companyLocalService.getCompany(_group.getCompanyId()), _group,
+			_layout);
 	}
 
 	@Test
@@ -130,28 +142,6 @@ public class FragmentEntryProcessorHelperTest {
 					"classPK", journalArticle.getResourcePrimKey()
 				).put(
 					"fieldId", "AssetTag_tagNames"
-				),
-				LocaleUtil.SPAIN));
-	}
-
-	@Test
-	public void testGetFieldValueFromEmptyCollectionValue() throws Exception {
-		JournalArticle journalArticle = _addJournalArticle(
-			_addImageFileEntry(), "ImageFieldName",
-			RandomTestUtil.randomString());
-
-		Assert.assertEquals(
-			StringPool.BLANK,
-			_getFieldValue(
-				JSONUtil.put(
-					"className", JournalArticle.class.getName()
-				).put(
-					"classNameId",
-					_portal.getClassNameId(JournalArticle.class.getName())
-				).put(
-					"classPK", journalArticle.getResourcePrimKey()
-				).put(
-					"fieldId", "AssetCategory_categories"
 				),
 				LocaleUtil.SPAIN));
 	}
@@ -227,6 +217,7 @@ public class FragmentEntryProcessorHelperTest {
 	}
 
 	@Test
+	@TestInfo("LPS-162223")
 	public void testGetFieldValueFromStringValueDateDDMFormFieldType()
 		throws Exception {
 
@@ -294,40 +285,33 @@ public class FragmentEntryProcessorHelperTest {
 		DDMFormField ddmFormField = _createDDMFormField(
 			DDMFormFieldTypeConstants.LINK_TO_LAYOUT);
 
-		Layout layout = LayoutTestUtil.addTypePortletLayout(
-			_group.getGroupId());
-
 		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
 			_dataDefinitionResourceFactory, ddmFormField,
 			_ddmFormValuesToFieldsConverter,
 			JSONUtil.put(
-				"groupId", layout.getGroupId()
+				"groupId", _layout.getGroupId()
 			).put(
-				"id", layout.getUuid()
+				"id", _layout.getUuid()
 			).put(
-				"layoutId", layout.getLayoutId()
+				"layoutId", _layout.getLayoutId()
 			).put(
-				"name", layout.getName()
+				"name", _layout.getName()
 			).put(
-				"privateLayout", layout.isPrivateLayout()
+				"privateLayout", _layout.isPrivateLayout()
 			).put(
 				"returnType",
 				"com.liferay.item.selector.criteria.UUIDItemSelectorReturnType"
 			).put(
-				"title", layout.getTitle()
+				"title", _layout.getTitle()
 			).toString(),
 			_group.getGroupId(), _journalConverter);
 
-		ThemeDisplay themeDisplay = ContentLayoutTestUtil.getThemeDisplay(
-			_companyLocalService.getCompany(_group.getCompanyId()), _group,
-			layout);
-
 		try {
-			_pushServiceContext(layout, themeDisplay);
+			_pushServiceContext(_layout, _themeDisplay);
 
 			Assert.assertEquals(
 				_portal.getLayoutFriendlyURL(
-					layout, themeDisplay, LocaleUtil.SPAIN),
+					_layout, _themeDisplay, LocaleUtil.SPAIN),
 				_getFieldValue(
 					JSONUtil.put(
 						"className", JournalArticle.class.getName()
@@ -377,6 +361,33 @@ public class FragmentEntryProcessorHelperTest {
 	}
 
 	@Test
+	public void testGetFieldValueFromURLStringValue() throws Exception {
+		DDMFormField ddmFormField = _createDDMFormField(
+			DDMFormFieldTypeConstants.TEXT);
+		String fieldValue = "testurl.com?test=info&param=info2";
+
+		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter, fieldValue, _group.getGroupId(),
+			_journalConverter);
+
+		Assert.assertEquals(
+			fieldValue,
+			_getFieldValue(
+				JSONUtil.put(
+					"className", JournalArticle.class.getName()
+				).put(
+					"classNameId",
+					_portal.getClassNameId(JournalArticle.class.getName())
+				).put(
+					"classPK", journalArticle.getResourcePrimKey()
+				).put(
+					"fieldId", "DDMStructure_" + ddmFormField.getName()
+				),
+				LocaleUtil.SPAIN));
+	}
+
+	@Test
 	public void testGetFieldValueFromWebImage() throws Exception {
 		String fieldId = "ImageFieldName";
 
@@ -397,6 +408,23 @@ public class FragmentEntryProcessorHelperTest {
 			LocaleUtil.SPAIN);
 
 		Assert.assertTrue(actual instanceof JSONObject);
+	}
+
+	@Test
+	public void testGetFieldValueWithNonexistingInfoItem() throws Exception {
+		Assert.assertNull(
+			_getFieldValue(
+				JSONUtil.put(
+					"className", JournalArticle.class.getName()
+				).put(
+					"classNameId",
+					_portal.getClassNameId(JournalArticle.class.getName())
+				).put(
+					"classPK", RandomTestUtil.randomLong()
+				).put(
+					"fieldId", "AssetTag_tagNames"
+				),
+				LocaleUtil.SPAIN));
 	}
 
 	@Test
@@ -474,12 +502,153 @@ public class FragmentEntryProcessorHelperTest {
 				fieldId, LocaleUtil.getSiteDefault()));
 	}
 
-	private DDMStructure _addDDMStructure(Group group, String content)
-		throws Exception {
+	@Test
+	@TestInfo("LPD-11377")
+	public void testGetRepeatableAssetTags() throws Exception {
+		JSONObject jsonObject = JSONUtil.put(
+			"className", JournalArticle.class.getName()
+		).put(
+			"classNameId",
+			_portal.getClassNameId(JournalArticle.class.getName())
+		).put(
+			"classPK",
+			() -> {
+				JournalArticle journalArticle = _addJournalArticle(
+					_addImageFileEntry(), "ImageFieldName",
+					RandomTestUtil.randomString());
 
+				return journalArticle.getResourcePrimKey();
+			}
+		).put(
+			"fieldId", "AssetTag_tagNames"
+		);
+
+		Assert.assertEquals(
+			"one",
+			_getFieldValue(
+				jsonObject.put(
+					"config", JSONUtil.put("iterationType", "first")),
+				LocaleUtil.SPAIN));
+		Assert.assertEquals(
+			"two",
+			_getFieldValue(
+				jsonObject.put(
+					"config",
+					JSONUtil.put(
+						"iterationNumber", "2"
+					).put(
+						"iterationType", "iteration-number"
+					)),
+				LocaleUtil.SPAIN));
+		Assert.assertEquals(
+			"three",
+			_getFieldValue(
+				jsonObject.put("config", JSONUtil.put("iterationType", "last")),
+				LocaleUtil.SPAIN));
+	}
+
+	@Test
+	@TestInfo("LPD-11377")
+	public void testGetRepeatableAssetVocabularies() throws Exception {
+		JSONObject jsonObject = JSONUtil.put(
+			"className", JournalArticle.class.getName()
+		).put(
+			"classNameId",
+			_portal.getClassNameId(JournalArticle.class.getName())
+		).put(
+			"classPK",
+			() -> {
+				JournalArticle journalArticle = _addJournalArticle(
+					_addImageFileEntry(), "ImageFieldName",
+					RandomTestUtil.randomString());
+
+				return journalArticle.getResourcePrimKey();
+			}
+		).put(
+			"fieldId",
+			AssetVocabulary.class.getSimpleName() + StringPool.UNDERLINE +
+				_assetVocabulary.getVocabularyId()
+		);
+
+		Assert.assertEquals(
+			"category1",
+			_getFieldValue(
+				jsonObject.put(
+					"config", JSONUtil.put("iterationType", "first")),
+				LocaleUtil.SPAIN));
+		Assert.assertEquals(
+			"category2",
+			_getFieldValue(
+				jsonObject.put(
+					"config",
+					JSONUtil.put(
+						"iterationNumber", "2"
+					).put(
+						"iterationType", "iteration-number"
+					)),
+				LocaleUtil.SPAIN));
+		Assert.assertEquals(
+			"category3",
+			_getFieldValue(
+				jsonObject.put("config", JSONUtil.put("iterationType", "last")),
+				LocaleUtil.SPAIN));
+	}
+
+	@Test
+	@TestInfo("LPD-11377")
+	public void testGetRepeatableFieldValue() throws Exception {
+		JSONObject jsonObject = JSONUtil.put(
+			"className", JournalArticle.class.getName()
+		).put(
+			"classNameId",
+			_portal.getClassNameId(JournalArticle.class.getName())
+		).put(
+			"classPK",
+			() -> {
+				JournalArticle journalArticle = _addJournalArticle(
+					_addDDMStructure(
+						_readJSONFileToString(
+							"ddm_structure_with_repeatable_field.json")),
+					_readFileToString(
+						"dynamic_content_with_repeatable_field.xml"),
+					RandomTestUtil.randomString());
+
+				return journalArticle.getResourcePrimKey();
+			}
+		).put(
+			"fieldId", "DDMStructure_Text"
+		);
+
+		Assert.assertEquals(
+			"uno", _getFieldValue(jsonObject, LocaleUtil.SPAIN));
+		Assert.assertEquals(
+			"one",
+			_getFieldValue(
+				jsonObject.put(
+					"config", JSONUtil.put("iterationType", "first")),
+				LocaleUtil.US));
+		Assert.assertEquals(
+			"dos",
+			_getFieldValue(
+				jsonObject.put(
+					"config",
+					JSONUtil.put(
+						"iterationNumber", "2"
+					).put(
+						"iterationType", "iteration-number"
+					)),
+				LocaleUtil.SPAIN));
+		Assert.assertEquals(
+			"three",
+			_getFieldValue(
+				jsonObject.put("config", JSONUtil.put("iterationType", "last")),
+				LocaleUtil.US));
+	}
+
+	private DDMStructure _addDDMStructure(String content) throws Exception {
 		DDMStructureTestHelper ddmStructureTestHelper =
 			new DDMStructureTestHelper(
-				_portal.getClassNameId(JournalArticle.class), group);
+				_portal.getClassNameId(JournalArticle.class), _group);
 
 		return ddmStructureTestHelper.addStructure(
 			_portal.getClassNameId(JournalArticle.class),
@@ -508,12 +677,24 @@ public class FragmentEntryProcessorHelperTest {
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			StringPool.BLANK, StringPool.BLANK, inputStream, bytes.length, null,
-			null, serviceContext);
+			null, null, serviceContext);
 	}
 
 	private JournalArticle _addJournalArticle(
 			DDMStructure ddmStructure, String fieldId, FileEntry fileEntry,
 			String title)
+		throws Exception {
+
+		String content = StringUtil.replace(
+			_readFileToString("dynamic_content.xml"),
+			new String[] {"[$FIELD_ID$]", "[$IMAGE_JSON$]"},
+			new String[] {fieldId, _toJSON(fileEntry)});
+
+		return _addJournalArticle(ddmStructure, content, title);
+	}
+
+	private JournalArticle _addJournalArticle(
+			DDMStructure ddmStructure, String content, String title)
 		throws Exception {
 
 		User user = TestPropsValues.getUser();
@@ -530,6 +711,26 @@ public class FragmentEntryProcessorHelperTest {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
 
+		_assetVocabulary = _assetVocabularyLocalService.addVocabulary(
+			TestPropsValues.getUserId(), _group.getGroupId(),
+			RandomTestUtil.randomString(), serviceContext);
+
+		AssetCategory assetCategory1 = _assetCategoryLocalService.addCategory(
+			TestPropsValues.getUserId(), _group.getGroupId(), "category1",
+			_assetVocabulary.getVocabularyId(), serviceContext);
+		AssetCategory assetCategory2 = _assetCategoryLocalService.addCategory(
+			TestPropsValues.getUserId(), _group.getGroupId(), "category2",
+			_assetVocabulary.getVocabularyId(), serviceContext);
+		AssetCategory assetCategory3 = _assetCategoryLocalService.addCategory(
+			TestPropsValues.getUserId(), _group.getGroupId(), "category3",
+			_assetVocabulary.getVocabularyId(), serviceContext);
+
+		serviceContext.setAssetCategoryIds(
+			new long[] {
+				assetCategory1.getCategoryId(), assetCategory2.getCategoryId(),
+				assetCategory3.getCategoryId()
+			});
+
 		serviceContext.setAssetTagNames(new String[] {"one", "two", "three"});
 
 		return _journalArticleLocalService.addArticle(
@@ -545,11 +746,8 @@ public class FragmentEntryProcessorHelperTest {
 			HashMapBuilder.put(
 				defaultLocale, RandomTestUtil.randomString()
 			).build(),
-			StringUtil.replace(
-				_readFileToString("dynamic_content.xml"),
-				new String[] {"[$FIELD_ID$]", "[$IMAGE_JSON$]"},
-				new String[] {fieldId, _toJSON(fileEntry)}),
-			ddmStructure.getStructureId(), ddmTemplate.getTemplateKey(), null,
+			content, ddmStructure.getStructureId(),
+			ddmTemplate.getTemplateKey(), null,
 			displayCalendar.get(Calendar.MONTH),
 			displayCalendar.get(Calendar.DATE),
 			displayCalendar.get(Calendar.YEAR),
@@ -569,8 +767,7 @@ public class FragmentEntryProcessorHelperTest {
 		ddmStructureContent = StringUtil.replace(
 			ddmStructureContent, "FIELD_NAME", fieldId);
 
-		DDMStructure ddmStructure = _addDDMStructure(
-			_group, ddmStructureContent);
+		DDMStructure ddmStructure = _addDDMStructure(ddmStructureContent);
 
 		return _addJournalArticle(ddmStructure, fieldId, fileEntry, title);
 	}
@@ -616,9 +813,17 @@ public class FragmentEntryProcessorHelperTest {
 			JSONObject editableValuesJSONObject, Locale locale)
 		throws Exception {
 
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(WebKeys.LAYOUT, _layout);
+		mockHttpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, _themeDisplay);
+
 		FragmentEntryProcessorContext fragmentEntryProcessorContext =
 			new DefaultFragmentEntryProcessorContext(
-				null, null, FragmentEntryLinkConstants.EDIT, locale);
+				mockHttpServletRequest, new MockHttpServletResponse(),
+				FragmentEntryLinkConstants.EDIT, locale);
 
 		return _fragmentEntryProcessorHelper.getFieldValue(
 			editableValuesJSONObject, new HashMap<>(),
@@ -690,6 +895,14 @@ public class FragmentEntryProcessorHelperTest {
 	private static DDMFormDeserializer _jsonDDMFormDeserializer;
 
 	@Inject
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	private AssetVocabulary _assetVocabulary;
+
+	@Inject
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Inject
 	private CompanyLocalService _companyLocalService;
 
 	@Inject
@@ -707,7 +920,11 @@ public class FragmentEntryProcessorHelperTest {
 	@Inject
 	private JournalConverter _journalConverter;
 
+	private Layout _layout;
+
 	@Inject
 	private Portal _portal;
+
+	private ThemeDisplay _themeDisplay;
 
 }

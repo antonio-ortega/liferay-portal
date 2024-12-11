@@ -55,7 +55,7 @@ public class VisibilityCommerceOrderValidatorImpl
 	@Override
 	public CommerceOrderValidatorResult validate(
 			Locale locale, CommerceOrder commerceOrder, CPInstance cpInstance,
-			BigDecimal quantity)
+			String json, BigDecimal quantity, boolean child)
 		throws PortalException {
 
 		if (cpInstance == null) {
@@ -86,12 +86,11 @@ public class VisibilityCommerceOrderValidatorImpl
 			return new CommerceOrderValidatorResult(false);
 		}
 
-		if (!_isAccountEnabled(
-				commerceOrderItem.getCommerceOrder(),
-				cpInstance.getCPDefinition()) ||
+		CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+
+		if (!_isAccountEnabled(commerceOrder, cpInstance.getCPDefinition()) ||
 			!_isChannelEnabled(
-				commerceOrderItem.getCommerceOrder(),
-				commerceOrderItem.getCPDefinition())) {
+				commerceOrder, commerceOrderItem.getCPDefinition())) {
 
 			return new CommerceOrderValidatorResult(
 				commerceOrderItem.getCommerceOrderItemId(), false,

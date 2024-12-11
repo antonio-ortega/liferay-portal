@@ -1,0 +1,30 @@
+[
+	{
+		"key": "bound",
+		"name": "Bound"
+	},
+	{
+		"key": "incomplete",
+		"name": "Incomplete"
+	},
+	{
+		"key": "rejected",
+		"name": "Rejected"
+	},
+	{
+		"key": "quoted",
+		"name": "Quoted"
+	},
+	{
+		"key": "open",
+		"name": "Open"
+	},
+	{
+		"key": "reviewed",
+		"name": "Reviewed"
+	},
+	{
+		"key": "underwriting",
+		"name": "Underwriting"
+	}
+]

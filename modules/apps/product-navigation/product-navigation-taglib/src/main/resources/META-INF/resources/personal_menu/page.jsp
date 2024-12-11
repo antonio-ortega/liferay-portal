@@ -28,9 +28,10 @@ if (size != null) {
 }
 %>
 
-<style type="text/css">
+<aui:style type="text/css">
 	.dropdown-menu-personal-menu {
 		max-height: none;
+		z-index: 1021;
 	}
 
 	.dropdown-menu-personal-menu .dropdown-item-indicator {
@@ -41,10 +42,14 @@ if (size != null) {
 		border-radius: 5000px;
 	}
 
+	div.personal-menu-dropdown .btn > span.sticker-user-icon {
+		pointer-events: none;
+	}
+
 	div.personal-menu-dropdown .dropdown-item {
 		color: #6B6C7E;
 	}
-</style>
+</aui:style>
 
 <div class="personal-menu-dropdown" id="<%= namespace %>personal_menu_dropdown">
 	<c:choose>
@@ -110,7 +115,7 @@ if (size != null) {
 	%>
 
 	<react:component
-		module="personal_menu/js/PersonalMenu.es"
+		module="{PersonalMenu} from product-navigation-taglib"
 		props="<%= props %>"
 	/>
 </div>

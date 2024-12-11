@@ -1,4 +1,4 @@
-@component-name = "portal-solutions"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -11,10 +11,7 @@ definition {
 		User.firstLoginUI();
 
 		task ("Configure digital signature with credentials") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
+			PortalSettings.openInstanceSettingsAdmin();
 
 			SystemSettings.gotoConfiguration(
 				configurationCategory = "Digital Signature",
@@ -39,6 +36,8 @@ definition {
 	@description = "This is a test for LPS-131427. Verify if Digital Signature can be enable in Site Settings, using the Always Override Strategy"
 	@priority = 5
 	test CanEnableDigitalSignatureBySiteSettings {
+		property portal.release = "quarantine";
+
 		task ("Given that the digital signature site strategy is set as 'Always Override'") {
 			DigitalSignature.selectSiteStrategy(siteStrategy = "Always Override");
 

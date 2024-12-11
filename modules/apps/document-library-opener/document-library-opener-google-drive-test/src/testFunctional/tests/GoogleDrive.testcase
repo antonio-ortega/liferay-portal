@@ -1,4 +1,5 @@
-@component-name = "portal-document-management"
+@component-name = "portal-content-management"
+@ignore = "true"
 definition {
 
 	property custom.properties = "default.layout.template.id=1_column${line.separator}dl.actions.visible=true";
@@ -6,7 +7,7 @@ definition {
 	property portal.upstream = "true";
 	property test.liferay.virtual.instance = "false";
 	property test.run.type = "single";
-	property testray.main.component.name = "Online Editing";
+	property testray.main.component.name = "External Document Repositories";
 
 	var pageName = "Documents and Media Page";
 	var portletName = "Documents and Media";
@@ -398,8 +399,6 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanCopyGoogleDocFromDepotToSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONDepot.addDepot(
@@ -442,8 +441,6 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanCopyGoogleDocToOtherFolderInDepot {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
@@ -486,8 +483,6 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanCopyGoogleDocToOtherSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		HeadlessSite.addSite(siteName = "Site Name");
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
@@ -827,7 +822,7 @@ definition {
 			userPassword = PropsUtil.get("email.password.3"),
 			windowTitle = "Documents and Media Page - Liferay");
 
-		Open.openInTheNewTab(locator1 = "http://localhost:8080");
+		Open.openInTheNewTab(value1 = "http://localhost:8080");
 
 		UserBar.signOut();
 
@@ -840,7 +835,7 @@ definition {
 		AssertConsoleTextNotPresent(value1 = "javax.portlet.PortletException:");
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
@@ -867,7 +862,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		JSONRole.assignRoleToUser(
 			roleTitle = "Regular Role",
@@ -905,7 +900,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");
@@ -971,7 +966,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoPage(pageName = "Documents and Media Page");

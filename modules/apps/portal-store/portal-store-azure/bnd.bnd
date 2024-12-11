@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Store Azure
 Bundle-SymbolicName: com.liferay.portal.store.azure
-Bundle-Version: 5.0.8
+Bundle-Version: 5.0.12
 Import-Package:\
 	!com.aayushatharva.brotli4j.*,\
 	\
@@ -22,6 +22,8 @@ Import-Package:\
 	\
 	!io.netty.handler.codec.haproxy,\
 	!io.netty.incubator.channel.uring,\
+	\
+	!jakarta.servlet.*,\
 	\
 	!javax.annotation.meta,\
 	\

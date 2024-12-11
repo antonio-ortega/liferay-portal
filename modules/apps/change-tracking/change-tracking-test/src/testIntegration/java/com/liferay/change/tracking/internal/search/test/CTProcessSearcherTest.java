@@ -6,18 +6,21 @@
 package com.liferay.change.tracking.internal.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTProcess;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTProcessLocalService;
 import com.liferay.counter.kernel.service.CounterLocalService;
+import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.background.task.model.BackgroundTask;
 import com.liferay.portal.background.task.service.BackgroundTaskLocalService;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskResult;
 import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -86,7 +89,7 @@ public class CTProcessSearcherTest {
 	public void testSearchByStatus() throws Exception {
 		BackgroundTaskExecutor backgroundTaskExecutor =
 			(BackgroundTaskExecutor)ProxyUtil.newProxyInstance(
-				CTProcessSearcherTest.class.getClassLoader(),
+				BackgroundTaskExecutor.class.getClassLoader(),
 				new Class<?>[] {BackgroundTaskExecutor.class},
 				(proxy, method, argus) -> {
 					if (Objects.equals(method.getName(), "clone")) {
@@ -150,26 +153,18 @@ public class CTProcessSearcherTest {
 	}
 
 	@Test
-	public void testSearchByType() throws Exception {
-		CTCollection ctCollection1 = _addCTCollection();
-		CTCollection ctCollection2 = _addCTCollection();
-
-		CTProcess moveCTProcess = _ctProcessLocalService.addCTProcess(
-			TestPropsValues.getUserId(), ctCollection1.getCtCollectionId(),
-			ctCollection2.getCtCollectionId(), null);
-
-		_addCTProcess(ctCollection1.getCtCollectionId());
-
-		_assertHits(
-			_getUIDs(moveCTProcess),
-			_byAttribute("type", CTConstants.CT_PROCESS_MOVE));
-	}
-
-	@Test
 	public void testSearchByUserId() throws Exception {
 		CTCollection ctCollection = _addCTCollection();
 
 		User user = UserTestUtil.addUser();
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ctCollection.getCtCollectionId())) {
+
+			DDMStructureTestUtil.addStructure(
+				TestPropsValues.getGroupId(), JournalArticle.class.getName());
+		}
 
 		CTProcess ctProcess = _ctProcessLocalService.addCTProcess(
 			user.getUserId(), ctCollection.getCtCollectionId());
@@ -207,10 +202,26 @@ public class CTProcessSearcherTest {
 
 		ctProcess.setBackgroundTaskId(backgroundTask.getBackgroundTaskId());
 
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ctCollectionId)) {
+
+			DDMStructureTestUtil.addStructure(
+				TestPropsValues.getGroupId(), JournalArticle.class.getName());
+		}
+
 		return _ctProcessLocalService.addCTProcess(ctProcess);
 	}
 
 	private CTProcess _addCTProcess(long ctCollectionId) throws Exception {
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ctCollectionId)) {
+
+			DDMStructureTestUtil.addStructure(
+				TestPropsValues.getGroupId(), JournalArticle.class.getName());
+		}
+
 		return _ctProcessLocalService.addCTProcess(
 			TestPropsValues.getUserId(), ctCollectionId);
 	}

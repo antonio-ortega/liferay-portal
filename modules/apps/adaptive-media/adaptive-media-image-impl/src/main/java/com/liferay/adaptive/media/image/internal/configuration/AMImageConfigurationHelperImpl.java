@@ -10,13 +10,13 @@ import com.liferay.adaptive.media.exception.AMImageConfigurationException.Invali
 import com.liferay.adaptive.media.exception.AMRuntimeException;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
+import com.liferay.adaptive.media.image.internal.configuration.util.AMImageConfigurationEntryParserUtil;
 import com.liferay.adaptive.media.image.service.AMImageEntryLocalService;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.cache.MultiVMPool;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
-import com.liferay.portal.kernel.messaging.DestinationFactory;
 import com.liferay.portal.kernel.settings.CompanyServiceSettingsLocator;
 import com.liferay.portal.kernel.settings.FallbackKeysSettingsUtil;
 import com.liferay.portal.kernel.settings.ModifiableSettings;
@@ -464,7 +464,7 @@ public class AMImageConfigurationHelperImpl
 									companyId,
 									AMImageCompanyConfiguration.class.
 										getName()))),
-						_amImageConfigurationEntryParser::parse);
+						AMImageConfigurationEntryParserUtil::parse);
 
 			PortalCacheHelperUtil.putWithoutReplicator(
 				_portalCache, companyId, amImageConfigurationEntries);
@@ -537,7 +537,7 @@ public class AMImageConfigurationHelperImpl
 				"imageVariants",
 				TransformUtil.transformToArray(
 					amImageConfigurationEntries,
-					_amImageConfigurationEntryParser::getConfigurationString,
+					AMImageConfigurationEntryParserUtil::getConfigurationString,
 					String.class));
 
 			modifiableSettings.store();
@@ -557,13 +557,7 @@ public class AMImageConfigurationHelperImpl
 	private static final Pattern _uuidPattern = Pattern.compile("^(?:\\w|-)+$");
 
 	@Reference
-	private AMImageConfigurationEntryParser _amImageConfigurationEntryParser;
-
-	@Reference
 	private AMImageEntryLocalService _amImageEntryLocalService;
-
-	@Reference
-	private DestinationFactory _destinationFactory;
 
 	@Reference
 	private JournalContent _journalContent;

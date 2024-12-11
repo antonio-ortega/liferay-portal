@@ -9,15 +9,14 @@ import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
+import com.liferay.layout.display.page.BaseLayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
-import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.web.internal.util.ObjectEntryUtil;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
@@ -32,7 +31,7 @@ import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
  * @author Guilherme Camacho
  */
 public class ObjectEntryLayoutDisplayPageProvider
-	implements LayoutDisplayPageProvider<ObjectEntry> {
+	extends BaseLayoutDisplayPageProvider<ObjectEntry> {
 
 	public ObjectEntryLayoutDisplayPageProvider(
 		ObjectDefinition objectDefinition,
@@ -51,6 +50,11 @@ public class ObjectEntryLayoutDisplayPageProvider
 	@Override
 	public String getClassName() {
 		return _objectDefinition.getClassName();
+	}
+
+	@Override
+	public String getDefaultURLSeparator() {
+		return FriendlyURLResolverConstants.URL_SEPARATOR_OBJECT_ENTRY;
 	}
 
 	@Override
@@ -74,10 +78,7 @@ public class ObjectEntryLayoutDisplayPageProvider
 			ObjectEntry objectEntry = _objectEntryLocalService.fetchObjectEntry(
 				classPKInfoItemIdentifier.getClassPK());
 
-			if ((objectEntry == null) ||
-				(objectEntry.isDraft() &&
-				 !FeatureFlagManagerUtil.isEnabled("LPS-195205"))) {
-
+			if (objectEntry == null) {
 				return null;
 			}
 
@@ -151,8 +152,11 @@ public class ObjectEntryLayoutDisplayPageProvider
 	}
 
 	@Override
-	public String getURLSeparator() {
-		return FriendlyURLResolverConstants.URL_SEPARATOR_OBJECT_ENTRY;
+	public LayoutDisplayPageObjectProvider<ObjectEntry>
+		getLayoutDisplayPageObjectProvider(ObjectEntry objectEntry) {
+
+		return new ObjectEntryLayoutDisplayPageObjectProvider(
+			_objectDefinition, objectEntry);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

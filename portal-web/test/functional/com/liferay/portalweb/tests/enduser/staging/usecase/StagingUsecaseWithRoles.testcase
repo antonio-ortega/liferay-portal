@@ -1,4 +1,4 @@
-@component-name = "portal-staging"
+@component-name = "portal-headless"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -468,7 +468,7 @@ definition {
 
 		// This pause is required to allow the test to wait for the scheduled Publication to be published. See LRQA-7161 and LRQA-75872 for more details.
 
-		Pause(locator1 = 300000);
+		Pause(value1 = 300000);
 
 		Navigator.gotoSitePage(
 			pageName = "Staging Test Page",
@@ -581,6 +581,8 @@ definition {
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
+
+		User.firstLoginPG();
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "userea@liferay.com",
@@ -935,6 +937,10 @@ definition {
 	test UpdateAndDeleteWebContentCommentOnLiveSite {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		JSONStaging.enableLocalStaging(groupName = "Site Name");
 

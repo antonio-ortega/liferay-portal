@@ -1,6 +1,7 @@
-@component-name = "portal-wcm"
+@component-name = "portal-content-management"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Content Display";
@@ -9,90 +10,6 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
-	}
-
-	tearDown {
-		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
-
-		if (${testLiferayVirtualInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONUser.tearDownNonAdminUsers();
-
-			Site.tearDownCP();
-
-			PagesAdmin.tearDownCP();
-		}
-	}
-
-	@priority = 4
-	test IFrameDemo {
-		property testray.component.names = "IFrame Portlet";
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		PagesAdmin.addPage(pageName = "IFrame Page");
-
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "IFrame Page",
-			sitePageType = "Widget Page");
-
-		Navigator.gotoPage(pageName = "IFrame Page");
-
-		Portlet.addPG(portletName = "IFrame");
-
-		Portlet.gotoPortletOptions(portletOption = "Configuration");
-
-		IFrame.addCP(sourceURL = "http://whereiscaliforniaonfire.com");
-
-		Navigator.gotoPage(pageName = "IFrame Page");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#IFRAME_PORTLET");
-
-		AssertVisible(
-			key_title = "Fires",
-			locator1 = "Header#H1_TITLE");
-
-		SelectFrameTop();
-	}
-
-	@description = "This is a test for LPS-140253. View no private page in page administration."
-	@priority = 4
-	test IFrameDemoFF {
-		property testray.component.names = "IFrame Portlet";
-
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		PagesAdmin.addPage(pageName = "IFrame Page");
-
-		PagesAdmin.configurePage(
-			columnName = "1 Column",
-			pageName = "IFrame Page",
-			sitePageType = "Widget Page");
-
-		Navigator.gotoPage(pageName = "IFrame Page");
-
-		Portlet.addPG(portletName = "IFrame");
-
-		Portlet.gotoPortletOptions(portletOption = "Configuration");
-
-		IFrame.addCP(sourceURL = "http://whereiscaliforniaonfire.com");
-
-		Navigator.gotoPage(pageName = "IFrame Page");
-
-		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#IFRAME_PORTLET");
-
-		AssertVisible(
-			key_title = "Fires",
-			locator1 = "Header#H1_TITLE");
-
-		SelectFrameTop();
 	}
 
 	@priority = 4

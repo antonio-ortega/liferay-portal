@@ -1,10 +1,10 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Comment";
-	property testray.main.component.name = "Lima Headless";
+	property testray.main.component.name = "Content Management Headless";
 
 	setUp {
 		TestCase.setUpPortalInstanceNoSelenium();
@@ -243,7 +243,7 @@ definition {
 		task ("Then I receive an error code response about duplicate erc") {
 			TestUtils.assertPartialEquals(
 				actual = ${response},
-				expected = "Duplicate message-boards message with external reference code ercComment");
+				expected = "This external reference code is already in use.");
 		}
 
 		task ("And Then another comment with the same external reference code is not being created") {
@@ -266,15 +266,16 @@ definition {
 			var response = CommentAPI.createCommentInBlogPosting(
 				blogPostingId = ${staticBlogPostingId},
 				commentText = "CommentOne");
+
+			var commentId = JSONUtil.getWithJSONPath(${response}, "$.id");
 		}
 
 		task ("When I make a GET request by external reference code using comment ID as external reference code") {
-			var repsonse = BlogPostingAPI.getBlogPostings();
+			var response = BlogPostingAPI.getBlogPostings();
 
 			var blogPostingErc = CommentAPI.getFieldValueOfBlogPostingComments(
 				fieldName = "externalReferenceCode",
-				responseToParse = ${repsonse});
-			var commentId = JSONUtil.getWithJSONPath(${response}, "$.id");
+				responseToParse = ${response});
 		}
 
 		task ("Then I receive an error about GET request by external reference code using comment ID as external reference code") {
@@ -286,15 +287,6 @@ definition {
 			TestUtils.assertPartialEquals(
 				actual = ${commentText},
 				expected = "NOT_FOUND");
-
-			var commentText = CommentAPI.getFieldValueOfBlogPostingComments(
-				blogPostingCommentErc = ${commentId},
-				blogPostingErc = ${blogPostingErc},
-				fieldName = "title");
-
-			TestUtils.assertPartialEquals(
-				actual = ${commentText},
-				expected = "No MBMessage exists with the key");
 		}
 	}
 

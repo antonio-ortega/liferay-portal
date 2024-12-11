@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -51,7 +52,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.PortalInstances;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -259,7 +259,7 @@ public class FragmentDisplayContext {
 				_themeDisplay.getLocale()));
 
 		contributedEntries.sort(
-			new FragmentCompositionFragmentEntryNameComparator(true));
+			FragmentCompositionFragmentEntryNameComparator.getInstance(true));
 
 		if (isSearch()) {
 			contributedEntries = ListUtil.filter(
@@ -637,8 +637,7 @@ public class FragmentDisplayContext {
 						).buildString());
 					verticalNavItem.setId(String.valueOf(fragmentCollectionId));
 
-					verticalNavItem.setLabel(
-						HtmlUtil.escape(fragmentCollection.getName()));
+					verticalNavItem.setLabel(fragmentCollection.getName());
 				});
 		}
 
@@ -658,12 +657,13 @@ public class FragmentDisplayContext {
 				verticalNavItem -> {
 					verticalNavItem.addIcon(
 						IconItem.of("lock", StringPool.BLANK));
-
 					verticalNavItem.setActive(
 						Objects.equals(
 							fragmentCollectionContributor.
 								getFragmentCollectionKey(),
 							getFragmentCollectionKey()));
+					verticalNavItem.setDeprecated(
+						fragmentCollectionContributor.isDeprecated());
 
 					String fragmentCollectionKey =
 						fragmentCollectionContributor.
@@ -678,9 +678,8 @@ public class FragmentDisplayContext {
 					verticalNavItem.setId(fragmentCollectionKey);
 
 					verticalNavItem.setLabel(
-						HtmlUtil.escape(
-							fragmentCollectionContributor.getName(
-								_themeDisplay.getLocale())));
+						fragmentCollectionContributor.getName(
+							_themeDisplay.getLocale()));
 				});
 		}
 
@@ -734,7 +733,7 @@ public class FragmentDisplayContext {
 
 		if ((fragmentCollection.getGroupId() == CompanyConstants.SYSTEM) &&
 			((_themeDisplay.getCompanyId() !=
-				PortalInstances.getDefaultCompanyId()) ||
+				PortalInstancePool.getDefaultCompanyId()) ||
 			 !scopeGroup.isCompany())) {
 
 			return true;

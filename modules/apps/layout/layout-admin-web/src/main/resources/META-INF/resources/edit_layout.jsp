@@ -53,6 +53,7 @@ if ((layoutRevision != null) && StagingUtil.isIncomplete(selLayout, layoutRevisi
 if (Validator.isNotNull(backURL)) {
 	portletDisplay.setShowBackIcon(true);
 	portletDisplay.setURLBack(backURL);
+	portletDisplay.setURLBackTitle(ParamUtil.getString(request, "backURLTitle"));
 }
 
 renderResponse.setTitle(layoutsAdminDisplayContext.getConfigurationTitle(selLayout, locale));
@@ -96,7 +97,7 @@ renderResponse.setTitle(layoutsAdminDisplayContext.getConfigurationTitle(selLayo
 								"enableLayoutURL", enableLayoutURL
 							).build()
 						%>'
-						module="js/layout/IncompleteLayoutEventListener"
+						module="{IncompleteLayoutEventListener} from layout-admin-web"
 					/>
 				</aui:button-row>
 			</clay:sheet>

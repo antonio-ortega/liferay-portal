@@ -57,8 +57,8 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 										<div class="input-group-inset-item input-group-inset-item-after">
 											<clay:button
 												data-qa-id="searchButton"
-												icon="search"
 												displayType="unstyled"
+												icon="search"
 												monospaced="<%= false %>"
 												type="submit"
 											/>
@@ -83,6 +83,12 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 								sb.append("javascript:");
 								sb.append(liferayPortletResponse.getNamespace());
 								sb.append("selectFormInstance('");
+
+								DDMStructure ddmStructure = formInstance.getStructure();
+
+								sb.append(ddmStructure.getExternalReferenceCode());
+
+								sb.append("','");
 								sb.append(formInstance.getFormInstanceId());
 								sb.append("','");
 								sb.append(HtmlUtil.escapeJS(HtmlUtil.escape(formInstance.getName(locale))));
@@ -135,7 +141,9 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 <aui:form action="<%= configurationActionURL %>" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value='<%= configurationRenderURL.toString() + StringPool.AMPERSAND + liferayPortletResponse.getNamespace() + "cur" + cur %>' />
+	<aui:input name="preferences--ddmStructureExternalReferenceCode--" type="hidden" value="" />
 	<aui:input name="preferences--formInstanceId--" type="hidden" value="<%= formInstanceId %>" />
+	<aui:input name="preferences--groupExternalReferenceCode--" type="hidden" value="<%= scopeGroup.getExternalReferenceCode() %>" />
 	<aui:input name="preferences--groupId--" type="hidden" value="<%= scopeGroupId %>" />
 
 	<aui:button-row>
@@ -147,31 +155,38 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectFormInstance',
-		(formInstanceId, formInstanceName) => {
-			var A = AUI();
+		(ddmStructureExternalReferenceCode, formInstanceId, formInstanceName) => {
+			document.getElementById(
+				'<portlet:namespace />ddmStructureExternalReferenceCode'
+			).value = ddmStructureExternalReferenceCode;
 
-			document.<portlet:namespace />fm.<portlet:namespace />formInstanceId.value = formInstanceId;
+			document.getElementById('<portlet:namespace />formInstanceId').value =
+				formInstanceId;
 
-			var formInstanceHolder = A.one('.displaying-form-instance-id-holder');
-
-			if (formInstanceHolder) {
-				formInstanceHolder.show();
-			}
-
-			var messageHolder = A.one('.displaying-help-message-holder');
-
-			if (messageHolder) {
-				messageHolder.hide();
-			}
-
-			var displayFormInstanceId = A.one('.displaying-form-instance-id');
-
-			displayFormInstanceId.set(
-				'innerHTML',
-				formInstanceName + ' (<liferay-ui:message key="modified" />)'
+			const formInstanceHolder = document.querySelector(
+				'.displaying-form-instance-id-holder'
 			);
 
-			displayFormInstanceId.addClass('modified');
+			if (formInstanceHolder) {
+				formInstanceHolder.classList.remove('hide');
+			}
+
+			const messageHolder = document.querySelector(
+				'.displaying-help-message-holder'
+			);
+
+			if (messageHolder) {
+				messageHolder.classList.add('hide');
+			}
+
+			const displayFormInstanceId = document.querySelector(
+				'.displaying-form-instance-id'
+			);
+
+			displayFormInstanceId.innerHTML =
+				formInstanceName + ' (<liferay-ui:message key="modified" />)';
+
+			displayFormInstanceId.classList.add('modified');
 		},
 		['aui-base']
 	);

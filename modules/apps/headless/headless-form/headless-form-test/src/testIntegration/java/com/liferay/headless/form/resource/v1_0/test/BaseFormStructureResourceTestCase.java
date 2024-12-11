@@ -26,19 +26,21 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -59,8 +61,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -98,10 +98,16 @@ public abstract class BaseFormStructureResourceTestCase {
 
 		_formStructureResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		FormStructureResource.Builder builder = FormStructureResource.builder();
 
 		formStructureResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -115,7 +121,32 @@ public abstract class BaseFormStructureResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		FormStructure formStructure1 = randomFormStructure();
+
+		String json = objectMapper.writeValueAsString(formStructure1);
+
+		FormStructure formStructure2 = FormStructureSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(formStructure1, formStructure2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		FormStructure formStructure = randomFormStructure();
+
+		String json1 = objectMapper.writeValueAsString(formStructure);
+		String json2 = FormStructureSerDes.toJSON(formStructure);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -130,40 +161,6 @@ public abstract class BaseFormStructureResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		FormStructure formStructure1 = randomFormStructure();
-
-		String json = objectMapper.writeValueAsString(formStructure1);
-
-		FormStructure formStructure2 = FormStructureSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(formStructure1, formStructure2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		FormStructure formStructure = randomFormStructure();
-
-		String json1 = objectMapper.writeValueAsString(formStructure);
-		String json2 = FormStructureSerDes.toJSON(formStructure);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -209,6 +206,8 @@ public abstract class BaseFormStructureResourceTestCase {
 		FormStructure formStructure =
 			testGraphQLGetFormStructure_addFormStructure();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				formStructure,
@@ -226,11 +225,36 @@ public abstract class BaseFormStructureResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/formStructure"))));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertTrue(
+			equals(
+				formStructure,
+				FormStructureSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessForm_v1_0",
+								new GraphQLField(
+									"formStructure",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"formStructureId",
+												formStructure.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessForm_v1_0",
+						"Object/formStructure"))));
 	}
 
 	@Test
 	public void testGraphQLGetFormStructureNotFound() throws Exception {
 		Long irrelevantFormStructureId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -246,6 +270,27 @@ public abstract class BaseFormStructureResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessForm_v1_0",
+						new GraphQLField(
+							"formStructure",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"formStructureId",
+										irrelevantFormStructureId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -266,7 +311,7 @@ public abstract class BaseFormStructureResourceTestCase {
 			formStructureResource.getSiteFormStructuresPage(
 				siteId, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantSiteId != null) {
 			FormStructure irrelevantFormStructure =
@@ -274,13 +319,12 @@ public abstract class BaseFormStructureResourceTestCase {
 					irrelevantSiteId, randomIrrelevantFormStructure());
 
 			page = formStructureResource.getSiteFormStructuresPage(
-				irrelevantSiteId, Pagination.of(1, 2));
+				irrelevantSiteId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantFormStructure),
-				(List<FormStructure>)page.getItems());
+			assertContains(
+				irrelevantFormStructure, (List<FormStructure>)page.getItems());
 			assertValid(
 				page,
 				testGetSiteFormStructuresPage_getExpectedActions(
@@ -298,11 +342,10 @@ public abstract class BaseFormStructureResourceTestCase {
 		page = formStructureResource.getSiteFormStructuresPage(
 			siteId, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(formStructure1, formStructure2),
-			(List<FormStructure>)page.getItems());
+		assertContains(formStructure1, (List<FormStructure>)page.getItems());
+		assertContains(formStructure2, (List<FormStructure>)page.getItems());
 		assertValid(
 			page, testGetSiteFormStructuresPage_getExpectedActions(siteId));
 	}
@@ -320,6 +363,12 @@ public abstract class BaseFormStructureResourceTestCase {
 	public void testGetSiteFormStructuresPageWithPagination() throws Exception {
 		Long siteId = testGetSiteFormStructuresPage_getSiteId();
 
+		Page<FormStructure> formStructurePage =
+			formStructureResource.getSiteFormStructuresPage(siteId, null);
+
+		int totalCount = GetterUtil.getInteger(
+			formStructurePage.getTotalCount());
+
 		FormStructure formStructure1 =
 			testGetSiteFormStructuresPage_addFormStructure(
 				siteId, randomFormStructure());
@@ -332,35 +381,78 @@ public abstract class BaseFormStructureResourceTestCase {
 			testGetSiteFormStructuresPage_addFormStructure(
 				siteId, randomFormStructure());
 
-		Page<FormStructure> page1 =
-			formStructureResource.getSiteFormStructuresPage(
-				siteId, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<FormStructure> formStructures1 =
-			(List<FormStructure>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			formStructures1.toString(), 2, formStructures1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<FormStructure> page1 =
+				formStructureResource.getSiteFormStructuresPage(
+					siteId,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<FormStructure> page2 =
-			formStructureResource.getSiteFormStructuresPage(
-				siteId, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				formStructure1, (List<FormStructure>)page1.getItems());
 
-		List<FormStructure> formStructures2 =
-			(List<FormStructure>)page2.getItems();
+			Page<FormStructure> page2 =
+				formStructureResource.getSiteFormStructuresPage(
+					siteId,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(
-			formStructures2.toString(), 1, formStructures2.size());
+			assertContains(
+				formStructure2, (List<FormStructure>)page2.getItems());
 
-		Page<FormStructure> page3 =
-			formStructureResource.getSiteFormStructuresPage(
-				siteId, Pagination.of(1, 3));
+			Page<FormStructure> page3 =
+				formStructureResource.getSiteFormStructuresPage(
+					siteId,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(formStructure1, formStructure2, formStructure3),
-			(List<FormStructure>)page3.getItems());
+			assertContains(
+				formStructure3, (List<FormStructure>)page3.getItems());
+		}
+		else {
+			Page<FormStructure> page1 =
+				formStructureResource.getSiteFormStructuresPage(
+					siteId, Pagination.of(1, totalCount + 2));
+
+			List<FormStructure> formStructures1 =
+				(List<FormStructure>)page1.getItems();
+
+			Assert.assertEquals(
+				formStructures1.toString(), totalCount + 2,
+				formStructures1.size());
+
+			Page<FormStructure> page2 =
+				formStructureResource.getSiteFormStructuresPage(
+					siteId, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<FormStructure> formStructures2 =
+				(List<FormStructure>)page2.getItems();
+
+			Assert.assertEquals(
+				formStructures2.toString(), 1, formStructures2.size());
+
+			Page<FormStructure> page3 =
+				formStructureResource.getSiteFormStructuresPage(
+					siteId, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				formStructure1, (List<FormStructure>)page3.getItems());
+			assertContains(
+				formStructure2, (List<FormStructure>)page3.getItems());
+			assertContains(
+				formStructure3, (List<FormStructure>)page3.getItems());
+		}
 	}
 
 	protected FormStructure testGetSiteFormStructuresPage_addFormStructure(
@@ -398,11 +490,13 @@ public abstract class BaseFormStructureResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject formStructuresJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/formStructures");
 
-		Assert.assertEquals(0, formStructuresJSONObject.get("totalCount"));
+		long totalCount = formStructuresJSONObject.getLong("totalCount");
 
 		FormStructure formStructure1 =
 			testGraphQLGetSiteFormStructuresPage_addFormStructure();
@@ -413,10 +507,38 @@ public abstract class BaseFormStructureResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/formStructures");
 
-		Assert.assertEquals(2, formStructuresJSONObject.getLong("totalCount"));
+		Assert.assertEquals(
+			totalCount + 2, formStructuresJSONObject.getLong("totalCount"));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(formStructure1, formStructure2),
+		assertContains(
+			formStructure1,
+			Arrays.asList(
+				FormStructureSerDes.toDTOs(
+					formStructuresJSONObject.getString("items"))));
+		assertContains(
+			formStructure2,
+			Arrays.asList(
+				FormStructureSerDes.toDTOs(
+					formStructuresJSONObject.getString("items"))));
+
+		// Using the namespace headlessForm_v1_0
+
+		formStructuresJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessForm_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessForm_v1_0",
+			"JSONObject/formStructures");
+
+		Assert.assertEquals(
+			totalCount + 2, formStructuresJSONObject.getLong("totalCount"));
+
+		assertContains(
+			formStructure1,
+			Arrays.asList(
+				FormStructureSerDes.toDTOs(
+					formStructuresJSONObject.getString("items"))));
+		assertContains(
+			formStructure2,
 			Arrays.asList(
 				FormStructureSerDes.toDTOs(
 					formStructuresJSONObject.getString("items"))));
@@ -880,6 +1002,10 @@ public abstract class BaseFormStructureResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -958,22 +1084,20 @@ public abstract class BaseFormStructureResourceTestCase {
 
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = formStructure.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							formStructure.getDateCreated(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							formStructure.getDateCreated(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -991,22 +1115,20 @@ public abstract class BaseFormStructureResourceTestCase {
 
 		if (entityFieldName.equals("dateModified")) {
 			if (operator.equals("between")) {
+				Date date = formStructure.getDateModified();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							formStructure.getDateModified(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							formStructure.getDateModified(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1158,7 +1280,8 @@ public abstract class BaseFormStructureResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1212,21 +1335,21 @@ public abstract class BaseFormStructureResourceTestCase {
 	}
 
 	protected FormStructureResource formStructureResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1235,11 +1358,16 @@ public abstract class BaseFormStructureResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1271,6 +1399,24 @@ public abstract class BaseFormStructureResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1292,16 +1438,6 @@ public abstract class BaseFormStructureResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

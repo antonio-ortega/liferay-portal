@@ -5,9 +5,11 @@
 
 package com.liferay.style.book.internal.upgrade.registry;
 
+import com.liferay.portal.kernel.upgrade.BaseExternalReferenceCodeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
+import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.style.book.internal.upgrade.v1_1_0.StyleBookEntryUpgradeProcess;
 import com.liferay.style.book.internal.upgrade.v1_2_0.StyleBookEntryVersionUpgradeProcess;
@@ -58,6 +60,27 @@ public class StyleBookServiceUpgradeStepRegistrator
 				}
 
 			});
+
+		registry.register(
+			"1.4.1", "1.5.0",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {
+						{"StyleBookEntry", "styleBookEntryId"},
+						{"StyleBookEntryVersion", "styleBookEntryId"}
+					};
+				}
+
+			});
+
+		registry.register(
+			"1.5.0", "1.6.0",
+			UpgradeProcessFactory.addColumns(
+				"StyleBookEntry", "themeId VARCHAR(255) null"),
+			UpgradeProcessFactory.addColumns(
+				"StyleBookEntryVersion", "themeId VARCHAR(255) null"));
 	}
 
 }

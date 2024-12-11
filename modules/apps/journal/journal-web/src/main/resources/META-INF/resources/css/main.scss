@@ -52,11 +52,16 @@ $productMenuWidth: 320px;
 			height: auto;
 			left: 0;
 			min-height: 3.5rem;
-			position: fixed;
-			transition: left ease $productMenuTransitionDuration,
+			transition:
+				left ease $productMenuTransitionDuration,
 				width ease $productMenuTransitionDuration;
 			width: 100%;
 			z-index: $toolbarZIndex;
+
+			@include media-breakpoint-up(sm) {
+				position: fixed;
+				top: var(--control-menu-container-height);
+			}
 
 			body.open & {
 				left: $productMenuWidth;
@@ -79,7 +84,7 @@ $productMenuWidth: 320px;
 					}
 
 					> .tbar-item {
-						padding: 0.5em;
+						padding: 0.75rem;
 					}
 
 					> .tbar-item:first-child {
@@ -104,24 +109,21 @@ $productMenuWidth: 320px;
 			}
 
 			.input-localized {
-				flex-direction: row-reverse;
-
 				.form-validator-stack {
 					display: none;
 				}
 
-				.input-group-item {
-					order: 2;
-				}
-
 				.input-localized-content {
-					order: 1;
 					padding-right: 0.5rem;
 				}
 			}
 
 			.journal-article-button-row .btn-cancel {
 				border: 0;
+			}
+
+			.translation-manager {
+				width: 115px;
 			}
 
 			@include media-breakpoint-up(lg) {
@@ -149,10 +151,12 @@ $productMenuWidth: 320px;
 				margin-top: $toolbarDesktopHeight;
 			}
 
-			.ddm-form-builder-app {
-				@include media-breakpoint-down(md) {
-					margin-top: $toolbarHeight;
-				}
+			@include media-breakpoint-between(sm, md) {
+				margin-top: $toolbarHeight;
+			}
+
+			.friendly-url {
+				margin-bottom: 0.25rem;
 			}
 		}
 
@@ -196,13 +200,36 @@ $productMenuWidth: 320px;
 		.edit-article-sidebar {
 			border-left: 1px #e7e7ed solid;
 			box-shadow: none;
-			max-width: 90vw;
+			max-width: 320px;
 			outline: 0;
 			overflow-y: scroll;
 			padding-top: 0;
 			position: fixed;
 			width: $productMenuWidth;
-			z-index: 1;
+			z-index: 5;
+
+			@include media-breakpoint-down(xs) {
+				height: auto;
+				overflow: hidden;
+				top: 0;
+
+				&.contextual-sidebar {
+					position: absolute;
+				}
+			}
+
+			@include media-breakpoint-between(sm, md) {
+				$management-bar-height: 110px;
+
+				&.contextual-sidebar {
+					height: calc(
+						100vh - var(--control-menu-container-height) - #{$management-bar-height}
+					);
+					top: calc(
+						var(--control-menu-container-height) + #{$management-bar-height}
+					);
+				}
+			}
 
 			.schedule {
 				.form-group-autofit {
@@ -214,6 +241,25 @@ $productMenuWidth: 320px;
 					.form-group-autofit {
 						margin-bottom: 8px;
 					}
+				}
+			}
+		}
+
+		.edit-article-panel {
+			border-color: $gray-400;
+
+			.sheet-subtitle {
+				border-width: 0;
+				font-size: 1.25rem;
+				padding: 1.25rem;
+				padding-bottom: 0;
+				text-transform: none;
+
+				.lexicon-icon {
+					font-size: 1.25rem;
+					margin-top: 1rem;
+					position: relative;
+					right: 0.5rem;
 				}
 			}
 		}
@@ -247,7 +293,7 @@ $productMenuWidth: 320px;
 		}
 	}
 
-	.nav-tabs + .tab-content .tab-pane {
-		padding: 0.5rem;
+	.lfr-lock-error-indicator {
+		cursor: pointer;
 	}
 }

@@ -30,6 +30,12 @@ public class JavaBaseUpgradeCallableCheck extends BaseJavaTermCheck {
 
 		JavaClass javaClass = (JavaClass)javaTerm;
 
+		String name = javaClass.getName();
+
+		if (name.endsWith("Test")) {
+			return javaTerm.getContent();
+		}
+
 		String packageName = javaClass.getPackageName();
 
 		if (packageName == null) {
@@ -42,16 +48,16 @@ public class JavaBaseUpgradeCallableCheck extends BaseJavaTermCheck {
 			return javaTerm.getContent();
 		}
 
-		Matcher runnablematcher = _runnablePattern.matcher(fileContent);
+		Matcher runnableMatcher = _runnablePattern.matcher(fileContent);
 
-		if (runnablematcher.find()) {
+		if (runnableMatcher.find()) {
 			addMessage(
 				fileName,
 				StringBundler.concat(
-					"Do not use 'java.lang.Runnable' in '",
+					"Do not use \"java.lang.Runnable\" in \"",
 					packageNameMatcher.group(2),
-					"' classes, use 'BaseUpgradeCallable' instead."),
-				getLineNumber(fileContent, runnablematcher.start()));
+					"\" classes, use \"BaseUpgradeCallable\" instead."),
+				getLineNumber(fileContent, runnableMatcher.start()));
 		}
 
 		List<String> importNames = javaClass.getImportNames();
@@ -64,9 +70,9 @@ public class JavaBaseUpgradeCallableCheck extends BaseJavaTermCheck {
 				addMessage(
 					fileName,
 					StringBundler.concat(
-						"Do not use '", importName, "' in '",
+						"Do not use \"", importName, "\" in \"",
 						packageNameMatcher.group(2),
-						"' classes, use 'BaseUpgradeCallable' instead."),
+						"\" classes, use \"BaseUpgradeCallable\" instead."),
 					getLineNumber(
 						fileContent, fileContent.indexOf(importName)));
 			}

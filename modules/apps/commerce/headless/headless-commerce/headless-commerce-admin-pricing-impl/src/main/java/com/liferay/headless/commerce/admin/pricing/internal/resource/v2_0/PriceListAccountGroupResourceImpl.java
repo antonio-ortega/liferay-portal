@@ -60,8 +60,9 @@ public class PriceListAccountGroupResourceImpl
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(
@@ -77,7 +78,7 @@ public class PriceListAccountGroupResourceImpl
 						pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceListCommerceAccountGroupRelService.
 				getCommercePriceListCommerceAccountGroupRelsCount(
 					commercePriceList.getCommercePriceListId());
@@ -85,7 +86,7 @@ public class PriceListAccountGroupResourceImpl
 		return Page.of(
 			_toPriceListAccountGroups(
 				commercePriceListCommerceAccountGroupRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@NestedField(
@@ -112,14 +113,14 @@ public class PriceListAccountGroupResourceImpl
 						id, search, pagination.getStartPosition(),
 						pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commercePriceListCommerceAccountGroupRelService.
 				getCommercePriceListCommerceAccountGroupRelsCount(id, search);
 
 		return Page.of(
 			_toPriceListAccountGroups(
 				commercePriceListCommerceAccountGroupRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -130,8 +131,9 @@ public class PriceListAccountGroupResourceImpl
 		throws Exception {
 
 		CommercePriceList commercePriceList =
-			_commercePriceListService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceListService.
+				fetchCommercePriceListByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceList == null) {
 			throw new NoSuchPriceListException(

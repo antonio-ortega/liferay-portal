@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -91,9 +92,19 @@ public class KBFolderLocalServiceUtil {
 	 *
 	 * @param kbFolder the kb folder
 	 * @return the kb folder that was removed
+	 * @throws PortalException
 	 */
-	public static KBFolder deleteKBFolder(KBFolder kbFolder) {
+	public static KBFolder deleteKBFolder(KBFolder kbFolder)
+		throws PortalException {
+
 		return getService().deleteKBFolder(kbFolder);
+	}
+
+	public static KBFolder deleteKBFolder(
+			KBFolder kbFolder, boolean includeTrashedEntries)
+		throws PortalException {
+
+		return getService().deleteKBFolder(kbFolder, includeTrashedEntries);
 	}
 
 	/**
@@ -111,6 +122,13 @@ public class KBFolderLocalServiceUtil {
 		throws PortalException {
 
 		return getService().deleteKBFolder(kbFolderId);
+	}
+
+	public static KBFolder deleteKBFolder(
+			long kbFolderId, boolean includeTrashedEntries)
+		throws PortalException {
+
+		return getService().deleteKBFolder(kbFolderId, includeTrashedEntries);
 	}
 
 	public static void deleteKBFolders(long groupId) throws PortalException {
@@ -350,6 +368,20 @@ public class KBFolderLocalServiceUtil {
 	}
 
 	public static List<Object> getKBFoldersAndKBArticles(
+		long groupId, long parentResourcePrimKey) {
+
+		return getService().getKBFoldersAndKBArticles(
+			groupId, parentResourcePrimKey);
+	}
+
+	public static List<Object> getKBFoldersAndKBArticles(
+		long groupId, long parentResourcePrimKey, int status) {
+
+		return getService().getKBFoldersAndKBArticles(
+			groupId, parentResourcePrimKey, status);
+	}
+
+	public static List<Object> getKBFoldersAndKBArticles(
 		long groupId, long parentResourcePrimKey, int status, int start,
 		int end, OrderByComparator<?> orderByComparator) {
 
@@ -411,6 +443,14 @@ public class KBFolderLocalServiceUtil {
 		return getService().getKBFoldersCount(groupId, parentKBFolderId);
 	}
 
+	public static int getKBFoldersCount(
+			long groupId, long parentKBFolderId, int status)
+		throws PortalException {
+
+		return getService().getKBFoldersCount(
+			groupId, parentKBFolderId, status);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -429,10 +469,31 @@ public class KBFolderLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
-	public static void moveKBFolder(long kbFolderId, long parentKBFolderId)
+	public static KBFolder moveKBFolder(long kbFolderId, long parentKBFolderId)
 		throws PortalException {
 
-		getService().moveKBFolder(kbFolderId, parentKBFolderId);
+		return getService().moveKBFolder(kbFolderId, parentKBFolderId);
+	}
+
+	public static KBFolder moveKBFolderFromTrash(
+			long userId, long kbFolderId, long parentKBFolderId)
+		throws PortalException {
+
+		return getService().moveKBFolderFromTrash(
+			userId, kbFolderId, parentKBFolderId);
+	}
+
+	public static KBFolder moveKBFolderToTrash(long userId, long kbFolderId)
+		throws PortalException {
+
+		return getService().moveKBFolderToTrash(userId, kbFolderId);
+	}
+
+	public static KBFolder restoreKBFolderFromTrash(
+			long userId, long kbFolderId)
+		throws PortalException {
+
+		return getService().restoreKBFolderFromTrash(userId, kbFolderId);
 	}
 
 	/**
@@ -460,14 +521,19 @@ public class KBFolderLocalServiceUtil {
 			description, serviceContext);
 	}
 
+	public static KBFolder updateStatus(
+			long userId, KBFolder kbFolder, int status)
+		throws PortalException {
+
+		return getService().updateStatus(userId, kbFolder, status);
+	}
+
 	public static KBFolderLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(KBFolderLocalService service) {
-		_service = service;
-	}
-
-	private static volatile KBFolderLocalService _service;
+	private static final Snapshot<KBFolderLocalService> _serviceSnapshot =
+		new Snapshot<>(
+			KBFolderLocalServiceUtil.class, KBFolderLocalService.class);
 
 }

@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -72,6 +71,7 @@ public class CTRemoteServiceImpl extends CTRemoteServiceBaseImpl {
 		return ctRemoteLocalService.deleteCTRemote(ctRemoteId);
 	}
 
+	@Override
 	public List<CTRemote> getCTRemotes(
 		String keywords, int start, int end,
 		OrderByComparator<CTRemote> orderByComparator) {
@@ -106,6 +106,7 @@ public class CTRemoteServiceImpl extends CTRemoteServiceBaseImpl {
 		return ctRemotePersistence.dslQuery(dslQuery);
 	}
 
+	@Override
 	public int getCTRemotesCount(String keywords) {
 		String[] keywordsArray = _customSQL.keywords(
 			keywords, true, WildcardMode.SURROUND);
@@ -155,8 +156,5 @@ public class CTRemoteServiceImpl extends CTRemoteServiceBaseImpl {
 
 	@Reference(target = "(resource.name=" + CTConstants.RESOURCE_NAME + ")")
 	private PortletResourcePermission _portletResourcePermission;
-
-	@Reference
-	private UserLocalService _userLocalService;
 
 }

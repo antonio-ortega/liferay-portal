@@ -3,7 +3,7 @@
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" change-tracking-enabled="true" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.dynamic.data.mapping">
 	<namespace>DDM</namespace>
-	<entity deprecated="true" local-service="true" name="DDMContent" remote-service="false" uuid="true">
+	<entity local-service="true" name="DDMContent" remote-service="false" uuid="true">
 
 		<!-- PK fields -->
 
@@ -35,10 +35,6 @@
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
-
-		<!-- References -->
-
-		<reference entity="User" package-path="com.liferay.portal" />
 	</entity>
 	<entity local-service="true" name="DDMDataProviderInstance" remote-service="true" uuid="true">
 
@@ -226,6 +222,9 @@
 
 		<finder name="GroupId" return-type="Collection">
 			<finder-column arrayable-operator="OR" name="groupId" />
+		</finder>
+		<finder name="StructureId" return-type="DDMFormInstance" unique="true">
+			<finder-column name="structureId" />
 		</finder>
 	</entity>
 	<entity local-service="true" name="DDMFormInstanceRecord" remote-service="true" uuid="true">
@@ -433,6 +432,10 @@
 	</entity>
 	<entity local-service="true" name="DDMStructure" remote-service="true" uuid="true">
 
+		<!-- External reference code -->
+
+		<column name="externalReferenceCode" type="String" />
+
 		<!-- PK fields -->
 
 		<column name="structureId" primary="true" type="long" />
@@ -485,6 +488,11 @@
 		</finder>
 		<finder name="C_C" return-type="Collection">
 			<finder-column name="companyId" />
+			<finder-column name="classNameId" />
+		</finder>
+		<finder name="ERC_G_C" return-type="DDMStructure" unique="true">
+			<finder-column name="externalReferenceCode" />
+			<finder-column name="groupId" />
 			<finder-column name="classNameId" />
 		</finder>
 		<finder name="G_C_S" return-type="DDMStructure" unique="true">
@@ -557,7 +565,7 @@
 			<finder-column name="structureVersionId" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="DDMStructureLink" remote-service="false">
+	<entity local-service="true" name="DDMStructureLink" remote-service="true">
 
 		<!-- PK fields -->
 
@@ -634,7 +642,7 @@
 			<finder-column name="status" />
 		</finder>
 	</entity>
-	<entity local-service="true" name="DDMTemplate" remote-service="true" uuid="true">
+	<entity external-reference-code="group" local-service="true" name="DDMTemplate" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -809,6 +817,7 @@
 		<exception>DataProviderInstanceName</exception>
 		<exception>DataProviderInstanceURL</exception>
 		<exception>DuplicateDataProviderInstanceInputParameterName</exception>
+		<exception>DuplicateDDMStructureExternalReferenceCode</exception>
 		<exception>FormInstanceExpired</exception>
 		<exception>FormInstanceName</exception>
 		<exception>FormInstanceNotPublished</exception>

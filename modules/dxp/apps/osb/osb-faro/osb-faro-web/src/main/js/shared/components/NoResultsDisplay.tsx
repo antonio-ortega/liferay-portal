@@ -15,6 +15,7 @@ export interface INoResultsDisplayProps
 	children?: React.ReactElement;
 	description?: string | React.ReactNode;
 	displayCard?: boolean;
+	flexGrow?: boolean;
 	icon?: IIconProps;
 	primary?: boolean;
 	spacer?: boolean;
@@ -49,14 +50,17 @@ const NoResultsDisplay: React.FC<INoResultsDisplayProps> = ({
 	className,
 	description,
 	displayCard = false,
+	flexGrow = true,
 	icon,
 	primary = false,
 	spacer = false,
 	title = getFormattedTitle(),
 	...otherProps
 }) => {
-	const classes = getCN(className, 'no-results-root flex-grow-1', {
+	const classes = getCN(className, 'no-results-root', {
 		'display-card': displayCard,
+		'flex-grow-0': !flexGrow,
+		'flex-grow-1': flexGrow,
 		'no-results-primary': primary
 	});
 
@@ -65,7 +69,7 @@ const NoResultsDisplay: React.FC<INoResultsDisplayProps> = ({
 			<div className={getCN('no-results-content', {spacer})}>
 				{icon && <NoResultsDisplayIcon {...icon} />}
 
-				{title && <h4 className='no-results-title'>{title}</h4>}
+				{title && <div className='h4 no-results-title'>{title}</div>}
 
 				{description && (
 					<div className='no-results-description'>{description}</div>

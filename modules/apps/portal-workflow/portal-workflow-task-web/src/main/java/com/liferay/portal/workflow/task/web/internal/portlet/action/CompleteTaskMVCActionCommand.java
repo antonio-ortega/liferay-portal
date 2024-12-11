@@ -5,8 +5,16 @@
 
 package com.liferay.portal.workflow.task.web.internal.portlet.action;
 
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -14,6 +22,8 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowHandler;
+import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
@@ -53,29 +63,65 @@ public class CompleteTaskMVCActionCommand
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		long workflowTaskId = ParamUtil.getLong(
-			actionRequest, "workflowTaskId");
+		try {
+			boolean hideDefaultSuccessMessage = ParamUtil.getBoolean(
+				actionRequest, "hideDefaultSuccessMessage");
 
-		String transitionName = ParamUtil.getString(
-			actionRequest, "transitionName");
-		String comment = ParamUtil.getString(actionRequest, "comment");
+			if (hideDefaultSuccessMessage) {
+				SessionMessages.add(
+					actionRequest,
+					_portal.getPortletId(actionRequest) +
+						SessionMessages.
+							KEY_SUFFIX_HIDE_DEFAULT_SUCCESS_MESSAGE);
+			}
 
-		Map<String, Serializable> workflowContext = _getWorkflowContext(
-			themeDisplay.getCompanyId(), workflowTaskId);
+			long workflowTaskId = ParamUtil.getLong(
+				actionRequest, "workflowTaskId");
 
-		ServiceContext serviceContext = (ServiceContext)workflowContext.get(
-			"serviceContext");
+			String transitionName = ParamUtil.getString(
+				actionRequest, "transitionName");
+			String comment = ParamUtil.getString(actionRequest, "comment");
 
-		serviceContext.setRequest(
-			_getHttpServletRequest(actionRequest, actionResponse));
+			Map<String, Serializable> workflowContext = _getWorkflowContext(
+				themeDisplay.getCompanyId(), workflowTaskId);
 
-		workflowContext.put(
-			WorkflowConstants.CONTEXT_USER_ID,
-			String.valueOf(themeDisplay.getUserId()));
+			ServiceContext serviceContext = (ServiceContext)workflowContext.get(
+				WorkflowConstants.CONTEXT_SERVICE_CONTEXT);
 
-		workflowTaskManager.completeWorkflowTask(
-			themeDisplay.getCompanyId(), themeDisplay.getUserId(),
-			workflowTaskId, transitionName, comment, workflowContext);
+			serviceContext.setRequest(
+				_getHttpServletRequest(actionRequest, actionResponse));
+
+			WorkflowHandler<?> workflowHandler =
+				WorkflowHandlerRegistryUtil.getWorkflowHandler(
+					(String)workflowContext.get(
+						WorkflowConstants.CONTEXT_ENTRY_CLASS_NAME));
+
+			workflowHandler.contributeServiceContext(serviceContext);
+
+			workflowContext.put(
+				WorkflowConstants.CONTEXT_USER_ID,
+				String.valueOf(themeDisplay.getUserId()));
+
+			workflowTaskManager.completeWorkflowTask(
+				themeDisplay.getCompanyId(), themeDisplay.getUserId(),
+				workflowTaskId, transitionName, comment, workflowContext);
+
+			JSONPortletResponseUtil.writeJSON(
+				actionRequest, actionResponse, _jsonFactory.createJSONObject());
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+
+			JSONPortletResponseUtil.writeJSON(
+				actionRequest, actionResponse,
+				JSONUtil.put(
+					"error",
+					_language.get(
+						themeDisplay.getLocale(),
+						"an-unexpected-error-occurred")));
+		}
 	}
 
 	@Reference
@@ -113,6 +159,15 @@ public class CompleteTaskMVCActionCommand
 
 		return workflowInstance.getWorkflowContext();
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CompleteTaskMVCActionCommand.class);
+
+	@Reference
+	private JSONFactory _jsonFactory;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

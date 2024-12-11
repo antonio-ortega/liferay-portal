@@ -1,4 +1,4 @@
-@component-name = "portal-document-management"
+@component-name = "portal-content-management"
 definition {
 
 	property custom.properties = "default.layout.template.id=1_column";
@@ -46,9 +46,9 @@ definition {
 			cancel = "true",
 			senderName = "Test Test");
 
-		Portlet.gotoPortletOptions(portletOption = "Configuration");
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "guest");
 
-		SelectFrame(locator1 = "IFrame#CONFIGURATION");
+		Portlet.gotoPortletOptions(portletOption = "Configuration");
 
 		InputField.viewText(
 			fieldLabel = "Name",
@@ -56,7 +56,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-91199. It checks that all files selected on different pages can be deleted."
-	@priority = 5
+	@priority = 4
 	test CanDeleteAllDocumentsOnDifferentPagesAtOnce {
 		for (var entryCount : list "1,2,3,4,5") {
 			JSONDocument.addFileWithUploadedFile(
@@ -81,6 +81,7 @@ definition {
 	@refactordone
 	test CanMoveDocumentsWithMultiplePaginations {
 		property portal.acceptance = "true";
+		property portal.release = "quarantine";
 
 		HeadlessSite.addSite(siteName = "Site Name");
 
@@ -118,25 +119,29 @@ definition {
 
 		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name");
 
+		DMFolder.gotoEntry(dmFolderName = "DM Folder Name");
+
 		Pagination.changePagination(itemsPerPage = 20);
 
-		Pagination.viewResults(results = "Showing 1 to 11 of 11 entries.");
+		Pagination.viewResults(results = "Showing 1 to 10 of 10 entries.");
 
 		Navigator.openSitePage(
 			pageName = "Documents and Media Page",
 			siteName = "Site Name");
 
+		DMNavigator.gotoFolder(dmFolderName = "DM Folder Name");
+
 		LexiconEntry.changeDisplayStyle(displayStyle = "List");
 
 		Pagination.changePagination(itemsPerPage = 4);
 
-		Pagination.viewResults(results = "Showing 1 to 4 of 11 entries.");
+		Pagination.viewResults(results = "Showing 1 to 4 of 10 entries.");
 
 		DMDocument.checkDocumentCheckboxPG(dmDocumentTitle = "DM Document Title8");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "1 of 11 Items Selected");
+			value1 = "1 of 10 Items Selected");
 
 		Click(locator1 = "Pagination#NEXT_LINK");
 
@@ -144,11 +149,11 @@ definition {
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "ManagementBar#NAVBAR_TEXT",
-			value1 = "5 of 11 Items Selected");
+			value1 = "5 of 10 Items Selected");
 	}
 
 	@description = "This is a test for LPS-91861. It checks that the counts can be reset in management toolbar."
-	@priority = 5
+	@priority = 4
 	test CanResetCountsInManagementToolbar {
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",

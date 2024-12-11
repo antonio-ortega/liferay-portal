@@ -1,5 +1,6 @@
 import ClayButton from '@clayui/button';
-import Constants from 'shared/util/constants';
+import ClayLink from '@clayui/link';
+import Constants, {FaroEnv} from 'shared/util/constants';
 import Form, {
 	validateMaxLength,
 	validateMinLength,
@@ -30,17 +31,20 @@ import {
 
 const {
 	faroURL,
-	projectLocations: {AS1, DEV, EU2, EU3, SA, UAT, US}
+	projectLocations: {AS1, EU2, EU3, SA, STG, US}
 } = Constants;
 
 const DEFAULT_TIME_ZONE = 'UTC';
 
 const getProjectLocations = (): {label: string; value: string}[] => {
 	switch (FARO_ENV) {
-		case 'dev':
-			return [{label: Liferay.Language.get('location-dev'), value: DEV}];
-		case 'uat':
-			return [{label: Liferay.Language.get('location-uat'), value: UAT}];
+		case FaroEnv.Staging:
+			return [
+				{
+					label: Liferay.Language.get('location-staging'),
+					value: STG
+				}
+			];
 		default:
 			return [
 				{label: Liferay.Language.get('location-as1'), value: AS1},
@@ -52,12 +56,10 @@ const getProjectLocations = (): {label: string; value: string}[] => {
 	}
 };
 
-const getDefaultServerLocation = (): string => {
+const getDefaultServerLocation = () => {
 	switch (FARO_ENV) {
-		case 'dev':
-			return DEV;
-		case 'uat':
-			return UAT;
+		case FaroEnv.Staging:
+			return STG;
 		default:
 			return US;
 	}
@@ -110,14 +112,6 @@ const AddWorkspaceForm: React.FC<IAddWorkspaceFormProps> = ({
 			})
 				.then(() => {
 					setSubmitting(false);
-
-					if (
-						editing &&
-						project.getIn(['timeZone', 'timeZoneId']) !==
-							values.timeZoneId
-					) {
-						analytics.track('Updated Timezone');
-					}
 
 					if (initialFriendlyURL === newFriendlyURL) {
 						resetForm(values);
@@ -268,16 +262,16 @@ const AddWorkspaceForm: React.FC<IAddWorkspaceFormProps> = ({
 									{/* <p class="extra-instruction text-secondary">
 											{sub(
 												Liferay.Language.get(
-													'cant-find-the-right-server?-send-us-a-x'
+													'cannot-find-the-right-server?-send-us-a-x'
 												),
 												[
 													// TODO: This should in the future direct to a
 													// suggestion form in the app
-													<a href="#1" key="suggestion">
+													<ClayLink href="#1" key="suggestion">
 														{Liferay.Language.get(
 															'suggestion-fragment'
 														)}
-													</a>
+													</ClayLink>
 												],
 												false
 											)}
@@ -465,7 +459,7 @@ const AddWorkspaceForm: React.FC<IAddWorkspaceFormProps> = ({
 														'by-selecting-i-agree-,-you-agree-to-our-x-including-our-x'
 													),
 													[
-														<a
+														<ClayLink
 															href={
 																URLConstants.TermsAndConditions
 															}
@@ -474,8 +468,8 @@ const AddWorkspaceForm: React.FC<IAddWorkspaceFormProps> = ({
 															{Liferay.Language.get(
 																'terms-and-conditions'
 															)}
-														</a>,
-														<a
+														</ClayLink>,
+														<ClayLink
 															href={
 																URLConstants.PrivacyPolicy
 															}
@@ -484,7 +478,7 @@ const AddWorkspaceForm: React.FC<IAddWorkspaceFormProps> = ({
 															{Liferay.Language.get(
 																'privacy-policy'
 															)}
-														</a>
+														</ClayLink>
 													],
 													false
 												)}

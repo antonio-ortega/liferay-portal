@@ -8,6 +8,7 @@ package com.liferay.asset.entry.query.processor.custom.user.attributes.internal.
 import com.liferay.asset.publisher.constants.AssetPublisherConstants;
 import com.liferay.frontend.taglib.form.navigator.BaseJSPFormNavigatorEntry;
 import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -62,8 +63,20 @@ public class CustomUserAttributesFormNavigatorEntry
 	}
 
 	@Override
+	public boolean isDeprecated() {
+		return true;
+	}
+
+	@Override
 	public boolean isVisible(User user, Object object) {
-		if (_isDynamicAssetSelection()) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-39304")) {
+			return false;
+		}
+
+		if (FeatureFlagManagerUtil.isEnabled(
+				user.getCompanyId(), "LPD-13311") &&
+			_isDynamicAssetSelection()) {
+
 			return true;
 		}
 
@@ -83,12 +96,12 @@ public class CustomUserAttributesFormNavigatorEntry
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
-		PortletPreferences portletSetup =
+		PortletPreferences portletPreferences =
 			themeDisplay.getStrictLayoutPortletSetup(
 				themeDisplay.getLayout(), portletDisplay.getPortletResource());
 
 		String selectionStyle = GetterUtil.getString(
-			portletSetup.getValue("selectionStyle", null));
+			portletPreferences.getValue("selectionStyle", null));
 
 		if (Objects.equals(selectionStyle, "dynamic")) {
 			return true;

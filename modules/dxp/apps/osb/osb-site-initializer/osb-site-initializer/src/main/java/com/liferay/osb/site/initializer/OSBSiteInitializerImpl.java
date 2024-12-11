@@ -15,6 +15,8 @@ import com.liferay.search.experiences.rest.resource.v1_0.SXPBlueprintResource;
 import com.liferay.site.initializer.extender.OSBSiteInitializer;
 import com.liferay.site.initializer.extender.SiteInitializerUtil;
 
+import java.util.Map;
+
 import javax.servlet.ServletContext;
 
 import org.osgi.service.component.annotations.Component;
@@ -26,8 +28,12 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = OSBSiteInitializer.class)
 public class OSBSiteInitializerImpl implements OSBSiteInitializer {
 
+	@Override
 	public void addOrUpdateSXPBlueprint(
-			ServiceContext serviceContext, ServletContext servletContext)
+			Map<String, String> classNameIdStringUtilReplaceValues,
+			Map<String, String> releaseInfoStringUtilReplaceValues,
+			ServiceContext serviceContext, ServletContext servletContext,
+			Map<String, String> stringUtilReplaceValues)
 		throws Exception {
 
 		String json = SiteInitializerUtil.read(
@@ -46,7 +52,11 @@ public class OSBSiteInitializerImpl implements OSBSiteInitializer {
 			serviceContext.fetchUser()
 		).build();
 
-		JSONArray jsonArray = _jsonFactory.createJSONArray(json);
+		JSONArray jsonArray = _jsonFactory.createJSONArray(
+			SiteInitializerUtil.replace(
+				classNameIdStringUtilReplaceValues,
+				releaseInfoStringUtilReplaceValues, json,
+				stringUtilReplaceValues));
 
 		for (int i = 0; i < jsonArray.length(); i++) {
 			SXPBlueprint sxpBlueprint = SXPBlueprint.toDTO(
@@ -60,8 +70,13 @@ public class OSBSiteInitializerImpl implements OSBSiteInitializer {
 				continue;
 			}
 
-			sxpBlueprintResource.putSXPBlueprintByExternalReferenceCode(
-				sxpBlueprint.getExternalReferenceCode(), sxpBlueprint);
+			sxpBlueprint =
+				sxpBlueprintResource.putSXPBlueprintByExternalReferenceCode(
+					sxpBlueprint.getExternalReferenceCode(), sxpBlueprint);
+
+			stringUtilReplaceValues.put(
+				"SXP_BLUEPRINT_ID:" + sxpBlueprint.getExternalReferenceCode(),
+				String.valueOf(sxpBlueprint.getId()));
 		}
 	}
 

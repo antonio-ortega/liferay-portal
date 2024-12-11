@@ -77,11 +77,13 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account.properties",
 	scope = ServiceScope.PROTOTYPE, service = AccountResource.class
 )
+@Deprecated
 public class AccountResourceImpl extends BaseAccountResourceImpl {
 
 	@Override
@@ -248,7 +250,7 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, account.getName(),
 				null, null, _getEmailAddress(account, null), null,
 				account.getTaxId(),
-				GetterUtil.get(
+				GetterUtil.getString(
 					_toAccountEntryType(account.getType()),
 					AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON),
 				_toAccountEntryStatus(
@@ -491,9 +493,11 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 				account.getDefaultShippingAccountAddressId(),
 				accountEntry.getDefaultShippingAddressId()));
 		accountEntry.setEmailAddress(_getEmailAddress(account, accountEntry));
-		accountEntry.setName(account.getName());
+		accountEntry.setName(
+			GetterUtil.getString(account.getName(), accountEntry.getName()));
 		accountEntry.setTaxIdNumber(
-			GetterUtil.get(account.getTaxId(), accountEntry.getTaxIdNumber()));
+			GetterUtil.getString(
+				account.getTaxId(), accountEntry.getTaxIdNumber()));
 		accountEntry.setStatus(
 			_toAccountEntryStatus(
 				GetterUtil.getBoolean(account.getActive(), true)));
@@ -569,16 +573,16 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 								ADDRESS_TYPE_BILLING_AND_SHIPPING),
 						serviceContext);
 
-					if (GetterUtil.get(
-							accountAddress.getDefaultBilling(), false)) {
+					if (GetterUtil.getBoolean(
+							accountAddress.getDefaultBilling())) {
 
 						_accountEntryLocalService.updateDefaultBillingAddressId(
 							accountEntry.getAccountEntryId(),
 							exisitingCommerceAddress.getCommerceAddressId());
 					}
 
-					if (GetterUtil.get(
-							accountAddress.getDefaultShipping(), false)) {
+					if (GetterUtil.getBoolean(
+							accountAddress.getDefaultShipping())) {
 
 						_accountEntryLocalService.
 							updateDefaultShippingAddressId(
@@ -610,14 +614,14 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 								ADDRESS_TYPE_BILLING_AND_SHIPPING),
 						serviceContext);
 
-				if (GetterUtil.get(accountAddress.getDefaultBilling(), false)) {
+				if (GetterUtil.getBoolean(accountAddress.getDefaultBilling())) {
 					_accountEntryLocalService.updateDefaultBillingAddressId(
 						accountEntry.getAccountEntryId(),
 						commerceAddress.getCommerceAddressId());
 				}
 
-				if (GetterUtil.get(
-						accountAddress.getDefaultShipping(), false)) {
+				if (GetterUtil.getBoolean(
+						accountAddress.getDefaultShipping())) {
 
 					_accountEntryLocalService.updateDefaultShippingAddressId(
 						accountEntry.getAccountEntryId(),

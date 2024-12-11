@@ -1,8 +1,10 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
 	property portal.acceptance = "true";
-	property portal.release = "true";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Item Selector";
 
@@ -10,6 +12,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 	}
 
 	tearDown {
@@ -35,6 +39,7 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanAddBlogsImageViaURL {
+		property portal.release = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -536,9 +541,7 @@ definition {
 
 		SelectFrame(locator1 = "ItemSelector#ITEM_SELECTOR_IFRAME");
 
-		for (var subheaderItem : list "Everywhere,Current Site") {
-			ManagementBar.viewNoSubheaderInFilterAndOrder(subheaderItem = ${subheaderItem});
-		}
+		AssertElementNotPresent(locator1 = "ManagementBar#FILTER");
 	}
 
 	@description = "It ensures that the web content draft in an Asset Library cannot be found when searching in an Item Selector in that Library."
@@ -902,6 +905,8 @@ definition {
 	@description = "Checks if user can edit a Wiki page adding an Image via URL."
 	@priority = 3
 	test CanUploadImageInWikiPage {
+		property portal.release = "quarantine";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "Document_2.jpg",
@@ -1048,7 +1053,7 @@ definition {
 
 	@description = "This ensures that the location info of depot web content can be viewed through WCD on a connected site."
 	@ignore = "true"
-	@priority = 5
+	@priority = 4
 	@refactordone
 	test CanViewCorrectWCLocationInfo {
 		HeadlessSite.addSite(siteName = "Site Name");
@@ -1093,7 +1098,7 @@ definition {
 	}
 
 	@description = "This ensures that the location info of the documents can be viewed through Blogs on a connected site."
-	@priority = 5
+	@priority = 4
 	@refactordone
 	test CanViewDocumentsCorrectLocationInfo {
 		HeadlessSite.addSite(siteName = "Site Name");
@@ -1474,8 +1479,11 @@ definition {
 	@priority = 4
 	@refactordone
 	test PrivateSiteShouldNotBeViewableWithoutPermissionsInCalendar {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+		property custom.properties = "feature.flag.LPD-35013=true${line.separator}jsonws.web.service.paths.excludes=";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		var portalURL = PropsUtil.get("portal.url");
 

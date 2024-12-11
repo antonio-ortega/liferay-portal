@@ -52,7 +52,7 @@ public class CategoryResourceImpl extends BaseCategoryResourceImpl {
 
 		if (cpDefinition == null) {
 			throw new NoSuchCPDefinitionException(
-				"Unable to find Product with ID: " + productId);
+				"Unable to find product with ID " + productId);
 		}
 
 		List<AssetCategory> assetCategories =
@@ -62,12 +62,12 @@ public class CategoryResourceImpl extends BaseCategoryResourceImpl {
 				cpDefinition.getCPDefinitionId(), pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-		int totalItems = _assetCategoryLocalService.getCategoriesCount(
+		int totalCount = _assetCategoryLocalService.getCategoriesCount(
 			_classNameLocalService.getClassNameId(cpDefinition.getModelClass()),
 			cpDefinition.getCPDefinitionId());
 
 		return Page.of(
-			_toProductCategories(assetCategories), pagination, totalItems);
+			_toProductCategories(assetCategories), pagination, totalCount);
 	}
 
 	private List<Category> _toProductCategories(

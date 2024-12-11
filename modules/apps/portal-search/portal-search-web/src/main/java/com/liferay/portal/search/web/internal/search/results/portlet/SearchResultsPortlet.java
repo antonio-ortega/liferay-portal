@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.security.permission.ResourceActions;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -36,7 +37,6 @@ import com.liferay.portal.search.web.internal.display.context.PortletURLFactoryI
 import com.liferay.portal.search.web.internal.display.context.SearchResultPreferences;
 import com.liferay.portal.search.web.internal.document.DocumentFormPermissionCheckerImpl;
 import com.liferay.portal.search.web.internal.portlet.shared.search.NullPortletURL;
-import com.liferay.portal.search.web.internal.portlet.shared.task.helper.PortletSharedRequestHelper;
 import com.liferay.portal.search.web.internal.result.display.context.SearchResultSummaryDisplayContext;
 import com.liferay.portal.search.web.internal.result.display.context.builder.SearchResultSummaryDisplayContextBuilder;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
@@ -189,9 +189,6 @@ public class SearchResultsPortlet extends MVCPortlet {
 	protected ObjectDefinitionLocalService objectDefinitionLocalService;
 
 	@Reference
-	protected PortletSharedRequestHelper portletSharedRequestHelper;
-
-	@Reference
 	protected PortletSharedSearchRequest portletSharedSearchRequest;
 
 	@Reference
@@ -238,10 +235,19 @@ public class SearchResultsPortlet extends MVCPortlet {
 		searchResultsPortletDisplayContext.setSearchContainer(
 			_buildSearchContainer(
 				documents, searchResponse.getTotalHits(),
-				portletSharedSearchResponse.getPaginationStart(),
+				GetterUtil.getInteger(
+					portletSharedSearchResponse.getParameter(
+						searchResultsPortletPreferences.
+							getPaginationStartParameterName(),
+						renderRequest)),
 				searchResultsPortletPreferences.
 					getPaginationStartParameterName(),
-				portletSharedSearchResponse.getPaginationDelta(),
+				GetterUtil.getInteger(
+					portletSharedSearchResponse.getParameter(
+						searchResultsPortletPreferences.
+							getPaginationDeltaParameterName(),
+						renderRequest),
+					searchResultsPortletPreferences.getPaginationDelta()),
 				searchResultsPortletPreferences.
 					getPaginationDeltaParameterName(),
 				renderRequest));
@@ -325,6 +331,8 @@ public class SearchResultsPortlet extends MVCPortlet {
 			assetEntryLocalService
 		).setAssetRendererFactoryLookup(
 			assetRendererFactoryLookup
+		).setClassNameLocalService(
+			_classNameLocalService
 		).setCurrentURL(
 			getCurrentURL(renderRequest)
 		).setDocument(
@@ -441,9 +449,11 @@ public class SearchResultsPortlet extends MVCPortlet {
 		RenderRequest renderRequest, String paginationStartParameterName) {
 
 		return HttpComponentsUtil.removeParameter(
-			portletSharedRequestHelper.getCompleteURL(renderRequest),
-			paginationStartParameterName);
+			_portal.getCurrentURL(renderRequest), paginationStartParameterName);
 	}
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private Portal _portal;

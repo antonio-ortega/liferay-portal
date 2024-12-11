@@ -1,3 +1,9 @@
+create table AutoEscapeEntry (
+	autoEscapeEntryId LONG not null primary key,
+	autoEscapeDisabledColumn VARCHAR(75) null,
+	autoEscapeEnabledColumn VARCHAR(75) null
+);
+
 create table BigDecimalEntries_LVEntries (
 	companyId LONG not null,
 	bigDecimalEntryId LONG not null,
@@ -54,13 +60,37 @@ create table ERCCompanyEntry (
 	uuid_ VARCHAR(75) null,
 	externalReferenceCode VARCHAR(75) null,
 	ercCompanyEntryId LONG not null primary key,
-	companyId LONG
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	column1 INTEGER
 );
 
 create table ERCGroupEntry (
 	uuid_ VARCHAR(75) null,
 	externalReferenceCode VARCHAR(75) null,
 	ercGroupEntryId LONG not null primary key,
+	groupId LONG,
+	companyId LONG
+);
+
+create table ERCVersionedEntry (
+	mvccVersion LONG default 0 not null,
+	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
+	headId LONG,
+	head BOOLEAN,
+	ercVersionedEntryId LONG not null primary key,
+	groupId LONG,
+	companyId LONG
+);
+
+create table ERCVersionedEntryVersion (
+	ercVersionedEntryVersionId LONG not null primary key,
+	version INTEGER,
+	uuid_ VARCHAR(75) null,
+	externalReferenceCode VARCHAR(75) null,
+	ercVersionedEntryId LONG,
 	groupId LONG,
 	companyId LONG
 );
@@ -76,6 +106,19 @@ create table FinderWhereClauseEntry (
 	finderWhereClauseEntryId LONG not null primary key,
 	name VARCHAR(75) null,
 	nickname VARCHAR(75) null
+);
+
+create table IndexEntry (
+	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
+	externalReferenceCode VARCHAR(75) null,
+	indexEntryId LONG not null,
+	companyId LONG,
+	ownerId LONG,
+	ownerType INTEGER,
+	plid LONG,
+	portletId VARCHAR(75) null,
+	primary key (indexEntryId, ctCollectionId)
 );
 
 create table LVEntries_BigDecimalEntries (
@@ -234,6 +277,14 @@ create table NullConvertibleEntry (
 	name VARCHAR(75) null
 );
 
+create table PermissionCheckFinderEntry (
+	permissionCheckFinderEntryId LONG not null primary key,
+	groupId LONG,
+	integer_ INTEGER,
+	name VARCHAR(75) null,
+	type_ VARCHAR(75) null
+);
+
 create table RedundantIndexEntry (
 	redundantIndexEntryId LONG not null primary key,
 	companyId LONG,
@@ -266,4 +317,13 @@ create table VersionedEntryVersion (
 	version INTEGER,
 	versionedEntryId LONG,
 	groupId LONG
+);
+
+create table userId (
+	dataLimitEntryId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	userName VARCHAR(75) null,
+	createDate DATE null,
+	modifiedDate DATE null
 );

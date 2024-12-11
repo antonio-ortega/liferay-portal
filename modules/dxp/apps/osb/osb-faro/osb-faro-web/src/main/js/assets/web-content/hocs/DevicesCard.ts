@@ -3,6 +3,7 @@ import URLConstants from 'shared/util/url-constants';
 import {BROWSER_FRAGMENT, DEVICE_FRAGMENT} from 'shared/queries/fragments';
 import {gql} from 'apollo-boost';
 import {graphql} from '@apollo/react-hoc';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {withDevicesCard} from 'shared/hoc/DevicesCard';
 
 const BROWSER_DEVICE_QUERY = gql`
@@ -60,5 +61,6 @@ export default withDevicesCard(withWebContentDevices, {
 		'learn-more-about-views-by-technology'
 	),
 	documentationUrl: URLConstants.SitesDashboardWebContentViewsByTechnology,
+	reportContainer: ReportContainer.ViewsByTechnologyCard,
 	title: Liferay.Language.get('there-are-no-views-on-the-selected-period')
 });

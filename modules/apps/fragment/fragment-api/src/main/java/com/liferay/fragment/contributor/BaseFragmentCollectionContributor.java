@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -27,6 +28,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.InputStream;
@@ -271,7 +273,7 @@ public abstract class BaseFragmentCollectionContributor
 		throws Exception {
 
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			StreamUtil.toString(url.openStream()));
+			URLUtil.toString(url));
 
 		String fragmentCompositionKey = jsonObject.getString(
 			"fragmentCompositionKey");
@@ -304,6 +306,7 @@ public abstract class BaseFragmentCollectionContributor
 		FragmentComposition fragmentComposition =
 			fragmentCompositionLocalService.createFragmentComposition(0L);
 
+		fragmentComposition.setCompanyId(CompanyConstants.SYSTEM);
 		fragmentComposition.setFragmentCompositionKey(fragmentCompositionKey);
 		fragmentComposition.setName(name);
 		fragmentComposition.setData(definition);
@@ -353,7 +356,7 @@ public abstract class BaseFragmentCollectionContributor
 
 	private FragmentEntry _getFragmentEntry(URL url) throws Exception {
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
-			StreamUtil.toString(url.openStream()));
+			URLUtil.toString(url));
 
 		String fragmentEntryKey = StringBundler.concat(
 			getFragmentCollectionKey(), StringPool.DASH,
@@ -394,6 +397,7 @@ public abstract class BaseFragmentCollectionContributor
 		FragmentEntry fragmentEntry =
 			fragmentEntryLocalService.createFragmentEntry(0L);
 
+		fragmentEntry.setCompanyId(CompanyConstants.SYSTEM);
 		fragmentEntry.setFragmentEntryKey(fragmentEntryKey);
 		fragmentEntry.setName(name);
 		fragmentEntry.setCss(css);

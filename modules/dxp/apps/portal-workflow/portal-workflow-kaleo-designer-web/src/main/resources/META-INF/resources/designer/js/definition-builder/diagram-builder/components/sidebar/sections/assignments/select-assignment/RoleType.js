@@ -7,7 +7,7 @@ import React, {useContext} from 'react';
 
 import {DiagramBuilderContext} from '../../../../../DiagramBuilderContext';
 import SidebarPanel from '../../../SidebarPanel';
-import BaseRoleType from '../../shared-components/BaseRoleType';
+import {BaseRoleType} from '../../shared-components/BaseRoleType';
 
 const RoleType = (props) => {
 	const {setSelectedItem} = useContext(DiagramBuilderContext);
@@ -20,7 +20,6 @@ const RoleType = (props) => {
 				assignments: {
 					assignmentType: ['roleType'],
 					autoCreate: values.map(({autoCreate}) => autoCreate),
-					roleKey: values.map(({roleKey}) => roleKey),
 					roleName: values.map(({roleName}) => roleName),
 					roleType: values.map(({roleType}) => roleType),
 				},

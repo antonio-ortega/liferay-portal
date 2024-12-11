@@ -21,7 +21,6 @@ import com.liferay.commerce.product.url.CPFriendlyURL;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -63,10 +62,30 @@ public class MiniCartTag extends IncludeTag {
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
 		try {
-			AccountEntry accountEntry = commerceContext.getAccountEntry();
+			AccountEntry accountEntry = null;
+
+			if (commerceContext != null) {
+				accountEntry = commerceContext.getAccountEntry();
+			}
 
 			if (accountEntry != null) {
 				_accountEntryId = accountEntry.getAccountEntryId();
+			}
+
+			_commerceChannelId = 0;
+
+			if (commerceContext != null) {
+				_commerceChannelId = commerceContext.getCommerceChannelId();
+			}
+
+			if (_commerceChannelId == 0) {
+				_commerceChannelGroupId = 0;
+				_checkoutURL = StringPool.BLANK;
+				_itemsQuantity = 0;
+				_orderDetailURL = StringPool.BLANK;
+				_orderId = 0;
+
+				return super.doStartTag();
 			}
 
 			_checkoutURL = StringPool.BLANK;
@@ -83,18 +102,6 @@ public class MiniCartTag extends IncludeTag {
 				).buildString();
 			}
 
-			_commerceChannelId = commerceContext.getCommerceChannelId();
-
-			if (_commerceChannelId == 0) {
-				_commerceChannelGroupId = 0;
-				_checkoutURL = StringPool.BLANK;
-				_itemsQuantity = 0;
-				_orderDetailURL = StringPool.BLANK;
-				_orderId = 0;
-
-				return super.doStartTag();
-			}
-
 			_commerceChannelGroupId =
 				commerceContext.getCommerceChannelGroupId();
 
@@ -109,29 +116,14 @@ public class MiniCartTag extends IncludeTag {
 				_itemsQuantity = _getItemsQuantity(
 					commerceOrder, httpServletRequest);
 				_orderId = commerceOrder.getCommerceOrderId();
-
-				PortletURL commerceCartPortletURL =
-					_commerceOrderHttpHelper.getCommerceCartPortletURL(
-						httpServletRequest, commerceOrder);
-
-				if (commerceCartPortletURL != null) {
-					_orderDetailURL = String.valueOf(commerceCartPortletURL);
-				}
 			}
 			else {
-				PortletURL commerceCartPortletURL =
-					_commerceOrderHttpHelper.getCommerceCartPortletURL(
-						httpServletRequest, null);
-
-				if (commerceCartPortletURL != null) {
-					_orderDetailURL = String.valueOf(commerceCartPortletURL);
-				}
-				else {
-					_orderDetailURL = StringPool.BLANK;
-				}
-
 				_orderId = 0;
 			}
+
+			_orderDetailURL =
+				_commerceOrderHttpHelper.getCommerceCartPortletURL(
+					httpServletRequest, commerceOrder);
 
 			_requestQuoteEnabled = _isRequestQuoteEnabled();
 		}
@@ -157,6 +149,10 @@ public class MiniCartTag extends IncludeTag {
 		return super.doStartTag();
 	}
 
+	public String getCssClasses() {
+		return _cssClasses;
+	}
+
 	public Map<String, String> getLabels() {
 		return _labels;
 	}
@@ -171,6 +167,10 @@ public class MiniCartTag extends IncludeTag {
 
 	public boolean isToggleable() {
 		return _toggleable;
+	}
+
+	public void setCssClasses(String cssClasses) {
+		_cssClasses = cssClasses;
 	}
 
 	public void setDisplayTotalItemsQuantity(
@@ -213,6 +213,7 @@ public class MiniCartTag extends IncludeTag {
 		_commerceCurrencyCode = null;
 		_commerceOrderHttpHelper = null;
 		_configurationProvider = null;
+		_cssClasses = StringPool.BLANK;
 		_displayTotalItemsQuantity = false;
 		_itemsQuantity = 0;
 		_labels = new HashMap<>();
@@ -246,6 +247,8 @@ public class MiniCartTag extends IncludeTag {
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:commerceCurrencyCode",
 			_commerceCurrencyCode);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:cart:cssClasses", _cssClasses);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:cart:displayDiscountLevels",
 			_isDisplayDiscountLevels());
@@ -315,10 +318,6 @@ public class MiniCartTag extends IncludeTag {
 	}
 
 	private boolean _isRequestQuoteEnabled() throws PortalException {
-		if (!FeatureFlagManagerUtil.isEnabled("COMMERCE-11028")) {
-			return false;
-		}
-
 		CommerceOrderFieldsConfiguration commerceOrderFieldsConfiguration =
 			_configurationProvider.getConfiguration(
 				CommerceOrderFieldsConfiguration.class,
@@ -340,6 +339,7 @@ public class MiniCartTag extends IncludeTag {
 	private String _commerceCurrencyCode;
 	private CommerceOrderHttpHelper _commerceOrderHttpHelper;
 	private ConfigurationProvider _configurationProvider;
+	private String _cssClasses = StringPool.BLANK;
 	private boolean _displayTotalItemsQuantity;
 	private int _itemsQuantity;
 	private Map<String, String> _labels = new HashMap<>();

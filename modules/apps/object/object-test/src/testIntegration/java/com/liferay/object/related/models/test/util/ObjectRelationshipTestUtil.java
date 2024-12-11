@@ -50,27 +50,39 @@ public class ObjectRelationshipTestUtil {
 	}
 
 	public static void assertSearchRelatedModels(
-			int expectedSize,
+			int expectedSize, long groupId,
 			ObjectRelatedModelsProvider objectRelatedModelsProvider,
 			long objectRelationshipId, long primaryKey, String search)
 		throws Exception {
 
 		List<ObjectEntry> objectEntries =
 			objectRelatedModelsProvider.getRelatedModels(
-				0, objectRelationshipId, primaryKey, search, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS);
+				groupId, objectRelationshipId, primaryKey, search,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		Assert.assertEquals(
 			objectEntries.toString(), expectedSize, objectEntries.size());
 	}
 
+	public static void assertSearchRelatedModels(
+			int expectedSize,
+			ObjectRelatedModelsProvider objectRelatedModelsProvider,
+			long objectRelationshipId, long primaryKey, String search)
+		throws Exception {
+
+		assertSearchRelatedModels(
+			expectedSize, 0, objectRelatedModelsProvider, objectRelationshipId,
+			primaryKey, search);
+	}
+
 	public static ObjectRelationship updateObjectRelationship(
-			long objectRelationshipId, String deletionType,
-			Map<Locale, String> labelMap)
+			String externalReferenceCode, long objectRelationshipId,
+			String deletionType, Map<Locale, String> labelMap)
 		throws Exception {
 
 		return ObjectRelationshipLocalServiceUtil.updateObjectRelationship(
-			objectRelationshipId, 0, deletionType, false, labelMap);
+			externalReferenceCode, objectRelationshipId, 0, deletionType, false,
+			labelMap, null);
 	}
 
 }

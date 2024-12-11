@@ -8,7 +8,5 @@ Import-Package:\
 	\
 	!org.junit.experimental.theories,\
 	\
-	javax.servlet,\
-	\
 	*
 -includeresource: @jsonassert-[0-9.]*.jar

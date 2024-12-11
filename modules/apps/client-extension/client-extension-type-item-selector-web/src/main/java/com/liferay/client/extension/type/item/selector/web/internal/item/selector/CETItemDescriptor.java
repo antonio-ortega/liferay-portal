@@ -7,6 +7,7 @@ package com.liferay.client.extension.type.item.selector.web.internal.item.select
 
 import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.type.CET;
+import com.liferay.client.extension.type.GlobalJSCET;
 import com.liferay.client.extension.type.ThemeFaviconCET;
 import com.liferay.item.selector.ItemSelectorViewDescriptor;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -48,20 +49,34 @@ public class CETItemDescriptor
 		).put(
 			"name", _cet.getName(LocaleUtil.getMostRelevantLocale())
 		).put(
+			"scriptElementAttributesJSON",
+			() -> {
+				if (!Objects.equals(
+						_cet.getType(),
+						ClientExtensionEntryConstants.TYPE_GLOBAL_JS)) {
+
+					return null;
+				}
+
+				GlobalJSCET globalJSCET = (GlobalJSCET)_cet;
+
+				return globalJSCET.getScriptElementAttributesJSON();
+			}
+		).put(
 			"type", _cet.getType()
 		).put(
 			"url",
 			() -> {
-				if (Objects.equals(
+				if (!Objects.equals(
 						_cet.getType(),
 						ClientExtensionEntryConstants.TYPE_THEME_FAVICON)) {
 
-					ThemeFaviconCET themeFaviconCET = (ThemeFaviconCET)_cet;
-
-					return themeFaviconCET.getURL();
+					return null;
 				}
 
-				return null;
+				ThemeFaviconCET themeFaviconCET = (ThemeFaviconCET)_cet;
+
+				return themeFaviconCET.getURL();
 			}
 		).toString();
 	}

@@ -5,6 +5,7 @@
 
 package com.liferay.gogo.shell.web.internal.portlet;
 
+import com.liferay.captcha.util.CaptchaUtil;
 import com.liferay.gogo.shell.web.internal.constants.GogoShellPortletKeys;
 import com.liferay.gogo.shell.web.internal.constants.GogoShellWebKeys;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
@@ -89,6 +90,8 @@ public class GogoShellPortlet extends MVCPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
+		CaptchaUtil.check(actionRequest);
+
 		String command = ParamUtil.getString(actionRequest, "command");
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
@@ -135,6 +138,14 @@ public class GogoShellPortlet extends MVCPortlet {
 			if (Validator.isNotNull(errorContent)) {
 				throw new Exception(errorContent);
 			}
+
+			String successMessage = ParamUtil.getString(
+				actionRequest, "successMessage");
+
+			SessionMessages.add(
+				actionRequest, "requestProcessed", successMessage);
+
+			sendRedirect(actionRequest, actionResponse);
 		}
 		catch (Exception exception) {
 			hideDefaultErrorMessage(actionRequest);
@@ -152,7 +163,7 @@ public class GogoShellPortlet extends MVCPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws IOException, PortletException {
 
-		_checkOmniAdmin();
+		_checkOmniadmin();
 
 		super.processAction(actionRequest, actionResponse);
 	}
@@ -162,7 +173,7 @@ public class GogoShellPortlet extends MVCPortlet {
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
 
-		_checkOmniAdmin();
+		_checkOmniadmin();
 
 		super.render(renderRequest, renderResponse);
 	}
@@ -180,7 +191,7 @@ public class GogoShellPortlet extends MVCPortlet {
 		}
 	}
 
-	private void _checkOmniAdmin() throws PortletException {
+	private void _checkOmniadmin() throws PortletException {
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
 

@@ -93,11 +93,11 @@ exports[`Event View page should render 1`] = `
         <div
           class="card-header"
         >
-          <h5
+          <div
             class="card-title"
           >
             Send This Event
-          </h5>
+          </div>
         </div>
         <div
           class="card-body"
@@ -125,7 +125,6 @@ exports[`Event View page should render 1`] = `
               data-clipboard-text="Analytics.track('name-0', {
 	'name-1': 'samplevalue-1',
 });"
-              data-tooltip-response="Copied"
               title="Click to Copy"
               type="button"
             >

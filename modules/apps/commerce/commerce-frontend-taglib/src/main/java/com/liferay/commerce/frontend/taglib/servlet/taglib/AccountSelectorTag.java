@@ -19,6 +19,7 @@ import com.liferay.commerce.service.CommerceOrderTypeLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -55,7 +56,11 @@ public class AccountSelectorTag extends IncludeTag {
 				(CommerceContext)httpServletRequest.getAttribute(
 					CommerceWebKeys.COMMERCE_CONTEXT);
 
-			_commerceChannelId = commerceContext.getCommerceChannelId();
+			_commerceChannelId = 0;
+
+			if (commerceContext != null) {
+				_commerceChannelId = commerceContext.getCommerceChannelId();
+			}
 
 			if (_commerceChannelId == 0) {
 				_accountEntryAllowedTypes = new String[0];
@@ -101,8 +106,16 @@ public class AccountSelectorTag extends IncludeTag {
 		return super.doStartTag();
 	}
 
+	public String getCssClasses() {
+		return _cssClasses;
+	}
+
 	public String getSpritemap() {
 		return _spritemap;
+	}
+
+	public void setCssClasses(String cssClasses) {
+		_cssClasses = cssClasses;
 	}
 
 	@Override
@@ -116,7 +129,11 @@ public class AccountSelectorTag extends IncludeTag {
 				(CommerceContext)httpServletRequest.getAttribute(
 					CommerceWebKeys.COMMERCE_CONTEXT);
 
-			_commerceChannelId = commerceContext.getCommerceChannelId();
+			_commerceChannelId = 0;
+
+			if (commerceContext != null) {
+				_commerceChannelId = commerceContext.getCommerceChannelId();
+			}
 
 			_commerceOrderTypeLocalService =
 				ServletContextUtil.getCommerceOrderTypeLocalService();
@@ -142,6 +159,7 @@ public class AccountSelectorTag extends IncludeTag {
 		_commerceChannelId = 0;
 		_commerceOrder = null;
 		_commerceOrderTypeLocalService = null;
+		_cssClasses = StringPool.BLANK;
 		_editOrderURL = null;
 		_setCurrentAccountURL = null;
 		_spritemap = null;
@@ -210,6 +228,8 @@ public class AccountSelectorTag extends IncludeTag {
 			"liferay-commerce:account-selector:createNewOrderURL",
 			_addCommerceOrderURL);
 		httpServletRequest.setAttribute(
+			"liferay-commerce:account-selector:cssClasses", _cssClasses);
+		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:selectOrderURL", _editOrderURL);
 		httpServletRequest.setAttribute(
 			"liferay-commerce:account-selector:setCurrentAccountURL",
@@ -273,7 +293,7 @@ public class AccountSelectorTag extends IncludeTag {
 			PortalUtil.getScopeGroupId(httpServletRequest),
 			CommercePortletKeys.COMMERCE_OPEN_ORDER_CONTENT);
 
-		if (plid > 0) {
+		if ((plid > 0) || FeatureFlagManagerUtil.isEnabled("LPD-20379")) {
 			return PortletURLBuilder.create(
 				_getPortletURL(
 					httpServletRequest,
@@ -319,6 +339,7 @@ public class AccountSelectorTag extends IncludeTag {
 	private long _commerceChannelId;
 	private CommerceOrder _commerceOrder;
 	private CommerceOrderTypeLocalService _commerceOrderTypeLocalService;
+	private String _cssClasses = StringPool.BLANK;
 	private String _editOrderURL;
 	private String _setCurrentAccountURL;
 	private String _spritemap;

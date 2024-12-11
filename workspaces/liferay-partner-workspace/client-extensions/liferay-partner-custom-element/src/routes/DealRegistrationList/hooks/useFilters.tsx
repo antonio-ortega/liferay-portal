@@ -5,26 +5,69 @@
 
 import {useEffect, useState} from 'react';
 
-import getSearchFilterTerm from '../../../common/utils/getSearchFilterTerm';
+import {Filters} from '../../../common/utils/constants/filters';
 import {INITIAL_FILTER} from '../utils/constants/initialFilter';
+import getDateSubmittedFilterTerm from '../utils/getDateSubmittedFilterTerm';
 
-export default function useFilters() {
-	const [filters, setFilters] = useState(INITIAL_FILTER);
+export default function useFilters(
+	sort: string,
+	urlParams: URLSearchParams,
+	submittedDealsFilter?: boolean
+) {
+	const [filters, setFilters] = useState(
+		(JSON.parse(
+			sessionStorage.getItem('dealRegistrationFilters')!
+		) as typeof INITIAL_FILTER) || INITIAL_FILTER
+	);
 
-	const [filtersTerm, setFilterTerm] = useState('');
+	const dealsInitialFilter = submittedDealsFilter
+		? Filters.DEAL_LISTING.submitted
+		: Filters.DEAL_LISTING.rejected;
 
 	const onFilter = (newFilters: Partial<typeof INITIAL_FILTER>) =>
 		setFilters((previousFilters) => ({...previousFilters, ...newFilters}));
 
+	sessionStorage.setItem('dealRegistrationFilters', JSON.stringify(filters));
+	sessionStorage.setItem(
+		'submittedDealsFilter',
+		JSON.stringify(submittedDealsFilter)
+	);
+
 	useEffect(() => {
+		let hasFilter = false;
 		let initialFilter = '';
 
-		if (filters.searchTerm) {
-			initialFilter = getSearchFilterTerm(filters.searchTerm);
+		if (dealsInitialFilter) {
+			initialFilter = initialFilter
+				? initialFilter.concat(dealsInitialFilter)
+				: `${dealsInitialFilter}`;
 		}
 
-		setFilterTerm(initialFilter);
-	}, [filters.searchTerm, setFilters]);
+		if (
+			filters.dataSubmitted?.dates.endDate ||
+			filters.dataSubmitted?.dates.startDate
+		) {
+			hasFilter = true;
+			initialFilter = getDateSubmittedFilterTerm(
+				initialFilter,
+				filters.dataSubmitted
+			);
+		}
 
-	return {filters, filtersTerm, onFilter};
+		onFilter({
+			hasValue: hasFilter,
+		});
+
+		urlParams.set('filter', initialFilter);
+		urlParams.set('sort', sort);
+	}, [
+		dealsInitialFilter,
+		filters.searchTerm,
+		filters.dataSubmitted,
+		setFilters,
+		sort,
+		urlParams,
+	]);
+
+	return {filters, onFilter};
 }

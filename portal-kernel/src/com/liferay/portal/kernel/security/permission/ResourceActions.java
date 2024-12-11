@@ -73,6 +73,8 @@ public interface ResourceActions {
 
 	public List<String> getPortletResourceLayoutManagerActions(String name);
 
+	public List<String> getPortletResourceOwnerDefaultActions(String name);
+
 	public String getPortletRootModelResource(String portletName);
 
 	public List<String> getResourceActions(String name);
@@ -120,5 +122,9 @@ public interface ResourceActions {
 		throws ResourceActionsException;
 
 	public void removeModelResource(String name, String action);
+
+	public void removeModelResources(Document document);
+
+	public void removePortletResources(Document document);
 
 }

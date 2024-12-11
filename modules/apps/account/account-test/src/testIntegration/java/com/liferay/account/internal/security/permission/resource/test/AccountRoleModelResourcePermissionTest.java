@@ -58,31 +58,34 @@ public class AccountRoleModelResourcePermissionTest {
 		AccountEntry accountEntry = AccountEntryTestUtil.addAccountEntry();
 
 		AccountRole ownedAccountRole = _accountRoleLocalService.addAccountRole(
-			TestPropsValues.getUserId(), accountEntry.getAccountEntryId(),
-			RandomTestUtil.randomString(), null, null);
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
+			null, null);
 
 		_testPermissions(Assert::assertTrue, accountEntry, ownedAccountRole);
 
 		AccountEntry accountEntryB = AccountEntryTestUtil.addAccountEntry();
 
 		try (SafeCloseable safeCloseable =
-				AccountRolePermissionThreadLocal.setWithSafeCloseable(
-					accountEntryB.getAccountEntryId())) {
+				AccountRolePermissionThreadLocal.
+					setAccountEntryIdWithSafeCloseable(
+						accountEntryB.getAccountEntryId())) {
 
 			_testPermissions(
 				Assert::assertFalse, accountEntry, ownedAccountRole);
 		}
 
 		AccountRole sharedAccountRole = _accountRoleLocalService.addAccountRole(
-			TestPropsValues.getUserId(),
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
 			RandomTestUtil.randomString(), null, null);
 
 		_testPermissions(Assert::assertFalse, accountEntry, sharedAccountRole);
 
 		try (SafeCloseable safeCloseable =
-				AccountRolePermissionThreadLocal.setWithSafeCloseable(
-					accountEntry.getAccountEntryId())) {
+				AccountRolePermissionThreadLocal.
+					setAccountEntryIdWithSafeCloseable(
+						accountEntry.getAccountEntryId())) {
 
 			_testPermissions(
 				Assert::assertTrue, accountEntry, sharedAccountRole);
@@ -94,13 +97,15 @@ public class AccountRoleModelResourcePermissionTest {
 		AccountEntry accountEntry = AccountEntryTestUtil.addAccountEntry();
 
 		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
-			TestPropsValues.getUserId(), accountEntry.getAccountEntryId(),
-			RandomTestUtil.randomString(), null, null);
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
+			null, null);
 
 		AccountRole permissionAccountRole =
 			_accountRoleLocalService.addAccountRole(
-				TestPropsValues.getUserId(), accountEntry.getAccountEntryId(),
-				RandomTestUtil.randomString(), null, null);
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
+				null, null);
 
 		RoleTestUtil.addResourcePermission(
 			permissionAccountRole.getRole(), AccountEntry.class.getName(),
@@ -127,13 +132,15 @@ public class AccountRoleModelResourcePermissionTest {
 		AccountEntry accountEntry = AccountEntryTestUtil.addAccountEntry();
 
 		AccountRole accountRole = _accountRoleLocalService.addAccountRole(
-			TestPropsValues.getUserId(), accountEntry.getAccountEntryId(),
-			RandomTestUtil.randomString(), null, null);
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
+			null, null);
 
 		AccountRole permissionAccountRole =
 			_accountRoleLocalService.addAccountRole(
-				TestPropsValues.getUserId(), accountEntry.getAccountEntryId(),
-				RandomTestUtil.randomString(), null, null);
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
+				null, null);
 
 		RoleTestUtil.addResourcePermission(
 			permissionAccountRole.getRole(), AccountEntry.class.getName(),
@@ -191,8 +198,9 @@ public class AccountRoleModelResourcePermissionTest {
 
 		AccountRole permissionAccountRole =
 			_accountRoleLocalService.addAccountRole(
-				TestPropsValues.getUserId(), accountEntry.getAccountEntryId(),
-				RandomTestUtil.randomString(), null, null);
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				accountEntry.getAccountEntryId(), RandomTestUtil.randomString(),
+				null, null);
 
 		_addResourcePermission(
 			permissionAccountRole.getRole(), AccountRole.class.getName(),

@@ -1,8 +1,10 @@
 definition {
 
-	macro _curlAccount {
+	@summary = "Default summary"
+	macro _curlAccount() {
 		var portalURL = JSONCompany.getPortalURL();
 		var api = "accounts";
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		if (isSet(batch)) {
 			var api = "accounts/batch";
@@ -12,13 +14,14 @@ definition {
 			${portalURL}/o/headless-commerce-admin-account/v1.0/${api} \
 				-H 'accept: application/json' \
 				-H 'Content-Type: application/json' \
-				-u 'test@liferay.com:test'
+				-u test@liferay.com:${userPassword}
 		''';
 
 		return ${curl};
 	}
 
-	macro createAccounts {
+	@summary = "Default summary"
+	macro createAccounts(objectField = null, accountName = null, numberOfAccounts = null, nestedField = null, fieldValue = null, name = null) {
 		Variables.assertDefined(parameterList = "${accountName},${numberOfAccounts},");
 
 		var curl = CommerceAdminAccountAPI._curlAccount(batch = "true");
@@ -68,7 +71,8 @@ definition {
 		return ${taskId};
 	}
 
-	macro getAccounts {
+	@summary = "Default summary"
+	macro getAccounts() {
 		var curl = CommerceAdminAccountAPI._curlAccount();
 
 		var response = JSONCurlUtil.get(${curl});

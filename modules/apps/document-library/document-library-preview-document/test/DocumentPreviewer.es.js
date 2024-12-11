@@ -6,7 +6,7 @@
 import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 
-import DocumentPreviewer from '../src/main/resources/META-INF/resources/preview/js/DocumentPreviewer.es';
+import {DocumentPreviewer} from '../src/main/resources/META-INF/resources/preview/js/index';
 
 describe('document-library-preview-document', () => {
 	afterEach(cleanup);
@@ -31,6 +31,20 @@ describe('document-library-preview-document', () => {
 				initialPage={5}
 				spritemap="icons.svg"
 				totalPages={19}
+			/>
+		);
+
+		expect(asFragment()).toMatchSnapshot();
+	});
+
+	it('renders a document previewer with alt attribute', () => {
+		const {asFragment} = render(
+			<DocumentPreviewer
+				alt="alt text"
+				baseImageURL="http://localhost/document-images/"
+				initialPage={1}
+				spritemap="icons.svg"
+				totalPages={10}
 			/>
 		);
 

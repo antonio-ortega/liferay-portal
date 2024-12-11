@@ -4,12 +4,8 @@
  */
 
 import ClayPanel from '@clayui/panel';
-import {
-	API,
-	BetaButton,
-	getLocalizableLabel,
-	openToast,
-} from '@liferay/object-js-components-web';
+import {API, openToast, stringUtils} from '@liferay/object-js-components-web';
+import {FeatureIndicator} from 'frontend-js-components-web';
 import React, {useEffect, useState} from 'react';
 
 import ObjectManagementToolbar from '../ObjectManagementToolbar';
@@ -25,29 +21,31 @@ import {useObjectDetailsForm} from './useObjectDetailsForm';
 
 import './ObjectDetails.scss';
 
-export type KeyValuePair = {
-	key: string;
-	value: string;
+export type Scope = {
+	items: LabelValueObject[];
+	label: string;
 };
 interface EditObjectDetailsProps {
 	backURL: string;
-	companyKeyValuePair: KeyValuePair[];
+	companies: Scope[];
 	dbTableName: string;
-	externalReferenceCode: string;
 	hasPublishObjectPermission: boolean;
 	hasUpdateObjectDefinitionPermission: boolean;
 	isApproved: boolean;
 	isRootDescendantNode: boolean;
+	isRootNode: boolean;
 	label: LocalizedValue<string>;
+	learnResourceContext: any;
 	nonRelationshipObjectFieldsInfo: {
 		label: LocalizedValue<string>;
 		name: string;
 	}[];
+	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	pluralLabel: LocalizedValue<string>;
 	portletNamespace: string;
 	shortName: string;
-	siteKeyValuePair: KeyValuePair[];
+	sites: Scope[];
 	storageTypes: LabelValueObject[];
 }
 
@@ -75,41 +73,38 @@ function setAccountRelationshipFieldMandatory(
 
 export default function EditObjectDetails({
 	backURL,
-	companyKeyValuePair,
+	companies,
 	dbTableName,
-	externalReferenceCode,
 	hasPublishObjectPermission,
 	hasUpdateObjectDefinitionPermission,
 	isApproved,
 	isRootDescendantNode,
+	isRootNode,
 	label,
+	learnResourceContext,
 	nonRelationshipObjectFieldsInfo,
+	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	pluralLabel,
 	portletNamespace,
 	shortName,
-	siteKeyValuePair,
+	sites,
 	storageTypes,
 }: EditObjectDetailsProps) {
 	const [objectFields, setObjectFields] = useState<ObjectField[]>([]);
 
-	const {
-		errors,
-		handleChange,
-		handleValidate,
-		setValues,
-		values,
-	} = useObjectDetailsForm({
-		initialValues: {
-			defaultLanguageId: 'en_US',
-			externalReferenceCode,
-			id: objectDefinitionId,
-			label,
-			name: shortName,
-			pluralLabel,
-		},
-		onSubmit: () => {},
-	});
+	const {errors, handleChange, handleValidate, setValues, values} =
+		useObjectDetailsForm({
+			initialValues: {
+				defaultLanguageId: 'en_US',
+				externalReferenceCode: objectDefinitionExternalReferenceCode,
+				id: objectDefinitionId,
+				label,
+				name: shortName,
+				pluralLabel,
+			},
+			onSubmit: () => {},
+		});
 
 	const onSubmit = async (draft: boolean) => {
 		const validationErrors = handleValidate();
@@ -121,9 +116,10 @@ export default function EditObjectDetails({
 				objectDefinition = setAccountRelationshipFieldMandatory(values);
 			}
 
-			const saveResponse = await API.putObjectDefinitionByExternalReferenceCode(
-				objectDefinition
-			);
+			const saveResponse =
+				await API.putObjectDefinitionByExternalReferenceCode(
+					objectDefinition
+				);
 
 			if (!saveResponse.ok) {
 				const {title} = (await saveResponse.json()) as {
@@ -145,10 +141,13 @@ export default function EditObjectDetails({
 				);
 
 				if (!publishResponse.ok) {
+					const {title} = (await publishResponse.json()) as {
+						status: string;
+						title: string;
+					};
+
 					openToast({
-						message: Liferay.Language.get(
-							'the-object-definition-is-already-published'
-						),
+						message: title,
 						type: 'danger',
 					});
 
@@ -180,18 +179,21 @@ export default function EditObjectDetails({
 
 	useEffect(() => {
 		const makeFetch = async () => {
-			const objectFieldsResponse = await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
-				externalReferenceCode
-			);
-			const objectDefinitionResponse = await API.getObjectDefinitionByExternalReferenceCode(
-				externalReferenceCode
-			);
+			const objectFieldsResponse =
+				await API.getObjectDefinitionByExternalReferenceCodeObjectFields(
+					objectDefinitionExternalReferenceCode
+				);
+			const objectDefinitionResponse =
+				await API.getObjectDefinitionByExternalReferenceCode(
+					objectDefinitionExternalReferenceCode
+				);
 
 			setValues(objectDefinitionResponse);
 			setObjectFields(objectFieldsResponse);
 		};
 
 		makeFetch();
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionId]);
 
@@ -200,23 +202,25 @@ export default function EditObjectDetails({
 			<div className="lfr-objects__object-definition-details-management-toolbar">
 				<ObjectManagementToolbar
 					backURL={backURL}
-					externalReferenceCode={externalReferenceCode}
 					hasPublishObjectPermission={hasPublishObjectPermission}
 					hasUpdateObjectDefinitionPermission={
 						hasUpdateObjectDefinitionPermission
 					}
 					isApproved={isApproved}
 					isRootDescendantNode={isRootDescendantNode}
-					label={getLocalizableLabel(
+					isRootNode={isRootNode}
+					label={stringUtils.getLocalizableLabel(
 						values.defaultLanguageId as Liferay.Language.Locale,
 						values.label,
 						values.name
 					)}
+					objectDefinitionExternalReferenceCode={
+						objectDefinitionExternalReferenceCode
+					}
 					objectDefinitionId={objectDefinitionId}
 					onSubmit={onSubmit}
 					portletNamespace={portletNamespace}
 					screenNavigationCategoryKey="details"
-					setValues={setValues}
 					system={values.system as boolean}
 				/>
 			</div>
@@ -267,24 +271,36 @@ export default function EditObjectDetails({
 						<ClayPanel
 							collapsable
 							defaultExpanded
-							displayTitle={Liferay.Language.get(
-								'external-data-source'
-							)}
+							displayTitle={
+								<div className="lfr__object-web-edit-object-details-external-data-source-panel">
+									<span className="panel-title">
+										{Liferay.Language.get(
+											'external-data-source'
+										)}
+									</span>
+
+									{values.storageType === 'salesforce' && (
+										<div className="lfr__object-web-edit-object-details-external-data-source-panel-container-beta">
+											<FeatureIndicator
+												interactive
+												learnResourceContext={
+													learnResourceContext
+												}
+												type="beta"
+											/>
+										</div>
+									)}
+								</div>
+							}
 							displayType="unstyled"
 						>
 							<ClayPanel.Body>
 								<div className="lfr__object-web-edit-object-details-external-data-source-container">
 									<ExternalDataSourceContainer
 										errors={errors}
-										setValues={setValues}
 										storageTypes={storageTypes}
 										values={values}
 									/>
-
-									<div className="lfr__object-web-edit-object-details-external-data-source-container-beta">
-										{values.storageType ===
-											'salesforce' && <BetaButton />}
-									</div>
 								</div>
 							</ClayPanel.Body>
 						</ClayPanel>
@@ -298,7 +314,7 @@ export default function EditObjectDetails({
 					>
 						<ClayPanel.Body>
 							<ScopeContainer
-								companyKeyValuePairs={companyKeyValuePair}
+								companies={companies}
 								errors={errors}
 								hasUpdateObjectDefinitionPermission={
 									hasUpdateObjectDefinitionPermission
@@ -306,7 +322,7 @@ export default function EditObjectDetails({
 								isApproved={isApproved}
 								isRootDescendantNode={isRootDescendantNode}
 								setValues={setValues}
-								siteKeyValuePairs={siteKeyValuePair}
+								sites={sites}
 								values={values}
 							/>
 						</ClayPanel.Body>

@@ -196,6 +196,7 @@ export function LayoutSelector({layoutType}) {
 				<ClayDropDown.Group header={Liferay.Language.get('recent')}>
 					{recentLayouts.map((layout) => (
 						<ClayDropDown.Item
+							className="align-items-center d-flex"
 							key={layout.url}
 							onClick={() => {
 								setActive(false);
@@ -210,6 +211,23 @@ export function LayoutSelector({layoutType}) {
 									className="ml-3"
 									symbol="low-vision"
 								/>
+							)}
+
+							{!layout.hasGuestViewPermission && (
+								<span
+									aria-label={Liferay.Language.get(
+										'restricted-page'
+									)}
+									className="c-ml-2 lfr-portal-tooltip"
+									title={Liferay.Language.get(
+										'restricted-page'
+									)}
+								>
+									<ClayIcon
+										className="c-mt-0 text-4 text-dark"
+										symbol="password-policies"
+									/>
+								</span>
 							)}
 						</ClayDropDown.Item>
 					))}

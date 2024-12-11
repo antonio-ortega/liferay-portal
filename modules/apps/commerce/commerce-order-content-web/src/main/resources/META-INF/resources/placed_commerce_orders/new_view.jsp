@@ -46,7 +46,7 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 			model="<%= CommerceOrder.class %>"
 			thumbnailUrl="<%= commerceOrderContentDisplayContext.getCommerceAccountThumbnailURL() %>"
 			title="<%= String.valueOf(commerceOrder.getCommerceOrderId()) %>"
-			transitionPortletURL="<%= commerceOrderContentDisplayContext.getTransitionOrderPortletURL() %>"
+			transitionPortletURL="<%= commerceOrderContentDisplayContext.getTransitionOrderPortletURL(commerceOrder) %>"
 		/>
 	</div>
 
@@ -66,6 +66,17 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 		>
 			<div class="row vertically-divided">
 				<div class="col-xl-4">
+
+					<%
+					String commerceOrderName = commerceOrder.getName();
+					%>
+
+					<commerce-ui:info-box
+						elementClasses="py-3"
+						title='<%= LanguageUtil.get(request, "name") %>'
+					>
+						<%= HtmlUtil.escape(commerceOrderName) %>
+					</commerce-ui:info-box>
 
 					<%
 					AccountEntry accountEntry = commerceOrder.getAccountEntry();
@@ -275,14 +286,22 @@ CommerceOrder commerceOrder = commerceOrderContentDisplayContext.getCommerceOrde
 		>
 			<div id="summary-root"></div>
 
-			<aui:script require="commerce-frontend-js/components/summary/entry as summary">
-				summary.default('summary', 'summary-root', {
-					apiUrl:
-						'/o/headless-commerce-admin-order/v1.0/orders/<%= commerceOrderContentDisplayContext.getCommerceOrderId() %>',
-					dataSetDisplayId: '<%= CommerceOrderFDSNames.PLACED_ORDER_ITEMS %>',
-					portletId: '<%= portletDisplay.getRootPortletId() %>',
-				});
-			</aui:script>
+			<liferay-frontend:component
+				context='<%=
+					HashMapBuilder.<String, Object>put(
+						"commerceOrderId", commerceOrderContentDisplayContext.getCommerceOrderId()
+					).put(
+						"placedOrderItems", CommerceOrderFDSNames.PLACED_ORDER_ITEMS
+					).put(
+						"portletId", portletDisplay.getRootPortletId()
+					).build()
+				%>'
+				module="{newView} from commerce-order-content-web"
+			/>
 		</commerce-ui:panel>
 	</div>
 </div>
+
+<liferay-frontend:component
+	module="{view} from commerce-order-content-web"
+/>

@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 
 import java.util.Locale;
 
+import javax.portlet.ActionRequest;
+
 /**
  * @author Marco Leo
  * @author Alessio Antonio Rendina
@@ -27,5 +29,12 @@ public interface CommercePriceFormatter {
 
 	public String formatAsRelative(
 		CommerceCurrency commerceCurrency, BigDecimal price, Locale locale);
+
+	public BigDecimal parse(
+			ActionRequest actionRequest, String className, String param)
+		throws Exception;
+
+	public String parse(String className, String price, Locale locale)
+		throws Exception;
 
 }

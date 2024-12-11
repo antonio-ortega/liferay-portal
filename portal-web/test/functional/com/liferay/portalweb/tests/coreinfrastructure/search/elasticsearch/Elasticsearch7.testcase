@@ -2,7 +2,7 @@
 definition {
 
 	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch7";
+	property portal.suite.search.engine = "elasticsearch7,opensearch2";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Elasticsearch Impl";
 
@@ -27,6 +27,10 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 		property timeout.explicit.wait = "120";
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -245,7 +249,9 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		AssertConsoleTextPresent(value1 = "Sidecar Elasticsearch liferay started at [\d\.]+:9201");
+		var clientVersion = Elasticsearch.getClientVersion();
+
+		AssertConsoleTextPresent(value1 = "Sidecar Elasticsearch ${clientVersion} liferay_sidecar started at [\d\.]+:9201");
 
 		JSONWebcontent.addWebContent(
 			content = "WC Content",
@@ -650,7 +656,7 @@ definition {
 		}
 
 		task ("Assert that there is only 1 Portal instance index after a concurrent reindex completes") {
-			WaitForConsoleTextPresent(value1 = "Finished reindexing company ${companyId}");
+			WaitForConsoleTextPresent(value1 = "Finished reindexing company ${companyId} with execution mode concurrent");
 
 			Refresh();
 
@@ -684,9 +690,9 @@ definition {
 				http://${portalHostname}:${port}/liferay-${companyId}/_doc \
 					-H 'Content-Type: application/json' \
 					-d '{
-						"companyId" : "${companyId}",
-						"userName" : "alpha bravo",
-						"entryClassName" : "com.liferay.portal.kernel.model.User"
+						"companyId": "${companyId}",
+						"entryClassName": "com.liferay.portal.kernel.model.User",
+						"userName": "alpha bravo"
 					}'
 			''';
 
@@ -698,21 +704,16 @@ definition {
 				http://${portalHostname}:${port}/liferay-${companyId}/_search?pretty \
 					-H 'Content-Type: application/json' \
 					-d '{
-						"query":
-						{
-							"bool":
-							{
-								"must":
-								[
+						"query": {
+							"bool": {
+								"must": [
 									{
-										"match":
-										{
-											"userName": "test test"
+										"match": {
+											"screenName": "default-service-account"
 										}
 									},
 									{
-										"match":
-										{
+										"match": {
 											"entryClassName": "com.liferay.portal.kernel.model.User"
 										}
 									}
@@ -732,19 +733,21 @@ definition {
 		}
 
 		task ("Assert that search results are still returned during the reindex") {
-			SearchPage.openSearchPage(searchTerm = "test");
+			SearchPage.openSearchPage(searchTerm = "tree");
 
 			AssertElementPresent(locator1 = "Search#REINDEX_IN_PROGRESS_INDICATOR");
 
 			SearchResults.viewSearchResults(
-				searchAssetTitle = "Test Test",
-				searchAssetType = "User");
+				searchAssetTitle = "tree.png",
+				searchAssetType = "Document");
 		}
 
 		task ("After the reindex is complete, assert the timestamp value for the 'Test Test' user document has updated in the index") {
 			SearchAdministration.openIndexActions();
 
 			WaitForElementNotPresent(locator1 = "Search#REINDEX_IN_PROGRESS_INDICATOR");
+
+			SearchPage.openSearchPage();
 
 			var postSyncReindexTimestamp = JSONCurlUtil.get(${curl}, "$.hits.hits[0]._source.timestamp");
 
@@ -761,15 +764,11 @@ definition {
 				http://${portalHostname}:${port}/liferay-${companyId}/_search?pretty \
 					-H 'Content-Type: application/json' \
 					-d '{
-						"query":
-						{
-							"bool":
-							{
-								"must":
-								[
+						"query": {
+							"bool": {
+								"must": [
 									{
-										"match":
-										{
+										"match": {
 											"userName": "alpha bravo"
 										}
 									}
@@ -883,6 +882,7 @@ definition {
 			value1 = "1 result for bicycle");
 	}
 
+	@ignore = "true"
 	@priority = 4
 	test SwitchSidecarToRemote {
 		property embedded.elasticsearch.only = "true";
@@ -936,11 +936,11 @@ definition {
 			locator1 = "SearchAdmin#CONNECTION_ID",
 			value1 = "__REMOTE__");
 
-		AssertTextNotEquals.assertNotPartialText(
+		AssertTextNotEquals.assertNotPartialMatch(
 			locator1 = "SearchAdmin#SEARCH_ENGINE_VENDOR",
 			value1 = "(Sidecar)");
 
-		AssertTextNotEquals.assertNotPartialText(
+		AssertTextNotEquals.assertNotPartialMatch(
 			locator1 = "SearchAdmin#CONNECTION_ID",
 			value1 = "__SIDECAR__");
 
@@ -997,7 +997,7 @@ definition {
 
 		// LRCI-2401
 
-		Pause(locator1 = 30000);
+		Pause(value1 = 30000);
 
 		var portalHostname = PropsUtil.get("portal.hostname");
 
@@ -1036,18 +1036,15 @@ definition {
 			mimeType = "text/txt",
 			sourceFileName = "Document_1.txt");
 
-		SQL.executeMySQLStatement(mysqlStatement = "SELECT * FROM DLFileEntry WHERE filename='Document_1.txt';");
+		SQL.executeSQLStatement(sqlStatement = "SELECT * FROM DLFileEntry WHERE filename='Document_1.txt';");
 
 		var fileEntryId = JSONDocument.getFileEntryId(
 			dmDocumentTitle = "DM Document",
 			groupName = "Guest");
 
-		SQL.executeMySQLStatement(mysqlStatement = "delete from DLFileEntry where fileEntryId = ${fileEntryId};");
+		SQL.executeSQLStatement(sqlStatement = "delete from DLFileEntry where fileEntryId = ${fileEntryId};");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "Server Administration");
+		ServerAdministration.openServerAdmin();
 
 		ServerAdministration.executeServerResourcesActions(actionsDescription = "Clear the database cache.");
 

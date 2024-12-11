@@ -650,7 +650,7 @@ public interface UserService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public User fetchUserByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -843,6 +843,11 @@ public interface UserService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public User getUserByExternalReferenceCode(
 			long companyId, String externalReferenceCode)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public User getUserByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	/**
@@ -1120,6 +1125,14 @@ public interface UserService extends BaseService {
 			String emailAddress2, ServiceContext serviceContext)
 		throws PortalException;
 
+	public User updateExternalReferenceCode(
+			long userId, String externalReferenceCode)
+		throws PortalException;
+
+	public User updateExternalReferenceCode(
+			User user, String externalReferenceCode)
+		throws PortalException;
+
 	/**
 	 * Updates a user account that was automatically created when a guest user
 	 * participated in an action (e.g. posting a comment) and only provided his
@@ -1219,6 +1232,9 @@ public interface UserService extends BaseService {
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	public User updateLanguageId(long userId, String languageId)
+		throws PortalException;
+
 	/**
 	 * Updates whether the user is locked out from logging in.
 	 *
@@ -1313,6 +1329,10 @@ public interface UserService extends BaseService {
 	 */
 	public User updateStatus(
 			long userId, int status, ServiceContext serviceContext)
+		throws PortalException;
+
+	public User updateStatus(
+			User user, int status, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**

@@ -8,24 +8,38 @@ package com.liferay.template.taglib.servlet.taglib;
 import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
+import com.liferay.portal.kernel.service.LayoutPrototypeLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portlet.display.template.PortletDisplayTemplate;
 import com.liferay.portlet.display.template.util.PortletDisplayTemplateUtil;
 import com.liferay.taglib.util.IncludeTag;
 import com.liferay.template.constants.TemplatePortletKeys;
 import com.liferay.template.taglib.internal.security.permission.resource.DDMTemplatePermission;
 import com.liferay.template.taglib.internal.servlet.ServletContextUtil;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
@@ -77,7 +91,42 @@ public class TemplateSelectorTag extends IncludeTag {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
+		if (Validator.isNotNull(_displayStyleGroupKey)) {
+			Group group = GroupLocalServiceUtil.fetchGroup(
+				themeDisplay.getCompanyId(), _displayStyleGroupKey);
+
+			if (group != null) {
+				return group.getGroupId();
+			}
+		}
+
 		return themeDisplay.getScopeGroupId();
+	}
+
+	public String getDisplayStyleGroupKey() {
+		if (Validator.isNotNull(_displayStyleGroupKey)) {
+			return _displayStyleGroupKey;
+		}
+
+		long groupId = _displayStyleGroupId;
+
+		if (groupId <= 0) {
+			HttpServletRequest httpServletRequest = getRequest();
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			groupId = themeDisplay.getScopeGroupId();
+		}
+
+		Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+
+		if (group != null) {
+			return group.getGroupKey();
+		}
+
+		return null;
 	}
 
 	public List<String> getDisplayStyles() {
@@ -108,6 +157,10 @@ public class TemplateSelectorTag extends IncludeTag {
 		_displayStyleGroupId = displayStyleGroupId;
 	}
 
+	public void setDisplayStyleGroupKey(String displayStyleGroupKey) {
+		_displayStyleGroupKey = displayStyleGroupKey;
+	}
+
 	public void setDisplayStyles(List<String> displayStyles) {
 		_displayStyles = displayStyles;
 	}
@@ -135,6 +188,7 @@ public class TemplateSelectorTag extends IncludeTag {
 		_defaultDisplayStyle = StringPool.BLANK;
 		_displayStyle = null;
 		_displayStyleGroupId = 0;
+		_displayStyleGroupKey = null;
 		_displayStyles = null;
 		_refreshURL = null;
 		_showEmptyOption = false;
@@ -160,79 +214,131 @@ public class TemplateSelectorTag extends IncludeTag {
 	@Override
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
 		setNamespacedAttribute(
-			httpServletRequest, "classNameId",
-			String.valueOf(PortalUtil.getClassNameId(getClassName())));
-		setNamespacedAttribute(
-			httpServletRequest, "defaultDisplayStyle",
-			getDefaultDisplayStyle());
-		setNamespacedAttribute(
-			httpServletRequest, "ddmTemplates",
-			_getDDMTemplates(httpServletRequest));
-		setNamespacedAttribute(
-			httpServletRequest, "displayStyle", getDisplayStyle());
-		setNamespacedAttribute(
-			httpServletRequest, "displayStyleGroupId",
-			getDisplayStyleGroupId());
-		setNamespacedAttribute(
-			httpServletRequest, "displayStyles", getDisplayStyles());
-		setNamespacedAttribute(
-			httpServletRequest, "refreshURL", getRefreshURL());
-		setNamespacedAttribute(
-			httpServletRequest, "portletDisplayDDMTemplate",
-			getPortletDisplayDDMTemplate());
-		setNamespacedAttribute(
-			httpServletRequest, "showEmptyOption", isShowEmptyOption());
+			httpServletRequest, "templateSelectorProps",
+			HashMapBuilder.<String, Object>put(
+				"displayStyle",
+				() -> {
+					String displayStyle = getDisplayStyle();
+
+					if (Validator.isNull(displayStyle) && isShowEmptyOption()) {
+						return "default";
+					}
+
+					return displayStyle;
+				}
+			).put(
+				"displayStyleGroupId",
+				() -> {
+					DDMTemplate portletDisplayDDMTemplate =
+						getPortletDisplayDDMTemplate();
+
+					if (portletDisplayDDMTemplate != null) {
+						return portletDisplayDDMTemplate.getGroupId();
+					}
+
+					return getDisplayStyleGroupId();
+				}
+			).put(
+				"displayStyleGroupKey",
+				() -> {
+					DDMTemplate portletDisplayDDMTemplate =
+						getPortletDisplayDDMTemplate();
+
+					if (portletDisplayDDMTemplate != null) {
+						Group group = GroupLocalServiceUtil.fetchGroup(
+							portletDisplayDDMTemplate.getGroupId());
+
+						if (group != null) {
+							return group.getGroupKey();
+						}
+					}
+
+					return getDisplayStyleGroupKey();
+				}
+			).put(
+				"items", _getItemsJSONArray(httpServletRequest)
+			).build());
 	}
 
-	private List<DDMTemplate> _getDDMTemplates(
-		HttpServletRequest httpServletRequest) {
+	private JSONArray _getDDMTemplatesJSONArray(
+		long groupId, Locale locale, PermissionChecker permissionChecker) {
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
+		JSONArray ddmTemplatesJSONArray = JSONFactoryUtil.createJSONArray();
 
-		try {
-			List<DDMTemplate> ddmTemplates =
-				DDMTemplateLocalServiceUtil.getTemplates(
-					_getGroupIds(themeDisplay.getScopeGroup()),
-					PortalUtil.getClassNameId(getClassName()), 0L);
+		List<DDMTemplate> ddmTemplates = ListUtil.sort(
+			DDMTemplateLocalServiceUtil.getTemplates(
+				groupId, PortalUtil.getClassNameId(getClassName()), 0L),
+			Comparator.comparing(
+				ddmTemplate -> ddmTemplate.getName(locale),
+				String::compareToIgnoreCase));
 
-			return ListUtil.filter(
-				ddmTemplates,
-				ddmTemplate -> {
-					try {
-						if (!DDMTemplatePermission.contains(
-								themeDisplay.getPermissionChecker(),
-								ddmTemplate.getTemplateId(), ActionKeys.VIEW) ||
-							!DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY.equals(
-								ddmTemplate.getType())) {
+		for (DDMTemplate ddmTemplate : ddmTemplates) {
+			try {
+				if (!DDMTemplatePermission.contains(
+						permissionChecker, ddmTemplate.getTemplateId(),
+						ActionKeys.VIEW) ||
+					!DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY.equals(
+						ddmTemplate.getType())) {
 
-							return false;
-						}
-					}
-					catch (Exception exception) {
-						if (_log.isDebugEnabled()) {
-							_log.debug(exception);
-						}
+					continue;
+				}
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
 
-						return false;
-					}
-
-					return true;
-				});
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
+				continue;
 			}
 
-			return Collections.emptyList();
+			ddmTemplatesJSONArray.put(
+				JSONUtil.put(
+					"groupId", ddmTemplate.getGroupId()
+				).put(
+					"groupKey",
+					() -> {
+						Group group = GroupLocalServiceUtil.fetchGroup(
+							ddmTemplate.getGroupId());
+
+						if (group != null) {
+							return group.getGroupKey();
+						}
+
+						return null;
+					}
+				).put(
+					"label", ddmTemplate.getName(locale)
+				).put(
+					"value",
+					PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
+						ddmTemplate.getTemplateKey()
+				));
 		}
+
+		return ddmTemplatesJSONArray;
 	}
 
 	private long[] _getGroupIds(Group group) {
 		if (group.isLayout()) {
 			group = group.getParentGroup();
+		}
+
+		if (group.isLayoutPrototype()) {
+			LayoutPrototype layoutPrototype =
+				LayoutPrototypeLocalServiceUtil.fetchLayoutPrototype(
+					group.getClassPK());
+
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
+				LayoutPageTemplateEntryLocalServiceUtil.
+					fetchFirstLayoutPageTemplateEntry(
+						layoutPrototype.getLayoutPrototypeId());
+
+			if ((layoutPageTemplateEntry != null) &&
+				(layoutPageTemplateEntry.getGroupId() > 0)) {
+
+				return PortalUtil.getCurrentAndAncestorSiteGroupIds(
+					layoutPageTemplateEntry.getGroupId());
+			}
 		}
 
 		long groupId = group.getGroupId();
@@ -248,6 +354,87 @@ public class TemplateSelectorTag extends IncludeTag {
 		return PortalUtil.getCurrentAndAncestorSiteGroupIds(groupId);
 	}
 
+	private JSONArray _getItemsJSONArray(
+		HttpServletRequest httpServletRequest) {
+
+		JSONArray itemsJSONArray = JSONFactoryUtil.createJSONArray();
+
+		if ((_displayStyles != null) || isShowEmptyOption()) {
+			itemsJSONArray.put(
+				JSONUtil.put(
+					"items",
+					() -> {
+						JSONArray displayStylesJSONArray =
+							JSONFactoryUtil.createJSONArray();
+
+						List<String> displayStyles = new ArrayList<>();
+
+						if (_displayStyles != null) {
+							displayStyles.addAll(_displayStyles);
+						}
+
+						if (isShowEmptyOption()) {
+							displayStyles.add("default");
+						}
+
+						for (String displayStyle :
+								ListUtil.sort(displayStyles)) {
+
+							displayStylesJSONArray.put(
+								JSONUtil.put(
+									"label",
+									LanguageUtil.get(
+										httpServletRequest, displayStyle)
+								).put(
+									"value", displayStyle
+								));
+						}
+
+						return displayStylesJSONArray;
+					}
+				).put(
+					"label", LanguageUtil.get(httpServletRequest, "default")
+				));
+		}
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		for (long groupId : _getGroupIds(themeDisplay.getScopeGroup())) {
+			Group group = GroupLocalServiceUtil.fetchGroup(groupId);
+
+			if (group == null) {
+				continue;
+			}
+
+			JSONArray ddmTempaltesJSONArray = _getDDMTemplatesJSONArray(
+				groupId, themeDisplay.getLocale(),
+				themeDisplay.getPermissionChecker());
+
+			if (ddmTempaltesJSONArray.length() <= 0) {
+				continue;
+			}
+
+			try {
+				itemsJSONArray.put(
+					JSONUtil.put(
+						"items", ddmTempaltesJSONArray
+					).put(
+						"label",
+						group.getDescriptiveName(themeDisplay.getLocale())
+					));
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+		}
+
+		return itemsJSONArray;
+	}
+
 	private static final String _ATTRIBUTE_NAMESPACE =
 		"liferay-template:template-selector:";
 
@@ -260,6 +447,7 @@ public class TemplateSelectorTag extends IncludeTag {
 	private String _defaultDisplayStyle = StringPool.BLANK;
 	private String _displayStyle;
 	private long _displayStyleGroupId;
+	private String _displayStyleGroupKey;
 	private List<String> _displayStyles;
 	private String _refreshURL;
 	private boolean _showEmptyOption;

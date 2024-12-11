@@ -29,17 +29,20 @@ interface ObjectFolderContextProviderProps
 const ObjectFolderContext = createContext({} as ObjectFolderContextProps);
 
 const initialState = {
+	deletedObjectDefinition: {} as DeletedObjectDefinition,
 	elements: [] as Elements<
-		ObjectDefinitionNodeData | ObjectRelationshipEdgeData
+		ObjectDefinitionNodeData | ObjectRelationshipEdgeData[]
 	>,
 	isLoadingObjectFolder: false,
 	leftSidebarItems: [] as LeftSidebarItem[],
-	objectDefinitions: [] as ObjectDefinition[],
+	modelBuilderModals: {} as ModelBuilderModals,
+	nodeHandleConnectable: false,
 	objectFolderName: getObjectFolderName(),
 	objectFolders: [] as ObjectFolder[],
 	rightSidebarType: 'empty' as RightSidebarType,
 	selectedObjectFolder: {},
 	showChangesSaved: false,
+	showSidebars: true,
 } as TState;
 
 export function ObjectFolderContextProvider({

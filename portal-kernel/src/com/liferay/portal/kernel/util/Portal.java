@@ -570,10 +570,12 @@ public interface Portal {
 	public long getDefaultCompanyId();
 
 	public String getEmailFromAddress(
-		PortletPreferences preferences, long companyId, String defaultValue);
+		PortletPreferences portletPreferences, long companyId,
+		String defaultValue);
 
 	public String getEmailFromName(
-		PortletPreferences preferences, long companyId, String defaultValue);
+		PortletPreferences portletPreferences, long companyId,
+		String defaultValue);
 
 	public String getForwardedHost(HttpServletRequest httpServletRequest);
 
@@ -702,10 +704,6 @@ public interface Portal {
 		HttpServletResponse httpServletResponse, boolean initialize);
 
 	public Locale getLocale(PortletRequest portletRequest);
-
-	public String getLocalizedFriendlyURL(
-		HttpServletRequest httpServletRequest, Layout layout, Locale locale,
-		Locale originalLocale);
 
 	public String getMailId(String mx, String popPortletPrefix, Object... ids);
 
@@ -991,8 +989,6 @@ public interface Portal {
 
 	public String getWidgetURL(Portlet portlet, ThemeDisplay themeDisplay)
 		throws PortalException;
-
-	public void initCustomSQL();
 
 	public User initUser(HttpServletRequest httpServletRequest)
 		throws Exception;

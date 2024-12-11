@@ -4,7 +4,7 @@
  */
 
 import {
-	REQUIRED_MSG,
+	constantsUtils,
 	invalidateRequired,
 	openToast,
 	useForm,
@@ -14,6 +14,8 @@ import {sub} from 'frontend-js-web';
 import {defaultLanguageId} from '../../utils/constants';
 import {normalizeFieldSettings} from '../../utils/fieldSettings';
 import {ObjectFieldErrors} from './ObjectFieldFormBase';
+
+const AUTO_INCREMENT_INITIAL_VALUE_REGEX = /^(?!0+$)\d+$/;
 
 interface IUseObjectFieldForm {
 	forbiddenChars?: string[];
@@ -83,27 +85,41 @@ export function useObjectFieldForm({
 		const settings = normalizeFieldSettings(field.objectFieldSettings);
 
 		if (invalidateRequired(label)) {
-			errors.label = REQUIRED_MSG;
+			errors.label = constantsUtils.REQUIRED_MSG;
 		}
 
 		if (invalidateRequired(field.name ?? label)) {
-			errors.name = REQUIRED_MSG;
+			errors.name = constantsUtils.REQUIRED_MSG;
 		}
 
 		if (!field.businessType) {
-			errors.businessType = REQUIRED_MSG;
+			errors.businessType = constantsUtils.REQUIRED_MSG;
+		}
+		else if (field.businessType === 'AutoIncrement') {
+			if (!settings.initialValue) {
+				errors.initialValue = constantsUtils.REQUIRED_MSG;
+			}
+			else if (
+				!AUTO_INCREMENT_INITIAL_VALUE_REGEX.exec(
+					settings.initialValue as string
+				)
+			) {
+				errors.initialValue = Liferay.Language.get(
+					'this-value-cannot-be-less-than-1'
+				);
+			}
 		}
 		else if (field.businessType === 'Aggregation') {
 			if (!settings.function) {
-				errors.function = REQUIRED_MSG;
+				errors.function = constantsUtils.REQUIRED_MSG;
 			}
 
 			if (settings.function !== 'COUNT' && !settings.objectFieldName) {
-				errors.objectFieldName = REQUIRED_MSG;
+				errors.objectFieldName = constantsUtils.REQUIRED_MSG;
 			}
 
 			if (!settings.objectRelationshipName) {
-				errors.objectRelationshipName = REQUIRED_MSG;
+				errors.objectRelationshipName = constantsUtils.REQUIRED_MSG;
 			}
 		}
 		else if (field.businessType === 'Attachment') {
@@ -117,13 +133,13 @@ export function useObjectFieldForm({
 					settings.acceptedFileExtensions as string | undefined
 				)
 			) {
-				errors.acceptedFileExtensions = REQUIRED_MSG;
+				errors.acceptedFileExtensions = constantsUtils.REQUIRED_MSG;
 			}
 			if (!settings.fileSource) {
-				errors.fileSource = REQUIRED_MSG;
+				errors.fileSource = constantsUtils.REQUIRED_MSG;
 			}
 			if (!settings.maximumFileSize && settings.maximumFileSize !== 0) {
-				errors.maximumFileSize = REQUIRED_MSG;
+				errors.maximumFileSize = constantsUtils.REQUIRED_MSG;
 			}
 			else if (
 				(settings.maximumFileSize as number) > uploadRequestSizeLimit
@@ -150,7 +166,7 @@ export function useObjectFieldForm({
 						settings.storageDLFolderPath as string | undefined
 					)
 				) {
-					errors.storageDLFolderPath = REQUIRED_MSG;
+					errors.storageDLFolderPath = constantsUtils.REQUIRED_MSG;
 				}
 				else {
 					const sourceFolderError = getSourceFolderError(
@@ -165,7 +181,7 @@ export function useObjectFieldForm({
 		}
 		else if (field.businessType === 'Formula') {
 			if (invalidateRequired(settings.output as string)) {
-				errors.output = REQUIRED_MSG;
+				errors.output = constantsUtils.REQUIRED_MSG;
 			}
 		}
 		else if (
@@ -173,12 +189,12 @@ export function useObjectFieldForm({
 			field.businessType === 'Text'
 		) {
 			if (settings.showCounter && !settings.maxLength) {
-				errors.maxLength = REQUIRED_MSG;
+				errors.maxLength = constantsUtils.REQUIRED_MSG;
 			}
 		}
 		else if (field.businessType === 'Picklist') {
 			if (!field.listTypeDefinitionId) {
-				errors.listTypeDefinitionId = REQUIRED_MSG;
+				errors.listTypeDefinitionId = constantsUtils.REQUIRED_MSG;
 			}
 
 			const thereIsDefaultValueType = field.objectFieldSettings?.some(
@@ -192,7 +208,7 @@ export function useObjectFieldForm({
 
 			if (!field.id) {
 				if (field.state && !thereIsDefaultValue) {
-					errors.defaultValue = REQUIRED_MSG;
+					errors.defaultValue = constantsUtils.REQUIRED_MSG;
 
 					openToast({
 						message: Liferay.Language.get(
@@ -204,7 +220,7 @@ export function useObjectFieldForm({
 			}
 			else {
 				if (thereIsDefaultValueType && !thereIsDefaultValue) {
-					errors.defaultValue = REQUIRED_MSG;
+					errors.defaultValue = constantsUtils.REQUIRED_MSG;
 				}
 			}
 		}

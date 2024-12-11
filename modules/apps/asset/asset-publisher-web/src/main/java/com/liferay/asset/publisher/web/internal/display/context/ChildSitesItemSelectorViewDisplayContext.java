@@ -6,12 +6,15 @@
 package com.liferay.asset.publisher.web.internal.display.context;
 
 import com.liferay.asset.publisher.util.AssetPublisherHelper;
+import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -20,6 +23,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.search.GroupSearch;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -34,10 +38,13 @@ public class ChildSitesItemSelectorViewDisplayContext
 	extends BaseItemSelectorViewDisplayContext {
 
 	public ChildSitesItemSelectorViewDisplayContext(
+		GroupItemSelectorCriterion groupItemSelectorCriterion,
 		HttpServletRequest httpServletRequest,
 		AssetPublisherHelper assetPublisherHelper, PortletURL portletURL) {
 
 		super(httpServletRequest, assetPublisherHelper, portletURL);
+
+		_groupItemSelectorCriterion = groupItemSelectorCriterion;
 	}
 
 	@Override
@@ -52,7 +59,11 @@ public class ChildSitesItemSelectorViewDisplayContext
 		groupSearch.setResultsAndTotal(
 			_filterGroups(
 				GroupLocalServiceUtil.search(
-					themeDisplay.getCompanyId(), _CLASS_NAME_IDS,
+					themeDisplay.getCompanyId(),
+					new long[] {
+						PortalUtil.getClassNameId(Group.class),
+						PortalUtil.getClassNameId(Organization.class)
+					},
 					ParamUtil.getString(httpServletRequest, "keywords"),
 					_getGroupParams(), QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 					groupSearch.getOrderByComparator()),
@@ -64,15 +75,15 @@ public class ChildSitesItemSelectorViewDisplayContext
 	private List<Group> _filterGroups(
 		List<Group> groups, PermissionChecker permissionChecker) {
 
-		List<Group> filteredGroups = new ArrayList<>();
+		return TransformUtil.transform(
+			groups,
+			group -> {
+				if (permissionChecker.isGroupAdmin(group.getGroupId())) {
+					return group;
+				}
 
-		for (Group group : groups) {
-			if (permissionChecker.isGroupAdmin(group.getGroupId())) {
-				filteredGroups.add(group);
-			}
-		}
-
-		return filteredGroups;
+				return null;
+			});
 	}
 
 	private LinkedHashMap<String, Object> _getGroupParams() {
@@ -95,6 +106,13 @@ public class ChildSitesItemSelectorViewDisplayContext
 			() -> {
 				List<Long> excludedGroupIds = new ArrayList<>();
 
+				if (_groupItemSelectorCriterion.getExcludedGroupIds() != null) {
+					Collections.addAll(
+						excludedGroupIds,
+						ArrayUtil.toLongArray(
+							_groupItemSelectorCriterion.getExcludedGroupIds()));
+				}
+
 				Group group = themeDisplay.getSiteGroup();
 
 				if (group.isStagingGroup()) {
@@ -111,11 +129,7 @@ public class ChildSitesItemSelectorViewDisplayContext
 		return _groupParams;
 	}
 
-	private static final long[] _CLASS_NAME_IDS = {
-		PortalUtil.getClassNameId(Group.class),
-		PortalUtil.getClassNameId(Organization.class)
-	};
-
+	private final GroupItemSelectorCriterion _groupItemSelectorCriterion;
 	private LinkedHashMap<String, Object> _groupParams;
 
 }

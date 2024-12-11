@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPOption;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -62,14 +63,6 @@ public class CPOptionServiceUtil {
 		getService().deleteCPOption(cpOptionId);
 	}
 
-	public static CPOption fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CPOption fetchCPOption(long cpOptionId)
 		throws PortalException {
 
@@ -80,6 +73,14 @@ public class CPOptionServiceUtil {
 		throws PortalException {
 
 		return getService().fetchCPOption(companyId, key);
+	}
+
+	public static CPOption fetchCPOptionByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().fetchCPOptionByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static List<CPOption> findCPOptionByCompanyId(
@@ -136,13 +137,10 @@ public class CPOptionServiceUtil {
 	}
 
 	public static CPOptionService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPOptionService service) {
-		_service = service;
-	}
-
-	private static volatile CPOptionService _service;
+	private static final Snapshot<CPOptionService> _serviceSnapshot =
+		new Snapshot<>(CPOptionServiceUtil.class, CPOptionService.class);
 
 }

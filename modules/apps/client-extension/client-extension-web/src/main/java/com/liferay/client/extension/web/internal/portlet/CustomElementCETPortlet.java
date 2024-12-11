@@ -6,11 +6,11 @@
 package com.liferay.client.extension.web.internal.portlet;
 
 import com.liferay.client.extension.type.CustomElementCET;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -39,11 +40,11 @@ import javax.portlet.RenderResponse;
 public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 
 	public CustomElementCETPortlet(
-		CustomElementCET customElementCET, NPMResolver npmResolver,
-		String portletId) {
+		CustomElementCET customElementCET, Portal portal, String portletId) {
 
-		super(customElementCET, npmResolver);
+		super(customElementCET);
 
+		_portal = portal;
 		_portletId = portletId;
 	}
 
@@ -55,6 +56,8 @@ public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 			).put(
 				"com.liferay.portlet.css-class-wrapper",
 				"portlet-client-extension"
+			).put(
+				"com.liferay.portlet.deploy.parallel", false
 			).put(
 				"com.liferay.portlet.display-category",
 				cet.getPortletCategoryName()
@@ -149,9 +152,24 @@ public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 	}
 
 	private String[] _prepareURLs(long lastModified, String[] urls) {
+		String contextPath = _portal.getPathContext();
+
 		for (int i = 0; i < urls.length; i++) {
-			urls[i] = HttpComponentsUtil.addParameter(
-				urls[i], "t", lastModified);
+			if (!FeatureFlagManagerUtil.isEnabled(
+					cet.getCompanyId(), "LPS-202104") &&
+				!urls[i].contains("?t=") && !urls[i].contains("&t=")) {
+
+				urls[i] = HttpComponentsUtil.addParameter(
+					urls[i], "t", lastModified);
+			}
+
+			if (urls[i].contains(contextPath + "/o/")) {
+				urls[i] = urls[i].replace(contextPath + "/o/", "/o/");
+			}
+
+			if (!urls[i].startsWith("module:")) {
+				urls[i] = "nocombo:" + urls[i];
+			}
 		}
 
 		return urls;
@@ -160,6 +178,7 @@ public class CustomElementCETPortlet extends BaseCETPortlet<CustomElementCET> {
 	private static final Log _log = LogFactoryUtil.getLog(
 		CustomElementCETPortlet.class);
 
+	private final Portal _portal;
 	private final String _portletId;
 
 }

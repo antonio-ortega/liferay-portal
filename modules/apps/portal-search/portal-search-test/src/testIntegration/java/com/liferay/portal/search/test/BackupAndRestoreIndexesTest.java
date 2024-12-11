@@ -6,16 +6,16 @@
 package com.liferay.portal.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.IndexAdminHelper;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.util.PortalInstances;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +40,7 @@ public class BackupAndRestoreIndexesTest {
 	public void testBackupAndRestore() throws Exception {
 		Map<Long, String> backupNames = new HashMap<>();
 
-		for (long companyId : PortalInstances.getCompanyIds()) {
+		for (long companyId : PortalInstancePool.getCompanyIds()) {
 			String backupName = StringUtil.lowerCase(
 				BackupAndRestoreIndexesTest.class.getName());
 

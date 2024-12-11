@@ -10,6 +10,7 @@ import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.Category;
+import com.liferay.headless.commerce.core.util.LanguageUtils;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 
@@ -38,18 +39,24 @@ public class CategoryDTOConverter
 		AssetCategory assetCategory = _assetCategoryService.getCategory(
 			(Long)dtoConverterContext.getId());
 
-		AssetVocabulary assetVocabulary =
-			_assetVocabularyLocalService.getAssetVocabulary(
-				assetCategory.getVocabularyId());
-
 		return new Category() {
 			{
-				externalReferenceCode =
-					assetCategory.getExternalReferenceCode();
-				id = assetCategory.getCategoryId();
-				name = assetCategory.getName();
-				siteId = assetCategory.getGroupId();
-				vocabulary = assetVocabulary.getName();
+				setExternalReferenceCode(
+					assetCategory::getExternalReferenceCode);
+				setId(assetCategory::getCategoryId);
+				setName(assetCategory::getName);
+				setSiteId(assetCategory::getGroupId);
+				setTitle(
+					() -> LanguageUtils.getLanguageIdMap(
+						assetCategory.getTitleMap()));
+				setVocabulary(
+					() -> {
+						AssetVocabulary assetVocabulary =
+							_assetVocabularyLocalService.getAssetVocabulary(
+								assetCategory.getVocabularyId());
+
+						return assetVocabulary.getName();
+					});
 			}
 		};
 	}

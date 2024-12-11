@@ -47,7 +47,7 @@ public class MBModerationWorkflowDefinitionUpgradeProcess
 		}
 
 		WorkflowDefinition latestWorkflowDefinition =
-			_workflowDefinitionManager.getLatestWorkflowDefinition(
+			_workflowDefinitionManager.liberalGetLatestWorkflowDefinition(
 				companyId, MBModerationConstants.WORKFLOW_DEFINITION_NAME);
 
 		String content = StringUtil.read(
@@ -56,7 +56,7 @@ public class MBModerationWorkflowDefinitionUpgradeProcess
 
 		try {
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				companyId, latestWorkflowDefinition.getUserId(),
+				null, companyId, latestWorkflowDefinition.getUserId(),
 				latestWorkflowDefinition.getTitle(),
 				latestWorkflowDefinition.getName(),
 				latestWorkflowDefinition.getScope(), content.getBytes());

@@ -18,7 +18,7 @@ The standard directory name of a client extension is broken up into several part
 
 For `liferay-sample-batch`, the owner is `liferay` and the project is `sample`. The owner and the project must not contain `-` since we use `-` to differentiate the owner from the project.
 
-The third part is usually one of the available client extension types: batch, custom-element, fds-cell-renderer, global-css, global-js, iframe, notification-type, oauth-application-headless-server, oauth-application-user-agent, object-action, site-initializer, static-content, theme-css, theme-favicon, theme-js, theme-spritemap, or workflow-action.
+The third part is usually one of the available client extension types: batch, custom-element, fds-cell-renderer, global-css, global-js, iframe, notification-type, oauth-application-headless-server, oauth-application-user-agent, object-action, site-initializer, static-content, theme-css, theme-favicon, theme-spritemap, or workflow-action.
 
 For `liferay-sample-batch`, the third part is the client extension type `batch`.
 
@@ -33,6 +33,14 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 - *liferay-sample-batch*
 
 	...
+
+- *liferay-sample-commerce-payment-integration*
+
+	TODO
+
+- *liferay-sample-commerce-shipping-engine*
+
+	Use Spring Boot to provide a new commerce shipping engine.
 
 - *liferay-sample-custom-element-1*
 
@@ -54,6 +62,10 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 
 	Build a custom element that uses `@clayui/badge`, `react`, and `react-dom` packages that Liferay makes publicly available through import maps.
 
+- *liferay-sample-editor-config-contributor*
+
+	Build a JavaScript function to configure WYSIWYG editors.
+
 - *liferay-sample-etc-cron*
 
 	Use Spring Boot and OAuth (server to server) to read from and write to Liferay in timed intervals.
@@ -70,17 +82,13 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 
 	1. Go to `liferay-sample-workspace/client-extensions/liferay-sample-etc-cron` and type `./gradlew bootRun` to start Spring Boot.
 
-- *liferay-sample-etc-frontend-1*
+- *liferay-sample-etc-frontend*
 
-	Combine multiple frontend client extensions.
+	Share code via JavaScript import maps to a custom element.
 
-- *liferay-sample-etc-frontend-2*
+- *liferay-sample-etc-node*
 
-	Combine multiple frontend client extensions that use `shared-utils.js` without duplicating or rerequesting it.
-
-- *liferay-sample-etc-frontend-3*
-
-	Share code through an import map client extension.
+	TODO
 
 - *liferay-sample-etc-spring-boot*
 
@@ -96,11 +104,19 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 
 - *liferay-sample-global-css*
 
-	Serve global CSS on a page.
+	Add a global CSS to a page.
 
-- *liferay-sample-global-js*
+- *liferay-sample-global-js-1*
 
-	Serve global JavaScript on a page.
+	Add a global script element to a page.
+
+- *liferay-sample-global-js-2*
+
+	Add a global script element with attributes to a page.
+
+- *liferay-sample-global-js-3*
+
+	Add a global script element to a company.
 
 - *liferay-sample-iframe-1*
 
@@ -114,17 +130,33 @@ For `liferay-sample-etc-cron` and `liferay-sample-etc-spring-boot` the third typ
 
 	Customize instance settings with YAML by overridding OSGi configurations.
 
+- *liferay-sample-js-import-maps-entry*
+
+	Share jQuery via JavaScript import maps.
+
+- *liferay-sample-site-initializer*
+
+	TODO
+
 - *liferay-sample-static-content*
 
 	Deploy static content that is only accessible if you know the URL.
 
 - *liferay-sample-theme-css-1*
 
-	Extend a theme's CSS with a CSS that uses `styled` as its base theme.
+	Extend the CSS of the `styled` theme.
 
 - *liferay-sample-theme-css-2*
 
-	Extend a theme's CSS with a CSS that uses `unstyled` as its base theme.
+	Extend the CSS of the `styled` theme and apply it to admin pages.
+
+- *liferay-sample-theme-css-3*
+
+	Extend the CSS of the `unstyled` theme.
+
+- *liferay-sample-theme-css-4*
+
+	Extend the CSS of the `unstyled` theme and provide frontend token definitions.
 
 - *liferay-sample-theme-favicon*
 

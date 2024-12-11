@@ -8,7 +8,7 @@ package com.liferay.portal.search.elasticsearch7.internal.index;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchFixture;
 import com.liferay.portal.search.elasticsearch7.internal.connection.IndexCreator;
 import com.liferay.portal.search.elasticsearch7.internal.connection.IndexName;
-import com.liferay.portal.search.elasticsearch7.internal.index.constants.LiferayTypeMappingsConstants;
+import com.liferay.portal.search.engine.SearchEngineInformation;
 
 import java.io.IOException;
 
@@ -18,6 +18,8 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.RestHighLevelClient;
+
+import org.mockito.Mockito;
 
 /**
  * @author André de Oliveira
@@ -33,6 +35,7 @@ public class LiferayIndexFixture {
 			{
 				setElasticsearchClientResolver(elasticsearchFixture);
 				setLiferayMappingsAddedToIndex(true);
+				setSearchEngineInformation(_createSearchEngineInformation());
 			}
 		};
 
@@ -43,16 +46,15 @@ public class LiferayIndexFixture {
 		RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
 
 		FieldMappingAssert.assertAnalyzer(
-			analyzer, field, LiferayTypeMappingsConstants.LIFERAY_DOCUMENT_TYPE,
-			_indexName.getName(), restHighLevelClient.indices());
+			analyzer, field, _indexName.getName(),
+			restHighLevelClient.indices());
 	}
 
 	public void assertType(String field, String type) throws Exception {
 		RestHighLevelClient restHighLevelClient = getRestHighLevelClient();
 
 		FieldMappingAssert.assertType(
-			type, field, LiferayTypeMappingsConstants.LIFERAY_DOCUMENT_TYPE,
-			_indexName.getName(), restHighLevelClient.indices());
+			type, field, _indexName.getName(), restHighLevelClient.indices());
 	}
 
 	public RestHighLevelClient getRestHighLevelClient() {
@@ -88,6 +90,19 @@ public class LiferayIndexFixture {
 
 	protected IndexRequest getIndexRequest() {
 		return Requests.indexRequest(_indexName.getName());
+	}
+
+	private SearchEngineInformation _createSearchEngineInformation() {
+		SearchEngineInformation searchEngineInformation = Mockito.mock(
+			SearchEngineInformation.class);
+
+		Mockito.when(
+			searchEngineInformation.getEmbeddingVectorDimensions()
+		).thenReturn(
+			new int[] {256}
+		);
+
+		return searchEngineInformation;
 	}
 
 	private final ElasticsearchFixture _elasticsearchFixture;

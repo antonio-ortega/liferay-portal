@@ -40,13 +40,14 @@
 		<column name="description" type="String" uad-nonanonymizable="true" />
 		<column name="extraSettings" type="String" />
 		<column name="fileEntryTypeId" type="long" />
-		<column change-tracking-resolution-type="merge" name="version" type="String" />
+		<column name="version" type="String" />
 		<column name="size" type="long" />
 		<column name="smallImageId" type="long" />
 		<column name="largeImageId" type="long" />
 		<column name="custom1ImageId" type="long" />
 		<column name="custom2ImageId" type="long" />
 		<column name="manualCheckInRequired" type="boolean" />
+		<column name="displayDate" type="Date" />
 		<column name="expirationDate" type="Date" />
 		<column name="reviewDate" type="Date" />
 		<column name="lastPublishDate" type="Date" />
@@ -135,7 +136,7 @@
 			<finder-column name="custom2ImageId" />
 		</finder>
 	</entity>
-	<entity human-name="document library file entry metadata" local-service="true" name="DLFileEntryMetadata" remote-service="false" uuid="true">
+	<entity external-reference-code="company" human-name="document library file entry metadata" local-service="true" name="DLFileEntryMetadata" remote-service="false" uuid="true">
 
 		<!-- PK fields -->
 
@@ -165,7 +166,7 @@
 			<finder-column name="fileVersionId" />
 		</finder>
 	</entity>
-	<entity human-name="document library file entry type" local-service="true" name="DLFileEntryType" remote-service="true" uad-dir-path="../modules/apps/document-library/document-library-uad/src/main/java" uad-package-path="com.liferay.document.library" uuid="true">
+	<entity external-reference-code="group" human-name="document library file entry type" local-service="true" name="DLFileEntryType" remote-service="true" uad-dir-path="../modules/apps/document-library/document-library-uad/src/main/java" uad-package-path="com.liferay.document.library" uuid="true">
 
 		<!-- PK fields -->
 
@@ -201,6 +202,9 @@
 		<finder name="GroupId" return-type="Collection">
 			<finder-column arrayable-operator="OR" name="groupId" />
 		</finder>
+		<finder name="CompanyId" return-type="Collection">
+			<finder-column name="companyId" />
+		</finder>
 		<finder name="G_DDI" return-type="DLFileEntryType" unique="true">
 			<finder-column name="groupId" />
 			<finder-column name="dataDefinitionId" />
@@ -210,7 +214,7 @@
 			<finder-column name="fileEntryTypeKey" />
 		</finder>
 	</entity>
-	<entity human-name="document library file shortcut" local-service="true" name="DLFileShortcut" remote-service="true" trash-enabled="true" uad-dir-path="../modules/apps/document-library/document-library-uad/src/main/java" uad-package-path="com.liferay.document.library" uuid="true">
+	<entity external-reference-code="group" human-name="document library file shortcut" local-service="true" name="DLFileShortcut" remote-service="true" trash-enabled="true" uad-dir-path="../modules/apps/document-library/document-library-uad/src/main/java" uad-package-path="com.liferay.document.library" uuid="true">
 
 		<!-- PK fields -->
 
@@ -243,6 +247,9 @@
 
 		<!-- Finder methods -->
 
+		<finder name="GroupId" return-type="Collection">
+			<finder-column name="groupId" />
+		</finder>
 		<finder name="CompanyId" return-type="Collection">
 			<finder-column name="companyId" />
 		</finder>
@@ -285,7 +292,7 @@
 		<column name="userId" type="long" />
 		<column name="userName" type="String" />
 		<column name="createDate" type="Date" />
-		<column change-tracking-resolution-type="merge" name="modifiedDate" type="Date" />
+		<column name="modifiedDate" type="Date" />
 
 		<!-- Other fields -->
 
@@ -305,13 +312,14 @@
 		<column name="size" type="long" />
 		<column name="checksum" type="String" />
 		<column name="storeUUID" type="String" />
+		<column name="displayDate" type="Date" />
 		<column name="expirationDate" type="Date" />
 		<column name="reviewDate" type="Date" />
 		<column name="lastPublishDate" type="Date" />
 		<column name="status" type="int" />
 		<column name="statusByUserId" type="long" />
 		<column name="statusByUserName" type="String" />
-		<column change-tracking-resolution-type="merge" name="statusDate" type="Date" />
+		<column name="statusDate" type="Date" />
 
 		<!-- Order -->
 
@@ -345,12 +353,21 @@
 		</finder>
 		<finder name="F_S" return-type="Collection">
 			<finder-column name="fileEntryId" />
+			<finder-column arrayable-operator="OR" name="status" />
+		</finder>
+		<finder name="LtD_S" return-type="Collection">
+			<finder-column comparator="&lt;" name="displayDate" />
 			<finder-column name="status" />
 		</finder>
 		<finder name="G_F_S" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="folderId" />
 			<finder-column name="status" />
+		</finder>
+		<finder name="C_E_S" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="expirationDate" />
+			<finder-column arrayable-operator="OR" name="status" />
 		</finder>
 		<finder name="G_F_T_V" return-type="Collection">
 			<finder-column name="groupId" />
@@ -383,8 +400,8 @@
 		<column name="mountPoint" type="boolean" />
 		<column name="parentFolderId" parent-container-model="true" type="long" />
 		<column name="treePath" type="String" />
-		<column change-tracking-resolution-type="merge" name="name" type="String" uad-nonanonymizable="true" />
-		<column change-tracking-resolution-type="merge" name="description" type="String" uad-nonanonymizable="true" />
+		<column name="name" type="String" uad-nonanonymizable="true" />
+		<column name="description" type="String" uad-nonanonymizable="true" />
 		<column change-tracking-resolution-type="max" name="lastPostDate" type="Date" />
 		<column name="defaultFileEntryTypeId" type="long" />
 		<column name="hidden" type="boolean" />
@@ -501,8 +518,11 @@
 		<exception>DuplicateFolderExternalReferenceCode</exception>
 		<exception>DuplicateFolderName</exception>
 		<exception>DuplicateRepositoryName</exception>
+		<exception>FileEntryDisplayDate</exception>
+		<exception>FileEntryExpirationDate</exception>
 		<exception>FileEntryExpired</exception>
 		<exception>FileEntryLock</exception>
+		<exception>FileEntryReviewDate</exception>
 		<exception>FileExtension</exception>
 		<exception>FileMimeType</exception>
 		<exception>FileName</exception>

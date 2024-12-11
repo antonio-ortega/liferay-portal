@@ -1,13 +1,13 @@
 html#{$cadmin-selector} .cadmin {
-	.page-editor__shorcut-modal__shorcut {
-		min-width: 60px;
+	.page-editor__shortcut-modal__shortcut {
+		min-width: 85px;
 
 		> kbd {
 			border-color: $cadmin-secondary-l2;
 		}
 	}
 
-	.page-editor__shorcut-modal__shorcut-description {
+	.page-editor__shortcut-modal__shortcut-description {
 		line-height: 2;
 	}
 }

@@ -4,11 +4,14 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Setup: Create an account with a buyer user") {
 			CommerceEntry.addAccountEntryUser(
@@ -74,7 +77,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -139,7 +142,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -235,7 +238,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -323,7 +326,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -343,6 +346,75 @@ definition {
 			AssertElementNotPresent(
 				locator1 = "CommerceFrontStore#FS_PRODUCT_NAME",
 				value1 = ${productName});
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12950. As an admin I can view the correct format for the Description in the Paragraph Fragment in a Display Page Template"
+	@priority = 3
+	test CanDisplayCorrectDesriptionOnParagraphFragment {
+		property portal.acceptance = "false";
+
+		task ("Given a new product is created") {
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Minium",
+				neverExpire = "false",
+				productDescription = "Full Description",
+				productName = "Simple Product",
+				productType = "Simple",
+				shortDescription = "Short Description");
+		}
+
+		task ("And a new Display Page Template for Commerce Product is created") {
+			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
+				contentType = "Product",
+				displayPageTemplateEntryName = "Master Page Blank",
+				groupName = "Minium");
+		}
+
+		task ("And the Paragraph Display fragment is deployed on the page") {
+			DisplayPageTemplate.addFragment(
+				collectionName = "Basic Components",
+				displayPageName = "Master Page Blank",
+				fragmentName = "Paragraph",
+				publish = "false",
+				siteURLKey = "minium");
+		}
+
+		task ("When the admin user goes to Paragraph Mappping") {
+			PageEditorMapping.gotoEditableFieldMapping(
+				fragmentName = "Paragraph",
+				id = "element-text");
+		}
+
+		task ("And Source, Item and Field are correctly filled") {
+			Click(
+				key_fieldLabel = "Source",
+				locator1 = "Select#GENERIC_SELECT_FIELD");
+
+			Select(
+				key_fieldLabel = "Source",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Specific Content");
+
+			PageEditorMapping.mapEditableFieldToAsset(
+				entryTitle = "Simple Product",
+				navItem = "Products");
+
+			WaitForEditable(locator1 = "PageEditorEditableLink#FIELD");
+
+			Select(
+				locator1 = "PageEditorEditableLink#FIELD",
+				value1 = "Description");
+		}
+
+		task ("Then the Description is correctly formatted") {
+			AssertElementPresent(
+				key_text = "Full Description",
+				locator1 = "Fragment#EDITABLE_FIELD_CONTENT");
+
+			AssertElementNotPresent(
+				key_text = "<p>Full Description<p>",
+				locator1 = "Fragment#EDITABLE_FIELD_CONTENT");
 		}
 	}
 
@@ -431,7 +503,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -531,7 +603,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -586,9 +658,7 @@ definition {
 		}
 
 		task ("And a product updated") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchProduct(search = "U-Joint");
 
@@ -604,7 +674,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -659,9 +729,7 @@ definition {
 		}
 
 		task ("And some categories of the new vocabulary are selected inside a product (e.g. ABS Sensor)") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			Click(
 				key_entryName = "ABS Sensor",
@@ -711,7 +779,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -754,10 +822,7 @@ definition {
 		}
 
 		task ("And a product with Delivery Subscription") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Product Management",
-				panel = "Commerce",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceNavigator.searchEntry(entryName = ${productName});
 
@@ -777,7 +842,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -823,7 +888,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -864,7 +929,7 @@ definition {
 			CommerceDisplayPageTemplates.addMappedDisplayPageTemplateEntry(
 				contentType = "Product",
 				displayPageName = "Test Commerce Product Display Page Template",
-				fieldsList = "Display Page URL,Display Date,Expiration Date",
+				fieldsList = "Default,Display Date,Expiration Date",
 				fragmentName = "Heading",
 				groupName = "Minium",
 				menuItem = "Mark as Default",
@@ -875,7 +940,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -887,7 +952,7 @@ definition {
 		task ("Then verifies the mapped fragments are visible") {
 			var baseURL = PropsUtil.get("portal.url");
 
-			CommerceDisplayPageTemplates.viewMappedFragmentsText(fragmentsTextList = "${baseURL}/web/minium/p/simple-product,1/1/23 1:01 AM,1/1/24 1:01 AM");
+			CommerceDisplayPageTemplates.viewMappedFragmentsText(fragmentsTextList = "${baseURL}/web/minium/p/simple-product,1/1/24 1:01 AM,1/1/25 1:01 AM");
 		}
 	}
 
@@ -910,10 +975,7 @@ definition {
 		}
 
 		task ("And a product with Payment Subscription") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Product Management",
-				panel = "Commerce",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceNavigator.searchEntry(entryName = ${productName});
 
@@ -933,7 +995,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1004,7 +1066,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1039,20 +1101,14 @@ definition {
 		var customField2Desc = "Custom Field Two Text";
 
 		task ("Given the admin already create the custom field 'Commerce Product' as text area") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Custom Fields");
+			CustomFields.openCustomFieldAdmin();
 
 			CommerceConfiguration.addCP(
 				customFieldName = ${customField1Name},
 				customFieldType = "Text Area",
 				resourceName = "Product");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Custom Fields");
+			CustomFields.openCustomFieldAdmin();
 
 			CommerceConfiguration.addCP(
 				customFieldName = ${customField2Name},
@@ -1061,9 +1117,7 @@ definition {
 		}
 
 		task ("And add 'Test Commerce Product Custom Field' inside the text area for the custom field for ABS Sensor") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			Click(
 				key_entryName = "ABS Sensor",
@@ -1109,7 +1163,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1203,7 +1257,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1298,7 +1352,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1344,9 +1398,7 @@ definition {
 		task ("Delete manually ABS Sensor to avoid problems during the tearDown (COMMERCE-11085)") {
 			User.logoutPG();
 
-			User.loginPG(
-				password = "test",
-				userEmailAddress = "test@liferay.com");
+			User.loginPG();
 
 			CommerceProducts.openProductsAdmin();
 
@@ -1378,7 +1430,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1438,7 +1490,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1455,9 +1507,7 @@ definition {
 		}
 
 		task ("Given the template page is unmarked as Default") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "Minium");
 
@@ -1474,7 +1524,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1538,7 +1588,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1599,7 +1649,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1657,7 +1707,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1708,7 +1758,7 @@ definition {
 		}
 
 		task ("When admin removes the DPT product") {
-			CommerceEntry.deleteCommerceEntry(key_value = "Bearings");
+			CommerceEntry.deleteCommerceEntry(entryName = "Bearings");
 
 			CommerceEntry.assertNoDisplayPageOverride(
 				entryName = "Bearings",
@@ -1719,7 +1769,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1809,7 +1859,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1819,13 +1869,13 @@ definition {
 		task ("Then the Image Gallery fragment is present") {
 			WaitForElementPresent(
 				key_fsProductImage = "Black",
-				locator1 = "CommerceFrontStore#FS_IMAGE_GALLERY_MAIN_IMAGE");
+				locator1 = "CommerceFrontStore#FS_PRODUCT_IMAGE");
 		}
 
 		task ("And it is possible to use its functionalities(previous arrow, next arrow, select from the list of images, image overlay)") {
 			Click(
 				key_fsProductImage = "Black",
-				locator1 = "CommerceFrontStore#FS_IMAGE_GALLERY_MAIN_IMAGE");
+				locator1 = "CommerceFrontStore#FS_PRODUCT_IMAGE");
 
 			AssertElementPresent(
 				key_fsProductImage = "Black",
@@ -1837,19 +1887,19 @@ definition {
 
 			AssertElementPresent(
 				key_fsProductImage = "Black",
-				locator1 = "CommerceFrontStore#FS_IMAGE_GALLERY_MAIN_IMAGE");
+				locator1 = "CommerceFrontStore#FS_PRODUCT_IMAGE");
 
 			Click(locator1 = "CommerceFrontStore#FS_IMAGE_GALLERY_ARROW_NEXT");
 
 			AssertElementPresent(
 				key_fsProductImage = "Minium_ProductImage",
-				locator1 = "CommerceFrontStore#FS_IMAGE_GALLERY_MAIN_IMAGE");
+				locator1 = "CommerceFrontStore#FS_PRODUCT_IMAGE");
 
 			Click(locator1 = "CommerceFrontStore#FS_IMAGE_GALLERY_ARROW_PREV");
 
 			AssertElementPresent(
 				key_fsProductImage = "Black",
-				locator1 = "CommerceFrontStore#FS_IMAGE_GALLERY_MAIN_IMAGE");
+				locator1 = "CommerceFrontStore#FS_PRODUCT_IMAGE");
 
 			Click(
 				key_fsProductImage = "Minium_ProductImage",
@@ -1857,7 +1907,7 @@ definition {
 
 			AssertElementPresent(
 				key_fsProductImage = "Minium_ProductImage",
-				locator1 = "CommerceFrontStore#FS_IMAGE_GALLERY_MAIN_IMAGE");
+				locator1 = "CommerceFrontStore#FS_PRODUCT_IMAGE");
 
 			Click(
 				key_fsProductImage = "Black",
@@ -1865,7 +1915,7 @@ definition {
 
 			AssertElementPresent(
 				key_fsProductImage = "Black",
-				locator1 = "CommerceFrontStore#FS_IMAGE_GALLERY_MAIN_IMAGE");
+				locator1 = "CommerceFrontStore#FS_PRODUCT_IMAGE");
 		}
 	}
 

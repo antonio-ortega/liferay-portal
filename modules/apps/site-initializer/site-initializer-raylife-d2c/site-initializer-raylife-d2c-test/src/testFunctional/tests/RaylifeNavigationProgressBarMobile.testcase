@@ -1,9 +1,8 @@
-@component-name = "portal-solutions"
+@component-name = "portal-site-management"
 definition {
 
 	property portal.release = "false";
 	property portal.upstream = "quarantine";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Raylife D2C";
 
 	var testSiteName = "Raylife D2C";
@@ -13,6 +12,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		HeadlessSite.addSite(
 			siteName = ${testSiteName},

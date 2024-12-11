@@ -6,34 +6,61 @@
 package com.liferay.layout.internal.search.spi.model.index.contributor.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
+import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
+import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.fragment.constants.FragmentConstants;
+import com.liferay.fragment.contributor.FragmentCollectionContributorRegistry;
 import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorConstants;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
+import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
-import com.liferay.layout.model.LayoutLocalization;
-import com.liferay.layout.service.LayoutLocalizationLocalService;
+import com.liferay.info.field.InfoField;
+import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.journal.constants.JournalContentPortletKeys;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.journal.util.JournalConverter;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.portlet.PortletIdCodec;
+import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.test.util.IndexerFixture;
 import com.liferay.portal.test.log.LogCapture;
@@ -42,11 +69,17 @@ import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.util.ThemeFactoryUtil;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
+import com.liferay.template.test.util.TemplateTestUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import javax.portlet.PortletPreferences;
+
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -71,11 +104,85 @@ public class LayoutModelDocumentContributorTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
+		_layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		_draftLayout = _layout.fetchDraftLayout();
+
 		_locale = _portal.getSiteDefaultLocale(_group);
 
 		_languageId = LocaleUtil.toLanguageId(_locale);
 
 		_layoutIndexerFixture = new IndexerFixture<>(Layout.class);
+
+		_serviceContext = ServiceContextTestUtil.getServiceContext(
+			_group.getGroupId());
+
+		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		ServiceContextThreadLocal.popServiceContext();
+	}
+
+	@Test
+	public void testGetContentLayoutSummary() throws Exception {
+		String defaultLocaleElementText = RandomTestUtil.randomString();
+		String spanishElementText = RandomTestUtil.randomString();
+
+		FragmentEntry fragmentEntry =
+			_fragmentCollectionContributorRegistry.getFragmentEntry(
+				"BASIC_COMPONENT-heading");
+
+		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"element-text",
+					JSONUtil.put(
+						_languageId, defaultLocaleElementText
+					).put(
+						"es_ES", spanishElementText
+					))
+			).toString(),
+			fragmentEntry.getCss(), fragmentEntry.getConfiguration(),
+			fragmentEntry.getFragmentEntryId(), fragmentEntry.getHtml(),
+			fragmentEntry.getJs(), _draftLayout,
+			fragmentEntry.getFragmentEntryKey(), fragmentEntry.getType(), null,
+			0,
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				_layout.getPlid()));
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		Document document = _layoutIndexerFixture.searchOnlyOne(
+			spanishElementText, LocaleUtil.SPAIN);
+
+		Indexer<Layout> indexer = IndexerRegistryUtil.getIndexer(Layout.class);
+
+		Summary summary = indexer.getSummary(document, LocaleUtil.SPAIN, null);
+
+		Assert.assertEquals(spanishElementText, summary.getContent());
+		Assert.assertEquals(_layout.getName(_locale), summary.getTitle());
+	}
+
+	@Test
+	@TestInfo("LPD-43082")
+	public void testReindexPublishedDraftLayoutWithFreeMarkerUsingLocale()
+		throws Exception {
+
+		String contentText = RandomTestUtil.randomString();
+
+		_addFragmentEntryLinkToLayout(
+			"{}", contentText + "[@liferay.language key=\"success\" /]",
+			_draftLayout);
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		_assertSearch(
+			contentText + LanguageUtil.get(LocaleUtil.GERMANY, "success"),
+			LocaleUtil.GERMANY);
 	}
 
 	@Test
@@ -83,42 +190,209 @@ public class LayoutModelDocumentContributorTest {
 		throws Exception {
 
 		String elementText = RandomTestUtil.randomString();
-		String html =
-			"<h1 data-lfr-editable-id=\"element-text\" " +
-				"data-lfr-editable-type=\"text\">Heading Example</h1>";
 
-		Layout layout = _addTypeContentLayout(elementText, true);
+		_setUpLayout(elementText, true, null);
 
-		_assertReindex(elementText, layout);
+		_assertReindex(elementText);
 
-		Layout draftLayout = _addFragmentToLayout(
-			RandomTestUtil.randomString(), html, layout);
+		String draftElementText = RandomTestUtil.randomString();
 
-		_assertReindexDraftLayout(draftLayout);
+		_addFragmentEntryLinkToLayout(
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"element-text", JSONUtil.put(_languageId, draftElementText))
+			).toString(),
+			_draftLayout);
 
-		_assertSearch(elementText, layout.getPlid());
+		_assertReindexDraftLayout(draftElementText, _draftLayout);
+
+		_assertSearch(elementText, _locale);
 	}
 
 	@Test
-	public void testReindexPublishedLayoutWithFreemarkerErrors()
+	public void testReindexPublishedLayout() throws Exception {
+		_assertReindexPublishedLayout(null);
+	}
+
+	@Test
+	public void testReindexPublishedLayoutFragmentEntryLinkWithInformationTemplate()
+		throws Exception {
+
+		String content = RandomTestUtil.randomString();
+
+		JournalArticle journalArticle =
+			JournalTestUtil.addArticleWithXMLContent(
+				DDMStructureTestUtil.getSampleStructuredContent(
+					"content",
+					Collections.singletonList(
+						HashMapBuilder.put(
+							_locale, content
+						).build()),
+					_languageId),
+				"BASIC-WEB-CONTENT", "BASIC-WEB-CONTENT");
+
+		InfoField infoField = TemplateTestUtil.addTemplateEntryInfoField(
+			"DDMStructure_content", JournalArticle.class.getName(),
+			String.valueOf(journalArticle.getDDMStructureId()),
+			_infoItemServiceRegistry, _serviceContext);
+
+		_addFragmentEntryLinkToLayout(
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"element-text",
+					JSONUtil.put(
+						"className", JournalArticle.class.getName()
+					).put(
+						"classNameId",
+						String.valueOf(
+							_portal.getClassNameId(
+								JournalArticle.class.getName()))
+					).put(
+						"classPK",
+						String.valueOf(journalArticle.getResourcePrimKey())
+					).put(
+						"classTypeId",
+						String.valueOf(journalArticle.getDDMStructureId())
+					).put(
+						"fieldId", infoField.getUniqueId()
+					))
+			).toString(),
+			_draftLayout);
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		_assertReindex(content);
+	}
+
+	@Test
+	public void testReindexPublishedLayoutFragmentEntryLinkWithPortlet()
+		throws Exception {
+
+		_assertReindexPublishedLayoutFragmentEntryLinkWithPortlet();
+	}
+
+	@Test
+	public void testReindexPublishedLayoutFragmentEntryLinkWithPortletVirtualHostSite()
+		throws Exception {
+
+		_layoutSetLocalService.updateVirtualHosts(
+			_group.getGroupId(), false,
+			TreeMapBuilder.put(
+				"myvirtualhost", LocaleUtil.toLanguageId(_locale)
+			).build());
+
+		_assertReindexPublishedLayoutFragmentEntryLinkWithPortlet();
+	}
+
+	@Test
+	@TestInfo("LPD-22568")
+	public void testReindexPublishedLayoutLayoutSetThemeNotAvailable()
+		throws Exception {
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_THEME_LOCAL_SERVICE_IMPL, LoggerTestUtil.INFO)) {
+
+			LayoutSet layoutSet = _group.getPublicLayoutSet();
+
+			_layoutSetLocalService.updateLookAndFeel(
+				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
+				"not_available_theme_id", layoutSet.getColorSchemeId(),
+				layoutSet.getCss());
+
+			_assertReindexPublishedLayout(null);
+		}
+	}
+
+	@Test
+	@TestInfo("LPD-22568")
+	public void testReindexPublishedLayoutSpecificThemeAndLayoutSetThemeNotAvailable()
+		throws Exception {
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_THEME_LOCAL_SERVICE_IMPL, LoggerTestUtil.INFO)) {
+
+			LayoutSet layoutSet = _group.getPublicLayoutSet();
+
+			_layoutSetLocalService.updateLookAndFeel(
+				layoutSet.getGroupId(), layoutSet.isPrivateLayout(),
+				"not_available_theme_id", layoutSet.getColorSchemeId(),
+				layoutSet.getCss());
+
+			_assertReindexPublishedLayout(
+				ThemeFactoryUtil.getDefaultRegularThemeId(
+					TestPropsValues.getCompanyId()));
+		}
+	}
+
+	@Test
+	@TestInfo("LPD-22568")
+	public void testReindexPublishedLayoutThemeNotAvailable() throws Exception {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_THEME_LOCAL_SERVICE_IMPL, LoggerTestUtil.INFO)) {
+
+			_assertReindexPublishedLayout("not_available_theme_id");
+		}
+	}
+
+	@Test
+	public void testReindexPublishedLayoutWithFragmentEntryLinkTypePortlet()
+		throws Exception {
+
+		String portletId = _addJournalContentPortletToDraftLayout();
+
+		String content = RandomTestUtil.randomString();
+
+		DDMFormField ddmFormField = _createDDMFormField(
+			DDMFormFieldTypeConstants.TEXT);
+
+		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter, content, _group.getGroupId(),
+			_journalConverter);
+
+		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+			JournalArticle.class.getName(),
+			journalArticle.getResourcePrimKey());
+
+		_setUpPortletPreferences(assetEntry, journalArticle, portletId);
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		_assertPortletPreferences(
+			assetEntry, journalArticle, _layout, portletId);
+
+		_assertReindex(content);
+	}
+
+	@Test
+	public void testReindexPublishedLayoutWithFreeMarkerErrors()
 		throws Exception {
 
 		String elementText = RandomTestUtil.randomString();
 
-		Layout layout = _addTypeContentLayout(elementText, true);
+		_setUpLayout(elementText, true, null);
 
 		String html =
 			"[#if /#] <h1 data-lfr-editable-id=\"element-text\" " +
 				"data-lfr-editable-type=\"text\">Heading Example</h1>";
 
 		_addFragmentEntryLinkToLayout(
-			elementText, html, layout,
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"element-text", JSONUtil.put(_languageId, elementText))
+			).toString(),
+			html, _layout);
 
-		_reindexLogEntries(layout);
+		_reindexLogEntries(_layout);
 
 		Document document = _layoutIndexerFixture.searchOnlyOne(
-			layout.getName(_locale), _locale);
+			_layout.getName(_locale), _locale);
 
 		Assert.assertNotNull(document);
 
@@ -129,94 +403,143 @@ public class LayoutModelDocumentContributorTest {
 
 		Assert.assertEquals(
 			document.get(Field.ENTRY_CLASS_PK),
-			String.valueOf(layout.getPlid()));
+			String.valueOf(_layout.getPlid()));
 	}
 
 	@Test
-	public void testReindexPublishedLayoutWithLayoutLocalization()
+	public void testReindexPublishedLayoutWithPortletDisplayingJournalArticleWithGeolocationDDMFormField()
 		throws Exception {
 
-		String elementText = RandomTestUtil.randomString();
+		String portletId = _addJournalContentPortletToDraftLayout();
 
-		Layout layout = _addTypeContentLayout(elementText, true);
+		DDMFormField ddmFormField = _createDDMFormField(
+			DDMFormFieldTypeConstants.GEOLOCATION);
 
-		List<LayoutLocalization> layoutLocalizations1 =
-			_layoutLocalizationLocalService.getLayoutLocalizations(
-				layout.getPlid());
+		double lat = RandomTestUtil.randomDouble();
+		double lng = RandomTestUtil.randomDouble();
 
-		Assert.assertFalse(
-			layoutLocalizations1.toString(), layoutLocalizations1.isEmpty());
+		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter,
+			JSONUtil.put(
+				"lat", lat
+			).put(
+				"lng", lng
+			).toString(),
+			_group.getGroupId(), _journalConverter);
 
-		_assertReindex(elementText, layout);
+		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+			JournalArticle.class.getName(),
+			journalArticle.getResourcePrimKey());
 
-		List<LayoutLocalization> layoutLocalizations2 =
-			_layoutLocalizationLocalService.getLayoutLocalizations(
-				layout.getPlid());
+		_setUpPortletPreferences(assetEntry, journalArticle, portletId);
 
-		Assert.assertEquals(
-			layoutLocalizations2.toString(), layoutLocalizations1,
-			layoutLocalizations2);
-	}
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
 
-	@Test
-	public void testReindexPublishedLayoutWithoutLayoutLocalization()
-		throws Exception {
+		_assertPortletPreferences(
+			assetEntry, journalArticle, _layout, portletId);
 
-		String elementText = RandomTestUtil.randomString();
-
-		Layout layout = _addTypeContentLayout(elementText, true);
-
-		_deleteLayoutLocalizations(layout.getPlid());
-
-		List<LogEntry> logEntries = _reindexLogEntries(layout);
-
-		Assert.assertEquals(logEntries.toString(), 0, logEntries.size());
-
-		_assertSearch(elementText, layout.getPlid());
+		_assertReindex("\"lat\":" + lat, "\"lng\":" + lng);
 	}
 
 	@Test
 	public void testReindexUnpublishedDraftLayout() throws Exception {
 		String elementText = RandomTestUtil.randomString();
 
-		Layout layout = _addTypeContentLayout(elementText, false);
+		_setUpLayout(elementText, false, null);
 
-		List<LayoutLocalization> layoutLocalizations =
-			_layoutLocalizationLocalService.getLayoutLocalizations(
-				layout.getPlid());
-
-		Assert.assertTrue(
-			layoutLocalizations.toString(), layoutLocalizations.isEmpty());
-
-		_assertReindexDraftLayout(layout);
+		_assertReindexDraftLayout(elementText, _layout);
 	}
 
-	private void _addFragmentEntryLinkToLayout(
-			String elementText, String html, Layout layout,
-			ServiceContext serviceContext)
+	@Test
+	@TestInfo("LPS-152949")
+	public void testSearchEmbeddedLayout() throws Exception {
+		Layout layout = LayoutTestUtil.addTypeEmbeddedLayout(
+			_group.getGroupId());
+
+		Document document = _layoutIndexerFixture.searchOnlyOne(
+			layout.getName(_locale), _locale);
+
+		Assert.assertNotNull(document);
+	}
+
+	@Test
+	@TestInfo("LPS-152949")
+	public void testSearchFullPageApplicationLayout() throws Exception {
+		Layout layout = LayoutTestUtil.addTypeFullPageApplicationLayout(
+			_group.getGroupId());
+
+		Document document = _layoutIndexerFixture.searchOnlyOne(
+			layout.getName(_locale), _locale);
+
+		Assert.assertNotNull(document);
+	}
+
+	@Test
+	@TestInfo("LPS-152949")
+	public void testSearchLinkToURLLayout() throws Exception {
+		Layout layout = LayoutTestUtil.addTypeLinkToURLLayout(
+			_group.getGroupId(), "https://www.liferay.com");
+
+		Document document = _layoutIndexerFixture.searchOnlyOne(
+			layout.getName(_locale), _locale);
+
+		Assert.assertNotNull(document);
+	}
+
+	@Test
+	@TestInfo("LPS-152949")
+	public void testSearchPanelLayout() throws Exception {
+		Layout layout = LayoutTestUtil.addTypePanelLayout(_group.getGroupId());
+
+		Document document = _layoutIndexerFixture.searchOnlyOne(
+			layout.getName(_locale), _locale);
+
+		Assert.assertNotNull(document);
+	}
+
+	@Test
+	@TestInfo("LPS-152949")
+	public void testSearchPortletLayout() throws Exception {
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+		Document document = _layoutIndexerFixture.searchOnlyOne(
+			layout.getName(_locale), _locale);
+
+		Assert.assertNotNull(document);
+	}
+
+	private FragmentEntryLink _addFragmentEntryLinkToLayout(
+			String editableValues, Layout layout)
+		throws Exception {
+
+		return _addFragmentEntryLinkToLayout(
+			editableValues,
+			"<h1 data-lfr-editable-id=\"element-text\" " +
+				"data-lfr-editable-type=\"text\">Heading Example</h1>",
+			layout);
+	}
+
+	private FragmentEntryLink _addFragmentEntryLinkToLayout(
+			String editableValues, String html, Layout layout)
 		throws Exception {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
-				TestPropsValues.getUserId(), _group.getGroupId(),
-				RandomTestUtil.randomString(), null, serviceContext);
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(), null, _serviceContext);
 
 		FragmentEntry fragmentEntry =
 			_fragmentEntryLocalService.addFragmentEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				fragmentCollection.getFragmentCollectionId(), null,
 				RandomTestUtil.randomString(), null, html, null, false, null,
-				null, 0, FragmentConstants.TYPE_COMPONENT, null,
-				WorkflowConstants.STATUS_APPROVED, serviceContext);
+				null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
+				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
-		ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
-			JSONUtil.put(
-				FragmentEntryProcessorConstants.
-					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
-				JSONUtil.put(
-					"element-text", JSONUtil.put(_languageId, elementText))
-			).toString(),
-			fragmentEntry.getCss(), fragmentEntry.getConfiguration(),
+		return ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+			editableValues, fragmentEntry.getCss(),
+			fragmentEntry.getConfiguration(),
 			fragmentEntry.getFragmentEntryId(), fragmentEntry.getHtml(),
 			fragmentEntry.getJs(), layout, fragmentEntry.getFragmentEntryKey(),
 			fragmentEntry.getType(), null, 0,
@@ -224,117 +547,162 @@ public class LayoutModelDocumentContributorTest {
 				layout.getPlid()));
 	}
 
-	private Layout _addFragmentToLayout(
-			String elementText, String html, Layout layout)
-		throws Exception {
+	private String _addJournalContentPortletToDraftLayout() throws Exception {
+		JSONObject processAddPortletJSONObject =
+			ContentLayoutTestUtil.addPortletToLayout(
+				_draftLayout, JournalContentPortletKeys.JOURNAL_CONTENT);
 
-		Layout draftLayout = layout.fetchDraftLayout();
+		JSONObject fragmentEntryLinkJSONObject =
+			processAddPortletJSONObject.getJSONObject("fragmentEntryLink");
 
-		Assert.assertNotNull(draftLayout);
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLinkJSONObject.getJSONObject("editableValues");
 
-		_addFragmentEntryLinkToLayout(
-			elementText, html, draftLayout,
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
-
-		return draftLayout;
+		return PortletIdCodec.encode(
+			editableValuesJSONObject.getString("portletId"),
+			editableValuesJSONObject.getString("instanceId"));
 	}
 
-	private Layout _addTypeContentLayout(String elementText, boolean publish)
-		throws Exception {
+	private void _assertPortletPreferences(
+		AssetEntry assetEntry, JournalArticle journalArticle, Layout layout,
+		String portletId) {
 
-		String html =
-			"<h1 data-lfr-editable-id=\"element-text\" " +
-				"data-lfr-editable-type=\"text\">Heading Example</h1>";
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+		PortletPreferences portletPreferences =
+			_portletPreferencesFactory.getPortletSetup(layout, portletId, null);
 
-		Layout draftLayout = _addFragmentToLayout(elementText, html, layout);
+		Assert.assertEquals(
+			String.valueOf(journalArticle.getArticleId()),
+			portletPreferences.getValue("articleId", null));
+		Assert.assertEquals(
+			String.valueOf(assetEntry.getEntryId()),
+			portletPreferences.getValue("assetEntryId", null));
+		Assert.assertEquals(
+			String.valueOf(journalArticle.getGroupId()),
+			portletPreferences.getValue("groupId", null));
+	}
 
-		if (publish) {
-			ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+	private void _assertReindex(String... expectedContents) throws Exception {
+		List<LogEntry> logEntries = _reindexLayoutsLogEntries();
 
-			layout = _layoutLocalService.getLayout(layout.getPlid());
+		Assert.assertEquals(logEntries.toString(), 0, logEntries.size());
+
+		for (String keywords : expectedContents) {
+			_assertSearch(keywords, _locale);
 		}
-
-		return layout;
 	}
 
-	private void _assertReindex(String expectedContent, Layout layout)
+	private void _assertReindexDraftLayout(String keywords, Layout layout)
 		throws Exception {
+
+		_layoutIndexerFixture.searchNoOne(keywords);
 
 		List<LogEntry> logEntries = _reindexLogEntries(layout);
 
 		Assert.assertEquals(logEntries.toString(), 0, logEntries.size());
 
-		LayoutLocalization layoutLocalization =
-			_layoutLocalizationLocalService.fetchLayoutLocalization(
-				layout.getGroupId(), _languageId, layout.getPlid());
-
-		Assert.assertNotNull(layoutLocalization);
-
-		Assert.assertTrue(
-			layoutLocalization.getContent(),
-			StringUtil.contains(
-				layoutLocalization.getContent(), expectedContent));
-
-		_assertSearch(expectedContent, layout.getPlid());
+		_layoutIndexerFixture.searchNoOne(keywords);
 	}
 
-	private void _assertReindexDraftLayout(Layout draftLayout)
+	private void _assertReindexPublishedLayout(String themeId)
 		throws Exception {
 
-		List<LogEntry> logEntries = _reindexLogEntries(draftLayout);
+		String elementText = RandomTestUtil.randomString();
+
+		_setUpLayout(elementText, true, themeId);
+
+		List<LogEntry> logEntries = _reindexLogEntries(_layout);
 
 		Assert.assertEquals(logEntries.toString(), 0, logEntries.size());
 
-		List<LayoutLocalization> layoutLocalizations =
-			_layoutLocalizationLocalService.getLayoutLocalizations(
-				draftLayout.getPlid());
-
-		Assert.assertTrue(
-			layoutLocalizations.toString(), layoutLocalizations.isEmpty());
+		_assertSearch(elementText, _locale);
 	}
 
-	private void _assertSearch(String keywords, long plid) {
+	private void _assertReindexPublishedLayoutFragmentEntryLinkWithPortlet()
+		throws Exception {
+
+		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLinkToLayout(
+			"{}", "<lfr-widget-web-content>", _draftLayout);
+
+		String portletId = PortletIdCodec.encode(
+			JournalContentPortletKeys.JOURNAL_CONTENT,
+			fragmentEntryLink.getNamespace());
+
+		String content = RandomTestUtil.randomString();
+
+		DDMFormField ddmFormField = _createDDMFormField(
+			DDMFormFieldTypeConstants.TEXT);
+
+		JournalArticle journalArticle = JournalTestUtil.addJournalArticle(
+			_dataDefinitionResourceFactory, ddmFormField,
+			_ddmFormValuesToFieldsConverter, content, _group.getGroupId(),
+			_journalConverter);
+
+		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+			JournalArticle.class.getName(),
+			journalArticle.getResourcePrimKey());
+
+		_setUpPortletPreferences(assetEntry, journalArticle, portletId);
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		_assertPortletPreferences(
+			assetEntry, journalArticle, _layout, portletId);
+
+		_assertReindex(content);
+	}
+
+	private void _assertSearch(String keywords, Locale locale) {
 		Document document = _layoutIndexerFixture.searchOnlyOne(
-			keywords, _locale);
+			keywords, locale);
 
 		Assert.assertNotNull(document);
 
 		String content = document.get(
-			Field.getLocalizedName(_locale, Field.CONTENT));
-
-		Assert.assertTrue(content, StringUtil.contains(content, keywords));
-
-		Assert.assertEquals(
-			document.get(Field.ENTRY_CLASS_PK), String.valueOf(plid));
-	}
-
-	private int _deleteLayoutLocalizations(long plid) {
-		List<LayoutLocalization> layoutLocalizations =
-			_layoutLocalizationLocalService.getLayoutLocalizations(plid);
-
-		Assert.assertFalse(
-			layoutLocalizations.toString(), layoutLocalizations.isEmpty());
-
-		for (LayoutLocalization layoutLocalization : layoutLocalizations) {
-			_layoutLocalizationLocalService.deleteLayoutLocalization(
-				layoutLocalization);
-		}
-
-		int originalLayoutLocalizationsSize = layoutLocalizations.size();
-
-		layoutLocalizations =
-			_layoutLocalizationLocalService.getLayoutLocalizations(plid);
+			Field.getLocalizedName(locale, Field.CONTENT));
 
 		Assert.assertTrue(
-			layoutLocalizations.toString(), layoutLocalizations.isEmpty());
+			content, StringUtil.contains(content, keywords, StringPool.BLANK));
 
-		return originalLayoutLocalizationsSize;
+		Assert.assertEquals(
+			document.get(Field.ENTRY_CLASS_PK),
+			String.valueOf(_layout.getPlid()));
+	}
+
+	private DDMFormField _createDDMFormField(String type) {
+		DDMFormField ddmFormField = new DDMFormField("name", type);
+
+		ddmFormField.setDataType("text");
+		ddmFormField.setIndexType("text");
+
+		LocalizedValue localizedValue = new LocalizedValue(LocaleUtil.US);
+
+		localizedValue.addString(
+			LocaleUtil.US, RandomTestUtil.randomString(10));
+
+		ddmFormField.setLabel(localizedValue);
+
+		ddmFormField.setLocalizable(true);
+
+		return ddmFormField;
+	}
+
+	private List<LogEntry> _reindexLayoutsLogEntries() throws Exception {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_INCLUDE_TAG, LoggerTestUtil.DEBUG)) {
+
+			_indexWriterHelper.reindex(
+				TestPropsValues.getUserId(), "reindex",
+				new long[] {_group.getCompanyId()}, Layout.class.getName(),
+				null);
+
+			return logCapture.getLogEntries();
+		}
 	}
 
 	private List<LogEntry> _reindexLogEntries(Layout layout) throws Exception {
 		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
-				_CLASS_NAME, LoggerTestUtil.DEBUG)) {
+				_CLASS_NAME_LAYOUT_MODEL_DOCUMENT_CONTRIBUTOR,
+				LoggerTestUtil.DEBUG)) {
 
 			Indexer<Layout> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
 				Layout.class);
@@ -345,9 +713,79 @@ public class LayoutModelDocumentContributorTest {
 		}
 	}
 
-	private static final String _CLASS_NAME =
+	private void _setUpLayout(
+			String elementText, boolean publish, String themeId)
+		throws Exception {
+
+		_addFragmentEntryLinkToLayout(
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"element-text", JSONUtil.put(_languageId, elementText))
+			).toString(),
+			_draftLayout);
+
+		if (themeId != null) {
+			_draftLayout = _layoutLocalService.updateLookAndFeel(
+				_draftLayout.getGroupId(), _draftLayout.isPrivateLayout(),
+				_draftLayout.getLayoutId(), themeId,
+				_draftLayout.getColorSchemeId(), _draftLayout.getCss());
+		}
+
+		if (publish) {
+			ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+			_layout = _layoutLocalService.getLayout(_layout.getPlid());
+		}
+	}
+
+	private void _setUpPortletPreferences(
+			AssetEntry assetEntry, JournalArticle journalArticle,
+			String portletId)
+		throws Exception {
+
+		PortletPreferences portletPreferences =
+			_portletPreferencesFactory.getPortletSetup(
+				_draftLayout, portletId, null);
+
+		portletPreferences.setValue(
+			"articleId", String.valueOf(journalArticle.getArticleId()));
+		portletPreferences.setValue(
+			"assetEntryId", String.valueOf(assetEntry.getEntryId()));
+		portletPreferences.setValue(
+			"groupId", String.valueOf(journalArticle.getGroupId()));
+
+		portletPreferences.store();
+
+		_assertPortletPreferences(
+			assetEntry, journalArticle, _draftLayout, portletId);
+	}
+
+	private static final String _CLASS_NAME_INCLUDE_TAG =
+		"com.liferay.taglib.util.IncludeTag";
+
+	private static final String _CLASS_NAME_LAYOUT_MODEL_DOCUMENT_CONTRIBUTOR =
 		"com.liferay.layout.internal.search.spi.model.index.contributor." +
 			"LayoutModelDocumentContributor";
+
+	private static final String _CLASS_NAME_THEME_LOCAL_SERVICE_IMPL =
+		"com.liferay.portal.service.impl.ThemeLocalServiceImpl";
+
+	@Inject
+	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Inject
+	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
+
+	@Inject
+	private DDMFormValuesToFieldsConverter _ddmFormValuesToFieldsConverter;
+
+	private Layout _draftLayout;
+
+	@Inject
+	private FragmentCollectionContributorRegistry
+		_fragmentCollectionContributorRegistry;
 
 	@Inject
 	private FragmentCollectionLocalService _fragmentCollectionLocalService;
@@ -358,14 +796,24 @@ public class LayoutModelDocumentContributorTest {
 	@DeleteAfterTestRun
 	private Group _group;
 
+	@Inject
+	private IndexWriterHelper _indexWriterHelper;
+
+	@Inject
+	private InfoItemServiceRegistry _infoItemServiceRegistry;
+
+	@Inject
+	private JournalConverter _journalConverter;
+
 	private String _languageId;
+	private Layout _layout;
 	private IndexerFixture<Layout> _layoutIndexerFixture;
 
 	@Inject
-	private LayoutLocalizationLocalService _layoutLocalizationLocalService;
+	private LayoutLocalService _layoutLocalService;
 
 	@Inject
-	private LayoutLocalService _layoutLocalService;
+	private LayoutSetLocalService _layoutSetLocalService;
 
 	private Locale _locale;
 
@@ -373,6 +821,11 @@ public class LayoutModelDocumentContributorTest {
 	private Portal _portal;
 
 	@Inject
+	private PortletPreferencesFactory _portletPreferencesFactory;
+
+	@Inject
 	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
+
+	private ServiceContext _serviceContext;
 
 }

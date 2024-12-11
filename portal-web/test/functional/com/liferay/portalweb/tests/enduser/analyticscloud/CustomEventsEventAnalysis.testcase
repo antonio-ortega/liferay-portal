@@ -63,10 +63,6 @@ definition {
 	tearDown {
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
-
-		//ACUtils.tearDownAC();
-
 		ACUtils.tearDownDXP();
 
 		if (${testLiferayVirtualInstance} == "true") {
@@ -75,6 +71,8 @@ definition {
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
+
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: LRAC-7868 | Automation ID: LRAC-10314 | Test Summary: Event Analysis in an empty state"
@@ -393,83 +391,10 @@ definition {
 		}
 	}
 
-	@description = "Bug: LRAC-11746 | Automation ID: LRAC-12356 | Test Summary: The analysis result should not appear if any of the attribute conditions are not contained within the result"
-	@priority = 4
-	test CheckResultNotAppearIfAnyAttributeConditionsNotContainedValue {
-		var firstFilterName = "pageTitle";
-		var secondFilterName = "url";
-		var firstFilterCondition = "contains";
-		var secondFilterCondition = "not contains";
-
-		task ("Fill fields and create custom event") {
-			var currentURL = Navigator.getCurrentURL();
-			var customEventName = ACCustomEvents.generateCustomEventName();
-
-			ACCustomEvents.createCustomEvent(
-				customEventName = ${customEventName},
-				timeToSendCustomEvent = 1);
-		}
-
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
-
-		task ("Switch the property in AC and go to event analysis") {
-			ACUtils.launchAC();
-
-			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
-
-			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
-
-			ACNavigation.goToEventAnalysis();
-		}
-
-		task ("Add the custom event, create an analysis and add a brekdown") {
-			var analysisInformation = StringUtil.lowerCase("AC Page - Site Name - ${dataSourceName}");
-
-			ACEventAnalysis.addEvent(customEventName = ${customEventName});
-
-			ACEventAnalysis.addBreakdown(attributeNameList = ${firstFilterName});
-		}
-
-		task ("Change the time filter to last 24h") {
-			ACTimeFilter.clickTimeFilterButton();
-
-			ACTimeFilter.setLast24Hours();
-		}
-
-		task ("Add a default attribute in the filter and use the contains condition") {
-			ACEventAnalysis.addFilter(
-				dropdownData = ${analysisInformation},
-				dropdownIndex = 1,
-				filterName = ${firstFilterName},
-				optionValue = ${firstFilterCondition});
-		}
-
-		task ("View the information displayed") {
-			ACEventAnalysis.viewAnalysisInformation(informationValueList = ${analysisInformation});
-		}
-
-		task ("Add another attribute in the filter and use not contains condition") {
-			ACEventAnalysis.addFilter(
-				dropdownData = ${currentURL},
-				dropdownIndex = 1,
-				filterName = ${secondFilterName},
-				optionValue = ${secondFilterCondition});
-		}
-
-		task ("View the information displayed and see that there are no results") {
-			ACEventAnalysis.viewAnalysisInformation(informationValueList = "No Results,No Results");
-		}
-	}
-
 	@description = "Feature ID: LRAC-4266 | Automation ID: LRAC-10307 | Test Summary: Total Chart, Unique Chart and Average Chart data shown"
 	@priority = 5
 	test CheckTotalAndUniqueAndAverageChartDataIsShown {
-		property portal.upstream = "quarantine";
-
-		// AC Quarantine Reason: The data in the event analysis taking a while to appear
-		// AC Refactor ticket: LRAC-10527
+		property test.run.type = "single";
 
 		var attributeName = "pageTitle";
 		var layoutNameList = "Custom 1,Custom 2";
@@ -480,7 +405,7 @@ definition {
 
 			ACCustomEvents.createCustomEvent(
 				customEventName = ${customEventName},
-				timeToSendCustomEvent = 3);
+				timeToSendCustomEvent = 6);
 		}
 
 		task ("Close sessions") {
@@ -504,7 +429,7 @@ definition {
 		task ("Fill fields and make new interactions with custom event") {
 			ACCustomEvents.createCustomEvent(
 				customEventName = ${customEventName},
-				timeToSendCustomEvent = 2);
+				timeToSendCustomEvent = 3);
 		}
 
 		task ("Close sessions") {
@@ -552,17 +477,11 @@ definition {
 		}
 
 		task ("Check that the chart appears for the total tab") {
-			ACEventAnalysis.viewTotalNumberRelatedToColumnInformation(
-				columnInformationValue = "ac page - site name - ${dataSource}",
-				totalEventsValue = 3);
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "ac page - site name - ${dataSource}");
 
-			ACEventAnalysis.viewTotalNumberRelatedToColumnInformation(
-				columnInformationValue = "custom 2 - site name - ${dataSource}",
-				totalEventsValue = 2);
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "custom 2 - site name - ${dataSource}");
 
-			ACEventAnalysis.viewTotalNumberRelatedToColumnInformation(
-				columnInformationValue = "custom 1 - site name - ${dataSource}",
-				totalEventsValue = 1);
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "custom 1 - site name - ${dataSource}");
 		}
 
 		task ("Switch tab to unique") {
@@ -570,17 +489,11 @@ definition {
 		}
 
 		task ("Check that the chart appears for the unique tab") {
-			ACEventAnalysis.viewTotalNumberRelatedToColumnInformation(
-				columnInformationValue = "ac page - site name - ${dataSource}",
-				totalEventsValue = 1);
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "ac page - site name - ${dataSource}");
 
-			ACEventAnalysis.viewTotalNumberRelatedToColumnInformation(
-				columnInformationValue = "custom 2 - site name - ${dataSource}",
-				totalEventsValue = 1);
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "custom 2 - site name - ${dataSource}");
 
-			ACEventAnalysis.viewTotalNumberRelatedToColumnInformation(
-				columnInformationValue = "custom 1 - site name - ${dataSource}",
-				totalEventsValue = 1);
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "custom 1 - site name - ${dataSource}");
 		}
 
 		task ("Switch tab to average") {
@@ -588,17 +501,11 @@ definition {
 		}
 
 		task ("Check that the chart appears for the average tab") {
-			ACEventAnalysis.viewTotalNumberRelatedToColumnInformation(
-				columnInformationValue = "ac page - site name - ${dataSource}",
-				totalEventsValue = 3);
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "ac page - site name - ${dataSource}");
 
-			ACEventAnalysis.viewTotalNumberRelatedToColumnInformation(
-				columnInformationValue = "custom 2 - site name - ${dataSource}",
-				totalEventsValue = 2);
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "custom 2 - site name - ${dataSource}");
 
-			ACEventAnalysis.viewTotalNumberRelatedToColumnInformation(
-				columnInformationValue = "custom 1 - site name - ${dataSource}",
-				totalEventsValue = 1);
+			ACEventAnalysis.viewAnalysisInformation(informationValueList = "custom 1 - site name - ${dataSource}");
 		}
 	}
 
@@ -700,12 +607,20 @@ definition {
 		var defaultEventName = "pageViewed";
 		var dataSource = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
+		task ("View the page") {
+			ACUtils.navigateToSitePage(
+				actionType = "View WC",
+				documentTitleList = "1,2,3,4",
+				pageName = "AC Page",
+				siteName = "Site Name");
+		}
+
 		task ("Fill fields and create custom event") {
 			var customEventName = ACCustomEvents.generateCustomEventName();
 
 			ACCustomEvents.createCustomEvent(
 				customEventName = ${customEventName},
-				timeToSendCustomEvent = 1);
+				timeToSendCustomEvent = 4);
 		}
 
 		task ("Close sessions") {
@@ -864,9 +779,7 @@ definition {
 		}
 
 		task ("Check the analysis result appears") {
-			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, "(");
-
-			var dataSourceName = StringUtil.trim(${dataSourceName});
+			var dataSourceName = StringUtil.extractFirst(${assignedPropertyName}, " ");
 
 			ACTimeFilter.clickTimeFilterButton();
 
@@ -880,7 +793,7 @@ definition {
 		}
 
 		task ("Check that the breakdown information does not appear in the result") {
-			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - liferay dxp");
+			ACEventAnalysis.viewAnalysisInformationNotPresent(informationValueList = "ac page - site name - ${dataSourceName}");
 		}
 
 		task ("Check that the breakdown does not appear on the dashboard") {

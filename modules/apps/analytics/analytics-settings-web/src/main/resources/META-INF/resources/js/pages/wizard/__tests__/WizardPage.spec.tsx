@@ -14,7 +14,7 @@ import {
 	TData,
 	initialState,
 	useData,
-} from '../../../App';
+} from '../../../index';
 import {mockResponse} from '../../../utils/__tests__/helpers';
 import {fetchPropertiesResponse} from '../../../utils/__tests__/mocks';
 import WizardPage from '../WizardPage';
@@ -34,9 +34,9 @@ const responseAttributesMock = {
 	product: 0,
 };
 
-const WrappedComponent: React.FC<React.HTMLAttributes<HTMLElement>> = ({
-	children,
-}) => {
+const WrappedComponent: React.FC<
+	{children?: React.ReactNode | undefined} & React.HTMLAttributes<HTMLElement>
+> = ({children}) => {
 	return (
 		<AppContextProvider
 			connected={false}
@@ -59,9 +59,8 @@ describe('Wizard Page', () => {
 
 		const wizardSheet = container.getElementsByClassName('sheet-lg');
 
-		const wizardMultiStep = container.getElementsByClassName(
-			'multi-step-nav'
-		);
+		const wizardMultiStep =
+			container.getElementsByClassName('multi-step-nav');
 
 		expect(wizardSheet).toBeTruthy();
 

@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -69,23 +70,6 @@ public class CPDefinitionVirtualSettingLocalServiceUtil {
 			maxUsages, useSample, sampleFileEntryId, sampleURL,
 			termsOfUseRequired, termsOfUseContentMap,
 			termsOfUseJournalArticleResourcePrimKey, override, serviceContext);
-	}
-
-	public static CPDefinitionVirtualSetting addCPDefinitionVirtualSetting(
-			String className, long classPK, long fileEntryId, String url,
-			int activationStatus, long duration, int maxUsages,
-			boolean useSample, long sampleFileEntryId, String sampleURL,
-			boolean termsOfUseRequired,
-			Map<java.util.Locale, String> termsOfUseContentMap,
-			long termsOfUseJournalArticleResourcePrimKey,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().addCPDefinitionVirtualSetting(
-			className, classPK, fileEntryId, url, activationStatus, duration,
-			maxUsages, useSample, sampleFileEntryId, sampleURL,
-			termsOfUseRequired, termsOfUseContentMap,
-			termsOfUseJournalArticleResourcePrimKey, serviceContext);
 	}
 
 	public static void cloneCPDefinitionVirtualSetting(
@@ -307,8 +291,7 @@ public class CPDefinitionVirtualSettingLocalServiceUtil {
 	}
 
 	public static CPDefinitionVirtualSetting getCPDefinitionVirtualSetting(
-			String className, long classPK)
-		throws PortalException {
+		String className, long classPK) {
 
 		return getService().getCPDefinitionVirtualSetting(className, classPK);
 	}
@@ -475,15 +458,12 @@ public class CPDefinitionVirtualSettingLocalServiceUtil {
 	}
 
 	public static CPDefinitionVirtualSettingLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CPDefinitionVirtualSettingLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile CPDefinitionVirtualSettingLocalService _service;
+	private static final Snapshot<CPDefinitionVirtualSettingLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CPDefinitionVirtualSettingLocalServiceUtil.class,
+			CPDefinitionVirtualSettingLocalService.class);
 
 }

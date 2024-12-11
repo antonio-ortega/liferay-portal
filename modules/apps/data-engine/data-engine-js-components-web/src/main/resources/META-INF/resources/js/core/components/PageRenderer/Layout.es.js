@@ -19,7 +19,8 @@ import {VariantsContext} from './VariantsContext.es';
 
 export function Layout({components, editable, itemPath, rows, viewMode}) {
 	const {containerElement, pageIndex} = usePage();
-	const {activePage, defaultLanguageId, pages, title} = useFormState();
+	const {activePage, defaultLanguageId, focusedField, pages, title} =
+		useFormState();
 	const {allowNestedFields, submitButtonId} = useConfig();
 
 	const createFieldChange = useEvaluate(fieldChange);
@@ -94,6 +95,7 @@ export function Layout({components, editable, itemPath, rows, viewMode}) {
 									onChange={(properties) =>
 										dispatch(
 											createFieldChange({
+												focusedField,
 												formId: getFormId(
 													getFormNode(
 														containerElement.current
@@ -101,6 +103,7 @@ export function Layout({components, editable, itemPath, rows, viewMode}) {
 												),
 												properties,
 												submitButtonId,
+												viewMode,
 											})
 										)
 									}

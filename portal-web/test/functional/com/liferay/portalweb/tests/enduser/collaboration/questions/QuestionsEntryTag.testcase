@@ -125,14 +125,16 @@ definition {
 				categoryDescription = "Description",
 				categoryName = "Questions Test Category",
 				userEmailAddress = "test@liferay.com");
+
+			Navigator.gotoPage(pageName = "Questions Page");
+
+			Questions.gotoCategory(categoryName = "Questions Test Category");
 		}
 
 		task ("When a Question that contains JavaScirpt is added") {
 			Questions.askQuestionFillingTheMandatoryFields(
 				contentField = "Body AddQuestionWithMoreText",
 				invalidCharacters = "Tag",
-				layoutName = "questions-page",
-				siteURLKey = "guest",
 				tagLocatorList = '''<script>alert(123);</script>''',
 				titleField = "Title AddQuestion",
 				topicName = "questions-test-category");
@@ -324,53 +326,6 @@ definition {
 		}
 	}
 
-	@description = "Validate if Question portlet have one tab with all tags used in the questions"
-	@priority = 3
-	@refactordone
-	test ListOfTagsCanBeViewedInTagsTab {
-		task ("Given a category and no tags available") {
-			JSONMBMessage.addCategory(
-				categoryDescription = "Description",
-				categoryName = "Question ListOfTagsAppearsInTheTagsTab",
-				userEmailAddress = "test@liferay.com");
-
-			Questions.openToTagsTab(
-				layoutName = "questions-page",
-				siteURLKey = "guest");
-
-			Questions.viewTags(noTagResults = "true");
-
-			Questions.configureTagsFilter(filterBy = "Latest Created");
-
-			Questions.viewTags(noTagResults = "true");
-		}
-
-		task ("When a tag and a Question with a tag is added") {
-			JSONAssettag.addTag(
-				groupName = "Guest",
-				tagName = "tag2");
-
-			JSONQuestions.addQuestionWithTag(
-				bodyField = "Body ListOfTagsAppearsInTheTagsTab",
-				categoryName = "Question ListOfTagsAppearsInTheTagsTab",
-				groupName = "Guest",
-				tagField = "tag1",
-				titleField = "Title ListOfTagsAppearsInTheTagsTab");
-		}
-
-		task ("Then the new tags can be viewed in the Tags Tab") {
-			Questions.openToTagsTab(
-				layoutName = "questions-page",
-				siteURLKey = "guest");
-
-			Questions.configureTagsFilter(filterBy = "Latest Created");
-
-			for (var tagName : list "tag1,tag2") {
-				Questions.viewTags(tagName = ${tagName});
-			}
-		}
-	}
-
 	@description = "Validate if the user can sort the tags."
 	@priority = 4
 	@refactordone
@@ -517,17 +472,31 @@ definition {
 				layoutName = "questions-page",
 				siteURLKey = "guest");
 
+			WaitForElementPresent(
+				key_tagName = "tag1",
+				locator1 = "Questions#TAGS_LIST_TAB_NAMES");
+
 			Questions.search(
 				searchKey = "tag1",
 				searchTag = "true");
+
+			WaitForElementNotPresent(
+				key_tagName = "tag2",
+				locator1 = "Questions#TAGS_LIST_TAB_NAMES");
 		}
 
 		task ("Then only the matching tag is displayed") {
 			Questions.viewTags(tagName = "tag1");
 
+			Questions.search(
+				searchKey = "tag1",
+				searchTag = "true");
+
 			Questions.viewNoTags(tagsList = "tag2,tag3");
 
-			Questions.clearSearchResults();
+			Click(
+				ariaLabel = "Clear",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			for (var tagName : list "tag1,tag2,tag3") {
 				Questions.viewTags(tagName = ${tagName});
@@ -543,7 +512,9 @@ definition {
 
 			Questions.viewNoTags(tagsList = "tag1,tag3");
 
-			Questions.clearSearchResults();
+			Click(
+				ariaLabel = "Clear",
+				locator1 = "Button#ANY_WITH_ARIA_LABEL");
 
 			for (var tagName : list "tag1,tag2,tag3") {
 				Questions.viewTags(tagName = ${tagName});

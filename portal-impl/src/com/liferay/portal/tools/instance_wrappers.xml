@@ -3,6 +3,10 @@
 <instance-wrappers>
 	<instance-wrapper
 		parent-dir="../portal-impl/src"
+		src-file="com/liferay/portal/image/ImageToolUtil.java"
+	/>
+	<instance-wrapper
+		parent-dir="../portal-impl/src"
 		src-file="com/liferay/portal/service/permission/CommonPermissionUtil.java"
 	/>
 	<instance-wrapper
@@ -43,6 +47,10 @@
 	/>
 	<instance-wrapper
 		parent-dir="../portal-kernel/src"
+		src-file="com/liferay/portal/kernel/service/permission/PortletPermissionUtil.java"
+	/>
+	<instance-wrapper
+		parent-dir="../portal-kernel/src"
 		src-file="com/liferay/portal/kernel/service/permission/RolePermissionUtil.java"
 	/>
 	<instance-wrapper
@@ -68,6 +76,10 @@
 	<instance-wrapper
 		parent-dir="../portal-kernel/src"
 		src-file="com/liferay/portal/kernel/util/HtmlUtil.java"
+	/>
+	<instance-wrapper
+		parent-dir="../portal-kernel/src"
+		src-file="com/liferay/portal/kernel/util/LocaleUtil.java"
 	/>
 	<instance-wrapper
 		parent-dir="../portal-kernel/src"

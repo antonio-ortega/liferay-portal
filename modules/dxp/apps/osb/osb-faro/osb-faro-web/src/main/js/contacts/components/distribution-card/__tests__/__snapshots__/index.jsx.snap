@@ -4,6 +4,7 @@ exports[`DistributionCard renders /w AddPropertyForm 1`] = `
 <div>
   <div
     class="card card-root distribution-card-root"
+    id="container.report.distributionBreakdownCard"
     style="min-height: 536px;"
   >
     <div
@@ -33,7 +34,7 @@ exports[`DistributionCard renders /w AddPropertyForm 1`] = `
             role="presentation"
           >
             <use
-              xlink:href="#plus"
+              href="#plus"
             />
           </svg>
         </button>
@@ -51,9 +52,11 @@ exports[`DistributionCard renders /w AddPropertyForm 1`] = `
           <div
             class="description"
           >
-            <h4>
+            <div
+              class="h4"
+            >
               Add a Breakdown by Individual Attribute
-            </h4>
+            </div>
             <p>
               Breakdown will display the top 10 results or be divided into a maximum of 10 bins depending on your attribute type.
             </p>
@@ -84,31 +87,41 @@ exports[`DistributionCard renders /w AddPropertyForm 1`] = `
                       </span>
                     </label>
                     <div
-                      aria-haspopup="true"
-                      class="input-group base-select-input-root select-input-root"
+                      class="dropdown dropdown-root base-select-container"
                     >
                       <div
-                        class="input-group-item"
+                        aria-controls="clay-dropdown-menu-1"
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                        class="dropdown-toggle"
                       >
-                        <input
-                          autocomplete="off"
-                          class="input-root form-control input-group-inset input-group-inset-after"
-                          id="property"
-                          placeholder="Select Field"
-                          type="text"
-                          value=""
-                        />
                         <div
-                          class="input-group-inset-item input-group-inset-item-after"
+                          class="input-group base-select-input-root select-input-root"
                         >
-                          <svg
-                            class="lexicon-icon lexicon-icon-caret-bottom icon-root"
-                            role="presentation"
+                          <div
+                            class="input-group-item"
                           >
-                            <use
-                              xlink:href="#caret-bottom"
+                            <input
+                              autocomplete="off"
+                              class="input-root form-control input-group-inset input-group-inset-after"
+                              id="property"
+                              placeholder="Select Field"
+                              type="text"
+                              value=""
                             />
-                          </svg>
+                            <div
+                              class="input-group-inset-item input-group-inset-item-after"
+                            >
+                              <svg
+                                class="lexicon-icon lexicon-icon-caret-bottom icon-root"
+                                role="presentation"
+                              >
+                                <use
+                                  href="#caret-bottom"
+                                />
+                              </svg>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -168,6 +181,7 @@ exports[`DistributionCard renders 1`] = `
 <div>
   <div
     class="card card-root distribution-card-root"
+    id="container.report.distributionBreakdownCard"
     style="min-height: 536px;"
   >
     <div
@@ -202,7 +216,7 @@ exports[`DistributionCard renders 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#times"
+                        href="#times"
                       />
                     </svg>
                   </button>
@@ -221,7 +235,7 @@ exports[`DistributionCard renders 1`] = `
             role="presentation"
           >
             <use
-              xlink:href="#plus"
+              href="#plus"
             />
           </svg>
         </button>
@@ -244,7 +258,7 @@ exports[`DistributionCard renders 1`] = `
           role="presentation"
         >
           <use
-            xlink:href="#angle-right-small"
+            href="#angle-right-small"
           />
         </svg>
       </a>
@@ -257,6 +271,7 @@ exports[`DistributionCard renders empty state via props with noResultsRenderer 1
 <div>
   <div
     class="card card-root distribution-card-root"
+    id="container.report.distributionBreakdownCard"
     style="min-height: 536px;"
   >
     <div
@@ -291,7 +306,7 @@ exports[`DistributionCard renders empty state via props with noResultsRenderer 1
                       role="presentation"
                     >
                       <use
-                        xlink:href="#times"
+                        href="#times"
                       />
                     </svg>
                   </button>
@@ -310,7 +325,7 @@ exports[`DistributionCard renders empty state via props with noResultsRenderer 1
             role="presentation"
           >
             <use
-              xlink:href="#plus"
+              href="#plus"
             />
           </svg>
         </button>
@@ -337,7 +352,7 @@ exports[`DistributionCard renders empty state via props with noResultsRenderer 1
           role="presentation"
         >
           <use
-            xlink:href="#angle-right-small"
+            href="#angle-right-small"
           />
         </svg>
       </a>
@@ -350,16 +365,17 @@ exports[`DistributionCard renders w/ showAddDataSource 1`] = `
 <div>
   <div
     class="card card-root distribution-card-root"
+    id="container.report.distributionBreakdownCard"
     style="min-height: 536px;"
   >
     <div
       class="card-header"
     >
-      <h5
+      <div
         class="card-title"
       >
         Distribution
-      </h5>
+      </div>
     </div>
     <div
       class="card-body"

@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -255,6 +256,38 @@ public class CommerceInventoryWarehouseRelLocalServiceUtil {
 			className, classPK, commerceInventoryWarehouseId);
 	}
 
+	public static List<CommerceInventoryWarehouseRel>
+		getAccountEntryCommerceInventoryWarehouseRels(
+			long commerceInventoryWarehouseId, String keywords, int start,
+			int end) {
+
+		return getService().getAccountEntryCommerceInventoryWarehouseRels(
+			commerceInventoryWarehouseId, keywords, start, end);
+	}
+
+	public static int getAccountEntryCommerceInventoryWarehouseRelsCount(
+		long commerceInventoryWarehouseId, String keywords) {
+
+		return getService().getAccountEntryCommerceInventoryWarehouseRelsCount(
+			commerceInventoryWarehouseId, keywords);
+	}
+
+	public static List<CommerceInventoryWarehouseRel>
+		getAccountGroupCommerceInventoryWarehouseRels(
+			long commerceInventoryWarehouseId, String keywords, int start,
+			int end) {
+
+		return getService().getAccountGroupCommerceInventoryWarehouseRels(
+			commerceInventoryWarehouseId, keywords, start, end);
+	}
+
+	public static int getAccountGroupCommerceInventoryWarehouseRelsCount(
+		long commerceInventoryWarehouseId, String keywords) {
+
+		return getService().getAccountGroupCommerceInventoryWarehouseRelsCount(
+			commerceInventoryWarehouseId, keywords);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -311,6 +344,26 @@ public class CommerceInventoryWarehouseRelLocalServiceUtil {
 			commerceInventoryWarehouseId, start, end, orderByComparator);
 	}
 
+	public static List<CommerceInventoryWarehouseRel>
+		getCommerceInventoryWarehouseRels(
+			String className, long commerceInventoryWarehouseId) {
+
+		return getService().getCommerceInventoryWarehouseRels(
+			className, commerceInventoryWarehouseId);
+	}
+
+	public static List<CommerceInventoryWarehouseRel>
+		getCommerceInventoryWarehouseRels(
+			String className, long commerceInventoryWarehouseId, int start,
+			int end,
+			OrderByComparator<CommerceInventoryWarehouseRel>
+				orderByComparator) {
+
+		return getService().getCommerceInventoryWarehouseRels(
+			className, commerceInventoryWarehouseId, start, end,
+			orderByComparator);
+	}
+
 	/**
 	 * Returns the number of commerce inventory warehouse rels.
 	 *
@@ -325,6 +378,13 @@ public class CommerceInventoryWarehouseRelLocalServiceUtil {
 
 		return getService().getCommerceInventoryWarehouseRelsCount(
 			commerceInventoryWarehouseId);
+	}
+
+	public static int getCommerceInventoryWarehouseRelsCount(
+		String className, long commerceInventoryWarehouseId) {
+
+		return getService().getCommerceInventoryWarehouseRelsCount(
+			className, commerceInventoryWarehouseId);
 	}
 
 	public static List<CommerceInventoryWarehouseRel>
@@ -388,15 +448,12 @@ public class CommerceInventoryWarehouseRelLocalServiceUtil {
 	}
 
 	public static CommerceInventoryWarehouseRelLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CommerceInventoryWarehouseRelLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile CommerceInventoryWarehouseRelLocalService _service;
+	private static final Snapshot<CommerceInventoryWarehouseRelLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceInventoryWarehouseRelLocalServiceUtil.class,
+			CommerceInventoryWarehouseRelLocalService.class);
 
 }

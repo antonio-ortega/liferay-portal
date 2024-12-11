@@ -9,14 +9,15 @@ import {SWRConfig} from 'swr';
 
 import {WebDAV} from './common/context/WebDAV';
 import {AppRouteType} from './common/enums/appRouteType';
-import {PartnerOpportunitiesColumnKey} from './common/enums/partnerOpportunitiesColumnKey';
 import getIconSpriteMap from './common/utils/getIconSpriteMap';
 import DealRegistrationForm from './routes/DealRegistrationForm';
 import DealRegistrationList from './routes/DealRegistrationList';
 import MDFClaimForm from './routes/MDFClaimForm';
 import MDFClaimList from './routes/MDFClaimList';
+import MDFClaimManagerStatus from './routes/MDFClaimManagerStatus/MDFClaimManagerStatus';
 import MDFRequestForm from './routes/MDFRequestForm';
 import MDFRequestList from './routes/MDFRequestList';
+import MDFRequestManagerStatus from './routes/MDFRequestManagerStatus';
 import PartnerOpportunitiesList from './routes/PartnerOpportunitiesList';
 import DealsChart from './routes/dashboard/DealsChart';
 import LevelChart from './routes/dashboard/LevelChart';
@@ -38,44 +39,17 @@ const appRoutes: AppRouteComponent = {
 	[AppRouteType.MDF_REQUEST_LIST]: <MDFRequestList />,
 	[AppRouteType.MDF_CLAIM_FORM]: <MDFClaimForm />,
 	[AppRouteType.MDF_CLAIM_LIST]: <MDFClaimList />,
+	[AppRouteType.MDF_REQUEST_MANAGER_STATUS]: <MDFRequestManagerStatus />,
+	[AppRouteType.MDF_CLAIM_MANAGER_STATUS]: <MDFClaimManagerStatus />,
 	[AppRouteType.DEAL_REGISTRATION_FORM]: <DealRegistrationForm />,
-	[AppRouteType.DEAL_REGISTRATION_LIST]: (
-		<DealRegistrationList
-			getFilteredItems={(items) =>
-				items.filter((item) => item.STATUS !== 'Qualified')
-			}
-			sort="dateCreated:desc"
-		/>
-	),
+	[AppRouteType.DEAL_REGISTRATION_LIST]: <DealRegistrationList />,
 	[AppRouteType.PARTNER_OPPORTUNITIES_LIST]: (
-		<PartnerOpportunitiesList
-			columnsDates={[
-				{
-					columnKey: PartnerOpportunitiesColumnKey.START_DATE,
-					label: 'Start Date',
-				},
-				{
-					columnKey: PartnerOpportunitiesColumnKey.END_DATE,
-					label: 'End Date',
-				},
-			]}
-			name="Partner Opportunities"
-			newButtonDeal={false}
-			sort="dateCreated:desc"
-		/>
+		<PartnerOpportunitiesList name="Partner Opportunities" />
 	),
 	[AppRouteType.RENEWALS_OPPORTUNITIES_LIST]: (
 		<PartnerOpportunitiesList
-			columnsDates={[
-				{
-					columnKey: PartnerOpportunitiesColumnKey.CLOSE_DATE,
-					label: 'Close Date',
-				},
-			]}
+			isRenewalListing={true}
 			name="Renewal Opportunities"
-			newButtonDeal={false}
-			renewalOpportunitiesFilter="stage ne 'Closed Lost' and type eq 'Existing Business'"
-			sort="closeDate:asc"
 		/>
 	),
 	[AppRouteType.DASHBOARD_DEALS_CHART]: <DealsChart />,
@@ -115,7 +89,7 @@ class PartnerPortalRemoteAppComponent extends HTMLElement {
 					liferayWebDAV={
 						super.getAttribute('liferaywebdavurl') as string
 					}
-					route={super.getAttribute('route') as AppRouteType}
+					route={super.getAttribute('path') as AppRouteType}
 				/>
 			);
 		}

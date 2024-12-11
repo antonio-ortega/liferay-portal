@@ -26,6 +26,7 @@ import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayConte
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import javax.portlet.RenderRequest;
@@ -61,7 +62,7 @@ public class UserSearchFacetDisplayContextBuilder {
 			new UserSearchFacetDisplayContext();
 
 		userSearchFacetDisplayContext.setBucketDisplayContexts(
-			buildBucketDisplayContexts(termCollectors));
+			_buildBucketDisplayContexts(termCollectors));
 		userSearchFacetDisplayContext.setDisplayStyleGroupId(
 			getDisplayStyleGroupId());
 		userSearchFacetDisplayContext.setNothingSelected(nothingSelected);
@@ -87,6 +88,10 @@ public class UserSearchFacetDisplayContextBuilder {
 
 	public void setFrequencyThreshold(int frequencyThreshold) {
 		_frequencyThreshold = frequencyThreshold;
+	}
+
+	public void setLocale(Locale locale) {
+		_locale = locale;
 	}
 
 	public void setMaxTerms(int maxTerms) {
@@ -137,41 +142,10 @@ public class UserSearchFacetDisplayContextBuilder {
 
 		bucketDisplayContext.setFrequency(termCollector.getFrequency());
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setLocale(_locale);
 		bucketDisplayContext.setSelected(isSelected(String.valueOf(userId)));
 
 		return bucketDisplayContext;
-	}
-
-	protected List<BucketDisplayContext> buildBucketDisplayContexts(
-		List<TermCollector> termCollectors) {
-
-		if (termCollectors.isEmpty()) {
-			return getEmptyBucketDisplayContexts();
-		}
-
-		List<BucketDisplayContext> bucketDisplayContexts = new ArrayList<>(
-			termCollectors.size());
-
-		for (int i = 0; i < termCollectors.size(); i++) {
-			TermCollector termCollector = termCollectors.get(i);
-
-			if (((_maxTerms > 0) && (i >= _maxTerms)) ||
-				((_frequencyThreshold > 0) &&
-				 (_frequencyThreshold > termCollector.getFrequency()))) {
-
-				break;
-			}
-
-			bucketDisplayContexts.add(buildBucketDisplayContext(termCollector));
-		}
-
-		if (_order != null) {
-			bucketDisplayContexts.sort(
-				BucketDisplayContextComparatorFactoryUtil.
-					getBucketDisplayContextComparator(_order));
-		}
-
-		return bucketDisplayContexts;
 	}
 
 	protected long getDisplayStyleGroupId() {
@@ -232,6 +206,38 @@ public class UserSearchFacetDisplayContextBuilder {
 		return false;
 	}
 
+	private List<BucketDisplayContext> _buildBucketDisplayContexts(
+		List<TermCollector> termCollectors) {
+
+		if (termCollectors.isEmpty()) {
+			return getEmptyBucketDisplayContexts();
+		}
+
+		List<BucketDisplayContext> bucketDisplayContexts = new ArrayList<>(
+			termCollectors.size());
+
+		for (int i = 0; i < termCollectors.size(); i++) {
+			TermCollector termCollector = termCollectors.get(i);
+
+			if (((_maxTerms > 0) && (i >= _maxTerms)) ||
+				((_frequencyThreshold > 0) &&
+				 (_frequencyThreshold > termCollector.getFrequency()))) {
+
+				break;
+			}
+
+			bucketDisplayContexts.add(buildBucketDisplayContext(termCollector));
+		}
+
+		if (_order != null) {
+			bucketDisplayContexts.sort(
+				BucketDisplayContextComparatorFactoryUtil.
+					getBucketDisplayContextComparator(_order));
+		}
+
+		return bucketDisplayContexts;
+	}
+
 	private String _getDisplayName(long userId) {
 		User user = _userLocalService.fetchUser(userId);
 
@@ -253,6 +259,7 @@ public class UserSearchFacetDisplayContextBuilder {
 	private Facet _facet;
 	private boolean _frequenciesVisible;
 	private int _frequencyThreshold;
+	private Locale _locale;
 	private int _maxTerms;
 	private String _order;
 	private String _paginationStartParameterName;

@@ -5,6 +5,8 @@
 
 package com.liferay.headless.commerce.admin.shipment.internal.dto.v1_0.converter;
 
+import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
+import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseLocalService;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceShipment;
 import com.liferay.commerce.model.CommerceShipmentItem;
@@ -44,19 +46,27 @@ public class ShipmentItemDTOConverter
 
 		return new ShipmentItem() {
 			{
-				actions = dtoConverterContext.getActions();
-				createDate = commerceShipmentItem.getCreateDate();
-				externalReferenceCode =
-					commerceShipmentItem.getExternalReferenceCode();
-				id = commerceShipmentItem.getCommerceShipmentItemId();
-				modifiedDate = commerceShipmentItem.getModifiedDate();
-				orderItemId = commerceShipmentItem.getCommerceOrderItemId();
-				shipmentId = commerceShipmentItem.getCommerceShipmentId();
-				unitOfMeasureKey = commerceShipmentItem.getUnitOfMeasureKey();
-				userName = commerceShipmentItem.getUserName();
-				warehouseId =
-					commerceShipmentItem.getCommerceInventoryWarehouseId();
+				setActions(dtoConverterContext::getActions);
+				setCreateDate(commerceShipmentItem::getCreateDate);
+				setExternalReferenceCode(
+					commerceShipmentItem::getExternalReferenceCode);
+				setId(commerceShipmentItem::getCommerceShipmentItemId);
+				setModifiedDate(commerceShipmentItem::getModifiedDate);
+				setOrderItemExternalReferenceCode(
+					() -> {
+						CommerceOrderItem commerceOrderItem =
+							_commerceOrderItemLocalService.
+								fetchCommerceOrderItem(
+									commerceShipmentItem.
+										getCommerceOrderItemId());
 
+						if (commerceOrderItem == null) {
+							return null;
+						}
+
+						return commerceOrderItem.getExternalReferenceCode();
+					});
+				setOrderItemId(commerceShipmentItem::getCommerceOrderItemId);
 				setQuantity(
 					() -> {
 						CommerceOrderItem commerceOrderItem =
@@ -81,9 +91,34 @@ public class ShipmentItemDTOConverter
 
 						return commerceShipment.getExternalReferenceCode();
 					});
+				setShipmentId(commerceShipmentItem::getCommerceShipmentId);
+				setUnitOfMeasureKey(commerceShipmentItem::getUnitOfMeasureKey);
+				setUserName(commerceShipmentItem::getUserName);
+				setWarehouseExternalReferenceCode(
+					() -> {
+						CommerceInventoryWarehouse commerceInventoryWarehouse =
+							_commerceInventoryWarehouseLocalService.
+								fetchCommerceInventoryWarehouse(
+									commerceShipmentItem.
+										getCommerceInventoryWarehouseId());
+
+						if (commerceInventoryWarehouse == null) {
+							return null;
+						}
+
+						return commerceInventoryWarehouse.
+							getExternalReferenceCode();
+					});
+				setWarehouseId(
+					() ->
+						commerceShipmentItem.getCommerceInventoryWarehouseId());
 			}
 		};
 	}
+
+	@Reference
+	private CommerceInventoryWarehouseLocalService
+		_commerceInventoryWarehouseLocalService;
 
 	@Reference
 	private CommerceOrderItemLocalService _commerceOrderItemLocalService;

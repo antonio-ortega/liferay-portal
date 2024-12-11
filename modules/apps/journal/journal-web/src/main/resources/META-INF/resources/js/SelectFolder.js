@@ -17,8 +17,8 @@ const SelectFolder = ({itemSelectorSaveEvent, nodes}) => {
 	const handleSelectionChange = (item) => {
 		getOpener().Liferay.fire(itemSelectorSaveEvent, {
 			data: {
-				folderId: item.id,
-				folderName: item.name,
+				resourceid: item.id,
+				resourcename: item.name,
 			},
 		});
 	};
@@ -131,7 +131,7 @@ function FolderTree({filterQuery, handleSelectionChange, items: initialItems}) {
 			description={Liferay.Language.get(
 				'try-again-with-a-different-search'
 			)}
-			imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
+			imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.svg`}
 			small
 			title={Liferay.Language.get('no-results-found')}
 		/>

@@ -1,8 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Recycle Bin";
 
@@ -10,6 +12,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 
 		HeadlessSite.addSite(siteName = "Site Name");
 
@@ -20,17 +24,6 @@ definition {
 		Navigator.gotoSitePage(
 			pageName = "Test Page",
 			siteName = "Site Name");
-	}
-
-	tearDown {
-		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
-
-		if (${testLiferayVirtualInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONGroup.deleteGroupByName(groupName = "Site Name");
-		}
 	}
 
 	@description = "This is a use case for LPS-109555. Can bulk restore multiple items from recycle bin."
@@ -135,7 +128,9 @@ definition {
 		}
 
 		task ("Go to recycle bin to view entry and restore") {
-			RecycleBin.openRecycleBinAdmin(siteURLKey = "site-name");
+			ProductMenu.gotoPortlet(
+				category = "Recycle Bin",
+				portlet = "Recycle Bin");
 
 			RecycleBin.viewCP(
 				assetName = "Blogs Entry Title",
@@ -222,7 +217,7 @@ definition {
 	@description = "Assert scheduled clean up in recycle bin works."
 	@priority = 3
 	test RecycleBinScheduledCleanup {
-		property custom.properties = "trash.entries.max.age=1${line.separator}trash.entry.check.interval=1";
+		property custom.properties = "feature.flag.LPD-35013=true${line.separator}trash.entries.max.age=0";
 
 		task ("Add a blogs widget to page and a blog entry") {
 			JSONLayout.addWidgetToPublicLayout(
@@ -247,23 +242,23 @@ definition {
 				entryTitle = "Blogs Entry Title");
 		}
 
-		task ("Go to recycle bin and wait 2 minutes") {
-			RecycleBin.openRecycleBinAdmin(siteURLKey = "site-name");
+		task ("Run check entry scheduler job") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "Job Scheduler");
 
-			RecycleBin.viewCP(
-				assetName = "Blogs Entry Title",
-				assetType = "Blogs Entry",
-				customMaxAge = "1 minute",
-				deleteUser = "Test Test");
+			Navigator.gotoNavTab(navTab = "Scheduled Jobs");
 
-			// We need this pause to check issue due trash.entry.check.interval=1
-			// To be investigated in LPS-157883
+			Pagination.changePagination(itemsPerPage = 60);
 
-			Pause(locator1 = 120000);
+			Click(locator1 = "xpath=(//tr[@data-qa-id='row'][contains(.,'CheckEntrySchedulerJobConfiguration')])[2]//td[contains(@class,'action-column')]//a[normalize-space()='Run Now']");
+
+			Alert.viewSuccessMessage();
 		}
 
-		task ("Refresh and assert no blog entry") {
-			Refresh();
+		task ("Assert no blog entry in recycle bin") {
+			RecycleBin.openRecycleBinAdmin(siteURLKey = "site-name");
 
 			RecycleBin.viewDefaultCP(assetName = "Blogs Entry Title");
 		}
@@ -316,7 +311,7 @@ definition {
 	@description = "Assert 2 documents moved to recycle bin are searchable."
 	@priority = 3
 	test RecycleBinSearchDMEntriesInFolder {
-		property custom.properties = "default.layout.template.id=1_column";
+		property custom.properties = "default.layout.template.id=1_column${line.separator}feature.flag.LPD-35013=true";
 
 		task ("Add DM widget to page") {
 			JSONLayout.addWidgetToPublicLayout(
@@ -437,7 +432,9 @@ definition {
 		}
 
 		task ("View wiki page and wiki node and restore them") {
-			RecycleBin.openRecycleBinAdmin(siteURLKey = "site-name");
+			ProductMenu.gotoPortlet(
+				category = "Recycle Bin",
+				portlet = "Recycle Bin");
 
 			RecycleBin.viewCP(
 				assetName = "Wiki Page Title",
@@ -726,7 +723,7 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "Search#SEARCH_INFO",
-				value1 = "2 Results for \"Comment\"");
+				value1 = "2 Results Found for \"Comment\"");
 
 			for (var title : list "Blogs Entry Title 1,Blogs Entry Title 2") {
 				Blogs.viewEntryTitle(entryTitle = ${title});
@@ -744,7 +741,7 @@ definition {
 
 			AssertTextEquals(
 				locator1 = "Search#SEARCH_INFO",
-				value1 = "1 Result for \"Comment\"");
+				value1 = "1 Result Found for \"Comment\"");
 
 			Blogs.viewEntryTitle(entryTitle = "Blogs Entry Title 2");
 

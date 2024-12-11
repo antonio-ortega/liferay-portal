@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-site-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -12,34 +12,15 @@ definition {
 		User.firstLoginPG();
 	}
 
-	tearDown {
-		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
-
-		if (${testLiferayVirtualInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			JSONUser.tearDownNonAdminUsers();
-
-			Site.tearDownCP();
-
-			Organization.tearDownCP();
-
-			Team.tearDownCP();
-
-			PagesAdmin.tearDownCP();
-
-			UserGroup.tearDownCP();
-		}
-	}
-
 	@description = "Export and import work in organization and add child site from imported site template."
 	@priority = 5
 	test AddChildSiteFromImportedSiteTemplate {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-		property testray.component.names = "Training";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Add an organization") {
 			JSONOrganization.addOrganization(organizationName = "Space Program Academy of Continuing Education");
@@ -184,7 +165,6 @@ definition {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Sites Administration,Training,Users and Organizations";
 
 		task ("Enable Show Inactive Request Message in system settings") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -335,7 +315,6 @@ definition {
 	@priority = 3
 	test OnlySiteOwnersCanAssignSiteRolesToUserGroups {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property testray.component.names = "Sites Administration,User Groups";
 
 		task ("Add a site role") {
 			JSONRole.addSiteRole(
@@ -392,6 +371,10 @@ definition {
 		}
 
 		task ("Log in as the user") {
+			Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+			Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "userea@liferay.com",
 				userLoginFullName = "userfn userln");
@@ -426,8 +409,10 @@ definition {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property osgi.module.configuration.file.names = "com.liferay.login.web.internal.configuration.AuthLoginConfiguration.config";
 		property osgi.module.configurations = "promptEnabled=\"true\"";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-		property testray.component.names = "Sites Administration";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		task ("Get site name") {
 			var siteName = TestCase.getSiteName(siteName = ${siteName});
@@ -459,7 +444,7 @@ definition {
 
 		task ("Log in as default user") {
 			User.loginUserPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -477,6 +462,10 @@ definition {
 		}
 
 		task ("Assign the created user to default site") {
+			Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+			Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
 			User.openUsersAdmin();
 
 			User.editUserSiteCP(
@@ -488,7 +477,7 @@ definition {
 			User.firstLoginUI(
 				specificURL = "http://www.able.com:8080/test-private-page",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("View private page in virtual host") {
@@ -551,10 +540,7 @@ definition {
 		}
 
 		task ("Add a user and set require password reset") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin(baseURL = "http://www.baker.com:8080");
 
 			User.addCP(
 				userEmailAddress = "user1@liferay.com",
@@ -621,10 +607,7 @@ definition {
 		}
 
 		task ("Edit Email Verification Notification in instance settings") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
+			PortalSettings.openInstanceSettingsAdmin(baseURL = "http://www.able.com:8080");
 
 			SystemSettings.gotoConfiguration(
 				configurationCategory = "Email",
@@ -681,7 +664,6 @@ definition {
 	@priority = 3
 	test SiteFriendlyURLLayoutImporter {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property testray.component.names = "Sites Administration";
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -716,7 +698,7 @@ definition {
 
 		task ("Log in as created user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -728,7 +710,7 @@ definition {
 
 		task ("Log in as default user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -763,7 +745,6 @@ definition {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Sites Administration";
 
 		task ("Enable Show Inactive Request Message in system settings") {
 			SystemSettings.openSystemSettingsAdmin();
@@ -827,7 +808,7 @@ definition {
 
 		task ("Log out and log in as the created user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -842,7 +823,7 @@ definition {
 
 		task ("Log out and log in as the default user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -854,7 +835,7 @@ definition {
 
 		task ("Log out and log in as the created user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com");
 		}
 
@@ -874,8 +855,10 @@ definition {
 		property osgi.module.configuration.file.names = "com.liferay.login.web.internal.configuration.AuthLoginConfiguration.config";
 		property osgi.module.configurations = "promptEnabled=\"true\"";
 		property portal.release = "true";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
-		property testray.component.names = "Sites Administration,Page Administration";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		var portalURL = PropsUtil.get("portal.url");
 
@@ -959,7 +942,7 @@ definition {
 		}
 
 		task ("View alert in Arenas page") {
-			Open.openNoError(locator1 = "${portalURL}/web/russia2018/Arenas");
+			Open.openNoError(value1 = "${portalURL}/web/russia2018/Arenas");
 
 			AssertConfirm(value1 = "Welcome to Russia.");
 		}
@@ -969,19 +952,19 @@ definition {
 		}
 
 		task ("View alert in Arenas page") {
-			Open.openNoError(locator1 = "${portalURL}/web/russia2018/Arenas");
+			Open.openNoError(value1 = "${portalURL}/web/russia2018/Arenas");
 
 			AssertConfirm(value1 = "Welcome to Russia.");
 		}
 
 		task ("Log in as default user") {
 			User.loginUserPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
 		task ("View logo is changed") {
-			Open.openNoError(locator1 = "${portalURL}/web/russia2018");
+			Open.openNoError(value1 = "${portalURL}/web/russia2018");
 
 			Page.viewCustomLogoPG();
 		}
@@ -997,7 +980,7 @@ definition {
 		}
 
 		task ("Add blank js to Arenaspage") {
-			Open.openNoError(locator1 = "${portalURL}/web/russia2018");
+			Open.openNoError(value1 = "${portalURL}/web/russia2018");
 
 			ProductMenu.gotoPortlet(
 				category = "Site Builder",
@@ -1042,18 +1025,20 @@ definition {
 
 		task ("Log in as created user via private page virtual host") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.baker.com:8080/group/russia2018",
 				userEmailAddress = "userea@liferay.com");
 		}
 
 		task ("View private pages") {
+			Navigator.openSpecificURL(url = "http://www.baker.com:8080/accomodations");
+
 			Page.viewSpecificPG(pageNameList = "Accomodations,Maps");
 		}
 
 		task ("Log in as created user via site URL") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "${portalURL}/web/russia2018",
 				userEmailAddress = "userea@liferay.com");
 		}
@@ -1080,7 +1065,7 @@ definition {
 
 		task ("Log in as default user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 

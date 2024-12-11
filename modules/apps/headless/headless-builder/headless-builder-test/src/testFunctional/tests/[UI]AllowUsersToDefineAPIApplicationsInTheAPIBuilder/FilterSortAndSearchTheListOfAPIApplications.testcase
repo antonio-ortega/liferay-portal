@@ -2,10 +2,10 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -20,12 +20,10 @@ definition {
 
 			ApplicationAPI.createAPIApplication(
 				baseURL = "test2",
-				status = "unpublished",
 				title = "test2");
 
 			ApplicationAPI.createAPIApplication(
 				baseURL = "test3",
-				status = "unpublished",
 				title = "test3");
 
 			ApplicationsMenu.gotoPortlet(
@@ -47,7 +45,6 @@ definition {
 
 	@priority = 4
 	test CanFilterAPIsByExcludeStatus {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -77,7 +74,6 @@ definition {
 
 	@priority = 4
 	test CanFilterAPIsByLastUpdated {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -96,7 +92,6 @@ definition {
 
 	@priority = 4
 	test CanFilterAPIsByStatus {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -124,7 +119,6 @@ definition {
 
 	@priority = 4
 	test CanSearchAPIsByTitle {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -139,7 +133,6 @@ definition {
 
 	@priority = 4
 	test CanSearchAPIsWithoutAvailableOnes {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -156,7 +149,6 @@ definition {
 
 	@priority = 4
 	test CanSortAPIsByLastUpdated {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -173,7 +165,6 @@ definition {
 
 	@priority = 4
 	test CanSortAPIsByStatus {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -190,7 +181,6 @@ definition {
 
 	@priority = 4
 	test CanSortAPIsByTitle {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

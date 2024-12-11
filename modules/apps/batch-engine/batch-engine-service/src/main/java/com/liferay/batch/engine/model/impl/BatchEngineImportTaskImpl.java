@@ -7,8 +7,12 @@ package com.liferay.batch.engine.model.impl;
 
 import com.liferay.batch.engine.model.BatchEngineImportTaskError;
 import com.liferay.batch.engine.service.BatchEngineImportTaskErrorLocalServiceUtil;
+import com.liferay.portal.kernel.util.MapUtil;
+
+import java.io.Serializable;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * The extended model implementation for the BatchEngineImportTask service.
@@ -26,14 +30,27 @@ import java.util.List;
  */
 public class BatchEngineImportTaskImpl extends BatchEngineImportTaskBaseImpl {
 
+	@Override
 	public List<BatchEngineImportTaskError> getBatchEngineImportTaskErrors() {
 		return BatchEngineImportTaskErrorLocalServiceUtil.
 			getBatchEngineImportTaskErrors(getBatchEngineImportTaskId());
 	}
 
+	@Override
 	public int getBatchEngineImportTaskErrorsCount() {
 		return BatchEngineImportTaskErrorLocalServiceUtil.
 			getBatchEngineImportTaskErrorsCount(getBatchEngineImportTaskId());
+	}
+
+	@Override
+	public String getParameterValue(String name) {
+		Map<String, Serializable> parameters = getParameters();
+
+		if ((parameters == null) || !parameters.containsKey(name)) {
+			return null;
+		}
+
+		return MapUtil.getString(parameters, name, null);
 	}
 
 }

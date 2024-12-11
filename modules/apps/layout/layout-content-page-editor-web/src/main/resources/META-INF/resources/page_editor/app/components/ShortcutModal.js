@@ -4,6 +4,7 @@
  */
 
 import ClayModal, {useModal} from '@clayui/modal';
+import {FeatureIndicator} from 'frontend-js-components-web';
 import React from 'react';
 
 const KEY_LABEL = Liferay.Browser?.isMac() ? '⌘' : 'Ctrl';
@@ -27,47 +28,93 @@ export default function ShortcutModal({onCloseModal}) {
 					{Liferay.Language.get('fragments')}
 				</p>
 
-				<KeyboardShorcut
-					description={Liferay.Language.get('move-fragment-up')}
-					keyCombinations={[OPTION_KEY_LABEL, '⇧', '↑']}
-				/>
-
-				<KeyboardShorcut
-					description={Liferay.Language.get('move-fragment-down')}
-					keyCombinations={[OPTION_KEY_LABEL, '⇧', '↓']}
-				/>
-
-				<KeyboardShorcut
+				<KeyboardShortcut
 					description={Liferay.Language.get('duplicate-fragment')}
-					keyCombinations={[KEY_LABEL, 'D']}
+					keyCombinations={[KEY_LABEL, OPTION_KEY_LABEL, 'D']}
 				/>
 
-				<KeyboardShorcut
+				<KeyboardShortcut
 					description={Liferay.Language.get('delete-fragment')}
 					keyCombinations={['⌫']}
 				/>
 
-				<KeyboardShorcut
+				<KeyboardShortcut
 					description={Liferay.Language.get(
 						'save-composition-for-containers-and-grids'
 					)}
 					keyCombinations={[KEY_LABEL, 'S']}
 				/>
 
+				<KeyboardShortcut
+					description={Liferay.Language.get('show-hide-fragment')}
+					keyCombinations={[KEY_LABEL, OPTION_KEY_LABEL, 'H']}
+				/>
+
+				<KeyboardShortcut
+					description={Liferay.Language.get('rename')}
+					keyCombinations={[KEY_LABEL, OPTION_KEY_LABEL, 'R']}
+				/>
+
+				{Liferay.FeatureFlags['LPD-18221'] ? (
+					<KeyboardShortcut
+						betaFeatureIndicator
+						description={Liferay.Language.get('cut')}
+						keyCombinations={[KEY_LABEL, 'X']}
+					/>
+				) : null}
+
+				{Liferay.FeatureFlags['LPD-18221'] ? (
+					<KeyboardShortcut
+						betaFeatureIndicator
+						description={Liferay.Language.get('copy')}
+						keyCombinations={[KEY_LABEL, 'C']}
+					/>
+				) : null}
+
+				{Liferay.FeatureFlags['LPD-18221'] ? (
+					<KeyboardShortcut
+						betaFeatureIndicator
+						description={Liferay.Language.get('paste')}
+						keyCombinations={[KEY_LABEL, 'V']}
+					/>
+				) : null}
+
 				<p className="sheet-subtitle text-secondary">
 					{Liferay.Language.get('selection')}
 				</p>
 
-				<KeyboardShorcut
+				<KeyboardShortcut
 					description={Liferay.Language.get('select-parent')}
 					keyCombinations={['⇧', 'Enter']}
 				/>
+
+				{Liferay.FeatureFlags['LPD-18221'] ? (
+					<>
+						<KeyboardShortcut
+							betaFeatureIndicator
+							description={Liferay.Language.get(
+								'range-selection'
+							)}
+							keyCombinations={['⇧', 'Arrows']}
+						/>
+					</>
+				) : null}
+
+				{Liferay.FeatureFlags['LPD-18221'] ? (
+					<KeyboardShortcut
+						betaFeatureIndicator
+						description={Liferay.Language.get(
+							'noncontinuous-selection'
+						)}
+						keyCombinations={[KEY_LABEL, 'Enter']}
+					/>
+				) : null}
 
 				<p className="sheet-subtitle text-secondary">
 					{Liferay.Language.get('view')}
 				</p>
 
-				<KeyboardShorcut
+				<KeyboardShortcut
 					description={Liferay.Language.get('toggle-sidebars')}
 					keyCombinations={[KEY_LABEL, '⇧', '.']}
 				/>
@@ -76,14 +123,18 @@ export default function ShortcutModal({onCloseModal}) {
 	);
 }
 
-function KeyboardShorcut({description, keyCombinations}) {
+function KeyboardShortcut({
+	betaFeatureIndicator = false,
+	description,
+	keyCombinations,
+}) {
 	return (
 		<div className="align-items-center d-flex mb-3">
-			<div className="page-editor__shorcut-modal__shorcut text-right">
-				<kbd className="c-kbd text-secondary">
+			<div className="page-editor__shortcut-modal__shortcut text-right">
+				<kbd className="c-kbd c-kbd-light">
 					{keyCombinations.map((key, index) => (
 						<React.Fragment key={index}>
-							<kbd className="c-kbd">{key}</kbd>
+							{key}
 
 							{index < keyCombinations.length - 1 ? (
 								<span className="c-kbd-separator">+</span>
@@ -93,9 +144,11 @@ function KeyboardShorcut({description, keyCombinations}) {
 				</kbd>
 			</div>
 
-			<p className="mb-0 ml-3 page-editor__shorcut-modal__shorcut-description text-3 text-weight-semi-bold">
+			<p className="mb-0 ml-3 mr-2 page-editor__shortcut-modal__shortcut-description text-3 text-weight-semi-bold">
 				{description}
 			</p>
+
+			{betaFeatureIndicator ? <FeatureIndicator type="beta" /> : null}
 		</div>
 	);
 }

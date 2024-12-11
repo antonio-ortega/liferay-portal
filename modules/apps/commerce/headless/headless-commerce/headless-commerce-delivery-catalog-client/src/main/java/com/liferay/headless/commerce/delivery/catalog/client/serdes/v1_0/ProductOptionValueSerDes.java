@@ -56,6 +56,20 @@ public class ProductOptionValueSerDes {
 			sb.append(productOptionValue.getId());
 		}
 
+		if (productOptionValue.getInfoMessage() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"infoMessage\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productOptionValue.getInfoMessage()));
+
+			sb.append("\"");
+		}
+
 		if (productOptionValue.getKey() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -170,6 +184,16 @@ public class ProductOptionValueSerDes {
 			sb.append("\"");
 		}
 
+		if (productOptionValue.getSelectable() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"selectable\": ");
+
+			sb.append(productOptionValue.getSelectable());
+		}
+
 		if (productOptionValue.getSkuId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -246,6 +270,15 @@ public class ProductOptionValueSerDes {
 			map.put("id", String.valueOf(productOptionValue.getId()));
 		}
 
+		if (productOptionValue.getInfoMessage() == null) {
+			map.put("infoMessage", null);
+		}
+		else {
+			map.put(
+				"infoMessage",
+				String.valueOf(productOptionValue.getInfoMessage()));
+		}
+
 		if (productOptionValue.getKey() == null) {
 			map.put("key", null);
 		}
@@ -318,6 +351,15 @@ public class ProductOptionValueSerDes {
 				String.valueOf(productOptionValue.getRelativePriceFormatted()));
 		}
 
+		if (productOptionValue.getSelectable() == null) {
+			map.put("selectable", null);
+		}
+		else {
+			map.put(
+				"selectable",
+				String.valueOf(productOptionValue.getSelectable()));
+		}
+
 		if (productOptionValue.getSkuId() == null) {
 			map.put("skuId", null);
 		}
@@ -367,6 +409,62 @@ public class ProductOptionValueSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "infoMessage")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "key")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "name")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "preselected")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "price")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "priceType")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "priority")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "productOptionId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "quantity")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "relativePriceFormatted")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "selectable")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "skuId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "totalPrice")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "unitOfMeasureKey")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "visible")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			ProductOptionValue productOptionValue, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -375,6 +473,12 @@ public class ProductOptionValueSerDes {
 				if (jsonParserFieldValue != null) {
 					productOptionValue.setId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "infoMessage")) {
+				if (jsonParserFieldValue != null) {
+					productOptionValue.setInfoMessage(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "key")) {
@@ -428,6 +532,12 @@ public class ProductOptionValueSerDes {
 				if (jsonParserFieldValue != null) {
 					productOptionValue.setRelativePriceFormatted(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "selectable")) {
+				if (jsonParserFieldValue != null) {
+					productOptionValue.setSelectable(
+						(Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "skuId")) {
@@ -486,36 +596,7 @@ public class ProductOptionValueSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -525,6 +606,38 @@ public class ProductOptionValueSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

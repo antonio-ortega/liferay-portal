@@ -10,10 +10,13 @@ import React, {forwardRef, useRef} from 'react';
 import InputQuantitySelector from './InputQuantitySelector';
 import ListQuantitySelector from './ListQuantitySelector';
 
+import './quantity_selector.scss';
+
 const QuantitySelector = forwardRef(
 	(
 		{
 			alignment,
+			allowEmptyValue,
 			allowedQuantities,
 			disabled,
 			max,
@@ -25,6 +28,7 @@ const QuantitySelector = forwardRef(
 			size,
 			step,
 			unitOfMeasure,
+			...props
 		},
 		providedRef
 	) => {
@@ -37,7 +41,9 @@ const QuantitySelector = forwardRef(
 
 		return (
 			<Selector
+				{...props}
 				alignment={alignment}
+				allowEmptyValue={allowEmptyValue}
 				allowedQuantities={allowedQuantities}
 				className={classnames({
 					[`form-control-${size}`]: size,
@@ -59,11 +65,13 @@ const QuantitySelector = forwardRef(
 );
 
 QuantitySelector.defaultProps = {
+	allowEmptyValue: false,
 	disabled: false,
 };
 
 QuantitySelector.propTypes = {
 	alignment: PropTypes.oneOf(['top', 'bottom']),
+	allowEmptyValue: PropTypes.bool,
 	disabled: PropTypes.bool,
 	name: PropTypes.string,
 	namespace: PropTypes.string,

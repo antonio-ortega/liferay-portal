@@ -68,8 +68,8 @@ public class Mutation {
 
 	@GraphQLField
 	public Response createCTCollectionsPageExportBatch(
-			@GraphQLName("status") Integer[] status,
 			@GraphQLName("search") String search,
+			@GraphQLName("status") Integer[] status,
 			@GraphQLName("sort") String sortsString,
 			@GraphQLName("callbackURL") String callbackURL,
 			@GraphQLName("contentType") String contentType,
@@ -81,7 +81,7 @@ public class Mutation {
 			this::_populateResourceContext,
 			ctCollectionResource ->
 				ctCollectionResource.postCTCollectionsPageExportBatch(
-					status, search,
+					search, status,
 					_sortsBiFunction.apply(ctCollectionResource, sortsString),
 					callbackURL, contentType, fieldNames));
 	}
@@ -139,6 +139,39 @@ public class Mutation {
 			ctCollectionResource ->
 				ctCollectionResource.patchCTCollectionByExternalReferenceCode(
 					externalReferenceCode, ctCollection));
+	}
+
+	@GraphQLField
+	public boolean createCTCollectionByExternalReferenceCodePublish(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_ctCollectionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctCollectionResource ->
+				ctCollectionResource.
+					postCTCollectionByExternalReferenceCodePublish(
+						externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public boolean createCTCollectionByExternalReferenceCodeSchedulePublish(
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("publishDate") Date publishDate)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_ctCollectionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctCollectionResource ->
+				ctCollectionResource.
+					postCTCollectionByExternalReferenceCodeSchedulePublish(
+						externalReferenceCode, publishDate));
+
+		return true;
 	}
 
 	@GraphQLField
@@ -257,8 +290,8 @@ public class Mutation {
 
 	@GraphQLField
 	public Response createCTProcessesPageExportBatch(
-			@GraphQLName("status") Integer[] status,
 			@GraphQLName("search") String search,
+			@GraphQLName("status") Integer[] status,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("sort") String sortsString,
 			@GraphQLName("callbackURL") String callbackURL,
@@ -271,10 +304,37 @@ public class Mutation {
 			this::_populateResourceContext,
 			ctProcessResource ->
 				ctProcessResource.postCTProcessesPageExportBatch(
-					status, search,
+					search, status,
 					_filterBiFunction.apply(ctProcessResource, filterString),
 					_sortsBiFunction.apply(ctProcessResource, sortsString),
 					callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField
+	public boolean deleteCTProcess(@GraphQLName("ctProcessId") Long ctProcessId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_ctProcessResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctProcessResource -> ctProcessResource.deleteCTProcess(
+				ctProcessId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteCTProcessBatch(
+			@GraphQLName("ctProcessId") Long ctProcessId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_ctProcessResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			ctProcessResource -> ctProcessResource.deleteCTProcessBatch(
+				ctProcessId, callbackURL, object));
 	}
 
 	@GraphQLField

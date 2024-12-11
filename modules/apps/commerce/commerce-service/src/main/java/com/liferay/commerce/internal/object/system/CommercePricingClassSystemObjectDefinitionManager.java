@@ -23,11 +23,15 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -45,7 +49,7 @@ public class CommercePricingClassSystemObjectDefinitionManager
 		throws Exception {
 
 		ProductGroupResource productGroupResource = _buildProductGroupResource(
-			user);
+			false, user);
 
 		ProductGroup productGroup = productGroupResource.postProductGroup(
 			_toProductGroup(values));
@@ -64,6 +68,7 @@ public class CommercePricingClassSystemObjectDefinitionManager
 			(CommercePricingClass)baseModel);
 	}
 
+	@Override
 	public BaseModel<?> fetchBaseModelByExternalReferenceCode(
 		String externalReferenceCode, long companyId) {
 
@@ -106,8 +111,12 @@ public class CommercePricingClassSystemObjectDefinitionManager
 	}
 
 	@Override
-	public Map<Locale, String> getLabelMap() {
-		return createLabelMap("commerce-product-group");
+	public Map<String, String> getLabelKeys() {
+		return HashMapBuilder.put(
+			"label", "commerce-product-group"
+		).put(
+			"pluralLabel", "commerce-product-groups"
+		).build();
 	}
 
 	@Override
@@ -147,8 +156,16 @@ public class CommercePricingClassSystemObjectDefinitionManager
 	}
 
 	@Override
-	public Map<Locale, String> getPluralLabelMap() {
-		return createLabelMap("commerce-product-groups");
+	public Page<?> getPage(
+			User user, String search, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception {
+
+		ProductGroupResource productGroupResource = _buildProductGroupResource(
+			true, user);
+
+		return productGroupResource.getProductGroupsPage(
+			search, filter, pagination, sorts);
 	}
 
 	@Override
@@ -173,7 +190,7 @@ public class CommercePricingClassSystemObjectDefinitionManager
 
 	@Override
 	public int getVersion() {
-		return 2;
+		return 3;
 	}
 
 	@Override
@@ -182,7 +199,7 @@ public class CommercePricingClassSystemObjectDefinitionManager
 		throws Exception {
 
 		ProductGroupResource productGroupResource = _buildProductGroupResource(
-			user);
+			false, user);
 
 		productGroupResource.patchProductGroup(
 			primaryKey, _toProductGroup(values));
@@ -192,12 +209,14 @@ public class CommercePricingClassSystemObjectDefinitionManager
 			values);
 	}
 
-	private ProductGroupResource _buildProductGroupResource(User user) {
+	private ProductGroupResource _buildProductGroupResource(
+		boolean checkPermissions, User user) {
+
 		ProductGroupResource.Builder builder =
 			_productGroupResourceFactory.create();
 
 		return builder.checkPermissions(
-			false
+			checkPermissions
 		).preferredLocale(
 			user.getLocale()
 		).user(
@@ -208,12 +227,13 @@ public class CommercePricingClassSystemObjectDefinitionManager
 	private ProductGroup _toProductGroup(Map<String, Object> values) {
 		return new ProductGroup() {
 			{
-				description = getLanguageIdMap("description", values);
-				externalReferenceCode = GetterUtil.getString(
-					values.get("externalReferenceCode"));
-				productsCount = GetterUtil.getInteger(
-					values.get("productsCount"));
-				title = getLanguageIdMap("title", values);
+				setDescription(() -> getLanguageIdMap("description", values));
+				setExternalReferenceCode(
+					() -> GetterUtil.getString(
+						values.get("externalReferenceCode")));
+				setProductsCount(
+					() -> GetterUtil.getInteger(values.get("productsCount")));
+				setTitle(() -> getLanguageIdMap("title", values));
 			}
 		};
 	}

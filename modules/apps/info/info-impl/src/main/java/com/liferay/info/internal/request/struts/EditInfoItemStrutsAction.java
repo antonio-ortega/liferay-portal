@@ -44,7 +44,6 @@ import com.liferay.layout.util.structure.LayoutStructureItemUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.exception.InfoFormException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -189,13 +188,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 				httpServletRequest, "status",
 				WorkflowConstants.STATUS_APPROVED);
 
-			if (!FeatureFlagManagerUtil.isEnabled("LPS-181663")) {
-				status = WorkflowConstants.STATUS_APPROVED;
-			}
-
-			if ((infoItemIdentifier != null) &&
-				FeatureFlagManagerUtil.isEnabled("LPS-183727")) {
-
+			if (infoItemIdentifier != null) {
 				InfoItemObjectProvider<Object> infoItemObjectProvider =
 					_infoItemServiceRegistry.getFirstInfoItemService(
 						InfoItemObjectProvider.class, className,
@@ -313,9 +306,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 								getInfoFieldUniqueId())) {
 
 						SessionErrors.add(
-							httpServletRequest,
-							infoFormValidationExceptionCustomValidation.
-								getInfoFieldUniqueId(),
+							httpServletRequest, InfoFormException.class,
 							infoFormValidationExceptionCustomValidation);
 					}
 					else {
@@ -338,8 +329,7 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 					infoFormValidationException.getInfoFieldUniqueId())) {
 
 				SessionErrors.add(
-					httpServletRequest,
-					infoFormValidationException.getInfoFieldUniqueId(),
+					httpServletRequest, InfoFormException.class,
 					infoFormValidationException);
 			}
 		}
@@ -404,12 +394,13 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 		String notificationText = ParamUtil.getString(
 			httpServletRequest, "notificationText");
 
-		if (Validator.isNotNull(notificationText)) {
+		if (success && Validator.isNotNull(notificationText)) {
 			SessionMessages.add(
-				httpServletRequest, "requestProcessed", notificationText);
+				httpServletRequest, "form_requestProcessedSuccess",
+				notificationText);
 		}
 
-		httpServletResponse.sendRedirect(redirect);
+		httpServletResponse.sendRedirect(_portal.escapeRedirect(redirect));
 
 		return null;
 	}
@@ -560,7 +551,16 @@ public class EditInfoItemStrutsAction implements StrutsAction {
 			SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
 				"yyyy-MM-dd");
 
-			return simpleDateFormat.format(infoFieldValue.getValue());
+			try {
+				return simpleDateFormat.format(infoFieldValue.getValue());
+			}
+			catch (IllegalArgumentException illegalArgumentException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(illegalArgumentException);
+				}
+
+				return null;
+			}
 		}
 
 		Object value = infoFieldValue.getValue();

@@ -5,9 +5,17 @@
 
 package com.liferay.layout.internal.portlet.category;
 
+import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.processor.PortletRegistry;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
+import com.liferay.layout.portlet.PortletManager;
 import com.liferay.layout.portlet.category.PortletCategoryManager;
 import com.liferay.layout.util.PortalPreferencesUtil;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -23,18 +31,24 @@ import com.liferay.portal.kernel.model.PortletApp;
 import com.liferay.portal.kernel.model.PortletCategory;
 import com.liferay.portal.kernel.model.PortletItem;
 import com.liferay.portal.kernel.model.PortletPreferences;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
+import com.liferay.portal.kernel.portlet.PortletProvider;
+import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.PortletItemLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -46,8 +60,12 @@ import com.liferay.portal.kernel.util.comparator.PortletCategoryComparator;
 import com.liferay.portal.kernel.util.comparator.PortletTitleComparator;
 import com.liferay.portal.util.PortletCategoryUtil;
 import com.liferay.portal.util.WebAppPool;
+import com.liferay.portlet.configuration.kernel.util.PortletConfigurationApplicationType;
+import com.liferay.segments.model.SegmentsExperienceModel;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -64,7 +82,10 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -73,6 +94,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(service = PortletCategoryManager.class)
 public class PortletCategoryManagerImpl implements PortletCategoryManager {
 
+	@Override
 	public JSONArray getPortletsJSONArray(
 			HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay)
 		throws Exception {
@@ -138,6 +160,49 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 			"sortedPortletCategoryKeys", sortedPortletCategoryKeys);
 	}
 
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, PortletManager.class, "javax.portlet.name");
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerMap.close();
+	}
+
+	private Set<String> _getFragmentEntryLinksPortletNames(
+		boolean deleted, ThemeDisplay themeDisplay) {
+
+		Layout layout = themeDisplay.getLayout();
+
+		if (!layout.isTypeContent() && !layout.isTypeAssetDisplay()) {
+			return Collections.emptySet();
+		}
+
+		Set<String> portletIds = new HashSet<>();
+
+		long[] segmentsExperiencesIds = TransformUtil.transformToLongArray(
+			_segmentsExperienceLocalService.getSegmentsExperiences(
+				themeDisplay.getScopeGroupId(), themeDisplay.getPlid()),
+			SegmentsExperienceModel::getSegmentsExperienceId);
+
+		for (FragmentEntryLink fragmentEntryLink :
+				_fragmentEntryLinkLocalService.
+					getFragmentEntryLinksBySegmentsExperienceId(
+						themeDisplay.getScopeGroupId(), segmentsExperiencesIds,
+						themeDisplay.getPlid(), deleted)) {
+
+			portletIds.addAll(
+				TransformUtil.transform(
+					_portletRegistry.getFragmentEntryLinkPortletIds(
+						fragmentEntryLink),
+					portletId -> PortletIdCodec.decodePortletName(portletId)));
+		}
+
+		return portletIds;
+	}
+
 	private Set<String> _getHighlightedPortletIds(
 		HttpServletRequest httpServletRequest,
 		PortletCategory highlightedPortletCategory) {
@@ -181,6 +246,46 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 		return layoutDecodedPortletNames;
 	}
 
+	private String _getPermissionsURL(HttpServletRequest httpServletRequest) {
+		try {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+			return PortletURLBuilder.create(
+				PortletProviderUtil.getPortletURL(
+					httpServletRequest,
+					PortletConfigurationApplicationType.PortletConfiguration.
+						CLASS_NAME,
+					PortletProvider.Action.VIEW)
+			).setMVCPath(
+				"/edit_permissions.jsp"
+			).setPortletResource(
+				portletDisplay.getId()
+			).setParameter(
+				"portletConfiguration", true
+			).setParameter(
+				"resourcePrimKey",
+				PortletPermissionUtil.getPrimaryKey(
+					themeDisplay.getPlid(), portletDisplay.getId())
+			).setParameter(
+				"returnToFullPageURL",
+				ParamUtil.getString(httpServletRequest, "returnToFullPageURL")
+			).setWindowState(
+				LiferayWindowState.POP_UP
+			).buildString();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return StringPool.BLANK;
+	}
+
 	private Map<String, JSONObject> _getPortletCategoryJSONObjectsMap(
 			Set<String> highlightedPortletIds,
 			HttpServletRequest httpServletRequest,
@@ -190,6 +295,10 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 		Map<String, JSONObject> portletCategoryJSONObjectsMap =
 			new LinkedHashMap<>();
 
+		Set<String> deletedFragmentEntryLinksPortletNames =
+			_getFragmentEntryLinksPortletNames(true, themeDisplay);
+		Set<String> fragmentEntryLinksPortletNames =
+			_getFragmentEntryLinksPortletNames(false, themeDisplay);
 		Set<String> layoutDecodedPortletNames = _getLayoutDecodedPortletNames(
 			themeDisplay);
 
@@ -219,9 +328,10 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 				portletCategoryJSONObject -> portletCategoryJSONObject);
 
 			JSONArray portletsJSONArray = _getPortletsJSONArray(
-				highlightedPortletIds, httpServletRequest,
-				layoutDecodedPortletNames, currentPortletCategory,
-				themeDisplay);
+				deletedFragmentEntryLinksPortletNames,
+				fragmentEntryLinksPortletNames, highlightedPortletIds,
+				httpServletRequest, layoutDecodedPortletNames,
+				currentPortletCategory, themeDisplay);
 
 			if ((childPortletCategoriesJSONArray.length() > 0) ||
 				(portletsJSONArray.length() > 0)) {
@@ -331,11 +441,7 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 			Portlet portlet = _portletLocalService.getPortletById(
 				themeDisplay.getCompanyId(), portletId);
 
-			if ((portlet == null) ||
-				((layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
-				 ArrayUtil.contains(
-					 _UNSUPPORTED_PORTLETS_NAMES, portlet.getPortletName()))) {
-
+			if (!_isVisible(layout, portlet)) {
 				continue;
 			}
 
@@ -360,6 +466,8 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 	}
 
 	private JSONArray _getPortletsJSONArray(
+			Set<String> deletedFragmentEntryLinksPortletNames,
+			Set<String> fragmentEntryLinksPortletNames,
 			Set<String> highlightedPortletIds,
 			HttpServletRequest httpServletRequest,
 			Set<String> layoutDecodedPortletNames,
@@ -383,10 +491,37 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 		for (Portlet portlet : portlets) {
 			jsonArray.put(
 				JSONUtil.put(
+					"embedded",
+					() -> {
+						if (deletedFragmentEntryLinksPortletNames.contains(
+								portlet.getPortletId()) ||
+							fragmentEntryLinksPortletNames.contains(
+								portlet.getPortletId())) {
+
+							return false;
+						}
+
+						Layout layout = themeDisplay.getLayout();
+
+						long count1 =
+							_portletPreferencesLocalService.
+								getPortletPreferencesCount(
+									PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
+									layout.getPlid(), portlet.getPortletId());
+
+						if (count1 > 0) {
+							return true;
+						}
+
+						return false;
+					}
+				).put(
 					"highlighted",
 					highlightedPortletIds.contains(portlet.getPortletId())
 				).put(
 					"instanceable", portlet.isInstanceable()
+				).put(
+					"permissionsURL", _getPermissionsURL(httpServletRequest)
 				).put(
 					"portletId", portlet.getPortletId()
 				).put(
@@ -402,7 +537,9 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 						Layout layout = themeDisplay.getLayout();
 
 						if (!layout.isTypePortlet() ||
-							portlet.isInstanceable()) {
+							portlet.isInstanceable() ||
+							deletedFragmentEntryLinksPortletNames.contains(
+								portlet.getPortletId())) {
 
 							return false;
 						}
@@ -435,12 +572,26 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 			"sortedPortletCategoryKeys");
 	}
 
-	private static final String[] _UNSUPPORTED_PORTLETS_NAMES = {
-		PortletKeys.NESTED_PORTLETS
-	};
+	private boolean _isVisible(Layout layout, Portlet portlet) {
+		if (portlet == null) {
+			return false;
+		}
+
+		PortletManager portletManager = _serviceTrackerMap.getService(
+			portlet.getRootPortletId());
+
+		if ((portletManager != null) && !portletManager.isVisible(layout)) {
+			return false;
+		}
+
+		return true;
+	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		PortletCategoryManagerImpl.class);
+
+	@Reference
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;
@@ -459,5 +610,16 @@ public class PortletCategoryManagerImpl implements PortletCategoryManager {
 
 	@Reference
 	private PortletPreferencesFactory _portletPreferencesFactory;
+
+	@Reference
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private PortletRegistry _portletRegistry;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
+
+	private ServiceTrackerMap<String, PortletManager> _serviceTrackerMap;
 
 }

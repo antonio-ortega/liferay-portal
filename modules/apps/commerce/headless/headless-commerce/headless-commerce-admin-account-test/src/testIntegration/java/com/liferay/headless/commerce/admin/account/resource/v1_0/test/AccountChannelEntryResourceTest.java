@@ -103,7 +103,7 @@ public class AccountChannelEntryResourceTest
 
 		_commerceCurrency =
 			CommerceCurrencyLocalServiceUtil.addCommerceCurrency(
-				_user.getUserId(), RandomTestUtil.randomString(),
+				null, _user.getUserId(), RandomTestUtil.randomString(),
 				Collections.singletonMap(
 					LocaleUtil.getSiteDefault(), RandomTestUtil.randomString()),
 				RandomTestUtil.randomString(), BigDecimal.ONE, new HashMap<>(),
@@ -142,13 +142,13 @@ public class AccountChannelEntryResourceTest
 		_commercePriceList =
 			CommercePriceListLocalServiceUtil.addCommercePriceList(
 				RandomTestUtil.randomString(), testGroup.getGroupId(),
-				_user.getUserId(), _commerceCurrency.getCommerceCurrencyId(),
-				true, CommercePriceListConstants.TYPE_PRICE_LIST, 0, true,
+				_user.getUserId(), _commerceCurrency.getCode(), true,
+				CommercePriceListConstants.TYPE_PRICE_LIST, 0, true,
 				RandomTestUtil.randomString(), 1000, 1, 1, 2022, 12, 0, 0, 0, 0,
 				0, 0, true, serviceContext);
 		_commerceUser = UserLocalServiceUtil.addUser(
 			_user.getUserId(), testCompany.getCompanyId(), true,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(), true,
+			StringPool.BLANK, StringPool.BLANK, true,
 			RandomTestUtil.randomString(),
 			RandomTestUtil.randomString() + "@liferay.com",
 			LocaleUtil.getSiteDefault(), RandomTestUtil.randomString(),

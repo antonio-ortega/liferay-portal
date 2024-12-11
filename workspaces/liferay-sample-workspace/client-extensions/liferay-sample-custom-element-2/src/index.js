@@ -44,19 +44,17 @@ const App = ({route}) => {
 
 class WebComponent extends HTMLElement {
 	connectedCallback() {
-		createRoot(this).render(
-			<App route={this.getAttribute('route')} />,
-			this
-		);
+		this.root = createRoot(this);
+
+		this.root.render(<App route={this.getAttribute('route')} />, this);
 
 		if (Liferay.ThemeDisplay.isSignedIn()) {
 			api('o/headless-admin-user/v1.0/my-user-account')
 				.then((response) => response.json())
 				.then((response) => {
 					if (response.givenName) {
-						const nameElements = document.getElementsByClassName(
-							'hello-world-name'
-						);
+						const nameElements =
+							document.getElementsByClassName('hello-world-name');
 
 						if (nameElements.length) {
 							nameElements[0].innerHTML = response.givenName;
@@ -64,10 +62,27 @@ class WebComponent extends HTMLElement {
 					}
 				})
 				.catch((error) => {
+
 					// eslint-disable-next-line no-console
 					console.log(error);
 				});
 		}
+	}
+
+	disconnectedCallback() {
+
+		//
+		// Unmount React tree to prevent memory leaks.
+		//
+		// See React documentation at
+		//
+		//     https://react.dev/reference/react-dom/client/createRoot#root-unmount
+		//
+		// for more information.
+		//
+
+		this.root.unmount();
+		delete this.root;
 	}
 }
 

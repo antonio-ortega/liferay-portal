@@ -12,13 +12,13 @@ import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.Website;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.url.validator.URLValidator;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.service.base.WebsiteLocalServiceBaseImpl;
 
 import java.util.List;
@@ -30,8 +30,9 @@ public class WebsiteLocalServiceImpl extends WebsiteLocalServiceBaseImpl {
 
 	@Override
 	public Website addWebsite(
-			long userId, String className, long classPK, String url,
-			long listTypeId, boolean primary, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, String className,
+			long classPK, String url, long listTypeId, boolean primary,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		User user = _userPersistence.findByPrimaryKey(userId);
@@ -46,6 +47,7 @@ public class WebsiteLocalServiceImpl extends WebsiteLocalServiceBaseImpl {
 		Website website = websitePersistence.create(websiteId);
 
 		website.setUuid(serviceContext.getUuid());
+		website.setExternalReferenceCode(externalReferenceCode);
 		website.setCompanyId(user.getCompanyId());
 		website.setUserId(user.getUserId());
 		website.setUserName(user.getFullName());
@@ -103,13 +105,15 @@ public class WebsiteLocalServiceImpl extends WebsiteLocalServiceBaseImpl {
 
 	@Override
 	public Website updateWebsite(
-			long websiteId, String url, long listTypeId, boolean primary)
+			String externalReferenceCode, long websiteId, String url,
+			long listTypeId, boolean primary)
 		throws PortalException {
 
 		validate(websiteId, 0, 0, 0, url, listTypeId, primary);
 
 		Website website = websitePersistence.findByPrimaryKey(websiteId);
 
+		website.setExternalReferenceCode(externalReferenceCode);
 		website.setUrl(url);
 		website.setListTypeId(listTypeId);
 		website.setPrimary(primary);
@@ -143,7 +147,9 @@ public class WebsiteLocalServiceImpl extends WebsiteLocalServiceBaseImpl {
 			String url, long listTypeId, boolean primary)
 		throws PortalException {
 
-		if (!_urlValidator.isValid(url)) {
+		URLValidator urlValidator = _urlValidatorSnapshot.get();
+
+		if (!urlValidator.isValid(url)) {
 			throw new WebsiteURLException(url);
 		}
 
@@ -161,10 +167,8 @@ public class WebsiteLocalServiceImpl extends WebsiteLocalServiceBaseImpl {
 		validate(websiteId, companyId, classNameId, classPK, primary);
 	}
 
-	private static volatile URLValidator _urlValidator =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			URLValidator.class, WebsiteLocalServiceImpl.class, "_urlValidator",
-			true);
+	private static final Snapshot<URLValidator> _urlValidatorSnapshot =
+		new Snapshot<>(WebsiteLocalServiceImpl.class, URLValidator.class);
 
 	@BeanReference(type = ClassNameLocalService.class)
 	private ClassNameLocalService _classNameLocalService;

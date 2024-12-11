@@ -7,6 +7,7 @@ package com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.convert
 
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
+import com.liferay.commerce.product.model.CPOption;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalService;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOption;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOptionValue;
@@ -50,16 +51,24 @@ public class ProductOptionDTOConverter
 
 		return new ProductOption() {
 			{
-				description = cpDefinitionOptionRel.getDescription(languageId);
-				fieldType = cpDefinitionOptionRel.getCommerceOptionTypeKey();
-				id = cpDefinitionOptionRel.getCPDefinitionOptionRelId();
-				key = cpDefinitionOptionRel.getKey();
-				name = cpDefinitionOptionRel.getName(languageId);
-				optionId = cpDefinitionOptionRel.getCPOptionId();
-				productOptionValues = _toProductOptionValues(
-					cpDefinitionOptionRel, dtoConverterContext);
-				required = cpDefinitionOptionRel.isRequired();
-				skuContributor = cpDefinitionOptionRel.isSkuContributor();
+				setDescription(
+					() -> cpDefinitionOptionRel.getDescription(languageId));
+				setFieldType(cpDefinitionOptionRel::getCommerceOptionTypeKey);
+				setId(cpDefinitionOptionRel::getCPDefinitionOptionRelId);
+				setKey(cpDefinitionOptionRel::getKey);
+				setName(() -> cpDefinitionOptionRel.getName(languageId));
+				setOptionExternalReferenceCode(
+					() -> {
+						CPOption cpOption = cpDefinitionOptionRel.getCPOption();
+
+						return cpOption.getExternalReferenceCode();
+					});
+				setOptionId(cpDefinitionOptionRel::getCPOptionId);
+				setProductOptionValues(
+					() -> _toProductOptionValues(
+						cpDefinitionOptionRel, dtoConverterContext));
+				setRequired(cpDefinitionOptionRel::isRequired);
+				setSkuContributor(cpDefinitionOptionRel::isSkuContributor);
 			}
 		};
 	}

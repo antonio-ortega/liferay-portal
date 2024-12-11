@@ -328,19 +328,17 @@ public class CommerceOrderItemServiceHttp {
 	}
 
 	public static com.liferay.commerce.model.CommerceOrderItem
-			fetchByExternalReferenceCode(
-				HttpPrincipal httpPrincipal, String externalReferenceCode,
-				long companyId)
+			fetchCommerceOrderItem(
+				HttpPrincipal httpPrincipal, long commerceOrderItemId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
 			MethodKey methodKey = new MethodKey(
-				CommerceOrderItemServiceUtil.class,
-				"fetchByExternalReferenceCode",
-				_fetchByExternalReferenceCodeParameterTypes7);
+				CommerceOrderItemServiceUtil.class, "fetchCommerceOrderItem",
+				_fetchCommerceOrderItemParameterTypes7);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, externalReferenceCode, companyId);
+				methodKey, commerceOrderItemId);
 
 			Object returnObj = null;
 
@@ -371,17 +369,19 @@ public class CommerceOrderItemServiceHttp {
 	}
 
 	public static com.liferay.commerce.model.CommerceOrderItem
-			fetchCommerceOrderItem(
-				HttpPrincipal httpPrincipal, long commerceOrderItemId)
+			fetchCommerceOrderItemByExternalReferenceCode(
+				HttpPrincipal httpPrincipal, String externalReferenceCode,
+				long companyId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
 			MethodKey methodKey = new MethodKey(
-				CommerceOrderItemServiceUtil.class, "fetchCommerceOrderItem",
-				_fetchCommerceOrderItemParameterTypes8);
+				CommerceOrderItemServiceUtil.class,
+				"fetchCommerceOrderItemByExternalReferenceCode",
+				_fetchCommerceOrderItemByExternalReferenceCodeParameterTypes8);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, commerceOrderItemId);
+				methodKey, externalReferenceCode, companyId);
 
 			Object returnObj = null;
 
@@ -1288,7 +1288,7 @@ public class CommerceOrderItemServiceHttp {
 	public static com.liferay.commerce.model.CommerceOrderItem
 			updateCommerceOrderItemInfo(
 				HttpPrincipal httpPrincipal, long commerceOrderItemId,
-				long shippingAddressId, String deliveryGroup,
+				long shippingAddressId, String deliveryGroupName,
 				String printedNote)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -1300,7 +1300,7 @@ public class CommerceOrderItemServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, commerceOrderItemId, shippingAddressId,
-				deliveryGroup, printedNote);
+				deliveryGroupName, printedNote);
 
 			Object returnObj = null;
 
@@ -1333,7 +1333,7 @@ public class CommerceOrderItemServiceHttp {
 	public static com.liferay.commerce.model.CommerceOrderItem
 			updateCommerceOrderItemInfo(
 				HttpPrincipal httpPrincipal, long commerceOrderItemId,
-				long shippingAddressId, String deliveryGroup,
+				long shippingAddressId, String deliveryGroupName,
 				String printedNote, int requestedDeliveryDateMonth,
 				int requestedDeliveryDateDay, int requestedDeliveryDateYear)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -1346,7 +1346,7 @@ public class CommerceOrderItemServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, commerceOrderItemId, shippingAddressId,
-				deliveryGroup, printedNote, requestedDeliveryDateMonth,
+				deliveryGroupName, printedNote, requestedDeliveryDateMonth,
 				requestedDeliveryDateDay, requestedDeliveryDateYear);
 
 			Object returnObj = null;
@@ -1380,7 +1380,7 @@ public class CommerceOrderItemServiceHttp {
 	public static com.liferay.commerce.model.CommerceOrderItem
 			updateCommerceOrderItemInfo(
 				HttpPrincipal httpPrincipal, long commerceOrderItemId,
-				String deliveryGroup, long shippingAddressId,
+				String deliveryGroupName, long shippingAddressId,
 				String printedNote, int requestedDeliveryDateMonth,
 				int requestedDeliveryDateDay, int requestedDeliveryDateYear,
 				int requestedDeliveryDateHour, int requestedDeliveryDateMinute,
@@ -1394,7 +1394,7 @@ public class CommerceOrderItemServiceHttp {
 				_updateCommerceOrderItemInfoParameterTypes31);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, commerceOrderItemId, deliveryGroup,
+				methodKey, commerceOrderItemId, deliveryGroupName,
 				shippingAddressId, printedNote, requestedDeliveryDateMonth,
 				requestedDeliveryDateDay, requestedDeliveryDateYear,
 				requestedDeliveryDateHour, requestedDeliveryDateMinute,
@@ -1749,12 +1749,11 @@ public class CommerceOrderItemServiceHttp {
 		_deleteMissingCommerceOrderItemsParameterTypes6 = new Class[] {
 			long.class, Long[].class, String[].class
 		};
-	private static final Class<?>[]
-		_fetchByExternalReferenceCodeParameterTypes7 = new Class[] {
-			String.class, long.class
-		};
-	private static final Class<?>[] _fetchCommerceOrderItemParameterTypes8 =
+	private static final Class<?>[] _fetchCommerceOrderItemParameterTypes7 =
 		new Class[] {long.class};
+	private static final Class<?>[]
+		_fetchCommerceOrderItemByExternalReferenceCodeParameterTypes8 =
+			new Class[] {String.class, long.class};
 	private static final Class<?>[]
 		_getAvailableForShipmentCommerceOrderItemsParameterTypes9 =
 			new Class[] {long.class};

@@ -7,6 +7,7 @@ package com.liferay.headless.delivery.resource.v1_0;
 
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardMessage;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -45,6 +46,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @author Javier Gamarra
  * @generated
  */
+@CTAware
 @Generated("")
 @ProviderType
 public interface MessageBoardMessageResource {
@@ -70,6 +72,9 @@ public interface MessageBoardMessageResource {
 
 	public Response putMessageBoardMessageBatch(
 			String callbackURL, Object object)
+		throws Exception;
+
+	public void putMessageBoardMessageMarkAsAnswer(Long messageBoardMessageId)
 		throws Exception;
 
 	public void deleteMessageBoardMessageMyRating(Long messageBoardMessageId)
@@ -98,6 +103,9 @@ public interface MessageBoardMessageResource {
 		throws Exception;
 
 	public void putMessageBoardMessageSubscribe(Long messageBoardMessageId)
+		throws Exception;
+
+	public void putMessageBoardMessageUnmarkAsAnswer(Long messageBoardMessageId)
 		throws Exception;
 
 	public void putMessageBoardMessageUnsubscribe(Long messageBoardMessageId)

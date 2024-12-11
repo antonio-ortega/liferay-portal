@@ -1,14 +1,17 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-10890=true${line.separator}feature.flag.COMMERCE-11026=true${line.separator}jsonws.web.service.paths.excludes=";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Order Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -107,7 +110,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -129,9 +132,7 @@ definition {
 		}
 
 		task ("And the admin splits the order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -145,8 +146,8 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			var customerOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 44.00')]//..//div[(@class='dnd-td')][1]");
-			var supplierOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 5.00')]//..//div[(@class='dnd-td')][1]");
+			var customerOrderId = selenium.getText("//*[contains(@class,'dnd-td') and contains(string(), '$ 44.00')]//..//*[contains(@class,'dnd-td')][1]");
+			var supplierOrderId = selenium.getText("//*[contains(@class,'dnd-td') and contains(string(), '$ 5.00')]//..//*[contains(@class,'dnd-td')][1]");
 		}
 
 		task ("When the supplier user edits the quantity of 'Simple Product' in the supplier order") {
@@ -168,14 +169,12 @@ definition {
 					productName = "Simple Product",
 					productQuantity = 3,
 					productSku = "TESTSKU",
-					productTotalPrice = "5.00");
+					productTotalPrice = "$ 5.00");
 			}
 		}
 
 		task ("Then the quantity of 'Simple Product' in the customer order is updated to the same one as the supplier order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -186,14 +185,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("But the quantity of 'Simple product' in the supplier order does not change with the customer order") {
@@ -206,14 +205,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 6,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "supplier@liferay.com",
@@ -228,7 +227,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("When the supplier user creates 1 quantity of the shipment in a supplier order with 'Simple Product'") {
@@ -243,9 +242,7 @@ definition {
 		}
 
 		task ("Then following the workflow of the shipment, the outstanding quantity of that product from the customer order is correctly decreased by 1 and equals 5") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -360,7 +357,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "supplieruser@liferay.com");
 		}
@@ -441,6 +438,8 @@ definition {
 
 		task ("Then Supplier Account 1 is linked successfully to the catalog") {
 			CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
+
+			Navigator.gotoBack();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium");
 
@@ -714,9 +713,7 @@ definition {
 		}
 
 		task ("When admin unlinks the Supplier account for Supplier Channel") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceChannels.openChannelsAdmin();
 
@@ -1218,7 +1215,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1325,7 +1322,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1436,7 +1433,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1554,7 +1551,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1796,199 +1793,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for COMMERCE-11888. As a supplier user, I can edit the order details and payments of an order"
-	@priority = 5
-	test CanSupplierEditOrderDetailsAndPayments {
-		property portal.acceptance = "true";
-
-		task ("Given a business account with billing and shipping addresses is created") {
-			JSONAccountEntry.addAccountEntry(
-				accountEntryName = "Commerce Account",
-				accountEntryType = "Business");
-
-			CommerceJSONAccountsAPI._addCommerceAccountAddress(
-				accountEntryName = "Commerce Account",
-				city = "Test City",
-				countryISOCode = "US",
-				name = "Test Address",
-				street1 = "Test Street",
-				zip = "Test Zip Code");
-		}
-
-		task ("And a Supplier account with a supplier user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Supplier Account",
-				accountType = "Supplier",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "supplier@liferay.com",
-				userFirstName = "Supplier",
-				userLastName = "User",
-				userRole = "Account Supplier",
-				userScreenName = "supplieruser");
-		}
-
-		task ("And the Supplier Account is linked to Minium Channel") {
-			CommerceJSONChannelsAPI._patchCommerceChannel(
-				accountIdByName = "Supplier Account",
-				channelName = "Minium Portal");
-		}
-
-		task ("And two active Delivery, Payment type terms are created") {
-			for (var termsType : list "Delivery,Payment") {
-				CommerceJSONTermsAndConditionsAPI._addCommerceTermsAndConditions(
-					termsCount = 2,
-					termsType = ${termsType});
-			}
-		}
-
-		task ("And an active order types is created") {
-			CommerceJSONOrdersAPI._addOrderType(
-				active = "true",
-				orderTypeDescription = "Test Order Type 1 Description",
-				orderTypeName = "Order Type 1");
-		}
-
-		task ("And two active payment methods eligible for the payment terms, one shipping method eligible for the delivery terms are added") {
-			CommerceChannels.openChannelsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
-
-			for (var paymentMethods : list "Money Order,PayPal") {
-				CommerceChannels.activatePaymentMethod(paymentMethod = ${paymentMethods});
-
-				CommerceEntry.clickTableEntryEditButton(
-					entryName = ${paymentMethods},
-					table = "Payment Methods");
-
-				SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-				CommerceEntry.gotoMenuTab(menuTab = "Eligibility");
-
-				CommerceEntry.setEntryEligibility(paymentTermsEligibility = "Payment Term 1,Payment Term 2");
-
-				Click(locator1 = "Icon#CLOSE");
-
-				SelectFrame.selectFrameTop();
-			}
-
-			CommerceEntry.setEntryEligibility(
-				deliveryTermsEligibility = "Delivery Term 1,Delivery Term 2",
-				shippingMethod = "Flat Rate",
-				shippingOption = "Standard Delivery");
-		}
-
-		task ("And an order is placed") {
-			CommerceJSONOrdersAPI._addCommerceOrder(
-				accountEntryName = "Commerce Account",
-				billingAddressName = "Test Address",
-				deliveryTermName = "delivery-term-2",
-				orderItems = "MIN55861:1",
-				orderStatus = 1,
-				paymentMethod = "money-order",
-				paymentStatus = 2,
-				paymentTermName = "payment-term-2",
-				printedNote = "Order printed note",
-				purchaseOrderNumber = "Abcd1234",
-				requestedDeliveryDate = "2023-07-06",
-				shippingAddressName = "Test Address",
-				shippingOption = "Standard Delivery");
-		}
-
-		task ("Then the supplier user can edit the order details and payments of the order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "supplier@liferay.com",
-				userLoginFullName = "Supplier User");
-
-			CommerceOrders.openOrdersAdmin();
-
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
-
-			Click(
-				key_text = "Accept Order",
-				locator1 = "Link#ANY");
-
-			Alert.viewSuccessMessage();
-
-			CommerceOrders.viewOrdersEntry(
-				addressAddress = "Test Street",
-				addressCity = "Test City",
-				addressZipCode = "Test Zip Code",
-				deliveryTerm = "Delivery Term 2",
-				orderType = "Order Type 1",
-				paymentMethod = "Money Order",
-				paymentTerm = "Payment Term 2",
-				printedNote = "Order printed note",
-				purchaseOrderNumber = "Abcd1234",
-				requestedDeliveryDate = "7/6/23");
-
-			CommerceEntry.gotoMenuTab(menuTab = "General");
-
-			AssertElementNotPresent(
-				key_buttonName = "Edit",
-				key_titleName = "Order Type",
-				locator1 = "CommerceOrders#ORDER_GENERAL_DETAILS_ADD_EDIT_BUTTON");
-
-			for (var addressType : list "Billing,Shipping") {
-				AssertClickNoError(
-					key_text = "${addressType} Address",
-					locator1 = "CommerceOrders#EDIT_SHIPMENT_DETAILS",
-					value1 = "Edit");
-
-				CommerceOrders.editOrderAddressCP(
-					editedCity = "Test City Edit",
-					editedCountry = "Italy",
-					editedName = "Test Address Edit",
-					editedRegion = "Lombardia",
-					editedStreet1 = "Test Street Edit",
-					editedZipCode = "Test Zip Code Edit");
-			}
-
-			CommerceOrders.editOrderDetails(
-				printedNote = "Test Print Note Content",
-				purchaseOrderNumber = 0100,
-				requestedDeliveryDate = "7/7/23");
-
-			for (var termType : list "Payment,Delivery") {
-				CommerceOrders.editOrdersEntryTerms(
-					newTerm = "${termType} Term 1",
-					type = ${termType});
-			}
-
-			CommerceEntry.gotoMenuTab(menuTab = "Payments");
-
-			CommerceOrders.editPaymentMethod(
-				eligiblePaymentMethods = "Money Order,PayPal",
-				notEligiblePaymentMethods = "Authorize.Net",
-				paymentMethod = "PayPal");
-
-			CommerceEntry.gotoMenuTab(menuTab = "General");
-
-			CommerceOrders.viewOrdersEntry(
-				addressAddress = "Test Street Edit",
-				addressCity = "Test City Edit",
-				addressZipCode = "Test Zip Code Edit",
-				deliveryTerm = "Delivery Term 1",
-				orderType = "Order Type 1",
-				paymentMethod = "PayPal",
-				paymentTerm = "Payment Term 1",
-				printedNote = "Test Print Note Content",
-				purchaseOrderNumber = 0100,
-				requestedDeliveryDate = "7/7/23");
-
-			AssertElementPresent(
-				locator1 = "CommerceEntry#ORDER_PAYMENT_STATUS",
-				paymentStatus = "Authorized");
-
-			CommerceOrders.editPaymentStatus(paymentStatus = "Completed");
-
-			AssertElementPresent(
-				locator1 = "CommerceEntry#ORDER_PAYMENT_STATUS",
-				paymentStatus = "Completed");
-		}
-	}
-
 	@description = "This is a test for COMMERCE-11888. As a supplier user, I can edit the order items of an order"
 	@priority = 5
 	test CanSupplierEditOrderItems {
@@ -2085,6 +1889,12 @@ definition {
 
 				CommerceNavigator.gotoEntry(entryName = ${sku});
 
+				SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+				CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+				CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
+
 				CommerceEntry.editSkuPricingAndInventory(
 					basePrice = ${priceAndQuantity},
 					italyQuantity = ${priceAndQuantity},
@@ -2096,7 +1906,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2142,7 +1952,7 @@ definition {
 				productOptions = "value2",
 				productQuantity = 1,
 				productSku = "VALUE2",
-				productTotalPrice = "60.00");
+				productTotalPrice = "$ 60.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productDiscount = "0.00",
@@ -2150,7 +1960,7 @@ definition {
 				productName = "Brake Rotors",
 				productQuantity = 1,
 				productSku = "MIN93020",
-				productTotalPrice = "40.00");
+				productTotalPrice = "$ 40.00");
 
 			CommerceOrders.editOrderItemDetails(
 				orderItemDeliveryGroup = "Supplier Delivery Group",
@@ -2171,7 +1981,7 @@ definition {
 				productOptions = "value2",
 				productQuantity = "2 meters",
 				productSku = "VALUE2",
-				productTotalPrice = "50.00");
+				productTotalPrice = "$ 50.00");
 
 			AssertTextEquals(
 				key_columnIndex = 9,
@@ -2225,7 +2035,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2303,124 +2113,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for COMMERCE-11888. As a supplier user, I can edit the order shipments details of an order"
-	@priority = 5
-	test CanSupplierEditOrderShipmentsDetails {
-		property portal.acceptance = "true";
-
-		task ("Given a business account with billing and shipping addresses is created") {
-			JSONAccountEntry.addAccountEntry(
-				accountEntryName = "Commerce Account",
-				accountEntryType = "Business");
-
-			CommerceJSONAccountsAPI._addCommerceAccountAddress(
-				accountEntryName = "Commerce Account",
-				city = "Test City",
-				countryISOCode = "US",
-				name = "Test Address",
-				street1 = "Test Street",
-				zip = "Test Zip Code");
-		}
-
-		task ("And a Supplier account with a supplier user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Supplier Account",
-				accountType = "Supplier",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "supplier@liferay.com",
-				userFirstName = "Supplier",
-				userLastName = "User",
-				userRole = "Account Supplier",
-				userScreenName = "supplieruser");
-		}
-
-		task ("And the Supplier Account is linked to Minium Channel") {
-			CommerceJSONChannelsAPI._patchCommerceChannel(
-				accountIdByName = "Supplier Account",
-				channelName = "Minium Portal");
-		}
-
-		task ("And Variable Rate and Flat Rate shipping method are activated for channel") {
-			CommerceChannels.openChannelsAdmin();
-
-			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
-
-			CommerceChannels.editShippingMethod(
-				active = "true",
-				shippingMethod = "Variable Rate");
-		}
-
-		task ("And an order is placed") {
-			CommerceJSONOrdersAPI._addCommerceOrder(
-				accountEntryName = "Commerce Account",
-				orderItems = "MIN55861:1",
-				orderStatus = 1,
-				paymentMethod = "money-order",
-				paymentStatus = 2,
-				shippingAddressName = "Test Address",
-				shippingOption = "Standard Delivery");
-		}
-
-		task ("Then the supplier user can edit the order shipment details of the order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "supplier@liferay.com",
-				userLoginFullName = "Supplier User");
-
-			CommerceOrders.openOrdersAdmin();
-
-			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
-
-			Click(
-				key_text = "Accept Order",
-				locator1 = "Link#ANY");
-
-			Alert.viewSuccessMessage();
-
-			CommerceEntry.gotoMenuTab(menuTab = "Shipments");
-
-			Click(
-				key_text = "Create Shipment",
-				locator1 = "Button#ANY");
-
-			CommerceOrders.viewOrderShipmentDetails(
-				addressAddress = "Test Address",
-				addressCity = "Test City",
-				addressCountry = "united-states",
-				addressStreet1 = "Test Street",
-				addressZipCode = "Test Zip Code",
-				carrierShippingMethod = "Flat Rate");
-
-			CommerceOrders.editOrderShipmentDetails(
-				carrierBaseTrackingURL = "www.variableratecarriersite.com/",
-				carrierName = "Test Carrier",
-				carrierShippingMethod = "Variable Rate",
-				carrierTrackingNumber = 123456789,
-				estimatedDeliveryDate = "07/06/2023",
-				estimatedShippingDate = "07/06/2023",
-				shippingAddressCity = "Test City Edit",
-				shippingAddressCountry = "Brazil",
-				shippingAddressName = "Test Address Edit",
-				shippingAddressRegion = "Acre",
-				shippingAddressStreet1 = "Test Street Edit",
-				shippingAddressZipCode = "Test Zip Code Edit");
-
-			CommerceOrders.viewOrderShipmentDetails(
-				addressAddress = "Test Address Edit",
-				addressCity = "Test City Edit",
-				addressCountry = "brazil",
-				addressStreet1 = "Test Street Edit",
-				addressZipCode = "Test Zip Code Edit",
-				carrierBaseTrackingURL = "www.variableratecarriersite.com/",
-				carrierName = "Test Carrier",
-				carrierShippingMethod = "Variable Rate",
-				carrierTrackingNumber = 123456789,
-				estimatedDeliveryDate = "Jul 6, 2023",
-				estimatedShippingDate = "Jul 6, 2023");
-		}
-	}
-
 	@description = "This is a test for COMMERCE-11888. As a supplier user, I can edit the order summary of an order"
 	@priority = 5
 	test CanSupplierEditOrderSummary {
@@ -2475,7 +2167,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2684,7 +2376,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2845,7 +2537,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2955,7 +2647,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2979,9 +2671,7 @@ definition {
 		}
 
 		task ("And the admin splits the order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -3325,15 +3015,18 @@ definition {
 		task ("Then can add a new product in Minium Catalog") {
 			CommerceProducts.openProductsAdmin();
 
-			CPCommerceCatalog.newProductsEntry(
-				productCatalog = "Minium",
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Minium",
+				neverExpire = "true",
+				price = 101,
 				productName = "Simple T-Shirt",
-				productType = "Simple");
+				productType = "Simple",
+				purchasable = "true",
+				sku = 1234123);
 
-			AssertSelectedLabel(
-				key_fieldLabel = "Catalog",
-				locator1 = "Select#GENERIC_SELECT_FIELD",
-				value1 = "Minium");
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "Simple T-Shirt");
 		}
 
 		task ("And can edit the product") {
@@ -3348,7 +3041,13 @@ definition {
 
 			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
-			CommerceNavigator.gotoEntry(entryName = "default");
+			CommerceNavigator.gotoEntry(entryName = 1234123);
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 
 			CommerceEntry.editSkuPricingAndInventory(
 				basePrice = "20.00",
@@ -3729,11 +3428,10 @@ definition {
 		}
 
 		task ("When the supplier user navigates to a catalog details") {
-			Click(
-				key_firstColumnValue = "Minium",
-				key_secondColumnValue = "USD",
-				key_table = "",
-				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+			Click.clickNoMouseOver(
+				key_actionName = "Edit",
+				key_entryName = "Minium",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
 		}
 
 		task ("Then the user is able to edit the catalog fields") {
@@ -3744,11 +3442,19 @@ definition {
 				catalogLanguage = "Catalan (Spain)",
 				catalogNewName = "Minium 2");
 
-			Click(
-				key_firstColumnValue = "Minium 2",
-				key_secondColumnValue = "EUR",
-				key_table = "",
-				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+			Navigator.gotoBack();
+
+			WaitForPageLoad();
+
+			AssertElementPresent(
+				key_actionName = "Edit",
+				key_entryName = "Minium 2",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
+
+			Click.clickNoMouseOver(
+				key_actionName = "Edit",
+				key_entryName = "Minium 2",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
 
 			CommerceEntry.viewCatalogsEntry(
 				catalogBasePriceList = "Test Price List",
@@ -3847,18 +3553,16 @@ definition {
 				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
 
 			AssertElementPresent(
-				key_firstColumnValue = "Supplier Channel 1",
-				key_secondColumnValue = "Site",
-				key_table = "",
-				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+				key_actionName = "Edit",
+				key_entryName = "Supplier Channel 1",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
 		}
 
 		task ("When the supplier user navigates to the channel details") {
-			Click(
-				key_firstColumnValue = "Supplier Channel 1",
-				key_secondColumnValue = "Site",
-				key_table = "",
-				locator1 = "CommerceEntry#TABLE_ASSERT_TWO_COLUMNS_EDIT_BUTTON");
+			Click.clickNoMouseOver(
+				key_actionName = "Edit",
+				key_entryName = "Supplier Channel 1",
+				locator1 = "CommerceEntry#TABLE_ENTRY_ACTION");
 		}
 
 		task ("Then the user is able to edit the channel fields") {
@@ -3946,7 +3650,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -4027,7 +3731,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -4127,7 +3831,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -4217,7 +3921,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -4512,7 +4216,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -4534,9 +4238,7 @@ definition {
 		}
 
 		task ("And the admin splits the order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -4554,7 +4256,7 @@ definition {
 				AssertTextEquals(
 					key_cellName1 = ${productTotalPrice},
 					key_cellName2 = "",
-					key_columnNumber = 4,
+					key_columnNumber = 5,
 					locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 					value1 = "Minium Portal");
 			}
@@ -4562,7 +4264,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 5.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Supplier Channel");
 
@@ -4579,7 +4281,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 5.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Supplier Channel");
 

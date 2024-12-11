@@ -43,6 +43,8 @@ import com.liferay.portal.kernel.lock.InvalidLockException;
 import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.lock.LockManagerUtil;
 import com.liferay.portal.kernel.lock.NoSuchLockException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -50,6 +52,8 @@ import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.WebDAVProps;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
+import com.liferay.portal.kernel.module.service.Snapshot;
+import com.liferay.portal.kernel.repository.UndeployedExternalRepositoryException;
 import com.liferay.portal.kernel.repository.event.RepositoryEventTrigger;
 import com.liferay.portal.kernel.repository.event.RepositoryEventType;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -75,7 +79,6 @@ import com.liferay.portal.kernel.tree.TreePathUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -779,7 +782,8 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 
 					return dlFolderPersistence.findByGtF_C_P(
 						previousId, companyId, parentPrimaryKey,
-						QueryUtil.ALL_POS, size, new FolderIdComparator(true));
+						QueryUtil.ALL_POS, size,
+						FolderIdComparator.getInstance(true));
 				}
 
 				@Override
@@ -1017,9 +1021,9 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 
 			dlFolder.setName(name);
 			dlFolder.setDescription(description);
-			dlFolder.setExpandoBridgeAttributes(serviceContext);
 			dlFolder.setDefaultFileEntryTypeId(defaultFileEntryTypeId);
 			dlFolder.setRestrictionType(restrictionType);
+			dlFolder.setExpandoBridgeAttributes(serviceContext);
 
 			dlFolder = dlFolderPersistence.update(dlFolder);
 
@@ -1305,23 +1309,34 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 			DLFolder dlFolder, boolean includeTrashedEntries)
 		throws PortalException {
 
-		RepositoryEventTrigger repositoryEventTrigger =
-			RepositoryUtil.getRepositoryEventTrigger(
-				dlFolder.getRepositoryId());
+		try {
+			RepositoryEventTrigger repositoryEventTrigger =
+				RepositoryUtil.getRepositoryEventTrigger(
+					dlFolder.getRepositoryId());
 
-		List<DLFolder> dlFolders = dlFolderPersistence.findByG_P(
-			dlFolder.getGroupId(), dlFolder.getFolderId());
+			List<DLFolder> dlFolders = dlFolderPersistence.findByG_P(
+				dlFolder.getGroupId(), dlFolder.getFolderId());
 
-		for (DLFolder curDLFolder : dlFolders) {
-			if (includeTrashedEntries ||
-				!_trashHelper.isInTrashExplicitly(curDLFolder)) {
+			for (DLFolder curDLFolder : dlFolders) {
+				TrashHelper trashHelper = _trashHelperSnapshot.get();
 
-				repositoryEventTrigger.trigger(
-					RepositoryEventType.Delete.class, Folder.class,
-					new LiferayFolder(curDLFolder));
+				if (includeTrashedEntries ||
+					!trashHelper.isInTrashExplicitly(curDLFolder)) {
 
-				dlFolderLocalService.deleteFolder(
-					curDLFolder, includeTrashedEntries);
+					repositoryEventTrigger.trigger(
+						RepositoryEventType.Delete.class, Folder.class,
+						new LiferayFolder(curDLFolder));
+
+					dlFolderLocalService.deleteFolder(
+						curDLFolder, includeTrashedEntries);
+				}
+			}
+		}
+		catch (UndeployedExternalRepositoryException
+					undeployedExternalRepositoryException) {
+
+			if (_log.isWarnEnabled()) {
+				_log.warn(undeployedExternalRepositoryException);
 			}
 		}
 	}
@@ -1448,10 +1463,11 @@ public class DLFolderLocalServiceImpl extends DLFolderLocalServiceBaseImpl {
 		}
 	}
 
-	private static volatile TrashHelper _trashHelper =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			TrashHelper.class, DLFolderLocalServiceImpl.class, "_trashHelper",
-			false);
+	private static final Log _log = LogFactoryUtil.getLog(
+		DLFolderLocalServiceImpl.class);
+
+	private static final Snapshot<TrashHelper> _trashHelperSnapshot =
+		new Snapshot<>(DLFolderLocalServiceImpl.class, TrashHelper.class);
 
 	@BeanReference(type = AssetEntryLocalService.class)
 	private AssetEntryLocalService _assetEntryLocalService;

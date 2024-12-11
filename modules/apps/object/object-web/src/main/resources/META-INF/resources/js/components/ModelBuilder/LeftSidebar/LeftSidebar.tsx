@@ -8,26 +8,29 @@ import ClayPanel from '@clayui/panel';
 import {
 	CustomVerticalBar,
 	ManagementToolbarSearch,
-	stringIncludesQuery,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import React, {useMemo, useState} from 'react';
 
 import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext';
+import {TYPES} from '../ModelBuilderContext/typesEnum';
 import {LeftSidebarItem} from '../types';
 import {LeftSidebarEmptySearch} from './LeftSidebarEmptySearch';
 import LeftSidebarTreeView from './LeftSidebarTreeView';
 
-interface LeftSidebarProps {
-	setShowModal: (value: React.SetStateAction<ModelBuilderModals>) => void;
-}
-
-export default function LeftSidebar({setShowModal}: LeftSidebarProps) {
+export default function LeftSidebar() {
 	const [expandedKeys, setExpandedKeys] = useState<Set<React.Key>>(
-		new Set(['uncategorized'])
+		new Set(['default'])
 	);
 	const [query, setQuery] = useState('');
 	const [
-		{isLoadingObjectFolder, leftSidebarItems, selectedObjectFolder},
+		{
+			isLoadingObjectFolder,
+			leftSidebarItems,
+			selectedObjectFolder,
+			showSidebars,
+		},
+		dispatch,
 	] = useObjectFolderContext();
 
 	const filteredLeftSidebarItems = useMemo(() => {
@@ -38,27 +41,37 @@ export default function LeftSidebar({setShowModal}: LeftSidebarProps) {
 				return leftSidebarItem;
 			}
 
-			const newLeftSidebarObjectDefinitionItems = leftSidebarItem.leftSidebarObjectDefinitionItems.filter(
-				(leftSidebarObjectDefinitionItem) =>
-					stringIncludesQuery(
-						leftSidebarObjectDefinitionItem.label,
-						query
-					)
-			);
+			const newLeftSidebarObjectDefinitionItems =
+				leftSidebarItem.leftSidebarObjectDefinitionItems.filter(
+					(leftSidebarObjectDefinitionItem) =>
+						stringUtils.stringIncludesQuery(
+							leftSidebarObjectDefinitionItem.label,
+							query
+						)
+				);
 
 			keys.push(leftSidebarItem.name);
 
 			return {
 				...leftSidebarItem,
 				id: leftSidebarItem.name,
-				leftSidebarObjectDefinitionItems: newLeftSidebarObjectDefinitionItems,
+				leftSidebarObjectDefinitionItems:
+					newLeftSidebarObjectDefinitionItems,
 			};
 		});
 
-		setExpandedKeys(new Set(keys));
+		const selectedObjectFolderKey = keys.find(
+			(key) => key === selectedObjectFolder.name
+		) as string;
+
+		const filteredFolders = leftSidebarItems
+			.filter((item) => item.leftSidebarObjectDefinitionItems?.length)
+			.map((filteredItems) => filteredItems.name);
+
+		setExpandedKeys(new Set([selectedObjectFolderKey, ...filteredFolders]));
 
 		return newLeftSidebarItems;
-	}, [leftSidebarItems, query]);
+	}, [leftSidebarItems, query, selectedObjectFolder]);
 
 	const leftSidebarOtherObjectFoldersItems = filteredLeftSidebarItems.filter(
 		(filteredLeftSidebarItem) =>
@@ -70,8 +83,8 @@ export default function LeftSidebar({setShowModal}: LeftSidebarProps) {
 		a.objectFolderName > b.objectFolderName
 			? 1
 			: b.objectFolderName > a.objectFolderName
-			? -1
-			: 0
+				? -1
+				: 0
 	);
 
 	const leftSidebarSelectedObjectFolderItem = filteredLeftSidebarItems.find(
@@ -82,11 +95,12 @@ export default function LeftSidebar({setShowModal}: LeftSidebarProps) {
 
 	return (
 		<CustomVerticalBar
+			className="lfr-objects__model-builder-custom-vertical-bar"
 			defaultActive="objectsModelBuilderLeftSidebar"
 			panelWidth={300}
 			position="left"
 			resize={false}
-			triggerSideBarAnimation={true}
+			triggerSideBarAnimation={showSidebars}
 			verticalBarItems={[
 				{
 					title: 'objectsModelBuilderLeftSidebar',
@@ -98,10 +112,14 @@ export default function LeftSidebar({setShowModal}: LeftSidebarProps) {
 					aria-labelledby={Liferay.Language.get('create-new-object')}
 					className="lfr-objects__model-builder-left-sidebar-body-create-new-object-button"
 					onClick={() =>
-						setShowModal((previousState: ModelBuilderModals) => ({
-							...previousState,
-							addObjectDefinition: true,
-						}))
+						dispatch({
+							payload: {
+								updatedModelBuilderModals: {
+									addObjectDefinition: true,
+								},
+							},
+							type: TYPES.UPDATE_VISIBILITY_MODEL_BUILDER_MODALS,
+						})
 					}
 					size="sm"
 				>
@@ -133,7 +151,7 @@ export default function LeftSidebar({setShowModal}: LeftSidebarProps) {
 										}
 										setExpandedKeys={setExpandedKeys}
 									/>
-
+									<hr className="lfr-objects__model-builder-left-sidebar-body-separator" />
 									<ClayPanel
 										className="lfr-objects__model-builder-left-sidebar-body-panel"
 										collapsable

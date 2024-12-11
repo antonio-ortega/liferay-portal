@@ -15,6 +15,8 @@ import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.related.models.ObjectRelatedModelsProvider;
 import com.liferay.object.related.models.ObjectRelatedModelsProviderRegistry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
+import com.liferay.object.scope.ObjectScopeProvider;
+import com.liferay.object.scope.ObjectScopeProviderRegistry;
 import com.liferay.object.web.internal.util.ObjectEntryUtil;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
@@ -23,11 +25,14 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
@@ -35,7 +40,6 @@ import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -54,7 +58,8 @@ public class ObjectEntryItemSelectorViewDescriptor
 		ObjectDefinition objectDefinition,
 		ObjectEntryManager objectEntryManager,
 		ObjectRelatedModelsProviderRegistry objectRelatedModelsProviderRegistry,
-		Portal portal, PortletURL portletURL) {
+		ObjectScopeProviderRegistry objectScopeProviderRegistry, Portal portal,
+		PortletURL portletURL) {
 
 		_httpServletRequest = httpServletRequest;
 		_infoItemItemSelectorCriterion = infoItemItemSelectorCriterion;
@@ -62,9 +67,11 @@ public class ObjectEntryItemSelectorViewDescriptor
 		_objectEntryManager = objectEntryManager;
 		_objectRelatedModelsProviderRegistry =
 			objectRelatedModelsProviderRegistry;
+		_objectScopeProviderRegistry = objectScopeProviderRegistry;
 		_portal = portal;
 		_portletURL = portletURL;
 
+		_keywords = ParamUtil.getString(httpServletRequest, "keywords");
 		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_REQUEST);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
@@ -92,14 +99,89 @@ public class ObjectEntryItemSelectorViewDescriptor
 		throws PortalException {
 
 		SearchContainer<ObjectEntry> searchContainer = new SearchContainer<>(
-			_portletRequest, _portletURL, null, "no-entries-were-found");
+			_portletRequest, null, null, "cur",
+			ParamUtil.getInteger(_portletRequest, "cur"),
+			ParamUtil.getInteger(_portletRequest, "delta"), _portletURL, null,
+			"no-entries-were-found");
 
 		try {
-			searchContainer.setResultsAndTotal(
-				_getObjectEntries(
-					ParamUtil.getLong(_portletRequest, "objectDefinitionId"),
-					searchContainer.getCur(), searchContainer.getDelta(),
-					ParamUtil.getString(_portletRequest, "keywords")));
+			if (ParamUtil.getLong(_portletRequest, "objectDefinitionId") != 0) {
+				searchContainer.setResultsAndTotal(
+					ArrayList::new, searchContainer.getEnd());
+
+				String objectRelationshipType = ParamUtil.getString(
+					_portletRequest, "objectRelationshipType");
+
+				if (Validator.isNull(objectRelationshipType)) {
+					return searchContainer;
+				}
+
+				ObjectRelatedModelsProvider objectRelatedModelsProvider =
+					_objectRelatedModelsProviderRegistry.
+						getObjectRelatedModelsProvider(
+							_objectDefinition.getClassName(),
+							CompanyThreadLocal.getCompanyId(),
+							objectRelationshipType);
+
+				ObjectScopeProvider objectScopeProvider =
+					_objectScopeProviderRegistry.getObjectScopeProvider(
+						_objectDefinition.getScope());
+
+				long groupId = ParamUtil.getLong(_portletRequest, "groupId");
+
+				if (!objectScopeProvider.isValidGroupId(groupId)) {
+					groupId = 0;
+				}
+
+				long finalGroupId = groupId;
+
+				searchContainer.setResultsAndTotal(
+					() -> {
+						if ((finalGroupId == 0) &&
+							ObjectDefinitionConstants.SCOPE_SITE.equals(
+								objectScopeProvider.getKey())) {
+
+							return new ArrayList<>();
+						}
+
+						return objectRelatedModelsProvider.getUnrelatedModels(
+							_objectDefinition.getCompanyId(), finalGroupId,
+							_objectDefinition,
+							ParamUtil.getLong(_portletRequest, "objectEntryId"),
+							ParamUtil.getLong(
+								_portletRequest, "objectRelationshipId"),
+							_keywords, searchContainer.getStart(),
+							searchContainer.getEnd());
+					},
+					objectRelatedModelsProvider.getUnrelatedModelsCount(
+						_objectDefinition.getCompanyId(), finalGroupId,
+						_objectDefinition,
+						ParamUtil.getLong(_portletRequest, "objectEntryId"),
+						ParamUtil.getLong(
+							_portletRequest, "objectRelationshipId"),
+						_keywords));
+			}
+			else {
+				Group scopeGroup = _themeDisplay.getScopeGroup();
+
+				Page<com.liferay.object.rest.dto.v1_0.ObjectEntry> page =
+					_objectEntryManager.getObjectEntries(
+						_themeDisplay.getCompanyId(), _objectDefinition,
+						scopeGroup.getGroupKey(), null,
+						_getDTOConverterContext(), StringPool.BLANK,
+						Pagination.of(
+							searchContainer.getCur(),
+							searchContainer.getDelta()),
+						ParamUtil.getString(_portletRequest, "keywords"), null);
+
+				searchContainer.setResultsAndTotal(
+					() -> TransformUtil.transform(
+						page.getItems(),
+						objectEntry -> ObjectEntryUtil.toObjectEntry(
+							_objectDefinition.getObjectDefinitionId(),
+							objectEntry)),
+					GetterUtil.getInteger(page.getTotalCount()));
+			}
 		}
 		catch (Exception exception) {
 			_log.error(exception);
@@ -138,48 +220,17 @@ public class ObjectEntryItemSelectorViewDescriptor
 			_themeDisplay.getLocale(), null, _themeDisplay.getUser());
 	}
 
-	private List<ObjectEntry> _getObjectEntries(
-			long objectDefinitionId, int curPage, int pageSize, String search)
-		throws Exception {
-
-		if (objectDefinitionId == 0) {
-			Group scopeGroup = _themeDisplay.getScopeGroup();
-
-			Page<com.liferay.object.rest.dto.v1_0.ObjectEntry> page =
-				_objectEntryManager.getObjectEntries(
-					_themeDisplay.getCompanyId(), _objectDefinition,
-					scopeGroup.getGroupKey(), null, _getDTOConverterContext(),
-					StringPool.BLANK, Pagination.of(curPage, pageSize), search,
-					null);
-
-			return TransformUtil.transform(
-				page.getItems(),
-				objectEntry -> ObjectEntryUtil.toObjectEntry(
-					_objectDefinition.getObjectDefinitionId(), objectEntry));
-		}
-
-		ObjectRelatedModelsProvider objectRelatedModelsProvider =
-			_objectRelatedModelsProviderRegistry.getObjectRelatedModelsProvider(
-				_objectDefinition.getClassName(),
-				_objectDefinition.getCompanyId(),
-				ParamUtil.getString(_portletRequest, "objectRelationshipType"));
-
-		return objectRelatedModelsProvider.getUnrelatedModels(
-			_objectDefinition.getCompanyId(),
-			ParamUtil.getLong(_portletRequest, "groupId"), _objectDefinition,
-			ParamUtil.getLong(_portletRequest, "objectEntryId"),
-			ParamUtil.getLong(_portletRequest, "objectRelationshipId"));
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		ObjectEntryItemSelectorViewDescriptor.class);
 
 	private final HttpServletRequest _httpServletRequest;
 	private final InfoItemItemSelectorCriterion _infoItemItemSelectorCriterion;
+	private final String _keywords;
 	private final ObjectDefinition _objectDefinition;
 	private final ObjectEntryManager _objectEntryManager;
 	private final ObjectRelatedModelsProviderRegistry
 		_objectRelatedModelsProviderRegistry;
+	private final ObjectScopeProviderRegistry _objectScopeProviderRegistry;
 	private final Portal _portal;
 	private final PortletRequest _portletRequest;
 	private final PortletURL _portletURL;

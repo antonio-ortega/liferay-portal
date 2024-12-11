@@ -9,11 +9,11 @@ import {
 	SUPPORTED_OPERATORS_MAP
 } from './constants';
 import {Criteria, Criterion, CriterionGroup, Operator} from './types';
+import {EntityType, ReferencedEntities} from '../context/referencedObjects';
 import {Event} from 'event-analysis/utils/types';
 import {every, isBoolean, isString, isUndefined} from 'lodash';
 import {FieldContexts, FieldOwnerTypes} from 'shared/util/constants';
 import {fromJS, Map} from 'immutable';
-import {getUid} from 'metal';
 import {
 	INDIVIDUAL_PROPERTIES,
 	ORGANIZATION_PROPERTIES,
@@ -21,6 +21,7 @@ import {
 	WEB_BEHAVIORS
 } from '../utils/properties';
 import {Property} from 'shared/util/records';
+import {v4 as uuidv4} from 'uuid';
 
 const GROUP_ID_NAMESPACE = 'group_';
 const ROW_ID_NAMESPACE = 'row_';
@@ -46,12 +47,12 @@ export const createNewGroup = (items: Criteria[]): CriterionGroup => ({
 /**
  * Generates a unique group id.
  */
-export const generateGroupId = (): string => `${GROUP_ID_NAMESPACE}${getUid()}`;
+export const generateGroupId = (): string => `${GROUP_ID_NAMESPACE}${uuidv4()}`;
 
 /**
  * Generates a unique row id.
  */
-export const generateRowId = (): string => `${ROW_ID_NAMESPACE}${getUid()}`;
+export const generateRowId = (): string => `${ROW_ID_NAMESPACE}${uuidv4()}`;
 
 /**
  * Gets a list of group ids from a criteria object.
@@ -371,18 +372,20 @@ export const convertEventToProperty = (
 	const displayName = isMap(eventDefinition)
 		? eventDefinition.get('displayName')
 		: eventDefinition.displayName;
-	const id = isMap(eventDefinition)
-		? eventDefinition.get('id')
-		: eventDefinition.id;
 	const name = isMap(eventDefinition)
 		? eventDefinition.get('name')
 		: eventDefinition.name;
 
+	const hidden = isMap(eventDefinition)
+		? eventDefinition.get('hidden')
+		: eventDefinition.hidden;
+
 	return new Property({
 		entityName: Liferay.Language.get('event'),
-		id,
+		id: name,
 		label: displayName || name,
-		name: id,
+		name,
+		options: [{label: 'hidden', value: hidden}],
 		propertyKey: 'event',
 		type: PropertyTypes.Event
 	});
@@ -428,6 +431,7 @@ export const convertReferencedObjectsToProperties = (
 
 	const eventProperties = referencedObjectsIMap
 		.get('event', Map())
+		.merge(referencedObjectsIMap.get('custom-events'))
 		.map(convertEventToProperty);
 
 	return fieldMappingProperties.merge(fromJS({event: eventProperties}));
@@ -478,6 +482,28 @@ export const invalidateCriterionWithMissingProperty = (
 				  )
 		};
 	}
+};
+
+export const parseReferencedEntityId = (
+	id: string,
+	referencedEntities: ReferencedEntities,
+	type: EntityType
+) => {
+	let parsedId = id;
+
+	if (
+		type === EntityType.Assets &&
+		parsedId &&
+		parsedId.indexOf('_') === -1
+	) {
+		const keys = Object.keys(
+			referencedEntities.getIn([EntityType.Assets]).toObject()
+		);
+
+		parsedId = keys.find(key => key.includes(id));
+	}
+
+	return parsedId;
 };
 
 /**

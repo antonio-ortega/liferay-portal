@@ -90,8 +90,9 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 		throws Exception {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
-			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
@@ -106,7 +107,7 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 						getCommerceInventoryWarehouseId(),
 					pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceInventoryWarehouseItemService.
 				getCommerceInventoryWarehouseItemsCount(
 					commerceInventoryWarehouse.
@@ -114,7 +115,7 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 
 		return Page.of(
 			_toWarehouseItems(commerceInventoryWarehouseItems), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@NestedField(parentClass = Warehouse.class, value = "items")
@@ -129,13 +130,13 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 					id, pagination.getStartPosition(),
 					pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceInventoryWarehouseItemService.
 				getCommerceInventoryWarehouseItemsCount(id);
 
 		return Page.of(
 			_toWarehouseItems(commerceInventoryWarehouseItems), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -193,14 +194,14 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 					contextCompany.getCompanyId(), start, end,
 					pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceInventoryWarehouseItemService.
 				getCommerceInventoryWarehouseItemsCountByModifiedDate(
 					contextCompany.getCompanyId(), start, end);
 
 		return Page.of(
 			_toWarehouseItems(commerceInventoryWarehouseItems), pagination,
-			totalItems);
+			totalCount);
 	}
 
 	@Override
@@ -265,8 +266,9 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 		throws Exception {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
-			_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceInventoryWarehouseService.
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceInventoryWarehouse == null) {
 			throw new NoSuchInventoryWarehouseException(
@@ -334,9 +336,10 @@ public class WarehouseItemResourceImpl extends BaseWarehouseItemResourceImpl {
 		}
 		else if (warehouseItem.getWarehouseExternalReferenceCode() != null) {
 			commerceInventoryWarehouse =
-				_commerceInventoryWarehouseService.fetchByExternalReferenceCode(
-					warehouseItem.getWarehouseExternalReferenceCode(),
-					contextUser.getCompanyId());
+				_commerceInventoryWarehouseService.
+					fetchCommerceInventoryWarehouseByExternalReferenceCode(
+						warehouseItem.getWarehouseExternalReferenceCode(),
+						contextUser.getCompanyId());
 		}
 
 		if (commerceInventoryWarehouse == null) {

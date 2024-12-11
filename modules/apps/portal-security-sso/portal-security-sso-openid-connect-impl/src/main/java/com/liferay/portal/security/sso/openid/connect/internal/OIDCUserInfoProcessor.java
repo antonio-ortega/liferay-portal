@@ -222,9 +222,9 @@ public class OIDCUserInfoProcessor {
 		}
 
 		_phoneLocalService.addPhone(
-			user.getUserId(), Contact.class.getName(), user.getContactId(),
-			phoneClaimString, null, listType.getListTypeId(), false,
-			serviceContext);
+			null, user.getUserId(), Contact.class.getName(),
+			user.getContactId(), phoneClaimString, null,
+			listType.getListTypeId(), false, serviceContext);
 	}
 
 	private User _addUser(
@@ -289,7 +289,7 @@ public class OIDCUserInfoProcessor {
 			companyId, userInfoJSONObject,
 			userInfoMapperJSONObject.getJSONObject("users_roles"));
 
-		if ((roleIds == null) || (roleIds.length == 0)) {
+		if (ArrayUtil.isEmpty(roleIds)) {
 			roleIds = _getRoleIds(companyId, issuer);
 		}
 

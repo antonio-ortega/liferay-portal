@@ -22,14 +22,20 @@
 
 <div class="row" id="<portlet:namespace />termsOfUseSettings">
 	<div class="col-md-3">
-		<h4 class="text-default"><liferay-ui:message key="select-existing-content-or-add-terms-of-use-in-the-space-below" /></h4>
+		<div class="h4 text-default"><liferay-ui:message key="select-existing-content-or-add-terms-of-use-in-the-space-below" /></div>
 	</div>
 
 	<div class="col-md-9">
 		<aui:fieldset>
 			<p class="text-default">
 				<span class="<%= (termsOfUseJournalArticleResourcePrimKey > 0) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />journalArticleRemove" role="button">
-					<aui:icon cssClass="icon-monospaced" image="times" markupView="lexicon" />
+					<clay:button
+						aria-label='<%= LanguageUtil.format(locale, "remove-x", "web-content") %>'
+						cssClass="lfr-portal-tooltip"
+						displayType="unstyled"
+						icon="times"
+						title="remove"
+					/>
 				</span>
 				<span id="<portlet:namespace />journalArticleNameInput">
 					<c:choose>
@@ -46,7 +52,7 @@
 			<aui:button name="selectArticle" value="select-web-content" />
 
 			<aui:field-wrapper cssClass="lfr-definition-virtual-setting-content">
-				<h4 class="text-default"><liferay-ui:message key="or" /></h4>
+				<div class="h4 text-default"><liferay-ui:message key="or" /></div>
 
 				<div class="entry-content form-group">
 					<liferay-ui:input-localized
@@ -86,9 +92,10 @@
 
 			Liferay.Util.openSelectionModal({
 				onSelect: (selectedItem) => {
-					const termsOfUseJournalArticleResourcePrimKey = document.getElementById(
-						'<portlet:namespace />termsOfUseJournalArticleResourcePrimKey'
-					);
+					const termsOfUseJournalArticleResourcePrimKey =
+						document.getElementById(
+							'<portlet:namespace />termsOfUseJournalArticleResourcePrimKey'
+						);
 
 					const itemValue = JSON.parse(selectedItem.value);
 
@@ -103,8 +110,7 @@
 				},
 				selectEventName: 'selectJournalArticle',
 				title: '<liferay-ui:message key="select-web-content" />',
-				url:
-					'<%= cpDefinitionVirtualSettingDisplayContext.getTermsOfUseJournalArticleBrowserURL() %>',
+				url: '<%= cpDefinitionVirtualSettingDisplayContext.getTermsOfUseJournalArticleBrowserURL() %>',
 			});
 		});
 

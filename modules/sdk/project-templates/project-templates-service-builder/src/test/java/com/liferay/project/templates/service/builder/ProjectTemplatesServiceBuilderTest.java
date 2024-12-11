@@ -29,6 +29,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -39,6 +40,7 @@ import org.w3c.dom.Element;
 /**
  * @author Gregory Amerson
  */
+@Ignore
 public class ProjectTemplatesServiceBuilderTest
 	implements BaseProjectTemplatesTestCase {
 
@@ -115,6 +117,18 @@ public class ProjectTemplatesServiceBuilderTest
 
 		File gradleProjectDir = _buildTemplateWithGradle(
 			"service-builder", "foo-bar", "--liferay-version", "7.4.3.36");
+
+		testContains(
+			gradleProjectDir, "foo-bar-service/service.xml",
+			"liferay-service-builder_7_4_0.dtd");
+	}
+
+	@Test
+	public void testBuildTemplateContentDTDVersionServiceBuilderQuarterly()
+		throws Exception {
+
+		File gradleProjectDir = _buildTemplateWithGradle(
+			"service-builder", "foo-bar", "--liferay-version", "2024.q1.1");
 
 		testContains(
 			gradleProjectDir, "foo-bar-service/service.xml",

@@ -9,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBThread;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Document;
@@ -24,10 +25,10 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.IndexedFieldsFixture;
 import com.liferay.portal.search.test.util.IndexerFixture;
-import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -83,7 +84,10 @@ public class MBThreadIndexerIndexedFieldsTest {
 		indexedFieldsFixture.postProcessDocument(document);
 
 		FieldValuesAssert.assertFieldValues(
-			_expectedFieldValues(mbThread, mbMessage), document, searchTerm);
+			document, _expectedFieldValues(mbThread, mbMessage),
+			name ->
+				!name.contains(StringPool.PERIOD) && !name.equals("timestamp"),
+			searchTerm);
 	}
 
 	@Rule
@@ -160,6 +164,8 @@ public class MBThreadIndexerIndexedFieldsTest {
 		).put(
 			"discussion", "false"
 		).put(
+			"groupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
 			"lastPostDate",
 			() -> {
 				Date lastPostDate = mbThread.getLastPostDate();
@@ -170,7 +176,14 @@ public class MBThreadIndexerIndexedFieldsTest {
 			"participantUserIds",
 			String.valueOf(_getValues(mbThread.getParticipantUserIds()))
 		).put(
+			"scopeGroupExternalReferenceCode", _group.getExternalReferenceCode()
+		).put(
+			"statusByUserExternalReferenceCode",
+			_user.getExternalReferenceCode()
+		).put(
 			"statusByUserId", String.valueOf(mbThread.getStatusByUserId())
+		).put(
+			"userExternalReferenceCode", _user.getExternalReferenceCode()
 		).build();
 
 		indexedFieldsFixture.populateUID(

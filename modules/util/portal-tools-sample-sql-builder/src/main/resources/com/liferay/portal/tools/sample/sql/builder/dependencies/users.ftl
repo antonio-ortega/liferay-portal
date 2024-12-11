@@ -8,13 +8,15 @@
 
 	${csvFileWriter.write("user", virtualHostModel.hostname + "," + userModel.screenName + "\n")}
 
-	<@insertLayout _layoutModel=dataFactory.newLayoutModel(userGroupModel.groupId, "home", "", "") />
+	<#list dataFactory.newLayoutModels(userGroupModel.groupId, "home", "", "") as layoutModel>
+		<@insertLayout _layoutModel = layoutModel />
+	</#list>
 
-	<@insertGroup _groupModel=userGroupModel />
+	<@insertGroup _groupModel = userGroupModel />
 
 	<@insertUser
-		_groupIds=groupIds
-		_roleIds=roleIds
-		_userModel=userModel
+		_groupIds = groupIds
+		_roleIds = roleIds
+		_userModel = userModel
 	/>
 </#list>

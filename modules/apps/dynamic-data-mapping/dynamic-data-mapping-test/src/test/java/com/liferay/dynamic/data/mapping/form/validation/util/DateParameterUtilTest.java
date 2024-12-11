@@ -19,6 +19,8 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
+import java.util.Locale;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -42,11 +44,18 @@ public class DateParameterUtilTest {
 
 	@Test
 	public void testGetLocalDate() {
-		String dateString = "2021-10-28";
+		_testGetLocalDate();
 
-		LocalDate localDate = DateParameterUtil.getLocalDate(dateString);
+		Locale locale = LocaleUtil.getDefault();
 
-		Assert.assertEquals(dateString, localDate.toString());
+		try {
+			_setDefaultLocale(new Locale("ar", "SA"));
+
+			_testGetLocalDate();
+		}
+		finally {
+			_setDefaultLocale(locale);
+		}
 
 		Assert.assertNull(DateParameterUtil.getLocalDate(null));
 		Assert.assertNull(DateParameterUtil.getLocalDate(StringPool.BLANK));
@@ -60,6 +69,25 @@ public class DateParameterUtilTest {
 				DateParameterUtil.getLocalDateTime("2021-10-28 1:00")));
 		Assert.assertNull(DateParameterUtil.getLocalDateTime(null));
 		Assert.assertNull(DateParameterUtil.getLocalDateTime(StringPool.BLANK));
+		Assert.assertEquals(
+			"2021-10-28T00:00",
+			String.valueOf(DateParameterUtil.getLocalDateTime("2021-10-28")));
+
+		Assert.assertEquals(
+			"2021-10-28T01:00",
+			String.valueOf(
+				DateParameterUtil.getLocalDateTime("2021-10-28 01:00:00")));
+
+		Assert.assertEquals(
+			"2021-10-28T01:00",
+			String.valueOf(
+				DateParameterUtil.getLocalDateTime("2021-10-28 1:00")));
+
+		Assert.assertEquals(
+			"2024-02-06T14:43:44",
+			String.valueOf(
+				DateParameterUtil.getLocalDateTime(
+					"Tue Feb 06 14:43:44 GMT 2024")));
 	}
 
 	@Test
@@ -210,6 +238,19 @@ public class DateParameterUtilTest {
 				"unit", unit
 			)
 		).toString();
+	}
+
+	private void _setDefaultLocale(Locale locale) {
+		LocaleUtil.setDefault(
+			locale.getLanguage(), locale.getCountry(), locale.getVariant());
+	}
+
+	private void _testGetLocalDate() {
+		String dateString = "2021-10-28";
+
+		LocalDate localDate = DateParameterUtil.getLocalDate(dateString);
+
+		Assert.assertEquals(dateString, localDate.toString());
 	}
 
 }

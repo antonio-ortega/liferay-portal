@@ -1,0 +1,13 @@
+{
+	"dependencies": {
+		"codemirror": "^5.59.0"
+	},
+	"main": "js/index.ts",
+	"name": "@liferay/frontend-js-codemirror-web",
+	"scripts": {
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
+	},
+	"version": "1.0.9"
+}

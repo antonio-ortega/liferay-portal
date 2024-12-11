@@ -46,6 +46,36 @@ public class AdvancedConfigurationSerDes {
 
 		sb.append("{");
 
+		if (advancedConfiguration.getCollapse() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"collapse\": ");
+
+			sb.append(String.valueOf(advancedConfiguration.getCollapse()));
+		}
+
+		if (advancedConfiguration.getFields() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fields\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < advancedConfiguration.getFields().length; i++) {
+				sb.append(_toJSON(advancedConfiguration.getFields()[i]));
+
+				if ((i + 1) < advancedConfiguration.getFields().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (advancedConfiguration.getSource() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -68,11 +98,7 @@ public class AdvancedConfigurationSerDes {
 			for (int i = 0; i < advancedConfiguration.getStored_fields().length;
 				 i++) {
 
-				sb.append("\"");
-
-				sb.append(_escape(advancedConfiguration.getStored_fields()[i]));
-
-				sb.append("\"");
+				sb.append(_toJSON(advancedConfiguration.getStored_fields()[i]));
 
 				if ((i + 1) < advancedConfiguration.getStored_fields().length) {
 					sb.append(", ");
@@ -102,6 +128,23 @@ public class AdvancedConfigurationSerDes {
 		}
 
 		Map<String, String> map = new TreeMap<>();
+
+		if (advancedConfiguration.getCollapse() == null) {
+			map.put("collapse", null);
+		}
+		else {
+			map.put(
+				"collapse",
+				String.valueOf(advancedConfiguration.getCollapse()));
+		}
+
+		if (advancedConfiguration.getFields() == null) {
+			map.put("fields", null);
+		}
+		else {
+			map.put(
+				"fields", String.valueOf(advancedConfiguration.getFields()));
+		}
 
 		if (advancedConfiguration.getSource() == null) {
 			map.put("source", null);
@@ -137,11 +180,41 @@ public class AdvancedConfigurationSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "collapse")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "fields")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "source")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "stored_fields")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			AdvancedConfiguration advancedConfiguration,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "source")) {
+			if (Objects.equals(jsonParserFieldName, "collapse")) {
+				if (jsonParserFieldValue != null) {
+					advancedConfiguration.setCollapse(
+						CollapseSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "fields")) {
+				if (jsonParserFieldValue != null) {
+					advancedConfiguration.setFields(
+						toStrings((Object[])jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "source")) {
 				if (jsonParserFieldValue != null) {
 					advancedConfiguration.setSource(
 						SourceSerDes.toDTO((String)jsonParserFieldValue));
@@ -185,36 +258,7 @@ public class AdvancedConfigurationSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -224,6 +268,38 @@ public class AdvancedConfigurationSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

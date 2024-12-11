@@ -49,13 +49,19 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface CTProcessResource {
 
 	public Page<CTProcess> getCTProcessesPage(
-			Integer[] status, String search, Filter filter,
+			String search, Integer[] status, Filter filter,
 			Pagination pagination, Sort[] sorts)
 		throws Exception;
 
 	public Response postCTProcessesPageExportBatch(
-			Integer[] status, String search, Filter filter, Sort[] sorts,
+			String search, Integer[] status, Filter filter, Sort[] sorts,
 			String callbackURL, String contentType, String fieldNames)
+		throws Exception;
+
+	public void deleteCTProcess(Long ctProcessId) throws Exception;
+
+	public Response deleteCTProcessBatch(
+			Long ctProcessId, String callbackURL, Object object)
 		throws Exception;
 
 	public CTProcess getCTProcess(Long ctProcessId) throws Exception;

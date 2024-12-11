@@ -41,6 +41,10 @@ public class StyleBookEntryVersionTable
 			"version", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryVersionTable, String> uuid = createColumn(
 		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<StyleBookEntryVersionTable, String>
+		externalReferenceCode = createColumn(
+			"externalReferenceCode", String.class, Types.VARCHAR,
+			Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryVersionTable, Long> styleBookEntryId =
 		createColumn(
 			"styleBookEntryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
@@ -78,6 +82,9 @@ public class StyleBookEntryVersionTable
 		createColumn(
 			"styleBookEntryKey", String.class, Types.VARCHAR,
 			Column.FLAG_DEFAULT);
+	public final Column<StyleBookEntryVersionTable, String> themeId =
+		createColumn(
+			"themeId", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 
 	private StyleBookEntryVersionTable() {
 		super("StyleBookEntryVersion", StyleBookEntryVersionTable::new);

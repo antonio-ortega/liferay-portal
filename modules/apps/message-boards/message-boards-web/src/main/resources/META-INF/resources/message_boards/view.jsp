@@ -50,6 +50,12 @@ if (cur2 > 0) {
 
 portletURL.setParameter("mbCategoryId", String.valueOf(categoryId));
 
+String searchCategoryId = ParamUtil.getString(request, "searchCategoryId");
+
+if (Validator.isNotNull(searchCategoryId)) {
+	portletURL.setParameter("searchCategoryId", searchCategoryId);
+}
+
 String keywords = ParamUtil.getString(request, "keywords");
 
 if (Validator.isNotNull(keywords)) {
@@ -69,7 +75,7 @@ if (orderByType.equals("asc")) {
 OrderByComparator threadOrderByComparator = null;
 
 if (orderByCol.equals("modified-date")) {
-	threadOrderByComparator = new ThreadModifiedDateComparator(orderByAsc);
+	threadOrderByComparator = ThreadModifiedDateComparator.getInstance(orderByAsc);
 }
 
 MBListDisplayContext mbListDisplayContext = MBDisplayContextUtil.getMBListDisplayContext(request, response, categoryId, mvcRenderCommandName);
@@ -384,7 +390,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 					mbListDisplayContext.setCategoryEntriesDelta(categoryEntriesSearchContainer);
 
 					categoryEntriesSearchContainer.setOrderByCol(orderByCol);
-					categoryEntriesSearchContainer.setOrderByComparator(new CategoryTitleComparator(true));
+					categoryEntriesSearchContainer.setOrderByComparator(CategoryTitleComparator.getInstance(true));
 					categoryEntriesSearchContainer.setOrderByType(orderByType);
 
 					mbListDisplayContext.populateCategoriesResultsAndTotal(categoryEntriesSearchContainer);
@@ -415,7 +421,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 					<c:if test="<%= (categoryEntriesSearchContainer.getTotal() <= 0) && (threadEntriesSearchContainer.getTotal() <= 0) %>">
 						<liferay-frontend:empty-result-message
 							animationType="<%= EmptyResultMessageKeys.AnimationType.EMPTY %>"
-							title='<%= LanguageUtil.get(resourceBundle, "there-are-no-threads-or-categories") %>'
+							title="<%= LanguageUtil.get(resourceBundle, mbListDisplayContext.getEmptyResultsMessage()) %>"
 						/>
 					</c:if>
 

@@ -9,11 +9,11 @@ exports[`CommerceMetricCard should render 1`] = `
     <div
       class="card-header align-items-center d-flex justify-content-between"
     >
-      <h5
+      <div
         class="card-title"
       >
         this is the label
-      </h5>
+      </div>
       <div
         class="d-flex"
       >
@@ -33,7 +33,7 @@ exports[`CommerceMetricCard should render 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#caret-bottom"
+                href="#caret-bottom"
               />
             </svg>
           </button>
@@ -63,7 +63,7 @@ exports[`CommerceMetricCard should render 1`] = `
               role="presentation"
             >
               <use
-                xlink:href="#caret-top-l"
+                href="#caret-top-l"
               />
             </svg>
             <span

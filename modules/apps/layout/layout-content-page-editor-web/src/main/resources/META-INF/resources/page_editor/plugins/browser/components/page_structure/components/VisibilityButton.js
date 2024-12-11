@@ -13,6 +13,7 @@ import React from 'react';
 import {ITEM_ACTIVATION_ORIGINS} from '../../../../../app/config/constants/itemActivationOrigins';
 import {useSelectItem} from '../../../../../app/contexts/ControlsContext';
 import {useSetMovementText} from '../../../../../app/contexts/KeyboardMovementContext';
+import {useSelector} from '../../../../../app/contexts/StoreContext';
 import {
 	FORM_ERROR_TYPES,
 	getFormErrorDescription,
@@ -22,14 +23,18 @@ import useHasRequiredChild from '../../../../../app/utils/useHasRequiredChild';
 
 export default function VisibilityButton({
 	className,
+	disabled,
 	dispatch,
 	node,
-	selectedViewportSize,
 	visible,
 }) {
 	const hasRequiredChild = useHasRequiredChild(node.id);
 	const selectItem = useSelectItem();
 	const setText = useSetMovementText();
+
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
 
 	return (
 		<ClayButton
@@ -43,16 +48,17 @@ export default function VisibilityButton({
 				'page-editor__page-structure__tree-node__visibility-button ' +
 					className,
 				{
-					'page-editor__page-structure__tree-node__visibility-button--visible': visible,
+					'page-editor__page-structure__tree-node__visibility-button--visible':
+						visible,
 				}
 			)}
-			disabled={node.isMasterItem || node.hiddenAncestor}
+			disabled={disabled}
 			displayType="unstyled"
 			onClick={(event) => {
 				event.stopPropagation();
 				updateItemStyle({
 					dispatch,
-					itemId: node.id,
+					itemIds: [node.id],
 					selectedViewportSize,
 					styleName: 'display',
 					styleValue: node.hidden ? 'block' : 'none',

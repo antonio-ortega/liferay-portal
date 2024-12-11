@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeoutException;
 
 import org.json.JSONObject;
 
@@ -68,20 +69,27 @@ public abstract class BaseWorkspace implements Workspace {
 		}
 
 		ParallelExecutor<WorkspaceGitRepository> parallelExecutor =
-			new ParallelExecutor<>(callables, threadPoolExecutor);
+			new ParallelExecutor<>(
+				callables, false, threadPoolExecutor, true,
+				"getWorkspaceGitRepositories");
 
-		List<WorkspaceGitRepository> workspaceGitRepositories =
-			parallelExecutor.execute();
+		try {
+			List<WorkspaceGitRepository> workspaceGitRepositories =
+				parallelExecutor.execute();
 
-		for (WorkspaceGitRepository workspaceGitRepository :
-				workspaceGitRepositories) {
+			for (WorkspaceGitRepository workspaceGitRepository :
+					workspaceGitRepositories) {
 
-			_workspaceGitRepositories.put(
-				workspaceGitRepository.getDirectoryName(),
-				workspaceGitRepository);
+				_workspaceGitRepositories.put(
+					workspaceGitRepository.getDirectoryName(),
+					workspaceGitRepository);
+			}
+
+			return new ArrayList<>(_workspaceGitRepositories.values());
 		}
-
-		return new ArrayList<>(_workspaceGitRepositories.values());
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
+		}
 	}
 
 	@Override
@@ -117,15 +125,31 @@ public abstract class BaseWorkspace implements Workspace {
 		}
 
 		ParallelExecutor<Object> parallelExecutor = new ParallelExecutor<>(
-			callables, threadPoolExecutor);
+			callables, false, threadPoolExecutor, true, "setUp");
 
-		parallelExecutor.execute();
+		try {
+			parallelExecutor.execute();
+		}
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
+		}
 
 		writePropertiesFiles();
 	}
 
 	@Override
 	public synchronized void startSynchronizeToGitHubDev() {
+		startSynchronizeToGitHubDev(true);
+	}
+
+	@Override
+	public synchronized void startSynchronizeToGitHubDev(
+		boolean synchronizePrimaryWorkspaceGitRepository) {
+
+		if (synchronizePrimaryWorkspaceGitRepository) {
+			_primaryWorkspaceGitRepository.synchronizeToGitHubDev();
+		}
+
 		if (_parallelExecutor != null) {
 			return;
 		}
@@ -135,22 +159,30 @@ public abstract class BaseWorkspace implements Workspace {
 		for (final WorkspaceGitRepository workspaceGitRepository :
 				getWorkspaceGitRepositories()) {
 
-			Callable<Object> callable = new Callable<Object>() {
+			if (synchronizePrimaryWorkspaceGitRepository &&
+				workspaceGitRepository.equals(_primaryWorkspaceGitRepository)) {
 
-				@Override
-				public Object call() {
-					workspaceGitRepository.synchronizeToGitHubDev();
+				continue;
+			}
 
-					return null;
-				}
+			Callable<Object> callable =
+				new ParallelExecutor.SequentialCallable<Object>(
+					workspaceGitRepository.getName()) {
 
-			};
+					@Override
+					public Object call() {
+						workspaceGitRepository.synchronizeToGitHubDev();
+
+						return null;
+					}
+
+				};
 
 			callables.add(callable);
 		}
 
 		_parallelExecutor = new ParallelExecutor<>(
-			callables, threadPoolExecutor);
+			callables, threadPoolExecutor, "startSynchronizeToGitHubDev");
 
 		_parallelExecutor.start();
 	}
@@ -189,9 +221,14 @@ public abstract class BaseWorkspace implements Workspace {
 		}
 
 		ParallelExecutor<Object> parallelExecutor = new ParallelExecutor<>(
-			callables, threadPoolExecutor);
+			callables, threadPoolExecutor, "tearDown");
 
-		parallelExecutor.execute();
+		try {
+			parallelExecutor.execute();
+		}
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
+		}
 	}
 
 	@Override
@@ -201,7 +238,12 @@ public abstract class BaseWorkspace implements Workspace {
 				"Synchronize to GitHub dev did not start");
 		}
 
-		_parallelExecutor.waitFor();
+		try {
+			_parallelExecutor.waitFor();
+		}
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
+		}
 	}
 
 	@Override
@@ -222,6 +264,27 @@ public abstract class BaseWorkspace implements Workspace {
 			GitRepositoryFactory.getWorkspaceGitRepository(
 				this.jsonObject.getString("primary_repository_name"),
 				this.jsonObject.getString("primary_upstream_branch_name"));
+
+		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
+
+		String workspaceRepositoryDirNames = jsonObject.getString(
+			"workspace_repository_dir_names");
+
+		_workspaceGitRepositories = new HashMap<>();
+
+		for (final String workspaceRepositoryDirName :
+				workspaceRepositoryDirNames.split("\\s*,\\s*")) {
+
+			try {
+				_workspaceGitRepositories.put(
+					workspaceRepositoryDirName,
+					buildDatabase.getWorkspaceGitRepository(
+						workspaceRepositoryDirName));
+			}
+			catch (Exception exception) {
+				exception.printStackTrace();
+			}
+		}
 	}
 
 	protected BaseWorkspace(

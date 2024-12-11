@@ -10,12 +10,18 @@ import java.net.URL;
 /**
  * @author Michael Hashimoto
  */
-public interface PortalPullRequestJobEntity extends JobEntity {
+public interface PortalPullRequestJobEntity extends PullRequestJobEntity {
 
-	public URL getJenkinsGitHubURL();
+	public String getForwardReceiverUserName();
 
-	public URL getPortalPullRequestURL();
+	public String getGitHubGistID();
 
-	public String getTestSuiteName();
+	public URL getPortalBundlesDistURL();
+
+	public void setForwardReceiverUserName(String forwardReceiverUserName);
+
+	public void setGitHubGistID(String gitHubGistID);
+
+	public void setPortalBundlesDistURL(URL portalBundlesDistURL);
 
 }

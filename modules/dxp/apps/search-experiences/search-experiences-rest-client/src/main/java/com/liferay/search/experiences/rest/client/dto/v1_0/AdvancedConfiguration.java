@@ -25,6 +25,48 @@ public class AdvancedConfiguration implements Cloneable, Serializable {
 		return AdvancedConfigurationSerDes.toDTO(json);
 	}
 
+	public Collapse getCollapse() {
+		return collapse;
+	}
+
+	public void setCollapse(Collapse collapse) {
+		this.collapse = collapse;
+	}
+
+	public void setCollapse(
+		UnsafeSupplier<Collapse, Exception> collapseUnsafeSupplier) {
+
+		try {
+			collapse = collapseUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Collapse collapse;
+
+	public String[] getFields() {
+		return fields;
+	}
+
+	public void setFields(String[] fields) {
+		this.fields = fields;
+	}
+
+	public void setFields(
+		UnsafeSupplier<String[], Exception> fieldsUnsafeSupplier) {
+
+		try {
+			fields = fieldsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String[] fields;
+
 	public Source getSource() {
 		return source;
 	}

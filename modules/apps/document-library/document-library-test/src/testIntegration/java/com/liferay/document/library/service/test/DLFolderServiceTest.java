@@ -85,7 +85,7 @@ public class DLFolderServiceTest {
 			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType = _dlFileEntryTypeService.addFileEntryType(
-			_group.getGroupId(), _ddmStructure.getStructureId(), null,
+			null, _group.getGroupId(), _ddmStructure.getStructureId(), null,
 			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			Collections.singletonMap(LocaleUtil.US, "New File Entry Type"),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -150,12 +150,12 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
 			"title1", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 		_dlAppService.addFileEntry(
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title2", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		Assert.assertEquals(
 			0,
@@ -180,18 +180,18 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title2", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 		_dlAppService.addFileEntry(
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title1", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		FileEntry fileEntry = _dlAppService.addFileEntry(
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
 			"title3", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		expectedFileEntries.add(fileEntry);
 
@@ -235,7 +235,7 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
 			"title", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		expectedFileEntries.add(fileEntry);
 
@@ -249,17 +249,17 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), folder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title2", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 		_dlAppService.addFileEntry(
 			null, _group.getGroupId(), folder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title1", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 		_dlAppService.addFileEntry(
 			null, _group.getGroupId(), folder.getFolderId(),
 			StringUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
 			"title3", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		List<Object> actualFoldersAndFileEntriesAndFileShortcuts =
 			_dlFolderService.getFoldersAndFileEntriesAndFileShortcuts(
@@ -324,7 +324,7 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title1", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		_viewCountManager.incrementViewCount(
 			fileEntry1.getCompanyId(),
@@ -335,7 +335,7 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title2", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		_viewCountManager.incrementViewCount(
 			fileEntry2.getCompanyId(),
@@ -346,7 +346,7 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title3", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		_viewCountManager.incrementViewCount(
 			fileEntry3.getCompanyId(),
@@ -364,7 +364,7 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), hiddenFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title4", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		_viewCountManager.incrementViewCount(
 			fileEntry4.getCompanyId(),
@@ -372,14 +372,14 @@ public class DLFolderServiceTest {
 			fileEntry4.getFileEntryId(), 5);
 
 		FileShortcut fileShortcut1 = _dlAppService.addFileShortcut(
-			_group.getGroupId(), _parentFolder.getFolderId(),
+			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			fileEntry4.getFileEntryId(), serviceContext);
 
 		FileEntry fileEntry5 = _dlAppService.addFileEntry(
 			null, _group.getGroupId(), hiddenFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title5", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		_viewCountManager.incrementViewCount(
 			fileEntry5.getCompanyId(),
@@ -387,7 +387,7 @@ public class DLFolderServiceTest {
 			fileEntry5.getFileEntryId(), 3);
 
 		FileShortcut fileShortcut2 = _dlAppService.addFileShortcut(
-			_group.getGroupId(), _parentFolder.getFolderId(),
+			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			fileEntry5.getFileEntryId(), serviceContext);
 
 		expectedFoldersAndFileEntriesAndFileShortcuts.add(fileEntry2);
@@ -452,13 +452,13 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title2", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		FileEntry fileEntry2 = _dlAppService.addFileEntry(
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title1", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		expectedFileEntries.add(fileEntry2);
 
@@ -468,7 +468,7 @@ public class DLFolderServiceTest {
 			null, _group.getGroupId(), _parentFolder.getFolderId(),
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
 			"title3", StringUtil.randomString(), StringUtil.randomString(),
-			StringPool.BLANK, (byte[])null, null, null, serviceContext);
+			StringPool.BLANK, (byte[])null, null, null, null, serviceContext);
 
 		expectedFileEntries.add(fileEntry3);
 

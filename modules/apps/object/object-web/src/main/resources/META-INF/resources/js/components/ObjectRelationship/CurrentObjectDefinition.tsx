@@ -4,7 +4,7 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
-import {Input, getLocalizableLabel} from '@liferay/object-js-components-web';
+import {Input, stringUtils} from '@liferay/object-js-components-web';
 import React from 'react';
 
 interface CurrentObjectDefinitionProps {
@@ -29,15 +29,16 @@ export default function CurrentObjectDefinition({
 	const readOnly = disabled ? false : true;
 
 	return (
-		<div className="lfr-object-web__modal-add-object-relationship-current-object-input">
+		<div className="lfr-objects__modal-add-object-relationship-current-object-input">
 			<Input
 				disabled={disabled}
 				error={error}
+				id="lfr-objects__object-relationship-form-base-current-object-definition"
 				label={label}
 				name="currentObjectInput"
 				readOnly={readOnly}
 				required
-				value={getLocalizableLabel(
+				value={stringUtils.getLocalizableLabel(
 					currentObjectDefinition?.defaultLanguageId as Liferay.Language.Locale,
 					currentObjectDefinition?.label,
 					currentObjectDefinition?.name

@@ -10,10 +10,12 @@
 <%
 AccountEntryDisplay accountEntryDisplay = (AccountEntryDisplay)request.getAttribute(AccountWebKeys.ACCOUNT_ENTRY_DISPLAY);
 
-String[] types = GetterUtil.getStringValues(request.getAttribute(AccountWebKeys.ACCOUNT_ENTRY_ALLOWED_TYPES), AccountConstants.ACCOUNT_ENTRY_TYPES);
+String[] types = GetterUtil.getStringValues(request.getAttribute(AccountWebKeys.ACCOUNT_ENTRY_ALLOWED_TYPES), AccountConstants.getAccountEntryTypes(themeDisplay.getCompanyId()));
 %>
 
 <clay:sheet-section>
+	<aui:input name="emailAddress" type="hidden" value="<%= accountEntryDisplay.getEmailAddress() %>" />
+
 	<h3 class="sheet-subtitle">
 		<liferay-ui:message key="account-display-data" />
 	</h3>

@@ -28,18 +28,19 @@
 				<#list entries as entry>
 					<li class="facet-value">
 						<div class="custom-control custom-radio">
-							<label class="facet-checkbox-label" for="${entry.getBucketText()}">
-								<input
-									autocomplete="off"
-									${(entry.isSelected())?then("checked", "")}
-									class="custom-control-input facet-term"
-									disabled
-									id="${entry.getBucketText()}"
-									name="${entry.getBucketText()}"
-									onChange='${"window.location.href = \"${entry.getFilterValue()}\";"}'
-									role="radio"
-									type="radio"
-								/>
+							<label class="facet-checkbox-label" for="${namespace}${entry.getBucketText()}">
+								<@liferay_ui.csp>
+									<input
+										${(entry.isSelected())?then("checked", "")}
+										class="custom-control-input facet-term"
+										disabled
+										id="${namespace}${entry.getBucketText()}"
+										name="${namespace}${entry.getBucketText()}"
+										onChange='${"window.location.href = \"${entry.getFilterValue()}\";"}'
+										role="radio"
+										type="radio"
+									/>
+								</@liferay_ui.csp>
 
 								<span class="custom-control-label term-name ${(entry.isSelected())?then('facet-term-selected', 'facet-term-unselected')}">
 									<span class="custom-control-label-text">
@@ -62,18 +63,19 @@
 
 			<li class="facet-value">
 				<div class="custom-control custom-radio">
-					<label class="facet-checkbox-label" for="${customRangeBucketDisplayContext.getBucketText()}">
-						<input
-							autocomplete="off"
-							${(customRangeBucketDisplayContext.isSelected())?then("checked", "")}
-							class="custom-control-input facet-term"
-							disabled
-							id="${customRangeBucketDisplayContext.getBucketText()}"
-							name="${customRangeBucketDisplayContext.getBucketText()}"
-							onChange='${"window.location.href = \"${customRangeBucketDisplayContext.getFilterValue()}\";"}'
-							role="radio"
-							type="radio"
-						/>
+					<label class="facet-checkbox-label" for="${namespace}${customRangeBucketDisplayContext.getBucketText()}">
+						<@liferay_ui.csp>
+							<input
+								${(customRangeBucketDisplayContext.isSelected())?then("checked", "")}
+								class="custom-control-input facet-term"
+								disabled
+								id="${namespace}${customRangeBucketDisplayContext.getBucketText()}"
+								name="${namespace}${customRangeBucketDisplayContext.getBucketText()}"
+								onChange='${"window.location.href = \"${customRangeBucketDisplayContext.getFilterValue()}\";"}'
+								role="radio"
+								type="radio"
+							/>
+						</@liferay_ui.csp>
 
 						<span class="custom-control-label term-name ${(customRangeBucketDisplayContext.isSelected())?then('facet-term-selected', 'facet-term-unselected')}">
 							<span class="custom-control-label-text">

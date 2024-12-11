@@ -95,13 +95,14 @@ public class CommerceInventoryWarehouseServiceImpl
 	}
 
 	@Override
-	public CommerceInventoryWarehouse fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
+	public CommerceInventoryWarehouse
+			fetchCommerceInventoryWarehouseByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
 			commerceInventoryWarehouseLocalService.
-				fetchCommerceInventoryWarehouseByReferenceCode(
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
 					externalReferenceCode, companyId);
 
 		if (commerceInventoryWarehouse != null) {
@@ -146,14 +147,6 @@ public class CommerceInventoryWarehouseServiceImpl
 			long companyId, boolean active, int start, int end,
 			OrderByComparator<CommerceInventoryWarehouse> orderByComparator)
 		throws PrincipalException {
-
-		PortletResourcePermission portletResourcePermission =
-			_commerceInventoryWarehouseModelResourcePermission.
-				getPortletResourcePermission();
-
-		portletResourcePermission.check(
-			getPermissionChecker(), null,
-			CommerceInventoryActionKeys.MANAGE_INVENTORY);
 
 		return commerceInventoryWarehouseLocalService.
 			getCommerceInventoryWarehouses(
@@ -202,7 +195,7 @@ public class CommerceInventoryWarehouseServiceImpl
 
 	@Override
 	public List<CommerceInventoryWarehouse> getCommerceInventoryWarehouses(
-			long companyId, long groupId, boolean active)
+			long companyId, long accountEntryId, long groupId, boolean active)
 		throws PortalException {
 
 		PortletResourcePermission portletResourcePermission =
@@ -214,7 +207,8 @@ public class CommerceInventoryWarehouseServiceImpl
 			CommerceInventoryActionKeys.MANAGE_INVENTORY);
 
 		return commerceInventoryWarehouseLocalService.
-			getCommerceInventoryWarehouses(companyId, groupId, active);
+			getCommerceInventoryWarehouses(
+				companyId, accountEntryId, groupId, active);
 	}
 
 	@Override

@@ -17,7 +17,7 @@
 	</tr>
 	<tr>
 		<td>OBJECT_VIEW_LABEL</td>
-		<td>//div[(@class = 'dnd-td') and contains (.,'${key_viewLabel}')]</td>
+		<td>//div[contains(@class, 'dnd-td') and contains(., '${key_viewLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -96,6 +96,11 @@
 		<td></td>
 	</tr>
 	<tr>
+		<td>ADD_COLUMN</td>
+		<td>//button[contains(text(),'Add Column')]</td>
+		<td></td>
+	</tr>
+	<tr>
 		<td>ADD_COLUMNS_COLUMN_LABEL</td>
 		<td>//span[@class="custom-control-label-text" and contains(text(),'${key_columnName}')]</td>
 		<td></td>
@@ -131,11 +136,6 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>SELECT_AUTO_COMPLETE</td>
-		<td>//div[contains(@class, 'select__content')]//span[contains(text(),'Choose an Option')]</td>
-		<td></td>
-	</tr>
-	<tr>
 		<td>SELECT_AUTO_COMPLETE_OPTION</td>
 		<td>//button[(@class='dropdown-item') and contains(.,'${key_columnOption}')]</td>
 		<td></td>
@@ -162,7 +162,7 @@
 	</tr>
 	<tr>
 		<td>DEFAULT_SORT_ADD_BUTTON</td>
-		<td>//h3[(@class='lfr-objects__card-title') and text()='Default Sort']/../..//button[contains(@class,'nav-btn nav-btn-monospaced btn btn-monospaced btn-primary')]</td>
+		<td>//h3[(@class='lfr-objects__card-title') and text()='Default Sort']/../..//button[contains(@class,'btn btn-monospaced btn-primary')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -236,13 +236,13 @@
 		<td></td>
 	</tr>
 	<tr>
-		<td>ADD_BUTTON_FILTERS</td>
-		<td>//h3[(@class='lfr-objects__card-title') and text()='Filters']/../..//button[contains(@class,'nav-btn nav-btn-monospaced btn btn-monospaced btn-primary')]</td>
+		<td>ADD_NEW_FILTER</td>
+		<td>//button[contains(text(),'New Filter')]</td>
 		<td></td>
 	</tr>
 	<tr>
-		<td>SELECT_FILTER_GENERIC</td>
-		<td>//label[contains(.,'${key_filterLabel}')]//..//input[@placeholder='Choose an Option']</td>
+		<td>FILTER_ADD_BUTTON</td>
+		<td>//h3[(@class='lfr-objects__card-title') and text()='Filters']/../..//button[contains(@class,'btn btn-monospaced btn-primary')]</td>
 		<td></td>
 	</tr>
 	<tr>

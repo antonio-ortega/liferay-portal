@@ -34,7 +34,9 @@ public class JavaUpgradeClassCheck extends BaseFileCheck {
 		_checkServiceUtil(fileName, absolutePath, content);
 		_checkTimestamp(fileName, content);
 
-		if (!fileName.endsWith("Upgrade.java")) {
+		if (!fileName.endsWith("Upgrade.java") &&
+			!fileName.endsWith("UpgradeStepRegistrator.java")) {
+
 			return content;
 		}
 
@@ -61,7 +63,7 @@ public class JavaUpgradeClassCheck extends BaseFileCheck {
 		String componentAnnotation = matcher.group();
 
 		if (!componentAnnotation.contains("service =")) {
-			addMessage(fileName, "@Component requires 'service' parameter");
+			addMessage(fileName, "@Component requires \"service\" parameter");
 		}
 	}
 

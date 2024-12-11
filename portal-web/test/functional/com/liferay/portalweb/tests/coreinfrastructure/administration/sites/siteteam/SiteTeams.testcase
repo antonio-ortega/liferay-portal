@@ -1,6 +1,7 @@
-@component-name = "portal-user-management"
+@component-name = "portal-commerce"
 definition {
 
+	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Site Teams";
@@ -13,28 +14,11 @@ definition {
 		HeadlessSite.addSite(siteName = "Site Name");
 	}
 
-	tearDown {
-		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
-
-		if (${testLiferayVirtualInstance} == "true") {
-			PortalInstances.tearDownCP();
-		}
-		else {
-			Team.tearDownCP();
-
-			UserGroup.tearDownCP();
-
-			JSONUser.tearDownNonAdminUsers();
-
-			JSONGroup.deleteGroupByName(groupName = "Site Name");
-		}
-	}
-
 	@description = "Able to add site team."
 	@priority = 4
 	@uitest
 	test AddSiteTeam {
-		property testray.component.names = "Sites Administration";
+		property testray.component.names = "Site Teams";
 
 		task ("Add a site team in new site") {
 			Site.openSiteTeamsAdmin(siteURLKey = "site-name");
@@ -54,7 +38,7 @@ definition {
 	@description = "Able to assign user to site team."
 	@priority = 4
 	test AddSiteTeamAssignUser {
-		property testray.component.names = "Sites Administration,Users and Organizations";
+		property testray.component.names = "Site Teams,Users and Organizations";
 
 		task ("Add a user") {
 			JSONUser.addUser(
@@ -102,7 +86,7 @@ definition {
 	@priority = 4
 	@uitest
 	test AddSiteTeamAssignUserGroup {
-		property testray.component.names = "Sites Administration,User Groups";
+		property testray.component.names = "Site Teams,User Groups";
 
 		task ("Add a site team in site") {
 			Site.openSiteTeamsAdmin(siteURLKey = "site-name");
@@ -152,7 +136,7 @@ definition {
 	@priority = 4
 	test AddSiteTeamMultiple {
 		property portal.acceptance = "true";
-		property testray.component.names = "Sites Administration";
+		property testray.component.names = "Site Teams";
 
 		task ("Add a site page") {
 			JSONLayout.addPublicLayout(
@@ -195,11 +179,11 @@ definition {
 	@priority = 4
 	@uitest
 	test AddSiteTeamRemoveUser {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
-		property testray.component.names = "Sites Administration,Users and Organizations";
+		property testray.component.names = "Site Teams,Users and Organizations";
 
 		task ("Add a user and assign it to the created site") {
 			JSONUser.addUser(
@@ -258,7 +242,7 @@ definition {
 	@priority = 4
 	@uitest
 	test AddSiteTeamRemoveUserGroup {
-		property testray.component.names = "Sites Administration,User Groups";
+		property testray.component.names = "Site Teams,User Groups";
 
 		task ("Add a site team in site") {
 			Site.openSiteTeamsAdmin(siteURLKey = "site-name");
@@ -322,7 +306,7 @@ definition {
 	@description = "Able to find user group in site team."
 	@priority = 4
 	test AddSiteTeamSearchUserGroups {
-		property testray.component.names = "Sites Administration,User Groups";
+		property testray.component.names = "Site Teams,User Groups";
 
 		task ("Add 2 user groups andd assign them to the site") {
 			for (var n : list "1,2") {
@@ -372,7 +356,7 @@ definition {
 	@priority = 4
 	test AddSiteTeamSearchUsers {
 		property portal.acceptance = "true";
-		property testray.component.names = "Sites Administration,Users and Organizations";
+		property testray.component.names = "Site Teams,Users and Organizations";
 
 		task ("Add 2 users and assign them to the created site") {
 			for (var n : list "1,2") {
@@ -428,7 +412,7 @@ definition {
 	@uitest
 	test DeleteSiteTeam {
 		property portal.acceptance = "true";
-		property testray.component.names = "Sites Administration";
+		property testray.component.names = "Site Teams";
 
 		task ("Add a site team and delete it") {
 			Site.openSiteTeamsAdmin(siteURLKey = "site-name");
@@ -452,7 +436,7 @@ definition {
 	@uitest
 	test EditSiteTeam {
 		property portal.acceptance = "true";
-		property testray.component.names = "Sites Administration";
+		property testray.component.names = "Site Teams";
 
 		task ("Add a site team and edit it") {
 			Site.openSiteTeamsAdmin(siteURLKey = "site-name");
@@ -478,7 +462,7 @@ definition {
 	@priority = 4
 	test SiteTeamsPermissions {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property testray.component.names = "Permissions,Sites Administration";
+		property testray.component.names = "Permissions,Site Teams";
 
 		task ("Add a site team and a public page basing on Search page template") {
 			PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
@@ -527,10 +511,7 @@ definition {
 		}
 
 		task ("Assign the second user to the created site") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Users and Organizations");
+			User.openUsersAdmin();
 
 			User.editUserSiteCP(
 				siteName = "Site Name",
@@ -595,7 +576,7 @@ definition {
 
 		task ("Log out and log in as the first created user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea1@liferay.com");
 		}
 
@@ -604,9 +585,9 @@ definition {
 				pageName = "Search Page Template",
 				siteName = "Site Name");
 
-			for (var portletName : list "SearchBar,Suggestions,SiteFacet,TypeFacet,TagFacet,CategoryFacet,FolderFacet,UserFacet,ModifiedFacet,SearchResults,SearchOptions") {
+			for (var portletName : list "Search Bar,Suggestions,Site Facet,Type Facet,Tag Facet,Category Facet,Folder Facet,User Facet,Modified Facet,Search Results,Search Options") {
 				AssertVisible(
-					key_decorator = "barebone",
+					key_decorator = "boundary",
 					key_portletTitleName = ${portletName},
 					locator1 = "Portlet#SPECIFIC_PORTLET_BORDER_DECORATOR");
 			}
@@ -614,7 +595,7 @@ definition {
 
 		task ("Log out and log in as the second created user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea2@liferay.com");
 		}
 
@@ -626,7 +607,7 @@ definition {
 
 		task ("Log out and log in as default user") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 	}
@@ -636,7 +617,7 @@ definition {
 	test SiteTeamsXSS {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
-		property testray.component.names = "Sites Administration,XSS";
+		property testray.component.names = "Site Teams,XSS";
 
 		task ("Add a site team with alert") {
 			Site.openSiteTeamsAdmin(siteURLKey = "site-name");
@@ -663,6 +644,52 @@ definition {
 			AssertHTMLSourceTextNotPresent(value1 = ${actualScript});
 
 			AssertHTMLSourceTextPresent(value1 = ${escapedScript});
+		}
+	}
+
+	@description = "This is a test for LPS-177717. The tooltip of the back button of a Team view or Team edit mode is Go to Teams."
+	@priority = 3
+	test ViewBackButtonTooltipForTeamsAdmin {
+		task ("Given a site administrator adds a team") {
+			Site.openSiteTeamsAdmin(siteURLKey = "site-name");
+
+			LexiconEntry.gotoAdd();
+
+			WaitForElementPresent(locator1 = "TextInput#NAME");
+		}
+
+		task ("When the site administrator hovers over the back button") {
+			MouseOver(locator1 = "Icon#BACK");
+		}
+
+		task ("Then the site administrator could see the tooltip message") {
+			AssertVisible(
+				key_content = "Go to Teams",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
+		}
+
+		task ("Given a site administrator edits the team") {
+			JSONTeam.addTeam(
+				siteName = "Site Name",
+				teamName = "Test Team Name");
+
+			Navigator.gotoBack();
+
+			LexiconEntry.gotoEntryMenuItem(
+				menuItem = "Edit",
+				rowEntry = "Test Team Name");
+
+			WaitForElementPresent(locator1 = "TextInput#NAME");
+		}
+
+		task ("When the site administrator hovers over the back button") {
+			MouseOver(locator1 = "Icon#BACK");
+		}
+
+		task ("Then the site administrator could see the tooltip message") {
+			AssertVisible(
+				key_content = "Go to Teams",
+				locator1 = "Tooltip#FLOATING_TOOLTIP_CONTENT");
 		}
 	}
 

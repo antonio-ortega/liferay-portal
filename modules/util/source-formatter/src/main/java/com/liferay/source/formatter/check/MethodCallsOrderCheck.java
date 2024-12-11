@@ -7,11 +7,12 @@ package com.liferay.source.formatter.check;
 
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
+import com.liferay.source.formatter.check.comparator.ParameterNameComparator;
+import com.liferay.source.formatter.check.util.JSPSourceUtil;
 import com.liferay.source.formatter.check.util.JavaSourceUtil;
+import com.liferay.source.formatter.processor.JSPSourceProcessor;
 
 import java.util.List;
 import java.util.Objects;
@@ -365,8 +366,9 @@ public class MethodCallsOrderCheck extends BaseFileCheck {
 
 		content = _sortMethodCallsByMethodName(
 			content, "DDMFormFieldRenderingContext", "DropdownItem",
-			"LabelItem", "NavigationItem", "SearchContext", "SearchEntry",
-			"ServiceContext", "ThemeDisplay");
+			"LabelItem", "NavigationItem", "SearchContainer", "SearchContext",
+			"SearchEntry", "ServiceContext", "SiteItemSelectorCriterion",
+			"ThemeDisplay");
 
 		content = _sortMethodCallsByParameter(
 			content, "add", "ConcurrentSkipListSet", "HashSet", "TreeSet");
@@ -393,6 +395,12 @@ public class MethodCallsOrderCheck extends BaseFileCheck {
 			Matcher matcher = pattern.matcher(content);
 
 			while (matcher.find()) {
+				if ((getSourceProcessor() instanceof JSPSourceProcessor) &&
+					JSPSourceUtil.isJSSource(content, matcher.start())) {
+
+					continue;
+				}
+
 				String methodCall1 = _getMethodCall(content, matcher.start(1));
 
 				if (methodCall1 == null) {
@@ -504,69 +512,6 @@ public class MethodCallsOrderCheck extends BaseFileCheck {
 
 			return methodCall.substring(x + 1, y);
 		}
-
-	}
-
-	private class ParameterNameComparator extends NaturalOrderStringComparator {
-
-		@Override
-		public int compare(String parameterName1, String parameterName2) {
-			Matcher matcher = _multipleLineConstantPattern.matcher(
-				parameterName1);
-
-			parameterName1 = matcher.replaceAll(".");
-
-			matcher = _multipleLineConstantPattern.matcher(parameterName2);
-
-			parameterName2 = matcher.replaceAll(".");
-
-			String strippedParameterName1 = stripQuotes(parameterName1);
-			String strippedParameterName2 = stripQuotes(parameterName2);
-
-			if (strippedParameterName1.contains(StringPool.OPEN_PARENTHESIS) ||
-				strippedParameterName2.contains(StringPool.OPEN_PARENTHESIS)) {
-
-				return 0;
-			}
-
-			matcher = _multipleLineParameterNamePattern.matcher(parameterName1);
-
-			if (matcher.find()) {
-				parameterName1 = matcher.replaceAll(StringPool.BLANK);
-			}
-
-			matcher = _multipleLineParameterNamePattern.matcher(parameterName2);
-
-			if (matcher.find()) {
-				parameterName2 = matcher.replaceAll(StringPool.BLANK);
-			}
-
-			if (parameterName1.matches("\".*\"") &&
-				parameterName2.matches("\".*\"")) {
-
-				String strippedQuotes1 = parameterName1.substring(
-					1, parameterName1.length() - 1);
-				String strippedQuotes2 = parameterName2.substring(
-					1, parameterName2.length() - 1);
-
-				return super.compare(strippedQuotes1, strippedQuotes2);
-			}
-
-			int value = super.compare(parameterName1, parameterName2);
-
-			if (parameterName1.startsWith(StringPool.QUOTE) ^
-				parameterName2.startsWith(StringPool.QUOTE)) {
-
-				return -value;
-			}
-
-			return value;
-		}
-
-		private final Pattern _multipleLineConstantPattern = Pattern.compile(
-			"\\.\n\t+");
-		private final Pattern _multipleLineParameterNamePattern =
-			Pattern.compile("\" \\+\n\t+\"");
 
 	}
 

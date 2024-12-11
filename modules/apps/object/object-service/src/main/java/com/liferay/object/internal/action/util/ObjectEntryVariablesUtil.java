@@ -20,6 +20,7 @@ import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -29,7 +30,10 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 
 import java.io.Serializable;
 
+import java.text.DateFormat;
+
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,6 +118,10 @@ public class ObjectEntryVariablesUtil {
 					objectDefinition,
 					Collections.unmodifiableSet(currentVariables.keySet()));
 			}
+		).put(
+			"originalEntryDTO",
+			payloadJSONObject.get(
+				"originalObjectEntryDTO" + objectDefinition.getShortName())
 		).build();
 	}
 
@@ -155,7 +163,7 @@ public class ObjectEntryVariablesUtil {
 
 			String defaultValue =
 				ObjectFieldSettingUtil.getDefaultValueAsString(
-					null, objectField.getObjectFieldId(),
+					null, objectField,
 					ObjectFieldSettingLocalServiceUtil.getService(), null);
 
 			if (Validator.isNotNull(defaultValue) &&
@@ -195,20 +203,36 @@ public class ObjectEntryVariablesUtil {
 
 		Map<String, Object> objectEntry =
 			(Map<String, Object>)payloadJSONObject.get("objectEntry");
-		String userId = payloadJSONObject.getString("userId");
 
 		Map<String, Object> allowedVariables =
 			HashMapBuilder.<String, Object>put(
 				"creator",
 				() -> {
 					if (objectDefinition.isUnmodifiableSystemObject()) {
-						return userId;
+						return null;
 					}
 
-					return MapUtil.getString(objectEntry, "userId");
+					return MapUtil.getLong(objectEntry, "userId");
 				}
 			).put(
-				"currentUserId", userId
+				"currentDate",
+				() -> {
+					ObjectField objectField =
+						ObjectFieldLocalServiceUtil.fetchObjectField(
+							objectDefinition.getObjectDefinitionId(),
+							"currentDate");
+
+					if (objectField != null) {
+						return null;
+					}
+
+					DateFormat dateFormat =
+						DateFormatFactoryUtil.getSimpleDateFormat("yyyy-MM-dd");
+
+					return dateFormat.format(new Date());
+				}
+			).put(
+				"currentUserId", payloadJSONObject.getLong("userId")
 			).put(
 				"groupId",
 				() -> {
@@ -228,15 +252,26 @@ public class ObjectEntryVariablesUtil {
 					getSystemObjectDefinitionManager(
 						objectDefinition.getName());
 
+			String contentType = _getContentType(
+				dtoConverterRegistry, objectDefinition,
+				systemObjectDefinitionManagerRegistry);
+
 			variables = systemObjectDefinitionManager.getVariables(
-				_getContentType(
-					dtoConverterRegistry, objectDefinition,
-					systemObjectDefinitionManagerRegistry),
-				objectDefinition, oldValues, payloadJSONObject);
+				contentType, objectDefinition, oldValues, payloadJSONObject);
 
 			if (variables == null) {
-				return payloadJSONObject.toMap();
+				return HashMapBuilder.<String, Object>putAll(
+					allowedVariables
+				).putAll(
+					payloadJSONObject.toMap()
+				).build();
 			}
+
+			allowedVariables.put(
+				"creator", MapUtil.getString(variables, "userId"));
+
+			allowedVariables.put(
+				"entryDTO", payloadJSONObject.get("modelDTO" + contentType));
 		}
 		else {
 			if (oldValues) {

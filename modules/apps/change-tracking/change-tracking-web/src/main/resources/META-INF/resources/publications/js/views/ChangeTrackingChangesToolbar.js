@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {ClayDropDownWithItems} from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
+import ClayLayout from '@clayui/layout';
 import ClayToolbar from '@clayui/toolbar';
 import classNames from 'classnames';
 import React, {useCallback, useRef, useState} from 'react';
@@ -39,6 +41,7 @@ export default function ChangeTrackingChangesToolbar({
 }) {
 	const commentsCacheRef = useRef({});
 	const [showComments, setShowComments] = useState(false);
+	const [publishButtonDisabled, setPublishButtonDisabled] = useState(false);
 
 	const setParameter = useCallback(
 		(url, name, value) => {
@@ -61,7 +64,9 @@ export default function ChangeTrackingChangesToolbar({
 						'btn btn-' + displayType + ' btn-sm',
 						{
 							disabled:
-								(!total && !ctMappingInfos.length) || expired,
+								publishButtonDisabled ||
+								(!total && !ctMappingInfos.length) ||
+								expired,
 						}
 					)}
 					href={setParameter(
@@ -69,6 +74,7 @@ export default function ChangeTrackingChangesToolbar({
 						'redirect',
 						window.location.pathname + window.location.search
 					)}
+					onClick={() => setPublishButtonDisabled(true)}
 				>
 					<span className="inline-item inline-item-before">
 						<ClayIcon spritemap={spritemap} symbol={symbol} />
@@ -192,6 +198,24 @@ export default function ChangeTrackingChangesToolbar({
 		);
 	};
 
+	const renderExpiredBanner = () => {
+		if (!expired) {
+			return '';
+		}
+
+		return (
+			<ClayAlert
+				displayType="warning"
+				spritemap={spritemap}
+				title={Liferay.Language.get('out-of-date')}
+			>
+				{Liferay.Language.get(
+					'this-publication-was-created-on-a-previous-liferay-version.-you-cannot-publish,-revert,-or-make-additional-changes'
+				)}
+			</ClayAlert>
+		);
+	};
+
 	return (
 		<>
 			{renderPublicationsToolbar()}
@@ -209,7 +233,7 @@ export default function ChangeTrackingChangesToolbar({
 									'height': '85vh',
 									'min-height': '485px',
 									'width': '320px',
-							  }
+								}
 							: {}
 					}
 				>
@@ -221,7 +245,7 @@ export default function ChangeTrackingChangesToolbar({
 										'height': '100%',
 										'min-height': '485px',
 										'width': '320px',
-								  }
+									}
 								: {}
 						}
 					>
@@ -252,6 +276,10 @@ export default function ChangeTrackingChangesToolbar({
 					</div>
 				</div>
 			</div>
+
+			<ClayLayout.ContainerFluid style={{marginTop: '1em'}}>
+				{renderExpiredBanner()}
+			</ClayLayout.ContainerFluid>
 		</>
 	);
 }

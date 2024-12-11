@@ -744,11 +744,11 @@ public class UserServiceUtil {
 	}
 
 	public static User fetchUserByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
+			String externalReferenceCode, long companyId)
 		throws PortalException {
 
 		return getService().fetchUserByExternalReferenceCode(
-			companyId, externalReferenceCode);
+			externalReferenceCode, companyId);
 	}
 
 	public static List<User> getCompanyUsers(long companyId, int start, int end)
@@ -990,6 +990,14 @@ public class UserServiceUtil {
 
 		return getService().getUserByExternalReferenceCode(
 			companyId, externalReferenceCode);
+	}
+
+	public static User getUserByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().getUserByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	/**
@@ -1331,6 +1339,22 @@ public class UserServiceUtil {
 			userId, password, emailAddress1, emailAddress2, serviceContext);
 	}
 
+	public static User updateExternalReferenceCode(
+			long userId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().updateExternalReferenceCode(
+			userId, externalReferenceCode);
+	}
+
+	public static User updateExternalReferenceCode(
+			User user, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().updateExternalReferenceCode(
+			user, externalReferenceCode);
+	}
+
 	/**
 	 * Updates a user account that was automatically created when a guest user
 	 * participated in an action (e.g. posting a comment) and only provided his
@@ -1444,6 +1468,12 @@ public class UserServiceUtil {
 			middleName, lastName, prefixListTypeId, suffixListTypeId, male,
 			birthdayMonth, birthdayDay, birthdayYear, jobTitle,
 			updateUserInformation, sendEmail, serviceContext);
+	}
+
+	public static User updateLanguageId(long userId, String languageId)
+		throws PortalException {
+
+		return getService().updateLanguageId(userId, languageId);
 	}
 
 	/**
@@ -1566,6 +1596,13 @@ public class UserServiceUtil {
 		throws PortalException {
 
 		return getService().updateStatus(userId, status, serviceContext);
+	}
+
+	public static User updateStatus(
+			User user, int status, ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().updateStatus(user, status, serviceContext);
 	}
 
 	/**

@@ -23,6 +23,7 @@ import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalS
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.util.AccountEntryAllowedTypesUtil;
 import com.liferay.commerce.util.CommerceAccountHelper;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -34,6 +35,7 @@ import com.liferay.portal.kernel.util.Portal;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 /**
  * @author Marco Leo
@@ -194,8 +196,52 @@ public class BaseCommerceContextHttp implements CommerceContext {
 	@Override
 	public CommerceOrder getCommerceOrder() {
 		try {
+			CommerceChannel commerceChannel =
+				_commerceChannelLocalService.fetchCommerceChannelBySiteGroupId(
+					_portal.getScopeGroupId(_httpServletRequest));
+
+			if (commerceChannel == null) {
+				return null;
+			}
+
 			_commerceOrder = _commerceOrderHttpHelper.getCurrentCommerceOrder(
 				_httpServletRequest);
+
+			if (_commerceOrder != null) {
+				HttpServletRequest originalHttpServletRequest =
+					_portal.getOriginalServletRequest(_httpServletRequest);
+
+				long groupId = commerceChannel.getGroupId();
+
+				HttpSession httpSession =
+					originalHttpServletRequest.getSession();
+
+				if (_commerceOrder.isGuestOrder()) {
+					httpSession.removeAttribute(
+						CommerceOrder.class.getName() + StringPool.POUND +
+							groupId);
+
+					return _commerceOrder;
+				}
+
+				if (_isChannelAccountEntry(
+						_commerceOrder.getCommerceAccountId(),
+						getCommerceChannelId())) {
+
+					httpSession.setAttribute(
+						CommerceOrder.class.getName() + StringPool.POUND +
+							groupId,
+						_commerceOrder.getUuid());
+				}
+				else {
+					httpSession.setAttribute(
+						CommerceOrder.class.getName() + StringPool.POUND +
+							groupId,
+						StringPool.BLANK);
+
+					_commerceOrder = null;
+				}
+			}
 
 			return _commerceOrder;
 		}
@@ -253,13 +299,35 @@ public class BaseCommerceContextHttp implements CommerceContext {
 		List<CommerceCurrency> commerceCurrencies =
 			_commerceCurrencyLocalService.getCommerceCurrencies(
 				companyId, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new CommerceCurrencyPriorityComparator(true));
+				CommerceCurrencyPriorityComparator.getInstance(true));
 
 		if (!commerceCurrencies.isEmpty()) {
 			commerceCurrency = commerceCurrencies.get(0);
 		}
 
 		return commerceCurrency;
+	}
+
+	private boolean _isChannelAccountEntry(
+		long accountEntryId, long commerceChannelId) {
+
+		CommerceChannelAccountEntryRel commerceChannelAccountEntryRel =
+			_commerceChannelAccountEntryRelLocalService.
+				fetchCommerceChannelAccountEntryRel(
+					accountEntryId, commerceChannelId,
+					CommerceChannelAccountEntryRelConstants.TYPE_ELIGIBILITY);
+
+		int count =
+			_commerceChannelAccountEntryRelLocalService.
+				getCommerceChannelAccountEntryRelsCount(
+					commerceChannelId, null,
+					CommerceChannelAccountEntryRelConstants.TYPE_ELIGIBILITY);
+
+		if ((commerceChannelAccountEntryRel != null) || (count == 0)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

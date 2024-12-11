@@ -31,7 +31,8 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
-import com.liferay.dynamic.data.mapping.util.DDMBeanTranslator;
+import com.liferay.friendly.url.model.FriendlyURLEntry;
+import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.headless.delivery.dto.v1_0.AdaptedImage;
 import com.liferay.headless.delivery.dto.v1_0.ContentField;
 import com.liferay.headless.delivery.dto.v1_0.Document;
@@ -56,6 +57,7 @@ import com.liferay.portal.kernel.comment.CommentManager;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -116,59 +118,15 @@ public class DocumentDTOConverter
 
 		return new Document() {
 			{
-				actions = dtoConverterContext.getActions();
-				adaptedImages = _getAdaptiveMedias(
-					dtoConverterContext, fileEntry);
-				aggregateRating = AggregateRatingUtil.toAggregateRating(
-					_ratingsStatsLocalService.fetchStats(
-						DLFileEntry.class.getName(),
-						fileEntry.getFileEntryId()));
-				assetLibraryKey = GroupUtil.getAssetLibraryKey(group);
-				contentValue = ContentValueUtil.toContentValue(
-					"contentValue", fileEntry::getContentStream,
-					dtoConverterContext.getUriInfo());
-				creator = CreatorUtil.toCreator(
-					dtoConverterContext, _portal,
-					_userLocalService.fetchUser(fileEntry.getUserId()));
-				customFields = CustomFieldsUtil.toCustomFields(
-					dtoConverterContext.isAcceptAllLanguages(),
-					DLFileEntry.class.getName(), fileVersion.getFileVersionId(),
-					fileEntry.getCompanyId(), dtoConverterContext.getLocale());
-				dateCreated = fileEntry.getCreateDate();
-				dateModified = fileEntry.getModifiedDate();
-				description = fileEntry.getDescription();
-				documentFolderId = fileEntry.getFolderId();
-				documentType = _toDocumentType(
-					dtoConverterContext, fileVersion);
-				encodingFormat = fileEntry.getMimeType();
-				externalReferenceCode = fileEntry.getExternalReferenceCode();
-				fileExtension = fileEntry.getExtension();
-				fileName = fileEntry.getFileName();
-				id = fileEntry.getFileEntryId();
-				keywords = ListUtil.toArray(
-					_assetTagLocalService.getTags(
-						DLFileEntry.class.getName(),
-						fileEntry.getFileEntryId()),
-					AssetTag.NAME_ACCESSOR);
-				numberOfComments = _commentManager.getCommentsCount(
-					DLFileEntry.class.getName(), fileEntry.getFileEntryId());
-				relatedContents = RelatedContentUtil.toRelatedContents(
-					_assetEntryLocalService, _assetLinkLocalService,
-					dtoConverterContext.getDTOConverterRegistry(),
-					DLFileEntry.class.getName(), fileEntry.getFileEntryId(),
-					dtoConverterContext.getLocale());
-				siteId = GroupUtil.getSiteId(group);
-				sizeInBytes = fileEntry.getSize();
-				taxonomyCategoryBriefs = TransformUtil.transformToArray(
-					_assetCategoryLocalService.getCategories(
-						DLFileEntry.class.getName(),
-						fileEntry.getFileEntryId()),
-					assetCategory ->
-						TaxonomyCategoryBriefUtil.toTaxonomyCategoryBrief(
-							assetCategory, dtoConverterContext),
-					TaxonomyCategoryBrief.class);
-				title = fileEntry.getTitle();
-
+				setActions(dtoConverterContext::getActions);
+				setAdaptedImages(
+					() -> _getAdaptiveMedias(dtoConverterContext, fileEntry));
+				setAggregateRating(
+					() -> AggregateRatingUtil.toAggregateRating(
+						_ratingsStatsLocalService.fetchStats(
+							DLFileEntry.class.getName(),
+							fileEntry.getFileEntryId())));
+				setAssetLibraryKey(() -> GroupUtil.getAssetLibraryKey(group));
 				setContentUrl(
 					() -> {
 						if ((fileVersion.getSize() == 0) ||
@@ -182,6 +140,75 @@ public class DocumentDTOConverter
 						return _dlURLHelper.getDownloadURL(
 							fileEntry, fileVersion, null, StringPool.BLANK);
 					});
+				setContentValue(
+					() -> ContentValueUtil.toContentValue(
+						"contentValue", fileEntry::getContentStream,
+						dtoConverterContext.getUriInfo()));
+				setCreator(
+					() -> CreatorUtil.toCreator(
+						dtoConverterContext, _portal,
+						_userLocalService.fetchUser(fileEntry.getUserId())));
+				setCustomFields(
+					() -> CustomFieldsUtil.toCustomFields(
+						dtoConverterContext.isAcceptAllLanguages(),
+						DLFileEntry.class.getName(),
+						fileVersion.getFileVersionId(),
+						fileEntry.getCompanyId(),
+						dtoConverterContext.getLocale()));
+				setDateCreated(fileEntry::getCreateDate);
+				setDateExpired(fileEntry::getExpirationDate);
+				setDateModified(fileEntry::getModifiedDate);
+				setDatePublished(fileEntry::getDisplayDate);
+				setDescription(fileEntry::getDescription);
+				setDocumentFolderExternalReferenceCode(
+					() -> {
+						if (fileEntry.getFolderId() > 0) {
+							Folder folder = _dlAppService.getFolder(
+								fileEntry.getFolderId());
+
+							return folder.getExternalReferenceCode();
+						}
+
+						return null;
+					});
+				setDocumentFolderId(fileEntry::getFolderId);
+				setDocumentType(
+					() -> _toDocumentType(dtoConverterContext, fileVersion));
+				setEncodingFormat(fileEntry::getMimeType);
+				setExternalReferenceCode(fileEntry::getExternalReferenceCode);
+				setFileExtension(fileEntry::getExtension);
+				setFileName(fileEntry::getFileName);
+				setFriendlyUrlPath(
+					() -> {
+						FriendlyURLEntry friendlyURLEntry =
+							_friendlyURLEntryLocalService.
+								fetchMainFriendlyURLEntry(
+									_portal.getClassNameId(FileEntry.class),
+									fileEntry.getFileEntryId());
+
+						if (friendlyURLEntry == null) {
+							return null;
+						}
+
+						return friendlyURLEntry.getUrlTitle();
+					});
+				setId(fileEntry::getFileEntryId);
+				setKeywords(
+					() -> ListUtil.toArray(
+						_assetTagLocalService.getTags(
+							DLFileEntry.class.getName(),
+							fileEntry.getFileEntryId()),
+						AssetTag.NAME_ACCESSOR));
+				setNumberOfComments(
+					() -> _commentManager.getCommentsCount(
+						DLFileEntry.class.getName(),
+						fileEntry.getFileEntryId()));
+				setRelatedContents(
+					() -> RelatedContentUtil.toRelatedContents(
+						_assetEntryLocalService, _assetLinkLocalService,
+						dtoConverterContext.getDTOConverterRegistry(),
+						DLFileEntry.class.getName(), fileEntry.getFileEntryId(),
+						dtoConverterContext.getLocale()));
 				setRenderedContents(
 					() -> DisplayPageRendererUtil.getRenderedContent(
 						BaseDocumentResourceImpl.class,
@@ -193,6 +220,18 @@ public class DocumentDTOConverter
 						_layoutPageTemplateEntryService,
 						"getDocumentRenderedContentByDisplayPageDisplayPage" +
 							"Key"));
+				setSiteId(() -> GroupUtil.getSiteId(group));
+				setSizeInBytes(fileEntry::getSize);
+				setTaxonomyCategoryBriefs(
+					() -> TransformUtil.transformToArray(
+						_assetCategoryLocalService.getCategories(
+							DLFileEntry.class.getName(),
+							fileEntry.getFileEntryId()),
+						assetCategory ->
+							TaxonomyCategoryBriefUtil.toTaxonomyCategoryBrief(
+								assetCategory, dtoConverterContext),
+						TaxonomyCategoryBrief.class));
+				setTitle(fileEntry::getTitle);
 			}
 		};
 	}
@@ -279,18 +318,23 @@ public class DocumentDTOConverter
 
 		return new AdaptedImage() {
 			{
-				contentUrl = String.valueOf(adaptiveMedia.getURI());
-				contentValue = ContentValueUtil.toContentValue(
-					"adaptedImages.contentValue", adaptiveMedia::getInputStream,
-					uriInfo);
-				height = adaptiveMedia.getValue(
-					AMImageAttribute.AM_IMAGE_ATTRIBUTE_HEIGHT);
-				resolutionName = adaptiveMedia.getValue(
-					AMAttribute.getConfigurationUuidAMAttribute());
-				sizeInBytes = adaptiveMedia.getValue(
-					AMAttribute.getContentLengthAMAttribute());
-				width = adaptiveMedia.getValue(
-					AMImageAttribute.AM_IMAGE_ATTRIBUTE_WIDTH);
+				setContentUrl(() -> String.valueOf(adaptiveMedia.getURI()));
+				setContentValue(
+					() -> ContentValueUtil.toContentValue(
+						"adaptedImages.contentValue",
+						adaptiveMedia::getInputStream, uriInfo));
+				setHeight(
+					() -> adaptiveMedia.getValue(
+						AMImageAttribute.AM_IMAGE_ATTRIBUTE_HEIGHT));
+				setResolutionName(
+					() -> adaptiveMedia.getValue(
+						AMAttribute.getConfigurationUuidAMAttribute()));
+				setSizeInBytes(
+					() -> adaptiveMedia.getValue(
+						AMAttribute.getContentLengthAMAttribute()));
+				setWidth(
+					() -> adaptiveMedia.getValue(
+						AMImageAttribute.AM_IMAGE_ATTRIBUTE_WIDTH));
 			}
 		};
 	}
@@ -312,16 +356,6 @@ public class DocumentDTOConverter
 
 		return new DocumentType() {
 			{
-				description = dlFileEntryType.getDescription(
-					dtoConverterContext.getLocale());
-				description_i18n = LocalizedMapUtil.getI18nMap(
-					dtoConverterContext.isAcceptAllLanguages(),
-					dlFileEntryType.getDescriptionMap());
-				name = dlFileEntryType.getName(dtoConverterContext.getLocale());
-				name_i18n = LocalizedMapUtil.getI18nMap(
-					dtoConverterContext.isAcceptAllLanguages(),
-					dlFileEntryType.getNameMap());
-
 				setAvailableLanguages(
 					() -> {
 						Set<Locale> locales = new HashSet<>();
@@ -353,6 +387,20 @@ public class DocumentDTOConverter
 									_layoutLocalService),
 							ContentField.class);
 					});
+				setDescription(
+					() -> dlFileEntryType.getDescription(
+						dtoConverterContext.getLocale()));
+				setDescription_i18n(
+					() -> LocalizedMapUtil.getI18nMap(
+						dtoConverterContext.isAcceptAllLanguages(),
+						dlFileEntryType.getDescriptionMap()));
+				setName(
+					() -> dlFileEntryType.getName(
+						dtoConverterContext.getLocale()));
+				setName_i18n(
+					() -> LocalizedMapUtil.getI18nMap(
+						dtoConverterContext.isAcceptAllLanguages(),
+						dlFileEntryType.getNameMap()));
 			}
 		};
 	}
@@ -379,9 +427,6 @@ public class DocumentDTOConverter
 	private CommentManager _commentManager;
 
 	@Reference
-	private DDMBeanTranslator _ddmBeanTranslator;
-
-	@Reference
 	private DDMStorageEngineManager _ddmStorageEngineManager;
 
 	@Reference
@@ -398,6 +443,9 @@ public class DocumentDTOConverter
 
 	@Reference
 	private DLURLHelper _dlURLHelper;
+
+	@Reference
+	private FriendlyURLEntryLocalService _friendlyURLEntryLocalService;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

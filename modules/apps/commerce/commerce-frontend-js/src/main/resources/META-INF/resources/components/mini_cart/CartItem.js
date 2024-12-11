@@ -14,6 +14,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import ServiceProvider from '../../ServiceProvider/index';
 import {debouncePromise} from '../../utilities/debounce';
 import {CART_PRODUCT_QUANTITY_CHANGED} from '../../utilities/eventsDefinitions';
+import {getMultipleQuantity} from '../../utilities/quantities';
 import Price from '../price/Price';
 import QuantitySelector from '../quantity_selector/QuantitySelector';
 import ItemInfoView from './CartItemViews/ItemInfoView';
@@ -25,7 +26,7 @@ import {
 	REMOVAL_TIMEOUT,
 	UNEXPECTED_ERROR,
 } from './util/constants';
-import {generateProductPageURL, parseOptions} from './util/index';
+import {filterOptions, generateProductPageURL, hasOptions} from './util/index';
 
 const CartResource = ServiceProvider.DeliveryCartAPI('v1');
 
@@ -56,6 +57,21 @@ const deboncedUpdateItemQuantity = debouncePromise(
 	1000
 );
 
+const isValidMedia = (adaptiveMediaImageHTMLTag) => {
+	if (adaptiveMediaImageHTMLTag) {
+		const testElement = window.document.createElement('div');
+
+		testElement.innerHTML = adaptiveMediaImageHTMLTag;
+
+		const imgElement = testElement.querySelector('img');
+		const srcAttribute = imgElement.getAttribute('src');
+
+		return !!srcAttribute;
+	}
+
+	return false;
+};
+
 function CartItem({
 	adaptiveMediaImageHTMLTag,
 	cartItems: childItems,
@@ -78,8 +94,9 @@ function CartItem({
 	const [itemState, setItemState] = useState(INITIAL_ITEM_STATE);
 	const [selectorQuantity, setSelectorQuantity] = useState(cartItemQuantity);
 	const hasChildItems = !!childItems?.length;
+	const hasSkuUnitOfMeasure = !!skuUnitOfMeasure?.key;
 	const isMounted = useIsMounted();
-	const options = parseOptions(rawOptions);
+	const options = filterOptions(rawOptions);
 
 	useEffect(() => {
 		setSelectorQuantity(cartItemQuantity);
@@ -170,86 +187,51 @@ function CartItem({
 
 	const getClassName = (className) => {
 		return classnames(className, {
-			'mini-cart-item-alignment': Liferay.FeatureFlags['COMMERCE-9599'],
+			'mini-cart-item-alignment': true,
 		});
 	};
 
 	return (
 		<div
 			className={classnames('mini-cart-item', {
-				'align-items-start':
-					Liferay.FeatureFlags['COMMERCE-9599'] && hasChildItems,
+				'align-items-start': hasChildItems,
 				'is-removed': isRemoved,
 			})}
 		>
-			{Liferay.FeatureFlags['COMMERCE-9599'] ? (
-				<div className="mini-cart-item-details position-relative">
-					<a
-						className="h-100 mini-cart-item-anchor position-absolute w-100"
-						data-senna-off="true"
-						href={productPageUrl}
-					>
-						<span className="sr-only">
-							{sub(Liferay.Language.get('go-to-x'), name)}
-						</span>
-					</a>
-
-					{!!adaptiveMediaImageHTMLTag && (
-						<div
-							className="mini-cart-item-thumbnail"
-							dangerouslySetInnerHTML={{
-								__html: adaptiveMediaImageHTMLTag,
-							}}
-						/>
-					)}
-
-					<div
-						className={classnames(
-							'mini-cart-item-info ml-3 w-100',
-							{
-								options: Boolean(options),
-							}
-						)}
-					>
-						<ItemInfoView
-							childItems={childItems}
-							name={name}
-							options={options}
-							replacedSku={replacedSku}
-							sku={sku}
-						/>
-					</div>
-				</div>
-			) : (
+			<div className="mini-cart-item-details position-relative">
 				<a
-					className="mini-cart-item-details"
+					className="h-100 mini-cart-item-anchor position-absolute w-100"
 					data-senna-off="true"
 					href={productPageUrl}
 				>
-					{!!adaptiveMediaImageHTMLTag && (
-						<div
-							className="mini-cart-item-thumbnail"
-							dangerouslySetInnerHTML={{
-								__html: adaptiveMediaImageHTMLTag,
-							}}
-						/>
-					)}
-
-					<div
-						className={classnames('mini-cart-item-info ml-3', {
-							options: Boolean(options),
-						})}
-					>
-						<ItemInfoView
-							childItems={childItems}
-							name={name}
-							options={options}
-							replacedSku={replacedSku}
-							sku={sku}
-						/>
-					</div>
+					<span className="sr-only">
+						{sub(Liferay.Language.get('go-to-x'), name)}
+					</span>
 				</a>
-			)}
+
+				{isValidMedia(adaptiveMediaImageHTMLTag) && (
+					<div
+						className="mini-cart-item-thumbnail"
+						dangerouslySetInnerHTML={{
+							__html: adaptiveMediaImageHTMLTag,
+						}}
+					/>
+				)}
+
+				<div
+					className={classnames('mini-cart-item-info ml-3 w-100', {
+						options: Boolean(options),
+					})}
+				>
+					<ItemInfoView
+						childItems={childItems}
+						name={name}
+						options={options}
+						replacedSku={replacedSku}
+						sku={sku}
+					/>
+				</div>
+			</div>
 
 			<div
 				className={getClassName(
@@ -297,8 +279,13 @@ function CartItem({
 					}}
 					quantity={selectorQuantity}
 					step={
-						skuUnitOfMeasure?.incrementalOrderQuantity ||
-						settings.multipleQuantity
+						skuUnitOfMeasure
+							? getMultipleQuantity(
+									skuUnitOfMeasure.incrementalOrderQuantity,
+									settings.multipleQuantity,
+									skuUnitOfMeasure.precision
+								)
+							: settings.multipleQuantity
 					}
 					{...settings}
 					unitOfMeasure={skuUnitOfMeasure}
@@ -316,7 +303,7 @@ function CartItem({
 			</div>
 
 			<div className={getClassName('mini-cart-item-actions')}>
-				{Liferay.FeatureFlags['COMMERCE-9599'] && hasChildItems ? (
+				{hasOptions(rawOptions) || hasSkuUnitOfMeasure ? (
 					<ClayDropDown
 						closeOnClick
 						trigger={
@@ -326,6 +313,7 @@ function CartItem({
 									name
 								)}
 								className="d-inline-flex"
+								data-qa-id="cartItemActions"
 								displayType="unstyled"
 								symbol="ellipsis-v"
 								title={sub(
@@ -338,7 +326,11 @@ function CartItem({
 						<ClayDropDown.ItemList>
 							<ClayDropDown.Item
 								onClick={() =>
-									setEditedItem({cartItemId, name, productId})
+									setEditedItem({
+										cartItemId,
+										name,
+										productId,
+									})
 								}
 							>
 								{Liferay.Language.get('edit')}

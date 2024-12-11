@@ -65,7 +65,6 @@ public class SegmentsEntryDisplayContext {
 		segmentEntrySearchContainer.setResultsAndTotal(
 			_segmentsEntryLocalService.searchSegmentsEntries(
 				_themeDisplay.getCompanyId(), _getGroupId(), _getKeywords(),
-				true,
 				LinkedHashMapBuilder.<String, Object>put(
 					"excludedSegmentsEntryIds",
 					_segmentsEntryItemSelectorCriterion.
@@ -139,19 +138,14 @@ public class SegmentsEntryDisplayContext {
 			orderByAsc = true;
 		}
 
-		Sort sort = null;
-
 		if (Objects.equals(_getOrderByCol(), "name")) {
-			sort = new Sort(
+			return new Sort(
 				Field.getSortableFieldName(
 					"localized_name_".concat(_themeDisplay.getLanguageId())),
 				Sort.STRING_TYPE, !orderByAsc);
 		}
-		else {
-			sort = new Sort(Field.MODIFIED_DATE, Sort.LONG_TYPE, !orderByAsc);
-		}
 
-		return sort;
+		return new Sort(Field.MODIFIED_DATE, Sort.LONG_TYPE, !orderByAsc);
 	}
 
 	private long _groupId;

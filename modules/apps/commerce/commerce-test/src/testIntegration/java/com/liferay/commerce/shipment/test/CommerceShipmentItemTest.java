@@ -13,7 +13,7 @@ import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.test.util.CommerceCurrencyTestUtil;
 import com.liferay.commerce.exception.CommerceShipmentStatusException;
-import com.liferay.commerce.exception.DuplicateCommerceShipmentItemException;
+import com.liferay.commerce.exception.DuplicateCommerceShipmentItemExternalReferenceCodeException;
 import com.liferay.commerce.inventory.engine.CommerceInventoryEngine;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceShipment;
@@ -98,14 +98,6 @@ public class CommerceShipmentItemTest {
 		_commerceContext = new TestCommerceContext(
 			_commerceOrder.getAccountEntry(), _commerceCurrency,
 			_commerceChannel, _user, _group, _commerceOrder);
-
-		_commerceShipmentItem =
-			CommerceShipmentTestUtil.addCommerceShipmentItem(
-				_commerceContext,
-				CPTestUtil.addCPInstanceWithRandomSku(_group.getGroupId()),
-				_group.getGroupId(), _user.getUserId(),
-				_commerceOrder.getCommerceOrderId(),
-				_commerceShipment.getCommerceShipmentId(), 2, 1);
 	}
 
 	@Test
@@ -124,6 +116,14 @@ public class CommerceShipmentItemTest {
 			"That shipment should contain the shipment Item"
 		);
 
+		CommerceShipmentItem commerceShipmentItem =
+			CommerceShipmentTestUtil.addCommerceShipmentItem(
+				_commerceContext,
+				CPTestUtil.addCPInstanceWithRandomSku(_group.getGroupId()),
+				_group.getGroupId(), _user.getUserId(),
+				_commerceOrder.getCommerceOrderId(),
+				_commerceShipment.getCommerceShipmentId(), 2, 1);
+
 		List<CommerceShipmentItem> commerceShipmentItems =
 			_commerceShipmentItemLocalService.getCommerceShipmentItems(
 				_commerceShipment.getCommerceShipmentId(), QueryUtil.ALL_POS,
@@ -135,7 +135,7 @@ public class CommerceShipmentItemTest {
 		CommerceShipmentItem actualCommerceShipmentItem =
 			commerceShipmentItems.get(0);
 
-		Assert.assertEquals(_commerceShipmentItem, actualCommerceShipmentItem);
+		Assert.assertEquals(commerceShipmentItem, actualCommerceShipmentItem);
 
 		_resetCommerceShipment();
 	}
@@ -273,7 +273,7 @@ public class CommerceShipmentItemTest {
 
 		BigDecimal actualCPInstanceStockQuantity =
 			_commerceInventoryEngine.getStockQuantity(
-				_user.getCompanyId(), cpInstance.getGroupId(),
+				_user.getCompanyId(), 0, cpInstance.getGroupId(),
 				_commerceChannel.getGroupId(), cpInstance.getSku(),
 				StringPool.BLANK);
 
@@ -283,7 +283,9 @@ public class CommerceShipmentItemTest {
 		_resetCommerceShipment();
 	}
 
-	@Test(expected = DuplicateCommerceShipmentItemException.class)
+	@Test(
+		expected = DuplicateCommerceShipmentItemExternalReferenceCodeException.class
+	)
 	public void testUpdateCommerceShipmentItem() throws Exception {
 		frutillaRule.scenario(
 			"It should not be possible to update the ERC field with a value " +
@@ -296,6 +298,14 @@ public class CommerceShipmentItemTest {
 			"An exception shall be raised"
 		);
 
+		CommerceShipmentItem commerceShipmentItem =
+			CommerceShipmentTestUtil.addCommerceShipmentItem(
+				_commerceContext,
+				CPTestUtil.addCPInstanceWithRandomSku(_group.getGroupId()),
+				_group.getGroupId(), _user.getUserId(),
+				_commerceOrder.getCommerceOrderId(),
+				_commerceShipment.getCommerceShipmentId(), 2, 1);
+
 		CommerceShipmentItem newCommerceShipmentItem =
 			CommerceShipmentTestUtil.addCommerceShipmentItem(
 				_commerceContext,
@@ -307,7 +317,7 @@ public class CommerceShipmentItemTest {
 		String externalReferenceCode = "externalReferenceCode";
 
 		_commerceShipmentItemLocalService.updateExternalReferenceCode(
-			_commerceShipmentItem.getCommerceShipmentItemId(),
+			commerceShipmentItem.getCommerceShipmentItemId(),
 			externalReferenceCode);
 
 		_commerceShipmentItemLocalService.updateExternalReferenceCode(
@@ -344,6 +354,14 @@ public class CommerceShipmentItemTest {
 			_commerceShipmentLocalService.updateCommerceShipment(
 				_commerceShipment);
 
+		CommerceShipmentItem commerceShipmentItem =
+			CommerceShipmentTestUtil.addCommerceShipmentItem(
+				_commerceContext,
+				CPTestUtil.addCPInstanceWithRandomSku(_group.getGroupId()),
+				_group.getGroupId(), _user.getUserId(),
+				_commerceOrder.getCommerceOrderId(),
+				_commerceShipment.getCommerceShipmentId(), 2, 1);
+
 		CommerceShipmentItem newCommerceShipmentItem =
 			_commerceShipmentItemLocalService.updateCommerceShipmentItem(
 				_commerceShipmentItem.getCommerceShipmentItemId(),
@@ -354,7 +372,7 @@ public class CommerceShipmentItemTest {
 			_commerceShipment.getStatus(),
 			CommerceShipmentConstants.SHIPMENT_STATUS_SHIPPED);
 		Assert.assertEquals(
-			_commerceShipmentItem.getQuantity(),
+			commerceShipmentItem.getQuantity(),
 			newCommerceShipmentItem.getQuantity());
 
 		_resetCommerceShipment();

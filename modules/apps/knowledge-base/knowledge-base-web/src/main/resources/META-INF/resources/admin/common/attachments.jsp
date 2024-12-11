@@ -33,7 +33,7 @@ if (kbArticle != null) {
 	<div class="hide selected" id="<portlet:namespace />selectedFileNameMetadataContainer"></div>
 
 	<c:if test="<%= !attachmentsFileEntries.isEmpty() %>">
-		<h4><liferay-ui:message key="saved-attachments" /></h4>
+		<div class="h4"><liferay-ui:message key="saved-attachments" /></div>
 
 		<div id="<portlet:namespace />existingAttachmentsContainer">
 
@@ -103,7 +103,7 @@ if (kbArticle != null) {
 	});
 </aui:script>
 
-<script>
+<aui:script>
 	window['<portlet:namespace />deleteFileEntry'] = function (fileEntryId) {
 		var removeFileEntryIdsInput = document.getElementById(
 			'<portlet:namespace />removeFileEntryIds'
@@ -127,4 +127,4 @@ if (kbArticle != null) {
 			fileEntryIdWrapper.style.display = 'none';
 		}
 	};
-</script>
+</aui:script>

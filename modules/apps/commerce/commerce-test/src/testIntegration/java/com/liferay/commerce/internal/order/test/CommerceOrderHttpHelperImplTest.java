@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -86,6 +87,8 @@ public class CommerceOrderHttpHelperImplTest {
 		_group = GroupTestUtil.addGroup();
 
 		_user = UserTestUtil.addUser();
+
+		_permissionChecker = PermissionThreadLocal.getPermissionChecker();
 
 		PermissionThreadLocal.setPermissionChecker(
 			PermissionCheckerFactoryUtil.create(_user));
@@ -145,11 +148,11 @@ public class CommerceOrderHttpHelperImplTest {
 
 	@After
 	public void tearDown() throws PortalException {
-		CentralizedThreadLocal.clearShortLivedThreadLocals();
-
 		for (CommerceOrder commerceOrder : _commerceOrders) {
 			_commerceOrderLocalService.deleteCommerceOrder(commerceOrder);
 		}
+
+		CentralizedThreadLocal.clearShortLivedThreadLocals();
 	}
 
 	@Test
@@ -225,6 +228,25 @@ public class CommerceOrderHttpHelperImplTest {
 					_httpServletRequest)));
 	}
 
+	@Test
+	public void testGetCommerceOrderWithNullCommerceContext() throws Exception {
+		frutillaRule.scenario(
+			"Attempt to get a commerce order from http servlet request"
+		).given(
+			"An HttpServletRequest and a ThemeDisplay"
+		).when(
+			"I use an empty HttpServletRequest with null CommerceContext"
+		).then(
+			"I should get a null value"
+		);
+
+		CommerceOrder commerceOrder =
+			_commerceOrderHttpHelper.getCurrentCommerceOrder(
+				new MockHttpServletRequest());
+
+		Assert.assertNull(commerceOrder);
+	}
+
 	@Rule
 	public FrutillaRule frutillaRule = new FrutillaRule();
 
@@ -255,6 +277,7 @@ public class CommerceOrderHttpHelperImplTest {
 	private final List<CommerceOrder> _commerceOrders = new ArrayList<>();
 	private Group _group;
 	private HttpServletRequest _httpServletRequest;
+	private PermissionChecker _permissionChecker;
 	private ThemeDisplay _themeDisplay;
 
 }

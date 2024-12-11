@@ -16,25 +16,6 @@ interface IStringInputProps extends ISegmentEditorInputBase {
 }
 
 export default class StringInput extends React.Component<IStringInputProps> {
-	_completedAnalytics = false;
-
-	componentDidUpdate() {
-		const {
-			id,
-			property: {entityName, type},
-			valid
-		} = this.props;
-
-		if (!id && valid && !this._completedAnalytics) {
-			this._completedAnalytics = true;
-
-			analytics.track('Dynamic Segment Creation - Completed Attribute', {
-				entityName,
-				type
-			});
-		}
-	}
-
 	@autobind
 	fieldValuesDataSourceFn() {
 		const {
@@ -111,10 +92,12 @@ export default class StringInput extends React.Component<IStringInputProps> {
 										'has-error': showError
 									})}
 									data-testid='value-select'
-									items={options.map(option => ({
-										label: option.label,
-										value: option.value
-									}))}
+									items={
+										options.map(({label, value}) => ({
+											label,
+											value
+										})) as {label: string; value: string}[]
+									}
 									onBlur={this.handleBlur}
 									onSelectionChange={this.handleChange}
 									selectedKey={value}

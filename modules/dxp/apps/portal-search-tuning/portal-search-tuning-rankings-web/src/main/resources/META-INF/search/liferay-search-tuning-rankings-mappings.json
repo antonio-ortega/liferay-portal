@@ -1,23 +1,15 @@
 {
 	"properties": {
 		"aliases": {
-			"store": true,
 			"type": "text"
 		},
 		"blocks": {
-			"store": true,
 			"type": "keyword"
 		},
 		"groupExternalReferenceCode": {
-			"store": true,
 			"type": "keyword"
 		},
-		"inactive": {
-			"store": true,
-			"type": "boolean"
-		},
 		"index": {
-			"store": true,
 			"type": "keyword"
 		},
 		"name": {
@@ -26,17 +18,14 @@
 					"type": "keyword"
 				}
 			},
-			"store": true,
 			"type": "text"
 		},
 		"pins": {
 			"properties": {
 				"position": {
-					"store": true,
 					"type": "integer"
 				},
 				"uid": {
-					"store": true,
 					"type": "keyword"
 				}
 			},
@@ -48,7 +37,6 @@
 					"type": "keyword"
 				}
 			},
-			"store": true,
 			"type": "text"
 		},
 		"queryStrings": {
@@ -57,19 +45,18 @@
 					"type": "keyword"
 				}
 			},
-			"store": true,
 			"type": "text"
 		},
+		"status": {
+			"type": "keyword"
+		},
 		"sxpBlueprintExternalReferenceCode": {
-			"store": true,
 			"type": "keyword"
 		},
 		"timestamp": {
-			"store": true,
 			"type": "date"
 		},
 		"uid": {
-			"store": true,
 			"type": "keyword"
 		}
 	}

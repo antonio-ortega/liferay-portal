@@ -10,6 +10,7 @@ import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.headless.delivery.dto.v1_0.NavigationMenu;
 import com.liferay.headless.delivery.dto.v1_0.NavigationMenuItem;
 import com.liferay.headless.delivery.dto.v1_0.util.CreatorUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
 import com.liferay.headless.delivery.resource.v1_0.NavigationMenuResource;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -124,7 +125,7 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 
 		SiteNavigationMenu siteNavigationMenu =
 			_siteNavigationMenuService.addSiteNavigationMenu(
-				siteId, navigationMenu.getName(),
+				null, siteId, navigationMenu.getName(),
 				SiteNavigationConstants.TYPE_DEFAULT, true,
 				ServiceContextBuilder.create(
 					siteId, contextHttpServletRequest, null
@@ -197,10 +198,16 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 
 		SiteNavigationMenuItem siteNavigationMenuItem =
 			_siteNavigationMenuItemService.addSiteNavigationMenuItem(
-				siteId, siteNavigationMenuId, parentNavigationMenuId,
+				null, siteId, siteNavigationMenuId, parentNavigationMenuId,
 				_getType(navigationMenuItem), unicodeProperties,
 				ServiceContextBuilder.create(
 					siteId, contextHttpServletRequest, null
+				).expandoBridgeAttributes(
+					CustomFieldsUtil.toMap(
+						SiteNavigationMenuItem.class.getName(),
+						contextCompany.getCompanyId(),
+						navigationMenuItem.getCustomFields(),
+						contextAcceptLanguage.getPreferredLocale())
 				).build());
 
 		_createNavigationMenuItems(
@@ -275,23 +282,45 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 	}
 
 	private String _getName(
-			String type, UnicodeProperties unicodeProperties,
+			Layout layout, String type, UnicodeProperties unicodeProperties,
 			boolean useCustomName)
 		throws JSONException {
 
 		String defaultLanguageId = LocaleUtil.toLanguageId(
 			LocaleUtil.getDefault());
+		String preferredLanguageId =
+			contextAcceptLanguage.getPreferredLanguageId();
+
+		if (StringUtil.equals(type, "page")) {
+			if (!useCustomName && (layout == null)) {
+				return null;
+			}
+
+			if (!useCustomName && (layout != null)) {
+				return layout.getName(
+					contextAcceptLanguage.getPreferredLocale());
+			}
+
+			if (useCustomName) {
+				return unicodeProperties.getProperty(
+					"name_" + preferredLanguageId,
+					unicodeProperties.getProperty("name_" + defaultLanguageId));
+			}
+
+			return null;
+		}
 
 		if (useCustomName) {
 			JSONObject customNameJSONObject = _jsonFactory.createJSONObject(
 				unicodeProperties.getProperty("localizedNames"));
 
-			return customNameJSONObject.getString(defaultLanguageId);
+			return customNameJSONObject.getString(
+				preferredLanguageId,
+				customNameJSONObject.getString(defaultLanguageId));
 		}
 
-		if (StringUtil.equals(type, "url")) {
-			String preferredLanguageId =
-				contextAcceptLanguage.getPreferredLanguageId();
+		if (StringUtil.equals(type, "navigationMenu") ||
+			StringUtil.equals(type, "url")) {
 
 			return unicodeProperties.getProperty(
 				"name_" + preferredLanguageId,
@@ -443,32 +472,8 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 	private NavigationMenu _toNavigationMenu(
 		SiteNavigationMenu siteNavigationMenu) {
 
-		Map<Long, List<SiteNavigationMenuItem>> siteNavigationMenuItemsMap =
-			_getSiteNavigationMenuItemsMap(
-				_siteNavigationMenuItemService.getSiteNavigationMenuItems(
-					siteNavigationMenu.getSiteNavigationMenuId(),
-					new SiteNavigationMenuItemOrderComparator()));
-
 		return new NavigationMenu() {
 			{
-				creator = CreatorUtil.toCreator(
-					new DefaultDTOConverterContext(
-						null, null, null, contextUriInfo, null),
-					_portal,
-					_userLocalService.fetchUser(
-						siteNavigationMenu.getUserId()));
-				dateCreated = siteNavigationMenu.getCreateDate();
-				dateModified = siteNavigationMenu.getModifiedDate();
-				id = siteNavigationMenu.getSiteNavigationMenuId();
-				name = siteNavigationMenu.getName();
-				navigationMenuItems = transformToArray(
-					siteNavigationMenuItemsMap.getOrDefault(
-						0L, new ArrayList<>()),
-					siteNavigationMenuItem -> _toNavigationMenuItem(
-						siteNavigationMenuItem, siteNavigationMenuItemsMap),
-					NavigationMenuItem.class);
-				siteId = siteNavigationMenu.getGroupId();
-
 				setActions(
 					() -> HashMapBuilder.put(
 						"delete",
@@ -481,6 +486,37 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 							ActionKeys.UPDATE, siteNavigationMenu,
 							"putNavigationMenu")
 					).build());
+				setCreator(
+					() -> CreatorUtil.toCreator(
+						new DefaultDTOConverterContext(
+							null, null, null, contextUriInfo, null),
+						_portal,
+						_userLocalService.fetchUser(
+							siteNavigationMenu.getUserId())));
+				setDateCreated(siteNavigationMenu::getCreateDate);
+				setDateModified(siteNavigationMenu::getModifiedDate);
+				setId(siteNavigationMenu::getSiteNavigationMenuId);
+				setName(siteNavigationMenu::getName);
+				setNavigationMenuItems(
+					() -> {
+						Map<Long, List<SiteNavigationMenuItem>>
+							siteNavigationMenuItemsMap =
+								_getSiteNavigationMenuItemsMap(
+									_siteNavigationMenuItemService.
+										getSiteNavigationMenuItems(
+											siteNavigationMenu.
+												getSiteNavigationMenuId(),
+											SiteNavigationMenuItemOrderComparator.
+												getInstance(true)));
+
+						return transformToArray(
+							siteNavigationMenuItemsMap.getOrDefault(
+								0L, new ArrayList<>()),
+							siteNavigationMenuItem -> _toNavigationMenuItem(
+								siteNavigationMenuItem,
+								siteNavigationMenuItemsMap),
+							NavigationMenuItem.class);
+					});
 				setNavigationType(
 					() -> {
 						if (siteNavigationMenu.getType() == 0) {
@@ -490,6 +526,7 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 						return NavigationType.values()
 							[siteNavigationMenu.getType() - 1];
 					});
+				setSiteId(siteNavigationMenu::getGroupId);
 			}
 		};
 	}
@@ -503,35 +540,16 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 		UnicodeProperties unicodeProperties = _getUnicodeProperties(
 			siteNavigationMenuItem);
 
-		Map<Locale, String> localizedMap = _getLocalizedNamesFromProperties(
-			unicodeProperties);
+		final String navigationMenuItemType = _toType(
+			siteNavigationMenuItem.getType());
 
 		return new NavigationMenuItem() {
 			{
-				creator = CreatorUtil.toCreator(
-					new DefaultDTOConverterContext(
-						null, null, null, contextUriInfo, null),
-					_portal,
-					_userLocalService.fetchUser(
-						siteNavigationMenuItem.getUserId()));
-				dateCreated = siteNavigationMenuItem.getCreateDate();
-				dateModified = siteNavigationMenuItem.getModifiedDate();
-				id = siteNavigationMenuItem.getSiteNavigationMenuItemId();
-				navigationMenuItems = transformToArray(
-					siteNavigationMenuItemsMap.getOrDefault(
-						siteNavigationMenuItem.getSiteNavigationMenuItemId(),
-						new ArrayList<>()),
-					item -> _toNavigationMenuItem(
-						item, siteNavigationMenuItemsMap),
-					NavigationMenuItem.class);
-				type = _toType(siteNavigationMenuItem.getType());
-				url = unicodeProperties.getProperty("url");
-
-				useCustomName = Boolean.valueOf(
-					unicodeProperties.getProperty("useCustomName"));
-
 				setAvailableLanguages(
 					() -> {
+						Map<Locale, String> localizedMap =
+							_getLocalizedNamesFromProperties(unicodeProperties);
+
 						Set<Locale> locales = localizedMap.keySet();
 
 						return LocaleUtil.toW3cLanguageIds(
@@ -539,12 +557,9 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 					});
 				setContentURL(
 					() -> {
-						if (Objects.equals(type, FileEntry.class.getName())) {
-							type = DLFileEntry.class.getName();
-						}
-
 						DTOConverter<?, ?> dtoConverter =
-							_dtoConverterRegistry.getDTOConverter(type);
+							_dtoConverterRegistry.getDTOConverter(
+								navigationMenuItemType);
 
 						if (dtoConverter == null) {
 							return null;
@@ -555,6 +570,23 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 								unicodeProperties.getProperty("classPK")),
 							contextUriInfo);
 					});
+				setCreator(
+					() -> CreatorUtil.toCreator(
+						new DefaultDTOConverterContext(
+							null, null, null, contextUriInfo, null),
+						_portal,
+						_userLocalService.fetchUser(
+							siteNavigationMenuItem.getUserId())));
+				setCustomFields(
+					() -> CustomFieldsUtil.toCustomFields(
+						contextAcceptLanguage.isAcceptAllLanguages(),
+						SiteNavigationMenuItem.class.getName(),
+						siteNavigationMenuItem.getSiteNavigationMenuItemId(),
+						siteNavigationMenuItem.getCompanyId(),
+						contextAcceptLanguage.getPreferredLocale()));
+				setDateCreated(siteNavigationMenuItem::getCreateDate);
+				setDateModified(siteNavigationMenuItem::getModifiedDate);
+				setId(siteNavigationMenuItem::getSiteNavigationMenuItemId);
 				setLink(
 					() -> {
 						if (layout == null) {
@@ -590,17 +622,9 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 						return i18nMap;
 					});
 				setName(
-					() -> {
-						String name = _getName(
-							type, unicodeProperties, useCustomName);
-
-						if ((name == null) && (layout != null)) {
-							return layout.getName(
-								contextAcceptLanguage.getPreferredLocale());
-						}
-
-						return name;
-					});
+					() -> _getName(
+						layout, navigationMenuItemType, unicodeProperties,
+						getUseCustomName()));
 				setName_i18n(
 					() -> {
 						if (contextAcceptLanguage.isAcceptAllLanguages()) {
@@ -608,7 +632,9 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 								_getLocalizedNamesFromProperties(
 									unicodeProperties);
 
-							if (localizedNames.isEmpty() && (layout != null)) {
+							if ((!useCustomName || localizedNames.isEmpty()) &&
+								(layout != null)) {
+
 								localizedNames = layout.getNameMap();
 							}
 
@@ -617,6 +643,15 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 
 						return null;
 					});
+				setNavigationMenuItems(
+					() -> transformToArray(
+						siteNavigationMenuItemsMap.getOrDefault(
+							siteNavigationMenuItem.
+								getSiteNavigationMenuItemId(),
+							new ArrayList<>()),
+						item -> _toNavigationMenuItem(
+							item, siteNavigationMenuItemsMap),
+						NavigationMenuItem.class));
 				setSitePageURL(
 					() -> {
 						if (layout == null) {
@@ -640,10 +675,11 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 				setType(
 					() -> {
 						DTOConverter<?, ?> dtoConverter =
-							_dtoConverterRegistry.getDTOConverter(type);
+							_dtoConverterRegistry.getDTOConverter(
+								navigationMenuItemType);
 
 						if (dtoConverter == null) {
-							return type;
+							return navigationMenuItemType;
 						}
 
 						String contentType = dtoConverter.getContentType();
@@ -651,6 +687,10 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 						return Character.toLowerCase(contentType.charAt(0)) +
 							contentType.substring(1);
 					});
+				setUrl(() -> unicodeProperties.getProperty("url"));
+				setUseCustomName(
+					() -> Boolean.valueOf(
+						unicodeProperties.getProperty("useCustomName")));
 			}
 		};
 	}
@@ -661,6 +701,9 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 		}
 		else if (type.equals("node")) {
 			return "navigationMenu";
+		}
+		else if (type.equals(FileEntry.class.getName())) {
+			return DLFileEntry.class.getName();
 		}
 
 		return type;
@@ -706,6 +749,13 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 									siteNavigationMenuItem),
 								ServiceContextBuilder.create(
 									siteId, contextHttpServletRequest, null
+								).expandoBridgeAttributes(
+									CustomFieldsUtil.toMap(
+										SiteNavigationMenuItem.class.getName(),
+										contextCompany.getCompanyId(),
+										navigationMenuItem.getCustomFields(),
+										contextAcceptLanguage.
+											getPreferredLocale())
 								).build());
 
 					_updateNavigationMenuItems(
@@ -728,7 +778,7 @@ public class NavigationMenuResourceImpl extends BaseNavigationMenuResourceImpl {
 				siteNavigationMenuItems) {
 
 			_siteNavigationMenuItemService.deleteSiteNavigationMenuItem(
-				siteNavigationMenuItem.getSiteNavigationMenuItemId());
+				siteNavigationMenuItem.getSiteNavigationMenuItemId(), true);
 		}
 	}
 

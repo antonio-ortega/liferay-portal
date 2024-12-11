@@ -18,11 +18,17 @@ import HTMLEditorModal from '../components/HTMLEditorModal';
  *  the editor is destroyed for any internal reason. This function does NOT need
  *  to be called if the editor is destroyed with destroyEditor function.
  */
-function createEditor(element, changeCallback, destroyCallback) {
+function createEditor(
+	_element,
+	changeCallback,
+	destroyCallback,
+	_clickPosition,
+	content
+) {
 	render(
 		HTMLEditorModal,
 		{
-			initialContent: element.innerHTML,
+			initialContent: content,
 			onClose: destroyCallback,
 			onSave: (content) => {
 				changeCallback(content);

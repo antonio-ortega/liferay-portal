@@ -84,9 +84,10 @@ public class DDMFormInstanceRecordExporterImpl
 				ddmFormInstanceId);
 
 			byte[] content = write(
-				type, getDDMFormFieldsLabel(ddmFormFields, locale),
+				ddmFormFields, getDDMFormFieldsLabel(ddmFormFields, locale),
 				getDDMFormFieldValues(
-					ddmFormFields, ddmFormInstanceRecords, locale));
+					ddmFormFields, ddmFormInstanceRecords, locale),
+				type);
 
 			builder = builder.withContent(content);
 		}
@@ -140,8 +141,12 @@ public class DDMFormInstanceRecordExporterImpl
 
 			if (value != null) {
 				sb.append(value);
-				sb.append(StringPool.COMMA_AND_SPACE);
 			}
+			else {
+				sb.append(StringPool.BLANK);
+			}
+
+			sb.append(StringPool.COMMA_AND_SPACE);
 		}
 
 		sb.setIndex(sb.index() - 1);
@@ -266,25 +271,23 @@ public class DDMFormInstanceRecordExporterImpl
 	}
 
 	protected byte[] write(
-			String type, Map<String, String> ddmFormFieldsLabel,
-			List<Map<String, String>> ddmFormFieldValues)
+			Map<String, DDMFormField> ddmFormFields,
+			Map<String, String> ddmFormFieldsLabel,
+			List<Map<String, String>> ddmFormFieldValues, String type)
 		throws Exception {
 
 		DDMFormInstanceRecordWriter ddmFormInstanceRecordWriter =
 			ddmFormInstanceRecordWriterRegistry.getDDMFormInstanceRecordWriter(
 				type);
 
-		DDMFormInstanceRecordWriterRequest.Builder builder =
-			DDMFormInstanceRecordWriterRequest.Builder.newBuilder(
-				ddmFormFieldsLabel, ddmFormFieldValues);
-
-		DDMFormInstanceRecordWriterRequest ddmFormInstanceRecordWriterRequest =
-			builder.build();
-
 		DDMFormInstanceRecordWriterResponse
 			ddmFormInstanceRecordWriterResponse =
 				ddmFormInstanceRecordWriter.write(
-					ddmFormInstanceRecordWriterRequest);
+					DDMFormInstanceRecordWriterRequest.Builder.newBuilder(
+						ddmFormFieldsLabel, ddmFormFieldValues
+					).withDDMFormFields(
+						ddmFormFields
+					).build());
 
 		return ddmFormInstanceRecordWriterResponse.getContent();
 	}

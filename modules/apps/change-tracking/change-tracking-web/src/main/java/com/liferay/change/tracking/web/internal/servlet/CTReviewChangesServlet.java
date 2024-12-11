@@ -8,7 +8,6 @@ package com.liferay.change.tracking.web.internal.servlet;
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.portal.kernel.exception.NoSuchTicketException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManager;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Ticket;
@@ -50,14 +49,6 @@ public class CTReviewChangesServlet extends HttpServlet {
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
-
-		if (!_featureFlagManager.isEnabled("LPS-187436")) {
-			httpServletResponse.sendError(
-				HttpServletResponse.SC_NOT_FOUND,
-				httpServletRequest.getRequestURI());
-
-			return;
-		}
 
 		super.service(httpServletRequest, httpServletResponse);
 	}
@@ -128,9 +119,6 @@ public class CTReviewChangesServlet extends HttpServlet {
 
 		return null;
 	}
-
-	@Reference
-	private FeatureFlagManager _featureFlagManager;
 
 	@Reference
 	private GroupLocalService _groupLocalService;

@@ -36,15 +36,12 @@ export function Select({
 	selectedOption,
 	triggerAriaLabel,
 }: SelectProps) {
-	const [displayPlaceholder, setDisplayPlaceholder] = useState<boolean>(
-		!!placeholder
-	);
+	const [displayPlaceholder, setDisplayPlaceholder] =
+		useState<boolean>(!!placeholder);
 	const [dropdownActive, setDropdownActive] = useState<boolean>(false);
 	const [dropdownWidth, setDropdownWidth] = useState<string | null>();
-	const [
-		selectTriggerElement,
-		setSelectTriggerElement,
-	] = useState<HTMLElement | null>();
+	const [selectTriggerElement, setSelectTriggerElement] =
+		useState<HTMLElement | null>();
 	const [triggerLabel, setTriggerLabel] = useState<string>(placeholder ?? '');
 
 	const handleBlur = () => {
@@ -78,6 +75,7 @@ export function Select({
 
 			if (selectedObjectLabel) {
 				setTriggerLabel(selectedObjectLabel);
+				setDisplayPlaceholder(false);
 			}
 		}
 	}, [options, selectedOption]);
@@ -144,16 +142,21 @@ export function Select({
 			)}
 
 			<DropDown.ItemList items={options}>
-				{(item: SelectOption) => (
-					<DropDown.Item
-						key={item.value}
-						onClick={() => {
-							handleSelect(item);
-						}}
-					>
-						{item.label}
-					</DropDown.Item>
-				)}
+				{
+
+					// @ts-ignore
+
+					(item: SelectOption) => (
+						<DropDown.Item
+							key={item.value}
+							onClick={() => {
+								handleSelect(item);
+							}}
+						>
+							{item.label}
+						</DropDown.Item>
+					)
+				}
 			</DropDown.ItemList>
 		</DropDown>
 	);

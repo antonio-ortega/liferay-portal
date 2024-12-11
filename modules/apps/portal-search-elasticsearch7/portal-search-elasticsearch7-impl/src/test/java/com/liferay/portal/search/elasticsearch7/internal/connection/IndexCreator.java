@@ -7,15 +7,17 @@ package com.liferay.portal.search.elasticsearch7.internal.connection;
 
 import com.liferay.portal.search.elasticsearch7.internal.connection.helper.IndexCreationHelper;
 import com.liferay.portal.search.elasticsearch7.internal.connection.helper.LiferayIndexCreationHelper;
+import com.liferay.portal.search.elasticsearch7.internal.settings.SettingsHelperImpl;
+import com.liferay.portal.search.engine.SearchEngineInformation;
 
 import java.io.IOException;
 
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.settings.Settings;
 
 import org.mockito.Mockito;
@@ -38,14 +40,15 @@ public class IndexCreator {
 
 		indexCreationHelper.contribute(createIndexRequest);
 
-		Settings.Builder builder = Settings.builder();
+		SettingsHelperImpl settingsHelperImpl = new SettingsHelperImpl(
+			Settings.builder());
 
-		builder.put("index.number_of_replicas", 0);
-		builder.put("index.number_of_shards", 1);
+		settingsHelperImpl.put("index.number_of_replicas", "0");
+		settingsHelperImpl.put("index.number_of_shards", "1");
 
-		indexCreationHelper.contributeIndexSettings(builder);
+		indexCreationHelper.contributeIndexSettings(settingsHelperImpl);
 
-		createIndexRequest.settings(builder);
+		createIndexRequest.settings(settingsHelperImpl.getBuilder());
 
 		try {
 			indicesClient.create(createIndexRequest, RequestOptions.DEFAULT);
@@ -94,6 +97,12 @@ public class IndexCreator {
 		_liferayMappingsAddedToIndex = liferayMappingsAddedToIndex;
 	}
 
+	protected void setSearchEngineInformation(
+		SearchEngineInformation searchEngineInformation) {
+
+		_searchEngineInformation = searchEngineInformation;
+	}
+
 	private IndexCreationHelper _getIndexCreationHelper() {
 		if (!_liferayMappingsAddedToIndex) {
 			if (_indexCreationHelper != null) {
@@ -104,7 +113,8 @@ public class IndexCreator {
 		}
 
 		LiferayIndexCreationHelper liferayIndexCreationHelper =
-			new LiferayIndexCreationHelper(_elasticsearchClientResolver);
+			new LiferayIndexCreationHelper(
+				_elasticsearchClientResolver, _searchEngineInformation);
 
 		if (_indexCreationHelper == null) {
 			return liferayIndexCreationHelper;
@@ -120,10 +130,14 @@ public class IndexCreator {
 			}
 
 			@Override
-			public void contributeIndexSettings(Settings.Builder builder) {
-				_indexCreationHelper.contributeIndexSettings(builder);
+			public void contributeIndexSettings(
+				SettingsHelperImpl settingsHelperImpl) {
 
-				liferayIndexCreationHelper.contributeIndexSettings(builder);
+				_indexCreationHelper.contributeIndexSettings(
+					settingsHelperImpl);
+
+				liferayIndexCreationHelper.contributeIndexSettings(
+					settingsHelperImpl);
 			}
 
 			@Override
@@ -146,5 +160,6 @@ public class IndexCreator {
 	private ElasticsearchClientResolver _elasticsearchClientResolver;
 	private IndexCreationHelper _indexCreationHelper;
 	private boolean _liferayMappingsAddedToIndex;
+	private SearchEngineInformation _searchEngineInformation;
 
 }

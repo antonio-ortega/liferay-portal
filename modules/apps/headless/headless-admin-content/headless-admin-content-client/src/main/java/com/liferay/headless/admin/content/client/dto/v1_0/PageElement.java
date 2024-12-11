@@ -46,6 +46,25 @@ public class PageElement implements Cloneable, Serializable {
 
 	protected Object definition;
 
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public void setId(UnsafeSupplier<String, Exception> idUnsafeSupplier) {
+		try {
+			id = idUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String id;
+
 	public PageElement[] getPageElements() {
 		return pageElements;
 	}
@@ -129,6 +148,7 @@ public class PageElement implements Cloneable, Serializable {
 
 		COLLECTION("Collection"), COLLECTION_ITEM("CollectionItem"),
 		COLUMN("Column"), DROP_ZONE("DropZone"), FORM("Form"),
+		FORM_STEP("FormStep"), FORM_STEP_CONTAINER("FormStepContainer"),
 		FRAGMENT("Fragment"), FRAGMENT_DROP_ZONE("FragmentDropZone"),
 		ROOT("Root"), ROW("Row"), SECTION("Section"), WIDGET("Widget");
 

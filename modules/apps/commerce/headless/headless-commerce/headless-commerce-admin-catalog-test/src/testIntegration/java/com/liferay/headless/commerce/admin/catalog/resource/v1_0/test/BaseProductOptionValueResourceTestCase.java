@@ -28,19 +28,21 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -100,11 +100,17 @@ public abstract class BaseProductOptionValueResourceTestCase {
 
 		_productOptionValueResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		ProductOptionValueResource.Builder builder =
 			ProductOptionValueResource.builder();
 
 		productOptionValueResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -118,7 +124,33 @@ public abstract class BaseProductOptionValueResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductOptionValue productOptionValue1 = randomProductOptionValue();
+
+		String json = objectMapper.writeValueAsString(productOptionValue1);
+
+		ProductOptionValue productOptionValue2 = ProductOptionValueSerDes.toDTO(
+			json);
+
+		Assert.assertTrue(equals(productOptionValue1, productOptionValue2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ProductOptionValue productOptionValue = randomProductOptionValue();
+
+		String json1 = objectMapper.writeValueAsString(productOptionValue);
+		String json2 = ProductOptionValueSerDes.toJSON(productOptionValue);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -133,41 +165,6 @@ public abstract class BaseProductOptionValueResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ProductOptionValue productOptionValue1 = randomProductOptionValue();
-
-		String json = objectMapper.writeValueAsString(productOptionValue1);
-
-		ProductOptionValue productOptionValue2 = ProductOptionValueSerDes.toDTO(
-			json);
-
-		Assert.assertTrue(equals(productOptionValue1, productOptionValue2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ProductOptionValue productOptionValue = randomProductOptionValue();
-
-		String json1 = objectMapper.writeValueAsString(productOptionValue);
-		String json2 = ProductOptionValueSerDes.toJSON(productOptionValue);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -177,6 +174,8 @@ public abstract class BaseProductOptionValueResourceTestCase {
 		ProductOptionValue productOptionValue = randomProductOptionValue();
 
 		productOptionValue.setKey(regex);
+		productOptionValue.setSkuExternalReferenceCode(regex);
+		productOptionValue.setUnitOfMeasureKey(regex);
 
 		String json = ProductOptionValueSerDes.toJSON(productOptionValue);
 
@@ -185,6 +184,9 @@ public abstract class BaseProductOptionValueResourceTestCase {
 		productOptionValue = ProductOptionValueSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, productOptionValue.getKey());
+		Assert.assertEquals(
+			regex, productOptionValue.getSkuExternalReferenceCode());
+		Assert.assertEquals(regex, productOptionValue.getUnitOfMeasureKey());
 	}
 
 	@Test
@@ -219,7 +221,10 @@ public abstract class BaseProductOptionValueResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteProductOptionValue() throws Exception {
-		ProductOptionValue productOptionValue =
+
+		// No namespace
+
+		ProductOptionValue productOptionValue1 =
 			testGraphQLDeleteProductOptionValue_addProductOptionValue();
 
 		Assert.assertTrue(
@@ -229,23 +234,61 @@ public abstract class BaseProductOptionValueResourceTestCase {
 						"deleteProductOptionValue",
 						new HashMap<String, Object>() {
 							{
-								put("id", productOptionValue.getId());
+								put("id", productOptionValue1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteProductOptionValue"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"productOptionValue",
 					new HashMap<String, Object>() {
 						{
-							put("id", productOptionValue.getId());
+							put("id", productOptionValue1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		ProductOptionValue productOptionValue2 =
+			testGraphQLDeleteProductOptionValue_addProductOptionValue();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"deleteProductOptionValue",
+							new HashMap<String, Object>() {
+								{
+									put("id", productOptionValue2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceAdminCatalog_v1_0",
+				"Object/deleteProductOptionValue"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminCatalog_v1_0",
+					new GraphQLField(
+						"productOptionValue",
+						new HashMap<String, Object>() {
+							{
+								put("id", productOptionValue2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ProductOptionValue
@@ -281,6 +324,8 @@ public abstract class BaseProductOptionValueResourceTestCase {
 		ProductOptionValue productOptionValue =
 			testGraphQLGetProductOptionValue_addProductOptionValue();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				productOptionValue,
@@ -296,11 +341,37 @@ public abstract class BaseProductOptionValueResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/productOptionValue"))));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertTrue(
+			equals(
+				productOptionValue,
+				ProductOptionValueSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminCatalog_v1_0",
+								new GraphQLField(
+									"productOptionValue",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"id",
+												productOptionValue.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminCatalog_v1_0",
+						"Object/productOptionValue"))));
 	}
 
 	@Test
 	public void testGraphQLGetProductOptionValueNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -314,6 +385,25 @@ public abstract class BaseProductOptionValueResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminCatalog_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminCatalog_v1_0",
+						new GraphQLField(
+							"productOptionValue",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -373,7 +463,7 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				getProductOptionIdProductOptionValuesPage(
 					id, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			ProductOptionValue irrelevantProductOptionValue =
@@ -383,12 +473,13 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			page =
 				productOptionValueResource.
 					getProductOptionIdProductOptionValuesPage(
-						irrelevantId, null, Pagination.of(1, 2), null);
+						irrelevantId, null,
+						Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantProductOptionValue),
+			assertContains(
+				irrelevantProductOptionValue,
 				(List<ProductOptionValue>)page.getItems());
 			assertValid(
 				page,
@@ -409,11 +500,12 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				getProductOptionIdProductOptionValuesPage(
 					id, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(productOptionValue1, productOptionValue2),
-			(List<ProductOptionValue>)page.getItems());
+		assertContains(
+			productOptionValue1, (List<ProductOptionValue>)page.getItems());
+		assertContains(
+			productOptionValue2, (List<ProductOptionValue>)page.getItems());
 		assertValid(
 			page,
 			testGetProductOptionIdProductOptionValuesPage_getExpectedActions(
@@ -442,6 +534,13 @@ public abstract class BaseProductOptionValueResourceTestCase {
 
 		Long id = testGetProductOptionIdProductOptionValuesPage_getId();
 
+		Page<ProductOptionValue> productOptionValuePage =
+			productOptionValueResource.
+				getProductOptionIdProductOptionValuesPage(id, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			productOptionValuePage.getTotalCount());
+
 		ProductOptionValue productOptionValue1 =
 			testGetProductOptionIdProductOptionValuesPage_addProductOptionValue(
 				id, randomProductOptionValue());
@@ -454,39 +553,94 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			testGetProductOptionIdProductOptionValuesPage_addProductOptionValue(
 				id, randomProductOptionValue());
 
-		Page<ProductOptionValue> page1 =
-			productOptionValueResource.
-				getProductOptionIdProductOptionValuesPage(
-					id, null, Pagination.of(1, 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ProductOptionValue> productOptionValues1 =
-			(List<ProductOptionValue>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			productOptionValues1.toString(), 2, productOptionValues1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ProductOptionValue> page1 =
+				productOptionValueResource.
+					getProductOptionIdProductOptionValuesPage(
+						id, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<ProductOptionValue> page2 =
-			productOptionValueResource.
-				getProductOptionIdProductOptionValuesPage(
-					id, null, Pagination.of(2, 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				productOptionValue1,
+				(List<ProductOptionValue>)page1.getItems());
 
-		List<ProductOptionValue> productOptionValues2 =
-			(List<ProductOptionValue>)page2.getItems();
+			Page<ProductOptionValue> page2 =
+				productOptionValueResource.
+					getProductOptionIdProductOptionValuesPage(
+						id, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			productOptionValues2.toString(), 1, productOptionValues2.size());
+			assertContains(
+				productOptionValue2,
+				(List<ProductOptionValue>)page2.getItems());
 
-		Page<ProductOptionValue> page3 =
-			productOptionValueResource.
-				getProductOptionIdProductOptionValuesPage(
-					id, null, Pagination.of(1, 3), null);
+			Page<ProductOptionValue> page3 =
+				productOptionValueResource.
+					getProductOptionIdProductOptionValuesPage(
+						id, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				productOptionValue1, productOptionValue2, productOptionValue3),
-			(List<ProductOptionValue>)page3.getItems());
+			assertContains(
+				productOptionValue3,
+				(List<ProductOptionValue>)page3.getItems());
+		}
+		else {
+			Page<ProductOptionValue> page1 =
+				productOptionValueResource.
+					getProductOptionIdProductOptionValuesPage(
+						id, null, Pagination.of(1, totalCount + 2), null);
+
+			List<ProductOptionValue> productOptionValues1 =
+				(List<ProductOptionValue>)page1.getItems();
+
+			Assert.assertEquals(
+				productOptionValues1.toString(), totalCount + 2,
+				productOptionValues1.size());
+
+			Page<ProductOptionValue> page2 =
+				productOptionValueResource.
+					getProductOptionIdProductOptionValuesPage(
+						id, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ProductOptionValue> productOptionValues2 =
+				(List<ProductOptionValue>)page2.getItems();
+
+			Assert.assertEquals(
+				productOptionValues2.toString(), 1,
+				productOptionValues2.size());
+
+			Page<ProductOptionValue> page3 =
+				productOptionValueResource.
+					getProductOptionIdProductOptionValuesPage(
+						id, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				productOptionValue1,
+				(List<ProductOptionValue>)page3.getItems());
+			assertContains(
+				productOptionValue2,
+				(List<ProductOptionValue>)page3.getItems());
+			assertContains(
+				productOptionValue3,
+				(List<ProductOptionValue>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -498,7 +652,7 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			(entityField, productOptionValue1, productOptionValue2) -> {
 				BeanTestUtil.setProperty(
 					productOptionValue1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -614,25 +768,37 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			testGetProductOptionIdProductOptionValuesPage_addProductOptionValue(
 				id, productOptionValue2);
 
+		Page<ProductOptionValue> page =
+			productOptionValueResource.
+				getProductOptionIdProductOptionValuesPage(id, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ProductOptionValue> ascPage =
 				productOptionValueResource.
 					getProductOptionIdProductOptionValuesPage(
-						id, null, Pagination.of(1, 2),
+						id, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(productOptionValue1, productOptionValue2),
+			assertContains(
+				productOptionValue1,
+				(List<ProductOptionValue>)ascPage.getItems());
+			assertContains(
+				productOptionValue2,
 				(List<ProductOptionValue>)ascPage.getItems());
 
 			Page<ProductOptionValue> descPage =
 				productOptionValueResource.
 					getProductOptionIdProductOptionValuesPage(
-						id, null, Pagination.of(1, 2),
+						id, null,
+						Pagination.of(1, (int)page.getTotalCount() + 1),
 						entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(productOptionValue2, productOptionValue1),
+			assertContains(
+				productOptionValue2,
+				(List<ProductOptionValue>)descPage.getItems());
+			assertContains(
+				productOptionValue1,
 				(List<ProductOptionValue>)descPage.getItems());
 		}
 	}
@@ -782,6 +948,14 @@ public abstract class BaseProductOptionValueResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("deltaPrice", additionalAssertFieldName)) {
+				if (productOptionValue.getDeltaPrice() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("key", additionalAssertFieldName)) {
 				if (productOptionValue.getKey() == null) {
 					valid = false;
@@ -798,8 +972,50 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("preselected", additionalAssertFieldName)) {
+				if (productOptionValue.getPreselected() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("priority", additionalAssertFieldName)) {
 				if (productOptionValue.getPriority() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("quantity", additionalAssertFieldName)) {
+				if (productOptionValue.getQuantity() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"skuExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (productOptionValue.getSkuExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("skuId", additionalAssertFieldName)) {
+				if (productOptionValue.getSkuId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("unitOfMeasureKey", additionalAssertFieldName)) {
+				if (productOptionValue.getUnitOfMeasureKey() == null) {
 					valid = false;
 				}
 
@@ -927,6 +1143,17 @@ public abstract class BaseProductOptionValueResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("deltaPrice", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						productOptionValue1.getDeltaPrice(),
+						productOptionValue2.getDeltaPrice())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						productOptionValue1.getId(),
@@ -960,10 +1187,67 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("preselected", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						productOptionValue1.getPreselected(),
+						productOptionValue2.getPreselected())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("priority", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						productOptionValue1.getPriority(),
 						productOptionValue2.getPriority())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("quantity", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						productOptionValue1.getQuantity(),
+						productOptionValue2.getQuantity())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"skuExternalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						productOptionValue1.getSkuExternalReferenceCode(),
+						productOptionValue2.getSkuExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("skuId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						productOptionValue1.getSkuId(),
+						productOptionValue2.getSkuId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("unitOfMeasureKey", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						productOptionValue1.getUnitOfMeasureKey(),
+						productOptionValue2.getUnitOfMeasureKey())) {
 
 					return false;
 				}
@@ -1007,6 +1291,10 @@ public abstract class BaseProductOptionValueResourceTestCase {
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
+
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
 
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
@@ -1075,6 +1363,11 @@ public abstract class BaseProductOptionValueResourceTestCase {
 		sb.append(operator);
 		sb.append(" ");
 
+		if (entityFieldName.equals("deltaPrice")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("id")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1131,8 +1424,115 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("preselected")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("priority")) {
 			sb.append(String.valueOf(productOptionValue.getPriority()));
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("quantity")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("skuExternalReferenceCode")) {
+			Object object = productOptionValue.getSkuExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("skuId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("unitOfMeasureKey")) {
+			Object object = productOptionValue.getUnitOfMeasureKey();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
 
 			return sb.toString();
 		}
@@ -1151,7 +1551,8 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1183,7 +1584,13 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			{
 				id = RandomTestUtil.randomLong();
 				key = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				preselected = RandomTestUtil.randomBoolean();
 				priority = RandomTestUtil.randomDouble();
+				skuExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
+				skuId = RandomTestUtil.randomLong();
+				unitOfMeasureKey = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 			}
 		};
 	}
@@ -1204,21 +1611,21 @@ public abstract class BaseProductOptionValueResourceTestCase {
 	}
 
 	protected ProductOptionValueResource productOptionValueResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1227,11 +1634,16 @@ public abstract class BaseProductOptionValueResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1263,6 +1675,24 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1284,16 +1714,6 @@ public abstract class BaseProductOptionValueResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

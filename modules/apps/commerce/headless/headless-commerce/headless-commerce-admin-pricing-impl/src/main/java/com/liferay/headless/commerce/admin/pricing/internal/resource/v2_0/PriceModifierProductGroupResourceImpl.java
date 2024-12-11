@@ -59,8 +59,9 @@ public class PriceModifierProductGroupResourceImpl
 		throws Exception {
 
 		CommercePriceModifier commercePriceModifier =
-			_commercePriceModifierService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceModifierService.
+				fetchCommercePriceModifierByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceModifier == null) {
 			throw new NoSuchPriceModifierException(
@@ -75,14 +76,14 @@ public class PriceModifierProductGroupResourceImpl
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierRelService.getCommercePriceModifierRelsCount(
 				commercePriceModifier.getCommercePriceModifierId(),
 				CommercePricingClass.class.getName());
 
 		return Page.of(
 			_toPriceModifierProductGroups(commercePriceModifierRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@NestedField(
@@ -101,14 +102,14 @@ public class PriceModifierProductGroupResourceImpl
 					id, search, pagination.getStartPosition(),
 					pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commercePriceModifierRelService.
 				getCommercePricingClassesCommercePriceModifierRelsCount(
 					id, search);
 
 		return Page.of(
 			_toPriceModifierProductGroups(commercePriceModifierRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -119,8 +120,9 @@ public class PriceModifierProductGroupResourceImpl
 		throws Exception {
 
 		CommercePriceModifier commercePriceModifier =
-			_commercePriceModifierService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceModifierService.
+				fetchCommercePriceModifierByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceModifier == null) {
 			throw new NoSuchPriceModifierException(

@@ -5,6 +5,7 @@
 
 package com.liferay.portal.workflow.util;
 
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
@@ -24,27 +25,15 @@ import java.util.List;
 public class WorkflowDefinitionManagerUtil {
 
 	public static WorkflowDefinition deployWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, byte[] bytes)
 		throws WorkflowException {
 
 		WorkflowDefinitionManager workflowDefinitionManager =
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.deployWorkflowDefinition(
-			companyId, userId, title, name, bytes);
-	}
-
-	public static List<WorkflowDefinition> getActiveWorkflowDefinitions(
-			long companyId, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
-		throws WorkflowException {
-
-		WorkflowDefinitionManager workflowDefinitionManager =
-			_workflowDefinitionManagerSnapshot.get();
-
-		return workflowDefinitionManager.getActiveWorkflowDefinitions(
-			companyId, start, end, orderByComparator);
+			externalReferenceCode, companyId, userId, title, name, bytes);
 	}
 
 	public static int getActiveWorkflowDefinitionsCount(long companyId)
@@ -57,52 +46,6 @@ public class WorkflowDefinitionManagerUtil {
 			companyId);
 	}
 
-	public static WorkflowDefinition getLatestWorkflowDefinition(
-			long companyId, String name)
-		throws WorkflowException {
-
-		WorkflowDefinitionManager workflowDefinitionManager =
-			_workflowDefinitionManagerSnapshot.get();
-
-		return workflowDefinitionManager.getLatestWorkflowDefinition(
-			companyId, name);
-	}
-
-	public static List<WorkflowDefinition> getLatestWorkflowDefinitions(
-			long companyId, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
-		throws WorkflowException {
-
-		WorkflowDefinitionManager workflowDefinitionManager =
-			_workflowDefinitionManagerSnapshot.get();
-
-		return workflowDefinitionManager.getLatestWorkflowDefinitions(
-			companyId, start, end, orderByComparator);
-	}
-
-	public static WorkflowDefinition getWorkflowDefinition(
-			long companyId, String name, int version)
-		throws WorkflowException {
-
-		WorkflowDefinitionManager workflowDefinitionManager =
-			_workflowDefinitionManagerSnapshot.get();
-
-		return workflowDefinitionManager.getWorkflowDefinition(
-			companyId, name, version);
-	}
-
-	public static List<WorkflowDefinition> getWorkflowDefinitions(
-			long companyId, String name, int start, int end,
-			OrderByComparator<WorkflowDefinition> orderByComparator)
-		throws WorkflowException {
-
-		WorkflowDefinitionManager workflowDefinitionManager =
-			_workflowDefinitionManagerSnapshot.get();
-
-		return workflowDefinitionManager.getWorkflowDefinitions(
-			companyId, name, start, end, orderByComparator);
-	}
-
 	public static int getWorkflowDefinitionsCount(long companyId, String name)
 		throws WorkflowException {
 
@@ -111,6 +54,64 @@ public class WorkflowDefinitionManagerUtil {
 
 		return workflowDefinitionManager.getWorkflowDefinitionsCount(
 			companyId, name);
+	}
+
+	public static List<WorkflowDefinition> liberalGetActiveWorkflowDefinitions(
+			long companyId, int start, int end,
+			OrderByComparator<WorkflowDefinition> orderByComparator)
+		throws WorkflowException {
+
+		WorkflowDefinitionManager workflowDefinitionManager =
+			_workflowDefinitionManagerSnapshot.get();
+
+		return workflowDefinitionManager.liberalGetActiveWorkflowDefinitions(
+			companyId, start, end, orderByComparator);
+	}
+
+	public static WorkflowDefinition liberalGetLatestWorkflowDefinition(
+			long companyId, String name)
+		throws WorkflowException {
+
+		WorkflowDefinitionManager workflowDefinitionManager =
+			_workflowDefinitionManagerSnapshot.get();
+
+		return workflowDefinitionManager.liberalGetLatestWorkflowDefinition(
+			companyId, name);
+	}
+
+	public static List<WorkflowDefinition> liberalGetLatestWorkflowDefinitions(
+			long companyId, int start, int end,
+			OrderByComparator<WorkflowDefinition> orderByComparator)
+		throws WorkflowException {
+
+		WorkflowDefinitionManager workflowDefinitionManager =
+			_workflowDefinitionManagerSnapshot.get();
+
+		return workflowDefinitionManager.liberalGetLatestWorkflowDefinitions(
+			companyId, start, end, orderByComparator);
+	}
+
+	public static WorkflowDefinition liberalGetWorkflowDefinition(
+			long companyId, String name, int version)
+		throws PortalException {
+
+		WorkflowDefinitionManager workflowDefinitionManager =
+			_workflowDefinitionManagerSnapshot.get();
+
+		return workflowDefinitionManager.liberalGetWorkflowDefinition(
+			companyId, name, version);
+	}
+
+	public static List<WorkflowDefinition> liberalGetWorkflowDefinitions(
+			long companyId, String name, int start, int end,
+			OrderByComparator<WorkflowDefinition> orderByComparator)
+		throws WorkflowException {
+
+		WorkflowDefinitionManager workflowDefinitionManager =
+			_workflowDefinitionManagerSnapshot.get();
+
+		return workflowDefinitionManager.liberalGetWorkflowDefinitions(
+			companyId, name, start, end, orderByComparator);
 	}
 
 	/**
@@ -128,15 +129,15 @@ public class WorkflowDefinitionManagerUtil {
 	 *         definition
 	 */
 	public static WorkflowDefinition saveWorkflowDefinition(
-			long companyId, long userId, String title, String name,
-			byte[] bytes)
+			String externalReferenceCode, long companyId, long userId,
+			String title, String name, byte[] bytes)
 		throws WorkflowException {
 
 		WorkflowDefinitionManager workflowDefinitionManager =
 			_workflowDefinitionManagerSnapshot.get();
 
 		return workflowDefinitionManager.saveWorkflowDefinition(
-			companyId, userId, title, name, bytes);
+			externalReferenceCode, companyId, userId, title, name, bytes);
 	}
 
 	public static WorkflowDefinition updateActive(

@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayForm from '@clayui/form';
 import {FormError, Input, Toggle} from '@liferay/object-js-components-web';
 import {InputLocalized} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
@@ -11,7 +12,7 @@ import React, {ChangeEventHandler, useState} from 'react';
 import {defaultLanguageId} from '../../utils/constants';
 
 interface ObjectDataContainerProps {
-	dbTableName: string;
+	dbTableName: string | undefined;
 	errors: FormError<ObjectDefinition>;
 	handleChange: ChangeEventHandler<HTMLInputElement>;
 	hasUpdateObjectDefinitionPermission: boolean;
@@ -33,9 +34,8 @@ export function ObjectDataContainer({
 	setValues,
 	values,
 }: ObjectDataContainerProps) {
-	const [selectedLocale, setSelectedLocale] = useState<
-		Liferay.Language.Locale
-	>(defaultLanguageId);
+	const [selectedLocale, setSelectedLocale] =
+		useState<Liferay.Language.Locale>(defaultLanguageId);
 
 	const isReadOnly = !values.modifiable && values.system;
 
@@ -47,6 +47,7 @@ export function ObjectDataContainer({
 			<Input
 				disabled={isApproved || noPermissionOrLinked}
 				error={errors.name}
+				id="lfr-objects__object-data-container-name"
 				label={Liferay.Language.get('name')}
 				name="name"
 				onBlur={(event) => {
@@ -64,6 +65,7 @@ export function ObjectDataContainer({
 			<InputLocalized
 				disabled={isReadOnly || noPermissionOrLinked}
 				error={errors.label}
+				id="lfr-objects__object-data-container-label"
 				label={Liferay.Language.get('label')}
 				onBlur={(event) => {
 					event.stopPropagation();
@@ -82,6 +84,7 @@ export function ObjectDataContainer({
 			<InputLocalized
 				disabled={isReadOnly || noPermissionOrLinked}
 				error={errors.pluralLabel}
+				id="lfr-objects__object-data-container-plural-label"
 				label={Liferay.Language.get('plural-label')}
 				onBlur={(event) => {
 					event.stopPropagation();
@@ -99,28 +102,31 @@ export function ObjectDataContainer({
 
 			<Input
 				disabled
+				id="lfr-objects__object-data-container-table-name"
 				label={Liferay.Language.get('object-definition-table-name')}
 				name="name"
 				value={dbTableName}
 			/>
 
-			<Toggle
-				disabled={!isApproved || isReadOnly || noPermissionOrLinked}
-				label={sub(
-					Liferay.Language.get('activate-x'),
-					Liferay.Language.get('object')
-				)}
-				name="active"
-				onBlur={(event) => {
-					event.stopPropagation();
+			<ClayForm.Group>
+				<Toggle
+					disabled={!isApproved || isReadOnly || noPermissionOrLinked}
+					label={sub(
+						Liferay.Language.get('activate-x'),
+						Liferay.Language.get('object')
+					)}
+					name="active"
+					onBlur={(event) => {
+						event.stopPropagation();
 
-					if (onSubmit) {
-						onSubmit();
-					}
-				}}
-				onToggle={() => setValues({active: !values.active})}
-				toggled={values.active}
-			/>
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+					onToggle={() => setValues({active: !values.active})}
+					toggled={values.active}
+				/>
+			</ClayForm.Group>
 		</>
 	);
 }

@@ -59,8 +59,40 @@ import org.osgi.service.component.annotations.ServiceScope;
 public class KeywordResourceImpl extends BaseKeywordResourceImpl {
 
 	@Override
+	public void deleteAssetLibraryKeywordByExternalReferenceCode(
+			Long assetLibraryId, String externalReferenceCode)
+		throws Exception {
+
+		AssetTag assetTag = _assetTagService.getAssetTagByExternalReferenceCode(
+			externalReferenceCode, assetLibraryId);
+
+		_assetTagService.deleteTag(assetTag.getTagId());
+	}
+
+	@Override
 	public void deleteKeyword(Long keywordId) throws Exception {
 		_assetTagService.deleteTag(keywordId);
+	}
+
+	@Override
+	public void deleteSiteKeywordByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception {
+
+		AssetTag assetTag = _assetTagService.getAssetTagByExternalReferenceCode(
+			externalReferenceCode, siteId);
+
+		_assetTagService.deleteTag(assetTag.getTagId());
+	}
+
+	@Override
+	public Keyword getAssetLibraryKeywordByExternalReferenceCode(
+			Long assetLibraryId, String externalReferenceCode)
+		throws Exception {
+
+		return _toKeyword(
+			_assetTagLocalService.getAssetTagByExternalReferenceCode(
+				externalReferenceCode, assetLibraryId));
 	}
 
 	@Override
@@ -111,7 +143,7 @@ public class KeywordResourceImpl extends BaseKeywordResourceImpl {
 
 	@Override
 	public Page<Keyword> getKeywordsRankedPage(
-		Long siteId, String search, Pagination pagination) {
+		String search, Long siteId, Pagination pagination) {
 
 		DynamicQuery dynamicQuery = _assetTagLocalService.dynamicQuery();
 
@@ -141,6 +173,16 @@ public class KeywordResourceImpl extends BaseKeywordResourceImpl {
 					this::_toAssetTag),
 				this::_toKeyword),
 			pagination, _getTotalCount(search, siteId));
+	}
+
+	@Override
+	public Keyword getSiteKeywordByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception {
+
+		return _toKeyword(
+			_assetTagService.getAssetTagByExternalReferenceCode(
+				externalReferenceCode, siteId));
 	}
 
 	@Override
@@ -192,7 +234,30 @@ public class KeywordResourceImpl extends BaseKeywordResourceImpl {
 
 		return _toKeyword(
 			_assetTagService.addTag(
-				siteId, keyword.getName(), new ServiceContext()));
+				keyword.getExternalReferenceCode(), siteId, keyword.getName(),
+				new ServiceContext()));
+	}
+
+	@Override
+	public Keyword putAssetLibraryKeywordByExternalReferenceCode(
+			Long assetLibraryId, String externalReferenceCode, Keyword keyword)
+		throws Exception {
+
+		AssetTag assetTag =
+			_assetTagService.fetchAssetTagByExternalReferenceCode(
+				externalReferenceCode, assetLibraryId);
+
+		if (assetTag != null) {
+			return _toKeyword(
+				_assetTagService.updateTag(
+					externalReferenceCode, assetTag.getTagId(),
+					keyword.getName(), null));
+		}
+
+		return _toKeyword(
+			_assetTagService.addTag(
+				externalReferenceCode, assetLibraryId, keyword.getName(),
+				new ServiceContext()));
 	}
 
 	@Override
@@ -200,7 +265,9 @@ public class KeywordResourceImpl extends BaseKeywordResourceImpl {
 		throws Exception {
 
 		return _toKeyword(
-			_assetTagService.updateTag(keywordId, keyword.getName(), null));
+			_assetTagService.updateTag(
+				keyword.getExternalReferenceCode(), keywordId,
+				keyword.getName(), null));
 	}
 
 	@Override
@@ -214,6 +281,28 @@ public class KeywordResourceImpl extends BaseKeywordResourceImpl {
 	@Override
 	public void putKeywordUnsubscribe(Long tagId) throws Exception {
 		_assetTagService.unsubscribeTag(contextUser.getUserId(), tagId);
+	}
+
+	@Override
+	public Keyword putSiteKeywordByExternalReferenceCode(
+			Long siteId, String externalReferenceCode, Keyword keyword)
+		throws Exception {
+
+		AssetTag assetTag =
+			_assetTagLocalService.fetchAssetTagByExternalReferenceCode(
+				externalReferenceCode, siteId);
+
+		if (assetTag != null) {
+			return _toKeyword(
+				_assetTagService.updateTag(
+					externalReferenceCode, assetTag.getTagId(),
+					keyword.getName(), null));
+		}
+
+		return _toKeyword(
+			_assetTagService.addTag(
+				externalReferenceCode, siteId, keyword.getName(),
+				new ServiceContext()));
 	}
 
 	@Override

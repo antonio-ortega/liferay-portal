@@ -20,6 +20,7 @@ import BuilderListItem from './BuilderListItem';
 import './BuilderScreen.scss';
 
 export function BuilderScreen({
+	builderScreenItems,
 	creationLanguageId,
 	defaultSort,
 	disableEdit,
@@ -27,7 +28,6 @@ export function BuilderScreen({
 	filter,
 	firstColumnHeader,
 	hasDragAndDrop,
-	objectColumns,
 	onChangeColumnOrder,
 	onDeleteColumn,
 	onEditing,
@@ -41,123 +41,142 @@ export function BuilderScreen({
 
 	const filteredItems = useMemo(() => {
 		return filterArrayByQuery({
-			array: objectColumns,
+			array: builderScreenItems,
 			query,
 			str: 'fieldLabel',
 		});
-	}, [objectColumns, query]);
+	}, [builderScreenItems, query]);
 
-	const tableItems = query ? filteredItems : objectColumns;
+	const tableItems = query ? filteredItems : builderScreenItems;
 
 	return (
 		<>
-			<ManagementToolbar.Container>
-				<ManagementToolbar.ItemList expand>
-					<ManagementToolbarSearch
-						query={query}
-						setQuery={setQuery}
-					/>
-
-					<ManagementToolbar.Item>
-						<ClayButtonWithIcon
-							aria-label={Liferay.Language.get('add')}
-							className="nav-btn nav-btn-monospaced"
-							onClick={openModal}
-							symbol="plus"
-						/>
-					</ManagementToolbar.Item>
-				</ManagementToolbar.ItemList>
-			</ManagementToolbar.Container>
-
 			{tableItems.length ? (
 				<ClayList>
-					{tableItems.map((viewColumn, index) => (
-						<React.Fragment key={viewColumn?.objectFieldName}>
-							{index === 0 && (
-								<ClayList.Item flex>
-									<ClayList.ItemField
-										className={classNames(
-											'lfr-object__object-builder-screen-first-column',
-											!hasDragAndDrop &&
-												'lfr-object__object-builder-screen-first-column--not-draggable'
-										)}
-										expand
-									>
-										{firstColumnHeader}
-									</ClayList.ItemField>
+					<div>
+						<ClayList.Item className="lfr-object__object-builder-screen-management-bar">
+							<ManagementToolbar.Container>
+								<ManagementToolbar.ItemList expand>
+									<ManagementToolbarSearch
+										query={query}
+										setQuery={setQuery}
+									/>
 
-									<ClayList.ItemField
-										className={classNames(
-											'lfr-object__object-builder-screen-second-column',
-											!hasDragAndDrop &&
-												'lfr-object__object-builder-screen-second-column--not-draggable'
-										)}
-										expand
-									>
-										<ClayList.ItemField>
-											{secondColumnHeader}
-										</ClayList.ItemField>
-									</ClayList.ItemField>
+									<ManagementToolbar.Item>
+										<ClayButtonWithIcon
+											aria-label={Liferay.Language.get(
+												'add'
+											)}
+											className="lfr-object__object-builder-screen-management-bar-button"
+											onClick={openModal}
+											symbol="plus"
+										/>
+									</ManagementToolbar.Item>
+								</ManagementToolbar.ItemList>
+							</ManagementToolbar.Container>
+						</ClayList.Item>
 
-									{thirdColumnHeader && (
+						{tableItems.map((viewColumn, index) => (
+							<React.Fragment key={viewColumn?.objectFieldName}>
+								{index === 0 && (
+									<ClayList.Item flex>
 										<ClayList.ItemField
 											className={classNames(
-												'lfr-object__object-builder-screen-third-column',
+												'lfr-object__object-builder-screen-first-column',
 												!hasDragAndDrop &&
-													'lfr-object__object-builder-screen-third-column--not-draggable'
+													'lfr-object__object-builder-screen-first-column--not-draggable'
+											)}
+											expand
+										>
+											{firstColumnHeader}
+										</ClayList.ItemField>
+
+										<ClayList.ItemField
+											className={classNames(
+												'lfr-object__object-builder-screen-second-column',
+												!hasDragAndDrop &&
+													'lfr-object__object-builder-screen-second-column--not-draggable'
 											)}
 											expand
 										>
 											<ClayList.ItemField>
-												{thirdColumnHeader}
+												{secondColumnHeader}
 											</ClayList.ItemField>
 										</ClayList.ItemField>
-									)}
-								</ClayList.Item>
-							)}
 
-							<DndProvider backend={HTML5Backend}>
-								<BuilderListItem
-									disableEdit={
-										disableEdit ||
-										(filter && viewColumn?.disableEdit)
-									}
-									hasDragAndDrop={hasDragAndDrop}
-									index={index}
-									label={viewColumn?.fieldLabel}
-									objectFieldName={viewColumn.objectFieldName}
-									onChangeColumnOrder={onChangeColumnOrder}
-									onDeleteColumn={onDeleteColumn}
-									onEditing={onEditing}
-									onEditingObjectFieldName={
-										onEditingObjectFieldName
-									}
-									onVisibleEditModal={onVisibleEditModal}
-									secondColumnValue={
-										defaultSort
-											? viewColumn.sortOrder === 'asc'
-												? Liferay.Language.get(
-														'ascending'
-												  )
-												: Liferay.Language.get(
-														'descending'
-												  )
-											: filter
-											? viewColumn?.objectFieldBusinessType
-											: getLocalizableLabel(
-													creationLanguageId as Liferay.Language.Locale,
-													viewColumn?.label,
-													viewColumn.objectFieldName
-											  )
-									}
-									thirdColumnValues={
-										viewColumn?.valueList ??
-										viewColumn?.value
-									}
-								/>
-							</DndProvider>
-						</React.Fragment>
-					))}
+										{thirdColumnHeader && (
+											<ClayList.ItemField
+												className={classNames(
+													'lfr-object__object-builder-screen-third-column',
+													!hasDragAndDrop &&
+														'lfr-object__object-builder-screen-third-column--not-draggable'
+												)}
+												expand
+											>
+												<ClayList.ItemField>
+													{thirdColumnHeader}
+												</ClayList.ItemField>
+											</ClayList.ItemField>
+										)}
+									</ClayList.Item>
+								)}
+
+								{
+
+									// @ts-ignore
+
+									<DndProvider backend={HTML5Backend}>
+										<BuilderListItem
+											disableEdit={
+												disableEdit ||
+												(filter &&
+													viewColumn?.disableEdit)
+											}
+											hasDragAndDrop={hasDragAndDrop}
+											index={index}
+											label={viewColumn?.fieldLabel}
+											objectFieldName={
+												viewColumn.objectFieldName
+											}
+											onChangeColumnOrder={
+												onChangeColumnOrder
+											}
+											onDeleteColumn={onDeleteColumn}
+											onEditing={onEditing}
+											onEditingObjectFieldName={
+												onEditingObjectFieldName
+											}
+											onVisibleEditModal={
+												onVisibleEditModal
+											}
+											secondColumnValue={
+												defaultSort
+													? viewColumn.sortOrder ===
+														'asc'
+														? Liferay.Language.get(
+																'ascending'
+															)
+														: Liferay.Language.get(
+																'descending'
+															)
+													: filter
+														? viewColumn?.objectFieldBusinessType
+														: getLocalizableLabel(
+																creationLanguageId as Liferay.Language.Locale,
+																viewColumn?.label,
+																viewColumn.objectFieldName
+															)
+											}
+											thirdColumnValues={
+												viewColumn?.valueList ??
+												viewColumn?.value
+											}
+										/>
+									</DndProvider>
+								}
+							</React.Fragment>
+						))}
+					</div>
 				</ClayList>
 			) : query ? (
 				<div className="lfr-object__object-builder-screen-empty-state">
@@ -189,9 +208,10 @@ type TLabelValueObject = {
 	value: string;
 };
 
-type TBuilderScreenColumn = {
+export type TBuilderScreenItem = {
 	defaultSort?: boolean;
 	disableEdit?: boolean;
+	externalReferenceCode?: string;
 	fieldLabel?: string;
 	filterBy?: string;
 	label: LocalizedValue<string>;
@@ -205,6 +225,7 @@ type TBuilderScreenColumn = {
 };
 
 interface IProps {
+	builderScreenItems: TBuilderScreenItem[];
 	creationLanguageId?: Liferay.Language.Locale;
 	defaultSort?: boolean;
 	disableEdit?: boolean;
@@ -216,12 +237,11 @@ interface IProps {
 	filter?: boolean;
 	firstColumnHeader: string;
 	hasDragAndDrop?: boolean;
-	objectColumns: TBuilderScreenColumn[];
 	onChangeColumnOrder?: (draggedIndex: number, targetIndex: number) => void;
 	onDeleteColumn: (objectFieldName: string) => void;
 	onEditing?: (boolean: boolean) => void;
 	onEditingObjectFieldName?: (objectFieldName: string) => void;
-	onVisibleEditModal: (boolean: boolean) => void;
+	onVisibleEditModal?: (boolean: boolean) => void;
 	openModal: () => void;
 	secondColumnHeader: string;
 	thirdColumnHeader?: string;

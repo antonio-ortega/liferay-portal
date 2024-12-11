@@ -6,26 +6,22 @@
 import {DELETE_ITEM} from './types';
 
 import type {LayoutData} from '../../types/layout_data/LayoutData';
-import type {PageContent} from './addItem';
 
 export default function deleteItem({
 	fragmentEntryLinkIds,
-	itemId,
+	itemIds,
 	layoutData,
-	pageContents,
 	portletIds = [],
 }: {
 	fragmentEntryLinkIds: string[];
-	itemId: string;
+	itemIds: string[];
 	layoutData: LayoutData;
-	pageContents: PageContent[];
 	portletIds?: string[];
 }) {
 	return {
 		fragmentEntryLinkIds,
-		itemId,
+		itemIds,
 		layoutData,
-		pageContents,
 		portletIds,
 		type: DELETE_ITEM,
 	} as const;

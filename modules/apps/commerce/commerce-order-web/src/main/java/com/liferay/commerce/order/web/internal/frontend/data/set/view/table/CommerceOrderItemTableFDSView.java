@@ -12,7 +12,6 @@ import com.liferay.frontend.data.set.view.table.FDSTableSchema;
 import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilder;
 import com.liferay.frontend.data.set.view.table.FDSTableSchemaBuilderFactory;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 
 import java.util.Locale;
 
@@ -33,7 +32,7 @@ public class CommerceOrderItemTableFDSView extends BaseTableFDSView {
 		FDSTableSchemaBuilder fdsTableSchemaBuilder =
 			_fdsTableSchemaBuilderFactory.create();
 
-		fdsTableSchemaBuilder.add(
+		return fdsTableSchemaBuilder.add(
 			"image", StringPool.BLANK,
 			fdsTableSchemaField -> fdsTableSchemaField.setContentRenderer(
 				"image")
@@ -48,20 +47,16 @@ public class CommerceOrderItemTableFDSView extends BaseTableFDSView {
 		).add(
 			"requestedDeliveryDate", "delivery-date"
 		).add(
-			"deliveryGroup", "delivery-group"
+			"deliveryGroupName", "delivery-group"
 		).add(
 			"price", "list-price"
 		).add(
 			"discount", "discount"
 		).add(
 			"formattedQuantity", "quantity"
-		);
-
-		if (FeatureFlagManagerUtil.isEnabled("COMMERCE-11287")) {
-			fdsTableSchemaBuilder.add("unitOfMeasureKey", "uom");
-		}
-
-		return fdsTableSchemaBuilder.add(
+		).add(
+			"unitOfMeasureKey", "uom"
+		).add(
 			"total", "total"
 		).build();
 	}

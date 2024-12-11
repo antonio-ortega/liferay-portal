@@ -5,89 +5,112 @@
 
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
+import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {useModal} from '@clayui/modal';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
 import {useState} from 'react';
 import {CSVLink} from 'react-csv';
 
+import './index.css';
 import Modal from '../../common/components/Modal';
 import Table from '../../common/components/Table';
 import TableHeader from '../../common/components/TableHeader';
+import DropDownWithDrillDown from '../../common/components/TableHeader/Filter/components/DropDownWithDrillDown';
+import {FilterTypes} from '../../common/components/TableHeader/Filter/components/FilterSelector/FilterSelector';
+import {Dates} from '../../common/components/TableHeader/Filter/components/filters/DateFilter/DateFilter';
 import Search from '../../common/components/TableHeader/Search';
 import {PartnerOpportunitiesColumnKey} from '../../common/enums/partnerOpportunitiesColumnKey';
-import {PRMPageRoute} from '../../common/enums/prmPageRoute';
-import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
+import {SortableTable} from '../../common/enums/sortableTable';
+import useDebounce from '../../common/hooks/useDebounce';
 import usePagination from '../../common/hooks/usePagination';
-import TableColumn from '../../common/interfaces/tableColumn';
-import {Liferay} from '../../common/services/liferay';
+import useQueryParams from '../../common/hooks/useQueryParams';
+import {
+	Filters,
+	currentFiscalYearStart,
+} from '../../common/utils/constants/filters';
+import {maxPagination} from '../../common/utils/constants/maxPagination';
 import getDoubleParagraph from '../../common/utils/getDoubleParagraph';
 import ModalContent from './components/ModalContent';
 import useFilters from './hooks/useFilters';
 import useGetListItemsFromPartnerOpportunities from './hooks/useGetListItemsFromPartnerOpportunities';
 import PartnerOpportunitiesItem from './interfaces/partnerOpportunitiesItem';
+import {INITIAL_FILTER} from './utils/constants/initialFilter';
 
 interface IProps {
-	columnsDates: TableColumn<PartnerOpportunitiesItem>[];
+	isRenewalListing?: boolean;
 	name: string;
-	newButtonDeal?: boolean;
-	renewalOpportunitiesFilter?: string;
-	sort: string;
 }
 
-const BASE_PAGE = 1;
-const MAX_ITEMS = 200;
+const PartnerOpportunitiesList = ({isRenewalListing, name}: IProps) => {
+	const [opportunitiesTableSort, setOpportunitiesTableSort] =
+		useState<string>('partnerAccountName:asc');
 
-const PartnerOpportunitiesList = ({
-	columnsDates,
-	name,
-	newButtonDeal,
-	renewalOpportunitiesFilter,
-	sort,
-}: IProps) => {
-	const {filters, filtersTerm, onFilter} = useFilters(
-		renewalOpportunitiesFilter
+	const debouncedDealRegistrationTableSort = useDebounce(
+		opportunitiesTableSort,
+		1000
 	);
+
+	const urlParams = useQueryParams();
+
+	const {filters, onFilter, setFilters} = useFilters(
+		debouncedDealRegistrationTableSort,
+		urlParams,
+		isRenewalListing
+	);
+
 	const [isVisibleModal, setIsVisibleModal] = useState(false);
-	const [modalContent, setModalContent] = useState<
-		PartnerOpportunitiesItem
-	>();
+	const [modalContent, setModalContent] =
+		useState<PartnerOpportunitiesItem>();
 	const {observer, onClose} = useModal({
-		onClose: () => setIsVisibleModal(false),
+		onClose: () => {
+			setIsVisibleModal(false);
+			setModalContent(undefined);
+		},
 	});
 
 	const pagination = usePagination();
+
 	const {data, isValidating} = useGetListItemsFromPartnerOpportunities(
 		pagination.activePage,
 		pagination.activeDelta,
-		filtersTerm,
-		sort
+		urlParams
 	);
+
 	const {data: dataCSV} = useGetListItemsFromPartnerOpportunities(
-		BASE_PAGE,
-		MAX_ITEMS,
-		filtersTerm,
-		sort
+		pagination.activePage,
+		maxPagination.MAX_ITEMS_SF.size,
+		urlParams
 	);
 
 	const {totalCount: totalPagination} = data;
 	const filteredData = data.items;
 	const filteredCSVData = dataCSV.items;
 
-	const siteURL = useLiferayNavigate();
 	const columns = [
 		{
 			columnKey: PartnerOpportunitiesColumnKey.PARTNER_ACCOUNT_NAME,
 			label: 'Partner Account Name',
 		},
 		{
-			columnKey: PartnerOpportunitiesColumnKey.ACCOUNT_NAME,
+			columnKey: PartnerOpportunitiesColumnKey.OPPORTUNITY_ACCOUNT_NAME,
 			label: 'Account Name',
 		},
-		...columnsDates,
 		{
-			columnKey: PartnerOpportunitiesColumnKey.DEAL_AMOUNT,
-			label: 'Deal Amount',
+			columnKey: PartnerOpportunitiesColumnKey.SUBSCRIPTION_ARR,
+			label: 'Subscription ARR',
+		},
+		{
+			columnKey: PartnerOpportunitiesColumnKey.STAGE,
+			label: 'Stage',
+		},
+		{
+			columnKey: PartnerOpportunitiesColumnKey.CLOSE_DATE,
+			label: 'Close Date',
+		},
+		{
+			columnKey: PartnerOpportunitiesColumnKey.SUBSCRIPTION_TERM,
+			label: 'Subscription Term',
 		},
 		{
 			columnKey: PartnerOpportunitiesColumnKey.PARTNER_REP_NAME,
@@ -101,13 +124,56 @@ const PartnerOpportunitiesList = ({
 			columnKey: PartnerOpportunitiesColumnKey.LIFERAY_REP,
 			label: 'Liferay Rep',
 		},
+	];
+
+	const rangeDataPicker = {
+		end: '',
+		start: currentFiscalYearStart,
+	};
+
+	const filterFields = [
 		{
-			columnKey: PartnerOpportunitiesColumnKey.STAGE,
-			label: 'Stage',
+			component: {
+				initialValues: filters.stage.value,
+				props: {
+					availableItems: isRenewalListing
+						? Filters.RENEWAL_LISTING.stages
+						: Filters.OPPORTUNITY_LISTING.stages,
+					clearCheckboxes: !filters.stage.value?.length,
+				},
+				type: FilterTypes.CHECKBOX,
+				updateFilter: (checkedItems: string[]) =>
+					setFilters((previousFilters) => ({
+						...previousFilters,
+						stage: {
+							...previousFilters.stage,
+							value: checkedItems,
+						},
+					})),
+			},
+			name: 'Stage',
+		},
+		{
+			component: {
+				initialValues: filters.closeDate?.dates,
+				props: {
+					clearInputs: filters?.closeDate,
+					filterDescription: 'Close Date',
+					years: rangeDataPicker,
+				},
+				type: FilterTypes.DATE,
+				updateFilter: (dates: Dates) =>
+					onFilter({
+						closeDate: {
+							dates,
+						},
+					}),
+			},
+			name: 'Close Date',
 		},
 	];
 
-	const handleCustomClickOnRow = (row: PartnerOpportunitiesItem) => {
+	const handleCustomClickOnRow = async (row: PartnerOpportunitiesItem) => {
 		setIsVisibleModal(true);
 		setModalContent(row);
 	};
@@ -142,9 +208,18 @@ const PartnerOpportunitiesList = ({
 			return (
 				<div className="mt-3">
 					<Table<PartnerOpportunitiesItem>
+						className="custom-table"
 						columns={columns}
 						customClickOnRow={handleCustomClickOnRow}
 						rows={items}
+						setTableSort={setOpportunitiesTableSort}
+						sortable={[
+							SortableTable.ACCOUNT_NAME,
+							SortableTable.CLOSE_DATE,
+							SortableTable.PARTNER_ACCOUNT_NAME,
+							SortableTable.STAGE,
+						]}
+						tableLayoutAuto
 					/>
 
 					<ClayPaginationBarWithBasicItems
@@ -158,17 +233,21 @@ const PartnerOpportunitiesList = ({
 
 	return (
 		<div className="border-0 my-4">
-			<h1>{name}</h1>
+			<div className="align-items-center d-md-flex justify-content-between mb-3 mr-4">
+				<h1>{name}</h1>
+			</div>
 
 			<TableHeader>
 				<div className="d-flex">
 					<div>
 						<Search
+							initialSearchTerm={filters.searchTerm}
 							onSearchSubmit={(searchTerm: string) =>
 								onFilter({
 									searchTerm,
 								})
 							}
+							urlParams={urlParams}
 						/>
 
 						<div className="bd-highlight flex-shrink-2 mt-1">
@@ -183,8 +262,39 @@ const PartnerOpportunitiesList = ({
 										</p>
 									</div>
 								)}
+							{filters.hasValue && (
+								<ClayButton
+									borderless
+									className="link"
+									onClick={() => {
+										onFilter({
+											...INITIAL_FILTER,
+											searchTerm: filters.searchTerm,
+										});
+									}}
+									small
+								>
+									<ClayIcon
+										className="ml-n2 mr-1"
+										symbol="times-circle"
+									/>
+									Clear All Filters
+								</ClayButton>
+							)}
 						</div>
 					</div>
+
+					<DropDownWithDrillDown
+						menuItems={filterFields}
+						trigger={
+							<ClayButton borderless className="btn-secondary">
+								<span className="inline-item inline-item-before">
+									<ClayIcon symbol="filter" />
+								</span>
+								Filter
+							</ClayButton>
+						}
+					/>
 				</div>
 
 				<div>
@@ -196,19 +306,6 @@ const PartnerOpportunitiesList = ({
 						>
 							Export {name}
 						</CSVLink>
-					)}
-
-					{newButtonDeal && (
-						<ClayButton
-							className="mb-2 mb-lg-0 mr-2"
-							onClick={() =>
-								Liferay.Util.navigate(
-									`${siteURL}/${PRMPageRoute.CREATE_DEAL_REGISTRATION}`
-								)
-							}
-						>
-							Register New Deal
-						</ClayButton>
 					)}
 				</div>
 			</TableHeader>

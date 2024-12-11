@@ -6,20 +6,31 @@
 type Locale = Liferay.Language.Locale;
 type LocalizedValue<T> = Liferay.Language.LocalizedValue<T>;
 
-interface LabelValueObject {
+interface LabelNameObject {
 	label: string;
-	value: string;
+	name: string;
+}
+interface LabelValueObject<T = string> {
+	label: string;
+	value: T;
 }
 
-type editorTypeOptions = 'freemarker' | 'richText';
+type EditorTypeOptions = 'freemarker' | 'richText';
 
 type EmailRecipients = {
-	bcc: string;
-	cc: string;
+	bcc: string | Partial<EmailNotificationRecipients>[];
+	bccType: string;
+	cc: string | Partial<EmailNotificationRecipients>[];
+	ccType: string;
 	from: string;
 	fromName: LocalizedValue<string>;
 	singleRecipient: boolean;
-	to: LocalizedValue<string>;
+	to: LocalizedValue<string> | EmailNotificationRecipients[];
+	toType: string;
+};
+
+type EmailNotificationRecipients = {
+	[key in 'roleName']?: string;
 };
 
 type UserNotificationRecipients = {
@@ -29,7 +40,7 @@ interface NotificationTemplate {
 	attachmentObjectFieldIds: string[] | number[];
 	body: LocalizedValue<string>;
 	description: string;
-	editorType: editorTypeOptions;
+	editorType: EditorTypeOptions;
 	externalReferenceCode: string;
 	name: string;
 	objectDefinitionExternalReferenceCode: string;
@@ -40,6 +51,7 @@ interface NotificationTemplate {
 		| Partial<UserNotificationRecipients>[]
 		| [];
 	subject: LocalizedValue<string>;
+	system: boolean;
 	type: string;
 }
 

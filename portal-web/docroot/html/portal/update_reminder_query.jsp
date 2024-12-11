@@ -87,8 +87,8 @@ if (referer.equals(themeDisplay.getPathMain() + "/portal/update_reminder_query")
 	</div>
 </div>
 
-<script>
-	(function() {
+<aui:script>
+	(function () {
 		var customQuestionContainer = document.getElementById('customQuestionContainer');
 		var reminderQueryQuestion = document.getElementById('reminderQueryQuestion');
 
@@ -119,4 +119,4 @@ if (referer.equals(themeDisplay.getPathMain() + "/portal/update_reminder_query")
 			);
 		}
 	})();
-</script>
+</aui:script>

@@ -2,10 +2,10 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -19,7 +19,7 @@ definition {
 				virtualHost = "www.able.com");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@liferay.com");
 		}
@@ -37,7 +37,6 @@ definition {
 
 	@priority = 4
 	test CanCreateAPIApplicationWithUIOnVirtualInstance {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -56,14 +55,12 @@ definition {
 
 	@priority = 4
 	test CanCreatePublishedAPIApplicationWithAPIOnVirtualInstance {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("When with postAPIApplication to create a published API application") {
 			var response = ApplicationAPI.createAPIApplication(
 				baseURL = "test",
-				status = "unpublished",
 				title = "test",
 				virtualHost = "www.able.com");
 		}
@@ -90,7 +87,6 @@ definition {
 
 	@priority = 5
 	test CanLoadHeadlessBuilderAPIsOnVirtualInstance {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -118,7 +114,6 @@ definition {
 	@ignore = "true"
 	@priority = 5
 	test CannotCreateSchemaWithAPIIdOfOtherInstance {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -158,7 +153,6 @@ definition {
 
 	@priority = 4
 	test CanPublishAPIApplicationWithUIOnVirtualInstance {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -179,7 +173,6 @@ definition {
 
 	@priority = 5
 	test CanSeeAPIObjectDefinitionsOnVirtualInstance {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

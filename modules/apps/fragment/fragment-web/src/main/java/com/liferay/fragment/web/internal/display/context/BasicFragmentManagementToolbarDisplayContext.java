@@ -9,6 +9,8 @@ import com.liferay.fragment.collection.item.selector.criterion.FragmentCollectio
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.web.internal.info.field.type.CaptchaInfoFieldType;
+import com.liferay.fragment.web.internal.info.field.type.FormButtonInfoFieldType;
+import com.liferay.fragment.web.internal.info.field.type.StepperInfoFieldType;
 import com.liferay.fragment.web.internal.security.permission.resource.FragmentPermission;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
@@ -28,7 +30,6 @@ import com.liferay.info.field.type.SelectInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -282,12 +283,6 @@ public class BasicFragmentManagementToolbarDisplayContext
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		for (InfoFieldType infoFieldType : _INFO_FIELD_TYPES) {
-			if (!FeatureFlagManagerUtil.isEnabled("LPS-183727") &&
-				(infoFieldType == DateTimeInfoFieldType.INSTANCE)) {
-
-				continue;
-			}
-
 			jsonArray.put(
 				JSONUtil.put(
 					"key", infoFieldType.getName()
@@ -337,10 +332,11 @@ public class BasicFragmentManagementToolbarDisplayContext
 	private static final InfoFieldType[] _INFO_FIELD_TYPES = {
 		BooleanInfoFieldType.INSTANCE, CaptchaInfoFieldType.INSTANCE,
 		DateInfoFieldType.INSTANCE, DateTimeInfoFieldType.INSTANCE,
-		FileInfoFieldType.INSTANCE, HTMLInfoFieldType.INSTANCE,
-		LongTextInfoFieldType.INSTANCE, MultiselectInfoFieldType.INSTANCE,
-		NumberInfoFieldType.INSTANCE, RelationshipInfoFieldType.INSTANCE,
-		SelectInfoFieldType.INSTANCE, TextInfoFieldType.INSTANCE
+		FileInfoFieldType.INSTANCE, FormButtonInfoFieldType.INSTANCE,
+		HTMLInfoFieldType.INSTANCE, LongTextInfoFieldType.INSTANCE,
+		MultiselectInfoFieldType.INSTANCE, NumberInfoFieldType.INSTANCE,
+		RelationshipInfoFieldType.INSTANCE, SelectInfoFieldType.INSTANCE,
+		StepperInfoFieldType.INSTANCE, TextInfoFieldType.INSTANCE
 	};
 
 	private final ItemSelector _itemSelector;

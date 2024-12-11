@@ -4,13 +4,6 @@
  */
 
 module.exports = {
-	build: {
-		bundler: {
-			exclude: {
-				'*': ['test?(s)/**/*', 'test.js'],
-			},
-		},
-	},
 	check: false,
 	fix: false,
 };

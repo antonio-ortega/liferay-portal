@@ -1,4 +1,4 @@
-@component-name = "portal-object"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -121,10 +121,12 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		for (var resourceActionIndex : list "ACCESS_IN_CONTROL_PANEL,CONFIGURATION,PERMISSIONS,PREFERENCES,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = ${resourceActionIndex},
-				resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+				resourceName = ${objectDefinitionPortletId},
 				roleTitle = "Regular Role",
 				roleType = "regular");
 		}
@@ -140,9 +142,12 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		ObjectPortlet.assertObjectIsDisplayedOnControlPanel();
+		ObjectPortlet.assertIsDisplayedOnControlPanel(itemMenu = "Custom Objects");
 
-		ObjectPortlet.goToCustomObjectPortletOnControlPanel();
+		Click(
+			key_category = "Objects",
+			key_portlet = "Custom Objects",
+			locator1 = "ApplicationsMenu#PORTLET");
 
 		AssertElementPresent(
 			key_objectLabel = "Custom Object",
@@ -333,7 +338,9 @@ definition {
 
 		ObjectAdmin.goToDetailsTab();
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
 		CreateObject.saveObject();
 
@@ -447,10 +454,12 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		for (var resourceActionIndex : list "ACCESS_IN_CONTROL_PANEL,CONFIGURATION,PERMISSIONS,PREFERENCES,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = ${resourceActionIndex},
-				resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+				resourceName = ${objectDefinitionPortletId},
 				roleTitle = "Regular Role",
 				roleType = "regular");
 		}
@@ -511,7 +520,9 @@ definition {
 
 		ObjectAdmin.goToDetailsTab();
 
-		CreateObject.selectPanelCategoryKey(panelCategoryKey = "Control Panel > Object");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Panel Link",
+			optionName = "Object");
 
 		CreateObject.saveObject();
 
@@ -519,7 +530,9 @@ definition {
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject239");
 
-		ObjectAdmin.addObjectPicklistFieldEntryViaUI(picklistOption = "Item Test 1");
+		ObjectAdmin.addObjectPicklistFieldEntryViaUI(
+			labelName = "Field Picklist",
+			picklistOption = "Item Test 1");
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject239");
 
@@ -632,10 +645,7 @@ definition {
 
 		Navigator.openURL();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Roles");
+		Role.openRolesAdmin();
 
 		Role.addAssignee(
 			assigneeName = "Site A",
@@ -848,16 +858,20 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
+
+		var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${objectId});
 
 		for (var resourceActionIndex : list "VIEW,DELETE") {
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = ${resourceActionIndex},
-				resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}",
+				resourceName = ${objectDefinitionClassName},
 				roleTitle = "Regular Role",
 				roleType = "regular");
 		}
@@ -1138,19 +1152,28 @@ definition {
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject254");
 
-		ObjectAdmin.addObjectPicklistFieldEntryViaUI(picklistOption = "Item Test 1");
+		ObjectAdmin.addObjectPicklistFieldEntryViaUI(
+			labelName = "Field Picklist",
+			picklistOption = "Item Test 1");
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject254");
 
 		ObjectPortlet.viewEntryDetails(entry = "Item Test 1");
 
-		ObjectAdmin.changePicklistFieldEntry(
-			entrySelected = "Item Test 1",
-			newPicklistOption = "Item Test 2");
+		ObjectAdmin.selectDropdownItem(
+			labelName = "Field Picklist",
+			optionName = "Item Test 2");
 
-		ObjectPortlet.assertEntryDetailsValueSelected(entrySelected = "Item Test 2");
+		AssertTextEquals(
+			key_labelName = "Field Picklist",
+			locator1 = "ObjectAdmin#CLAY_GENERIC_BUTTON",
+			value1 = "Item Test 2");
 
-		ObjectPortlet.assertEntryDetailsNotPresent(entryNotSelected = "Item Test 1");
+		PortletEntry.save();
+
+		ObjectAdmin.goToCustomObject(objectName = "CustomObject254");
+
+		ObjectPortlet.viewEntry(entry = "Item Test 2");
 	}
 
 	@description = "LPS-135396 - Verify it is possible to edit a String entry on layout"
@@ -1234,10 +1257,12 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		for (var resourceActionIndex : list "ACCESS_IN_CONTROL_PANEL,CONFIGURATION,PERMISSIONS,PREFERENCES,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = ${resourceActionIndex},
-				resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+				resourceName = ${objectDefinitionPortletId},
 				roleTitle = "Regular Role",
 				roleType = "regular");
 		}
@@ -1300,9 +1325,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -1355,15 +1382,19 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
+		var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW",
-			resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}",
+			resourceName = ${objectDefinitionClassName},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -1450,9 +1481,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -1505,9 +1538,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -1644,62 +1679,6 @@ definition {
 			locator1 = "ObjectPortlet#CHECK_UNCHECK_DROPDOWN_ITEM");
 	}
 
-	@description = "LPS-140082 - Verify it is possible to search for a partial Object entry on the Relationship field"
-	@priority = 4
-	test CanSearchPartialOnRelationshipField {
-		ObjectAdmin.addObjectViaAPI(
-			labelName = "Custom Object 264",
-			objectName = "CustomObject264",
-			pluralLabelName = "Custom Objects 264");
-
-		ObjectAdmin.addObjectFieldViaAPI(
-			fieldBusinessType = "Text",
-			fieldLabelName = "Field",
-			fieldName = "customObjectField",
-			fieldType = "String",
-			isRequired = "false",
-			objectName = "CustomObject264");
-
-		ObjectAdmin.addObjectRelationshipViaAPI(
-			objectName_1 = "CustomObject264",
-			objectName_2 = "CustomObject264",
-			relationshipLabel = "Relationship",
-			relationshipName = "relationship",
-			relationshipType = "oneToMany");
-
-		ObjectAdmin.openObjectAdmin();
-
-		ObjectPortlet.selectCustomObject(label = "Custom Object 264");
-
-		CreateObject.selectTitleField(fieldLabel = "Field");
-
-		CreateObject.saveObject();
-
-		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject264");
-
-		ObjectAdmin.goToCustomObject(objectName = "CustomObject264");
-
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "customObjectField",
-			objectName = "CustomObject264",
-			value = "Test 1");
-
-		ObjectAdmin.addObjectSingleFieldEntryViaAPI(
-			fieldName = "customObjectField",
-			objectName = "CustomObject264",
-			value = "Test 2");
-
-		ObjectAdmin.goToCustomObject(objectName = "CustomObject264");
-
-		ObjectPortlet.viewEntryDetails(entry = "Test 1");
-
-		ObjectPortlet.searchEntryRelationshipField(entryValue = "Tes");
-
-		AssertElementPresent(
-			locator1 = "ObjectPortlet#SEARCH_RELATIONSHIP_ENTRY",
-			value1 = "t 2");
-	}
-
 	@description = "LPS-135390 - Verify it is possible to update an Object entry with the Update permission"
 	@priority = 4
 	test CanUpdateObjectEntryWithUpdatePermission {
@@ -1732,16 +1711,20 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
+
+		var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${objectId});
 
 		for (var resourceActionIndex : list "VIEW,UPDATE") {
 			Permissions.definePermissionViaJSONAPI(
 				resourceAction = ${resourceActionIndex},
-				resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}",
+				resourceName = ${objectDefinitionClassName},
 				roleTitle = "Regular Role",
 				roleType = "regular");
 		}
@@ -2026,15 +2009,19 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
+		var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW",
-			resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}",
+			resourceName = ${objectDefinitionClassName},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -2098,17 +2085,18 @@ definition {
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject273");
 
-		ObjectAdmin.addObjectPicklistFieldEntryViaUI(picklistOption = "Item Test 1");
+		ObjectAdmin.addObjectPicklistFieldEntryViaUI(
+			labelName = "Field Picklist",
+			picklistOption = "Item Test 1");
 
 		ObjectAdmin.goToCustomObject(objectName = "CustomObject273");
 
 		ObjectPortlet.viewEntryDetails(entry = "Item Test 1");
 
-		AssertElementPresent(
-			key_entryLabel = "Field Picklist",
-			locator1 = "ObjectPortlet#VIEW_ENTRY_DETAILS_LABEL");
-
-		ObjectPortlet.assertEntryDetailsValueSelected(entrySelected = "Item Test 1");
+		AssertTextEquals(
+			key_labelName = "Field Picklist",
+			locator1 = "ObjectAdmin#CLAY_GENERIC_BUTTON",
+			value1 = "Item Test 1");
 	}
 
 	@description = "LPS-135396 - Verify it is possible to view a String entry and label on layout"

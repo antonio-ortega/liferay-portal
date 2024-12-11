@@ -74,27 +74,6 @@ if (dispatchTrigger != null) {
 	</div>
 </clay:container-fluid>
 
-<aui:script>
-	Liferay.provide(
-		window,
-		'<portlet:namespace />selectType',
-		() => {
-			var A = AUI();
-
-			var processType = A.one(<portlet:namespace />type).val();
-
-			var portletURL = new Liferay.PortletURL.createURL(
-				'<%= currentURLObj %>'
-			);
-
-			portletURL.setParameter('type', processType);
-
-			window.location.replace(portletURL.toString());
-		},
-		['liferay-portlet-url']
-	);
-</aui:script>
-
 <aui:script use="aui-ace-editor">
 	var STR_VALUE = 'value';
 
@@ -119,9 +98,8 @@ if (dispatchTrigger != null) {
 	Liferay.on('<portlet:namespace />saveTrigger', (event) => {
 		var form = window.document['<portlet:namespace />fm'];
 
-		form['<portlet:namespace />dispatchTaskSettings'].value = contentEditor.get(
-			STR_VALUE
-		);
+		form['<portlet:namespace />dispatchTaskSettings'].value =
+			contentEditor.get(STR_VALUE);
 
 		submitForm(
 			form,

@@ -27,6 +27,7 @@ import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -37,6 +38,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -54,6 +56,7 @@ import java.text.ParseException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -157,6 +160,46 @@ public class InfoRequestFieldValuesProviderHelper {
 				continue;
 			}
 
+			if (FeatureFlagManagerUtil.isEnabled("LPD-37927") &&
+				infoField.isLocalizable() &&
+				(infoField.getInfoFieldType() instanceof HTMLInfoFieldType ||
+				 infoField.getInfoFieldType() instanceof
+					 LongTextInfoFieldType ||
+				 infoField.getInfoFieldType() instanceof TextInfoFieldType)) {
+
+				infoFieldValues.put(
+					infoField.getUniqueId(),
+					new InfoFieldValue<>(
+						infoField,
+						InfoLocalizedValue.builder(
+						).defaultLocale(
+							themeDisplay.getSiteDefaultLocale()
+						).value(
+							unsafeBiConsumer -> {
+								for (Locale locale :
+										LanguageUtil.getAvailableLocales(
+											themeDisplay.getSiteGroupId())) {
+
+									String languageId =
+										LanguageUtil.getLanguageId(locale);
+
+									List<String> values =
+										regularParameterMap.get(
+											infoField.getName() +
+												StringPool.UNDERLINE +
+													languageId);
+
+									if (ListUtil.isNotEmpty(values)) {
+										unsafeBiConsumer.accept(
+											locale, values.get(0));
+									}
+								}
+							}
+						).build()));
+
+				continue;
+			}
+
 			for (String value : regularParameters) {
 				InfoFieldValue<Object> infoFieldValue = _getInfoFieldValue(
 					infoField, themeDisplay.getLocale(), value);
@@ -203,10 +246,24 @@ public class InfoRequestFieldValuesProviderHelper {
 	private InfoFieldValue<Object> _getDateTimeInfoFieldValue(
 		InfoField<?> infoField, Locale locale, String value) {
 
-		LocalDateTime localDateTime = LocalDateTime.parse(
-			value, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+		if (Validator.isBlank(value)) {
+			return _getInfoFieldValue(
+				infoField, locale, (Object)StringPool.BLANK);
+		}
 
-		return _getInfoFieldValue(infoField, locale, localDateTime);
+		try {
+			LocalDateTime localDateTime = LocalDateTime.parse(
+				value, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
+
+			return _getInfoFieldValue(infoField, locale, localDateTime);
+		}
+		catch (DateTimeParseException dateTimeParseException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(dateTimeParseException);
+			}
+		}
+
+		return null;
 	}
 
 	private InfoFieldValue<Object> _getFileInfoFieldValue(
@@ -305,9 +362,7 @@ public class InfoRequestFieldValuesProviderHelper {
 			return _getDateInfoFieldValue(infoField, locale, value);
 		}
 
-		if ((infoField.getInfoFieldType() instanceof DateTimeInfoFieldType) &&
-			FeatureFlagManagerUtil.isEnabled("LPS-183727")) {
-
+		if (infoField.getInfoFieldType() instanceof DateTimeInfoFieldType) {
 			return _getDateTimeInfoFieldValue(infoField, locale, value);
 		}
 

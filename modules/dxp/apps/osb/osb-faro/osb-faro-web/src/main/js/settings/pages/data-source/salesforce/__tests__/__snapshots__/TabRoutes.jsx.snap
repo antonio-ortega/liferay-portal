@@ -88,9 +88,11 @@ exports[`SalesforceTabRoutes should render 1`] = `
                     href="/workspace/23/settings/data-source/test"
                     role="tab"
                   >
-                    <h4>
+                    <div
+                      class="h4"
+                    >
                       Authorization
-                    </h4>
+                    </div>
                   </a>
                 </li>
                 <li
@@ -102,9 +104,11 @@ exports[`SalesforceTabRoutes should render 1`] = `
                     href="/workspace/23/settings/data-source/test/salesforce/configuration-status"
                     role="tab"
                   >
-                    <h4>
+                    <div
+                      class="h4"
+                    >
                       Configure Data Source
-                    </h4>
+                    </div>
                     <span
                       class="badge badge-primary ml-2"
                     >
@@ -134,6 +138,7 @@ exports[`SalesforceTabRoutes should render 1`] = `
                     Salesforce
                      Data Source. You will need to enter the credentials of the data source's administrator. If you need help setting this up, please refer to the 
                     <a
+                      class=""
                       href="https://developer.salesforce.com/page/Connected_Apps"
                     >
                       documentation
@@ -277,7 +282,7 @@ exports[`SalesforceTabRoutes should render 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#view"
+                                href="#view"
                               />
                             </svg>
                           </button>

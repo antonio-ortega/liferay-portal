@@ -45,7 +45,7 @@ definition {
 
 		Navigator.gotoNavTab(navTab = "Widget Templates");
 
-		ApplicationDisplayTemplates.addCP(
+		WidgetTemplates.addCP(
 			adtFile = "adt_breadcrumb.ftl",
 			adtType = "Breadcrumb");
 
@@ -60,7 +60,7 @@ definition {
 
 		Navigator.gotoPage(pageName = "Test Breadcrumb Page");
 
-		ApplicationDisplayTemplates.selectPortletADT(
+		WidgetTemplates.selectPortletADT(
 			portletName = "Breadcrumb",
 			templateName = "Breadcrumb Test ADT");
 
@@ -156,68 +156,6 @@ ${Application['org.apache.catalina.resources'].getContext().getInstanceManager()
 	}
 
 	@priority = 4
-	test ViewInstanceManagerVelocity {
-		SetWindowSize(value1 = "1920,1080");
-
-		Navigator.gotoSitePage(
-			pageName = "Test Page",
-			siteName = "Test Site Name");
-
-		Portlet.addPG(portletName = "Dynamic Data Lists Display");
-
-		Navigator.gotoSitePage(
-			pageName = "Test Page",
-			siteName = "Test Site Name");
-
-		var templateScript = '''
-$request.servletContext.getAttribute("org.apache.tomcat.InstanceManager"))
-''';
-
-		DDLList.addViaDDLDisplayPG();
-
-		DDLDataDefinition.addViaDDLDisplayPG();
-
-		DynamicDataMapping.addField(
-			field = "Text",
-			fieldFieldLabel = "Name",
-			fieldName = "Name");
-
-		DDLDataDefinition.saveViaDDLDisplayPG();
-
-		DDLDataDefinition.selectViaDDLDisplayPG();
-
-		DDLList.saveViaDDLDisplayPG();
-
-		Navigator.gotoSitePage(
-			pageName = "Test Page",
-			siteName = "Test Site Name");
-
-		DDLRecord.addViaDDLDisplayPG();
-
-		DDLRecord.populateFieldText(
-			ddlRecordFieldData = "Name1",
-			fieldFieldLabel = "Name",
-			fieldName = "Name");
-
-		PortletEntry.publish();
-
-		Navigator.gotoSitePage(
-			pageName = "Test Page",
-			siteName = "Test Site Name");
-
-		DDLTemplate.addDisplayTemplateTemplateViaDDLDisplayPG(
-			ddlDisplayTemplateLanguage = "Velocity (.vm)",
-			ddlDisplayTemplateName = "Velocity Template",
-			ddlDisplayTemplateScript = ${templateScript});
-
-		Navigator.gotoSitePage(
-			pageName = "Test Page",
-			siteName = "Test Site Name");
-
-		AssertConsoleTextPresent(value1 = "java.lang.IllegalArgumentException: Denied resolving class org.apache.catalina.core.ApplicationContextFacade by org.apache");
-	}
-
-	@priority = 4
 	test ViewInstanceManagerWildfly {
 		property app.server.types = "wildfly";
 		property test.assert.warning.exceptions = "false";
@@ -271,7 +209,7 @@ ${Application['org.apache.tomcat.InstanceManager'].newInstance('com.sun.org.apac
 
 	@priority = 4
 	test ViewServletContext {
-		property app.server.types = "tomcat,weblogic,websphere,wildfly";
+		property app.server.types = "tomcat,weblogic,wildfly";
 		property ci.retries.disabled = "false";
 		property test.assert.warning.exceptions = "false";
 

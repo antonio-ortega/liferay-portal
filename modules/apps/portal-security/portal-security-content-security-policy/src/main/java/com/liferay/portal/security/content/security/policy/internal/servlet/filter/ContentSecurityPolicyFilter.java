@@ -5,15 +5,16 @@
 
 package com.liferay.portal.security.content.security.policy.internal.servlet.filter;
 
-import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.content.security.policy.internal.ContentSecurityPolicyNonceManager;
 import com.liferay.portal.security.content.security.policy.internal.configuration.ContentSecurityPolicyConfiguration;
+import com.liferay.portal.security.content.security.policy.internal.configuration.ContentSecurityPolicyConfigurationUtil;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 
 import java.io.ByteArrayOutputStream;
@@ -50,14 +51,30 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-134060")) {
+		if (CompanyThreadLocal.getCompanyId() == 0) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Content security policy will not be applied to this " +
+						"request for company ID 0");
+			}
+
 			return false;
 		}
 
 		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration =
-			_getContentSecurityPolicyConfiguration(httpServletRequest);
+			ContentSecurityPolicyConfigurationUtil.
+				setContentSecurityPolicyConfiguration(
+					_configurationProvider, httpServletRequest, _portal);
 
-		return contentSecurityPolicyConfiguration.enabled();
+		if (!contentSecurityPolicyConfiguration.enabled() ||
+			Validator.isNull(contentSecurityPolicyConfiguration.policy()) ||
+			_isExcludedURIPath(
+				contentSecurityPolicyConfiguration, httpServletRequest)) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
@@ -66,92 +83,35 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		if (_isExcludedURIPath(httpServletRequest)) {
-			filterChain.doFilter(httpServletRequest, httpServletResponse);
-
-			return;
-		}
-
-		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration =
-			_getContentSecurityPolicyConfiguration(httpServletRequest);
-
-		String policy = contentSecurityPolicyConfiguration.policy();
-
-		if (Validator.isNull(policy)) {
-			filterChain.doFilter(httpServletRequest, httpServletResponse);
-
-			return;
-		}
-
-		String nonce = _contentSecurityPolicyNonceManager.ensureNonce(
+		String nonce = _contentSecurityPolicyNonceManager.setNonce(
 			httpServletRequest);
 
 		try {
-			_contentSecurityPolicyNonceManager.setTLSNonce(nonce);
+			httpServletResponse.setContentType("text/html; charset=UTF-8");
+
+			ContentSecurityPolicyConfiguration
+				contentSecurityPolicyConfiguration =
+					ContentSecurityPolicyConfigurationUtil.
+						getContentSecurityPolicyConfiguration(
+							httpServletRequest);
+
+			String policy = contentSecurityPolicyConfiguration.policy();
 
 			policy = StringUtil.replace(policy, "[$NONCE$]", "nonce-" + nonce);
 
 			httpServletResponse.setHeader("Content-Security-Policy", policy);
 
-			PrintWriter printWriter = httpServletResponse.getWriter();
-
-			ContentSecurityPolicyHttpServletResponse
-				contentSecurityPolicyHttpServletResponse =
-					new ContentSecurityPolicyHttpServletResponse(
-						httpServletResponse);
-
-			filterChain.doFilter(
-				httpServletRequest, contentSecurityPolicyHttpServletResponse);
-
-			String content =
-				contentSecurityPolicyHttpServletResponse.getContent();
-
-			content = content.replaceAll(
-				"<(?i)link ", "<link nonce=\"" + nonce + "\" ");
-			content = content.replaceAll(
-				"<(?i)link>", "<link nonce=\"" + nonce + "\">");
-			content = content.replaceAll(
-				"<(?i)script ", "<script nonce=\"" + nonce + "\" ");
-			content = content.replaceAll(
-				"<(?i)script>", "<script nonce=\"" + nonce + "\">");
-			content = content.replaceAll(
-				"<(?i)style ", "<style nonce=\"" + nonce + "\" ");
-			content = content.replaceAll(
-				"<(?i)style>", "<style nonce=\"" + nonce + "\">");
-
-			printWriter.write(content);
-
-			printWriter.close();
-
-			httpServletResponse.setContentLength(content.length());
+			filterChain.doFilter(httpServletRequest, httpServletResponse);
 		}
 		finally {
-			_contentSecurityPolicyNonceManager.removeTLSNonce();
+			_contentSecurityPolicyNonceManager.cleanUpNonce(httpServletRequest);
 		}
 	}
 
-	private ContentSecurityPolicyConfiguration
-		_getContentSecurityPolicyConfiguration(
-			HttpServletRequest httpServletRequest) {
+	private boolean _isExcludedURIPath(
+		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration,
+		HttpServletRequest httpServletRequest) {
 
-		try {
-			long groupId = _portal.getScopeGroupId(httpServletRequest);
-
-			if (groupId > 0) {
-				return _configurationProvider.getGroupConfiguration(
-					ContentSecurityPolicyConfiguration.class, groupId);
-			}
-
-			return _configurationProvider.getCompanyConfiguration(
-				ContentSecurityPolicyConfiguration.class,
-				_portal.getCompanyId(httpServletRequest));
-		}
-		catch (PortalException portalException) {
-			return ReflectionUtil.throwException(portalException);
-		}
-	}
-
-	private boolean _isExcludedURIPath(HttpServletRequest httpServletRequest) {
 		String requestURI = httpServletRequest.getRequestURI();
 
 		if (Validator.isNull(requestURI)) {
@@ -169,9 +129,6 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 
 		requestURI = StringUtil.toLowerCase(requestURI);
 
-		ContentSecurityPolicyConfiguration contentSecurityPolicyConfiguration =
-			_getContentSecurityPolicyConfiguration(httpServletRequest);
-
 		for (String excludedPath :
 				contentSecurityPolicyConfiguration.excludedPaths()) {
 
@@ -188,6 +145,9 @@ public class ContentSecurityPolicyFilter extends BasePortalFilter {
 	private static final String[] _INTERNALLY_EXCLUDED_PATHS = {
 		"/group/", "/user/", "/web/"
 	};
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ContentSecurityPolicyFilter.class);
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

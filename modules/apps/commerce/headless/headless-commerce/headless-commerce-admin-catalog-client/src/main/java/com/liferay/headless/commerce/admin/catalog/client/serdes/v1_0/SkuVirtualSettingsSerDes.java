@@ -6,6 +6,7 @@
 package com.liferay.headless.commerce.admin.catalog.client.serdes.v1_0;
 
 import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.SkuVirtualSettings;
+import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.SkuVirtualSettingsFileEntry;
 import com.liferay.headless.commerce.admin.catalog.client.json.BaseJSONParser;
 
 import java.util.Iterator;
@@ -91,6 +92,16 @@ public class SkuVirtualSettingsSerDes {
 			sb.append(skuVirtualSettings.getDuration());
 		}
 
+		if (skuVirtualSettings.getId() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"id\": ");
+
+			sb.append(skuVirtualSettings.getId());
+		}
+
 		if (skuVirtualSettings.getMaxUsages() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -151,6 +162,36 @@ public class SkuVirtualSettingsSerDes {
 			sb.append(_escape(skuVirtualSettings.getSampleURL()));
 
 			sb.append("\"");
+		}
+
+		if (skuVirtualSettings.getSkuVirtualSettingsFileEntries() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"skuVirtualSettingsFileEntries\": ");
+
+			sb.append("[");
+
+			for (int i = 0;
+				 i <
+					 skuVirtualSettings.
+						 getSkuVirtualSettingsFileEntries().length;
+				 i++) {
+
+				sb.append(
+					String.valueOf(
+						skuVirtualSettings.getSkuVirtualSettingsFileEntries()
+							[i]));
+
+				if ((i + 1) < skuVirtualSettings.
+						getSkuVirtualSettingsFileEntries().length) {
+
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (skuVirtualSettings.getSrc() != null) {
@@ -277,6 +318,13 @@ public class SkuVirtualSettingsSerDes {
 				"duration", String.valueOf(skuVirtualSettings.getDuration()));
 		}
 
+		if (skuVirtualSettings.getId() == null) {
+			map.put("id", null);
+		}
+		else {
+			map.put("id", String.valueOf(skuVirtualSettings.getId()));
+		}
+
 		if (skuVirtualSettings.getMaxUsages() == null) {
 			map.put("maxUsages", null);
 		}
@@ -316,6 +364,16 @@ public class SkuVirtualSettingsSerDes {
 		else {
 			map.put(
 				"sampleURL", String.valueOf(skuVirtualSettings.getSampleURL()));
+		}
+
+		if (skuVirtualSettings.getSkuVirtualSettingsFileEntries() == null) {
+			map.put("skuVirtualSettingsFileEntries", null);
+		}
+		else {
+			map.put(
+				"skuVirtualSettingsFileEntries",
+				String.valueOf(
+					skuVirtualSettings.getSkuVirtualSettingsFileEntries()));
 		}
 
 		if (skuVirtualSettings.getSrc() == null) {
@@ -385,6 +443,71 @@ public class SkuVirtualSettingsSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "activationStatus")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "activationStatusInfo")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "attachment")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "duration")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "maxUsages")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "override")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "sampleAttachment")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "sampleSrc")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "sampleURL")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "skuVirtualSettingsFileEntries")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "src")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "termsOfUseContent")) {
+				return true;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "termsOfUseJournalArticleId")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "termsOfUseRequired")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "url")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "useSample")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			SkuVirtualSettings skuVirtualSettings, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -412,6 +535,12 @@ public class SkuVirtualSettingsSerDes {
 			else if (Objects.equals(jsonParserFieldName, "duration")) {
 				if (jsonParserFieldValue != null) {
 					skuVirtualSettings.setDuration(
+						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				if (jsonParserFieldValue != null) {
+					skuVirtualSettings.setId(
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
@@ -445,6 +574,30 @@ public class SkuVirtualSettingsSerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "skuVirtualSettingsFileEntries")) {
+
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					SkuVirtualSettingsFileEntry[]
+						skuVirtualSettingsFileEntriesArray =
+							new SkuVirtualSettingsFileEntry
+								[jsonParserFieldValues.length];
+
+					for (int i = 0;
+						 i < skuVirtualSettingsFileEntriesArray.length; i++) {
+
+						skuVirtualSettingsFileEntriesArray[i] =
+							SkuVirtualSettingsFileEntrySerDes.toDTO(
+								(String)jsonParserFieldValues[i]);
+					}
+
+					skuVirtualSettings.setSkuVirtualSettingsFileEntries(
+						skuVirtualSettingsFileEntriesArray);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "src")) {
 				if (jsonParserFieldValue != null) {
 					skuVirtualSettings.setSrc((String)jsonParserFieldValue);
@@ -453,8 +606,7 @@ public class SkuVirtualSettingsSerDes {
 			else if (Objects.equals(jsonParserFieldName, "termsOfUseContent")) {
 				if (jsonParserFieldValue != null) {
 					skuVirtualSettings.setTermsOfUseContent(
-						(Map)SkuVirtualSettingsSerDes.toMap(
-							(String)jsonParserFieldValue));
+						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(
@@ -516,36 +668,7 @@ public class SkuVirtualSettingsSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -555,6 +678,38 @@ public class SkuVirtualSettingsSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

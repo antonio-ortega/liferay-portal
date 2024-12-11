@@ -25,18 +25,16 @@ import {
 	useEditableProcessorUniqueId,
 	useSetEditableProcessorUniqueId,
 } from '../../../app/contexts/EditableProcessorContext';
-import {
-	useSelector,
-	useSelectorCallback,
-} from '../../../app/contexts/StoreContext';
+import {useSelector} from '../../../app/contexts/StoreContext';
 import selectCanUpdateEditables from '../../../app/selectors/selectCanUpdateEditables';
-import {selectPageContentDropdownItems} from '../../../app/selectors/selectPageContentDropdownItems';
 import getEditableId from '../../../app/utils/getEditableId';
 import getFirstControlsId from '../../../app/utils/getFirstControlsId';
 import getFragmentItem from '../../../app/utils/getFragmentItem';
+import {getPageContentDropdownItems} from '../../../app/utils/getPageContentDropdownItems';
 import ImageEditorModal from './ImageEditorModal';
 
 export default function PageContent({
+	actions,
 	classNameId,
 	classPK,
 	editableId,
@@ -54,10 +52,8 @@ export default function PageContent({
 	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
 	const [isHovered, setIsHovered] = useState(false);
 	const layoutData = useSelector((state) => state.layoutData);
-	const [
-		nextEditableProcessorUniqueId,
-		setNextEditableProcessorUniqueId,
-	] = useState(null);
+	const [nextEditableProcessorUniqueId, setNextEditableProcessorUniqueId] =
+		useState(null);
 	const selectItem = useSelectItem();
 	const setEditableProcessorUniqueId = useSetEditableProcessorUniqueId();
 	const [imageEditorParams, setImageEditorParams] = useState(null);
@@ -67,40 +63,35 @@ export default function PageContent({
 		[editableId, editableProcessorUniqueId]
 	);
 
-	const dropdownItems = useSelectorCallback(
-		(state) => {
-			const pageContentDropdownItems = selectPageContentDropdownItems({
-				classNameId,
-				classPK,
-				externalReferenceCode,
-			})(state);
+	const dropdownItems = useMemo(() => {
+		const pageContentDropdownItems = getPageContentDropdownItems({
+			actions,
+		});
 
-			return pageContentDropdownItems?.map((item) => {
-				if (item.label === Liferay.Language.get('edit-image')) {
-					const {
-						editImageURL,
-						fileEntryId,
-						previewURL,
-						...editImageItem
-					} = item;
+		return pageContentDropdownItems?.map((item) => {
+			if (item.label === Liferay.Language.get('edit-image')) {
+				const {
+					editImageURL,
+					fileEntryId,
+					previewURL,
+					...editImageItem
+				} = item;
 
-					return {
-						...editImageItem,
-						onClick: () => {
-							setImageEditorParams({
-								editImageURL,
-								fileEntryId,
-								previewURL,
-							});
-						},
-					};
-				}
+				return {
+					...editImageItem,
+					onClick: () => {
+						setImageEditorParams({
+							editImageURL,
+							fileEntryId,
+							previewURL,
+						});
+					},
+				};
+			}
 
-				return item;
-			});
-		},
-		[classNameId, classPK, externalReferenceCode]
-	);
+			return item;
+		});
+	}, [actions]);
 
 	useEffect(() => {
 		if (editableProcessorUniqueId || !nextEditableProcessorUniqueId) {
@@ -121,10 +112,8 @@ export default function PageContent({
 				setIsHovered(editableId === hoveredItemId);
 			}
 			else {
-				const [
-					fragmentEntryLinkId,
-					...editableId
-				] = hoveredItemId.split('-');
+				const [fragmentEntryLinkId, ...editableId] =
+					hoveredItemId.split('-');
 
 				if (fragmentEntryLinks[fragmentEntryLinkId]) {
 					const fragmentEntryLink =
@@ -233,10 +222,10 @@ export default function PageContent({
 				},
 				'role': 'button',
 				'tabIndex': '0',
-		  }
+			}
 		: {
 				'aria-label': title,
-		  };
+			};
 
 	return (
 		<li
@@ -250,7 +239,7 @@ export default function PageContent({
 			onMouseLeave={handleMouseLeave}
 			onMouseOver={handleMouseOver}
 		>
-			{Liferay.FeatureFlags['LPS-169923'] && isRestricted ? (
+			{isRestricted ? (
 				<div className="align-items-center d-flex">
 					<ClayIcon
 						className="flex-shrink-0 mr-3"

@@ -7,6 +7,7 @@ package com.liferay.portal.search.internal;
 
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
@@ -16,6 +17,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
@@ -43,8 +45,8 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.configuration.SearchPermissionCheckerConfiguration;
-import com.liferay.portal.search.spi.model.permission.SearchPermissionFieldContributor;
-import com.liferay.portal.search.spi.model.permission.SearchPermissionFilterContributor;
+import com.liferay.portal.search.spi.model.permission.contributor.SearchPermissionFieldContributor;
+import com.liferay.portal.search.spi.model.permission.contributor.SearchPermissionFilterContributor;
 
 import java.io.Serializable;
 
@@ -519,7 +521,23 @@ public class SearchPermissionCheckerImpl implements SearchPermissionChecker {
 			}
 		}
 
-		if (ArrayUtil.isNotEmpty(groupIds)) {
+		if (ArrayUtil.isEmpty(groupIds)) {
+			List<ResourcePermission> resourcePermissions = new ArrayList<>();
+
+			for (long roleId : roleIds) {
+				resourcePermissions.addAll(
+					_resourcePermissionLocalService.getResourcePermissions(
+						companyId, className, ResourceConstants.SCOPE_GROUP,
+						roleId, true));
+			}
+
+			groupsTermsFilter.addValues(
+				TransformUtil.transformToArray(
+					resourcePermissions,
+					resourcePermission -> resourcePermission.getPrimKey(),
+					String.class));
+		}
+		else {
 			for (long searchGroupId : groupIds) {
 				if (!searchPermissionContext.containsGroupId(searchGroupId) &&
 					_resourcePermissionLocalService.hasResourcePermission(

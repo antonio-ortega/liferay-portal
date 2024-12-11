@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -200,7 +200,7 @@ definition {
 
 		task ("Activate local staging in the created portal instance global site") {
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com",
 				virtualHostsURL = "http://www.able.com:8080");
 
@@ -337,8 +337,6 @@ definition {
 	@description = "This is a test for LPS-192836. Assert can select feature image from Document and Media in web content creation in staging."
 	@priority = 3
 	test PublishWebContentWithFeaturedImageFromDocumentsAndMediaToLive {
-		property custom.properties = "feature.flag.LPS-180855=true";
-
 		var siteName = StringUtil.randomString(8);
 
 		var siteURLKey = StringUtil.toLowerCase(${siteName});
@@ -414,6 +412,10 @@ definition {
 	test PublishWebContentWithFeeds {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		task ("Given a site designer has web content feeds") {
 			Staging.openStagingAdmin(siteURLKey = ${randomSiteURLKey});

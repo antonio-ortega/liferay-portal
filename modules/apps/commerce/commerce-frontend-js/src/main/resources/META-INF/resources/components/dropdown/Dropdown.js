@@ -41,6 +41,7 @@ function Dropdown(props) {
 				closeOnSubmit: true,
 				id: dropdownSupportModalId,
 				size: resolveModalSize(target),
+				title: label,
 				url,
 			});
 		}
@@ -85,11 +86,11 @@ function Dropdown(props) {
 												url: item.href,
 											});
 										},
-								  }
+									}
 								: {
 										'data-senna-off': true,
 										'href': item.href,
-								  };
+									};
 
 						return (
 							<ClayDropDown.Item key={i} {...dropdownProps}>

@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPTaxCategory;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -98,6 +99,16 @@ public class CPTaxCategoryServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	public static com.liferay.portal.kernel.search.BaseModelSearchResult
+		<CPTaxCategory> searchCPTaxCategories(
+				long companyId, String keywords, int start, int end,
+				com.liferay.portal.kernel.search.Sort sort)
+			throws PortalException {
+
+		return getService().searchCPTaxCategories(
+			companyId, keywords, start, end, sort);
+	}
+
 	public static CPTaxCategory updateCPTaxCategory(
 			String externalReferenceCode, long cpTaxCategoryId,
 			Map<java.util.Locale, String> nameMap,
@@ -109,13 +120,11 @@ public class CPTaxCategoryServiceUtil {
 	}
 
 	public static CPTaxCategoryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPTaxCategoryService service) {
-		_service = service;
-	}
-
-	private static volatile CPTaxCategoryService _service;
+	private static final Snapshot<CPTaxCategoryService> _serviceSnapshot =
+		new Snapshot<>(
+			CPTaxCategoryServiceUtil.class, CPTaxCategoryService.class);
 
 }

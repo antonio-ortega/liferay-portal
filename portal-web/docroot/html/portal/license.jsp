@@ -7,7 +7,7 @@
 
 <%@ include file="/html/portal/init.jsp" %>
 
-<style type="text/css">
+<aui:style type="text/css">
 	.build-info {
 		color: #555;
 		font-size: 11px;
@@ -34,7 +34,7 @@
 		font-weight: bold;
 		margin: 0 0 2px 0;
 	}
-</style>
+</aui:style>
 
 <%
 Map<String, String> orderProducts = (Map<String, String>)request.getAttribute("ORDER_PRODUCTS");
@@ -75,6 +75,8 @@ dateFormatDateTime.setTimeZone(timeZone);
 	</h3>
 
 	<form class="license-form" method="post" name="license_fm" <%= (clusterNodes.size() > 1) ? "onsubmit=\"return validateForm();\"" : "" %>>
+		<input name="p_auth" type="hidden" value="<%= AuthTokenUtil.getToken(request) %>" />
+
 		<c:if test="<%= Validator.isNotNull(errorMessage) %>">
 			<div class="alert alert-danger">
 				<%= errorMessage %>
@@ -461,7 +463,7 @@ dateFormatDateTime.setTimeZone(timeZone);
 									success(data);
 								}
 							).catch(
-								function() {
+								function () {
 									var errorMessage = A.Lang.sub('<liferay-ui:message key="error-contacting-x" />', [ip]);
 
 									if (port != '-1') {
@@ -640,34 +642,36 @@ dateFormatDateTime.setTimeZone(timeZone);
 						<liferay-ui:message key="product" />
 					</td>
 					<td>
-						<select name="productEntryName" onChange="if (this.value == "basic-cluster") {document.getElementById("maxServers").style.display = "";} else {document.getElementById("maxServers").style.display = "none";}">
-							<option value=""></option>
+						<liferay-ui:csp>
+							<select name="productEntryName" onchange="if (this.value == "basic-cluster") {document.getElementById("maxServers").style.display = "";} else {document.getElementById("maxServers").style.display = "none";}">
+								<option value=""></option>
 
-							<%
-							for (Map.Entry<String, String> entry : orderProducts.entrySet()) {
-								String key = entry.getKey();
+								<%
+								for (Map.Entry<String, String> entry : orderProducts.entrySet()) {
+									String key = entry.getKey();
 
-								String licensesLeft = LanguageUtil.get(request, entry.getValue());
-							%>
+									String licensesLeft = LanguageUtil.get(request, entry.getValue());
+								%>
 
-								<c:choose>
-									<c:when test='<%= key.equals("basic") %>'>
-										<option value="basic"><liferay-ui:message arguments='<%= new String[] {licensesLeft, licensesLeft.equals("1") ? "license" : "licenses"} %>' key="single-production-server-x-x-left" /></option>
-										<option value="basic-cluster"><liferay-ui:message arguments='<%= new String[] {licensesLeft, licensesLeft.equals("1") ? "license" : "licenses"} %>' key="create-new-cluster-production-servers-x-x-left" /></option>
-									</c:when>
-									<c:when test='<%= key.startsWith("basic-") %>'>
-										<option value="<%= key %>"><liferay-ui:message arguments='<%= new String[] {licensesLeft, licensesLeft.equals("1") ? "server" : "servers"} %>' key="join-existing-cluster-x-x-left" /></option>
-									</c:when>
-									<c:otherwise>
-										<option value="<%= key %>"><liferay-ui:message arguments='<%= new String[] {key, licensesLeft, licensesLeft.equals("1") ? "license" : "licenses"} %>' key="x-x-x-left" /></option>
-									</c:otherwise>
-								</c:choose>
+									<c:choose>
+										<c:when test='<%= key.equals("basic") %>'>
+											<option value="basic"><liferay-ui:message arguments='<%= new String[] {licensesLeft, licensesLeft.equals("1") ? "license" : "licenses"} %>' key="single-production-server-x-x-left" /></option>
+											<option value="basic-cluster"><liferay-ui:message arguments='<%= new String[] {licensesLeft, licensesLeft.equals("1") ? "license" : "licenses"} %>' key="create-new-cluster-production-servers-x-x-left" /></option>
+										</c:when>
+										<c:when test='<%= key.startsWith("basic-") %>'>
+											<option value="<%= key %>"><liferay-ui:message arguments='<%= new String[] {licensesLeft, licensesLeft.equals("1") ? "server" : "servers"} %>' key="join-existing-cluster-x-x-left" /></option>
+										</c:when>
+										<c:otherwise>
+											<option value="<%= key %>"><liferay-ui:message arguments='<%= new String[] {key, licensesLeft, licensesLeft.equals("1") ? "license" : "licenses"} %>' key="x-x-x-left" /></option>
+										</c:otherwise>
+									</c:choose>
 
-							<%
-							}
-							%>
+								<%
+								}
+								%>
 
-						</select>
+							</select>
+						</liferay-ui:csp>
 					</td>
 				</tr>
 				<tr id="maxServers" style="display: none;">
@@ -704,7 +708,9 @@ dateFormatDateTime.setTimeZone(timeZone);
 			<c:when test="<%= orderProducts != null %>">
 				<input class="btn btn-secondary" type="submit" value="<liferay-ui:message key="register" />" />
 
-				<input onClick="location.href='<%= HtmlUtil.escapeJS(themeDisplay.getURLCurrent()) %>';" type="button" value="<liferay-ui:message key="cancel" />" />
+				<liferay-ui:csp>
+					<input onclick="location.href = '<%= HtmlUtil.escapeJS(themeDisplay.getURLCurrent()) %>';" type="button" value="<liferay-ui:message key="cancel" />" />
+				</liferay-ui:csp>
 			</c:when>
 			<c:otherwise>
 				<input class="btn btn-secondary" type="submit" value="<liferay-ui:message key="query" />" />

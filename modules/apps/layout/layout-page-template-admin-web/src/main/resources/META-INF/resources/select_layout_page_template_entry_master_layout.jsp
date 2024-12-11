@@ -23,6 +23,7 @@ masterLayoutPageTemplateEntries.addAll(LayoutPageTemplateEntryServiceUtil.getLay
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
+portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
 renderResponse.setTitle(LanguageUtil.get(request, "select-master-page"));
 %>
@@ -57,7 +58,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-master-page"));
 								"mainFieldPlaceholder", LanguageUtil.get(request, "name")
 							).build()
 						%>'
-						propsTransformer="js/propsTransformers/SelectLayoutPageTemplateEntryMasterLayoutVerticalCardPropsTransformer"
+						propsTransformer="{SelectLayoutPageTemplateEntryMasterLayoutVerticalCardPropsTransformer} from layout-page-template-admin-web"
 						verticalCard="<%= selectLayoutPageTemplateEntryMasterLayoutVerticalCard %>"
 					/>
 				</li>

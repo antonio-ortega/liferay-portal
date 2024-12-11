@@ -15,16 +15,27 @@ ViewObjectDefinitionsDisplayContext viewObjectDefinitionsDisplayContext = (ViewO
 
 <div>
 	<react:component
-		module="js/components/ViewObjectDefinitions/ViewObjectDefinitions"
+		module="{ViewObjectDefinitions} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
-				"baseResourceURL", String.valueOf(baseResourceURL)
+				"baseResourceURL",
+				URLBuilder.create(
+					String.valueOf(baseResourceURL)
+				).setParameter(
+					"objectFolderName", "Default"
+				).build()
 			).put(
 				"editObjectDefinitionURL", viewObjectDefinitionsDisplayContext.getEditObjectDefinitionURL()
 			).put(
+				"importObjectDefinitionURL", viewObjectDefinitionsDisplayContext.getImportObjectDefinitionURL()
+			).put(
+				"importObjectFolderURL", viewObjectDefinitionsDisplayContext.getImportObjectFolderURL()
+			).put(
+				"learnResourceContext", LearnMessageUtil.getReactDataJSONObject("frontend-js-components-web")
+			).put(
 				"modelBuilderURL", viewObjectDefinitionsDisplayContext.getModelBuilderURL()
 			).put(
-				"objectDefinitionsAPIURL", viewObjectDefinitionsDisplayContext.getAPIURL()
+				"nameMaxLength", ModelHintsConstants.TEXT_MAX_LENGTH
 			).put(
 				"objectDefinitionsCreationMenu", viewObjectDefinitionsDisplayContext.getCreationMenu()
 			).put(
@@ -35,6 +46,8 @@ ViewObjectDefinitionsDisplayContext viewObjectDefinitionsDisplayContext = (ViewO
 				"objectDefinitionsStorageTypes", viewObjectDefinitionsDisplayContext.getStorageTypesJSONArray()
 			).put(
 				"objectFolderPermissionsURL", viewObjectDefinitionsDisplayContext.getPermissionsURL(ObjectFolder.class.getName())
+			).put(
+				"portletNamespace", liferayPortletResponse.getNamespace()
 			).build()
 		%>'
 	/>

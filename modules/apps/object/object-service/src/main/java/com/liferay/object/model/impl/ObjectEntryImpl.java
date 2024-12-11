@@ -5,6 +5,7 @@
 
 package com.liferay.object.model.impl;
 
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.entry.util.ObjectEntryValuesUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
@@ -12,17 +13,19 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.object.service.ObjectEntryLocalServiceUtil;
 import com.liferay.object.service.ObjectFieldLocalServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Marco Leo
@@ -41,7 +44,15 @@ public class ObjectEntryImpl extends ObjectEntryBaseImpl {
 
 	@Override
 	public String getModelClassName() {
-		return ObjectDefinition.class.getName() + "#" + getObjectDefinitionId();
+		ObjectDefinition objectDefinition =
+			ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
+				getObjectDefinitionId());
+
+		if (objectDefinition == null) {
+			return StringPool.BLANK;
+		}
+
+		return objectDefinition.getClassName();
 	}
 
 	@Override
@@ -76,13 +87,27 @@ public class ObjectEntryImpl extends ObjectEntryBaseImpl {
 					objectDefinition.getTitleObjectFieldId());
 
 			if (objectField != null) {
+				String title = ObjectEntryValuesUtil.getValueString(
+					objectField, getValues());
+
+				if (Validator.isNotNull(title)) {
+					return title;
+				}
+
+				if (!Objects.equals(
+						objectField.getBusinessType(),
+						ObjectFieldConstants.BUSINESS_TYPE_ATTACHMENT) &&
+					!Objects.equals(
+						objectField.getBusinessType(),
+						ObjectFieldConstants.BUSINESS_TYPE_RICH_TEXT) &&
+					Objects.equals(objectField.getName(), "id")) {
+
+					return String.valueOf(getObjectEntryId());
+				}
+
 				return ObjectEntryValuesUtil.getValueString(
 					objectField,
-					HashMapBuilder.create(
-						getValues()
-					).putAll(
-						ObjectEntryLocalServiceUtil.getSystemValues(this)
-					).build());
+					ObjectEntryLocalServiceUtil.getSystemValues(this));
 			}
 		}
 

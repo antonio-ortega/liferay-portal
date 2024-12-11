@@ -19,13 +19,13 @@ exports[`ModalRenderer should pass props to modal: should render with title 'Foo
           class="modal-content"
         >
           <div
-            class="modal-header"
+            class="modal-header has-title"
           >
-            <h4
-              class="modal-title"
+            <div
+              class="h4 modal-title"
             >
               FooBar
-            </h4>
+            </div>
             <button
               aria-label="Close"
               class="button-root close btn btn-secondary"
@@ -36,7 +36,7 @@ exports[`ModalRenderer should pass props to modal: should render with title 'Foo
                 role="presentation"
               >
                 <use
-                  xlink:href="#times"
+                  href="#times"
                 />
               </svg>
             </button>
@@ -44,9 +44,11 @@ exports[`ModalRenderer should pass props to modal: should render with title 'Foo
           <div
             class="modal-body inline-scroller"
           >
-            <h4>
+            <div
+              class="h4"
+            >
               Modal Body
-            </h4>
+            </div>
           </div>
           <div
             class="modal-footer"
@@ -101,13 +103,13 @@ exports[`ModalRenderer should render multiple modals 1`] = `
           class="modal-content"
         >
           <div
-            class="modal-header"
+            class="modal-header has-title"
           >
-            <h4
-              class="modal-title"
+            <div
+              class="h4 modal-title"
             >
               Modal
-            </h4>
+            </div>
             <button
               aria-label="Close"
               class="button-root close btn btn-secondary"
@@ -118,7 +120,7 @@ exports[`ModalRenderer should render multiple modals 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#times"
+                  href="#times"
                 />
               </svg>
             </button>
@@ -126,9 +128,11 @@ exports[`ModalRenderer should render multiple modals 1`] = `
           <div
             class="modal-body inline-scroller"
           >
-            <h4>
+            <div
+              class="h4"
+            >
               Modal Body
-            </h4>
+            </div>
           </div>
           <div
             class="modal-footer"
@@ -163,13 +167,13 @@ exports[`ModalRenderer should render multiple modals 1`] = `
           class="modal-content"
         >
           <div
-            class="modal-header"
+            class="modal-header has-title"
           >
-            <h4
-              class="modal-title"
+            <div
+              class="h4 modal-title"
             >
               Modal
-            </h4>
+            </div>
             <button
               aria-label="Close"
               class="button-root close btn btn-secondary"
@@ -180,7 +184,7 @@ exports[`ModalRenderer should render multiple modals 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#times"
+                  href="#times"
                 />
               </svg>
             </button>
@@ -188,9 +192,11 @@ exports[`ModalRenderer should render multiple modals 1`] = `
           <div
             class="modal-body inline-scroller"
           >
-            <h4>
+            <div
+              class="h4"
+            >
               Modal Body
-            </h4>
+            </div>
           </div>
           <div
             class="modal-footer"
@@ -237,13 +243,13 @@ exports[`ModalRenderer should render test modal 1`] = `
           class="modal-content"
         >
           <div
-            class="modal-header"
+            class="modal-header has-title"
           >
-            <h4
-              class="modal-title"
+            <div
+              class="h4 modal-title"
             >
               Modal
-            </h4>
+            </div>
             <button
               aria-label="Close"
               class="button-root close btn btn-secondary"
@@ -254,7 +260,7 @@ exports[`ModalRenderer should render test modal 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#times"
+                  href="#times"
                 />
               </svg>
             </button>
@@ -262,9 +268,11 @@ exports[`ModalRenderer should render test modal 1`] = `
           <div
             class="modal-body inline-scroller"
           >
-            <h4>
+            <div
+              class="h4"
+            >
               Modal Body
-            </h4>
+            </div>
           </div>
           <div
             class="modal-footer"

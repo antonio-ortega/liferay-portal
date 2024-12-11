@@ -61,9 +61,9 @@ SiteAdminDisplayContext siteAdminDisplayContext = (SiteAdminDisplayContext)reque
 				<liferay-ui:search-container-column-text
 					colspan="<%= 2 %>"
 				>
-					<h5>
+					<div class="h5">
 						<aui:a href="<%= !curGroup.isCompany() ? viewSubsitesURL : StringPool.BLANK %>" label="<%= HtmlUtil.escape(curGroup.getDescriptiveName(locale)) %>" localizeLabel="<%= false %>" />
-					</h5>
+					</div>
 
 					<span class="text-secondary">
 						<c:choose>
@@ -86,14 +86,14 @@ SiteAdminDisplayContext siteAdminDisplayContext = (SiteAdminDisplayContext)reque
 					<clay:dropdown-actions
 						aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 						dropdownItems="<%= siteAdminDisplayContext.getActionDropdownItems(curGroup) %>"
-						propsTransformer="js/SiteDropdownDefaultPropsTransformer"
+						propsTransformer="{SiteDropdownDefaultPropsTransformer} from site-admin-web"
 					/>
 				</liferay-ui:search-container-column-text>
 			</c:when>
 			<c:when test='<%= Objects.equals(siteAdminDisplayContext.getDisplayStyle(), "icon") %>'>
 				<liferay-ui:search-container-column-text>
 					<clay:vertical-card
-						propsTransformer="js/SiteDropdownDefaultPropsTransformer"
+						propsTransformer="{SiteDropdownDefaultPropsTransformer} from site-admin-web"
 						verticalCard="<%= new SiteVerticalCard(curGroup, liferayPortletRequest, liferayPortletResponse, searchContainer.getRowChecker(), siteAdminDisplayContext) %>"
 					/>
 				</liferay-ui:search-container-column-text>
@@ -221,7 +221,7 @@ SiteAdminDisplayContext siteAdminDisplayContext = (SiteAdminDisplayContext)reque
 					<clay:dropdown-actions
 						aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 						dropdownItems="<%= siteAdminDisplayContext.getActionDropdownItems(curGroup) %>"
-						propsTransformer="js/SiteDropdownDefaultPropsTransformer"
+						propsTransformer="{SiteDropdownDefaultPropsTransformer} from site-admin-web"
 					/>
 				</liferay-ui:search-container-column-text>
 			</c:otherwise>

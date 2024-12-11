@@ -263,6 +263,8 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 				updateDocumentRequest.setRefresh(true);
 			}
 
+			updateDocumentRequest.setUpsert(true);
+
 			try {
 				_searchEngineAdapter.execute(updateDocumentRequest);
 			}
@@ -343,7 +345,9 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 		BulkDocumentResponse bulkDocumentResponse =
 			_searchEngineAdapter.execute(bulkDocumentRequest);
 
-		if (bulkDocumentResponse.hasErrors()) {
+		if ((bulkDocumentResponse != null) &&
+			bulkDocumentResponse.hasErrors()) {
+
 			if (_elasticsearchConfigurationWrapper.logExceptionsOnly()) {
 				_log.error("Update failed");
 			}
@@ -442,7 +446,7 @@ public class ElasticsearchIndexWriter extends BaseIndexWriter {
 	private CompanyLocalService _companyLocalService;
 
 	@Reference
-	private volatile ElasticsearchConfigurationWrapper
+	private ElasticsearchConfigurationWrapper
 		_elasticsearchConfigurationWrapper;
 
 	@Reference

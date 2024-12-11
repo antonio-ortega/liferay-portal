@@ -5,21 +5,25 @@
 
 package com.liferay.object.internal.field.business.type;
 
-import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.list.type.model.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.constants.ObjectFieldConstants;
+import com.liferay.object.dynamic.data.mapping.form.field.type.constants.ObjectDDMFormFieldTypeConstants;
 import com.liferay.object.field.business.type.ObjectFieldBusinessType;
 import com.liferay.object.field.render.ObjectFieldRenderingContext;
 import com.liferay.object.model.ObjectField;
-import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.object.rest.dto.v1_0.ListEntry;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.vulcan.extension.PropertyDefinition;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -44,7 +48,7 @@ public class MultiselectPicklistObjectFieldBusinessType
 
 	@Override
 	public String getDDMFormFieldTypeName() {
-		return DDMFormFieldTypeConstants.SELECT;
+		return ObjectDDMFormFieldTypeConstants.MULTISELECT_PICKLIST;
 	}
 
 	@Override
@@ -107,17 +111,36 @@ public class MultiselectPicklistObjectFieldBusinessType
 			ObjectField objectField, long userId, Map<String, Object> values)
 		throws PortalException {
 
-		Object object = values.get(objectField.getName());
+		Object value = values.get(objectField.getName());
 
-		if (object instanceof List) {
-			List<?> list = (List)object;
+		if (value instanceof List) {
+			List<String> keys = new ArrayList<>();
 
-			if (!list.isEmpty() && (list.get(0) instanceof Map)) {
+			for (Object object : (List<Object>)value) {
+				if (object instanceof ListEntry) {
+					ListEntry listEntry = (ListEntry)object;
+
+					keys.add(listEntry.getKey());
+				}
+				else if (object instanceof Map) {
+					keys.add(
+						MapUtil.getString((Map<String, String>)object, "key"));
+				}
+				else {
+					keys.add((String)object);
+				}
+			}
+
+			values.put(objectField.getName(), keys);
+		}
+		else if (value instanceof String) {
+			String valueString = GetterUtil.getString(value);
+
+			if (valueString.contains(StringPool.COMMA_AND_SPACE)) {
 				values.put(
 					objectField.getName(),
-					TransformUtil.transform(
-						(List<Map<String, String>>)list,
-						map -> map.get("key")));
+					ListUtil.fromString(
+						valueString, StringPool.COMMA_AND_SPACE));
 			}
 		}
 

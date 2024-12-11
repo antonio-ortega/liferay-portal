@@ -29,7 +29,6 @@ import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.repository.model.FileVersion;
@@ -103,7 +102,7 @@ public class CommerceCartContentDisplayContext {
 	}
 
 	public CommerceOrder getCommerceOrder() {
-		if (_commerceOrder != null) {
+		if ((_commerceOrder != null) || (commerceContext == null)) {
 			return _commerceOrder;
 		}
 
@@ -136,6 +135,10 @@ public class CommerceCartContentDisplayContext {
 	}
 
 	public String getCommercePriceDisplayType() throws PortalException {
+		if (commerceContext == null) {
+			return CommercePricingConstants.TAX_EXCLUDED_FROM_PRICE;
+		}
+
 		CommerceChannel commerceChannel =
 			_commerceChannelLocalService.fetchCommerceChannel(
 				commerceContext.getCommerceChannelId());
@@ -346,10 +349,6 @@ public class CommerceCartContentDisplayContext {
 	}
 
 	public boolean isRequestQuoteEnabled() throws PortalException {
-		if (!FeatureFlagManagerUtil.isEnabled("COMMERCE-11028")) {
-			return false;
-		}
-
 		CommerceOrderFieldsConfiguration commerceOrderFieldsConfiguration =
 			_getCommerceOrderFieldsConfiguration();
 
@@ -411,7 +410,9 @@ public class CommerceCartContentDisplayContext {
 			_getCommerceOrderFieldsConfiguration()
 		throws PortalException {
 
-		if (_commerceOrderFieldsConfiguration != null) {
+		if ((_commerceOrderFieldsConfiguration != null) ||
+			(commerceContext == null)) {
+
 			return _commerceOrderFieldsConfiguration;
 		}
 

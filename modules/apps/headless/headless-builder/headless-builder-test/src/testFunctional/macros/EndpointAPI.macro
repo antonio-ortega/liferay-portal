@@ -1,6 +1,7 @@
 definition {
 
-	macro _curlAPIEndpoint {
+	@summary = "Default summary"
+	macro _curlAPIEndpoint(virtualHost = null) {
 		if (isSet(virtualHost)) {
 			if (!(isSet(port))) {
 				var port = 8080;
@@ -13,18 +14,20 @@ definition {
 		}
 
 		var api = "headless-builder/endpoints";
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		var curl = '''
 			${portalURL}/o/${api} \
-				-u test@liferay.com:test \
+				-u test@liferay.com:${userPassword} \
 				-H Content-Type: application/json
 		''';
 
 		return ${curl};
 	}
 
-	macro createAPIEndpoint {
-		Variables.assertDefined(parameterList = "${externalReferenceCode},${name},${path}");
+	@summary = "Default summary"
+	macro createAPIEndpoint(requestSchemaId = null, path = null, responseSchemaId = null, name = null, virtualHost = null, apiApplicationERC = null) {
+		Variables.assertDefined(parameterList = "${apiApplicationERC},${name},${path}");
 
 		var curl = EndpointAPI._curlAPIEndpoint(virtualHost = ${virtualHost});
 
@@ -36,15 +39,15 @@ definition {
 			"httpMethod": "${httpMethod}",
 			"name": "${name}",
 			"path": "${path}",
-			"r_apiApplicationToAPIEndpoints_c_apiApplicationERC": "${externalReferenceCode}"
+			"r_apiApplicationToAPIEndpoints_l_apiApplicationERC": "${apiApplicationERC}"
 		''';
 
 		if (isSet(requestSchemaId)) {
-			var body = StringUtil.add(${body}, ", \"r_requestAPISchemaToAPIEndpoints_c_apiSchemaId\": ${requestSchemaId}", "");
+			var body = StringUtil.add(${body}, ", \"r_requestAPISchemaToAPIEndpoints_l_apiSchemaId\": ${requestSchemaId}", "");
 		}
 
 		if (isSet(responseSchemaId)) {
-			var body = StringUtil.add(${body}, ", \"r_responseAPISchemaToAPIEndpoints_c_apiSchemaId\": ${responseSchemaId}", "");
+			var body = StringUtil.add(${body}, ", \"r_responseAPISchemaToAPIEndpoints_l_apiSchemaId\": ${responseSchemaId}", "");
 		}
 
 		var curl = StringUtil.add(${curl}, " -d { ${body} }", "");
@@ -54,8 +57,9 @@ definition {
 		return ${response};
 	}
 
-	macro createNAPIEndpoints {
-		Variables.assertDefined(parameterList = "${externalReferenceCode},${name},${numberOfEndpoints},${path}");
+	@summary = "Default summary"
+	macro createNAPIEndpoints(path = null, numberOfEndpoints = null, name = null, apiApplicationERC = null) {
+		Variables.assertDefined(parameterList = "${apiApplicationERC},${name},${numberOfEndpoints},${path}");
 
 		var i = 0;
 
@@ -63,13 +67,14 @@ definition {
 			var i = ${i} + 1;
 
 			EndpointAPI.createAPIEndpoint(
-				externalReferenceCode = ${externalReferenceCode},
+				apiApplicationERC = ${apiApplicationERC},
 				name = "${name}${i}",
 				path = "${path}${i}");
 		}
 	}
 
-	macro getAPIEndpoints {
+	@summary = "Default summary"
+	macro getAPIEndpoints() {
 		var curl = EndpointAPI._curlAPIEndpoint();
 
 		var response = JSONCurlUtil.get(${curl});

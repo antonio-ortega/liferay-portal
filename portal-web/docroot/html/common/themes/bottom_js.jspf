@@ -63,10 +63,8 @@
 	}
 </aui:script>
 
-<aui:script require="frontend-js-web/index as frontendJsWeb">
-	var {delegate} = frontendJsWeb;
-
-	delegate(
+<aui:script sandbox="<%= true %>">
+	Liferay.Util.delegate(
 		document,
 		'focusin',
 		'.portlet',
@@ -75,7 +73,7 @@
 		}
 	);
 
-	delegate(
+	Liferay.Util.delegate(
 		document,
 		'focusout',
 		'.portlet',
@@ -135,7 +133,7 @@ if (layout != null) {
 
 		Liferay.once(
 			'initNavigation',
-			function() {
+			function () {
 				new Liferay.Navigation(
 					{
 						navBlock: navBlock
@@ -161,7 +159,7 @@ if (layout != null) {
 			else {
 				navBlock.once(
 					['gesturemovestart', 'mousemove'],
-					function() {
+					function () {
 						Liferay.fire('initNavigation');
 					}
 				);
@@ -170,7 +168,7 @@ if (layout != null) {
 
 		A.on(
 			'io:complete',
-			function() {
+			function () {
 				Liferay.fire('io:complete');
 			}
 		);
@@ -188,7 +186,7 @@ if (layout != null) {
 
 </aui:script>
 
-<script type="text/javascript">
+<aui:script type="text/javascript">
 	// <![CDATA[
 
 		<%
@@ -199,7 +197,7 @@ if (layout != null) {
 		Liferay.currentURLEncoded = '<%= HtmlUtil.escapeJS(URLCodec.encodeURL(currentURL)) %>';
 
 	// ]]>
-</script>
+</aui:script>
 
 <c:if test="<%= layout != null %>">
 
@@ -223,7 +221,7 @@ if (layout != null) {
 	UnicodeProperties layoutTypeSettingsUnicodeProperties = layout.getTypeSettingsProperties();
 	%>
 
-	<script type="text/javascript">
+	<aui:script type="text/javascript">
 		// <![CDATA[
 			<c:if test="<%= !layout.isTypeControlPanel() %>">
 				<%= GetterUtil.getString(layoutSetSettingsUnicodeProperties.getProperty("javascript")) %>
@@ -233,5 +231,5 @@ if (layout != null) {
 				<%= GetterUtil.getString(layoutTypeSettingsUnicodeProperties.getProperty("javascript")) %>
 			</c:if>
 		// ]]>
-	</script>
+	</aui:script>
 </c:if>

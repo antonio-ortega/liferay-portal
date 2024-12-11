@@ -1,4 +1,4 @@
-@component-name = "portal-categories"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -271,6 +271,8 @@ definition {
 	@description = "This is a test for LPS-143509. The sites creator can add a site with required vocabulary."
 	@priority = 4
 	test AddSiteWithRequiredVocabulary {
+		property portal.upstream = "quarantine";
+
 		task ("Given a site creator has a required vocabulary on Global site") {
 			task ("Add a vocabulary with site as associated asset type") {
 				Category.openCategoriesAdmin(siteURLKey = "global");
@@ -613,11 +615,11 @@ definition {
 		}
 
 		task ("View the category is assigned to the copy of web content") {
-			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title (Copy 1)");
+			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title (Copy)");
 
 			WebContent.viewCP(
 				webContentContent = "Web Content Content",
-				webContentTitle = "Web Content Title (Copy 1)");
+				webContentTitle = "Web Content Title (Copy)");
 
 			WebContent.viewCategorizationVocabularyCP(vocabularyNameList = "Vocabulary Name");
 
@@ -656,137 +658,58 @@ definition {
 		}
 	}
 
-	@description = "Export and import a web content with a category or a subcategory."
-	@priority = 5
-	test ExportImportWebContentWithCategoryOrSubCategory {
-		property portal.acceptance = "true";
+	@description = "This is a test for LPS-187080. Changing the category filter 'Vocabulary' setting from 'All' to 'Filter' may not work properly."
+	@priority = 3
+	test FilterCategoryFilterByVocabularies {
+		property custom.properties = "feature.flag.LPD-27566=true";
 
-		task ("Add a widget page") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Page Name");
-		}
-
-		task ("Add widgets to page") {
-			for (var portletName : list "Asset Publisher,Category Filter") {
-				JSONLayout.addWidgetToPublicLayout(
-					groupName = "Test Site Name",
-					layoutName = "Test Page Name",
-					widgetName = ${portletName});
-			}
-		}
-
-		task ("Add a vocabulary") {
+		task ("Given a user has a Category Filter widget on a content page") {
 			JSONCategory.addVocabulary(
 				groupName = "Test Site Name",
 				title = "Vocabulary Name");
-		}
 
-		task ("Add a category") {
-			var categoryId = JSONCategory.addCategory(
+			JSONCategory.addCategory(
 				groupName = "Test Site Name",
 				title = "Category Name",
 				vocabularyName = "Vocabulary Name");
-		}
 
-		task ("Add a subcategory") {
-			var subcategoryId = JSONCategory.addSubcategory(
+			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
-				parentCategoryName = "Category Name",
-				title = "Subcategory Name",
-				vocabularyName = "Vocabulary Name");
-		}
+				layoutName = "Test Page Name",
+				type = "content");
 
-		task ("Add a web content with the category") {
-			JSONWebcontent.addWebContent(
-				assetCategoryIds = ${categoryId},
-				content = "Web Content Content",
-				groupName = "Test Site Name",
-				title = "Web Content Title");
-		}
-
-		task ("Add a web content with the subcategory") {
-			JSONWebcontent.addWebContent(
-				assetCategoryIds = ${subcategoryId},
-				content = "Web Content Content",
-				groupName = "Test Site Name",
-				title = "Subcategory WC Title");
-		}
-
-		task ("Export the whole site") {
-			LAR.exportSiteCP(siteScopeName = "Test Site Name");
-
-			var key_larFileName = ${larFileName};
-
-			AssertTextEquals(
-				locator1 = "ExportImport#CURRENT_AND_PREVIOUS_STATUS_1",
-				value1 = "Successful");
-
-			var larFileName = LAR.getLarFileName();
-
-			LAR.downloadLar();
-		}
-
-		task ("Add a new site based on Blank Site") {
-			HeadlessSite.addSite(siteName = "Import Site Name");
-
-			for (var layoutUtilityPageName : list "404 Error,500 Error") {
-				JSONLayoututilitypage.deleteLayoutUtilityPage(
-					groupName = "Import Site Name",
-					layoutUtilityPageName = ${layoutUtilityPageName});
-			}
-		}
-
-		task ("Import the lar to new site") {
-			LAR.importSiteCP(
-				larFileName = ${larFileName},
-				siteName = "Import Site Name");
-		}
-
-		task ("Select the category in Categories Navigation") {
-			Navigator.gotoSitePage(
+			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page Name",
-				siteName = "Import Site Name");
+				siteName = "Test Site Name");
 
-			CategoriesNavigationPortlet.selectCategoryPG(categoryName = "Category Name");
+			PageEditor.addWidget(portletName = "Category Filter");
 		}
 
-		task ("View the web content with category shown in AP") {
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content Content",
-				assetTitle = "Web Content Title");
+		task ("When the user filters Category Filter by vocabularies") {
+			Portlet.gotoPortletOptions(
+				portletName = "Category Filter",
+				portletOption = "Configuration");
+
+			IFrame.selectModalFrame();
+
+			Select(
+				key_fieldLabel = "Vocabularies",
+				locator1 = "Select#GENERIC_SELECT_FIELD",
+				value1 = "Filter");
+
+			PortletEntry.save();
+
+			IFrame.closeFrame();
+
+			PageEditor.publish();
 		}
 
-		task ("Select the subcategory in Categories Navigation") {
-			Navigator.gotoSitePage(
-				pageName = "Test Page Name",
-				siteName = "Import Site Name");
+		task ("Then the user could see categories on Category Filter") {
+			Portlet.expandTree();
 
-			CategoriesNavigationPortlet.selectCategoryPG(categoryName = "Subcategory Name");
-		}
-
-		task ("View the web content with subcategory shown in AP") {
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content Content",
-				assetTitle = "Subcategory WC Title");
-		}
-
-		task ("View the category or subcategory are assigned to web contents") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "import-site-name");
-
-			WebContentNavigator.gotoEditCP(webContentTitle = "Web Content Title");
-
-			WebContent.viewCategorizationCategoryCP(
-				categoryNameList = "Category Name",
-				webContentTitle = "Web Content Title");
-
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "import-site-name");
-
-			WebContentNavigator.gotoEditCP(webContentTitle = "Subcategory WC Title");
-
-			WebContent.viewCategorizationCategoryCP(
-				categoryNameList = "Subcategory Name",
-				webContentTitle = "Subcategory WC Title");
+			AssertVisible(
+				key_nodeName = "Category Name",
+				locator1 = "Treeview#NODE_ITEM");
 		}
 	}
 

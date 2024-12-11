@@ -6,6 +6,7 @@
 package com.liferay.layout.taglib.internal.struts;
 
 import com.liferay.layout.taglib.internal.util.LayoutUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -18,10 +19,12 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.struts.StrutsAction;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.util.PropsValues;
 
 import java.util.Collections;
 import java.util.List;
@@ -66,9 +69,11 @@ public class FindLayoutsStrutsAction implements StrutsAction {
 
 		boolean privateLayout = ParamUtil.getBoolean(
 			httpServletRequest, "privateLayout");
+		boolean searchOnlyByTitle = ParamUtil.getBoolean(
+			httpServletRequest, "searchOnlyByTitle");
 
-		int layoutsCount = _layoutLocalService.getLayoutsCount(
-			group, privateLayout, keywords,
+		int layoutsCount = _layoutLocalService.searchCount(
+			group, privateLayout, keywords, searchOnlyByTitle,
 			new String[] {
 				LayoutConstants.TYPE_COLLECTION, LayoutConstants.TYPE_CONTENT,
 				LayoutConstants.TYPE_EMBEDDED,
@@ -77,71 +82,107 @@ public class FindLayoutsStrutsAction implements StrutsAction {
 				LayoutConstants.TYPE_PORTLET, LayoutConstants.TYPE_URL
 			});
 
-		List<Layout> layouts = _layoutLocalService.getLayouts(
-			groupId, privateLayout, keywords,
-			new String[] {
-				LayoutConstants.TYPE_COLLECTION, LayoutConstants.TYPE_CONTENT,
-				LayoutConstants.TYPE_EMBEDDED,
-				LayoutConstants.TYPE_FULL_PAGE_APPLICATION,
-				LayoutConstants.TYPE_LINK_TO_LAYOUT, LayoutConstants.TYPE_PANEL,
-				LayoutConstants.TYPE_PORTLET, LayoutConstants.TYPE_URL
-			},
-			0, layoutsCount, null);
+		boolean hasMoreElements = false;
 
-		boolean checkDisplayPage = ParamUtil.getBoolean(
-			httpServletRequest, "checkDisplayPage");
-		boolean enableCurrentPage = ParamUtil.getBoolean(
-			httpServletRequest, "enableCurrentPage");
-		String itemSelectorReturnType = ParamUtil.getString(
-			httpServletRequest, "itemSelectorReturnType");
-		long selPlid = ParamUtil.getLong(
-			httpServletRequest, "selPlid", LayoutConstants.DEFAULT_PLID);
+		if (layoutsCount > 0) {
+			int start = ParamUtil.getInteger(
+				httpServletRequest, "start", QueryUtil.ALL_POS);
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
+			if (start != QueryUtil.ALL_POS) {
+				start = Math.max(0, start);
+			}
 
-		for (Layout layout : layouts) {
-			jsonArray.put(
-				JSONUtil.put(
-					"disabled",
-					() -> {
-						if ((checkDisplayPage &&
-							 !layout.isContentDisplayPage()) ||
-							(!enableCurrentPage &&
-							 (layout.getPlid() == selPlid))) {
+			int pageSize = GetterUtil.getInteger(
+				PropsValues.LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN);
 
-							return true;
+			int end = ParamUtil.getInteger(
+				httpServletRequest, "end", start + pageSize);
+
+			if ((start == QueryUtil.ALL_POS) || (pageSize <= 0)) {
+				start = QueryUtil.ALL_POS;
+				end = QueryUtil.ALL_POS;
+			}
+
+			int startEndMax = Math.max(start, end);
+
+			if ((startEndMax != QueryUtil.ALL_POS) && (pageSize > 0) &&
+				(layoutsCount > startEndMax)) {
+
+				hasMoreElements = true;
+			}
+
+			List<Layout> layouts = _layoutLocalService.search(
+				groupId, privateLayout, keywords, searchOnlyByTitle,
+				new String[] {
+					LayoutConstants.TYPE_COLLECTION,
+					LayoutConstants.TYPE_CONTENT, LayoutConstants.TYPE_EMBEDDED,
+					LayoutConstants.TYPE_FULL_PAGE_APPLICATION,
+					LayoutConstants.TYPE_LINK_TO_LAYOUT,
+					LayoutConstants.TYPE_PANEL, LayoutConstants.TYPE_PORTLET,
+					LayoutConstants.TYPE_URL
+				},
+				start, end, null);
+
+			boolean checkDisplayPage = ParamUtil.getBoolean(
+				httpServletRequest, "checkDisplayPage");
+			boolean enableCurrentPage = ParamUtil.getBoolean(
+				httpServletRequest, "enableCurrentPage");
+			String itemSelectorReturnType = ParamUtil.getString(
+				httpServletRequest, "itemSelectorReturnType");
+			long selPlid = ParamUtil.getLong(
+				httpServletRequest, "selPlid", LayoutConstants.DEFAULT_PLID);
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			for (Layout layout : layouts) {
+				jsonArray.put(
+					JSONUtil.put(
+						"disabled",
+						() -> {
+							if ((checkDisplayPage &&
+								 !layout.isContentDisplayPage()) ||
+								(!enableCurrentPage &&
+								 (layout.getPlid() == selPlid))) {
+
+								return true;
+							}
+
+							return false;
 						}
-
-						return false;
-					}
-				).put(
-					"groupId", layout.getGroupId()
-				).put(
-					"id", layout.getUuid()
-				).put(
-					"layoutId", layout.getLayoutId()
-				).put(
-					"name", layout.getName(themeDisplay.getLocale())
-				).put(
-					"path",
-					_getLayoutPathJSONArray(layout, themeDisplay.getLocale())
-				).put(
-					"payload",
-					LayoutUtil.getLayoutPayload(
-						httpServletRequest, itemSelectorReturnType, layout,
-						themeDisplay)
-				).put(
-					"privateLayout", layout.isPrivateLayout()
-				).put(
-					"returnType", itemSelectorReturnType
-				).put(
-					"value", layout.getBreadcrumb(themeDisplay.getLocale())
-				));
+					).put(
+						"groupId", layout.getGroupId()
+					).put(
+						"id", layout.getUuid()
+					).put(
+						"layoutId", layout.getLayoutId()
+					).put(
+						"name", layout.getName(themeDisplay.getLocale())
+					).put(
+						"path",
+						_getLayoutPathJSONArray(
+							layout, themeDisplay.getLocale())
+					).put(
+						"payload",
+						LayoutUtil.getLayoutPayload(
+							httpServletRequest, itemSelectorReturnType, layout,
+							themeDisplay)
+					).put(
+						"privateLayout", layout.isPrivateLayout()
+					).put(
+						"returnType", itemSelectorReturnType
+					).put(
+						"value", layout.getBreadcrumb(themeDisplay.getLocale())
+					));
+			}
 		}
 
-		jsonObject.put("layouts", jsonArray);
+		jsonObject.put(
+			"hasMoreElements", hasMoreElements
+		).put(
+			"layouts", jsonArray
+		);
 
 		ServletResponseUtil.write(httpServletResponse, jsonObject.toString());
 

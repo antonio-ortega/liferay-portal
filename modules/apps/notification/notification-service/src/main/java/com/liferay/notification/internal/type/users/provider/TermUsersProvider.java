@@ -15,26 +15,32 @@ import com.liferay.notification.term.evaluator.NotificationTermEvaluatorTracker;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Feliphe Marinho
  */
-@Component(
-	property = "recipient.type=" + NotificationRecipientConstants.TYPE_TERM,
-	service = UsersProvider.class
-)
-public class TermUsersProvider
-	extends BaseUsersProvider implements UsersProvider {
+public class TermUsersProvider implements UsersProvider {
+
+	public TermUsersProvider(
+		PermissionCheckerFactory permissionCheckerFactory,
+		NotificationTermEvaluatorTracker notificationTermEvaluatorTracker,
+		UserLocalService userLocalService) {
+
+		_permissionCheckerFactory = permissionCheckerFactory;
+		_notificationTermEvaluatorTracker = notificationTermEvaluatorTracker;
+		_userLocalService = userLocalService;
+	}
 
 	@Override
 	public String getRecipientType() {
@@ -77,9 +83,12 @@ public class TermUsersProvider
 					User user = _userLocalService.getUserByScreenName(
 						notificationRecipient.getCompanyId(), screenName);
 
-					if (!hasViewPermission(
+					if (!ModelResourcePermissionUtil.contains(
+							_permissionCheckerFactory.create(user),
+							notificationContext.getGroupId(),
 							notificationContext.getClassName(),
-							notificationContext.getClassPK(), user)) {
+							notificationContext.getClassPK(),
+							ActionKeys.VIEW)) {
 
 						return null;
 					}
@@ -95,16 +104,23 @@ public class TermUsersProvider
 				TransformUtil.unsafeTransform(
 					terms,
 					term -> {
-						User user = _userLocalService.getUser(
-							GetterUtil.getLong(
-								notificationTermEvaluator.evaluate(
-									NotificationTermEvaluator.Context.RECIPIENT,
-									notificationContext.getTermValues(),
-									term)));
+						String termValue = notificationTermEvaluator.evaluate(
+							NotificationTermEvaluator.Context.RECIPIENT,
+							notificationContext.getTermValues(), term);
 
-						if (!hasViewPermission(
+						if (Objects.equals(term, termValue)) {
+							return null;
+						}
+
+						User user = _userLocalService.getUser(
+							GetterUtil.getLong(termValue));
+
+						if (!ModelResourcePermissionUtil.contains(
+								_permissionCheckerFactory.create(user),
+								notificationContext.getGroupId(),
 								notificationContext.getClassName(),
-								notificationContext.getClassPK(), user)) {
+								notificationContext.getClassPK(),
+								ActionKeys.VIEW)) {
 
 							return null;
 						}
@@ -119,10 +135,9 @@ public class TermUsersProvider
 	private static final Pattern _pattern = Pattern.compile(
 		"\\[%[^\\[%]+%\\]", Pattern.CASE_INSENSITIVE);
 
-	@Reference
-	private NotificationTermEvaluatorTracker _notificationTermEvaluatorTracker;
-
-	@Reference
-	private UserLocalService _userLocalService;
+	private final NotificationTermEvaluatorTracker
+		_notificationTermEvaluatorTracker;
+	private final PermissionCheckerFactory _permissionCheckerFactory;
+	private final UserLocalService _userLocalService;
 
 }

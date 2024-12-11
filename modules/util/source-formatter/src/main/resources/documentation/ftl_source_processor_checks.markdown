@@ -2,6 +2,7 @@
 
 Check | Category | Description
 ----- | -------- | -----------
+CSPComplianceCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks code to prevent common CSP related pitfalls. |
 FTLEmptyLinesCheck | [Styling](styling_checks.markdown#styling-checks) | Finds missing and unnecessary empty lines. |
 [FTLIfStatementCheck](check/if_statement_check.markdown#ifstatementcheck) | [Styling](styling_checks.markdown#styling-checks) | Finds incorrect use of parentheses in statement. |
 FTLImportsCheck | [Styling](styling_checks.markdown#styling-checks) | Sorts and groups imports in `.ftl` files. |
@@ -11,4 +12,4 @@ FTLStylingCheck | [Styling](styling_checks.markdown#styling-checks) | Applies ru
 FTLTagAttributesCheck | [Styling](styling_checks.markdown#styling-checks) | Sorts and formats attributes values in tags. |
 FTLTagCheck | [Styling](styling_checks.markdown#styling-checks) | Finds cases where consecutive `#assign` can be combined. |
 FTLWhitespaceCheck | [Styling](styling_checks.markdown#styling-checks) | Finds missing and unnecessary whitespace in `.ftl` files. |
-IllegalTaglibsCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases of incorrect use of certain taglibs. |
+IllegalTaglibsCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Finds cases of incorrect use of certain deprecated taglibs in modules. |

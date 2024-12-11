@@ -5,9 +5,11 @@
 
 package com.liferay.headless.commerce.delivery.order.client.serdes.v1_0;
 
+import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.Attachment;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrder;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrderComment;
 import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.PlacedOrderItem;
+import com.liferay.headless.commerce.delivery.order.client.dto.v1_0.Step;
 import com.liferay.headless.commerce.delivery.order.client.json.BaseJSONParser;
 
 import java.text.DateFormat;
@@ -76,6 +78,26 @@ public class PlacedOrderSerDes {
 			sb.append("\"accountId\": ");
 
 			sb.append(placedOrder.getAccountId());
+		}
+
+		if (placedOrder.getAttachments() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"attachments\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < placedOrder.getAttachments().length; i++) {
+				sb.append(String.valueOf(placedOrder.getAttachments()[i]));
+
+				if ((i + 1) < placedOrder.getAttachments().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (placedOrder.getAuthor() != null) {
@@ -165,11 +187,7 @@ public class PlacedOrderSerDes {
 			sb.append("[");
 
 			for (int i = 0; i < placedOrder.getErrorMessages().length; i++) {
-				sb.append("\"");
-
-				sb.append(_escape(placedOrder.getErrorMessages()[i]));
-
-				sb.append("\"");
+				sb.append(_toJSON(placedOrder.getErrorMessages()[i]));
 
 				if ((i + 1) < placedOrder.getErrorMessages().length) {
 					sb.append(", ");
@@ -177,6 +195,34 @@ public class PlacedOrderSerDes {
 			}
 
 			sb.append("]");
+		}
+
+		if (placedOrder.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrder.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
+		if (placedOrder.getFriendlyURLSeparator() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"friendlyURLSeparator\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrder.getFriendlyURLSeparator()));
+
+			sb.append("\"");
 		}
 
 		if (placedOrder.getId() != null) {
@@ -220,6 +266,20 @@ public class PlacedOrderSerDes {
 			sb.append("\"");
 		}
 
+		if (placedOrder.getName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrder.getName()));
+
+			sb.append("\"");
+		}
+
 		if (placedOrder.getOrderStatusInfo() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -228,6 +288,20 @@ public class PlacedOrderSerDes {
 			sb.append("\"orderStatusInfo\": ");
 
 			sb.append(String.valueOf(placedOrder.getOrderStatusInfo()));
+		}
+
+		if (placedOrder.getOrderType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"orderType\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(placedOrder.getOrderType()));
+
+			sb.append("\"");
 		}
 
 		if (placedOrder.getOrderTypeExternalReferenceCode() != null) {
@@ -485,6 +559,26 @@ public class PlacedOrderSerDes {
 			sb.append("\"");
 		}
 
+		if (placedOrder.getSteps() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"steps\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < placedOrder.getSteps().length; i++) {
+				sb.append(String.valueOf(placedOrder.getSteps()[i]));
+
+				if ((i + 1) < placedOrder.getSteps().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (placedOrder.getSummary() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -561,6 +655,14 @@ public class PlacedOrderSerDes {
 			map.put("accountId", String.valueOf(placedOrder.getAccountId()));
 		}
 
+		if (placedOrder.getAttachments() == null) {
+			map.put("attachments", null);
+		}
+		else {
+			map.put(
+				"attachments", String.valueOf(placedOrder.getAttachments()));
+		}
+
 		if (placedOrder.getAuthor() == null) {
 			map.put("author", null);
 		}
@@ -616,6 +718,24 @@ public class PlacedOrderSerDes {
 				String.valueOf(placedOrder.getErrorMessages()));
 		}
 
+		if (placedOrder.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(placedOrder.getExternalReferenceCode()));
+		}
+
+		if (placedOrder.getFriendlyURLSeparator() == null) {
+			map.put("friendlyURLSeparator", null);
+		}
+		else {
+			map.put(
+				"friendlyURLSeparator",
+				String.valueOf(placedOrder.getFriendlyURLSeparator()));
+		}
+
 		if (placedOrder.getId() == null) {
 			map.put("id", null);
 		}
@@ -642,6 +762,13 @@ public class PlacedOrderSerDes {
 				liferayToJSONDateFormat.format(placedOrder.getModifiedDate()));
 		}
 
+		if (placedOrder.getName() == null) {
+			map.put("name", null);
+		}
+		else {
+			map.put("name", String.valueOf(placedOrder.getName()));
+		}
+
 		if (placedOrder.getOrderStatusInfo() == null) {
 			map.put("orderStatusInfo", null);
 		}
@@ -649,6 +776,13 @@ public class PlacedOrderSerDes {
 			map.put(
 				"orderStatusInfo",
 				String.valueOf(placedOrder.getOrderStatusInfo()));
+		}
+
+		if (placedOrder.getOrderType() == null) {
+			map.put("orderType", null);
+		}
+		else {
+			map.put("orderType", String.valueOf(placedOrder.getOrderType()));
 		}
 
 		if (placedOrder.getOrderTypeExternalReferenceCode() == null) {
@@ -817,6 +951,13 @@ public class PlacedOrderSerDes {
 			map.put("status", String.valueOf(placedOrder.getStatus()));
 		}
 
+		if (placedOrder.getSteps() == null) {
+			map.put("steps", null);
+		}
+		else {
+			map.put("steps", String.valueOf(placedOrder.getSteps()));
+		}
+
 		if (placedOrder.getSummary() == null) {
 			map.put("summary", null);
 		}
@@ -865,6 +1006,165 @@ public class PlacedOrderSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "account")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "accountId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "attachments")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "author")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "channelId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "couponCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "createDate")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "currencyCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "customFields")) {
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "errorMessages")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "friendlyURLSeparator")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "lastPriceUpdateDate")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "modifiedDate")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "name")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderStatusInfo")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderType")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"orderTypeExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderTypeId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderUUID")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "paymentMethod")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "paymentMethodLabel")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "paymentStatus")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "paymentStatusInfo")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "paymentStatusLabel")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderBillingAddress")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderBillingAddressId")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderComments")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "placedOrderItems")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderShippingAddress")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "placedOrderShippingAddressId")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "printedNote")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "purchaseOrderNumber")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippingMethod")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "shippingOption")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "steps")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "summary")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "useAsBilling")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "valid")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "workflowStatusInfo")) {
+
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			PlacedOrder placedOrder, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -878,6 +1178,22 @@ public class PlacedOrderSerDes {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setAccountId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "attachments")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Attachment[] attachmentsArray =
+						new Attachment[jsonParserFieldValues.length];
+
+					for (int i = 0; i < attachmentsArray.length; i++) {
+						attachmentsArray[i] = AttachmentSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					placedOrder.setAttachments(attachmentsArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "author")) {
@@ -910,14 +1226,29 @@ public class PlacedOrderSerDes {
 			else if (Objects.equals(jsonParserFieldName, "customFields")) {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setCustomFields(
-						(Map)PlacedOrderSerDes.toMap(
-							(String)jsonParserFieldValue));
+						(Map<String, ?>)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "errorMessages")) {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setErrorMessages(
 						toStrings((Object[])jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "externalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					placedOrder.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "friendlyURLSeparator")) {
+
+				if (jsonParserFieldValue != null) {
+					placedOrder.setFriendlyURLSeparator(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -940,10 +1271,20 @@ public class PlacedOrderSerDes {
 						toDate((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "name")) {
+				if (jsonParserFieldValue != null) {
+					placedOrder.setName((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "orderStatusInfo")) {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setOrderStatusInfo(
 						StatusSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "orderType")) {
+				if (jsonParserFieldValue != null) {
+					placedOrder.setOrderType((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(
@@ -1097,6 +1438,21 @@ public class PlacedOrderSerDes {
 					placedOrder.setStatus((String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "steps")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					Step[] stepsArray = new Step[jsonParserFieldValues.length];
+
+					for (int i = 0; i < stepsArray.length; i++) {
+						stepsArray[i] = StepSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					placedOrder.setSteps(stepsArray);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "summary")) {
 				if (jsonParserFieldValue != null) {
 					placedOrder.setSummary(
@@ -1153,36 +1509,7 @@ public class PlacedOrderSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -1192,6 +1519,38 @@ public class PlacedOrderSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

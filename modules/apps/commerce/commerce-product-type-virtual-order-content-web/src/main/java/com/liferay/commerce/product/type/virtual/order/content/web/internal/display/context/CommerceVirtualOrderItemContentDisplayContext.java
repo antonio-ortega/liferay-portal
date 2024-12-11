@@ -15,6 +15,7 @@ import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSettin
 import com.liferay.commerce.product.type.virtual.order.content.web.internal.display.context.helper.CommerceVirtualOrderItemContentRequestHelper;
 import com.liferay.commerce.product.type.virtual.order.content.web.internal.portlet.configuration.CommerceVirtualOrderItemContentPortletInstanceConfiguration;
 import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem;
+import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItemFileEntry;
 import com.liferay.commerce.product.type.virtual.order.service.CommerceVirtualOrderItemLocalService;
 import com.liferay.commerce.product.type.virtual.order.util.comparator.CommerceVirtualOrderItemCreateDateComparator;
 import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSettingLocalService;
@@ -55,8 +56,8 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 			CommerceChannelLocalService commerceChannelLocalService,
 			CommerceVirtualOrderItemLocalService
 				commerceVirtualOrderItemLocalService,
-			ModelResourcePermission<CommerceVirtualOrderItem>
-				commerceVirtualOrderItemModelResourcePermission,
+			ModelResourcePermission<CommerceVirtualOrderItemFileEntry>
+				commerceVirtualOrderItemFileEntryModelResourcePermission,
 			CPDefinitionHelper cpDefinitionHelper,
 			CPDefinitionVirtualSettingLocalService
 				cpDefinitionVirtualSettingLocalService,
@@ -67,8 +68,8 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 		_commerceChannelLocalService = commerceChannelLocalService;
 		_commerceVirtualOrderItemLocalService =
 			commerceVirtualOrderItemLocalService;
-		_commerceVirtualOrderItemModelResourcePermission =
-			commerceVirtualOrderItemModelResourcePermission;
+		_commerceVirtualOrderItemFileEntryModelResourcePermission =
+			commerceVirtualOrderItemFileEntryModelResourcePermission;
 		_cpDefinitionHelper = cpDefinitionHelper;
 		_cpDefinitionVirtualSettingLocalService =
 			cpDefinitionVirtualSettingLocalService;
@@ -186,7 +187,10 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 		return _displayStyleGroupId;
 	}
 
-	public ResourceURL getDownloadResourceURL(long commerceVirtualOrderItemId) {
+	public ResourceURL getDownloadResourceURL(
+		long commerceVirtualOrderItemId,
+		long commerceVirtualOrderItemFileEntryId) {
+
 		LiferayPortletResponse liferayPortletResponse =
 			_commerceVirtualOrderItemContentRequestHelper.
 				getLiferayPortletResponse();
@@ -196,6 +200,9 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 		resourceURL.setParameter(
 			"commerceVirtualOrderItemId",
 			String.valueOf(commerceVirtualOrderItemId));
+		resourceURL.setParameter(
+			"commerceVirtualOrderItemFileEntryId",
+			String.valueOf(commerceVirtualOrderItemFileEntryId));
 		resourceURL.setResourceID(
 			"/commerce_virtual_order_item_content" +
 				"/download_commerce_virtual_order_item");
@@ -204,7 +211,8 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 	}
 
 	public String getDownloadURL(
-			CommerceVirtualOrderItem commerceVirtualOrderItem)
+			CommerceVirtualOrderItem commerceVirtualOrderItem,
+			long commerceVirtualOrderItemFileEntryId)
 		throws Exception {
 
 		CPDefinitionVirtualSetting cpDefinitionVirtualSetting =
@@ -216,7 +224,8 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 
 			return String.valueOf(
 				getDownloadResourceURL(
-					commerceVirtualOrderItem.getCommerceVirtualOrderItemId()));
+					commerceVirtualOrderItem.getCommerceVirtualOrderItemId(),
+					commerceVirtualOrderItemFileEntryId));
 		}
 
 		PortletURL portletURL = PortletURLBuilder.createRenderURL(
@@ -315,7 +324,8 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 					getCommerceVirtualOrderItems(
 						commerceChannelGroupId, commerceAccountId,
 						_searchContainer.getStart(), _searchContainer.getEnd(),
-						new CommerceVirtualOrderItemCreateDateComparator()),
+						CommerceVirtualOrderItemCreateDateComparator.
+							getInstance(false)),
 			_commerceVirtualOrderItemLocalService.
 				getCommerceVirtualOrderItemsCount(
 					commerceChannelGroupId, commerceAccountId));
@@ -331,6 +341,10 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 			(CommerceContext)httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
+		if (commerceContext == null) {
+			return false;
+		}
+
 		long commerceChannelId = commerceContext.getCommerceChannelId();
 
 		if (commerceChannelId > 0) {
@@ -342,11 +356,13 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 
 	public boolean hasPermission(
 			PermissionChecker permissionChecker,
-			CommerceVirtualOrderItem commerceVirtualOrderItem, String actionId)
+			CommerceVirtualOrderItemFileEntry commerceVirtualOrderItemFileEntry,
+			String actionId)
 		throws PortalException {
 
-		return _commerceVirtualOrderItemModelResourcePermission.contains(
-			permissionChecker, commerceVirtualOrderItem, actionId);
+		return _commerceVirtualOrderItemFileEntryModelResourcePermission.
+			contains(
+				permissionChecker, commerceVirtualOrderItemFileEntry, actionId);
 	}
 
 	private JournalArticleDisplay _articleDisplay;
@@ -355,10 +371,10 @@ public class CommerceVirtualOrderItemContentDisplayContext {
 		_commerceVirtualOrderItemContentPortletInstanceConfiguration;
 	private final CommerceVirtualOrderItemContentRequestHelper
 		_commerceVirtualOrderItemContentRequestHelper;
+	private final ModelResourcePermission<CommerceVirtualOrderItemFileEntry>
+		_commerceVirtualOrderItemFileEntryModelResourcePermission;
 	private final CommerceVirtualOrderItemLocalService
 		_commerceVirtualOrderItemLocalService;
-	private final ModelResourcePermission<CommerceVirtualOrderItem>
-		_commerceVirtualOrderItemModelResourcePermission;
 	private final CPDefinitionHelper _cpDefinitionHelper;
 	private final CPDefinitionVirtualSettingLocalService
 		_cpDefinitionVirtualSettingLocalService;

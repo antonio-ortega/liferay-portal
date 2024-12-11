@@ -5,6 +5,9 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Michael Hashimoto
  */
@@ -13,6 +16,10 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 	@Override
 	public Build getBuild() {
 		return _build;
+	}
+
+	@Override
+	public void reset() {
 	}
 
 	@Override
@@ -56,22 +63,34 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 	}
 
 	protected void runMissing() {
-		_build.setStatus("missing");
-
 		if (isBuildQueued()) {
+			_build.setStatus("queued");
+
 			runQueued();
 
 			return;
 		}
 
 		if (isBuildRunning()) {
+			_build.setStatus("running");
+
 			runRunning();
+
+			return;
+		}
+
+		if (isBuildCompleted()) {
+			_build.setStatus("completed");
 
 			return;
 		}
 
 		if (!_build.hasMaximumInvocationCount()) {
 			_build.setStatus("starting");
+
+			_build.reset();
+
+			runStarting();
 
 			return;
 		}
@@ -80,14 +99,20 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 	}
 
 	protected void runQueued() {
-		_build.setStatus("queued");
-
 		if (isBuildQueued()) {
 			return;
 		}
 
 		if (isBuildRunning()) {
+			_build.setStatus("running");
+
 			runRunning();
+
+			return;
+		}
+
+		if (isBuildCompleted()) {
+			_build.setStatus("completed");
 
 			return;
 		}
@@ -96,38 +121,32 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 	}
 
 	protected void runReporting() {
-		_build.setStatus("reporting");
+		if (isBuildFailing()) {
+			_isApplySlaveOfflineRules();
 
-		if (!isBuildCompleted()) {
-			return;
-		}
+			if (_isApplyReinvokeRules()) {
+				_build.setStatus("queued");
 
-		_isApplySlaveOfflineRules();
-
-		if (_isApplyReinvokeRules()) {
-			_build.setStatus("queued");
-
-			return;
+				return;
+			}
 		}
 
 		runCompleted();
 	}
 
 	protected void runRunning() {
-		_build.setStatus("running");
-
 		if (!isBuildCompleted()) {
+			_build.setStatus("running");
+
 			return;
 		}
+
+		_build.setStatus("reporting");
 
 		runReporting();
 	}
 
 	protected void runStarting() {
-		_build.setStatus("starting");
-
-		_build.reset();
-
 		Build.Invocation previousInvocation = _build.getPreviousInvocation();
 
 		if (previousInvocation != null) {
@@ -137,7 +156,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			invoke();
 		}
 
-		runQueued();
+		_build.setStatus("queued");
 	}
 
 	private boolean _isApplyReinvokeRules() {
@@ -147,9 +166,8 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return false;
 		}
 
-		if ((build.isCompleted() && !build.isFailing()) ||
-			!build.isCompleted() || build.isFromArchive() ||
-			build.hasMaximumInvocationCount()) {
+		if ((isBuildCompleted() && !isBuildFailing()) || !isBuildCompleted() ||
+			build.isFromArchive() || build.hasMaximumInvocationCount()) {
 
 			return false;
 		}
@@ -174,8 +192,8 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return false;
 		}
 
-		if ((build.isCompleted() && !build.isFailing()) ||
-			!build.isCompleted() || build.isFromArchive()) {
+		if ((isBuildCompleted() && !isBuildFailing()) || !isBuildCompleted() ||
+			build.isFromArchive()) {
 
 			return false;
 		}
@@ -192,9 +210,10 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return false;
 		}
 
-		for (SlaveOfflineRule slaveOfflineRule :
-				SlaveOfflineRule.getSlaveOfflineRules()) {
+		List<SlaveOfflineRule> slaveOfflineRules = new ArrayList<>(
+			SlaveOfflineRule.getSlaveOfflineRules());
 
+		for (SlaveOfflineRule slaveOfflineRule : slaveOfflineRules) {
 			if (!slaveOfflineRule.matches(build)) {
 				continue;
 			}
@@ -254,7 +273,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 				!notificationRecipients.isEmpty()) {
 
 				NotificationUtil.sendEmail(
-					message, "jenkins", "Build Reinvoked",
+					message, "jenkins", "Build reinvoked",
 					reinvokeRule.notificationRecipients);
 			}
 		}
@@ -269,48 +288,7 @@ public abstract class BaseBuildUpdater implements BuildUpdater {
 			return;
 		}
 
-		String pinnedMessage = "";
-
-		if (!slaveOfflineRule.shutdown) {
-			pinnedMessage = "PINNED\n";
-		}
-
-		JenkinsSlave jenkinsSlave = build.getJenkinsSlave();
-
-		JenkinsMaster jenkinsMaster = jenkinsSlave.getJenkinsMaster();
-
-		String slaveOfflineRuleString = slaveOfflineRule.toString();
-
-		slaveOfflineRuleString = slaveOfflineRuleString.replace("\\", "\\\\");
-
-		String message = JenkinsResultsParserUtil.combine(
-			pinnedMessage, slaveOfflineRule.getName(), " failure detected at ",
-			build.getBuildURL(), ". ", jenkinsSlave.getName(),
-			" will be taken offline.\n\n", slaveOfflineRuleString,
-			"\n\n\nOffline Slave URL: https://", jenkinsMaster.getName(),
-			".liferay.com/computer/", jenkinsSlave.getName(), "\n");
-
-		System.out.println(message);
-
-		TopLevelBuild topLevelBuild = build.getTopLevelBuild();
-
-		if (topLevelBuild != null) {
-			message = JenkinsResultsParserUtil.combine(
-				message, "Top Level Build URL: ", topLevelBuild.getBuildURL());
-		}
-
-		jenkinsSlave.takeSlavesOffline(message);
-
-		String notificationRecipients =
-			slaveOfflineRule.getNotificationRecipients();
-
-		if ((notificationRecipients != null) &&
-			!notificationRecipients.isEmpty()) {
-
-			NotificationUtil.sendEmail(
-				message, "jenkins", "Slave Offline",
-				slaveOfflineRule.notificationRecipients);
-		}
+		slaveOfflineRule.takeSlaveOffline(build);
 	}
 
 	private final Build _build;

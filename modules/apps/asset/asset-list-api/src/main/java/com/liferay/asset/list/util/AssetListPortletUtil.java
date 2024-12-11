@@ -28,11 +28,12 @@ public class AssetListPortletUtil {
 		OrderByComparator<AssetListEntry> orderByComparator = null;
 
 		if (orderByCol.equals("create-date")) {
-			orderByComparator = new AssetListEntryCreateDateComparator(
+			orderByComparator = AssetListEntryCreateDateComparator.getInstance(
 				orderByAsc);
 		}
 		else if (orderByCol.equals("title")) {
-			orderByComparator = new AssetListEntryTitleComparator(orderByAsc);
+			orderByComparator = AssetListEntryTitleComparator.getInstance(
+				orderByAsc);
 		}
 
 		return orderByComparator;

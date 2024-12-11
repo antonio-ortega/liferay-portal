@@ -19,13 +19,13 @@ exports[`useModalNotifications should open a notification modal 1`] = `
           class="modal-content"
         >
           <div
-            class="modal-header"
+            class="modal-header has-title"
           >
-            <h4
-              class="modal-title"
+            <div
+              class="h4 modal-title"
             >
               Workspace Timezone
-            </h4>
+            </div>
           </div>
           <form
             class="form-root"

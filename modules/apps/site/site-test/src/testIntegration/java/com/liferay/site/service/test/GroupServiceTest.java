@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.GroupService;
@@ -46,6 +47,7 @@ import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ResourcePermissionTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -61,8 +63,10 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LanguageIds;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portlet.documentlibrary.constants.DLConstants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,6 +89,10 @@ import org.junit.runner.RunWith;
  * @author Roberto Díaz
  * @author Sergio González
  */
+@LanguageIds(
+	availableLanguageIds = {"de_DE", "en", "en_US", "es_ES", "pt_BR", "zh_CN"},
+	defaultLanguageId = "en_US"
+)
 @RunWith(Arquillian.class)
 @Sync(cleanTransaction = true)
 public class GroupServiceTest {
@@ -316,18 +324,49 @@ public class GroupServiceTest {
 			group.getGroupId());
 
 		_assetTagLocalService.addTag(
-			TestPropsValues.getUserId(), group.getGroupId(),
+			null, TestPropsValues.getUserId(), group.getGroupId(),
 			RandomTestUtil.randomString(), serviceContext);
 
 		Assert.assertEquals(
 			initialTagsCount + 1,
 			_assetTagLocalService.getGroupTagsCount(group.getGroupId()));
 
+		Assert.assertEquals(
+			1,
+			_resourcePermissionLocalService.getResourcePermissionsCount(
+				group.getCompanyId(), Group.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(group.getGroupId())));
+
+		ResourcePermissionTestUtil.addResourcePermission(
+			2L, DLConstants.RESOURCE_NAME, String.valueOf(group.getGroupId()),
+			ResourceConstants.SCOPE_INDIVIDUAL);
+
+		Assert.assertEquals(
+			1,
+			_resourcePermissionLocalService.getResourcePermissionsCount(
+				group.getCompanyId(), DLConstants.RESOURCE_NAME,
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(group.getGroupId())));
+
 		_groupService.deleteGroup(group.getGroupId());
 
 		Assert.assertEquals(
 			initialTagsCount,
 			_assetTagLocalService.getGroupTagsCount(group.getGroupId()));
+
+		Assert.assertEquals(
+			0,
+			_resourcePermissionLocalService.getResourcePermissionsCount(
+				group.getCompanyId(), DLConstants.RESOURCE_NAME,
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(group.getGroupId())));
+		Assert.assertEquals(
+			0,
+			_resourcePermissionLocalService.getResourcePermissionsCount(
+				group.getCompanyId(), Group.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(group.getGroupId())));
 	}
 
 	@Test
@@ -1285,6 +1324,44 @@ public class GroupServiceTest {
 	}
 
 	@Test
+	public void testUpdateGroupWithDifferentDefaultLocale() throws Exception {
+		_testUpdateGroupWithDifferentDefaultLocale(
+			"Spanish",
+			_groupLocalService.addGroup(
+				TestPropsValues.getUserId(),
+				GroupConstants.DEFAULT_PARENT_GROUP_ID, null, 0,
+				GroupConstants.DEFAULT_LIVE_GROUP_ID,
+				HashMapBuilder.put(
+					LocaleUtil.SPAIN, "Spanish"
+				).put(
+					LocaleUtil.US, "English"
+				).build(),
+				null, GroupConstants.TYPE_SITE_OPEN, true,
+				GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, true, true,
+				ServiceContextTestUtil.getServiceContext()));
+
+		long classPK = RandomTestUtil.nextLong();
+
+		_testUpdateGroupWithDifferentDefaultLocale(
+			String.valueOf(classPK),
+			_groupLocalService.addGroup(
+				TestPropsValues.getUserId(),
+				GroupConstants.DEFAULT_PARENT_GROUP_ID, Company.class.getName(),
+				classPK, GroupConstants.DEFAULT_LIVE_GROUP_ID,
+				HashMapBuilder.put(
+					LocaleUtil.getDefault(),
+					() -> {
+						Group group1 = GroupTestUtil.addGroup();
+
+						return group1.getName(LocaleUtil.getDefault());
+					}
+				).build(),
+				null, GroupConstants.TYPE_SITE_OPEN, true,
+				GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, true, true,
+				ServiceContextTestUtil.getServiceContext()));
+	}
+
+	@Test
 	public void testValidChangeAvailableLanguageIds() throws Exception {
 		_group = GroupTestUtil.addGroup(GroupConstants.DEFAULT_PARENT_GROUP_ID);
 
@@ -1421,11 +1498,37 @@ public class GroupServiceTest {
 		}
 	}
 
+	private void _testUpdateGroupWithDifferentDefaultLocale(
+			String expectedGroupKey, Group group)
+		throws Exception {
+
+		Locale defaultLocale = LocaleUtil.getDefault();
+
+		try {
+			LocaleUtil.setDefault(
+				LocaleUtil.SPAIN.getLanguage(), LocaleUtil.SPAIN.getCountry(),
+				LocaleUtil.SPAIN.getVariant());
+
+			group = _groupLocalService.updateGroup(
+				group.getGroupId(), group.getTypeSettings());
+
+			Assert.assertEquals(expectedGroupKey, group.getGroupKey());
+		}
+		finally {
+			LocaleUtil.setDefault(
+				defaultLocale.getLanguage(), defaultLocale.getCountry(),
+				defaultLocale.getVariant());
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		GroupServiceTest.class);
 
 	@Inject
 	private AssetTagLocalService _assetTagLocalService;
+
+	@Inject
+	private ClassNameLocalService _classNameLocalService;
 
 	@Inject
 	private CompanyLocalService _companyLocalService;

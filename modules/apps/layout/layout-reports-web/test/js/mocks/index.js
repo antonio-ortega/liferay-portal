@@ -22,38 +22,6 @@ export const pageURLs = [
 	},
 ];
 
-export const selectedItem = {
-	description:
-		'Background and foreground colors do not have a sufficient contrast ratio. Low contrast ratio is difficult or impossible for many users to read. <a href="https://web.dev/color-contrast" target="_blank">Learn more about Low Contrast Ratio.</a>',
-	failingElements: [
-		{
-			node: {
-				boundingRect: {
-					bottom: 3762,
-					height: 12,
-					left: 118,
-					right: 185,
-					top: 3750,
-					width: 67,
-				},
-				explanation:
-					'Fix any of the following:\n  Element has insufficient color contrast of 1.35 (foreground color: #dddddd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1',
-				lhId: '6-10-SPAN',
-				nodeLabel: 'color-contrast',
-				path: '1,HTML,2,BODY,8,SPAN',
-				selector: 'body > span',
-				snippet: '<span style="color: #dddddd">',
-				type: 'node',
-			},
-		},
-	],
-	key: 'low-contrast-ratio',
-	tips:
-		'Text that is 18pt, or 14pt and bold, needs a contrast ratio of 3:1. All other text needs a contrast ratio of 4.5:1. Contrast between colors may be defined in the style book, the page/fragment template or the fragment itself.',
-	title: 'Low Contrast Ratio',
-	total: '1',
-};
-
 export const layoutReportsIssues = {
 	'en-US': {
 		date: 'July 5, 2021 12:09 PM',
@@ -87,8 +55,7 @@ export const layoutReportsIssues = {
 						],
 						key: 'missing-input-alt-attributes',
 
-						tips:
-							'Input ALT attributes can be added in the fragment editor.',
+						tips: 'Input ALT attributes can be added in the fragment editor.',
 
 						title: 'Missing Input ALT Attributes',
 						total: '1',
@@ -111,8 +78,7 @@ export const layoutReportsIssues = {
 							},
 						],
 						key: 'invalid-canonical-url',
-						tips:
-							'In a Liferay site, canonical URLs are automatically generated. If it is missing, the issue could be originated by the theme. If the problem is that it does not match the URL of the page, you can change the configuration for using localized canonical URLs at Instance Settings > Pages > SEO.',
+						tips: 'In a Liferay site, canonical URLs are automatically generated. If it is missing, the issue could be originated by the theme. If the problem is that it does not match the URL of the page, you can change the configuration for using localized canonical URLs at Instance Settings > Pages > SEO.',
 						title: 'Invalid Canonical URL',
 						total: '1',
 					},
@@ -126,8 +92,7 @@ export const layoutReportsIssues = {
 							},
 						],
 						key: 'missing-meta-description',
-						tips:
-							'Meta description can be added in the configuration section of this page.',
+						tips: 'Meta description can be added in the configuration section of this page.',
 						title: 'Missing Meta Description',
 						total: '1',
 					},
@@ -179,8 +144,7 @@ export const layoutReportsIssues = {
 							},
 						],
 						key: 'small-tap-targets',
-						tips:
-							'Targets that are smaller than 48px by 48px or closer than 8px apart fail the audit, so make sure your layout respects these rules.',
+						tips: 'Targets that are smaller than 48px by 48px or closer than 8px apart fail the audit, so make sure your layout respects these rules.',
 						title: 'Small Tap Targets',
 						total: '1',
 					},
@@ -194,8 +158,7 @@ export const layoutReportsIssues = {
 							},
 						],
 						key: 'missing-title-element',
-						tips:
-							'<code>&lt;title&gt;</code> element is automatically generated from the asset title, but you can change it in the configuration section of this page.',
+						tips: '<code>&lt;title&gt;</code> element is automatically generated from the asset title, but you can change it in the configuration section of this page.',
 						title: 'Missing <title> Element',
 
 						total: '1',

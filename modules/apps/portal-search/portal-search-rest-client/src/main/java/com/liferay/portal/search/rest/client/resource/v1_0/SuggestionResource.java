@@ -12,6 +12,8 @@ import com.liferay.portal.search.rest.client.pagination.Page;
 import com.liferay.portal.search.rest.client.problem.Problem;
 import com.liferay.portal.search.rest.client.serdes.v1_0.SuggestionsContributorResultsSerDes;
 
+import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -101,6 +103,10 @@ public interface SuggestionResource {
 			_scheme = scheme;
 
 			return this;
+		}
+
+		public Builder endpoint(URL url) {
+			return endpoint(url.getHost(), url.getPort(), url.getProtocol());
 		}
 
 		public Builder header(String key, String value) {
@@ -304,7 +310,7 @@ public interface SuggestionResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port + _builder._contextPath +
-						"/o/portal-search-rest/v1.0/suggestions");
+						"/o/search/v1.0/suggestions");
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

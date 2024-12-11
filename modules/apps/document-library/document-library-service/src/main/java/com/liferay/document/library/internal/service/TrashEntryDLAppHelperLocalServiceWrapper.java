@@ -553,7 +553,7 @@ public class TrashEntryDLAppHelperLocalServiceWrapper
 				fileEntry.getFileEntryId(), WorkflowConstants.STATUS_IN_TRASH);
 
 		dlFileVersions = ListUtil.sort(
-			dlFileVersions, new DLFileVersionVersionComparator());
+			dlFileVersions, DLFileVersionVersionComparator.getInstance(false));
 
 		FileVersion fileVersion = new LiferayFileVersion(dlFileVersions.get(0));
 
@@ -648,13 +648,13 @@ public class TrashEntryDLAppHelperLocalServiceWrapper
 				fileEntry.getFileEntryId(), WorkflowConstants.STATUS_ANY);
 
 		dlFileVersions = ListUtil.sort(
-			dlFileVersions, new DLFileVersionVersionComparator());
+			dlFileVersions, DLFileVersionVersionComparator.getInstance(false));
 
 		List<ObjectValuePair<Long, Integer>> dlFileVersionStatusOVPs =
 			new ArrayList<>();
 
 		if ((dlFileVersions != null) && !dlFileVersions.isEmpty()) {
-			dlFileVersionStatusOVPs = getDlFileVersionStatuses(dlFileVersions);
+			dlFileVersionStatusOVPs = getDLFileVersionStatuses(dlFileVersions);
 		}
 
 		FileVersion fileVersion = fileEntry.getLatestFileVersion(true);
@@ -869,7 +869,7 @@ public class TrashEntryDLAppHelperLocalServiceWrapper
 		return new LiferayFolder(dlFolder);
 	}
 
-	protected List<ObjectValuePair<Long, Integer>> getDlFileVersionStatuses(
+	protected List<ObjectValuePair<Long, Integer>> getDLFileVersionStatuses(
 		List<DLFileVersion> dlFileVersions) {
 
 		List<ObjectValuePair<Long, Integer>> dlFileVersionStatusOVPs =

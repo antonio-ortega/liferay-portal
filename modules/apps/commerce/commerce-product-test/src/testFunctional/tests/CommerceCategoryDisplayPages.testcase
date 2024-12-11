@@ -3,11 +3,14 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -93,7 +96,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "category.manager@liferay.com");
 		}
@@ -415,7 +418,7 @@ definition {
 		}
 
 		task ("When the user removes the Override Default Category Display Page") {
-			CommerceEntry.deleteCommerceEntry(key_value = "Suspension");
+			CommerceEntry.deleteCommerceEntry(entryName = "Suspension");
 		}
 
 		task ("Then the category display page override should no longer be present") {

@@ -10,11 +10,19 @@
 <%
 String redirect = ParamUtil.getString(request, "redirect");
 
-DisplayPageDisplayContext displayPageDisplayContext = new DisplayPageDisplayContext(request, renderRequest, renderResponse);
+DisplayPageDisplayContext displayPageDisplayContext = (DisplayPageDisplayContext)request.getAttribute(DisplayPageDisplayContext.class.getName());
+
+if (displayPageDisplayContext == null) {
+	InfoItemServiceRegistry infoItemServiceRegistry = (InfoItemServiceRegistry)request.getAttribute(InfoItemServiceRegistry.class.getName());
+
+	displayPageDisplayContext = new DisplayPageDisplayContext(request, infoItemServiceRegistry, liferayPortletRequest, liferayPortletResponse);
+}
+
 SelectDisplayPageMasterLayoutDisplayContext selectDisplayPageMasterLayoutDisplayContext = new SelectDisplayPageMasterLayoutDisplayContext(request);
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
+portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
 renderResponse.setTitle(LanguageUtil.get(request, "select-master-page"));
 %>
@@ -45,7 +53,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-master-page"));
 								"title", LanguageUtil.get(request, "add-display-page-template")
 							).build()
 						%>'
-						propsTransformer="js/propsTransformers/SelectDisplayPageMasterLayoutVerticalCardPropsTransformer"
+						propsTransformer="{SelectDisplayPageMasterLayoutVerticalCardPropsTransformer} from layout-page-template-admin-web"
 						verticalCard="<%= selectDisplayPageMasterLayoutVerticalCard %>"
 					/>
 				</li>

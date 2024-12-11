@@ -100,7 +100,7 @@ export default withRouter(
 
 		const sectionTitleQuestion =
 			data?.messageBoardMessages?.items[0]?.messageBoardThread
-				.messageBoardSection.title;
+				.messageBoardSection?.title;
 
 		const hasActivities = totalCount > 0;
 
@@ -155,7 +155,7 @@ export default withRouter(
 												.messageBoardSection &&
 												question.messageBoardThread
 													.messageBoardSection.id) ||
-										  context.rootTopicId
+											context.rootTopicId
 								}
 								key={question.id}
 								linkProps={{

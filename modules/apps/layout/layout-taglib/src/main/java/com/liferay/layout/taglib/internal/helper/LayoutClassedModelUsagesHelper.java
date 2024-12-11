@@ -11,11 +11,9 @@ import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
-import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.layout.util.constants.LayoutClassedModelUsageConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -67,6 +65,10 @@ public class LayoutClassedModelUsagesHelper {
 		long plid = layoutClassedModelUsage.getPlid();
 
 		Layout layout = _layoutLocalService.fetchLayout(plid);
+
+		if (layout == null) {
+			return StringPool.BLANK;
+		}
 
 		if (layout.isDraftLayout()) {
 			plid = layout.getClassPK();
@@ -180,6 +182,10 @@ public class LayoutClassedModelUsagesHelper {
 
 		Layout layout = _layoutLocalService.fetchLayout(plid);
 
+		if (layout == null) {
+			return false;
+		}
+
 		if (layout.isDraftLayout()) {
 			plid = layout.getClassPK();
 		}
@@ -199,14 +205,7 @@ public class LayoutClassedModelUsagesHelper {
 	}
 
 	@Reference
-	private JSONFactory _jsonFactory;
-
-	@Reference
 	private Language _language;
-
-	@Reference
-	private LayoutClassedModelUsageLocalService
-		_layoutClassedModelUsageLocalService;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

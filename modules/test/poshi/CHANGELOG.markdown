@@ -1,5 +1,133 @@
 # Poshi Runner Change Log
 
+## 1.0.494
+
+### Other
+
+* [LRCI-3714](https://liferay.atlassian.net/browse/LRCI-3714) - When a test fails in the setUp block of a Poshi test, import into testray with BLOCKED status
+* [LRCI-4654](https://liferay.atlassian.net/browse/LRCI-4654) - Fix all Poshi unit tests in acceptance
+* [LRCI-4789](https://liferay.atlassian.net/browse/LRCI-4789) - Investigate and fix Poshi Unit test failing in acceptance
+
+## 1.0.493
+
+### Utils
+
+* [LPD-38993](https://liferay.atlassian.net/browse/LPD-38993) - Technical task | fix Poshi Runner DateUtils method
+* [POSHI-702](https://liferay.atlassian.net/browse/POSHI-702) - Update ExecUtil to redirect error stream
+* [POSHI-704](https://liferay.atlassian.net/browse/POSHI-704) - Print log regardless of exit value
+
+## 1.0.491
+
+### Runner
+
+* [POSHI-700](https://liferay.atlassian.net/browse/POSHI-700) - Use JUnit 5 for Poshi Runner tests
+
+## 1.0.490
+
+### Core
+
+* [POSHI-696](https://liferay.atlassian.net/browse/POSHI-696) - Allow Poshi Context file reading timeout to be configurable
+
+### Gradle
+
+* [POSHI-695](https://liferay.atlassian.net/browse/POSHI-695) - Update ChromeDriver's base URL for downloads
+
+### Other
+
+* [LPS-105380](https://liferay.atlassian.net/browse/LPS-105380) - SourceFormatter Improvements
+* [LRCI-4072](https://liferay.atlassian.net/browse/LRCI-4072) - Update Quarterly Release branches to latest Poshi version for compatibility with latest Jenkins slave image.
+
+### Prose
+
+* [POSHI-654](https://liferay.atlassian.net/browse/POSHI-654) - Delete poshi prose
+
+### Runner
+
+* [POSHI-697](https://liferay.atlassian.net/browse/POSHI-697) - Refactor SelectWindow.selectPopUp to accept value2 as a param.
+
+### Utils
+
+* [POSHI-692](https://liferay.atlassian.net/browse/POSHI-692) - Use of library with known vulnerability: Jayway JsonPath 2.1.0 (poshi-runner)
+
+### Validation
+
+* [POSHI-629](https://liferay.atlassian.net/browse/POSHI-629) - Validate for double quoted or variable reference arguments in util methods
+
+### WebDriver
+
+* [POSHI-675](https://liferay.atlassian.net/browse/POSHI-675) - Make JSONUtil.getWithJSONPath support expression with null
+* [POSHI-687](https://liferay.atlassian.net/browse/POSHI-687) - Make DEFAULT_PATH_LEAF_TO_NULL work
+* [POSHI-690](https://liferay.atlassian.net/browse/POSHI-690) - Remove robot screenshot from Poshi
+* [POSHI-693](https://liferay.atlassian.net/browse/POSHI-693) - Stop using net.jsourcerer.webdriver:JSErrorCollector
+* [POSHI-694](https://liferay.atlassian.net/browse/POSHI-694) - Add new method to return a CDP command
+
+## 1.0.481
+
+### Documentation
+
+* [POSHI-652](https://liferay.atlassian.net/browse/POSHI-652) - Update poshi-script.markdown to reflect new major syntax changes
+
+### Other
+
+* [LPS-194474](https://liferay.atlassian.net/browse/LPS-194474) - Refactor Echo case runs over 5 mins
+* [LPS-203216](https://liferay.atlassian.net/browse/LPS-203216) - Investigate failure in LocalFile.WebContentDisplay#ViewAllSettingsEnabled
+* [LPSA-61758](https://liferay.atlassian.net/browse/LPSA-61758) - Add option to override/set custom artifact version for the uploadPoshiRunnerResources task
+* [LRQA-81564](https://liferay.atlassian.net/browse/LRQA-81564) - Deprecated methods "waitForNotPartialText" and "assertNotPartialText" should be replaced
+* [LRQA-81565](https://liferay.atlassian.net/browse/LRQA-81565) - Deprecated methods "waitForTextCaseInsensitive" and "assertTextCaseInsensitive" should be replaced
+* [LRQA-81566](https://liferay.atlassian.net/browse/LRQA-81566) - Deprecated methods "waitForPartialTextCaseInsensitive" and "assertPartialTextCaseInsensitive" should be replaced
+
+### Script
+
+* [POSHI-674](https://liferay.atlassian.net/browse/POSHI-674) - Update poshi-runner-resources to use new signature syntax
+
+### Testing
+
+* [POSHI-660](https://liferay.atlassian.net/browse/POSHI-660) - Exception failure at PoshiElementFactoryTest
+* [POSHI-661](https://liferay.atlassian.net/browse/POSHI-661) - ComparisonFailure at PoshiSourceProcessorTest
+
+### WebDriver
+
+* [POSHI-630](https://liferay.atlassian.net/browse/POSHI-630) - As a test writer, I would like a property to configure browser resolution for a test
+* [POSHI-670](https://liferay.atlassian.net/browse/POSHI-670) - Add cookie setting support through ProxyUtil
+* [POSHI-675](https://liferay.atlassian.net/browse/POSHI-675) - Make JSONUtil.getWithJSONPath support expression with null
+* [POSHI-685](https://liferay.atlassian.net/browse/POSHI-685) - Modify RegexUtil.escapeRegexChars to support other types
+
+## 1.0.477
+
+### Core
+
+* [POSHI-557](https://liferay.atlassian.net/browse/POSHI-557) - Investigate failure in com.liferay.poshi.core.PoshiContextTest
+
+### Script
+
+* [POSHI-577](https://liferay.atlassian.net/browse/POSHI-577) - Begin migration to utilize macro and function signatures
+
+## 1.0.476
+
+### Core
+
+* [POSHI-561](https://liferay.atlassian.net/browse/POSHI-561) - Clean up usage of "value" and "locator" to specific methods for more clear usage.
+
+### Other
+
+* [LPS-181508](https://liferay.atlassian.net/browse/LPS-181508) - In order to use supported JDK versions, we need to upgrade to Gradle 7 to use newer JDK
+* [LPS-187460](https://liferay.atlassian.net/browse/LPS-187460) - Use of library with known vulnerability: JSON-java 20220320 (liferay-partner-workspace)
+* [LPS-199147](https://liferay.atlassian.net/browse/LPS-199147) - Adding a method to get headers from HTTP response
+* [LPS-199200](https://liferay.atlassian.net/browse/LPS-199200) - Use of library with known vulnerability: JSON-java 20230618
+
+### Reports
+
+* [POSHI-650](https://liferay.atlassian.net/browse/POSHI-650) - Add PoshiContext.readFiles into the CSV file generator
+
+### Script
+
+* [POSHI-577](https://liferay.atlassian.net/browse/POSHI-577) - Begin migration to utilize macro and function signatures
+
+### Utils
+
+* [POSHI-574](https://liferay.atlassian.net/browse/POSHI-574) - Simplify HttpRequestUtil method usages
+* [POSHI-618](https://liferay.atlassian.net/browse/POSHI-618) - Evaluate API testing for content, status code, and response time assertions
+
 ## 1.0.471
 
 ### Core

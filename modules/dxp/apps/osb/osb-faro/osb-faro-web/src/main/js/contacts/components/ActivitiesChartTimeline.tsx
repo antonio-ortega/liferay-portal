@@ -2,6 +2,7 @@ import * as API from 'shared/api';
 import ActivitiesChart from './ActivitiesChartDeprecated';
 import Card from 'shared/components/Card';
 import ClayButton from '@clayui/button';
+import ClayLink from '@clayui/link';
 import getCN from 'classnames';
 import NoResultsDisplay from 'shared/components/NoResultsDisplay';
 import React from 'react';
@@ -22,7 +23,7 @@ import {
 } from 'shared/util/date';
 import {Interval, RangeSelectors} from 'shared/types';
 import {sub} from 'shared/util/lang';
-import {useStatefulPagination} from 'shared/hooks';
+import {useStatefulPagination} from 'shared/hooks/useStatefulPagination';
 import {withSelectedPoint} from 'shared/hoc';
 
 const getActivities = ({
@@ -153,7 +154,7 @@ const ActivitiesChartTimeline: React.FC<IActivitiesChartTimelineProps> = ({
 			{!!history.length && (
 				<div className='selected-info'>
 					<div className='d-flex align-items-baseline'>
-						<h4>{sub(activitiesLabel, [date])}</h4>
+						<div className='h4'>{sub(activitiesLabel, [date])}</div>
 
 						{hasSelectedPoint && (
 							<ClayButton
@@ -201,7 +202,7 @@ const ActivitiesChartTimeline: React.FC<IActivitiesChartTimelineProps> = ({
 										'check-back-later-to-verify-if-data-has-been-received-from-your-data-sources'
 									)}
 
-									<a
+									<ClayLink
 										className='d-block'
 										href={
 											URLConstants.AccountActivitiesDocumentationLink
@@ -212,7 +213,7 @@ const ActivitiesChartTimeline: React.FC<IActivitiesChartTimelineProps> = ({
 										{Liferay.Language.get(
 											'learn-more-about-account-activities'
 										)}
-									</a>
+									</ClayLink>
 								</>
 							}
 							spacer

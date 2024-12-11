@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.annotation.Generated;
 
@@ -49,31 +50,44 @@ public class Status implements Serializable {
 
 	@Schema
 	public Boolean getActionInProgress() {
+		if (_actionInProgressSupplier != null) {
+			actionInProgress = _actionInProgressSupplier.get();
+
+			_actionInProgressSupplier = null;
+		}
+
 		return actionInProgress;
 	}
 
 	public void setActionInProgress(Boolean actionInProgress) {
 		this.actionInProgress = actionInProgress;
+
+		_actionInProgressSupplier = null;
 	}
 
 	@JsonIgnore
 	public void setActionInProgress(
 		UnsafeSupplier<Boolean, Exception> actionInProgressUnsafeSupplier) {
 
-		try {
-			actionInProgress = actionInProgressUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		_actionInProgressSupplier = () -> {
+			try {
+				return actionInProgressUnsafeSupplier.get();
+			}
+			catch (RuntimeException runtimeException) {
+				throw runtimeException;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		};
 	}
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean actionInProgress;
+
+	@JsonIgnore
+	private Supplier<Boolean> _actionInProgressSupplier;
 
 	@Override
 	public boolean equals(Object object) {
@@ -101,6 +115,8 @@ public class Status implements Serializable {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		Boolean actionInProgress = getActionInProgress();
 
 		if (actionInProgress != null) {
 			if (sb.length() > 1) {
@@ -164,7 +180,10 @@ public class Status implements Serializable {
 				Object[] valueArray = (Object[])value;
 
 				for (int i = 0; i < valueArray.length; i++) {
-					if (valueArray[i] instanceof String) {
+					if (valueArray[i] instanceof Map) {
+						sb.append(_toJSON((Map<String, ?>)valueArray[i]));
+					}
+					else if (valueArray[i] instanceof String) {
 						sb.append("\"");
 						sb.append(valueArray[i]);
 						sb.append("\"");

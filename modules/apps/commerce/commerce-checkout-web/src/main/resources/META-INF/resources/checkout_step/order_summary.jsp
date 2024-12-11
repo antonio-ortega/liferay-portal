@@ -8,6 +8,8 @@
 <%@ include file="/init.jsp" %>
 
 <%
+CheckoutDisplayContext checkoutDisplayContext = (CheckoutDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
+
 CommerceContext commerceContext = (CommerceContext)request.getAttribute(CommerceWebKeys.COMMERCE_CONTEXT);
 
 AccountEntry accountEntry = commerceContext.getAccountEntry();
@@ -36,8 +38,6 @@ if (priceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
 	totalCommerceDiscountValue = commerceOrderPrice.getTotalDiscountValueWithTaxAmount();
 	totalOrderCommerceMoney = commerceOrderPrice.getTotalWithTaxAmount();
 }
-
-Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap = orderSummaryCheckoutStepDisplayContext.getCommerceOrderValidatorResultsMap();
 %>
 
 <div class="commerce-order-summary">
@@ -54,223 +54,14 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 			cssClass="commerce-checkout-summary"
 			size="8"
 		>
-			<ul class="commerce-checkout-summary-header">
-				<li class="autofit-row">
-					<div class="autofit-col autofit-col-expand">
-						<h5 class="commerce-title">
-							<liferay-ui:message arguments="<%= orderSummaryCheckoutStepDisplayContext.getCommerceOrderItemsQuantity() %>" key="items-x" translateArguments="<%= false %>" />
-						</h5>
-					</div>
-				</li>
-			</ul>
-
-			<div class="commerce-checkout-summary-body" id="<portlet:namespace />entriesContainer">
-				<liferay-ui:search-container
-					cssClass="list-group-flush"
-					id="commerceOrderItems"
-				>
-					<liferay-ui:search-container-results
-						results="<%= commerceOrder.getCommerceOrderItems() %>"
-					/>
-
-					<liferay-ui:search-container-row
-						className="com.liferay.commerce.model.CommerceOrderItem"
-						keyProperty="CommerceOrderItemId"
-						modelVar="commerceOrderItem"
-					>
-
-						<%
-						CPDefinition cpDefinition = commerceOrderItem.getCPDefinition();
-
-						String cpInstanceCDNURL = orderSummaryCheckoutStepDisplayContext.getCPInstanceCDNURL(commerceOrderItem);
-						%>
-
-						<liferay-ui:search-container-column-text
-							cssClass="thumbnail-section"
-							name="image"
-						>
-							<span class="sticker sticker-xl">
-								<span class="sticker-overlay">
-									<c:choose>
-										<c:when test="<%= Validator.isNotNull(cpInstanceCDNURL) %>">
-											<img class="sticker-img" src="<%= cpInstanceCDNURL %>" />
-										</c:when>
-										<c:otherwise>
-											<liferay-adaptive-media:img
-												class="sticker-img"
-												fileVersion="<%= orderSummaryCheckoutStepDisplayContext.getCPInstanceImageFileVersion(commerceOrderItem) %>"
-											/>
-										</c:otherwise>
-									</c:choose>
-								</span>
-							</span>
-						</liferay-ui:search-container-column-text>
-
-						<liferay-ui:search-container-column-text
-							cssClass="autofit-col-expand"
-							name="product"
-						>
-							<div class="description-section">
-								<div class="list-group-title">
-									<%= HtmlUtil.escape(cpDefinition.getName(themeDisplay.getLanguageId())) %>
-								</div>
-
-								<%
-								StringJoiner stringJoiner = new StringJoiner(StringPool.COMMA);
-
-								for (KeyValuePair keyValuePair : orderSummaryCheckoutStepDisplayContext.getKeyValuePairs(commerceOrderItem.getCPDefinitionId(), commerceOrderItem.getJson(), locale)) {
-									stringJoiner.add(keyValuePair.getValue());
-								}
-								%>
-
-								<div class="list-group-subtitle"><%= HtmlUtil.escape(stringJoiner.toString()) %></div>
-
-								<c:if test="<%= !commerceOrderValidatorResultsMap.isEmpty() %>">
-
-									<%
-									List<CommerceOrderValidatorResult> commerceOrderValidatorResults = commerceOrderValidatorResultsMap.get(commerceOrderItem.getCommerceOrderItemId());
-
-									for (CommerceOrderValidatorResult commerceOrderValidatorResult : commerceOrderValidatorResults) {
-									%>
-
-										<div class="alert-danger commerce-alert-danger">
-											<liferay-ui:message key="<%= HtmlUtil.escape(commerceOrderValidatorResult.getLocalizedMessage()) %>" />
-										</div>
-
-									<%
-									}
-									%>
-
-								</c:if>
-							</div>
-						</liferay-ui:search-container-column-text>
-
-						<liferay-ui:search-container-column-text
-							name="quantity"
-						>
-							<div class="quantity-section">
-								<span class="commerce-quantity"><%= orderSummaryCheckoutStepDisplayContext.getCommerceOrderItemFormattedQuantity(commerceOrderItem) %></span><span class="inline-item-after">x</span>
-							</div>
-						</liferay-ui:search-container-column-text>
-
-						<c:if test='<%= FeatureFlagManagerUtil.isEnabled("COMMERCE-11287") %>'>
-							<liferay-ui:search-container-column-text
-								name="uom"
-							>
-								<div class="value-section">
-									<span class="commerce-value">
-										<%= HtmlUtil.escape(commerceOrderItem.getUnitOfMeasureKey()) %>
-									</span>
-								</div>
-							</liferay-ui:search-container-column-text>
-						</c:if>
-
-						<%
-						CommerceProductPrice commerceProductPrice = orderSummaryCheckoutStepDisplayContext.getCommerceProductPrice(commerceOrderItem);
-						CPInstance cpInstance = commerceOrderItem.fetchCPInstance();
-						%>
-
-						<liferay-ui:search-container-column-text
-							name="price"
-						>
-							<c:if test="<%= commerceProductPrice != null %>">
-
-								<%
-								CommerceMoney unitPriceCommerceMoney = commerceProductPrice.getUnitPrice();
-								CommerceMoney unitPromoPriceCommerceMoney = commerceProductPrice.getUnitPromoPrice();
-
-								if (priceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
-									unitPriceCommerceMoney = commerceProductPrice.getUnitPriceWithTaxAmount();
-									unitPromoPriceCommerceMoney = commerceProductPrice.getUnitPromoPriceWithTaxAmount();
-								}
-								%>
-
-								<div class="value-section">
-									<span class="price">
-										<c:choose>
-											<c:when test="<%= !unitPromoPriceCommerceMoney.isEmpty() && BigDecimalUtil.gt(unitPromoPriceCommerceMoney.getPrice(), BigDecimal.ZERO) && BigDecimalUtil.lt(unitPromoPriceCommerceMoney.getPrice(), unitPriceCommerceMoney.getPrice()) %>">
-												<span class="price-value price-value-promo">
-													<%= HtmlUtil.escape(unitPromoPriceCommerceMoney.format(locale)) %>
-												</span>
-												<span class="price-value price-value-inactive">
-													<%= HtmlUtil.escape(unitPriceCommerceMoney.format(locale)) %>
-												</span>
-											</c:when>
-											<c:otherwise>
-												<span class="price-value {$additionalPriceClasses}">
-													<%= HtmlUtil.escape(unitPriceCommerceMoney.format(locale)) %>
-												</span>
-											</c:otherwise>
-										</c:choose>
-									</span>
-
-									<c:if test="<%= (cpInstance != null) && Validator.isNotNull(cpInstance.getCPSubscriptionInfo()) %>">
-										<span class="commerce-subscription-info">
-											<commerce-ui:product-subscription-info
-												CPInstanceId="<%= commerceOrderItem.getCPInstanceId() %>"
-												showDuration="<%= false %>"
-											/>
-										</span>
-									</c:if>
-								</div>
-							</c:if>
-						</liferay-ui:search-container-column-text>
-
-						<liferay-ui:search-container-column-text
-							name="discount"
-						>
-							<c:if test="<%= commerceProductPrice != null %>">
-
-								<%
-								CommerceDiscountValue discountValue = commerceProductPrice.getDiscountValue();
-
-								if (priceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
-									discountValue = commerceProductPrice.getDiscountValueWithTaxAmount();
-								}
-
-								CommerceMoney discountAmountCommerceMoney = null;
-
-								if (discountValue != null) {
-									discountAmountCommerceMoney = discountValue.getDiscountAmount();
-								}
-								%>
-
-								<div class="value-section">
-									<span class="commerce-value">
-										<%= (discountAmountCommerceMoney == null) ? StringPool.BLANK : HtmlUtil.escape(discountAmountCommerceMoney.format(locale)) %>
-									</span>
-								</div>
-							</c:if>
-						</liferay-ui:search-container-column-text>
-
-						<liferay-ui:search-container-column-text
-							name="total"
-						>
-							<c:if test="<%= commerceProductPrice != null %>">
-
-								<%
-								CommerceMoney finalPriceCommerceMoney = commerceProductPrice.getFinalPrice();
-
-								if (priceDisplayType.equals(CommercePricingConstants.TAX_INCLUDED_IN_PRICE)) {
-									finalPriceCommerceMoney = commerceProductPrice.getFinalPriceWithTaxAmount();
-								}
-								%>
-
-								<div class="value-section">
-									<span class="commerce-value">
-										<%= HtmlUtil.escape(finalPriceCommerceMoney.format(locale)) %>
-									</span>
-								</div>
-							</c:if>
-						</liferay-ui:search-container-column-text>
-					</liferay-ui:search-container-row>
-
-					<liferay-ui:search-iterator
-						displayStyle="list"
-						markupView="lexicon"
-						paginate="<%= false %>"
-					/>
-				</liferay-ui:search-container>
+			<div>
+				<liferay-frontend:screen-navigation
+					context="<%= commerceOrder %>"
+					key="<%= CommerceCheckoutScreenNavigationConstants.SCREEN_NAVIGATION_KEY_COMMERCE_CHECKOUT_ORDER_SUMMARY %>"
+					menubarCssClass="menubar menubar-transparent menubar-vertical-expand-lg"
+					navCssClass="col-lg-3"
+					portletURL="<%= currentURLObj %>"
+				/>
 			</div>
 
 			<ul class="commerce-checkout-summary-footer">
@@ -400,10 +191,10 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 			%>
 
 			<c:if test="<%= shippingAddress != null %>">
-				<address class="shipping-address">
-					<h5>
+				<address class="shipping-address" data-qa-id="commerceShippingAddress">
+					<div class="h5">
 						<liferay-ui:message key="shipping-address-and-date" />
-					</h5>
+					</div>
 
 					<%
 					request.setAttribute("address.jsp-commerceAddress", shippingAddress);
@@ -422,6 +213,18 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 
 					<%= HtmlUtil.escape(shippingAddress.getCity()) %> <br />
 
+					<c:if test="<%= Validator.isNotNull(shippingAddress.getZip()) && checkoutDisplayContext.isOrderSummaryShowFullAddressEnabled() %>">
+						<%= HtmlUtil.escape(shippingAddress.getZip()) %> <br />
+					</c:if>
+
+					<%
+					Region region = shippingAddress.getRegion();
+					%>
+
+					<c:if test="<%= (region != null) && checkoutDisplayContext.isOrderSummaryShowFullAddressEnabled() %>">
+						<%= HtmlUtil.escape(region.getTitle()) %> <br />
+					</c:if>
+
 					<%
 					Country country = shippingAddress.getCountry();
 					%>
@@ -430,7 +233,9 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 						<%= HtmlUtil.escape(country.getTitle(locale)) %><br />
 					</c:if>
 
-					<br />
+					<c:if test="<%= Validator.isNotNull(shippingAddress.getPhoneNumber()) && checkoutDisplayContext.isOrderSummaryShowPhoneNumberEnabled() %>">
+						<%= HtmlUtil.escape(shippingAddress.getPhoneNumber()) %> <br />
+					</c:if>
 
 					<c:if test="<%= orderSummaryCheckoutStepDisplayContext.isCheckoutRequestedDeliveryDateEnabled() %>">
 
@@ -476,10 +281,10 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 			%>
 
 			<c:if test="<%= (commerceBillingAddress != null) && orderSummaryCheckoutStepDisplayContext.hasViewBillingAddressPermission(permissionChecker, accountEntry) %>">
-				<address class="billing-address">
-					<h5>
+				<address class="billing-address" data-qa-id="commerceBillingAddress">
+					<div class="h5">
 						<liferay-ui:message key="billing-address" />
-					</h5>
+					</div>
 
 					<%
 					request.setAttribute("address.jsp-commerceAddress", commerceBillingAddress);
@@ -498,12 +303,28 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 
 					<%= HtmlUtil.escape(commerceBillingAddress.getCity()) %> <br />
 
+					<c:if test="<%= Validator.isNotNull(commerceBillingAddress.getZip()) && checkoutDisplayContext.isOrderSummaryShowFullAddressEnabled() %>">
+						<%= HtmlUtil.escape(commerceBillingAddress.getZip()) %> <br />
+					</c:if>
+
+					<%
+					Region region = commerceBillingAddress.getRegion();
+					%>
+
+					<c:if test="<%= (region != null) && checkoutDisplayContext.isOrderSummaryShowFullAddressEnabled() %>">
+						<%= HtmlUtil.escape(region.getTitle()) %> <br />
+					</c:if>
+
 					<%
 					Country country = commerceBillingAddress.getCountry();
 					%>
 
 					<c:if test="<%= country != null %>">
 						<%= HtmlUtil.escape(country.getTitle(locale)) %><br />
+					</c:if>
+
+					<c:if test="<%= Validator.isNotNull(commerceBillingAddress.getPhoneNumber()) && checkoutDisplayContext.isOrderSummaryShowPhoneNumberEnabled() %>">
+						<%= HtmlUtil.escape(commerceBillingAddress.getPhoneNumber()) %> <br />
 					</c:if>
 				</address>
 			</c:if>
@@ -512,15 +333,15 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 			String commerceShippingOptionName = StringPool.BLANK;
 
 			if (commerceOrder.getShippingOptionName() != null) {
-				commerceShippingOptionName = orderSummaryCheckoutStepDisplayContext.getShippingOptionName(commerceOrder.getShippingOptionName(), locale);
+				commerceShippingOptionName = orderSummaryCheckoutStepDisplayContext.getShippingOptionName(locale);
 			}
 			%>
 
 			<c:if test="<%= Validator.isNotNull(commerceShippingOptionName) %>">
 				<div class="panel-body shipping-method">
-					<h5>
+					<div class="h5">
 						<liferay-ui:message key="method" />
-					</h5>
+					</div>
 
 					<div class="shipping-description">
 						<%= HtmlUtil.escape(commerceShippingOptionName) %>
@@ -542,9 +363,9 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 
 			<c:if test="<%= Validator.isNotNull(commercePaymentMethodName) %>">
 				<div class="panel-body payment-method">
-					<h5>
+					<div class="h5">
 						<liferay-ui:message key="payment" />
-					</h5>
+					</div>
 
 					<div class="shipping-description">
 						<%= HtmlUtil.escape(commercePaymentMethodName) %>
@@ -557,10 +378,10 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 			%>
 
 			<c:if test="<%= Validator.isNotNull(deliveryTermEntryName) %>">
-				<div class="panel-body payment-method">
-					<h5>
+				<div class="delivery-term panel-body">
+					<div class="h5">
 						<liferay-ui:message key="delivery-terms" />
-					</h5>
+					</div>
 
 					<div class="shipping-description">
 						<a href="#" id="<%= commerceOrder.getDeliveryCommerceTermEntryId() %>"><%= HtmlUtil.escape(deliveryTermEntryName) %></a>
@@ -575,7 +396,7 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 									"modalTitle", deliveryTermEntryName
 								).build()
 							%>'
-							module="js/attachModalToHTMLElement"
+							module="{attachModalToHTMLElement} from commerce-checkout-web"
 						/>
 					</div>
 				</div>
@@ -586,10 +407,10 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 			%>
 
 			<c:if test="<%= Validator.isNotNull(paymentTermEntryName) %>">
-				<div class="panel-body payment-method">
-					<h5>
+				<div class="panel-body payment-term">
+					<div class="h5">
 						<liferay-ui:message key="payment-terms" />
-					</h5>
+					</div>
 
 					<div class="shipping-description">
 						<a href="#" id="<%= commerceOrder.getPaymentCommerceTermEntryId() %>"><%= HtmlUtil.escape(paymentTermEntryName) %></a>
@@ -604,7 +425,7 @@ Map<Long, List<CommerceOrderValidatorResult>> commerceOrderValidatorResultsMap =
 									"modalTitle", paymentTermEntryName
 								).build()
 							%>'
-							module="js/attachModalToHTMLElement"
+							module="{attachModalToHTMLElement} from commerce-checkout-web"
 						/>
 					</div>
 				</div>

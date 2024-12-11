@@ -33,6 +33,16 @@ html#{$cadmin-selector} {
 			position: static;
 		}
 
+		&.dialog-iframe-popup {
+			.portlet-body > .container-fluid {
+				padding-bottom: 65px;
+
+				@include media-breakpoint-down(sm) {
+					padding-bottom: 57px;
+				}
+			}
+		}
+
 		&.modal.show,
 		.modal.show {
 			display: block;
@@ -50,6 +60,10 @@ html#{$cadmin-selector} {
 
 			&.modal-dialog-sm {
 				max-width: $cadmin-modal-md;
+			}
+
+			.modal-content {
+				max-height: calc(100vh - 8px * 2);
 			}
 
 			.yui3-resize-handles-wrapper {
@@ -144,6 +158,35 @@ html#{$cadmin-selector} {
 
 		.user-icon-color-9 {
 			color: $user-icon-color-9;
+		}
+
+		// Autocomplete Input List
+
+		.yui3-aclist {
+			&-content {
+				background: $cadmin-white;
+				border: 1px solid #afafaf;
+				box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.58);
+			}
+
+			&-hidden {
+				visibility: hidden;
+			}
+
+			&-item {
+				padding: 2px 5px;
+
+				&-active {
+					background: #2647a0;
+					color: $cadmin-white;
+				}
+			}
+
+			&-list {
+				margin: 0;
+				overflow: hidden;
+				padding: 0;
+			}
 		}
 
 		// Taglib Move Boxes
@@ -578,10 +621,13 @@ html#{$cadmin-selector} {
 				position: relative;
 				text-align: center;
 
-				h4 span {
-					display: block;
-					margin: 5px 0;
-					text-transform: lowercase;
+				.h4,
+				h4 {
+					span {
+						display: block;
+						margin: 5px 0;
+						text-transform: lowercase;
+					}
 				}
 
 				.or-text {
@@ -651,6 +697,7 @@ html#{$cadmin-selector} {
 			.upload-list-info {
 				margin: 1em 0 0.5em;
 
+				.h4,
 				h4 {
 					font-size: 1.3em;
 				}
@@ -840,6 +887,7 @@ html#{$cadmin-selector} {
 									sm,
 									$cadmin-grid-breakpoints
 								) {
+									background-color: $cadmin-table-head-bg;
 									left: 0;
 									position: absolute;
 									right: 15px;
@@ -996,12 +1044,9 @@ html#{$cadmin-selector} {
 			left: 0;
 			margin: 0;
 			padding: 10px 24px;
+			position: fixed;
 			width: 100%;
 			z-index: $cadmin-zindex-sticky;
-
-			@include media-breakpoint-up(md) {
-				position: fixed;
-			}
 
 			.btn {
 				margin-left: 16px;

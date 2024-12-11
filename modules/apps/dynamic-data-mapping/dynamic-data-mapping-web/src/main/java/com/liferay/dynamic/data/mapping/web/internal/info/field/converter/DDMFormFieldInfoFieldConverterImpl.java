@@ -47,7 +47,7 @@ public class DDMFormFieldInfoFieldConverterImpl
 		InfoFieldType infoFieldType = _getInfoFieldType(ddmFormField);
 		LocalizedValue label = ddmFormField.getLabel();
 
-		return _addAttributes(
+		InfoField.FinalStep finalStep = _addAttributes(
 			ddmFormField,
 			InfoField.builder(
 			).infoFieldType(
@@ -70,7 +70,11 @@ public class DDMFormFieldInfoFieldConverterImpl
 			ddmFormField.isLocalizable()
 		).required(
 			ddmFormField.isRequired()
-		).build();
+		).repeatable(
+			ddmFormField.isRepeatable()
+		);
+
+		return finalStep.build();
 	}
 
 	private InfoField.FinalStep _addAttributes(

@@ -3,13 +3,13 @@ import DateRangeInput, {DateRange} from 'shared/components/DateRangeInput';
 import Loading, {Align} from 'shared/components/Loading';
 import Modal from 'shared/components/modal';
 import moment from 'moment';
-import Promise from 'metal-promise';
 import React, {useState} from 'react';
 import {downloadDataAsFile} from 'shared/util/util';
 
 interface IExportLogModalProps {
 	description: string;
 	fileName: string;
+	groupId: string;
 	onClose: () => void;
 	onSubmit: ({
 		fromDate,
@@ -17,13 +17,14 @@ interface IExportLogModalProps {
 	}: {
 		fromDate: string;
 		toDate: string;
-	}) => typeof Promise;
+	}) => Promise<any>;
 	title: string;
 }
 
 const ExportLogModal: React.FC<IExportLogModalProps> = ({
 	description,
 	fileName,
+	groupId,
 	onClose,
 	onSubmit,
 	title
@@ -47,13 +48,20 @@ const ExportLogModal: React.FC<IExportLogModalProps> = ({
 			<Modal.Body>
 				<p className='text-secondary'>{description}</p>
 
-				<h4>{Liferay.Language.get('request-date-range')}</h4>
+				<div className='h4'>
+					{Liferay.Language.get('request-date-range')}
+				</div>
 
 				<div className='d-flex'>
-					<DateRangeInput onChange={setDateRange} value={dateRange} />
+					<DateRangeInput
+						className='w-100'
+						groupId={groupId}
+						onChange={setDateRange}
+						value={dateRange}
+					/>
 
 					<ClayButton
-						className='button-root download'
+						className='button-root ml-2'
 						disabled={!isValid()}
 						displayType='primary'
 						onClick={() => {

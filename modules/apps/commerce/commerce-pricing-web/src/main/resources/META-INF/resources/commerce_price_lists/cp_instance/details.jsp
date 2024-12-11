@@ -29,6 +29,8 @@ boolean priceOnApplication = BeanParamUtil.getBoolean(commercePriceEntry, reques
 	<aui:input name="commercePriceEntryId" type="hidden" value="<%= commercePriceEntryId %>" />
 	<aui:input name="cpInstanceId" type="hidden" value="<%= cpInstanceCommercePriceEntryDisplayContext.getCPInstanceId() %>" />
 
+	<liferay-ui:error exception="<%= CommercePriceEntryPriceException.class %>" message="please-enter-a-valid-price" />
+
 	<aui:model-context bean="<%= commercePriceEntry %>" model="<%= CommercePriceEntry.class %>" />
 
 	<div class="row">
@@ -36,35 +38,35 @@ boolean priceOnApplication = BeanParamUtil.getBoolean(commercePriceEntry, reques
 			<commerce-ui:panel
 				title='<%= LanguageUtil.get(request, "details") %>'
 			>
-				<c:if test='<%= FeatureFlagManagerUtil.isEnabled("COMMERCE-11028") %>'>
-					<div class="row">
-						<div class="col-12">
-							<aui:input checked="<%= priceOnApplication %>" helpMessage="do-not-set-a-base-price-for-this-product" inlineLabel="right" label="price-on-application" name="priceOnApplication" type="toggle-switch" />
-						</div>
+				<div class="row">
+					<div class="col-12">
+						<aui:input checked="<%= priceOnApplication %>" helpMessage="do-not-set-a-base-price-for-this-product" inlineLabel="right" label="price-on-application" name="priceOnApplication" type="toggle-switch" />
 					</div>
-				</c:if>
+				</div>
 
-				<c:if test='<%= FeatureFlagManagerUtil.isEnabled("COMMERCE-11287") %>'>
-					<aui:select disabled="<%= true %>" label="unit-of-measure" name="unitOfMeasureKey">
+				<aui:select disabled="<%= true %>" label="unit-of-measure" name="unitOfMeasureKey">
 
-						<%
-						String unitOfMeasureKey = commercePriceEntry.getUnitOfMeasureKey();
+					<%
+					String unitOfMeasureKey = commercePriceEntry.getUnitOfMeasureKey();
 
-						for (CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure : cpInstanceCommercePriceEntryDisplayContext.getCPInstanceUnitOfMeasures()) {
-						%>
+					for (CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure : cpInstanceCommercePriceEntryDisplayContext.getCPInstanceUnitOfMeasures()) {
+					%>
 
-							<aui:option label="<%= cpInstanceUnitOfMeasure.getKey() %>" selected="<%= unitOfMeasureKey.equals(cpInstanceUnitOfMeasure.getKey()) %>" value="<%= cpInstanceUnitOfMeasure.getKey() %>" />
+					<aui:option label="<%= cpInstanceUnitOfMeasure.getKey() %>" selected="<%= unitOfMeasureKey.equals(cpInstanceUnitOfMeasure.getKey()) %>" value="<%= cpInstanceUnitOfMeasure.getKey() %>" />
 
-						<%
-						}
-						%>
+					<%
+					}
+					%>
 
-					</aui:select>
-				</c:if>
+				</aui:select>
 
 				<aui:fieldset collapsible="<%= false %>" cssClass='<%= "price-entry-price-settings " + (priceOnApplication ? "disabled" : StringPool.BLANK) %>' id='<%= liferayPortletResponse.getNamespace() + "price-entry-price-settings" %>'>
 					<liferay-ui:error exception="<%= CommercePriceListMaxPriceValueException.class %>">
 						<liferay-ui:message arguments="<%= CommercePriceConstants.PRICE_VALUE_MAX %>" key="price-max-value-is-x" />
+					</liferay-ui:error>
+
+					<liferay-ui:error exception="<%= CommercePriceListMinPriceValueException.class %>">
+						<liferay-ui:message arguments="<%= CommercePriceConstants.PRICE_VALUE_MIN %>" key="price-min-value-is-x" />
 					</liferay-ui:error>
 
 					<%
@@ -82,7 +84,7 @@ boolean priceOnApplication = BeanParamUtil.getBoolean(commercePriceEntry, reques
 
 								<div class="row">
 									<div class="col-3">
-										<aui:input disabled="<%= discountDiscovery || priceOnApplication %>" ignoreRequestValue="<%= true %>" inlineField="<%= true %>" label="l1" name="discountLevel1" type="text" value="<%= commercePriceEntry.getDiscountLevel1() %>" wrapperCssClass="discount-label-wrapper">
+										<aui:input disabled="<%= discountDiscovery || priceOnApplication %>" ignoreRequestValue="<%= true %>" inlineField="<%= true %>" label="l1" name="discountLevel1" type="currency" value="<%= commercePriceEntry.getDiscountLevel1() %>" wrapperCssClass="discount-label-wrapper">
 											<aui:validator name="min"><%= CommercePriceConstants.PRICE_VALUE_MIN %></aui:validator>
 											<aui:validator name="max"><%= CommercePriceConstants.PRICE_VALUE_MAX %></aui:validator>
 											<aui:validator name="number" />
@@ -90,7 +92,7 @@ boolean priceOnApplication = BeanParamUtil.getBoolean(commercePriceEntry, reques
 									</div>
 
 									<div class="col-3">
-										<aui:input disabled="<%= discountDiscovery || priceOnApplication %>" ignoreRequestValue="<%= true %>" inlineField="<%= true %>" label="l2" name="discountLevel2" type="text" value="<%= commercePriceEntry.getDiscountLevel2() %>" wrapperCssClass="discount-label-wrapper">
+										<aui:input disabled="<%= discountDiscovery || priceOnApplication %>" ignoreRequestValue="<%= true %>" inlineField="<%= true %>" label="l2" name="discountLevel2" type="currency" value="<%= commercePriceEntry.getDiscountLevel2() %>" wrapperCssClass="discount-label-wrapper">
 											<aui:validator name="min"><%= CommercePriceConstants.PRICE_VALUE_MIN %></aui:validator>
 											<aui:validator name="max"><%= CommercePriceConstants.PRICE_VALUE_MAX %></aui:validator>
 											<aui:validator name="number" />
@@ -98,7 +100,7 @@ boolean priceOnApplication = BeanParamUtil.getBoolean(commercePriceEntry, reques
 									</div>
 
 									<div class="col-3">
-										<aui:input disabled="<%= discountDiscovery || priceOnApplication %>" ignoreRequestValue="<%= true %>" inlineField="<%= true %>" label="l3" name="discountLevel3" type="text" value="<%= commercePriceEntry.getDiscountLevel3() %>" wrapperCssClass="discount-label-wrapper">
+										<aui:input disabled="<%= discountDiscovery || priceOnApplication %>" ignoreRequestValue="<%= true %>" inlineField="<%= true %>" label="l3" name="discountLevel3" type="currency" value="<%= commercePriceEntry.getDiscountLevel3() %>" wrapperCssClass="discount-label-wrapper">
 											<aui:validator name="min"><%= CommercePriceConstants.PRICE_VALUE_MIN %></aui:validator>
 											<aui:validator name="max"><%= CommercePriceConstants.PRICE_VALUE_MAX %></aui:validator>
 											<aui:validator name="number" />
@@ -106,7 +108,7 @@ boolean priceOnApplication = BeanParamUtil.getBoolean(commercePriceEntry, reques
 									</div>
 
 									<div class="col-3">
-										<aui:input disabled="<%= discountDiscovery || priceOnApplication %>" ignoreRequestValue="<%= true %>" inlineField="<%= true %>" label="l4" name="discountLevel4" type="text" value="<%= commercePriceEntry.getDiscountLevel4() %>" wrapperCssClass="discount-label-wrapper">
+										<aui:input disabled="<%= discountDiscovery || priceOnApplication %>" ignoreRequestValue="<%= true %>" inlineField="<%= true %>" label="l4" name="discountLevel4" type="currency" value="<%= commercePriceEntry.getDiscountLevel4() %>" wrapperCssClass="discount-label-wrapper">
 											<aui:validator name="min"><%= CommercePriceConstants.PRICE_VALUE_MIN %></aui:validator>
 											<aui:validator name="max"><%= CommercePriceConstants.PRICE_VALUE_MAX %></aui:validator>
 											<aui:validator name="number" />
@@ -131,7 +133,7 @@ boolean priceOnApplication = BeanParamUtil.getBoolean(commercePriceEntry, reques
 						%>
 
 						<div class="col-6">
-							<aui:input disabled="<%= priceOnApplication %>" label="<%= priceInputLabel %>" name="price" suffix="<%= HtmlUtil.escape(commerceCurrency.getCode()) %>" type="text" value="<%= commerceCurrency.round(commercePriceEntry.getPrice()) %>">
+							<aui:input disabled="<%= priceOnApplication %>" label="<%= priceInputLabel %>" name="price" suffix="<%= HtmlUtil.escape(commerceCurrency.getCode()) %>" type="currency" value="<%= cpInstanceCommercePriceEntryDisplayContext.getPrice() %>">
 								<aui:validator name="min"><%= CommercePriceConstants.PRICE_VALUE_MIN %></aui:validator>
 								<aui:validator name="max"><%= CommercePriceConstants.PRICE_VALUE_MAX %></aui:validator>
 								<aui:validator name="number" />
@@ -207,5 +209,5 @@ boolean priceOnApplication = BeanParamUtil.getBoolean(commercePriceEntry, reques
 </aui:form>
 
 <liferay-frontend:component
-	module="commerce_price_lists/commerce_price_entry/js/PriceEntry"
+	module="{PriceEntry} from commerce-pricing-web"
 />

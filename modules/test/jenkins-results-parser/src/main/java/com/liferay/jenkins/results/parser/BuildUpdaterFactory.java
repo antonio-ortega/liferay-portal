@@ -11,7 +11,25 @@ package com.liferay.jenkins.results.parser;
 public class BuildUpdaterFactory {
 
 	public static BuildUpdater newBuildUpdater(Build build) {
-		return new DefaultBuildUpdater(build);
+		BuildUpdater buildUpdater = null;
+
+		TopLevelBuild topLevelBuild = build.getTopLevelBuild();
+
+		if (topLevelBuild != null) {
+			String jethr0JobId = topLevelBuild.getParameterValue(
+				"JETHR0_JOB_ID");
+
+			if (JenkinsResultsParserUtil.isInteger(jethr0JobId)) {
+				buildUpdater = new Jethr0BuildUpdater(
+					build, Long.parseLong(jethr0JobId));
+			}
+		}
+
+		if (buildUpdater == null) {
+			buildUpdater = new DefaultBuildUpdater(build);
+		}
+
+		return buildUpdater;
 	}
 
 }

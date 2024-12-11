@@ -7,6 +7,10 @@ $border: 1px solid rgba(180, 187, 201, 0.2);
 		&-header {
 			border-bottom: $border;
 			height: 60px;
+
+			span {
+				color: #272833;
+			}
 		}
 
 		&-footer {
@@ -19,12 +23,16 @@ $border: 1px solid rgba(180, 187, 201, 0.2);
 			font-weight: bold;
 
 			.price-discount {
-				color: $danger;
+				color: $danger-primary;
 			}
 
 			.price-line-through {
 				text-decoration: line-through;
 			}
 		}
+	}
+
+	.quantity-selector-popover {
+		left: 50% !important;
 	}
 }

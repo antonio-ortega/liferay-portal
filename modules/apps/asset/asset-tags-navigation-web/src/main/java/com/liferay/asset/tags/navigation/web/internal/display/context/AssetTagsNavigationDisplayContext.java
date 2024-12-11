@@ -51,12 +51,12 @@ public class AssetTagsNavigationDisplayContext {
 		if (showAssetCount && (_classNameId > 0)) {
 			_assetTags = AssetTagServiceUtil.getTags(
 				PortalUtil.getSiteGroupId(_scopeGroupId), _classNameId, null, 0,
-				maxAssetTags, new AssetTagCountComparator());
+				maxAssetTags, AssetTagCountComparator.getInstance(false));
 		}
 		else {
 			_assetTags = AssetTagServiceUtil.getGroupTags(
 				PortalUtil.getSiteGroupId(_scopeGroupId), 0, maxAssetTags,
-				new AssetTagCountComparator());
+				AssetTagCountComparator.getInstance(false));
 		}
 
 		_assetTags = ListUtil.sort(_assetTags);
@@ -72,18 +72,10 @@ public class AssetTagsNavigationDisplayContext {
 		_scopedAssetCounts = new HashMap<>();
 
 		for (AssetTag assetTag : getAssetTags()) {
-			int count = 0;
-
-			if (_classNameId > 0) {
-				count = AssetTagServiceUtil.getVisibleAssetsTagsCount(
-					_scopeGroupId, _classNameId, assetTag.getName());
-			}
-			else {
-				count = AssetTagServiceUtil.getVisibleAssetsTagsCount(
-					_scopeGroupId, assetTag.getName());
-			}
-
-			_scopedAssetCounts.put(assetTag.getName(), count);
+			_scopedAssetCounts.put(
+				assetTag.getName(),
+				AssetTagServiceUtil.getVisibleAssetsTagsCount(
+					_scopeGroupId, _classNameId, assetTag.getName()));
 		}
 
 		return _scopedAssetCounts;

@@ -5,6 +5,7 @@
 
 package com.liferay.layout.page.template.internal.upgrade.v5_1_0;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -39,7 +40,11 @@ public class LayoutPageTemplateStructureUpgradeProcess extends UpgradeProcess {
 	protected void doUpgrade() throws Exception {
 		try (PreparedStatement preparedStatement1 = connection.prepareStatement(
 				"select layoutPageTemplateStructureId, companyId, userId," +
-					"classPK from LayoutPageTemplateStructure")) {
+					"classPK from LayoutPageTemplateStructure");
+			SafeCloseable safeCloseable1 = addTemporaryIndex(
+				"FragmentEntryLink", false, "segmentsExperienceId", "plid");
+			SafeCloseable safeCloseable2 = addTemporaryIndex(
+				"SegmentsExperiment", false, "plid", "segmentsExperienceId")) {
 
 			try (ResultSet resultSet = preparedStatement1.executeQuery()) {
 				while (resultSet.next()) {
@@ -85,7 +90,7 @@ public class LayoutPageTemplateStructureUpgradeProcess extends UpgradeProcess {
 
 			SegmentsExperience defaultSegmentsExperience =
 				_segmentsExperienceLocalService.addDefaultSegmentsExperience(
-					userId, classPK, new ServiceContext());
+					null, userId, classPK, new ServiceContext());
 
 			defaultSegmentsExperienceId =
 				defaultSegmentsExperience.getSegmentsExperienceId();

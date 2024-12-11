@@ -7,7 +7,7 @@ import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
 import {useId} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 
 import {TEXT_EDITABLE_TYPES} from '../../config/constants/textEditableTypes';
 import {
@@ -30,6 +30,7 @@ import resolveEditableConfig from '../../utils/editable_value/resolveEditableCon
 import resolveEditableValue from '../../utils/editable_value/resolveEditableValue';
 import getLayoutDataItemCssClasses from '../../utils/getLayoutDataItemCssClasses';
 import getLayoutDataItemUniqueClassName from '../../utils/getLayoutDataItemUniqueClassName';
+import getPortletCustomActions from '../../utils/getPortletCustomActions';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
 import hasInnerCommonStyles from '../../utils/hasInnerCustomStyles';
 import useBackgroundImageValue from '../../utils/useBackgroundImageValue';
@@ -119,6 +120,11 @@ const FragmentContent = ({
 
 	const cssClasses = getLayoutDataItemCssClasses(item);
 
+	const portletCustomActions = useMemo(
+		() => getPortletCustomActions(fragmentEntryLink),
+		[fragmentEntryLink]
+	);
+
 	useEffect(() => {
 		if (fragmentEntryLinkError) {
 			throw new Error(fragmentEntryLinkError);
@@ -145,9 +151,8 @@ const FragmentContent = ({
 			fragmentElement.innerHTML = defaultContent;
 
 			if (hasInnerCommonStyles(fragmentEntryLink)) {
-				const stylesElement = fragmentElement.querySelector(
-					'[data-lfr-styles]'
-				);
+				const stylesElement =
+					fragmentElement.querySelector('[data-lfr-styles]');
 
 				if (stylesElement) {
 					stylesElement.className = `${stylesElement.className} ${cssClasses}`;
@@ -235,9 +240,8 @@ const FragmentContent = ({
 	const style = {};
 
 	if (backgroundImageValue.url) {
-		style[
-			`--lfr-background-image-${item.itemId}`
-		] = `url(${backgroundImageValue.url})`;
+		style[`--lfr-background-image-${item.itemId}`] =
+			`url(${backgroundImageValue.url})`;
 
 		if (backgroundImage?.fileEntryId) {
 			style['--background-image-file-entry-id'] =
@@ -257,16 +261,16 @@ const FragmentContent = ({
 						className,
 						`page-editor__fragment-content`,
 						{
-							[`${fragmentEntryLink?.cssClass}`]: !hasInnerCommonStyles(
-								fragmentEntryLink
-							),
-							[getLayoutDataItemCssClasses(
-								item
-							)]: !hasInnerCommonStyles(fragmentEntryLink),
-							[getLayoutDataItemUniqueClassName(
-								item.itemId
-							)]: !hasInnerCommonStyles(fragmentEntryLink),
-							'page-editor__fragment-content--portlet-topper-hidden': !canConfigureWidgets,
+							[`${fragmentEntryLink?.cssClass}`]:
+								!hasInnerCommonStyles(fragmentEntryLink),
+							[getLayoutDataItemCssClasses(item)]:
+								!hasInnerCommonStyles(fragmentEntryLink),
+							[getLayoutDataItemUniqueClassName(item.itemId)]:
+								!hasInnerCommonStyles(fragmentEntryLink),
+							'custom-height': item.config.styles?.height,
+							'page-editor__fragment-content--portlet-topper-hidden':
+								!canConfigureWidgets ||
+								!portletCustomActions.length,
 						}
 					)}
 					contentRef={elementRef}

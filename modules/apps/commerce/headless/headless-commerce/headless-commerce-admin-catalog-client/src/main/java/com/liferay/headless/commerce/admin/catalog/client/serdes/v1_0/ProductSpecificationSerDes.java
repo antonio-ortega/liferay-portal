@@ -46,6 +46,20 @@ public class ProductSpecificationSerDes {
 
 		sb.append("{");
 
+		if (productSpecification.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productSpecification.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (productSpecification.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -56,6 +70,20 @@ public class ProductSpecificationSerDes {
 			sb.append(productSpecification.getId());
 		}
 
+		if (productSpecification.getKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"key\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(productSpecification.getKey()));
+
+			sb.append("\"");
+		}
+
 		if (productSpecification.getLabel() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -64,6 +92,25 @@ public class ProductSpecificationSerDes {
 			sb.append("\"label\": ");
 
 			sb.append(_toJSON(productSpecification.getLabel()));
+		}
+
+		if (productSpecification.getOptionCategoryExternalReferenceCode() !=
+				null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"optionCategoryExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(
+					productSpecification.
+						getOptionCategoryExternalReferenceCode()));
+
+			sb.append("\"");
 		}
 
 		if (productSpecification.getOptionCategoryId() != null) {
@@ -96,6 +143,25 @@ public class ProductSpecificationSerDes {
 			sb.append(productSpecification.getProductId());
 		}
 
+		if (productSpecification.getSpecificationExternalReferenceCode() !=
+				null) {
+
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"specificationExternalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(
+					productSpecification.
+						getSpecificationExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (productSpecification.getSpecificationId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -118,6 +184,16 @@ public class ProductSpecificationSerDes {
 			sb.append(_escape(productSpecification.getSpecificationKey()));
 
 			sb.append("\"");
+		}
+
+		if (productSpecification.getSpecificationPriority() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"specificationPriority\": ");
+
+			sb.append(productSpecification.getSpecificationPriority());
 		}
 
 		if (productSpecification.getValue() != null) {
@@ -151,6 +227,16 @@ public class ProductSpecificationSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (productSpecification.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(
+					productSpecification.getExternalReferenceCode()));
+		}
+
 		if (productSpecification.getId() == null) {
 			map.put("id", null);
 		}
@@ -158,11 +244,31 @@ public class ProductSpecificationSerDes {
 			map.put("id", String.valueOf(productSpecification.getId()));
 		}
 
+		if (productSpecification.getKey() == null) {
+			map.put("key", null);
+		}
+		else {
+			map.put("key", String.valueOf(productSpecification.getKey()));
+		}
+
 		if (productSpecification.getLabel() == null) {
 			map.put("label", null);
 		}
 		else {
 			map.put("label", String.valueOf(productSpecification.getLabel()));
+		}
+
+		if (productSpecification.getOptionCategoryExternalReferenceCode() ==
+				null) {
+
+			map.put("optionCategoryExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"optionCategoryExternalReferenceCode",
+				String.valueOf(
+					productSpecification.
+						getOptionCategoryExternalReferenceCode()));
 		}
 
 		if (productSpecification.getOptionCategoryId() == null) {
@@ -191,6 +297,19 @@ public class ProductSpecificationSerDes {
 				String.valueOf(productSpecification.getProductId()));
 		}
 
+		if (productSpecification.getSpecificationExternalReferenceCode() ==
+				null) {
+
+			map.put("specificationExternalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"specificationExternalReferenceCode",
+				String.valueOf(
+					productSpecification.
+						getSpecificationExternalReferenceCode()));
+		}
+
 		if (productSpecification.getSpecificationId() == null) {
 			map.put("specificationId", null);
 		}
@@ -207,6 +326,16 @@ public class ProductSpecificationSerDes {
 			map.put(
 				"specificationKey",
 				String.valueOf(productSpecification.getSpecificationKey()));
+		}
+
+		if (productSpecification.getSpecificationPriority() == null) {
+			map.put("specificationPriority", null);
+		}
+		else {
+			map.put(
+				"specificationPriority",
+				String.valueOf(
+					productSpecification.getSpecificationPriority()));
 		}
 
 		if (productSpecification.getValue() == null) {
@@ -233,21 +362,93 @@ public class ProductSpecificationSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "key")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "label")) {
+				return true;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"optionCategoryExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "optionCategoryId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "priority")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "productId")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"specificationExternalReferenceCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "specificationId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "specificationKey")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "specificationPriority")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "value")) {
+				return true;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			ProductSpecification productSpecification,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "id")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				if (jsonParserFieldValue != null) {
+					productSpecification.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setId(
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "key")) {
+				if (jsonParserFieldValue != null) {
+					productSpecification.setKey((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "label")) {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setLabel(
-						(Map)ProductSpecificationSerDes.toMap(
-							(String)jsonParserFieldValue));
+						(Map<String, String>)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"optionCategoryExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					productSpecification.setOptionCategoryExternalReferenceCode(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "optionCategoryId")) {
@@ -268,6 +469,15 @@ public class ProductSpecificationSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName,
+						"specificationExternalReferenceCode")) {
+
+				if (jsonParserFieldValue != null) {
+					productSpecification.setSpecificationExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "specificationId")) {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setSpecificationId(
@@ -280,11 +490,18 @@ public class ProductSpecificationSerDes {
 						(String)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "specificationPriority")) {
+
+				if (jsonParserFieldValue != null) {
+					productSpecification.setSpecificationPriority(
+						Double.valueOf((String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "value")) {
 				if (jsonParserFieldValue != null) {
 					productSpecification.setValue(
-						(Map)ProductSpecificationSerDes.toMap(
-							(String)jsonParserFieldValue));
+						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
 		}
@@ -319,36 +536,7 @@ public class ProductSpecificationSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -358,6 +546,38 @@ public class ProductSpecificationSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

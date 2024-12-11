@@ -76,10 +76,10 @@ public class ImageMagickImpl implements ImageMagick {
 	}
 
 	@Override
-	public String getGlobalSearchPath() throws Exception {
-		PortletPreferences preferences = _prefsProps.getPreferences();
+	public String getGlobalSearchPath() {
+		PortletPreferences portletPreferences = _prefsProps.getPreferences();
 
-		String globalSearchPath = preferences.getValue(
+		String globalSearchPath = portletPreferences.getValue(
 			PropsKeys.IMAGEMAGICK_GLOBAL_SEARCH_PATH, null);
 
 		if (Validator.isNotNull(globalSearchPath)) {
@@ -103,7 +103,7 @@ public class ImageMagickImpl implements ImageMagick {
 	}
 
 	@Override
-	public Properties getResourceLimitsProperties() throws Exception {
+	public Properties getResourceLimitsProperties() {
 		Properties resourceLimitsProperties = _prefsProps.getProperties(
 			PropsKeys.IMAGEMAGICK_RESOURCE_LIMIT, true);
 
@@ -168,7 +168,7 @@ public class ImageMagickImpl implements ImageMagick {
 					"Liferay is not configured to use ImageMagick and ",
 					"Ghostscript. For better quality document and image ",
 					"previews, install ImageMagick and Ghostscript. Enable ",
-					"ImageMagick in portal-ext.properties or in the Server ",
+					"ImageMagick in portal.properties or in the Server ",
 					"Administration section of the Control Panel at: ",
 					"http://<server>/group/control_panel/manage/-/server",
 					"/external-services."));
@@ -225,9 +225,18 @@ public class ImageMagickImpl implements ImageMagick {
 			arguments.add(StringBundler.concat(width, "x", height, ">"));
 			arguments.add(scaledImageFile.getAbsolutePath());
 
+			long start = System.currentTimeMillis();
+
 			Future<?> future = convert(arguments);
 
 			ProcessEvent processEvent = (ProcessEvent)future.get();
+
+			if (_log.isInfoEnabled()) {
+				_log.info(
+					StringBundler.concat(
+						"Converted image with ImageMagick in ",
+						System.currentTimeMillis() - start, "ms"));
+			}
 
 			if (_log.isDebugEnabled() &&
 				(processEvent.getException() != null)) {

@@ -12,7 +12,7 @@
 <tbody>
 <tr>
 	<td>ADD_BLOGS_ENTRY</td>
-	<td>//a[contains(@class,'nav-btn') and *[contains(@class,'icon-plus')]][*[name()='svg'][contains(@class,'lexicon-icon-plus')]]</td>
+	<td>//*[self::a or self::button][contains(@class,'btn-primary')][normalize-space()='New']</td>
 	<td></td>
 </tr>
 <tr>
@@ -45,7 +45,7 @@
 
 <tr>
 	<td>DESCRIPTIVE_VIEW_ENTRY_TITLE</td>
-	<td>//div[contains(@id,'blogEntriesSearchContainer')]//*[@data-qa-id='rowItemContent']/h4/a[contains(.,'${key_entryTitle}')]</td>
+	<td>//div[contains(@id,'blogEntriesSearchContainer')]//*[@data-qa-id='rowItemContent']/div[contains(@class,'h4')]/a[contains(.,'${key_entryTitle}')]</td>
 	<td></td>
 </tr>
 <tr>

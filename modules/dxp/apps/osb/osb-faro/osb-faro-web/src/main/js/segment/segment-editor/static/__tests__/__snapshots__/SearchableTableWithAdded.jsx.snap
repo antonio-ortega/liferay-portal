@@ -28,7 +28,7 @@ exports[`SearchableTableWithAdded should render 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#order-arrow-ascending"
+                  href="#order-arrow-ascending"
                 />
               </svg>
             </a>
@@ -62,7 +62,7 @@ exports[`SearchableTableWithAdded should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#search"
+                      href="#search"
                     />
                   </svg>
                 </button>
@@ -104,7 +104,7 @@ exports[`SearchableTableWithAdded should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#order-arrow-up"
+                      href="#order-arrow-up"
                     />
                   </svg>
                 </span>
@@ -160,7 +160,7 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
                 role="presentation"
               >
                 <use
-                  xlink:href="#order-arrow-ascending"
+                  href="#order-arrow-ascending"
                 />
               </svg>
             </a>
@@ -194,7 +194,7 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
                     role="presentation"
                   >
                     <use
-                      xlink:href="#search"
+                      href="#search"
                     />
                   </svg>
                 </button>
@@ -273,7 +273,7 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
                     role="presentation"
                   >
                     <use
-                      xlink:href="#order-arrow-up"
+                      href="#order-arrow-up"
                     />
                   </svg>
                 </span>
@@ -302,11 +302,11 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
             <td
               class="table-cell-expand"
             >
-              <h4
-                class="table-title text-truncate"
+              <div
+                class="h4 table-title text-truncate"
               >
                 Foo Bar
-              </h4>
+              </div>
             </td>
             <td>
               email0@liferay.com
@@ -318,11 +318,11 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
             <td
               class="table-cell-expand"
             >
-              <h4
-                class="table-title text-truncate"
+              <div
+                class="h4 table-title text-truncate"
               >
                 Foo Bar
-              </h4>
+              </div>
             </td>
             <td>
               email1@liferay.com
@@ -334,11 +334,11 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
             <td
               class="table-cell-expand"
             >
-              <h4
-                class="table-title text-truncate"
+              <div
+                class="h4 table-title text-truncate"
               >
                 Foo Bar
-              </h4>
+              </div>
             </td>
             <td>
               email2@liferay.com
@@ -350,11 +350,11 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
             <td
               class="table-cell-expand"
             >
-              <h4
-                class="table-title text-truncate"
+              <div
+                class="h4 table-title text-truncate"
               >
                 Foo Bar
-              </h4>
+              </div>
             </td>
             <td>
               email3@liferay.com
@@ -366,11 +366,11 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
             <td
               class="table-cell-expand"
             >
-              <h4
-                class="table-title text-truncate"
+              <div
+                class="h4 table-title text-truncate"
               >
                 Foo Bar
-              </h4>
+              </div>
             </td>
             <td>
               email4@liferay.com
@@ -402,7 +402,7 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
             role="presentation"
           >
             <use
-              xlink:href="#caret-bottom"
+              href="#caret-bottom"
             />
           </svg>
         </button>
@@ -429,7 +429,7 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
               role="presentation"
             >
               <use
-                xlink:href="#angle-left-small"
+                href="#angle-left-small"
               />
             </svg>
           </button>
@@ -459,7 +459,7 @@ exports[`SearchableTableWithAdded should show the staged table if showStaged is 
               role="presentation"
             >
               <use
-                xlink:href="#angle-right-small"
+                href="#angle-right-small"
               />
             </svg>
           </button>

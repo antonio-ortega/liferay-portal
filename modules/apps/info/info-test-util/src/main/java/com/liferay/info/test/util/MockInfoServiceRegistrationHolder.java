@@ -12,14 +12,23 @@ import com.liferay.info.item.provider.InfoItemCapabilitiesProvider;
 import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
+import com.liferay.info.item.provider.InfoItemPermissionProvider;
+import com.liferay.info.permission.provider.InfoPermissionProvider;
 import com.liferay.info.test.util.info.item.creator.MockInfoItemCreator;
 import com.liferay.info.test.util.info.item.provider.MockInfoItemCapabilitiesProvider;
 import com.liferay.info.test.util.info.item.provider.MockInfoItemDetailsProvider;
 import com.liferay.info.test.util.info.item.provider.MockInfoItemFieldValuesProvider;
 import com.liferay.info.test.util.info.item.provider.MockInfoItemFormProvider;
+import com.liferay.info.test.util.info.item.provider.MockInfoItemPermissionProvider;
+import com.liferay.info.test.util.info.item.provider.MockInfoPermissionProvider;
+import com.liferay.info.test.util.layout.display.page.MockObjectLayoutDisplayPageObjectProvider;
+import com.liferay.info.test.util.layout.display.page.MockObjectLayoutDisplayPageProvider;
 import com.liferay.info.test.util.model.MockObject;
+import com.liferay.layout.display.page.LayoutDisplayPageProvider;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Portal;
 
 import java.util.List;
 
@@ -34,7 +43,8 @@ import org.osgi.framework.ServiceRegistration;
 public class MockInfoServiceRegistrationHolder implements AutoCloseable {
 
 	public MockInfoServiceRegistrationHolder(
-		InfoFieldSet infoFieldSet, InfoItemCapability... infoItemCapabilities) {
+		InfoFieldSet infoFieldSet, MockObject mockObject, Portal portal,
+		InfoItemCapability... infoItemCapabilities) {
 
 		Bundle bundle = FrameworkUtil.getBundle(
 			MockInfoServiceRegistrationHolder.class);
@@ -43,8 +53,18 @@ public class MockInfoServiceRegistrationHolder implements AutoCloseable {
 
 		_mockInfoItemCapabilitiesProvider =
 			new MockInfoItemCapabilitiesProvider(infoItemCapabilities);
-
 		_mockInfoItemFormProvider = new MockInfoItemFormProvider(infoFieldSet);
+		_mockInfoItemPermissionProvider = new MockInfoItemPermissionProvider(
+			mockObject);
+		_mockInfoPermissionProvider = new MockInfoPermissionProvider(
+			mockObject);
+
+		_mockObjectLayoutDisplayPageObjectProvider =
+			new MockObjectLayoutDisplayPageObjectProvider(mockObject, portal);
+
+		_mockObjectLayoutDisplayPageProvider =
+			new MockObjectLayoutDisplayPageProvider(
+				_mockObjectLayoutDisplayPageObjectProvider);
 
 		_serviceRegistrations = ListUtil.fromArray(
 			bundleContext.registerService(
@@ -73,7 +93,33 @@ public class MockInfoServiceRegistrationHolder implements AutoCloseable {
 				InfoItemFormProvider.class, _mockInfoItemFormProvider,
 				HashMapDictionaryBuilder.<String, Object>put(
 					"item.class.name", MockObject.class.getName()
+				).build()),
+			bundleContext.registerService(
+				InfoItemPermissionProvider.class,
+				_mockInfoItemPermissionProvider,
+				HashMapDictionaryBuilder.<String, Object>put(
+					"item.class.name", MockObject.class.getName()
+				).build()),
+			bundleContext.registerService(
+				InfoPermissionProvider.class, _mockInfoPermissionProvider,
+				HashMapDictionaryBuilder.<String, Object>put(
+					"item.class.name", MockObject.class.getName()
+				).build()),
+			bundleContext.registerService(
+				LayoutDisplayPageProvider.class,
+				_mockObjectLayoutDisplayPageProvider,
+				HashMapDictionaryBuilder.<String, Object>put(
+					"item.class.name", MockObject.class.getName()
 				).build()));
+	}
+
+	public MockInfoServiceRegistrationHolder(
+		InfoFieldSet infoFieldSet, Portal portal,
+		InfoItemCapability... infoItemCapabilities) {
+
+		this(
+			infoFieldSet, new MockObject(RandomTestUtil.randomLong()), portal,
+			infoItemCapabilities);
 	}
 
 	@Override
@@ -109,6 +155,26 @@ public class MockInfoServiceRegistrationHolder implements AutoCloseable {
 		return _mockInfoItemFormProvider;
 	}
 
+	public MockInfoItemPermissionProvider getMockInfoItemPermissionProvider() {
+		return _mockInfoItemPermissionProvider;
+	}
+
+	public MockInfoPermissionProvider getMockInfoPermissionProvider() {
+		return _mockInfoPermissionProvider;
+	}
+
+	public MockObjectLayoutDisplayPageObjectProvider
+		getMockObjectLayoutDisplayPageObjectProvider() {
+
+		return _mockObjectLayoutDisplayPageObjectProvider;
+	}
+
+	public MockObjectLayoutDisplayPageProvider
+		getMockObjectLayoutDisplayPageProvider() {
+
+		return _mockObjectLayoutDisplayPageProvider;
+	}
+
 	public List<ServiceRegistration<?>> getServiceRegistrations() {
 		return _serviceRegistrations;
 	}
@@ -123,6 +189,13 @@ public class MockInfoServiceRegistrationHolder implements AutoCloseable {
 		_mockInfoItemFieldValuesProvider =
 			new MockInfoItemFieldValuesProvider();
 	private final MockInfoItemFormProvider _mockInfoItemFormProvider;
+	private final MockInfoItemPermissionProvider
+		_mockInfoItemPermissionProvider;
+	private final MockInfoPermissionProvider _mockInfoPermissionProvider;
+	private final MockObjectLayoutDisplayPageObjectProvider
+		_mockObjectLayoutDisplayPageObjectProvider;
+	private final MockObjectLayoutDisplayPageProvider
+		_mockObjectLayoutDisplayPageProvider;
 	private final List<ServiceRegistration<?>> _serviceRegistrations;
 
 }

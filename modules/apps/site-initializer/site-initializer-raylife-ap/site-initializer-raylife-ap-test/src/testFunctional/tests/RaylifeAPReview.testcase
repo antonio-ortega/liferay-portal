@@ -1,11 +1,10 @@
-@component-name = "portal-solutions"
+@component-name = "portal-site-management"
 definition {
 
 	property custom.properties = "feature.flag.LPS-165493=true";
 	property osgi.modules.includes = "site-initializer-raylife-ap";
 	property portal.release = "false";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Raylife AP";
 
 	var testSiteName = "Raylife AP";
@@ -18,10 +17,17 @@ definition {
 			User.firstLoginPG();
 		}
 
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
+
 		task ("Create a new Raylife AP Site") {
 			Site.openSitesAdmin();
 
-			Raylife.createRaylifeSite(siteName = "Raylife D2C");
+			HeadlessSite.addSite(
+				siteName = "Raylife D2C",
+				templateName = "Raylife D2C",
+				templateType = "Site Initializer");
 
 			Raylife.createRaylifeSite(siteName = "Raylife AP");
 		}
@@ -59,7 +65,7 @@ definition {
 		property test.run.type = "single";
 
 		task ("Given that an user go to Raylife AP and start a new application") {
-			RaylifeAP.goToRaylifeUserProfileMenu(raylifeSite = "Raylife AP");
+			Navigator.openSiteURL(siteName = "Raylife AP");
 
 			RaylifeApplicationModal.openNewApplicationFlow(
 				insurance = "Personal",
@@ -93,7 +99,7 @@ definition {
 				highestEducation = "Masters",
 				lastName = "Model",
 				maritalStatus = "Single",
-				millitaryAffiliation = "None",
+				militaryAffiliation = "None",
 				occupation = "Engineer",
 				relationToContact = "Spouse");
 
@@ -160,7 +166,7 @@ definition {
 				highestEducation = "Masters",
 				lastName = "Model",
 				maritalStatus = "Single",
-				millitaryAffiliation = "None",
+				militaryAffiliation = "None",
 				occupation = "Engineer",
 				relationToContact = "Spouse");
 
@@ -195,7 +201,7 @@ definition {
 		// Skip portal instance due to LRQA-79129. Unskip after it is resolved
 
 		task ("Given that an user created an uncompleted new application") {
-			RaylifeAP.goToRaylifeUserProfileMenu(raylifeSite = "Raylife AP");
+			Navigator.openSiteURL(siteName = "Raylife AP");
 
 			RaylifeApplicationModal.openNewApplicationFlow(
 				insurance = "Personal",
@@ -227,7 +233,7 @@ definition {
 				highestEducation = "Masters",
 				lastName = "Model",
 				maritalStatus = "Single",
-				millitaryAffiliation = "None",
+				militaryAffiliation = "None",
 				occupation = "Engineer",
 				relationToContact = "Spouse");
 

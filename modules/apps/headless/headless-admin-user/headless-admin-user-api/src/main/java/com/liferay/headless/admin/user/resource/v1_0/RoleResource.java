@@ -49,15 +49,74 @@ import org.osgi.annotation.versioning.ProviderType;
 public interface RoleResource {
 
 	public Page<Role> getRolesPage(
-			Integer[] types, String search, Pagination pagination)
+			String search, Integer[] types, Pagination pagination)
 		throws Exception;
 
 	public Response postRolesPageExportBatch(
-			Integer[] types, String search, String callbackURL,
+			String search, Integer[] types, String callbackURL,
 			String contentType, String fieldNames)
 		throws Exception;
 
+	public Role postRole(Role role) throws Exception;
+
+	public Response postRoleBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteRoleByExternalReferenceCode(String externalReferenceCode)
+		throws Exception;
+
+	public Role getRoleByExternalReferenceCode(String externalReferenceCode)
+		throws Exception;
+
+	public Role patchRoleByExternalReferenceCode(
+			String externalReferenceCode, Role role)
+		throws Exception;
+
+	public Role putRoleByExternalReferenceCode(
+			String externalReferenceCode, Role role)
+		throws Exception;
+
+	public void deleteRoleByExternalReferenceCodeUserAccountAssociation(
+			String externalReferenceCode, Long userAccountId)
+		throws Exception;
+
+	public void postRoleByExternalReferenceCodeUserAccountAssociation(
+			String externalReferenceCode, Long userAccountId)
+		throws Exception;
+
+	public void
+			deleteOrganizationRoleByExternalReferenceCodeUserAccountAssociation(
+				String externalReferenceCode, Long userAccountId,
+				Long organizationId)
+		throws Exception;
+
+	public void
+			postOrganizationRoleByExternalReferenceCodeUserAccountAssociation(
+				String externalReferenceCode, Long userAccountId,
+				Long organizationId)
+		throws Exception;
+
+	public void deleteSiteRoleByExternalReferenceCodeUserAccountAssociation(
+			String externalReferenceCode, Long userAccountId, Long siteId)
+		throws Exception;
+
+	public void postSiteRoleByExternalReferenceCodeUserAccountAssociation(
+			String externalReferenceCode, Long userAccountId, Long siteId)
+		throws Exception;
+
+	public void deleteRole(Long roleId) throws Exception;
+
+	public Response deleteRoleBatch(String callbackURL, Object object)
+		throws Exception;
+
 	public Role getRole(Long roleId) throws Exception;
+
+	public Role patchRole(Long roleId, Role role) throws Exception;
+
+	public Role putRole(Long roleId, Role role) throws Exception;
+
+	public Response putRoleBatch(String callbackURL, Object object)
+		throws Exception;
 
 	public void deleteRoleUserAccountAssociation(
 			Long roleId, Long userAccountId)

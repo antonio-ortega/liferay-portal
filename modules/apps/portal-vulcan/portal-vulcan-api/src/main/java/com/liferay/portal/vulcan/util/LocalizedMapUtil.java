@@ -5,8 +5,12 @@
 
 package com.liferay.portal.vulcan.util;
 
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Collections;
@@ -35,6 +39,27 @@ public class LocalizedMapUtil {
 			Locale locale = entry.getKey();
 
 			i18nMap.put(LocaleUtil.toBCP47LanguageId(locale), entry.getValue());
+		}
+
+		return i18nMap;
+	}
+
+	public static Map<String, String> getI18nMap(
+		boolean acceptAllLanguages, Set<Locale> availableLocales,
+		Map<String, String> localizedMap) {
+
+		if (!acceptAllLanguages) {
+			return null;
+		}
+
+		Map<String, String> i18nMap = new HashMap<>();
+
+		for (Locale locale : availableLocales) {
+			String languageId = LocaleUtil.toLanguageId(locale);
+
+			if (localizedMap.containsKey(languageId)) {
+				i18nMap.put(languageId, localizedMap.get(languageId));
+			}
 		}
 
 		return i18nMap;
@@ -108,6 +133,12 @@ public class LocalizedMapUtil {
 	public static Map<Locale, String> getLocalizedMap(
 		Map<String, String> i18nMap) {
 
+		return getLocalizedMap(i18nMap, false);
+	}
+
+	public static Map<Locale, String> getLocalizedMap(
+		Map<String, String> i18nMap, boolean useDefault) {
+
 		Map<Locale, String> localizedMap = new HashMap<>();
 
 		if (i18nMap == null) {
@@ -115,7 +146,7 @@ public class LocalizedMapUtil {
 		}
 
 		for (Map.Entry<String, String> entry : i18nMap.entrySet()) {
-			Locale locale = _getLocale(entry.getKey());
+			Locale locale = _getLocale(entry.getKey(), useDefault);
 			String value = entry.getValue();
 
 			if ((locale != null) && (value != null)) {
@@ -211,7 +242,7 @@ public class LocalizedMapUtil {
 		}
 
 		for (Map.Entry<String, String> entry : i18nMap.entrySet()) {
-			Locale locale = _getLocale(entry.getKey());
+			Locale locale = _getLocale(entry.getKey(), false);
 
 			if (locale != null) {
 				resultLocalizedMap = patchLocalizedMap(
@@ -220,6 +251,39 @@ public class LocalizedMapUtil {
 		}
 
 		return resultLocalizedMap;
+	}
+
+	public static Map<String, String> populateI18nMap(
+		String defaultLanguageId, Map<String, String> i18nMap,
+		String siteDefaultValue) {
+
+		if ((defaultLanguageId == null) && (siteDefaultValue == null)) {
+			return i18nMap;
+		}
+
+		String siteDefaultLanguageId = LocaleUtil.toLanguageId(
+			LocaleUtil.getSiteDefault());
+
+		if (MapUtil.isEmpty(i18nMap)) {
+			return HashMapBuilder.put(
+				siteDefaultLanguageId, siteDefaultValue
+			).build();
+		}
+
+		Map<String, String> newI18nMap = new HashMap<>();
+
+		for (Map.Entry<String, String> entry : i18nMap.entrySet()) {
+			newI18nMap.put(
+				StringUtil.replace(
+					entry.getKey(), CharPool.MINUS, CharPool.UNDERLINE),
+				entry.getValue());
+		}
+
+		newI18nMap.putIfAbsent(
+			siteDefaultLanguageId,
+			MapUtil.getString(newI18nMap, defaultLanguageId, siteDefaultValue));
+
+		return newI18nMap;
 	}
 
 	public static void validateI18n(
@@ -254,8 +318,8 @@ public class LocalizedMapUtil {
 		}
 	}
 
-	private static Locale _getLocale(String languageId) {
-		return LocaleUtil.fromLanguageId(languageId, true, false);
+	private static Locale _getLocale(String languageId, boolean useDefault) {
+		return LocaleUtil.fromLanguageId(languageId, true, useDefault);
 	}
 
 }

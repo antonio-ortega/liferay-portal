@@ -3,49 +3,17 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayBadge from '@clayui/badge';
 import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import {ClayRadio, ClayRadioGroup} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClaySticker from '@clayui/sticker';
 import {ClayTooltipProvider} from '@clayui/tooltip';
-import React, {useEffect, useRef, useState} from 'react';
+import {FeatureIndicator} from 'frontend-js-components-web';
+import React, {useRef, useState} from 'react';
 
+import {EXECUTION_MODES, SCOPES} from '../constants';
 import InstanceSelector from './InstanceSelector';
-
-const EXECUTE_BUTTON_QUERY_SELECTOR = '.save-server-button';
-
-const EXECUTION_MODES = {
-	CONCURRENT: {
-		description: Liferay.Language.get(
-			'reindex-mode-concurrent-description'
-		),
-		label: Liferay.Language.get('concurrent'),
-		showBetaBadge: true,
-		symbol: 'change-list',
-		value: 'concurrent',
-	},
-	FULL: {
-		description: Liferay.Language.get('reindex-mode-full-description'),
-		label: Liferay.Language.get('full'),
-		showBetaBadge: false,
-		symbol: 'globe-lines',
-		value: 'full',
-	},
-	SYNC: {
-		description: Liferay.Language.get('reindex-mode-sync-description'),
-		label: Liferay.Language.get('sync'),
-		showBetaBadge: true,
-		symbol: 'reload',
-		value: 'sync',
-	},
-};
-
-const SCOPES = {
-	ALL: 'all',
-	SELECTED: 'selected',
-};
 
 /**
  * Options on the left of the Index Actions page that affect the reindex
@@ -56,58 +24,29 @@ const SCOPES = {
  * 	- Execution Mode: Value is submitted as `executionMode`.
  */
 function ExecutionOptions({
-	initialCompanyIds = [],
-	initialExecutionMode,
-	initialScope,
-	isConcurrentModeSupported,
+	concurrentModeSupported,
+	executionMode,
+	executionScope,
+	omniadmin,
+	onExecutionModeChange,
+	onExecutionScopeChange,
+	onSelectedCompanyIdsChange,
 	portletNamespace,
+	selectedCompanyIds = [],
 	virtualInstances = [],
 }) {
-	const [executionMode, setExecutionMode] = useState(
-		initialExecutionMode || EXECUTION_MODES.FULL.value
-	);
-	const [
-		executionModeDropdownActive,
-		setExecutionModeDropdownActive,
-	] = useState(false);
-	const [selected, setSelected] = useState(initialCompanyIds);
-	const [scope, setScope] = useState(initialScope || SCOPES.ALL);
+	const [executionModeDropdownActive, setExecutionModeDropdownActive] =
+		useState(false);
 
 	const alignElementRef = useRef();
 
-	/**
-	 * Disables execute buttons with the attribute `data-concurrent-disabled`
-	 * if Concurrent execution mode is selected.
-	 */
-	useEffect(() => {
-		const executeButtonsElement = document.querySelectorAll(
-			EXECUTE_BUTTON_QUERY_SELECTOR
-		);
-
-		executeButtonsElement.forEach((element) => {
-			if (
-				executionMode === EXECUTION_MODES.CONCURRENT.value &&
-				element.hasAttribute('data-concurrent-disabled')
-			) {
-				element.classList.add('disabled');
-			}
-			else {
-				element.classList.remove('disabled');
-			}
-		});
-	}, [executionMode]);
-
 	const _handleExecutionModeChange = (mode) => {
-		setExecutionMode(mode);
+		onExecutionModeChange(mode);
 		setExecutionModeDropdownActive(false);
 	};
 
 	const _handleExecutionModeDropdownChange = () =>
 		setExecutionModeDropdownActive(!executionModeDropdownActive);
-
-	const _handleScopeChange = (value) => {
-		setScope(value);
-	};
 
 	return (
 		<div className="execution-scope-sheet sheet sheet-lg">
@@ -115,7 +54,7 @@ function ExecutionOptions({
 				{Liferay.Language.get('configuration')}
 			</h2>
 
-			{isConcurrentModeSupported && (
+			{concurrentModeSupported && (
 				<div className="c-mb-1 sheet-section">
 					<div
 						className="sheet-subtitle text-secondary"
@@ -192,11 +131,9 @@ function ExecutionOptions({
 															{label}
 
 															{showBetaBadge && (
-																<ClayBadge
-																	className="c-ml-1"
-																	displayType="beta"
-																	label="beta"
-																/>
+																<span className="c-ml-1">
+																	<FeatureIndicator type="beta" />
+																</span>
 															)}
 														</div>
 
@@ -223,60 +160,64 @@ function ExecutionOptions({
 				</div>
 			)}
 
-			<div className="sheet-section">
-				<div
-					className="sheet-subtitle text-secondary"
-					style={{textTransform: 'none'}}
-				>
-					<span>{Liferay.Language.get('reindex-scope')}</span>
+			{omniadmin && (
+				<div className="sheet-section">
+					<div
+						className="sheet-subtitle text-secondary"
+						style={{textTransform: 'none'}}
+					>
+						<span>{Liferay.Language.get('reindex-scope')}</span>
 
-					<ClayTooltipProvider>
-						<ClaySticker
-							data-tooltip-align="bottom-left"
-							displayType="secondary"
-							size="sm"
-							title={Liferay.Language.get('execution-scope-help')}
-						>
-							<ClayIcon symbol="question-circle-full" />
-						</ClaySticker>
-					</ClayTooltipProvider>
+						<ClayTooltipProvider>
+							<ClaySticker
+								data-tooltip-align="bottom-left"
+								displayType="secondary"
+								size="sm"
+								title={Liferay.Language.get(
+									'execution-scope-help'
+								)}
+							>
+								<ClayIcon symbol="question-circle-full" />
+							</ClaySticker>
+						</ClayTooltipProvider>
+					</div>
+
+					<ClayRadioGroup
+						className="c-pb-2"
+						name={`${portletNamespace}scope`}
+						onChange={onExecutionScopeChange}
+						value={executionScope}
+					>
+						<ClayRadio
+							label={Liferay.Language.get('all-instances')}
+							value={SCOPES.ALL}
+						/>
+
+						<ClayRadio
+							label={Liferay.Language.get('selected-instances')}
+							value={SCOPES.SELECTED}
+						/>
+					</ClayRadioGroup>
+
+					{executionScope === SCOPES.SELECTED && (
+						<InstanceSelector
+							onSelectedChange={onSelectedCompanyIdsChange}
+							selected={selectedCompanyIds}
+							virtualInstances={virtualInstances}
+						/>
+					)}
+
+					<input
+						name={`${portletNamespace}companyIds`}
+						type="hidden"
+						value={
+							executionScope === SCOPES.ALL
+								? virtualInstances.map(({id}) => id)?.toString()
+								: selectedCompanyIds.toString()
+						}
+					/>
 				</div>
-
-				<ClayRadioGroup
-					className="c-pb-2"
-					name={`${portletNamespace}scope`}
-					onChange={_handleScopeChange}
-					value={scope}
-				>
-					<ClayRadio
-						label={Liferay.Language.get('all-instances')}
-						value={SCOPES.ALL}
-					/>
-
-					<ClayRadio
-						label={Liferay.Language.get('selected-instances')}
-						value={SCOPES.SELECTED}
-					/>
-				</ClayRadioGroup>
-
-				{scope === SCOPES.SELECTED && (
-					<InstanceSelector
-						selected={selected}
-						setSelected={setSelected}
-						virtualInstances={virtualInstances}
-					/>
-				)}
-
-				<input
-					name={`${portletNamespace}companyIds`}
-					type="hidden"
-					value={
-						scope === SCOPES.ALL
-							? virtualInstances.map(({id}) => id).toString()
-							: selected.toString()
-					}
-				/>
-			</div>
+			)}
 		</div>
 	);
 }

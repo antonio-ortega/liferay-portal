@@ -39,11 +39,9 @@ interface ISiteTabProps {
 	property: TProperty;
 }
 
-const SitesTab: React.FC<ISiteTabProps> = ({
-	initialIds,
-	onSitesChange,
-	property,
-}) => (
+const SitesTab: React.FC<
+	{children?: React.ReactNode | undefined} & ISiteTabProps
+> = ({initialIds, onSitesChange, property}) => (
 	<Tab
 		columns={columns.map(({id}) => id) as Array<keyof TRawItem>}
 		description={Liferay.Language.get('sites-tab-description')}
@@ -56,6 +54,7 @@ const SitesTab: React.FC<ISiteTabProps> = ({
 		onItemsChange={onSitesChange}
 		property={property}
 		requestFn={fetchSites}
+		type="sites"
 	/>
 );
 

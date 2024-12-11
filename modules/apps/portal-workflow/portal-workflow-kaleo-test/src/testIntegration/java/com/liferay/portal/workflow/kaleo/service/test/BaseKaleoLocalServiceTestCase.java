@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.security.script.management.test.rule.ScriptManagementConfigurationTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
@@ -66,7 +67,9 @@ public abstract class BaseKaleoLocalServiceTestCase {
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new AggregateTestRule(
-			new LiferayIntegrationTestRule(), SynchronousMailTestRule.INSTANCE);
+			new LiferayIntegrationTestRule(),
+			ScriptManagementConfigurationTestRule.INSTANCE,
+			SynchronousMailTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -93,16 +96,17 @@ public abstract class BaseKaleoLocalServiceTestCase {
 
 		return addKaleoDefinition(
 			StringUtil.randomString(), StringUtil.randomString(),
-			StringUtil.randomString());
+			StringUtil.randomString(), StringUtil.randomString());
 	}
 
 	protected KaleoDefinition addKaleoDefinition(
-			String name, String title, String description)
+			String externalReferenceCode, String name, String title,
+			String description)
 		throws IOException, PortalException {
 
 		KaleoDefinition kaleoDefinition =
 			_kaleoDefinitionLocalService.addKaleoDefinition(
-				name, title, description,
+				externalReferenceCode, name, title, description,
 				_read("legal-marketing-workflow-definition.xml"),
 				StringPool.BLANK, 1, serviceContext);
 
@@ -265,6 +269,7 @@ public abstract class BaseKaleoLocalServiceTestCase {
 		throws IOException, PortalException {
 
 		kaleoDefinition = _kaleoDefinitionLocalService.updatedKaleoDefinition(
+			kaleoDefinition.getExternalReferenceCode(),
 			kaleoDefinition.getKaleoDefinitionId(), StringUtil.randomString(),
 			StringUtil.randomString(), kaleoDefinition.getContent(),
 			serviceContext);

@@ -48,6 +48,8 @@ public interface ObjectDefinition
 
 		};
 
+	public java.util.Locale getDefaultLocale();
+
 	public String getDestinationName();
 
 	public String getExtensionDBTableName();
@@ -62,9 +64,13 @@ public interface ObjectDefinition
 
 	public String getPortletId();
 
+	public String getPreviousRESTContextPath();
+
 	public String getResourceName();
 
 	public String getRESTContextPath();
+
+	public String getRootObjectDefinitionExternalReferenceCode();
 
 	public String getShortName();
 
@@ -74,6 +80,8 @@ public interface ObjectDefinition
 
 	public boolean isLinkedToObjectFolder(long objectFolderId);
 
+	public boolean isModifiableAndSystem();
+
 	public boolean isNodeCandidate();
 
 	public boolean isRootDescendantNode();
@@ -81,5 +89,7 @@ public interface ObjectDefinition
 	public boolean isRootNode();
 
 	public boolean isUnmodifiableSystemObject();
+
+	public void setPreviousRESTContextPath(String previousRESTContextPath);
 
 }

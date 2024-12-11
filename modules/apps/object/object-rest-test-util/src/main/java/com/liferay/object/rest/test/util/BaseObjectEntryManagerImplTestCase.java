@@ -26,6 +26,9 @@ import com.liferay.portal.vulcan.pagination.Page;
 
 import java.text.DateFormat;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -116,11 +119,23 @@ public abstract class BaseObjectEntryManagerImplTestCase {
 	}
 
 	protected String getValue(Object value) {
+		if (value == null) {
+			return null;
+		}
+
 		if (value instanceof Date) {
 			DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
 				"yyyy-MM-dd");
 
 			return dateFormat.format(value);
+		}
+		else if (value instanceof LocalDateTime) {
+			DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
+				"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+			LocalDateTime localDateTime = (LocalDateTime)value;
+
+			return dateTimeFormatter.format(localDateTime.withNano(0));
 		}
 		else if (value instanceof String) {
 			return StringUtil.quote(String.valueOf(value));
@@ -141,6 +156,9 @@ public abstract class BaseObjectEntryManagerImplTestCase {
 			sorts = new Sort[] {
 				SortFactoryUtil.create(sort[0], Objects.equals(sort[1], "desc"))
 			};
+		}
+		else {
+			sorts = new Sort[] {SortFactoryUtil.create("createDate", false)};
 		}
 
 		Page<ObjectEntry> page = getObjectEntries(context, sorts);

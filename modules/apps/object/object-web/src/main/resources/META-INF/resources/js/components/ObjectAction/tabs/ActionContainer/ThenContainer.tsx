@@ -3,36 +3,33 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ClayCheckbox} from '@clayui/form';
-import ClayIcon from '@clayui/icon';
-import ClayLabel from '@clayui/label';
-import {ClayTooltipProvider} from '@clayui/tooltip';
-import {
-	API,
-	Card,
-	CustomItem,
-	SelectWithOption,
-	SingleSelect,
-} from '@liferay/object-js-components-web';
-import React, {useEffect, useMemo, useState} from 'react';
+import {Option, Text} from '@clayui/core';
+import {API, Card, SingleSelect} from '@liferay/object-js-components-web';
+import React, {useEffect, useState} from 'react';
 
+import {ActionError} from '../../ObjectActionContainer';
 import {
+	ObjectOptionsListItem,
 	ObjectsOptionsList,
 	fetchObjectDefinitionFields,
 	fetchObjectDefinitions,
 } from '../../fetchUtil';
+import {CheckboxParameter} from './CheckboxParameter';
+import {SingleSelectAddObjectEntry} from './SingleSelectAddObjectEntry';
+import {SingleSelectNotification} from './SingleSelectNotification';
+import {updateUsePreferredLanguageForGuestsParameter} from './updateUsePreferredLanguageForGuestsParameter';
 
 import './ThenContainer.scss';
-import {ActionError} from '../..';
 
 interface ThenContainerProps {
+	disabled: boolean;
 	errors: ActionError;
 	isValidField: (
 		{businessType, name, objectFieldSettings, system}: ObjectField,
 		isObjectActionSystem?: boolean
 	) => boolean;
-	newObjectActionExecutors: CustomItem<string>[];
-	objectActionExecutors: CustomItem[];
+	newObjectActionExecutors: ObjectActionTriggerExecutorItem[];
+	objectActionExecutors: ObjectActionTriggerExecutorItem[];
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectDefinitionsRelationshipsURL: string;
@@ -40,11 +37,20 @@ interface ThenContainerProps {
 	setCurrentObjectDefinitionFields: (values: ObjectField[]) => void;
 	setValues: (values: Partial<ObjectAction>) => void;
 	systemObject: boolean;
-	updateParameters: (value: string) => Promise<void>;
+	updateObjectDefinitionParameters: (
+		value: ObjectOptionsListItem
+	) => Promise<void>;
 	values: Partial<ObjectAction>;
 }
 
+export type NotificationTemplateAction = {
+	label: string;
+	type: string;
+	value: string;
+};
+
 export function ThenContainer({
+	disabled,
 	errors,
 	isValidField,
 	newObjectActionExecutors,
@@ -56,43 +62,41 @@ export function ThenContainer({
 	setCurrentObjectDefinitionFields,
 	setValues,
 	systemObject,
-	updateParameters,
+	updateObjectDefinitionParameters,
 	values,
 }: ThenContainerProps) {
 	const [notificationTemplates, setNotificationTemplates] = useState<
-		CustomItem<string>[]
+		NotificationTemplateAction[]
 	>([]);
 
-	const notificationTemplateLabel = useMemo(() => {
-		return notificationTemplates.find(
-			({value}) =>
-				value ===
-				values.parameters?.notificationTemplateExternalReferenceCode
-		)?.label;
-	}, [notificationTemplates, values.parameters]);
+	const [selectedNotificationTemplate, setSelectedNotificationTemplate] =
+		useState<Partial<NotificationTemplateAction>>();
 
 	const [objectsOptions, setObjectOptions] = useState<ObjectsOptionsList>([]);
 
-	const [selectedObjectDefinition, setSelectedObjectDefinition] = useState(
-		''
-	);
+	useEffect(() => {
+		if (selectedNotificationTemplate) {
+			const parameters = updateUsePreferredLanguageForGuestsParameter(
+				values,
+				selectedNotificationTemplate.type
+			);
 
-	const actionExecutors = useMemo(() => {
-		const executors = new Map<string, string>();
+			setValues({
+				parameters,
+			});
+		}
 
-		newObjectActionExecutors.forEach(({label, value}) => {
-			value && executors.set(value, label);
-		});
-
-		return executors;
-	}, [newObjectActionExecutors]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [values.objectActionTriggerKey]);
 
 	useEffect(() => {
 		if (values.objectActionExecutorKey === 'notification') {
 			const makeFetch = async () => {
-				const NotificationTemplatesResponse = await API.getNotificationTemplates();
+				const NotificationTemplatesResponse =
+					await API.getNotificationTemplates();
 
-				let notificationArray: NotificationTemplate[] = NotificationTemplatesResponse;
+				let notificationArray: NotificationTemplate[] =
+					NotificationTemplatesResponse;
 
 				if (systemObject) {
 					notificationArray = NotificationTemplatesResponse.filter(
@@ -120,8 +124,6 @@ export function ThenContainer({
 				objectDefinitionsRelationshipsURL,
 				setAddObjectEntryDefinitions,
 				setObjectOptions,
-				setSelectedObjectDefinition,
-				values,
 			});
 
 			fetchObjectDefinitionFields(
@@ -134,6 +136,7 @@ export function ThenContainer({
 				setValues
 			);
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		objectDefinitionId,
@@ -143,125 +146,112 @@ export function ThenContainer({
 		values.objectActionExecutorKey,
 	]);
 
+	const parameterDetails =
+		values.parameters?.usePreferredLanguageForGuests !== undefined
+			? {
+					checked: values.parameters?.usePreferredLanguageForGuests,
+					disabled: false,
+					key: 'usePreferredLanguageForGuests',
+					label: Liferay.Language.get(
+						'send-email-notifications-in-the-guest-users-preferred-language'
+					),
+					title: Liferay.Language.get(
+						"send-email-notifications-to-guest-users-in-the-form's-language"
+					),
+				}
+			: values.parameters?.relatedObjectEntries !== undefined
+				? {
+						checked: values.parameters?.relatedObjectEntries,
+						disabled: values.system ?? false,
+						key: 'relatedObjectEntries',
+						label: Liferay.Language.get('also-relate-entries'),
+						title: Liferay.Language.get(
+							'automatically-relate-object-entries-involved-in-the-action'
+						),
+					}
+				: undefined;
+
 	return (
 		<Card title={Liferay.Language.get('then[object]')} viewMode="inline">
-			<div className="lfr-object__action-builder-then">
-				<SingleSelect
-					disabled={values.system}
-					error={errors.objectActionExecutorKey}
-					onChange={({value}) => {
-						if (values.objectActionExecutorKey !== value) {
-							return setValues({
-								objectActionExecutorKey: value,
-								parameters: {},
-							});
-						}
-					}}
-					options={
-						Liferay.FeatureFlags['LPS-153714']
-							? newObjectActionExecutors
-							: objectActionExecutors
-					}
-					placeholder={Liferay.Language.get('choose-an-action')}
-					value={actionExecutors.get(
-						values.objectActionExecutorKey ?? ''
-					)}
-				/>
-
-				{values.objectActionExecutorKey === 'add-object-entry' && (
-					<>
-						on
-						<SelectWithOption
-							aria-label={Liferay.Language.get(
-								'choose-an-object'
-							)}
-							disabled={values.system}
-							error={errors.objectDefinitionExternalReferenceCode}
-							items={objectsOptions}
-							onSelectChange={(label, value) => {
-								updateParameters(value);
-								setSelectedObjectDefinition(label);
-							}}
-							placeholder={Liferay.Language.get(
-								'choose-an-object'
-							)}
-							value={selectedObjectDefinition}
-						/>
-						{values.parameters?.relatedObjectEntries !==
-							undefined && (
-							<>
-								<ClayCheckbox
-									checked={
-										values.parameters
-											.relatedObjectEntries === true
-									}
-									disabled={values.system}
-									label={Liferay.Language.get(
-										'also-relate-entries'
-									)}
-									onChange={({target: {checked}}) => {
-										setValues({
-											parameters: {
-												...values.parameters,
-												relatedObjectEntries: checked,
-											},
-										});
-									}}
-								/>
-								<ClayTooltipProvider>
-									<div
-										data-tooltip-align="top"
-										title={Liferay.Language.get(
-											'automatically-relate-object-entries-involved-in-the-action'
-										)}
-									>
-										<ClayIcon
-											className=".lfr-object__action-builder-tooltip-icon"
-											symbol="question-circle-full"
-										/>
-									</div>
-								</ClayTooltipProvider>
-							</>
-						)}
-					</>
-				)}
-
-				{values.objectActionExecutorKey === 'notification' && (
-					<SingleSelect<CustomItem<string>>
-						className="lfr-object__action-builder-notification-then"
-						disabled={values.system}
+			<div className="lfr-object__action-builder-then-container">
+				<div className="lfr-object__action-builder-then">
+					<SingleSelect
+						disabled={values.system || disabled}
 						error={errors.objectActionExecutorKey}
-						onChange={({value}) => {
+						items={
+							Liferay.FeatureFlags['LPS-153714']
+								? newObjectActionExecutors
+								: objectActionExecutors
+						}
+						onSelectionChange={(value) => {
+							if (values.objectActionExecutorKey !== value) {
+								return setValues({
+									objectActionExecutorKey: value as string,
+									parameters: {},
+								});
+							}
+						}}
+						placeholder={Liferay.Language.get('choose-an-action')}
+						selectedKey={values.objectActionExecutorKey}
+					>
+						{(item) => (
+							<Option key={item.value} textValue={item.label}>
+								<div className="lfr-objects__object-action-builder-when-option">
+									<Text size={3} weight="semi-bold">
+										{item.label}
+									</Text>
+
+									<Text
+										aria-hidden
+										color="secondary"
+										size={2}
+									>
+										{item.description}
+									</Text>
+								</div>
+							</Option>
+						)}
+					</SingleSelect>
+
+					{values.objectActionExecutorKey === 'add-object-entry' && (
+						<SingleSelectAddObjectEntry
+							errors={errors}
+							objectsOptions={objectsOptions}
+							updateObjectDefinitionParameters={
+								updateObjectDefinitionParameters
+							}
+							values={values}
+						/>
+					)}
+
+					{values.objectActionExecutorKey === 'notification' && (
+						<SingleSelectNotification
+							errors={errors}
+							notificationTemplates={notificationTemplates}
+							setSelectedNotificationTemplate={
+								setSelectedNotificationTemplate
+							}
+							setValues={setValues}
+							values={values}
+						/>
+					)}
+				</div>
+
+				{parameterDetails && (
+					<CheckboxParameter
+						checked={parameterDetails.checked}
+						disabled={parameterDetails.disabled}
+						label={parameterDetails.label}
+						onChange={(checked) => {
 							setValues({
 								parameters: {
 									...values.parameters,
-									notificationTemplateExternalReferenceCode: value,
+									[parameterDetails.key]: checked,
 								},
 							});
 						}}
-						options={notificationTemplates}
-						required
-						value={notificationTemplateLabel}
-					>
-						{notificationTemplates.map(
-							(option) =>
-								option.type && (
-									<ClayLabel
-										displayType={
-											option.type === 'email'
-												? 'success'
-												: 'info'
-										}
-									>
-										{option.type === 'email'
-											? Liferay.Language.get('email')
-											: Liferay.Language.get(
-													'user-notification'
-											  )}
-									</ClayLabel>
-								)
-						)}
-					</SingleSelect>
+						title={parameterDetails.title}
+					/>
 				)}
 			</div>
 		</Card>

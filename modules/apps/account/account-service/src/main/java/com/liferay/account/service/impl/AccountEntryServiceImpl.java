@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.AddressService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
@@ -220,6 +221,22 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 	}
 
 	@Override
+	public AccountEntry getAccountEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		AccountEntry accountEntry =
+			accountEntryLocalService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, companyId);
+
+		_accountEntryModelResourcePermission.check(
+			getPermissionChecker(), accountEntry.getAccountEntryId(),
+			ActionKeys.VIEW);
+
+		return accountEntry;
+	}
+
+	@Override
 	public BaseModelSearchResult<AccountEntry> searchAccountEntries(
 			String keywords, LinkedHashMap<String, Object> params, int cur,
 			int delta, String orderByField, boolean reverse)
@@ -244,6 +261,14 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 
 		_accountEntryModelResourcePermission.check(
 			getPermissionChecker(), accountEntry, ActionKeys.UPDATE);
+
+		if (accountEntry.getDefaultBillingAddressId() > 0) {
+			_validateAddressId(accountEntry.getDefaultBillingAddressId());
+		}
+
+		if (accountEntry.getDefaultShippingAddressId() > 0) {
+			_validateAddressId(accountEntry.getDefaultShippingAddressId());
+		}
 
 		if (!_accountEntryModelResourcePermission.contains(
 				getPermissionChecker(), accountEntry.getAccountEntryId(),
@@ -276,6 +301,32 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 			accountEntryId, parentAccountEntryId, name, description, deleteLogo,
 			_getManageableDomains(accountEntryId, domains), emailAddress,
 			logoBytes, taxIdNumber, status, serviceContext);
+	}
+
+	@Override
+	public AccountEntry updateDefaultBillingAddressId(
+			long accountEntryId, long addressId)
+		throws PortalException {
+
+		_accountEntryModelResourcePermission.check(
+			getPermissionChecker(), accountEntryId, ActionKeys.UPDATE);
+
+		_validateAddressId(addressId);
+
+		return updateDefaultBillingAddressId(accountEntryId, addressId);
+	}
+
+	@Override
+	public AccountEntry updateDefaultShippingAddressId(
+			long accountEntryId, long addressId)
+		throws PortalException {
+
+		_accountEntryModelResourcePermission.check(
+			getPermissionChecker(), accountEntryId, ActionKeys.UPDATE);
+
+		_validateAddressId(addressId);
+
+		return updateDefaultShippingAddressId(accountEntryId, addressId);
 	}
 
 	@Override
@@ -328,6 +379,12 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 		return null;
 	}
 
+	private void _validateAddressId(long addressId) throws PortalException {
+		if (addressId > 0) {
+			_addressService.getAddress(addressId);
+		}
+	}
+
 	private AccountEntry _withServiceContext(
 			UnsafeSupplier<AccountEntry, PortalException> unsafeSupplier,
 			long userId)
@@ -354,5 +411,8 @@ public class AccountEntryServiceImpl extends AccountEntryServiceBaseImpl {
 	)
 	private volatile ModelResourcePermission<AccountEntry>
 		_accountEntryModelResourcePermission;
+
+	@Reference
+	private AddressService _addressService;
 
 }

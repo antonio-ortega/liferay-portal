@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.service.permission.ModelPermissions;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.spring.aop.Property;
 import com.liferay.portal.kernel.spring.aop.Retry;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -53,6 +54,11 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @CTAware
+@OSGiBeanProperties(
+	property = {
+		"model.class.name=com.liferay.portal.kernel.model.ResourcePermission"
+	}
+)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -266,6 +272,10 @@ public interface ResourcePermissionLocalService
 	public ResourcePermission deleteResourcePermission(
 		ResourcePermission resourcePermission);
 
+	public void deleteResourcePermissions(
+			long companyId, String name, int scope)
+		throws PortalException;
+
 	/**
 	 * Deletes all resource permissions at the scope to resources of the type.
 	 * This method should not be confused with any of the
@@ -315,6 +325,8 @@ public interface ResourcePermissionLocalService
 	public void deleteResourcePermissions(
 			long companyId, String name, int scope, String primKey)
 		throws PortalException;
+
+	public void deleteResourcePermissions(String name);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
@@ -488,6 +500,11 @@ public interface ResourcePermissionLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<ResourcePermission> getResourcePermissions(int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ResourcePermission> getResourcePermissions(
+		long companyId, String name, int scope, long roleId,
+		boolean viewActionId);
 
 	/**
 	 * Returns all the resource permissions at the scope of the type.
@@ -712,6 +729,10 @@ public interface ResourcePermissionLocalService
 	public boolean hasScopeResourcePermission(
 			long companyId, String name, int scope, long roleId,
 			String actionId)
+		throws PortalException;
+
+	public void initDefaultModelResourcePermissions(
+			long companyId, Collection<String> modelResources)
 		throws PortalException;
 
 	public void initPortletDefaultPermissions(Portlet portlet)

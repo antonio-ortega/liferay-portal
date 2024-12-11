@@ -47,30 +47,51 @@ public class JUnitBatchBuildTestrayCaseResult
 	}
 
 	@Override
+	public long getDuration() {
+		List<TestClassResult> testClassResults = getTestClassResults();
+
+		if (testClassResults == null) {
+			return 0;
+		}
+
+		long duration = 0;
+
+		for (TestClassResult testClassResult : testClassResults) {
+			duration += testClassResult.getDuration();
+		}
+
+		return duration;
+	}
+
+	@Override
 	public String getErrors() {
-		List<TestClassResult> testClassResults = _getTestClassResults();
+		Build build = getBuild();
+
+		List<TestClassResult> testClassResults = getTestClassResults();
 
 		if ((testClassResults == null) || testClassResults.isEmpty()) {
-			Build build = getBuild();
-
 			if (build == null) {
-				return "Failed to run build on CI";
+				return "Unable to run build on CI";
 			}
 
 			String result = build.getResult();
 
 			if (result == null) {
-				return "Failed to finish build on CI";
+				return "Unable to finish build on CI";
 			}
 
 			if (result.equals("ABORTED")) {
-				return "Aborted prior to running test";
+				return build.getJobName() + " timed out after 2 hours";
 			}
 
 			if (result.equals("SUCCESS") || result.equals("UNSTABLE")) {
-				return "Failed to run test on CI";
+				return "Unable to run test on CI";
 			}
 
+			return "Failed prior to running test";
+		}
+
+		if (_isTestClassResultsSkipped()) {
 			return "Failed prior to running test";
 		}
 
@@ -80,12 +101,16 @@ public class JUnitBatchBuildTestrayCaseResult
 
 		Map<String, String> errorMessages = new HashMap<>();
 
-		for (TestResult testResult : _getTestResults()) {
+		for (TestResult testResult : getTestResults()) {
 			if ((testResult == null) || !testResult.isFailing()) {
 				continue;
 			}
 
 			String errorMessage = testResult.getErrorDetails();
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
+				errorMessage = build.getFailureMessage();
+			}
 
 			if (JenkinsResultsParserUtil.isNullOrEmpty(errorMessage)) {
 				errorMessage = "Failed for unknown reason";
@@ -111,7 +136,7 @@ public class JUnitBatchBuildTestrayCaseResult
 
 		if (errorMessages.size() > 1) {
 			return JenkinsResultsParserUtil.combine(
-				"Failed tests: ",
+				String.valueOf(errorMessages.size()), " Failed tests: ",
 				JenkinsResultsParserUtil.join(
 					", ", new ArrayList<>(errorMessages.keySet())));
 		}
@@ -142,7 +167,7 @@ public class JUnitBatchBuildTestrayCaseResult
 			return Status.UNTESTED;
 		}
 
-		List<TestClassResult> testClassResults = _getTestClassResults();
+		List<TestClassResult> testClassResults = getTestClassResults();
 
 		if ((testClassResults == null) || testClassResults.isEmpty()) {
 			String result = build.getResult();
@@ -155,6 +180,10 @@ public class JUnitBatchBuildTestrayCaseResult
 			}
 
 			return Status.FAILED;
+		}
+
+		if (_isTestClassResultsSkipped()) {
+			return Status.UNTESTED;
 		}
 
 		if (_isTestClassResultsFailing()) {
@@ -179,7 +208,7 @@ public class JUnitBatchBuildTestrayCaseResult
 	}
 
 	protected TestrayAttachment getFailureMessagesTestrayAttachment() {
-		List<TestClassResult> testClassResults = _getTestClassResults();
+		List<TestClassResult> testClassResults = getTestClassResults();
 
 		if ((testClassResults == null) || testClassResults.isEmpty()) {
 			return null;
@@ -198,7 +227,7 @@ public class JUnitBatchBuildTestrayCaseResult
 
 	@Override
 	protected List<TestrayAttachment> getLiferayLogTestrayAttachments() {
-		List<TestClassResult> testClassResults = _getTestClassResults();
+		List<TestClassResult> testClassResults = getTestClassResults();
 
 		if ((testClassResults == null) || testClassResults.isEmpty()) {
 			return new ArrayList<>();
@@ -209,16 +238,16 @@ public class JUnitBatchBuildTestrayCaseResult
 
 	@Override
 	protected List<TestrayAttachment> getLiferayOSGiLogTestrayAttachments() {
-		List<TestClassResult> testClassResults = _getTestClassResults();
+		List<TestClassResult> testClassResults = getTestClassResults();
 
 		if ((testClassResults == null) || testClassResults.isEmpty()) {
 			return new ArrayList<>();
 		}
 
-		return super.getLiferayLogTestrayAttachments();
+		return super.getLiferayOSGiLogTestrayAttachments();
 	}
 
-	private List<TestClassResult> _getTestClassResults() {
+	protected List<TestClassResult> getTestClassResults() {
 		if (_testClassResults != null) {
 			return _testClassResults;
 		}
@@ -258,10 +287,10 @@ public class JUnitBatchBuildTestrayCaseResult
 		return _testClassResults;
 	}
 
-	private List<TestResult> _getTestResults() {
+	protected List<TestResult> getTestResults() {
 		List<TestResult> testResults = new ArrayList<>();
 
-		for (TestClassResult testClassResult : _getTestClassResults()) {
+		for (TestClassResult testClassResult : getTestClassResults()) {
 			String testClassName = testClassResult.getClassName();
 
 			if (!testClassName.equals("junit.framework.TestSuite")) {
@@ -283,8 +312,18 @@ public class JUnitBatchBuildTestrayCaseResult
 	}
 
 	private boolean _isTestClassResultsFailing() {
-		for (TestClassResult testClassResult : _getTestClassResults()) {
+		for (TestClassResult testClassResult : getTestClassResults()) {
 			if (testClassResult.isFailing()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean _isTestClassResultsSkipped() {
+		for (TestClassResult testClassResult : getTestClassResults()) {
+			if (testClassResult.isSkipped()) {
 				return true;
 			}
 		}

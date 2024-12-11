@@ -5,9 +5,9 @@
 
 package com.liferay.gradle.plugins;
 
+import aQute.bnd.gradle.BeanProperties;
 import aQute.bnd.gradle.BndUtils;
-import aQute.bnd.gradle.BundleTaskConvention;
-import aQute.bnd.gradle.PropertiesWrapper;
+import aQute.bnd.gradle.BundleTaskExtension;
 import aQute.bnd.header.Parameters;
 import aQute.bnd.osgi.Builder;
 import aQute.bnd.osgi.Constants;
@@ -40,7 +40,6 @@ import com.liferay.gradle.plugins.lang.builder.LangBuilderPlugin;
 import com.liferay.gradle.plugins.node.NodePlugin;
 import com.liferay.gradle.plugins.node.task.DownloadNodeModuleTask;
 import com.liferay.gradle.plugins.node.task.NpmInstallTask;
-import com.liferay.gradle.plugins.python.PythonPlugin;
 import com.liferay.gradle.plugins.source.formatter.SourceFormatterPlugin;
 import com.liferay.gradle.plugins.task.DirectDeployTask;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationPlugin;
@@ -81,11 +80,12 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.artifacts.DependencySet;
+import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.file.CopySpec;
-import org.gradle.api.file.DuplicatesStrategy;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileCopyDetails;
-import org.gradle.api.file.RelativePath;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -99,6 +99,8 @@ import org.gradle.api.plugins.JavaLibraryPlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.PluginContainer;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Delete;
@@ -117,7 +119,6 @@ import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.language.base.plugins.LifecycleBasePlugin;
 import org.gradle.plugins.ide.eclipse.EclipsePlugin;
 
 /**
@@ -137,8 +138,6 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 	public static final String DEPLOY_DEPENDENCIES_TASK_NAME =
 		"deployDependencies";
-
-	public static final String DEPLOY_FAST_TASK_NAME = "deployFast";
 
 	public static final String PLUGIN_NAME = "liferayOSGi";
 
@@ -210,8 +209,6 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 		final TaskProvider<Copy> deployDependenciesTaskProvider =
 			GradleUtil.addTaskProvider(
 				project, DEPLOY_DEPENDENCIES_TASK_NAME, Copy.class);
-		TaskProvider<Copy> deployFastTaskProvider = GradleUtil.addTaskProvider(
-			project, DEPLOY_FAST_TASK_NAME, Copy.class);
 		TaskProvider<DirectDeployTask> directDeployTaskProvider =
 			GradleUtil.addTaskProvider(
 				project, AUTO_UPDATE_XML_TASK_NAME, DirectDeployTask.class);
@@ -219,22 +216,18 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 			GradleUtil.addTaskProvider(
 				project, ZIP_ZIPPABLE_RESOURCES_TASK_NAME, Task.class);
 
-		TaskProvider<Task> classesTaskProvider = GradleUtil.getTaskProvider(
-			project, JavaPlugin.CLASSES_TASK_NAME);
 		TaskProvider<Delete> cleanTaskProvider = GradleUtil.getTaskProvider(
 			project, BasePlugin.CLEAN_TASK_NAME, Delete.class);
-		TaskProvider<JavaCompile> compileJSPTaskProvider =
+		TaskProvider<JavaCompile> compileTestJavaTaskProvider =
 			GradleUtil.getTaskProvider(
-				project, JspCPlugin.COMPILE_JSP_TASK_NAME, JavaCompile.class);
+				project, JavaPlugin.COMPILE_TEST_JAVA_TASK_NAME,
+				JavaCompile.class);
 		TaskProvider<Copy> deployTaskProvider = GradleUtil.getTaskProvider(
 			project, LiferayBasePlugin.DEPLOY_TASK_NAME, Copy.class);
 		TaskProvider<Jar> jarTaskProvider = GradleUtil.getTaskProvider(
 			project, JavaPlugin.JAR_TASK_NAME, Jar.class);
 		TaskProvider<Javadoc> javadocTaskProvider = GradleUtil.getTaskProvider(
 			project, JavaPlugin.JAVADOC_TASK_NAME, Javadoc.class);
-		TaskProvider<Copy> processResourcesTaskProvider =
-			GradleUtil.getTaskProvider(
-				project, JavaPlugin.PROCESS_RESOURCES_TASK_NAME, Copy.class);
 		TaskProvider<Test> testTaskProvider = GradleUtil.getTaskProvider(
 			project, JavaPlugin.TEST_TASK_NAME, Test.class);
 
@@ -265,10 +258,6 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 			deployTaskProvider, deployDependenciesTaskProvider);
 		_configureTaskDeployDependenciesProvider(
 			liferayExtension, deployDependenciesTaskProvider);
-		_configureTaskDeployFastProvider(
-			project, bundleExtension, liferayExtension, javaMainSourceSet,
-			classesTaskProvider, compileJSPTaskProvider, deployFastTaskProvider,
-			processResourcesTaskProvider);
 		_configureTaskJarProvider(
 			project, bundleExtension, jarTaskProvider,
 			zipZippableResourcesTaskProvider);
@@ -353,6 +342,8 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 					_configureExtensionBundleAfterEvaluate(
 						bundleExtension, liferayOSGiExtension,
 						compileIncludeConfiguration);
+					_configureTaskCompileTestJavaProviderAfterEvaluate(
+						project, compileTestJavaTaskProvider);
 					_configureTaskDeployDependenciesProviderAfterEvaluate(
 						deployDependenciesTaskProvider);
 				}
@@ -373,7 +364,6 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 		GradleUtil.applyPlugin(project, JavadocFormatterPlugin.class);
 		GradleUtil.applyPlugin(project, JspCPlugin.class);
 		GradleUtil.applyPlugin(project, LangBuilderPlugin.class);
-		GradleUtil.applyPlugin(project, PythonPlugin.class);
 		GradleUtil.applyPlugin(project, SourceFormatterPlugin.class);
 		GradleUtil.applyPlugin(project, TLDDocBuilderPlugin.class);
 		GradleUtil.applyPlugin(project, TLDFormatterPlugin.class);
@@ -445,7 +435,10 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 		SourceDirectorySet javaSourceDirectorySet = javaMainSourceSet.getJava();
 
-		javaSourceDirectorySet.setOutputDir(javaClassesDir);
+		DirectoryProperty directoryProperty =
+			javaSourceDirectorySet.getDestinationDirectory();
+
+		directoryProperty.set(javaClassesDir);
 
 		SourceSetOutput sourceSetOutput = javaMainSourceSet.getOutput();
 
@@ -679,9 +672,11 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 							@Override
 							public void execute(Task task) {
+								Property<String> property =
+									jar.getArchiveFileName();
+
 								String deployedPluginDirName =
-									FileUtil.stripExtension(
-										jar.getArchiveName());
+									FileUtil.stripExtension(property.get());
 
 								File deployedPluginDir = new File(
 									directDeployTask.getAppServerDeployDir(),
@@ -798,15 +793,14 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 							public void execute(Task task) {
 								Logger logger = project.getLogger();
 
-								Properties gradleProperties =
-									new PropertiesWrapper();
+								Properties beanProperties =
+									new BeanProperties();
 
-								gradleProperties.put("project", project);
-								gradleProperties.put("task", task);
+								beanProperties.put("project", project);
+								beanProperties.put("task", task);
 
 								try (Builder builder = new Builder(
-										new Processor(
-											gradleProperties, false))) {
+										new Processor(beanProperties, false))) {
 
 									Map<String, String> properties =
 										_getBuilderProperties(
@@ -827,7 +821,8 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 										javaMainSourceSet.getOutput();
 
 									FileCollection buildDirs = project.files(
-										sourceDirectorySet.getOutputDir(),
+										sourceDirectorySet.
+											getClassesDirectory(),
 										sourceSetOutput.getResourcesDir());
 
 									Set<File> buildDirsFiles =
@@ -840,11 +835,7 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 										"project.buildpath",
 										buildDirs.getAsPath());
 
-									if (logger.isDebugEnabled() ||
-										Boolean.getBoolean(
-											"build.bnd.print.builder." +
-												"classpath")) {
-
+									if (logger.isDebugEnabled()) {
 										logger.lifecycle(
 											"BND Builder Classpath {}: {}",
 											project.getName(),
@@ -957,13 +948,16 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 					String taskName = buildWSDDTask.getName();
 
+					Property<String> property =
+						buildWSDDJar.getArchiveAppendix();
+
 					if (taskName.equals(
 							WSDDBuilderPlugin.BUILD_WSDD_TASK_NAME)) {
 
-						buildWSDDJar.setAppendix("wsdd");
+						property.set("wsdd");
 					}
 					else {
-						buildWSDDJar.setAppendix("wsdd-" + taskName);
+						property.set("wsdd-" + taskName);
 					}
 
 					buildWSDDTask.finalizedBy(buildWSDDJar);
@@ -1040,8 +1034,7 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 							for (Task task : project.getTasks()) {
 								String taskName = task.getName();
 
-								if (taskName.equals(DEPLOY_FAST_TASK_NAME) ||
-									taskName.equals(
+								if (taskName.equals(
 										LiferayBasePlugin.DEPLOY_TASK_NAME) ||
 									taskName.equals("buildSoy") ||
 									taskName.equals("eclipseClasspath") ||
@@ -1094,6 +1087,38 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 					};
 
 					cleanDelete.dependsOn(c);
+				}
+
+			});
+	}
+
+	private void _configureTaskCompileTestJavaProviderAfterEvaluate(
+		Project project,
+		TaskProvider<JavaCompile> compileTestJavaTaskProvider) {
+
+		compileTestJavaTaskProvider.configure(
+			new Action<JavaCompile>() {
+
+				@Override
+				public void execute(JavaCompile javaCompile) {
+					Configuration testImplementationConfiguration =
+						GradleUtil.getConfiguration(
+							project,
+							JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME);
+
+					DependencySet dependencySet =
+						testImplementationConfiguration.getDependencies();
+
+					for (ProjectDependency projectDependency :
+							dependencySet.withType(ProjectDependency.class)) {
+
+						Project dependencyProject =
+							projectDependency.getDependencyProject();
+
+						javaCompile.mustRunAfter(
+							dependencyProject.getPath() + ":" +
+								JavaPlugin.PROCESS_RESOURCES_TASK_NAME);
+					}
 				}
 
 			});
@@ -1161,185 +1186,6 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 						new RenameDependencyAction(
 							Boolean.getBoolean(
 								"deploy.dependencies.keep.versions")));
-				}
-
-			});
-	}
-
-	private void _configureTaskDeployFastProvider(
-		final Project project, final BundleExtension bundleExtension,
-		final LiferayExtension liferayExtension,
-		final SourceSet javaMainSourceSet,
-		final TaskProvider<Task> classesTaskProvider,
-		final TaskProvider<JavaCompile> compileJSPTaskProvider,
-		TaskProvider<Copy> deployFastTaskProvider,
-		TaskProvider<Copy> processResourcesTaskProvider) {
-
-		deployFastTaskProvider.configure(
-			new Action<Copy>() {
-
-				@Override
-				public void execute(Copy deployFastCopy) {
-					deployFastCopy.setDescription(
-						"Builds and deploys resources to the Liferay work " +
-							"directory.");
-					deployFastCopy.setGroup(LifecycleBasePlugin.BUILD_GROUP);
-
-					deployFastCopy.setDestinationDir(
-						liferayExtension.getLiferayHome());
-					deployFastCopy.setDuplicatesStrategy(
-						DuplicatesStrategy.INCLUDE);
-					deployFastCopy.setIncludeEmptyDirs(false);
-
-					String bundleSymbolicName = bundleExtension.getInstruction(
-						Constants.BUNDLE_SYMBOLICNAME);
-					String bundleVersion = bundleExtension.getInstruction(
-						Constants.BUNDLE_VERSION);
-
-					StringBuilder sb = new StringBuilder();
-
-					sb.append("work/");
-					sb.append(bundleSymbolicName);
-					sb.append("-");
-					sb.append(bundleVersion);
-
-					final String pathName = sb.toString();
-
-					deployFastCopy.from(
-						compileJSPTaskProvider,
-						new Closure<Void>(project) {
-
-							@SuppressWarnings("unused")
-							public void doCall(CopySpec copySpec) {
-								copySpec.into(pathName);
-							}
-
-						});
-
-					deployFastCopy.from(
-						processResourcesTaskProvider,
-						new Closure<Void>(project) {
-
-							@SuppressWarnings("unused")
-							public void doCall(CopySpec copySpec) {
-								Action<FileCopyDetails> action =
-									new Action<FileCopyDetails>() {
-
-										@Override
-										public void execute(
-											FileCopyDetails fileCopyDetails) {
-
-											RelativePath relativePath =
-												fileCopyDetails.
-													getRelativePath();
-
-											String[] segments =
-												relativePath.getSegments();
-
-											if ((segments.length > 4) &&
-												segments[2].equals(
-													"META-INF") &&
-												segments[3].equals(
-													"resources")) {
-
-												List<String> list =
-													new ArrayList<>();
-
-												list.add(segments[0]);
-												list.add(segments[1]);
-
-												for (int i = 4;
-													 i < segments.length; i++) {
-
-													String segment =
-														segments[i];
-
-													if (!segment.equals(
-															".sass-cache")) {
-
-														list.add(segment);
-													}
-												}
-
-												segments = list.toArray(
-													new String[0]);
-											}
-
-											fileCopyDetails.setRelativePath(
-												new RelativePath(
-													true, segments));
-										}
-
-									};
-
-								copySpec.eachFile(action);
-
-								copySpec.include("**/*.css");
-								copySpec.include("**/*.css.map");
-								copySpec.into(pathName);
-							}
-
-						});
-
-					deployFastCopy.dependsOn(classesTaskProvider);
-
-					deployFastCopy.from(
-						javaMainSourceSet.getOutput(),
-						new Closure<Void>(project) {
-
-							@SuppressWarnings("unused")
-							public void doCall(CopySpec copySpec) {
-								Action<FileCopyDetails> action =
-									new Action<FileCopyDetails>() {
-
-										@Override
-										public void execute(
-											FileCopyDetails fileCopyDetails) {
-
-											RelativePath relativePath =
-												fileCopyDetails.
-													getRelativePath();
-
-											String[] segments =
-												relativePath.getSegments();
-
-											if ((segments.length > 4) &&
-												segments[2].equals(
-													"META-INF") &&
-												segments[3].equals(
-													"resources")) {
-
-												List<String> list =
-													new ArrayList<>();
-
-												list.add(segments[0]);
-												list.add(segments[1]);
-
-												for (int i = 4;
-													 i < segments.length; i++) {
-
-													list.add(segments[i]);
-												}
-
-												segments = list.toArray(
-													new String[0]);
-											}
-
-											fileCopyDetails.setRelativePath(
-												new RelativePath(
-													true, segments));
-										}
-
-									};
-
-								copySpec.eachFile(action);
-
-								copySpec.include("**/*.js");
-								copySpec.include("**/*.js.map");
-								copySpec.into(pathName);
-							}
-
-						});
 				}
 
 			});
@@ -1427,10 +1273,10 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 					Map<String, Object> plugins = convention.getPlugins();
 
-					final BundleTaskConvention bundleTaskConvention =
-						new BundleTaskConvention(jar);
+					final BundleTaskExtension bundleTaskExtension =
+						new BundleTaskExtension(jar);
 
-					plugins.put("bundle", bundleTaskConvention);
+					plugins.put("bundle", bundleTaskExtension);
 
 					jar.setDescription(
 						"Assembles a bundle containing the main classes.");
@@ -1467,35 +1313,12 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 									}
 								}
 
-								bundleTaskConvention.setBnd(bundleExtension);
+								bundleTaskExtension.setBnd(bundleExtension);
 							}
 
 						});
 
-					jar.doLast(
-						new Action<Task>() {
-
-							@Override
-							public void execute(Task task) {
-								bundleTaskConvention.buildBundle();
-
-								Logger logger = task.getLogger();
-
-								if (logger.isDebugEnabled() ||
-									Boolean.getBoolean(
-										"build.bnd.print.builder.classpath")) {
-
-									FileCollection builderClasspath =
-										bundleTaskConvention.getClasspath();
-
-									logger.lifecycle(
-										"BND Builder Classpath {}: {}",
-										project.getName(),
-										builderClasspath.getAsPath());
-								}
-							}
-
-						});
+					jar.doLast(bundleTaskExtension.buildAction());
 
 					File bndFile = project.file("bnd.bnd");
 
@@ -1579,8 +1402,12 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 
 				@Override
 				public void execute(Zip zippableResourcesZip) {
-					File zippableResourcesFile =
-						zippableResourcesZip.getArchivePath();
+					Provider<RegularFile> provider =
+						zippableResourcesZip.getArchiveFile();
+
+					RegularFile regularFile = provider.get();
+
+					File zippableResourcesFile = regularFile.getAsFile();
 
 					StringBuilder sb = new StringBuilder();
 
@@ -1593,10 +1420,16 @@ public class LiferayOSGiPlugin implements Plugin<Project> {
 					zippableResourcesZip.setDescription(sb.toString());
 
 					zippableResourcesZip.from(zippableResourcesDir);
-					zippableResourcesZip.setArchiveName(
-						zippableResourcesDir.getName() + ".zip");
-					zippableResourcesZip.setDestinationDir(
-						project.file("classes"));
+
+					Property<String> property =
+						zippableResourcesZip.getArchiveFileName();
+
+					property.set(zippableResourcesDir.getName() + ".zip");
+
+					DirectoryProperty directoryProperty =
+						zippableResourcesZip.getDestinationDirectory();
+
+					directoryProperty.set(project.file("classes"));
 				}
 
 			});

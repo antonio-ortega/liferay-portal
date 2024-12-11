@@ -36,13 +36,19 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.Theme;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.url.builder.ResourceURLBuilder;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalServiceUtil;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
+import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -212,7 +218,8 @@ public class EditStyleBookEntryDisplayContext {
 							_themeDisplay.getCompanyGroupId()
 						},
 						0, Math.min(fragmentCollectionsCount, 4),
-						new FragmentCollectionCreateDateComparator(false));
+						FragmentCollectionCreateDateComparator.getInstance(
+							false));
 
 				JSONObject[] fragmentCollectionContributorJSONObjects =
 					new JSONObject[0];
@@ -294,12 +301,11 @@ public class EditStyleBookEntryDisplayContext {
 
 		Group group = _themeDisplay.getScopeGroup();
 
-		LayoutSet layoutSet = LayoutSetLocalServiceUtil.fetchLayoutSet(
-			_themeDisplay.getSiteGroupId(), group.isLayoutSetPrototype());
-
 		FrontendTokenDefinition frontendTokenDefinition =
 			_frontendTokenDefinitionRegistry.getFrontendTokenDefinition(
-				layoutSet.getThemeId());
+				LayoutSetLocalServiceUtil.fetchLayoutSet(
+					_themeDisplay.getSiteGroupId(),
+					group.isLayoutSetPrototype()));
 
 		if (frontendTokenDefinition != null) {
 			return frontendTokenDefinition.getJSONObject(
@@ -349,8 +355,8 @@ public class EditStyleBookEntryDisplayContext {
 							_getPreviewItemsGroupId(), layoutTypes,
 							WorkflowConstants.STATUS_APPROVED, 0,
 							Math.min(total, 4),
-							new LayoutPageTemplateEntryModifiedDateComparator(
-								false)),
+							LayoutPageTemplateEntryModifiedDateComparator.
+								getInstance(false)),
 					layoutPageTemplateEntry -> JSONUtil.put(
 						"name", layoutPageTemplateEntry.getName()
 					).put(
@@ -395,12 +401,26 @@ public class EditStyleBookEntryDisplayContext {
 				List<Layout> layouts =
 					LayoutLocalServiceUtil.getPublishedLayouts(
 						_getPreviewItemsGroupId(), 0, Math.min(total, 4),
-						new LayoutModifiedDateComparator(false));
+						LayoutModifiedDateComparator.getInstance(false));
 
 				return JSONUtil.putAll(
 					(JSONObject[])TransformUtil.transformToArray(
 						layouts,
 						layout -> JSONUtil.put(
+							"hasGuestViewPermission",
+							() -> {
+								Role role = RoleLocalServiceUtil.getRole(
+									layout.getCompanyId(), RoleConstants.GUEST);
+
+								return ResourcePermissionLocalServiceUtil.
+									hasResourcePermission(
+										layout.getCompanyId(),
+										Layout.class.getName(),
+										ResourceConstants.SCOPE_INDIVIDUAL,
+										String.valueOf(layout.getPlid()),
+										role.getRoleId(), ActionKeys.VIEW);
+							}
+						).put(
 							"name", layout.getName(_themeDisplay.getLocale())
 						).put(
 							"private", layout.isPrivateLayout()

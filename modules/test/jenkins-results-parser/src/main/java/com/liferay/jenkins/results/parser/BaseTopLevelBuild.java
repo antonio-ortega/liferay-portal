@@ -21,6 +21,7 @@ import com.liferay.jenkins.results.parser.failure.message.generator.JenkinsSourc
 import com.liferay.jenkins.results.parser.failure.message.generator.PoshiTestFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PoshiValidationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.RebaseFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.RelevantRuleValidationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.testray.TestrayBuild;
 
 import java.io.File;
@@ -61,27 +62,6 @@ import org.json.JSONObject;
  */
 public abstract class BaseTopLevelBuild
 	extends BaseParentBuild implements TopLevelBuild {
-
-	public static String getReleaseRepositoryName() {
-		String portalBranchName = System.getenv("TEST_PORTAL_BRANCH_NAME");
-
-		String portalReleaseVersion = System.getenv(
-			"TEST_PORTAL_RELEASE_VERSION");
-
-		if (PortalRelease.isQuarterlyRelease(portalReleaseVersion) ||
-			!portalBranchName.equals("master")) {
-
-			return "liferay-portal-ee";
-		}
-
-		return "liferay-portal";
-	}
-
-	public static boolean isReleaseBuild() {
-		String jobName = System.getenv("JOB_NAME");
-
-		return jobName.equals("test-portal-release");
-	}
 
 	@Override
 	public void addTimelineData(TimelineData timelineData) {
@@ -675,7 +655,7 @@ public abstract class BaseTopLevelBuild
 
 		try {
 			JSONObject buildJSONObject = JenkinsResultsParserUtil.toJSONObject(
-				buildURL + "api/json?tree=result");
+				buildURL + "/api/json?tree=result");
 
 			if (!JenkinsResultsParserUtil.isNullOrEmpty(
 					buildJSONObject.optString("result", null))) {
@@ -726,8 +706,7 @@ public abstract class BaseTopLevelBuild
 		}
 	}
 
-	public static class WorkspaceBranchInformation
-		implements BranchInformation {
+	public class WorkspaceBranchInformation implements BranchInformation {
 
 		@Override
 		public String getCachedRemoteGitRefName() {
@@ -741,7 +720,7 @@ public abstract class BaseTopLevelBuild
 
 		@Override
 		public Integer getPullRequestNumber() {
-			Matcher matcher = _pattern.matcher(
+			Matcher matcher = _gitHubURLPattern.matcher(
 				_workspaceGitRepository.getGitHubURL());
 
 			if (!matcher.find()) {
@@ -753,7 +732,7 @@ public abstract class BaseTopLevelBuild
 
 		@Override
 		public String getReceiverUsername() {
-			Matcher matcher = _pattern.matcher(
+			Matcher matcher = _gitHubURLPattern.matcher(
 				_workspaceGitRepository.getGitHubURL());
 
 			if (!matcher.find()) {
@@ -776,6 +755,21 @@ public abstract class BaseTopLevelBuild
 		@Override
 		public String getSenderBranchSHA() {
 			return _workspaceGitRepository.getSenderBranchSHA();
+		}
+
+		@Override
+		public String getSenderBranchSHAShort() {
+			String senderBranchSHA = getSenderBranchSHA();
+
+			if (senderBranchSHA == null) {
+				return null;
+			}
+
+			if (senderBranchSHA.length() >= 7) {
+				senderBranchSHA = senderBranchSHA.substring(0, 7);
+			}
+
+			return senderBranchSHA;
 		}
 
 		@Override
@@ -817,10 +811,6 @@ public abstract class BaseTopLevelBuild
 
 			_workspaceGitRepository = workspaceGitRepository;
 		}
-
-		private static final Pattern _pattern = Pattern.compile(
-			"https://github.com/(?<username>[^/]+)/[^/]/pull/" +
-				"(?<pullNumber>\\d+)");
 
 		private final WorkspaceGitRepository _workspaceGitRepository;
 
@@ -881,6 +871,38 @@ public abstract class BaseTopLevelBuild
 		if (getParentBuild() != null) {
 			return;
 		}
+
+		BuildDatabase buildDatabase = getBuildDatabase();
+
+		Properties properties = buildDatabase.getProperties(
+			BUILD_URLS_PROPERTIES_KEY);
+
+		Map<String, String> urlAxisNames = new HashMap<>();
+
+		List<String> badBuildURLs = getBadBuildURLs();
+
+		for (String propertyName : properties.stringPropertyNames()) {
+			if (Objects.equals(propertyName, getJobVariant())) {
+				continue;
+			}
+
+			String buildURL = properties.getProperty(propertyName);
+
+			if (badBuildURLs.contains(buildURL)) {
+				continue;
+			}
+
+			urlAxisNames.put(buildURL, propertyName);
+		}
+
+		if (!urlAxisNames.isEmpty()) {
+			addDownstreamBuilds(urlAxisNames);
+
+			return;
+		}
+
+		System.out.println(
+			"Unable to find downstream builds in build-database.json");
 
 		_findDownstreamBuildsInConsoleText();
 	}
@@ -977,43 +999,75 @@ public abstract class BaseTopLevelBuild
 	}
 
 	protected Element[] getBuildFailureElements() {
-		Map<Build, Element> downstreamBuildFailureMessages =
-			getDownstreamBuildMessages(getFailedDownstreamBuilds());
+		List<Build> failedDownstreamBuilds = getFailedDownstreamBuilds();
+
+		if (failedDownstreamBuilds != null) {
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("\nUnique Failures:");
+
+			for (Build failedDownstreamBuild : failedDownstreamBuilds) {
+				if (failedDownstreamBuild.isUniqueFailure()) {
+					sb.append("\n");
+					sb.append(failedDownstreamBuild.getDisplayName());
+
+					for (TestResult testResult :
+							failedDownstreamBuild.
+								getUniqueFailureTestResults()) {
+
+						sb.append("\n\t");
+						sb.append(testResult.getDisplayName());
+					}
+				}
+			}
+
+			sb.append("\n\nUpstream Failures:");
+
+			for (Build failedDownstreamBuild : failedDownstreamBuilds) {
+				if (!failedDownstreamBuild.isUniqueFailure()) {
+					sb.append("\n");
+					sb.append(failedDownstreamBuild.getDisplayName());
+
+					for (TestResult testResult :
+							failedDownstreamBuild.
+								getUpstreamJobFailureTestResults()) {
+
+						sb.append("\n\t");
+						sb.append(testResult.getDisplayName());
+					}
+				}
+			}
+
+			System.out.println(sb.toString());
+		}
+
+		List<Element> downstreamBuildMessageElements =
+			getDownstreamBuildMessageElements(failedDownstreamBuilds);
+
+		System.out.println(
+			"Collected " + downstreamBuildMessageElements.size() +
+				" downstream failure messages");
 
 		List<Element> allCurrentBuildFailureElements = new ArrayList<>();
 		List<Element> upstreamBuildFailureElements = new ArrayList<>();
 
 		int maxFailureCount = 5;
 
-		for (Map.Entry<Build, Element> entry :
-				downstreamBuildFailureMessages.entrySet()) {
+		for (Build failedDownstreamBuild : failedDownstreamBuilds) {
+			Element gitHubMessageElement =
+				failedDownstreamBuild.getGitHubMessageElement();
 
-			Build failedDownstreamBuild = entry.getKey();
-
-			Element failureElement = entry.getValue();
-
-			if (failureElement != null) {
-				if (!failedDownstreamBuild.isUniqueFailure()) {
-					upstreamBuildFailureElements.add(failureElement);
-
-					continue;
-				}
-
-				if (isHighPriorityBuildFailureElement(failureElement)) {
-					allCurrentBuildFailureElements.add(0, failureElement);
-
-					continue;
-				}
-
-				allCurrentBuildFailureElements.add(failureElement);
+			if (gitHubMessageElement != null) {
+				allCurrentBuildFailureElements.add(gitHubMessageElement);
 			}
 
-			Element upstreamJobFailureElement =
+			Element gitHubMessageUpstreamJobFailureElement =
 				failedDownstreamBuild.
 					getGitHubMessageUpstreamJobFailureElement();
 
-			if (upstreamJobFailureElement != null) {
-				upstreamBuildFailureElements.add(upstreamJobFailureElement);
+			if (gitHubMessageUpstreamJobFailureElement != null) {
+				upstreamBuildFailureElements.add(
+					gitHubMessageUpstreamJobFailureElement);
 			}
 		}
 
@@ -1240,7 +1294,8 @@ public abstract class BaseTopLevelBuild
 			topLevelBuild.getJenkinsMaster();
 
 		return JenkinsResultsParserUtil.combine(
-			URL_BASE_TEMP_MAP, topLevelBuildJenkinsMaster.getName(), "/",
+			JenkinsResultsParserUtil.getJenkinsTempMapURL(), "/",
+			topLevelBuildJenkinsMaster.getName(), "/",
 			topLevelBuild.getJobName(), "/",
 			String.valueOf(topLevelBuild.getBuildNumber()), "/",
 			topLevelBuild.getJobName(), "/git.", gitRepositoryType,
@@ -1753,6 +1808,14 @@ public abstract class BaseTopLevelBuild
 			preElement);
 	}
 
+	protected String getReleaseRepositoryName() {
+		if (!Objects.equals(getBranchName(), "master")) {
+			return "liferay-portal-ee";
+		}
+
+		return "liferay-portal";
+	}
+
 	protected Element getResourceFileContentAsElement(
 		String tagName, Element parentElement, String resourceName) {
 
@@ -1808,7 +1871,8 @@ public abstract class BaseTopLevelBuild
 		JenkinsMaster jenkinsMaster = getJenkinsMaster();
 
 		return JenkinsResultsParserUtil.combine(
-			URL_BASE_TEMP_MAP, jenkinsMaster.getName(), "/", getJobName(), "/",
+			JenkinsResultsParserUtil.getJenkinsTempMapURL(), "/",
+			jenkinsMaster.getName(), "/", getJobName(), "/",
 			String.valueOf(getBuildNumber()), "/", getJobName(), "/",
 			"start.properties");
 	}
@@ -1822,7 +1886,8 @@ public abstract class BaseTopLevelBuild
 		JenkinsMaster jenkinsMaster = getJenkinsMaster();
 
 		return JenkinsResultsParserUtil.combine(
-			URL_BASE_TEMP_MAP, jenkinsMaster.getName(), "/", getJobName(), "/",
+			JenkinsResultsParserUtil.getJenkinsTempMapURL(), "/",
+			jenkinsMaster.getName(), "/", getJobName(), "/",
 			String.valueOf(getBuildNumber()), "/", getJobName(), "/",
 			"stop.properties");
 	}
@@ -1980,6 +2045,10 @@ public abstract class BaseTopLevelBuild
 	protected boolean isEligibleForReevaluation(
 		String result, String upstreamBranchSHA) {
 
+		if (JenkinsResultsParserUtil.isNullOrEmpty(upstreamBranchSHA)) {
+			return false;
+		}
+
 		if ((result != null) && !result.matches("(APPROVED|SUCCESS)") &&
 			hasDownstreamBuilds() &&
 			!upstreamBranchSHA.equals(
@@ -1988,6 +2057,10 @@ public abstract class BaseTopLevelBuild
 			return true;
 		}
 
+		return false;
+	}
+
+	protected boolean isReleaseBuild() {
 		return false;
 	}
 
@@ -2068,15 +2141,11 @@ public abstract class BaseTopLevelBuild
 
 		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
-		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(this);
+		BuildDatabase buildDatabase = getBuildDatabase();
 
 		try {
-			JSONObject buildDatabaseJSONObject = new JSONObject(
-				JenkinsResultsParserUtil.read(
-					buildDatabase.getBuildDatabaseFile()));
-
 			writeArchiveFile(
-				buildDatabaseJSONObject.toString(4),
+				String.valueOf(buildDatabase.getJSONObject()),
 				getArchivePath() + "/" + urlSuffix);
 		}
 		catch (IOException ioException) {
@@ -2340,6 +2409,7 @@ public abstract class BaseTopLevelBuild
 			new InvalidGitCommitSHAFailureMessageGenerator(),
 			new InvalidSenderSHAFailureMessageGenerator(),
 			new RebaseFailureMessageGenerator(),
+			new RelevantRuleValidationFailureMessageGenerator(),
 			//
 			new PoshiValidationFailureMessageGenerator(),
 			new PoshiTestFailureMessageGenerator(),
@@ -2370,6 +2440,9 @@ public abstract class BaseTopLevelBuild
 			"(?<url>.+/job/(?<jobName>[^/]+)/.+)\\.");
 	private static final ExecutorService _executorService =
 		JenkinsResultsParserUtil.getNewThreadPoolExecutor(10, true);
+	private static final Pattern _gitHubURLPattern = Pattern.compile(
+		"https://github.com/(?<username>[^/]+)/[^/]/pull/" +
+			"(?<pullNumber>\\d+)");
 
 	private boolean _compareToUpstream;
 	private Build _controllerBuild;

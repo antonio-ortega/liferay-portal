@@ -65,15 +65,11 @@ describe('MiniCart', () => {
 			detach: jest.fn(),
 			fire: jest.fn(),
 			on: jest.fn((eventName, callback) => {
-				switch (eventName) {
-					case CURRENT_ORDER_UPDATED:
-						onCurrentOrderUpdated = callback;
-						break;
-					case CURRENT_ACCOUNT_UPDATED:
-						onCurrentAccountUpdated = callback;
-						break;
-					default:
-						break;
+				if (eventName === CURRENT_ACCOUNT_UPDATED) {
+					onCurrentAccountUpdated = callback;
+				}
+				else if (eventName === CURRENT_ORDER_UPDATED) {
+					onCurrentOrderUpdated = callback;
 				}
 			}),
 		};
@@ -98,9 +94,8 @@ describe('MiniCart', () => {
 					container.querySelector(COMPONENT_SELECTOR)
 				);
 
-				const MiniCartElement = container.querySelector(
-					COMPONENT_SELECTOR
-				);
+				const MiniCartElement =
+					container.querySelector(COMPONENT_SELECTOR);
 				const MiniCartOverlayElement = MiniCartElement.querySelector(
 					`${COMPONENT_SELECTOR}-overlay`
 				);
@@ -165,9 +160,8 @@ describe('MiniCart', () => {
 				});
 
 				await wait(() => {
-					const MiniCartElement = container.querySelector(
-						COMPONENT_SELECTOR
-					);
+					const MiniCartElement =
+						container.querySelector(COMPONENT_SELECTOR);
 
 					expect(MiniCartElement.classList.contains('is-open')).toBe(
 						true
@@ -191,9 +185,8 @@ describe('MiniCart', () => {
 				});
 
 				await wait(() => {
-					const MiniCartElement = container.querySelector(
-						COMPONENT_SELECTOR
-					);
+					const MiniCartElement =
+						container.querySelector(COMPONENT_SELECTOR);
 
 					expect(MiniCartElement.classList.contains('is-open')).toBe(
 						false
@@ -215,9 +208,8 @@ describe('MiniCart', () => {
 					container.querySelector(COMPONENT_SELECTOR)
 				);
 
-				const MiniCartElement = container.querySelector(
-					COMPONENT_SELECTOR
-				);
+				const MiniCartElement =
+					container.querySelector(COMPONENT_SELECTOR);
 				const MiniCartOverlayElement = MiniCartElement.querySelector(
 					`${COMPONENT_SELECTOR}-overlay`
 				);

@@ -365,7 +365,7 @@ Map<String, Object> fragmentsEditorData = HashMapBuilder.<String, Object>put(
 								borderless="<%= true %>"
 								displayType="secondary"
 								icon="print"
-								propsTransformer="js/printPageButtonPropsTransformer"
+								propsTransformer="{printPageButtonPropsTransformer} from asset-publisher-web"
 								small="<%= true %>"
 								type="button"
 							/>
@@ -417,7 +417,7 @@ Map<String, Object> fragmentsEditorData = HashMapBuilder.<String, Object>put(
 
 				<c:if test="<%= availableLanguageIds.length > 1 %>">
 					<div class="autofit-col locale-actions mr-3">
-						<liferay-ui:language
+						<liferay-site-navigation:language
 							formAction="<%= currentURL %>"
 							languageId="<%= languageId %>"
 							languageIds="<%= availableLanguageIds %>"

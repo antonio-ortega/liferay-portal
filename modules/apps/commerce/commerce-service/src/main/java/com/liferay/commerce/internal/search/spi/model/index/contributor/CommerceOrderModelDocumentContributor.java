@@ -9,8 +9,10 @@ import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
+import com.liferay.commerce.model.CommerceOrderType;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
+import com.liferay.commerce.service.CommerceOrderTypeLocalService;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -50,7 +52,14 @@ public class CommerceOrderModelDocumentContributor
 
 			document.addNumberSortable(
 				Field.ENTRY_CLASS_PK, commerceOrder.getCommerceOrderId());
+			document.addKeyword(Field.NAME, commerceOrder.getName());
+			document.addKeywordSortable(Field.NAME, commerceOrder.getName());
 			document.addKeyword(Field.STATUS, commerceOrder.getStatus());
+
+			User user = _userLocalService.getUser(commerceOrder.getUserId());
+
+			document.addKeyword(Field.USER_NAME, user.getFullName());
+			document.addKeywordSortable(Field.USER_NAME, user.getFullName());
 
 			AccountEntry accountEntry =
 				_accountEntryLocalService.fetchAccountEntry(
@@ -58,31 +67,53 @@ public class CommerceOrderModelDocumentContributor
 
 			if (accountEntry != null) {
 				document.addKeyword("accountName", accountEntry.getName());
+				document.addKeywordSortable(
+					"accountName", accountEntry.getName());
 			}
 
 			document.addKeyword(
 				"advanceStatus", commerceOrder.getAdvanceStatus());
 			document.addKeyword(
 				"commerceAccountId", commerceOrder.getCommerceAccountId());
+			document.addNumberSortable(
+				"commerceAccountId", commerceOrder.getCommerceAccountId());
 			document.addKeyword(
 				"commerceChannelId", commerceChannel.getCommerceChannelId());
+
+			CommerceOrderType commerceOrderType =
+				_commerceOrderTypeLocalService.fetchCommerceOrderType(
+					commerceOrder.getCommerceOrderTypeId());
+
+			if (commerceOrderType != null) {
+				document.addLocalizedKeyword(
+					"commerceOrderTypeName", commerceOrderType.getNameMap(),
+					false, true);
+				document.addKeyword(
+					"commerceOrderTypeExternalReferenceCode",
+					commerceOrderType.getExternalReferenceCode());
+			}
+
 			document.addKeyword(
+				"commerceOrderTypeId", commerceOrder.getCommerceOrderTypeId());
+
+			document.addKeyword(
+				"externalReferenceCode",
+				commerceOrder.getExternalReferenceCode());
+			document.addKeywordSortable(
 				"externalReferenceCode",
 				commerceOrder.getExternalReferenceCode());
 			document.addNumber(
 				"itemsQuantity", _getItemsQuantity(commerceOrder));
 			document.addKeyword(
-				"name", _getCommerceOrderItemNames(commerceOrder));
-
-			User user = _userLocalService.getUser(commerceOrder.getUserId());
-
-			document.addKeyword(
 				"orderCreatorEmailAddress", user.getEmailAddress());
-
 			document.addDate("orderDate", commerceOrder.getOrderDate());
 			document.addDateSortable("orderDate", commerceOrder.getOrderDate());
+			document.addKeyword(
+				"orderItemNames", _getCommerceOrderItemNames(commerceOrder));
 			document.addKeyword("orderStatus", commerceOrder.getOrderStatus());
 			document.addKeyword(
+				"purchaseOrderNumber", commerceOrder.getPurchaseOrderNumber());
+			document.addKeywordSortable(
 				"purchaseOrderNumber", commerceOrder.getPurchaseOrderNumber());
 			document.addKeyword(
 				"sku", _getCommerceOrderItemSKUs(commerceOrder));
@@ -155,6 +186,9 @@ public class CommerceOrderModelDocumentContributor
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
+
+	@Reference
+	private CommerceOrderTypeLocalService _commerceOrderTypeLocalService;
 
 	@Reference
 	private Language _language;

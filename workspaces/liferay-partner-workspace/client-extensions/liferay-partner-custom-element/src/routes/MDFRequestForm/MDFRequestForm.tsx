@@ -13,13 +13,11 @@ import PRMForm from '../../common/components/PRMForm/PRMForm';
 import PRMFormik from '../../common/components/PRMFormik';
 import {ObjectActionName} from '../../common/enums/objectActionName';
 import {PermissionActionType} from '../../common/enums/permissionActionType';
-import {PRMPageRoute} from '../../common/enums/prmPageRoute';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
 import usePermissionActions from '../../common/hooks/usePermissionActions';
 import MDFRequestDTO from '../../common/interfaces/dto/mdfRequestDTO';
 import MDFRequest from '../../common/interfaces/mdfRequest';
 import UserAccount from '../../common/interfaces/userAccount';
-import {Liferay} from '../../common/services/liferay';
 import {LiferayAPIs} from '../../common/services/liferay/common/enums/apis';
 import useGet from '../../common/services/liferay/object/useGet';
 import {Status} from '../../common/utils/constants/status';
@@ -39,14 +37,17 @@ const initialFormValues: MDFRequest = {
 	additionalOption: {},
 	claimPercent: 0,
 	company: {},
+	convertedTotalCostOfExpense: 0,
+	convertedTotalMDFRequestAmount: 0,
 	currency: {},
+	currencyExchangeRate: 0,
 	liferayBusinessSalesGoals: [],
 	maxDateActivity: '',
 	mdfRequestStatus: Status.DRAFT,
 	minDateActivity: '',
 	overallCampaignDescription: '',
 	overallCampaignName: '',
-	partnerCountry: {},
+	partnerCountries: [],
 	submitted: false,
 	targetAudienceRoles: [],
 	targetMarkets: [],
@@ -99,13 +100,10 @@ const MDFRequestForm = () => {
 
 	const hasPermissionShowForm = mdfRequestId
 		? (hasPermissionToAccess && currentMDFRequestHasValidStatus) ||
-		  hasPermissionToByPass
+			hasPermissionToByPass
 		: hasPermissionToAccess;
 
-	const onCancel = () =>
-		Liferay.Util.navigate(
-			`${siteURL}/${PRMPageRoute.MDF_REQUESTS_LISTING}`
-		);
+	const onCancel = () => history.back();
 
 	const onContinue = async (
 		formikHelpers: Omit<FormikHelpers<MDFRequest>, 'setFieldValue'>,
@@ -148,7 +146,7 @@ const MDFRequestForm = () => {
 									(action) =>
 										action !==
 										PermissionActionType.UPDATE_WO_CHANGE_STATUS
-							  )
+								)
 							: true
 					)
 				}
@@ -180,7 +178,7 @@ const MDFRequestForm = () => {
 									(action) =>
 										action !==
 										PermissionActionType.UPDATE_WO_CHANGE_STATUS
-							  )
+								)
 							: true
 					)
 				}
@@ -209,7 +207,7 @@ const MDFRequestForm = () => {
 									(action) =>
 										action !==
 										PermissionActionType.UPDATE_WO_CHANGE_STATUS
-							  )
+								)
 							: true
 					)
 				}
@@ -223,7 +221,7 @@ const MDFRequestForm = () => {
 
 	if (!hasPermissionShowForm) {
 		return (
-			<PRMForm name="" title="MDF Claim">
+			<PRMForm name="" title="MDF Request">
 				<div className="d-flex justify-content-center mt-4">
 					<ClayAlert
 						className="m-0 w-100"
@@ -267,7 +265,7 @@ const MDFRequestForm = () => {
 								(action) =>
 									action !==
 									PermissionActionType.UPDATE_WO_CHANGE_STATUS
-						  )
+							)
 						: true
 				)
 			}

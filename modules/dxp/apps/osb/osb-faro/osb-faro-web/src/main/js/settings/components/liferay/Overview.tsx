@@ -162,7 +162,7 @@ class LiferayOverview extends React.Component<ILiferayOverviewProps> {
 	handleValidate(value) {
 		const {dataSource, groupId} = this.props;
 
-		let error = '';
+		let error = null;
 
 		if (value !== dataSource.name) {
 			if (this._cachedNameValues.has(value)) {
@@ -197,7 +197,9 @@ class LiferayOverview extends React.Component<ILiferayOverviewProps> {
 							inputWidth={100}
 							label={Liferay.Language.get('name')}
 							name='dataSourceName'
-							onSubmit={this.handleUpdateName}
+							onSubmit={name =>
+								toPromise(this.handleUpdateName(name))
+							}
 							required
 							validate={sequence([
 								validateRequired,
@@ -270,7 +272,7 @@ class LiferayOverview extends React.Component<ILiferayOverviewProps> {
 						}: ConfigurationItem) => (
 							<Sheet.Section key={title} lastChildMargin>
 								<div className='mb-1 d-flex align-items-center'>
-									<h4 className='mb-0 mr-2'>{title}</h4>
+									<div className='h4 mb-0 mr-2'>{title}</div>
 
 									{getStatusLabel(
 										getConfigurationStatus(dataSource)

@@ -17,8 +17,6 @@ import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowThreadLocal;
-import com.liferay.portal.test.log.LogCapture;
-import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.wiki.constants.WikiPageConstants;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
@@ -154,6 +152,57 @@ public class WikiTestUtil {
 		finally {
 			WorkflowThreadLocal.setEnabled(workflowEnabled);
 		}
+	}
+
+	public static File addPageAttachment(
+			long userId, long nodeId, String title, Class<?> clazz)
+		throws Exception {
+
+		String fileName = RandomTestUtil.randomString() + ".docx";
+
+		return addPageAttachment(userId, nodeId, title, fileName, clazz);
+	}
+
+	public static File addPageAttachment(
+			long userId, long nodeId, String title, String fileName,
+			Class<?> clazz)
+		throws Exception {
+
+		byte[] fileBytes = FileUtil.getBytes(
+			clazz, "dependencies/OSX_Test.docx");
+
+		File file = null;
+
+		if (ArrayUtil.isNotEmpty(fileBytes)) {
+			file = FileUtil.createTempFile(fileBytes);
+		}
+
+		String mimeType = MimeTypesUtil.getExtensionContentType("docx");
+
+		WikiPageLocalServiceUtil.addPageAttachment(
+			userId, nodeId, title, fileName, file, mimeType);
+
+		return file;
+	}
+
+	public static File addPageAttachment(
+			long userId, long nodeId, String title, String attachmentFileName,
+			Class<?> clazz, String testFileName)
+		throws Exception {
+
+		byte[] bytes = FileUtil.getBytes(clazz, "dependencies/" + testFileName);
+
+		if (ArrayUtil.isEmpty(bytes)) {
+			throw new RuntimeException("File not found: " + testFileName);
+		}
+
+		File file = FileUtil.createTempFile(bytes);
+
+		WikiPageLocalServiceUtil.addPageAttachment(
+			userId, nodeId, title, attachmentFileName, file,
+			MimeTypesUtil.getContentType(file));
+
+		return file;
 	}
 
 	public static WikiPage[] addPageWithChangedParentPage(
@@ -386,42 +435,6 @@ public class WikiTestUtil {
 			grandchildPage.getPageId());
 
 		return new WikiPage[] {parentPage, childPage, grandchildPage};
-	}
-
-	public static File addWikiAttachment(
-			long userId, long nodeId, String title, Class<?> clazz)
-		throws Exception {
-
-		String fileName = RandomTestUtil.randomString() + ".docx";
-
-		return addWikiAttachment(userId, nodeId, title, fileName, clazz);
-	}
-
-	public static File addWikiAttachment(
-			long userId, long nodeId, String title, String fileName,
-			Class<?> clazz)
-		throws Exception {
-
-		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
-				"org.apache.xmlbeans.impl.common.SAXHelper",
-				LoggerTestUtil.WARN)) {
-
-			byte[] fileBytes = FileUtil.getBytes(
-				clazz, "dependencies/OSX_Test.docx");
-
-			File file = null;
-
-			if (ArrayUtil.isNotEmpty(fileBytes)) {
-				file = FileUtil.createTempFile(fileBytes);
-			}
-
-			String mimeType = MimeTypesUtil.getExtensionContentType("docx");
-
-			WikiPageLocalServiceUtil.addPageAttachment(
-				userId, nodeId, title, fileName, file, mimeType);
-
-			return file;
-		}
 	}
 
 	public static WikiPage copyPage(

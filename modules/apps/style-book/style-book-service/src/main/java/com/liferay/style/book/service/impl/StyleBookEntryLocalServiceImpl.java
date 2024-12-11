@@ -49,19 +49,10 @@ public class StyleBookEntryLocalServiceImpl
 
 	@Override
 	public StyleBookEntry addStyleBookEntry(
-			long userId, long groupId, String name, String styleBookEntryKey,
+			String externalReferenceCode, long userId, long groupId,
+			boolean defaultStyleBookEntry, String frontendTokensValues,
+			String name, String styleBookEntryKey, String themeId,
 			ServiceContext serviceContext)
-		throws PortalException {
-
-		return addStyleBookEntry(
-			userId, groupId, StringPool.BLANK, name, styleBookEntryKey,
-			serviceContext);
-	}
-
-	@Override
-	public StyleBookEntry addStyleBookEntry(
-			long userId, long groupId, String frontendTokensValues, String name,
-			String styleBookEntryKey, ServiceContext serviceContext)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
@@ -94,15 +85,17 @@ public class StyleBookEntryLocalServiceImpl
 			styleBookEntry.setUuid(uuid);
 		}
 
+		styleBookEntry.setExternalReferenceCode(externalReferenceCode);
 		styleBookEntry.setGroupId(groupId);
 		styleBookEntry.setCompanyId(companyId);
 		styleBookEntry.setUserId(user.getUserId());
 		styleBookEntry.setUserName(user.getFullName());
 		styleBookEntry.setCreateDate(serviceContext.getCreateDate(new Date()));
-		styleBookEntry.setDefaultStyleBookEntry(false);
+		styleBookEntry.setDefaultStyleBookEntry(defaultStyleBookEntry);
 		styleBookEntry.setFrontendTokensValues(frontendTokensValues);
 		styleBookEntry.setName(name);
 		styleBookEntry.setStyleBookEntryKey(styleBookEntryKey);
+		styleBookEntry.setThemeId(themeId);
 
 		return publishDraft(styleBookEntry);
 	}
@@ -119,8 +112,10 @@ public class StyleBookEntryLocalServiceImpl
 		String name = _getUniqueCopyName(sourceStyleBookEntry);
 
 		StyleBookEntry targetStyleBookEntry = addStyleBookEntry(
-			userId, groupId, sourceStyleBookEntry.getFrontendTokensValues(),
-			name, StringPool.BLANK, serviceContext);
+			null, userId, groupId, false,
+			sourceStyleBookEntry.getFrontendTokensValues(), name,
+			StringPool.BLANK, sourceStyleBookEntry.getThemeId(),
+			serviceContext);
 
 		long previewFileEntryId = _copyStyleBookEntryPreviewFileEntry(
 			userId, groupId, sourceStyleBookEntry, targetStyleBookEntry);
@@ -146,6 +141,18 @@ public class StyleBookEntryLocalServiceImpl
 		throws PortalException {
 
 		return deleteStyleBookEntry(getStyleBookEntry(styleBookEntryId));
+	}
+
+	@Override
+	public StyleBookEntry deleteStyleBookEntry(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		StyleBookEntry styleBookEntry =
+			styleBookEntryPersistence.fetchByERC_G_Head(
+				externalReferenceCode, groupId, true);
+
+		return deleteStyleBookEntry(styleBookEntry);
 	}
 
 	@Override
@@ -486,7 +493,7 @@ public class StyleBookEntryLocalServiceImpl
 	}
 
 	private String _getUniqueCopyName(StyleBookEntry styleBookEntry) {
-		String copy = _language.get(LocaleUtil.getMostRelevantLocale(), "copy");
+		String copy = _language.get(LocaleUtil.getSiteDefault(), "copy");
 
 		String name = StringUtil.appendParentheticalSuffix(
 			styleBookEntry.getName(), copy);

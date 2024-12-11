@@ -138,13 +138,6 @@ public class CommerceTierPriceEntryLocalServiceImpl
 		_validateCommercePriceEntryId(
 			0, commercePriceEntry.getCommercePriceEntryId(), minQuantity);
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
-		_validateExternalReferenceCode(
-			externalReferenceCode, serviceContext.getCompanyId());
-
 		Date expirationDate = null;
 		Date date = new Date();
 
@@ -179,7 +172,6 @@ public class CommerceTierPriceEntryLocalServiceImpl
 		commerceTierPriceEntry.setDiscountLevel4(discountLevel4);
 		commerceTierPriceEntry.setMinQuantity(
 			_normalizeMinQuantity(commercePriceEntry, minQuantity));
-		commerceTierPriceEntry.setExpandoBridgeAttributes(serviceContext);
 		commerceTierPriceEntry.setDisplayDate(displayDate);
 
 		if ((expirationDate == null) || expirationDate.after(date)) {
@@ -193,6 +185,7 @@ public class CommerceTierPriceEntryLocalServiceImpl
 		commerceTierPriceEntry.setStatusByUserId(user.getUserId());
 		commerceTierPriceEntry.setStatusDate(
 			serviceContext.getModifiedDate(date));
+		commerceTierPriceEntry.setExpandoBridgeAttributes(serviceContext);
 
 		commerceTierPriceEntry = commerceTierPriceEntryPersistence.update(
 			commerceTierPriceEntry);
@@ -305,10 +298,6 @@ public class CommerceTierPriceEntryLocalServiceImpl
 						noSuchTierPriceEntryException);
 				}
 			}
-		}
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
 		}
 
 		if (Validator.isNotNull(externalReferenceCode)) {
@@ -519,56 +508,33 @@ public class CommerceTierPriceEntryLocalServiceImpl
 	}
 
 	@Override
-	public CommerceTierPriceEntry fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
-		return commerceTierPriceEntryPersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
-	}
-
-	@Override
-	public List<CommerceTierPriceEntry> fetchCommerceTierPriceEntries(
-		long companyId, int start, int end) {
-
-		return commerceTierPriceEntryPersistence.findByCompanyId(
-			companyId, start, end);
-	}
-
-	@Override
-	public CommerceTierPriceEntry findClosestCommerceTierPriceEntry(
+	public CommerceTierPriceEntry fetchClosestCommerceTierPriceEntry(
 		long commercePriceEntryId, BigDecimal minQuantity) {
 
-		CommerceTierPriceEntry commerceTierPriceEntry = null;
-
-		try {
-			commerceTierPriceEntry =
-				commerceTierPriceEntryPersistence.findByC_LteM_S_First(
-					commercePriceEntryId, minQuantity,
-					WorkflowConstants.STATUS_APPROVED,
-					new CommerceTierPriceEntryMinQuantityComparator(false));
-		}
-		catch (NoSuchTierPriceEntryException noSuchTierPriceEntryException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchTierPriceEntryException);
-			}
-		}
-
-		return commerceTierPriceEntry;
+		return commerceTierPriceEntryPersistence.fetchByC_LteM_S_First(
+			commercePriceEntryId, minQuantity,
+			WorkflowConstants.STATUS_APPROVED,
+			CommerceTierPriceEntryMinQuantityComparator.getInstance(false));
 	}
 
 	@Override
-	public List<CommerceTierPriceEntry> findCommerceTierPriceEntries(
+	public List<CommerceTierPriceEntry> getCommerceTierPriceEntries(
 		long commercePriceEntryId, BigDecimal minQuantity) {
 
 		return commerceTierPriceEntryPersistence.findByC_LteM_S(
 			commercePriceEntryId, minQuantity,
 			WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS,
-			new CommerceTierPriceEntryMinQuantityComparator(true));
+			CommerceTierPriceEntryMinQuantityComparator.getInstance(true));
+	}
+
+	@Override
+	public List<CommerceTierPriceEntry> getCommerceTierPriceEntries(
+		long commercePriceEntryId, int status) {
+
+		return commerceTierPriceEntryPersistence.findByC_S(
+			commercePriceEntryId, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+			CommerceTierPriceEntryMinQuantityComparator.getInstance(true));
 	}
 
 	@Override
@@ -685,14 +651,13 @@ public class CommerceTierPriceEntryLocalServiceImpl
 
 		commerceTierPriceEntry.setPrice(price);
 		commerceTierPriceEntry.setPromoPrice(promoPrice);
-		commerceTierPriceEntry.setMinQuantity(
-			_normalizeMinQuantity(commercePriceEntry, minQuantity));
-		commerceTierPriceEntry.setExpandoBridgeAttributes(serviceContext);
 		commerceTierPriceEntry.setDiscountDiscovery(discountDiscovery);
 		commerceTierPriceEntry.setDiscountLevel1(discountLevel1);
 		commerceTierPriceEntry.setDiscountLevel2(discountLevel2);
 		commerceTierPriceEntry.setDiscountLevel3(discountLevel3);
 		commerceTierPriceEntry.setDiscountLevel4(discountLevel4);
+		commerceTierPriceEntry.setMinQuantity(
+			_normalizeMinQuantity(commercePriceEntry, minQuantity));
 		commerceTierPriceEntry.setDisplayDate(displayDate);
 
 		if ((expirationDate == null) || expirationDate.after(date)) {
@@ -706,6 +671,7 @@ public class CommerceTierPriceEntryLocalServiceImpl
 		commerceTierPriceEntry.setStatusByUserId(user.getUserId());
 		commerceTierPriceEntry.setStatusDate(
 			serviceContext.getModifiedDate(date));
+		commerceTierPriceEntry.setExpandoBridgeAttributes(serviceContext);
 
 		// Commerce price entry
 
@@ -768,10 +734,6 @@ public class CommerceTierPriceEntryLocalServiceImpl
 			CommerceTierPriceEntry commerceTierPriceEntry,
 			String externalReferenceCode)
 		throws PortalException {
-
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
 
 		commerceTierPriceEntry.setExternalReferenceCode(externalReferenceCode);
 
@@ -1066,25 +1028,6 @@ public class CommerceTierPriceEntryLocalServiceImpl
 				commerceTierPriceEntryId)) {
 
 			throw new DuplicateCommerceTierPriceEntryException();
-		}
-	}
-
-	private void _validateExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		if (Validator.isNull(externalReferenceCode)) {
-			return;
-		}
-
-		CommerceTierPriceEntry commerceTierPriceEntry =
-			commerceTierPriceEntryPersistence.fetchByERC_C(
-				externalReferenceCode, companyId);
-
-		if (commerceTierPriceEntry != null) {
-			throw new DuplicateCommerceTierPriceEntryException(
-				"There is another commerce tier price entry with external " +
-					"reference code " + externalReferenceCode);
 		}
 	}
 

@@ -23,7 +23,7 @@ boolean workflowEnabled = WorkflowHandlerRegistryUtil.getWorkflowHandler(Journal
 List<WorkflowDefinition> workflowDefinitions = null;
 
 if (workflowEnabled) {
-	workflowDefinitions = WorkflowDefinitionManagerUtil.getActiveWorkflowDefinitions(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	workflowDefinitions = WorkflowDefinitionManagerUtil.liberalGetActiveWorkflowDefinitions(company.getCompanyId(), QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 }
 
 String languageId = LocaleUtil.toLanguageId(locale);
@@ -56,13 +56,7 @@ renderResponse.setTitle(title);
 <liferay-util:buffer
 	var="removeButton"
 >
-	<button
-		aria-label='<%= LanguageUtil.get(request, "remove") %>'
-		class="btn btn-monospaced btn-outline-borderless btn-outline-secondary float-right modify-link"
-		data-rowId="REMOVE_BUTTON_ROW_ID"
-		title='<%= LanguageUtil.get(request, "remove") %>'
-		type="button"
-	>
+	<button aria-label="<%= LanguageUtil.get(request, "remove") %>" class="btn btn-monospaced btn-outline-borderless btn-outline-secondary float-right modify-link" data-rowId="REMOVE_BUTTON_ROW_ID" title="<%= LanguageUtil.get(request, "remove") %>" type="button">
 		<clay:icon
 			symbol="times-circle"
 		/>
@@ -162,49 +156,28 @@ renderResponse.setTitle(title);
 				}
 				%>
 
-				<div class="form-group">
-					<aui:input name="folderName" type="resource" value="<%= parentFolderName %>" />
-
-					<clay:button
-						displayType="secondary"
-						id='<%= liferayPortletResponse.getNamespace() + "selectFolderButton" %>'
-						label="select"
-					/>
-
-					<liferay-frontend:component
-						context='<%=
-							HashMapBuilder.<String, Object>put(
-								"inputName", "parentFolderId"
-							).put(
-								"selectFolderURL",
-								PortletURLBuilder.createRenderURL(
-									renderResponse
-								).setMVCPath(
-									"/select_folder.jsp"
-								).setParameter(
-									"folderId", folderId
-								).setParameter(
-									"parentFolderId", parentFolderId
-								).setWindowState(
-									LiferayWindowState.POP_UP
-								).buildString()
-							).build()
-						%>'
-						module="js/SelectFolderButton"
-					/>
-
-					<%
-					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('parentFolderId', 'folderName', this, '" + liferayPortletResponse.getNamespace() + "');";
-					%>
-
-					<clay:button
-						disabled="<%= parentFolderId <= 0 %>"
-						displayType="secondary"
-						id='<%= liferayPortletResponse.getNamespace() + "removeFolderButton" %>'
-						label="remove"
-						onClick="<%= taglibRemoveFolder %>"
-					/>
-				</div>
+				<liferay-frontend:resource-selector
+					inputLabel='<%= LanguageUtil.get(request, "folder-name") %>'
+					inputName="newFolderId"
+					modalTitle='<%= LanguageUtil.get(request, "select-folder") %>'
+					resourceName="<%= parentFolderName %>"
+					resourceValue="<%= String.valueOf(parentFolderId) %>"
+					selectEventName="selectFolder"
+					selectResourceURL='<%=
+						PortletURLBuilder.createRenderURL(
+							renderResponse
+						).setMVCPath(
+							"/select_folder.jsp"
+						).setParameter(
+							"folderId", folderId
+						).setParameter(
+							"parentFolderId", parentFolderId
+						).setWindowState(
+							LiferayWindowState.POP_UP
+						).buildString()
+					%>'
+					showRemoveButton="<%= true %>"
+				/>
 			</liferay-frontend:fieldset>
 		</c:if>
 
@@ -333,7 +306,7 @@ renderResponse.setTitle(title);
 									"workflowEnabled", workflowEnabled
 								).build()
 							%>'
-							module="js/SelectDDMStructureButton"
+							module="{SelectDDMStructureButton} from journal-web"
 						/>
 					</div>
 				</c:if>

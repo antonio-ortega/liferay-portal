@@ -120,6 +120,9 @@ public class ObjectRelationshipPersistenceTest {
 
 		newObjectRelationship.setUuid(RandomTestUtil.randomString());
 
+		newObjectRelationship.setExternalReferenceCode(
+			RandomTestUtil.randomString());
+
 		newObjectRelationship.setCompanyId(RandomTestUtil.nextLong());
 
 		newObjectRelationship.setUserId(RandomTestUtil.nextLong());
@@ -167,6 +170,9 @@ public class ObjectRelationshipPersistenceTest {
 		Assert.assertEquals(
 			existingObjectRelationship.getUuid(),
 			newObjectRelationship.getUuid());
+		Assert.assertEquals(
+			existingObjectRelationship.getExternalReferenceCode(),
+			newObjectRelationship.getExternalReferenceCode());
 		Assert.assertEquals(
 			existingObjectRelationship.getObjectRelationshipId(),
 			newObjectRelationship.getObjectRelationshipId());
@@ -296,11 +302,38 @@ public class ObjectRelationshipPersistenceTest {
 	}
 
 	@Test
+	public void testCountByODI2_E() throws Exception {
+		_persistence.countByODI2_E(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByODI2_E(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountByODI2_R() throws Exception {
 		_persistence.countByODI2_R(
 			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
 
 		_persistence.countByODI2_R(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByDTN_R() throws Exception {
+		_persistence.countByDTN_R("", RandomTestUtil.randomBoolean());
+
+		_persistence.countByDTN_R("null", RandomTestUtil.randomBoolean());
+
+		_persistence.countByDTN_R((String)null, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByERC_C_ODI1() throws Exception {
+		_persistence.countByERC_C_ODI1(
+			"", RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByERC_C_ODI1("null", 0L, 0L);
+
+		_persistence.countByERC_C_ODI1((String)null, 0L, 0L);
 	}
 
 	@Test
@@ -399,12 +432,13 @@ public class ObjectRelationshipPersistenceTest {
 	protected OrderByComparator<ObjectRelationship> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
 			"ObjectRelationship", "mvccVersion", true, "uuid", true,
-			"objectRelationshipId", true, "companyId", true, "userId", true,
-			"userName", true, "createDate", true, "modifiedDate", true,
-			"objectDefinitionId1", true, "objectDefinitionId2", true,
-			"objectFieldId2", true, "parameterObjectFieldId", true,
-			"deletionType", true, "dbTableName", true, "edge", true, "label",
-			true, "name", true, "reverse", true, "system", true, "type", true);
+			"externalReferenceCode", true, "objectRelationshipId", true,
+			"companyId", true, "userId", true, "userName", true, "createDate",
+			true, "modifiedDate", true, "objectDefinitionId1", true,
+			"objectDefinitionId2", true, "objectFieldId2", true,
+			"parameterObjectFieldId", true, "deletionType", true, "dbTableName",
+			true, "edge", true, "label", true, "name", true, "reverse", true,
+			"system", true, "type", true);
 	}
 
 	@Test
@@ -690,6 +724,44 @@ public class ObjectRelationshipPersistenceTest {
 				new Class<?>[] {String.class}, "objectFieldId2"));
 
 		Assert.assertEquals(
+			Long.valueOf(objectRelationship.getObjectDefinitionId2()),
+			ReflectionTestUtil.<Long>invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "objectDefinitionId2"));
+		Assert.assertEquals(
+			Boolean.valueOf(objectRelationship.getEdge()),
+			ReflectionTestUtil.<Boolean>invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "edge"));
+
+		Assert.assertEquals(
+			objectRelationship.getDBTableName(),
+			ReflectionTestUtil.invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "dbTableName"));
+		Assert.assertEquals(
+			Boolean.valueOf(objectRelationship.getReverse()),
+			ReflectionTestUtil.<Boolean>invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "reverse"));
+
+		Assert.assertEquals(
+			objectRelationship.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
+		Assert.assertEquals(
+			Long.valueOf(objectRelationship.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			Long.valueOf(objectRelationship.getObjectDefinitionId1()),
+			ReflectionTestUtil.<Long>invoke(
+				objectRelationship, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "objectDefinitionId1"));
+
+		Assert.assertEquals(
 			Long.valueOf(objectRelationship.getObjectDefinitionId1()),
 			ReflectionTestUtil.<Long>invoke(
 				objectRelationship, "getColumnOriginalValue",
@@ -724,6 +796,9 @@ public class ObjectRelationshipPersistenceTest {
 		objectRelationship.setMvccVersion(RandomTestUtil.nextLong());
 
 		objectRelationship.setUuid(RandomTestUtil.randomString());
+
+		objectRelationship.setExternalReferenceCode(
+			RandomTestUtil.randomString());
 
 		objectRelationship.setCompanyId(RandomTestUtil.nextLong());
 

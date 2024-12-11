@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -38,8 +39,9 @@ public class CPAttachmentFileEntryServiceUtil {
 			int displayDateMinute, int expirationDateMonth,
 			int expirationDateDay, int expirationDateYear,
 			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, Map<java.util.Locale, String> titleMap,
-			String json, double priority, int type,
+			boolean neverExpire, boolean galleryEnabled,
+			Map<java.util.Locale, String> titleMap, String json,
+			double priority, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
@@ -48,7 +50,8 @@ public class CPAttachmentFileEntryServiceUtil {
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, expirationDateMonth, expirationDateDay,
 			expirationDateYear, expirationDateHour, expirationDateMinute,
-			neverExpire, titleMap, json, priority, type, serviceContext);
+			neverExpire, galleryEnabled, titleMap, json, priority, type,
+			serviceContext);
 	}
 
 	public static CPAttachmentFileEntry addOrUpdateCPAttachmentFileEntry(
@@ -59,8 +62,9 @@ public class CPAttachmentFileEntryServiceUtil {
 			int displayDateMinute, int expirationDateMonth,
 			int expirationDateDay, int expirationDateYear,
 			int expirationDateHour, int expirationDateMinute,
-			boolean neverExpire, Map<java.util.Locale, String> titleMap,
-			String json, double priority, int type,
+			boolean neverExpire, boolean galleryEnabled,
+			Map<java.util.Locale, String> titleMap, String json,
+			double priority, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
@@ -70,7 +74,8 @@ public class CPAttachmentFileEntryServiceUtil {
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, expirationDateMonth, expirationDateDay,
 			expirationDateYear, expirationDateHour, expirationDateMinute,
-			neverExpire, titleMap, json, priority, type, serviceContext);
+			neverExpire, galleryEnabled, titleMap, json, priority, type,
+			serviceContext);
 	}
 
 	public static void deleteCPAttachmentFileEntry(long cpAttachmentFileEntryId)
@@ -79,19 +84,20 @@ public class CPAttachmentFileEntryServiceUtil {
 		getService().deleteCPAttachmentFileEntry(cpAttachmentFileEntryId);
 	}
 
-	public static CPAttachmentFileEntry fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CPAttachmentFileEntry fetchCPAttachmentFileEntry(
 			long cpAttachmentFileEntryId)
 		throws PortalException {
 
 		return getService().fetchCPAttachmentFileEntry(cpAttachmentFileEntryId);
+	}
+
+	public static CPAttachmentFileEntry
+			fetchCPAttachmentFileEntryByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().fetchCPAttachmentFileEntryByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static List<CPAttachmentFileEntry> getCPAttachmentFileEntries(
@@ -161,8 +167,8 @@ public class CPAttachmentFileEntryServiceUtil {
 			int expirationDateMonth, int expirationDateDay,
 			int expirationDateYear, int expirationDateHour,
 			int expirationDateMinute, boolean neverExpire,
-			Map<java.util.Locale, String> titleMap, String json,
-			double priority, int type,
+			boolean galleryEnabled, Map<java.util.Locale, String> titleMap,
+			String json, double priority, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
@@ -171,17 +177,17 @@ public class CPAttachmentFileEntryServiceUtil {
 			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
 			displayDateMinute, expirationDateMonth, expirationDateDay,
 			expirationDateYear, expirationDateHour, expirationDateMinute,
-			neverExpire, titleMap, json, priority, type, serviceContext);
+			neverExpire, galleryEnabled, titleMap, json, priority, type,
+			serviceContext);
 	}
 
 	public static CPAttachmentFileEntryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPAttachmentFileEntryService service) {
-		_service = service;
-	}
-
-	private static volatile CPAttachmentFileEntryService _service;
+	private static final Snapshot<CPAttachmentFileEntryService>
+		_serviceSnapshot = new Snapshot<>(
+			CPAttachmentFileEntryServiceUtil.class,
+			CPAttachmentFileEntryService.class);
 
 }

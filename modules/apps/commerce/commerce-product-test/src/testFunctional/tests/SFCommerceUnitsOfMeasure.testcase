@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11287=true${line.separator}jsonws.web.service.paths.excludes=";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Product Info Management";
@@ -68,7 +68,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -189,7 +189,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -337,7 +337,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -466,7 +466,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -605,7 +605,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -737,7 +737,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -760,13 +760,9 @@ definition {
 					if (${quantity} == "0.6") {
 						var multipleConditionNotSatisfied = "false";
 
-						Click(
+						AssertElementPresent(
 							key_productName = "U-Joint",
-							locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON");
-
-						AssertTextEquals.assertPartialText(
-							locator1 = "Message#ERROR_DISMISSIBLE",
-							value1 = "The specified quantity is not a multiple of 0.5");
+							locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_INVALID");
 
 						Click(
 							key_productName = "U-Joint",
@@ -790,7 +786,7 @@ definition {
 
 				FrontStore.viewQuantitySelectorPopoverListItem(
 					conditionNotSatisfied = ${multipleConditionNotSatisfied},
-					quantity = "0.3",
+					quantity = "1.5",
 					quantityConfiguration = "multiple");
 			}
 		}
@@ -850,7 +846,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -987,7 +983,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1111,7 +1107,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1136,11 +1132,7 @@ definition {
 					if (${quantity} == "0.6") {
 						var multipleConditionNotSatisfied = "false";
 
-						Click(locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE");
-
-						AssertTextEquals.assertPartialText(
-							locator1 = "Message#ERROR_DISMISSIBLE",
-							value1 = "The specified quantity is not a multiple of 0.5");
+						AssertElementPresent(locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE_INVALID");
 
 						Click(locator1 = "CommerceAccelerators#PRODUCT_DETAILS_QUANTITY_SELECTOR_INPUT_FIELD");
 					}
@@ -1158,7 +1150,7 @@ definition {
 
 				FrontStore.viewQuantitySelectorPopoverListItem(
 					conditionNotSatisfied = ${multipleConditionNotSatisfied},
-					quantity = "0.3",
+					quantity = "1.5",
 					quantityConfiguration = "multiple");
 			}
 		}
@@ -1205,7 +1197,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1348,10 +1340,67 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-12447 | The Inventory Quantity can be decimal only if there is a UOM attached to the SKU."
+	@priority = 5
+	test CanInventoryQuantityBeDecimalOnlyWithUOM {
+		property portal.acceptance = "true";
+
+		task ("Given a Minium site") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+		}
+
+		task ("And Admin adds a UOM for MIN93015 with Decimal Allowed (Precision) set to 3") {
+			CommerceJSONSKUsAPI._addCommerceUOM(
+				basePrice = 10,
+				precision = 3,
+				productSKU = "MIN93015",
+				uomKey = "test",
+				uomName = "Test");
+		}
+
+		task ("Then the inventory quantity should be with 3 decimals because the Decimal Allowed (Precision) = 3") {
+			CommerceProducts.openProductsAdmin();
+
+			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
+
+			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
+
+			CommerceNavigator.gotoEntry(entryName = "MIN93015");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Inventory");
+
+			CommerceSKUs.viewSkuUomWarehouse(
+				uomKey = "test",
+				uomLists = "0:Italy,1:United States - Northeast,2:United States - Southwest");
+
+			CommerceSKUs.viewSkuUomInventory(uomQuantityLists = "0:20.000,1:60.000,2:60.000");
+		}
+
+		task ("When the admin deletes the UOM") {
+			CommerceJSONSKUsAPI._deleteAllCommerceUOMs(productSKU = "MIN93015");
+		}
+
+		task ("Then the inventory quantity should be shown without decimals") {
+			SelectFrameTop();
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Inventory");
+
+			CommerceSKUs.viewSkuUomWarehouse(
+				uomKey = "",
+				uomLists = "0:Italy,1:United States - Northeast,2:United States - Southwest");
+
+			CommerceSKUs.viewSkuUomInventory(uomQuantityLists = "0:20,1:60,2:60");
+		}
+	}
+
 	@description = "This is a test for COMMERCE-12381 | Verify that Price On Application works correctly on the minicart with UOM"
 	@priority = 5
 	test CanPriceOnApplicationWithUOMBeShownInMiniCart {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11028=true${line.separator}feature.flag.COMMERCE-11287=true${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "true";
 
 		task ("Given a Minium site with a buyer user") {
@@ -1408,7 +1457,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1454,7 +1503,7 @@ definition {
 				orderAuthor = "Buyer User",
 				priceOnApplication = "true",
 				productName = "ABS Sensor",
-				productQuantity = "1.0",
+				productQuantity = 1,
 				productSku = "MIN93015",
 				uomKey = "UOM1KEY");
 		}
@@ -1462,10 +1511,7 @@ definition {
 		task ("When the admin logs in") {
 			User.logoutPG();
 
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "test@liferay.com");
+			CommerceLogin.miniumLogin(urlAppend = "web/minium");
 		}
 
 		task ("And navigates to the orders page") {
@@ -1484,7 +1530,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}

@@ -7,6 +7,7 @@ import {useEventListener} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
 import React, {useCallback, useMemo, useRef, useState} from 'react';
 
+import useSetRef from '../../../common/hooks/useSetRef';
 import {getLayoutDataItemPropTypes} from '../../../prop_types/index';
 import {VIEWPORT_SIZES} from '../../config/constants/viewportSizes';
 import {useIsActive} from '../../contexts/ControlsContext';
@@ -418,10 +419,13 @@ const ColumnWithControls = React.forwardRef(({children, item}, ref) => {
 		globalContext.document.body
 	);
 
+	const [setRef, itemElement] = useSetRef(ref);
+
 	return (
 		<TopperEmpty
 			className={getLayoutDataItemTopperUniqueClassName(item.itemId)}
 			item={item}
+			itemElement={itemElement}
 		>
 			<Column
 				className={classNames('page-editor__col', {
@@ -436,7 +440,7 @@ const ColumnWithControls = React.forwardRef(({children, item}, ref) => {
 						resizing,
 				})}
 				item={item}
-				ref={ref}
+				ref={setRef}
 			>
 				{(canUpdatePageStructure || canUpdateItemConfiguration) &&
 					parentItemIsActive &&
@@ -447,7 +451,8 @@ const ColumnWithControls = React.forwardRef(({children, item}, ref) => {
 								className={classNames(
 									'btn-primary page-editor__col__resizer',
 									{
-										'page-editor__col__resizer-first': isFirstColumnOfRow,
+										'page-editor__col__resizer-first':
+											isFirstColumnOfRow,
 									}
 								)}
 								onMouseDown={handleMouseDown}

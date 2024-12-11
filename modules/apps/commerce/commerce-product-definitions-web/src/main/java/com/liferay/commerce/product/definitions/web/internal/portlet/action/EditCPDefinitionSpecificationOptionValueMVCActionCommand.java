@@ -6,11 +6,14 @@
 package com.liferay.commerce.product.definitions.web.internal.portlet.action;
 
 import com.liferay.commerce.product.constants.CPPortletKeys;
+import com.liferay.commerce.product.exception.CPDefinitionSpecificationOptionValueKeyException;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionSpecificationOptionValueException;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueService;
 import com.liferay.commerce.product.service.CPSpecificationOptionService;
+import com.liferay.list.type.model.ListTypeEntry;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -18,10 +21,12 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Localization;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -73,6 +78,19 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 
 				actionResponse.setRenderParameter("mvcPath", "/error.jsp");
 			}
+			else if (exception instanceof
+						CPDefinitionSpecificationOptionValueKeyException) {
+
+				hideDefaultErrorMessage(actionRequest);
+				hideDefaultSuccessMessage(actionRequest);
+
+				SessionErrors.add(actionRequest, exception.getClass());
+
+				String redirect = ParamUtil.getString(
+					actionRequest, "redirect");
+
+				sendRedirect(actionRequest, actionResponse, redirect);
+			}
 			else {
 				throw exception;
 			}
@@ -113,8 +131,8 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 
 			_cpDefinitionSpecificationOptionValueService.
 				addCPDefinitionSpecificationOptionValue(
-					cpDefinitionId, cpSpecificationOptionId,
-					cpSpecificationOption.getCPOptionCategoryId(), null, i,
+					StringPool.BLANK, cpDefinitionId, cpSpecificationOptionId,
+					cpSpecificationOption.getCPOptionCategoryId(), i, null,
 					serviceContext);
 		}
 	}
@@ -150,6 +168,39 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 		}
 	}
 
+	private Map<Locale, String> _getValueMap(
+			long cpDefinitionSpecificationOptionValueId,
+			ActionRequest actionRequest)
+		throws Exception {
+
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue =
+				_cpDefinitionSpecificationOptionValueService.
+					getCPDefinitionSpecificationOptionValue(
+						cpDefinitionSpecificationOptionValueId);
+
+		CPSpecificationOption cpSpecificationOption =
+			cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
+
+		if (ListUtil.isEmpty(cpSpecificationOption.getListTypeEntries())) {
+			return _localization.getLocalizationMap(
+				actionRequest, "listTypeEntriesSelect");
+		}
+
+		String value = ParamUtil.getString(
+			actionRequest, "listTypeEntriesSelect");
+
+		for (ListTypeEntry listTypeEntry :
+				cpSpecificationOption.getListTypeEntries()) {
+
+			if (value.equals(listTypeEntry.getKey())) {
+				return listTypeEntry.getNameMap();
+			}
+		}
+
+		return new HashMap<>();
+	}
+
 	private CPDefinitionSpecificationOptionValue
 			_updateCPDefinitionSpecificationOptionValue(
 				ActionRequest actionRequest)
@@ -160,18 +211,26 @@ public class EditCPDefinitionSpecificationOptionValueMVCActionCommand
 
 		long cpOptionCategoryId = ParamUtil.getLong(
 			actionRequest, "CPOptionCategoryId");
-		Map<Locale, String> valueMap = _localization.getLocalizationMap(
-			actionRequest, "value");
+		String key = ParamUtil.getString(actionRequest, "key");
 		double priority = ParamUtil.getDouble(actionRequest, "priority");
+		Map<Locale, String> valueMap = _getValueMap(
+			cpDefinitionSpecificationOptionValueId, actionRequest);
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			CPDefinitionSpecificationOptionValue.class.getName(),
 			actionRequest);
 
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue =
+				_cpDefinitionSpecificationOptionValueService.
+					getCPDefinitionSpecificationOptionValue(
+						cpDefinitionSpecificationOptionValueId);
+
 		return _cpDefinitionSpecificationOptionValueService.
 			updateCPDefinitionSpecificationOptionValue(
-				cpDefinitionSpecificationOptionValueId, cpOptionCategoryId,
-				valueMap, priority, serviceContext);
+				cpDefinitionSpecificationOptionValue.getExternalReferenceCode(),
+				cpDefinitionSpecificationOptionValueId, cpOptionCategoryId, key,
+				priority, valueMap, serviceContext);
 	}
 
 	@Reference

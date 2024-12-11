@@ -6,9 +6,9 @@
 package com.liferay.document.library.app.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.document.library.app.service.test.util.DLAppServiceTestUtil;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
-import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.test.util.BaseDLAppTestCase;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.repository.model.FileEntry;
@@ -17,7 +17,7 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import org.junit.ClassRule;
@@ -43,7 +43,7 @@ public class DLAppServiceWhenSearchingFileEntriesTest
 
 		FileEntry fileEntry = DLAppServiceTestUtil.addFileEntry(
 			RandomTestUtil.randomString(), group.getGroupId(),
-			parentFolder.getFolderId(), fileName, fileName, null, null,
+			parentFolder.getFolderId(), fileName, fileName, null, null, null,
 			new String[] {"hello", "world"});
 
 		DLAppServiceTestUtil.search(fileEntry, "hello", true);
@@ -64,7 +64,7 @@ public class DLAppServiceWhenSearchingFileEntriesTest
 
 		FileEntry fileEntry = DLAppServiceTestUtil.addFileEntry(
 			RandomTestUtil.randomString(), group.getGroupId(),
-			parentFolder.getFolderId(), fileName, fileName, null, null,
+			parentFolder.getFolderId(), fileName, fileName, null, null, null,
 			assetTagNames);
 
 		assetTagNames = new String[] {"hello", "world", "liferay"};
@@ -74,10 +74,11 @@ public class DLAppServiceWhenSearchingFileEntriesTest
 
 		serviceContext.setAssetTagNames(assetTagNames);
 
-		fileEntry = DLAppServiceUtil.updateFileEntry(
+		fileEntry = dlAppService.updateFileEntry(
 			fileEntry.getFileEntryId(), fileName, ContentTypes.TEXT_PLAIN,
 			fileName, StringPool.BLANK, description, changeLog,
-			DLVersionNumberIncrease.MINOR, bytes, null, null, serviceContext);
+			DLVersionNumberIncrease.MINOR, bytes, null, null, null,
+			serviceContext);
 
 		DLAppServiceTestUtil.search(fileEntry, "hello", true);
 		DLAppServiceTestUtil.search(fileEntry, "world", true);

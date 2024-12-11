@@ -57,7 +57,7 @@ definition {
 
 		MenuItem.click(menuItem = "Checkout");
 
-		while ((IsTextEqual(locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS", value1 = "Draft")) && (maxIterations = "6")) {
+		while ((IsElementPresent(locator1 = "DocumentsAndMedia#ICON_DOCUMENT_WORKFLOW_STATUS_DRAFT")) && (maxIterations = "6")) {
 			Refresh();
 		}
 
@@ -121,12 +121,12 @@ definition {
 			entryTitle = "Blogs Entry1 Title");
 
 		User.logoutPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		User.loginPG(
 			nodePort = 9080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Page.assertNodePortPG(nodePort = 9080);

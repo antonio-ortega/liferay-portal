@@ -43,7 +43,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.adaptive.media.image.internal.configuration.AMImageConfiguration",
-	property = "supportedMimeTypes=image/gif", service = AMImageScaler.class
+	property = "mimeTypes=image/gif", service = AMImageScaler.class
 )
 public class AMGIFImageScaler implements AMImageScaler {
 
@@ -62,7 +62,7 @@ public class AMGIFImageScaler implements AMImageScaler {
 
 			Future<Map.Entry<byte[], byte[]>> collectorFuture =
 				ProcessUtil.execute(
-					CollectorOutputProcessor.INSTANCE, "gifsicle",
+					CollectorOutputProcessor.INSTANCE, "gifsicle", "--careful",
 					"--resize-fit",
 					_getResizeFitValues(amImageConfigurationEntry), "--output",
 					"-", file.getAbsolutePath());

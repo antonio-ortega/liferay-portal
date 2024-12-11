@@ -41,6 +41,8 @@ public class PoshiProperties extends Properties {
 	public static final String BROWSER_FIREFOX_BIN_FILE =
 		"browser.firefox.bin.file";
 
+	public static final String BROWSER_RESOLUTION = "browser.resolution";
+
 	public static final String BROWSER_TYPE = "browser.type";
 
 	public static final String BROWSER_VERSION = "browser.version";
@@ -78,6 +80,9 @@ public class PoshiProperties extends Properties {
 
 	public static final String POSHI_FILE_READ_THREAD_POOL =
 		"poshi.file.read.thread.pool";
+
+	public static final String POSHI_FILE_READ_TIMEOUT =
+		"poshi.file.read.timeout";
 
 	public static final String PRINT_JAVA_PROCESS_ON_FAIL =
 		"print.java.process.on.fail";
@@ -338,6 +343,7 @@ public class PoshiProperties extends Properties {
 	public String browserChromeBinArgs = getProperty(BROWSER_CHROME_BIN_ARGS);
 	public String browserChromeBinFile = getProperty(BROWSER_CHROME_BIN_FILE);
 	public String browserFirefoxBinFile = getProperty(BROWSER_FIREFOX_BIN_FILE);
+	public String browserResolution = getProperty(BROWSER_RESOLUTION);
 	public String browserType = getProperty(BROWSER_TYPE);
 	public String browserVersion = getProperty(BROWSER_VERSION);
 	public Boolean debugStacktrace = GetterUtil.getBoolean(
@@ -360,6 +366,8 @@ public class PoshiProperties extends Properties {
 	public String portalURL = getProperty(PORTAL_URL);
 	public int poshiFileReadThreadPool = GetterUtil.getInteger(
 		getProperty(POSHI_FILE_READ_THREAD_POOL));
+	public int poshiFileReadTimeout = GetterUtil.getInteger(
+		getProperty(POSHI_FILE_READ_TIMEOUT));
 	public String printJavaProcessOnFail = getProperty(
 		PRINT_JAVA_PROCESS_ON_FAIL);
 	public String projectDir = getProperty(PROJECT_DIR);
@@ -393,7 +401,7 @@ public class PoshiProperties extends Properties {
 		getProperty(TCAT_ENABLED));
 	public boolean testAssertConsoleErrors = GetterUtil.getBoolean(
 		getProperty(TEST_ASSERT_CONSOLE_ERRORS));
-	public boolean testAssertJavascriptErrors = GetterUtil.getBoolean(
+	public boolean testAssertJavaScriptErrors = GetterUtil.getBoolean(
 		getProperty(TEST_ASSERT_JAVASCRIPT_ERRORS));
 	public boolean testAssertWarningExceptions = GetterUtil.getBoolean(
 		getProperty(TEST_ASSERT_WARNING_EXCEPTIONS));

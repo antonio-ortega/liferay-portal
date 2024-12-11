@@ -15,7 +15,7 @@ import {
 	CP_UNIT_OF_MEASURE_SELECTOR_CHANGED,
 } from '../../utilities/eventsDefinitions';
 import {useCommerceAccount, useCommerceCart} from '../../utilities/hooks';
-import {getMinQuantity} from '../../utilities/quantities';
+import {getMinQuantity, getMultipleQuantity} from '../../utilities/quantities';
 import QuantitySelector from '../quantity_selector/QuantitySelector';
 import UnitOfMeasureSelector from '../unit_of_measure_selector/UnitOfMeasureSelector';
 import AddToCartButton from './AddToCartButton';
@@ -35,8 +35,11 @@ function getQuantity(settings, skuUnitOfMeasure) {
 			skuUnitOfMeasure
 				? settings?.productConfiguration?.minOrderQuantity
 				: Math.ceil(settings?.productConfiguration?.minOrderQuantity),
-			skuUnitOfMeasure?.incrementalOrderQuantity ||
+			getMultipleQuantity(
+				skuUnitOfMeasure?.incrementalOrderQuantity,
 				settings?.productConfiguration?.multipleOrderQuantity,
+				skuUnitOfMeasure?.precision || 0
+			),
 			skuUnitOfMeasure?.precision || 0
 		)
 	);
@@ -69,19 +72,30 @@ function AddToCart({
 	});
 	const inputRef = useRef(null);
 
-	const buttonDisabled = useMemo(() => {
+	const inputDisabled = useMemo(() => {
 		if (
 			initialDisabled ||
 			!account?.id ||
 			cpInstance.disabled ||
+			cpInstance.published === false ||
 			cpInstance.purchasable === false ||
-			!cpInstance.quantity
+			(cpInstance.availability?.stockQuantity !== undefined &&
+				cpInstance.backOrderAllowed === false &&
+				cpInstance.availability?.stockQuantity <= 0)
 		) {
 			return true;
 		}
 
 		return false;
 	}, [account, cpInstance, initialDisabled]);
+
+	const buttonDisabled = useMemo(() => {
+		if (inputDisabled || !cpInstance.quantity) {
+			return true;
+		}
+
+		return false;
+	}, [cpInstance, inputDisabled]);
 
 	useEffect(() => {
 		setCpInstance({
@@ -96,9 +110,11 @@ function AddToCart({
 			function updateInCartState(inCart) {
 				setCpInstance((cpInstance) => ({
 					...cpInstance,
+					availability: incomingCpInstance.availability,
 					backOrderAllowed: incomingCpInstance.backOrderAllowed,
 					disabled: incomingCpInstance.disabled,
 					inCart,
+					published: incomingCpInstance.published,
 					purchasable: incomingCpInstance.purchasable,
 					skuId: incomingCpInstance.skuId,
 					skuOptions: Array.isArray(incomingCpInstance.skuOptions)
@@ -110,18 +126,7 @@ function AddToCart({
 			}
 
 			if (cart.id) {
-				if (!Liferay.FeatureFlags['COMMERCE-11287']) {
-					CartResource.getItemsByCartId(cart.id).then(({items}) => {
-						const inCart = items.some(
-							({skuId}) => incomingCpInstance.skuId === skuId
-						);
-
-						updateInCartState(inCart);
-					});
-				}
-				else {
-					updateInCartState(cpInstance.inCart);
-				}
+				updateInCartState(cpInstance.inCart);
 			}
 			else {
 				updateInCartState(false);
@@ -210,37 +215,30 @@ function AddToCart({
 	}, [cart.id, cpInstance.skuId, handleCPInstanceReplaced, settings]);
 
 	const spaceDirection = settings.inline ? 'ml' : 'mt';
-	let spacer = settings.size === 'sm' ? 1 : 3;
-
-	if (Liferay.FeatureFlags['COMMERCE-11287']) {
-		spacer = 0;
-	}
+	const spacer = 0;
 
 	return (
 		<div
 			className={classnames({
 				'add-to-cart-wrapper': true,
-				'align-items-center':
-					(settings.alignment === 'full-width' ||
-						settings.alignment === 'center') &&
-					!Liferay.FeatureFlags['COMMERCE-11287'],
-				'align-items-end': Liferay.FeatureFlags['COMMERCE-11287'],
-				'd-flex': !Liferay.FeatureFlags['COMMERCE-11287'],
+				'align-items-end': true,
+				'd-flex': false,
 				'flex-column': !settings.inline,
 			})}
 		>
 			<div
 				className={classnames({
 					'd-flex': true,
-					'justify-content-center': !settings.showUnitOfMeasureSelector,
-					'mb-3': Liferay.FeatureFlags['COMMERCE-11287'],
+					'justify-content-center':
+						!settings.showUnitOfMeasureSelector,
+					'mb-3': true,
 				})}
 			>
 				<QuantitySelector
 					allowedQuantities={
 						settings.productConfiguration?.allowedOrderQuantities
 					}
-					disabled={initialDisabled || !account?.id}
+					disabled={inputDisabled}
 					max={settings.productConfiguration?.maxOrderQuantity}
 					min={settings.productConfiguration?.minOrderQuantity}
 					namespace={settings.namespace}
@@ -262,18 +260,17 @@ function AddToCart({
 					unitOfMeasure={cpInstance.skuUnitOfMeasure}
 				/>
 
-				{Liferay.FeatureFlags['COMMERCE-11287'] &&
-					settings.showUnitOfMeasureSelector && (
-						<UnitOfMeasureSelector
-							accountId={account.id}
-							channelId={channel.id}
-							cpInstanceId={cpInstance.skuId}
-							namespace={settings.namespace}
-							productConfiguration={settings.productConfiguration}
-							productId={productId}
-							size={settings.size}
-						/>
-					)}
+				{settings.showUnitOfMeasureSelector && (
+					<UnitOfMeasureSelector
+						accountId={account.id}
+						channelId={channel.id}
+						cpInstanceId={cpInstance.skuId}
+						namespace={settings.namespace}
+						productConfiguration={settings.productConfiguration}
+						productId={productId}
+						size={settings.size}
+					/>
+				)}
 			</div>
 
 			<AddToCartButton
@@ -297,7 +294,7 @@ function AddToCart({
 								event.preventDefault();
 
 								inputRef.current?.focus();
-						  }
+							}
 				}
 				settings={settings}
 				showOrderTypeModal={showOrderTypeModal}

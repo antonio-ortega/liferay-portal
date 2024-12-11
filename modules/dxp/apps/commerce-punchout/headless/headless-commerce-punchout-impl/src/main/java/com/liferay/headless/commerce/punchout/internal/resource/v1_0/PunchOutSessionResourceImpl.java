@@ -7,7 +7,6 @@ package com.liferay.headless.commerce.punchout.internal.resource.v1_0;
 
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
-import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.model.CommerceOrder;
@@ -171,9 +170,6 @@ public class PunchOutSessionResourceImpl
 			commerceOrderUuid = editCartCommerceOrder.getUuid();
 		}
 
-		String punchOutStartURL = _getPunchOutStartURL(
-			commerceChannel.getGroupId());
-
 		PunchOutContext punchOutContext = new PunchOutContext(
 			businessAccountEntry, buyerGroup, buyerLiferayUser, commerceChannel,
 			editCartCommerceOrder, punchOutSession);
@@ -187,17 +183,25 @@ public class PunchOutSessionResourceImpl
 				_punchOutSessionContributor.getPunchOutSessionAttributes(
 					punchOutContext));
 
-		String tokenString = Base64.encodeToURL(punchOutAccessToken.getToken());
+		cart.setChannelId(commerceChannel::getCommerceChannelId);
 
-		punchOutStartURL +=
-			StringPool.QUESTION + _PUNCH_OUT_ACCESS_TOKEN_PARAMETER +
-				URLEncoder.encode(tokenString, "UTF-8");
+		punchOutSession.setCart(() -> cart);
 
-		cart.setChannelId(commerceChannel.getCommerceChannelId());
+		punchOutSession.setPunchOutStartURL(
+			() -> {
+				String punchOutStartURL = _getPunchOutStartURL(
+					commerceChannel.getGroupId());
 
-		punchOutSession.setCart(cart);
+				String url = URLEncoder.encode(
+					Base64.encodeToURL(punchOutAccessToken.getToken()),
+					"UTF-8");
 
-		punchOutSession.setPunchOutStartURL(punchOutStartURL);
+				punchOutStartURL +=
+					StringPool.QUESTION + _PUNCH_OUT_ACCESS_TOKEN_PARAMETER +
+						url;
+
+				return punchOutStartURL;
+			});
 
 		return punchOutSession;
 	}
@@ -479,9 +483,6 @@ public class PunchOutSessionResourceImpl
 
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;
-
-	@Reference
-	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;

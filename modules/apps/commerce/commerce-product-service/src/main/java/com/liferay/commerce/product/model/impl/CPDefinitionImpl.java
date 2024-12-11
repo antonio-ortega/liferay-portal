@@ -10,6 +10,8 @@ import com.liferay.commerce.product.exception.CPDefinitionMetaDescriptionExcepti
 import com.liferay.commerce.product.exception.CPDefinitionMetaKeywordsException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaTitleException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
+import com.liferay.commerce.product.model.CPConfigurationEntry;
+import com.liferay.commerce.product.model.CPConfigurationList;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLocalization;
 import com.liferay.commerce.product.model.CPDefinitionOptionRel;
@@ -19,6 +21,8 @@ import com.liferay.commerce.product.model.CPTaxCategory;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPAttachmentFileEntryLocalServiceUtil;
+import com.liferay.commerce.product.service.CPConfigurationEntryLocalServiceUtil;
+import com.liferay.commerce.product.service.CPConfigurationListLocalServiceUtil;
 import com.liferay.commerce.product.service.CPDefinitionLocalServiceUtil;
 import com.liferay.commerce.product.service.CPDefinitionOptionRelLocalServiceUtil;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalServiceUtil;
@@ -145,6 +149,27 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 	}
 
 	@Override
+	public CPConfigurationEntry fetchMasterCPConfigurationEntry()
+		throws PortalException {
+
+		if (_cpConfigurationEntry != null) {
+			return _cpConfigurationEntry;
+		}
+
+		CPConfigurationList cpConfigurationList =
+			CPConfigurationListLocalServiceUtil.getMasterCPConfigurationList(
+				getGroupId());
+
+		_cpConfigurationEntry =
+			CPConfigurationEntryLocalServiceUtil.fetchCPConfigurationEntry(
+				PortalUtil.getClassNameId(CPDefinition.class.getName()),
+				getCPDefinitionId(),
+				cpConfigurationList.getCPConfigurationListId());
+
+		return _cpConfigurationEntry;
+	}
+
+	@Override
 	public String[] getAvailableLanguageIds() {
 		Set<String> availableLanguageIds = new TreeSet<>();
 
@@ -202,12 +227,12 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 
 	@Override
 	public CPTaxCategory getCPTaxCategory() throws PortalException {
-		if (getCPTaxCategoryId() > 0) {
-			return CPTaxCategoryLocalServiceUtil.getCPTaxCategory(
-				getCPTaxCategoryId());
+		if (getCPTaxCategoryId() <= 0) {
+			return null;
 		}
 
-		return null;
+		return CPTaxCategoryLocalServiceUtil.getCPTaxCategory(
+			getCPTaxCategoryId());
 	}
 
 	@Override
@@ -265,6 +290,14 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 				getCPDefinitionId());
 
 		return _descriptionMap;
+	}
+
+	@Override
+	public CPConfigurationList getMasterCPConfigurationList()
+		throws PortalException {
+
+		return CPConfigurationListLocalServiceUtil.getMasterCPConfigurationList(
+			getGroupId());
 	}
 
 	@Override
@@ -464,6 +497,7 @@ public class CPDefinitionImpl extends CPDefinitionBaseImpl {
 	private static final Log _log = LogFactoryUtil.getLog(
 		CPDefinitionImpl.class);
 
+	private CPConfigurationEntry _cpConfigurationEntry;
 	private UnicodeProperties
 		_deliverySubscriptionTypeSettingsUnicodeProperties;
 	private Map<Locale, String> _descriptionMap;

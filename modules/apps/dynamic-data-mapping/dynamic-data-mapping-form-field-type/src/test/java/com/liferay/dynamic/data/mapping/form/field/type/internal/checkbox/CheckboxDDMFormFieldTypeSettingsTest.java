@@ -5,11 +5,11 @@
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.checkbox;
 
-import com.liferay.dynamic.data.mapping.form.field.type.BaseDDMFormFieldTypeSettingsTestCase;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMFormRule;
+import com.liferay.dynamic.data.mapping.test.util.BaseDDMFormFieldTypeSettingsTestCase;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormLayoutTestUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormFactory;
 import com.liferay.dynamic.data.mapping.util.DDMFormLayoutFactory;
@@ -141,7 +141,7 @@ public class CheckboxDDMFormFieldTypeSettingsTest
 					"label", "tip", "required", "requiredErrorMessage",
 					"showAsSwitcher"),
 				DDMFormLayoutTestUtil.createDDMFormLayoutPage(
-					"name", "fieldReference", "visibilityExpression",
+					"fieldReference", "name", "visibilityExpression",
 					"predefinedValue", "objectFieldName", "fieldNamespace",
 					"indexType", "labelAtStructureLevel", "localizable",
 					"readOnly", "dataType", "type", "repeatable")));

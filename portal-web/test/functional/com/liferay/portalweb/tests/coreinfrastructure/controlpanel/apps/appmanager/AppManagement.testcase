@@ -1,4 +1,4 @@
-@component-name = "portal-user-management"
+@component-name = "portal-commerce"
 definition {
 
 	property portal.release = "true";
@@ -24,7 +24,7 @@ definition {
 			webId = "www.able.com");
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "test@www.able.com");
 
@@ -55,30 +55,27 @@ definition {
 			panel = "Control Panel",
 			portlet = "App Manager");
 
-		ManagementBar.setFilterAndOrder(orderBy = "Title");
+		AssertTextEquals.assertPartialText(
+			key_rowEntry = "Independent",
+			locator1 = "ContentRow#ENTRY_CONTENT_PARTIAL_TEXt",
+			value1 = "Independent");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Installed");
+
+		AssertTextEquals(
+			locator1 = "Message#EMPTY_INFO",
+			value1 = "No apps were found.");
+
+		Click.clickNoMouseOver(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Active");
 
 		AssertTextEquals.assertPartialText(
 			key_rowEntry = "Independent",
 			locator1 = "ContentRow#ENTRY_CONTENT_PARTIAL_TEXt",
 			value1 = "Independent");
 
-		ManagementBar.toggleViewOrder(order = "up");
-
-		ManagementBar.setFilterAndOrder(filterBy = "Communication");
-
-		AssertTextEquals.assertPartialText(
-			key_rowEntry = "Wiki",
-			locator1 = "ContentRow#ENTRY_CONTENT_PARTIAL_TEXt",
-			value1 = "Wiki");
-
-		ManagementBar.toggleViewOrder(order = "down");
-
-		ManagementBar.setFilterAndOrder(filterBy = "Utility");
-
-		AssertTextEquals.assertPartialText(
-			key_rowEntry = "Account",
-			locator1 = "ContentRow#ENTRY_CONTENT_PARTIAL_TEXt",
-			value1 = "Account");
+		Click.clickNoMouseOver(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
 	}
 
 	@priority = 3
@@ -119,16 +116,14 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		var key_appName = "Independent Modules";
 
 		AssertClick(
-			locator1 = "AppManager#APP_NAME",
-			value1 = "Independent Modules");
+			key_text = ${key_appName},
+			locator1 = "Link#ANY",
+			value1 = ${key_appName});
 
 		AssertElementNotPresent(locator1 = "AppManager#APP_NAME");
 	}
@@ -141,10 +136,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Adaptive Media";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Adaptive Media",
@@ -170,51 +162,49 @@ definition {
 	@description = "This ensures that the Asset Libraries app in the app manager can be deactivated and reactivated."
 	@priority = 3
 	test CanDeactivateAndActivateAssetLibraries {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
+		property portal.release = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 		property testray.main.component.name = "Depot";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
-			appName = "Asset Libraries",
-			appStatus = "Active");
+			appName = "Liferay Depot Web",
+			appStatus = "Active",
+			searchTerm = "com.liferay.depot.web");
 
-		AppManager.deactivateApp(appName = "Asset Libraries");
+		AppManager.deactivateApp(appName = "com.liferay.depot.web");
 
 		AssertConsoleTextNotPresent(value1 = "java.lang.NullPointerException");
 
 		AppManager.viewApp(
-			appName = "Asset Libraries",
-			appStatus = "Resolved");
+			appName = "Liferay Depot Web",
+			appStatus = "Resolved",
+			searchTerm = "com.liferay.depot.web");
 
-		AppManager.activateApp(appName = "Asset Libraries");
+		AppManager.activateApp(appName = "com.liferay.depot.web");
 
 		AssertConsoleTextNotPresent(value1 = "java.lang.NullPointerException");
 
 		AppManager.viewApp(
-			appName = "Asset Libraries",
-			appStatus = "Active");
+			appName = "Liferay Depot Web",
+			appStatus = "Active",
+			searchTerm = "com.liferay.depot.web");
 	}
 
 	@description = "This ensures that the Blogs app in the app manager can be deactivated and reactivated."
 	@priority = 3
 	test CanDeactivateAndActivateBlogs {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 		property testray.main.component.name = "Blogs";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Blogs",
@@ -245,10 +235,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Content Page Review";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Comment",
@@ -274,35 +261,36 @@ definition {
 	@description = "This ensures that the Document Library Opener app in the app manager can be deactivated and reactivated."
 	@priority = 3
 	test CanDeactivateAndActivateDocumentLibraryOpener {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
+		property portal.release = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 		property testray.main.component.name = "Document Management";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
-			appName = "Document Library Opener",
-			appStatus = "Active");
+			appName = "Liferay Document Library Opener Service",
+			appStatus = "Active",
+			searchTerm = "com.liferay.document.library.opener.service");
 
-		AppManager.deactivateApp(appName = "Document Library Opener");
+		AppManager.deactivateApp(appName = "Liferay Document Library Opener Service");
 
 		AssertConsoleTextNotPresent(value1 = "java.lang.NullPointerException");
 
 		AppManager.viewApp(
-			appName = "Document Library Opener",
-			appStatus = "Resolved");
+			appName = "Liferay Document Library Opener Service",
+			appStatus = "Resolved",
+			searchTerm = "com.liferay.document.library.opener.service");
 
-		AppManager.activateApp(appName = "Document Library Opener");
+		AppManager.activateApp(appName = "Liferay Document Library Opener Service");
 
 		AssertConsoleTextNotPresent(value1 = "java.lang.NullPointerException");
 
 		AppManager.viewApp(
-			appName = "Document Library Opener",
-			appStatus = "Active");
+			appName = "Liferay Document Library Opener Service",
+			appStatus = "Active",
+			searchTerm = "com.liferay.document.library.opener.service");
 	}
 
 	@description = "This ensures that the Knowledge Base app in the app manager can be deactivated and reactivated."
@@ -313,10 +301,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Knowledge Base";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Knowledge Base",
@@ -347,10 +332,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Message Boards";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Message Boards",
@@ -381,10 +363,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Notifications";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Notifications",
@@ -415,10 +394,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Questions";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Questions",
@@ -449,10 +425,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Ratings";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Ratings",
@@ -483,10 +456,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Asset Sharing";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Sharing",
@@ -517,10 +487,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Translations Management";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Translation",
@@ -551,10 +518,7 @@ definition {
 		property test.run.type = "single";
 		property testray.main.component.name = "Wiki";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.viewApp(
 			appName = "Wiki",
@@ -578,6 +542,7 @@ definition {
 	}
 
 	@description = "This test asserts that user can filter app by Category in marketplace store."
+	@ignore = "true"
 	@priority = 3
 	test CanFilterMarketplaceStoreAppsByCategory {
 		property test.liferay.virtual.instance = "false";
@@ -622,6 +587,7 @@ definition {
 	}
 
 	@description = "This test asserts that user can filter app by liferay version in marketplace store."
+	@ignore = "true"
 	@priority = 3
 	test CanFilterMarketplaceStoreAppsByLiferayVersion {
 		property test.liferay.virtual.instance = "false";
@@ -666,6 +632,7 @@ definition {
 	}
 
 	@description = "This test asserts that user can filter app by Price in marketplace store."
+	@ignore = "true"
 	@priority = 3
 	test CanFilterMarketplaceStoreAppsByPrice {
 		property test.liferay.virtual.instance = "false";
@@ -714,10 +681,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		var appName = "test-app-portlet";
 
@@ -736,10 +700,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		var key_appName = "title.zip";
 
@@ -761,6 +722,7 @@ definition {
 	}
 
 	@description = "This test check search apps in marketplace store and check sign in and sign out."
+	@ignore = "true"
 	@priority = 3
 	test SearchMarketplaceStore {
 		property test.liferay.virtual.instance = "false";
@@ -820,10 +782,7 @@ definition {
 
 		var appName = "test-app-portlet";
 
-		ApplicationsMenu.gotoPortlet(
-			category = "System",
-			panel = "Control Panel",
-			portlet = "App Manager");
+		AppManager.openAppManagerAdmin();
 
 		AppManager.uploadApp(
 			appName = ${appName},
@@ -861,6 +820,7 @@ definition {
 	}
 
 	@description = "This test view purchased apps in marketplace purchased page."
+	@ignore = "true"
 	@priority = 3
 	test ViewPurchasedApp {
 		property test.liferay.virtual.instance = "false";

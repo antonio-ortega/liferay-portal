@@ -5,13 +5,15 @@
 
 import ClayBreadcrumb from '@clayui/breadcrumb';
 import {ReactPortal} from '@liferay/frontend-js-react-web';
+import classNames from 'classnames';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
+import {useDragLayer} from 'react-dnd';
 
 import {ITEM_ACTIVATION_ORIGINS} from '../config/constants/itemActivationOrigins';
 import {ITEM_TYPES} from '../config/constants/itemTypes';
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
 import {
-	useActiveItemId,
+	useActiveItemIds,
 	useActiveItemType,
 	useSelectItem,
 } from '../contexts/ControlsContext';
@@ -30,6 +32,23 @@ const DROP_ZONE_BASE_LABEL = Liferay.Language.get('drop-zone');
 const ELLIPSIS_BUFFER_MARGIN = 4;
 
 export function LayoutBreadcrumbs() {
+	const activeItemIds = useActiveItemIds();
+
+	const {isDragging} = useDragLayer((monitor) => ({
+		isDragging: monitor.isDragging(),
+	}));
+
+	if (
+		isDragging ||
+		(Liferay.FeatureFlags['LPD-18221'] && activeItemIds.length > 1)
+	) {
+		return null;
+	}
+
+	return <LayoutBreadcrumbsContent />;
+}
+
+function LayoutBreadcrumbsContent() {
 	const wrapperElement = useMemo(
 		() => document.getElementById('wrapper'),
 		[]
@@ -52,10 +71,13 @@ export function LayoutBreadcrumbs() {
 		);
 	}, [wrapperElement, breadcrumbItems.length]);
 
-	return wrapperElement && breadcrumbItems.length ? (
+	return wrapperElement ? (
 		<ReactPortal container={wrapperElement}>
 			<div
-				className="bg-white border-top cadmin page-editor__layout-breadcrumbs position-fixed px-3"
+				className={classNames(
+					'bg-white border-top cadmin page-editor__layout-breadcrumbs position-fixed px-3',
+					{'d-none': !breadcrumbItems.length}
+				)}
 				ref={containerRef}
 			>
 				<div
@@ -74,7 +96,10 @@ export function LayoutBreadcrumbs() {
 }
 
 function useBreadcrumbItems() {
-	const activeItemId = useActiveItemId();
+	const activeItemIds = useActiveItemIds();
+
+	const [activeItemId] = activeItemIds;
+
 	const activeItemType = useActiveItemType();
 	const globalContext = useGlobalContext();
 	const selectItem = useSelectItem();
@@ -82,6 +107,10 @@ function useBreadcrumbItems() {
 	return useSelectorCallback(
 		(state) => {
 			const items = [];
+
+			if (!activeItemId) {
+				return items;
+			}
 
 			const addLayoutDataItems = (layoutDataItem) => {
 				if (
@@ -105,11 +134,7 @@ function useBreadcrumbItems() {
 							: DROP_ZONE_BASE_LABEL,
 					});
 				}
-				else if (
-					layoutDataItem.type !== LAYOUT_DATA_ITEM_TYPES.column &&
-					layoutDataItem.type !==
-						LAYOUT_DATA_ITEM_TYPES.collectionItem
-				) {
+				else {
 					items.push({
 						label: selectLayoutDataItemLabel(state, layoutDataItem),
 						onClick: () =>
@@ -129,9 +154,8 @@ function useBreadcrumbItems() {
 				addLayoutDataItems(state.layoutData.items[activeItemId]);
 			}
 			else if (activeItemType === ITEM_TYPES.editable) {
-				const [, fragmentEntryLinkId, editableId] = activeItemId.match(
-					/^([^-]+)-([^\n]+)$/
-				);
+				const [, fragmentEntryLinkId, editableId] =
+					activeItemId.match(/^([^-]+)-([^\n]+)$/);
 
 				items.push({
 					label: editableId,
@@ -169,10 +193,6 @@ function useBreadcrumbItems() {
 
 function useEllipsisBuffer(breacrumbItems, containerRef) {
 	const [ellipsisBuffer, setEllipsisBuffer] = useState(0);
-
-	useEffect(() => {
-		setEllipsisBuffer(0);
-	}, [breacrumbItems]);
 
 	useEffect(() => {
 		const containerElement = containerRef.current;

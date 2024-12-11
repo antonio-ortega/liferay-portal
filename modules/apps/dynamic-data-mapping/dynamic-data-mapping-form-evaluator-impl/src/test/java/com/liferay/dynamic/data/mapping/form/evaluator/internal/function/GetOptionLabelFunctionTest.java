@@ -9,6 +9,7 @@ import com.liferay.dynamic.data.mapping.expression.GetFieldPropertyResponse;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
@@ -43,22 +44,23 @@ public class GetOptionLabelFunctionTest {
 		DDMFormFieldOptions ddmFormFieldOptions = Mockito.mock(
 			DDMFormFieldOptions.class);
 
-		LocalizedValue localizedValue = new LocalizedValue();
-
-		localizedValue.addString(LocaleUtil.US, "Option 1");
-		localizedValue.addString(LocaleUtil.BRAZIL, "Opcao 1");
-
 		Mockito.when(
-			ddmFormFieldOptions.getOptionLabels(Mockito.eq("optionName"))
+			ddmFormFieldOptions.getOptionLabels(Mockito.eq("option1"))
 		).thenReturn(
-			localizedValue
+			_getLocalizedValue("Option 1", "Opcao 1")
 		);
 
-		GetFieldPropertyResponse.Builder builder =
-			GetFieldPropertyResponse.Builder.newBuilder(ddmFormFieldOptions);
+		Mockito.when(
+			ddmFormFieldOptions.getOptionLabels(Mockito.eq("option2"))
+		).thenReturn(
+			_getLocalizedValue("Option 2", "Opcao 2")
+		);
 
 		ddmExpressionFieldAccessor.setGetFieldPropertyResponseFunction(
-			getFieldPropertyRequest -> builder.build());
+			getFieldPropertyRequest ->
+				GetFieldPropertyResponse.Builder.newBuilder(
+					ddmFormFieldOptions
+				).build());
 
 		_getOptionLabelFunction.setDDMExpressionFieldAccessor(
 			ddmExpressionFieldAccessor);
@@ -67,8 +69,11 @@ public class GetOptionLabelFunctionTest {
 			new DefaultDDMExpressionParameterAccessor());
 
 		Assert.assertEquals(
-			"Opcao 1",
-			_getOptionLabelFunction.apply("fieldName", "optionName"));
+			"Opcao 1", _getOptionLabelFunction.apply("fieldName", "option1"));
+		Assert.assertEquals(
+			"Opcao 1, Opcao 2",
+			_getOptionLabelFunction.apply(
+				"fieldName", JSONUtil.putAll("option1", "option2")));
 	}
 
 	@Test
@@ -117,6 +122,15 @@ public class GetOptionLabelFunctionTest {
 		Assert.assertEquals(
 			"Option 1",
 			_getOptionLabelFunction.apply("fieldName", "optionName"));
+	}
+
+	private LocalizedValue _getLocalizedValue(String value1, String value2) {
+		LocalizedValue localizedValue = new LocalizedValue();
+
+		localizedValue.addString(LocaleUtil.US, value1);
+		localizedValue.addString(LocaleUtil.BRAZIL, value2);
+
+		return localizedValue;
 	}
 
 	private GetOptionLabelFunction _getOptionLabelFunction;

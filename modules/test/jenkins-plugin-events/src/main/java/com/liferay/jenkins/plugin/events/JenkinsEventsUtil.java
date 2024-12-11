@@ -18,6 +18,8 @@ import hudson.model.labels.LabelAtom;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jenkins.model.Jenkins;
 
@@ -29,8 +31,30 @@ import org.json.JSONObject;
  */
 public class JenkinsEventsUtil {
 
+	public static String getMasterHostname() {
+		Jenkins jenkins = Jenkins.getInstanceOrNull();
+
+		if (jenkins == null) {
+			return null;
+		}
+
+		String rootUrl = jenkins.getRootUrl();
+
+		if (rootUrl == null) {
+			return null;
+		}
+
+		Matcher matcher = _pattern.matcher(rootUrl);
+
+		if (!matcher.find()) {
+			return null;
+		}
+
+		return matcher.group("masterHostname");
+	}
+
 	public static void publish(
-		JenkinsEventsDescriptor.EventTrigger eventTrigger, Object eventObject) {
+		JenkinsEventsDescriptor.EventType eventType, Object eventObject) {
 
 		if (_jenkinsEventsDescriptor == null) {
 			return;
@@ -47,9 +71,9 @@ public class JenkinsEventsUtil {
 		payloadJSONObject.put(
 			"build", _getBuildJSONObject(eventObject)
 		).put(
-			"computer", _getComputerJSONObject(eventObject, eventTrigger)
+			"computer", _getComputerJSONObject(eventObject, eventType)
 		).put(
-			"eventTrigger", eventTrigger
+			"eventType", eventType
 		).put(
 			"jenkins", _getJenkinsJSONObject(jenkins)
 		).put(
@@ -59,7 +83,7 @@ public class JenkinsEventsUtil {
 		);
 
 		_jenkinsEventsDescriptor.publish(
-			payloadJSONObject.toString(), eventTrigger);
+			payloadJSONObject.toString(), eventType);
 	}
 
 	public static void setJenkinsEventsDescriptor(
@@ -132,7 +156,7 @@ public class JenkinsEventsUtil {
 	}
 
 	private static JSONObject _getComputerJSONObject(
-		Object eventObject, JenkinsEventsDescriptor.EventTrigger eventTrigger) {
+		Object eventObject, JenkinsEventsDescriptor.EventType eventType) {
 
 		Computer computer = _getComputer(eventObject);
 
@@ -142,14 +166,10 @@ public class JenkinsEventsUtil {
 
 		JSONObject jsonObject = new JSONObject();
 
-		if (eventTrigger ==
-				JenkinsEventsDescriptor.EventTrigger.COMPUTER_IDLE) {
-
+		if (eventType == JenkinsEventsDescriptor.EventType.COMPUTER_IDLE) {
 			jsonObject.put("busy", false);
 		}
-		else if (eventTrigger ==
-					JenkinsEventsDescriptor.EventTrigger.COMPUTER_BUSY) {
-
+		else if (eventType == JenkinsEventsDescriptor.EventType.COMPUTER_BUSY) {
 			jsonObject.put("busy", true);
 		}
 		else {
@@ -288,5 +308,7 @@ public class JenkinsEventsUtil {
 	}
 
 	private static JenkinsEventsDescriptor _jenkinsEventsDescriptor;
+	private static final Pattern _pattern = Pattern.compile(
+		"https://(?<masterHostname>test-\\d+-\\d+).liferay.com/");
 
 }

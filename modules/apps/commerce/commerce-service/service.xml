@@ -188,7 +188,7 @@
 
 		<column name="billingAddressId" type="long" />
 		<column name="commerceAccountId" type="long" />
-		<column name="commerceCurrencyId" type="long" />
+		<column name="commerceCurrencyCode" type="String" />
 		<column name="commerceOrderTypeId" type="long" />
 		<column name="commerceShippingMethodId" type="long" />
 		<column name="deliveryCommerceTermEntryId" type="long" />
@@ -201,6 +201,7 @@
 		<column name="deliveryCommerceTermEntryName" type="String" />
 		<column name="lastPriceUpdateDate" type="Date" />
 		<column name="manuallyAdjusted" type="boolean" />
+		<column name="name" type="String" />
 		<column name="orderDate" type="Date" />
 		<column name="orderStatus" type="int" />
 		<column db-name="paymentCTermEntryDescription" name="paymentCommerceTermEntryDescription" type="String" />
@@ -209,6 +210,7 @@
 		<column name="printedNote" type="String" />
 		<column name="purchaseOrderNumber" type="String" />
 		<column name="requestedDeliveryDate" type="Date" />
+		<column name="shippable" type="boolean" />
 		<column name="shippingAmount" type="BigDecimal" />
 		<column name="shippingDiscountAmount" type="BigDecimal" />
 		<column db-name="shippingDiscountPercentLevel1" name="shippingDiscountPercentageLevel1" type="BigDecimal" />
@@ -334,7 +336,7 @@
 		<column name="customerCommerceOrderItemId" type="long" />
 		<column name="parentCommerceOrderItemId" type="long" />
 		<column name="shippingAddressId" type="long" />
-		<column name="deliveryGroup" type="String" />
+		<column name="deliveryGroupName" type="String" />
 		<column name="deliveryMaxSubscriptionCycles" type="long" />
 		<column name="deliverySubscriptionLength" type="int" />
 		<column name="deliverySubscriptionType" type="String" />
@@ -720,6 +722,7 @@
 		<column name="imageId" type="long" />
 		<column name="priority" type="double" />
 		<column name="trackingURL" type="String" />
+		<column name="typeSettings" type="String" />
 
 		<!-- Order -->
 
@@ -935,6 +938,7 @@
 		<exception>CommerceOrderDate</exception>
 		<exception>CommerceOrderDefaultBillingAddress</exception>
 		<exception>CommerceOrderGuestCheckout</exception>
+		<exception>CommerceOrderItemPrice</exception>
 		<exception>CommerceOrderItemRequestedDeliveryDate</exception>
 		<exception>CommerceOrderNoteContent</exception>
 		<exception>CommerceOrderPaymentMethod</exception>

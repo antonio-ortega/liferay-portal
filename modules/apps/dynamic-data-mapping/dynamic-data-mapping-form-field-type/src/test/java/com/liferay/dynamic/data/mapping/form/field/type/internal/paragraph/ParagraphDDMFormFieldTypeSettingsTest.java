@@ -5,11 +5,11 @@
 
 package com.liferay.dynamic.data.mapping.form.field.type.internal.paragraph;
 
-import com.liferay.dynamic.data.mapping.form.field.type.BaseDDMFormFieldTypeSettingsTestCase;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMFormRule;
+import com.liferay.dynamic.data.mapping.test.util.BaseDDMFormFieldTypeSettingsTestCase;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormLayoutTestUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormFactory;
 import com.liferay.dynamic.data.mapping.util.DDMFormLayoutFactory;
@@ -126,7 +126,7 @@ public class ParagraphDDMFormFieldTypeSettingsTest
 				DDMFormLayoutTestUtil.createDDMFormLayoutPage(
 					"label", "text", "tip", "required"),
 				DDMFormLayoutTestUtil.createDDMFormLayoutPage(
-					"name", "fieldReference", "showLabel", "repeatable",
+					"fieldReference", "name", "showLabel", "repeatable",
 					"predefinedValue", "visibilityExpression", "fieldNamespace",
 					"indexType", "localizable", "readOnly", "dataType", "type",
 					"rulesConditionDisabled")));

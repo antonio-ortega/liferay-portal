@@ -9,25 +9,54 @@ import {
 	openModal,
 	openSelectionModal,
 	openSimpleInputModal,
+	setFormValues,
+	sub,
 } from 'frontend-js-web';
 
+import openContentTypeModal from '../commands/openContentTypeModal';
+import openDeletePageTemplateModal from '../commands/openDeletePageTemplateModal';
+import openInUseModal from '../commands/openInUseModal';
 import {MODAL_TYPES} from '../constants/modalTypes';
-import openDeletePageTemplateModal from '../modal/openDeletePageTemplateModal';
-import openDisplayPageModal from '../modal/openDisplayPageModal.es';
 
 const ACTIONS = {
-	changeContentType({changeContentTypeURL, mappingTypes}, namespace) {
-		openDisplayPageModal({
-			formSubmitURL: changeContentTypeURL,
+	changeContentType(
+		{
+			assetType,
+			changeContentTypeURL,
+			classNameId,
+			classTypeId,
+			hasMissingType,
 			mappingTypes,
-			namespace,
-			spritemap: getSpritemap(),
-			title: Liferay.Language.get('change-content-type'),
-			type: MODAL_TYPES.edit,
-			warningMessage: Liferay.Language.get(
-				'changing-the-content-type-may-cause-some-elements-of-the-display-page-template-to-lose-their-previous-mapping'
-			),
-		});
+			viewUsagesURL,
+		},
+		namespace
+	) {
+		if (viewUsagesURL) {
+			openInUseModal({assetType, status: 'info', viewUsagesURL});
+		}
+		else {
+			openContentTypeModal({
+				description: hasMissingType
+					? Liferay.Language.get(
+							'this-display-page-template-does-not-have-any-content-type-assigned-you-must-select-one-to-edit-it'
+						)
+					: '',
+				disableWarning: Boolean(hasMissingType) || !assetType,
+				formSubmitURL: changeContentTypeURL,
+				mappingTypes,
+				namespace,
+				selectedSubtype: classTypeId,
+				selectedType: classNameId,
+				spritemap: getSpritemap(),
+				title: hasMissingType
+					? Liferay.Language.get('select-content-type')
+					: Liferay.Language.get('change-content-type'),
+				type: MODAL_TYPES.edit,
+				warningMessage: Liferay.Language.get(
+					'changing-the-content-type-may-cause-some-elements-of-the-display-page-template-to-lose-their-previous-mapping'
+				),
+			});
+		}
 	},
 
 	copyDisplayPage({copyDisplayPageURL}) {
@@ -77,6 +106,41 @@ const ACTIONS = {
 		else {
 			send(markAsDefaultDisplayPageURL);
 		}
+	},
+
+	moveDisplayPage(
+		{
+			itemSelectorURL,
+			layoutPageTemplateEntryId,
+			layoutPageTemplateEntryName,
+			moveSelectedDisplayPageURL,
+		},
+		portletNamespace
+	) {
+		openSelectionModal({
+			height: '70vh',
+			onSelect: (selectedItem) => {
+				const form = document.getElementById(
+					`${portletNamespace}actionEntriesFm`
+				);
+
+				setFormValues(form, {
+					copyPermissions: true,
+					layoutPageTemplateEntriesIds: layoutPageTemplateEntryId,
+					layoutParentPageTemplateCollectionId:
+						selectedItem.resourceid,
+				});
+
+				submitForm(form, moveSelectedDisplayPageURL);
+			},
+			selectEventName: 'selectFolder',
+			size: 'md',
+			title: sub(
+				Liferay.Language.get('move-x-to'),
+				`"${layoutPageTemplateEntryName}"`
+			),
+			url: itemSelectorURL,
+		});
 	},
 
 	permissionsDisplayPage({permissionsDisplayPageURL}) {
@@ -155,7 +219,10 @@ function send(url) {
 export default function DisplayPageDropdownPropsTransformer({
 	actions,
 	additionalProps,
+	inputName,
+	inputValue,
 	portletNamespace,
+	title,
 	...otherProps
 }) {
 	const updateItem = (item) => {
@@ -185,5 +252,11 @@ export default function DisplayPageDropdownPropsTransformer({
 	return {
 		...otherProps,
 		actions: actions?.map(updateItem),
+		checkboxProps: {
+			'aria-label': sub(Liferay.Language.get('select-x'), title),
+			'name': inputName,
+			'value': inputValue,
+		},
+		title,
 	};
 }

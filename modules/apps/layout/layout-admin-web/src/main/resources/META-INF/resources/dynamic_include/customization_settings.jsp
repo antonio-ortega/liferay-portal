@@ -13,13 +13,31 @@ String portletNamespace = PortalUtil.getPortletNamespace(LayoutAdminPortletKeys.
 boolean hasUpdateLayoutPermission = GetterUtil.getBoolean(request.getAttribute(CustomizationSettingsControlMenuJSPDynamicInclude.CUSTOMIZATION_SETTINGS_LAYOUT_UPDATE_PERMISSION));
 %>
 
-<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/customization_settings.css") %>" rel="stylesheet" type="text/css" />
+<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/customization_settings.css") %>' rel="stylesheet" type="text/css" />
 
 <liferay-ui:success key='<%= LayoutAdminPortletKeys.GROUP_PAGES + "requestProcessed" %>' message="your-request-completed-successfully" />
 
 <div id="<%= portletNamespace %>customizationBar">
 	<div class="control-menu-level-2">
 		<clay:container-fluid>
+			<div class="control-menu-level-2-heading d-flex d-md-none">
+				<liferay-ui:message key="customization-options" />
+
+				<clay:button
+					additionalProps='<%=
+						HashMapBuilder.<String, Object>put(
+							"portletNamespace", portletNamespace
+						).build()
+					%>'
+					aria-label='<%= LanguageUtil.get(request, "close") %>'
+					cssClass="close"
+					displayType="unstyled"
+					icon="times"
+					propsTransformer="{CustomizationButtonPropsTransformer} from layout-admin-web"
+					small="<%= true %>"
+				/>
+			</div>
+
 			<ul class="control-menu-level-2-nav control-menu-nav flex-column flex-md-row">
 				<li class="c-mb-0 control-menu-nav-item flex-shrink-1">
 					<span class="text-info">
@@ -61,7 +79,7 @@ boolean hasUpdateLayoutPermission = GetterUtil.getBoolean(request.getAttribute(C
 					</li>
 
 					<liferay-frontend:component
-						module="js/LayoutCustomizationSettings"
+						module="{LayoutCustomizationSettings} from layout-admin-web"
 					/>
 				</c:if>
 
@@ -74,7 +92,17 @@ boolean hasUpdateLayoutPermission = GetterUtil.getBoolean(request.getAttribute(C
 					<clay:dropdown-actions
 						aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 						dropdownItems="<%= customizationSettingsActionDropdownItemsProvider.getActionDropdownItems() %>"
-						propsTransformer="js/CustomizationSettingsActionDropdownPropsTransformer"
+						propsTransformer="{CustomizationSettingsActionDropdownPropsTransformer} from layout-admin-web"
+					/>
+				</li>
+				<li class="c-ml-2 control-menu-nav-item d-block d-md-none flex-shrink-0">
+					<clay:dropdown-menu
+						aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
+						dropdownItems="<%= customizationSettingsActionDropdownItemsProvider.getActionDropdownItems() %>"
+						icon="caret-bottom"
+						label="show-actions"
+						propsTransformer="{CustomizationSettingsActionDropdownPropsTransformer} from layout-admin-web"
+						swapIconSide="<%= true %>"
 					/>
 				</li>
 			</ul>

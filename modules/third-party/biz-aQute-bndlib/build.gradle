@@ -10,6 +10,10 @@ dependencies {
 	compileOnly group: "org.slf4j", name: "slf4j-api", transitive: false, version: "1.7.25"
 }
 
+jarSources {
+	mustRunAfter patch
+}
+
 patch {
 	ext {
 		autoClean = false
@@ -17,6 +21,7 @@ patch {
 
 	fileNames "aQute/bnd/classfile/ConstantPool.java"
 	fileNames "aQute/bnd/osgi/Analyzer.java"
+	fileNames "aQute/bnd/osgi/Jar.java"
 
 	originalLibModuleName = "biz.aQute.bndlib"
 	originalLibSrcBaseUrl = "https://repository-cdn.liferay.com/nexus/content/groups/public/com/liferay/"

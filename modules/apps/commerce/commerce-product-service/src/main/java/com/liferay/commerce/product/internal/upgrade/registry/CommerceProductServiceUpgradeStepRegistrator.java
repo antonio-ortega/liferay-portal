@@ -6,8 +6,12 @@
 package com.liferay.commerce.product.internal.upgrade.registry;
 
 import com.liferay.account.settings.AccountEntryGroupSettings;
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.commerce.product.constants.CPPortletKeys;
 import com.liferay.commerce.product.internal.upgrade.v1_10_1.CommerceSiteTypeUpgradeProcess;
 import com.liferay.commerce.product.internal.upgrade.v1_11_0.CPAttachmentFileEntryGroupUpgradeProcess;
 import com.liferay.commerce.product.internal.upgrade.v1_11_1.CPDisplayLayoutUpgradeProcess;
@@ -31,6 +35,13 @@ import com.liferay.commerce.product.internal.upgrade.v2_5_0.FriendlyURLEntryUpgr
 import com.liferay.commerce.product.internal.upgrade.v3_9_2.MiniumSiteInitializerUpgradeProcess;
 import com.liferay.commerce.product.internal.upgrade.v4_0_0.util.CommerceChannelAccountEntryRelTable;
 import com.liferay.commerce.product.internal.upgrade.v4_0_2.CommerceRepositoryUpgradeProcess;
+import com.liferay.commerce.product.internal.upgrade.v5_11_0.CPAttachmentFileEntryGalleryEnabledUpgradeProcess;
+import com.liferay.commerce.product.internal.upgrade.v5_11_1.ProductDefinitionConfigurationUpgradeProcess;
+import com.liferay.commerce.product.internal.upgrade.v5_14_0.CPDefinitionSpecificationOptionValueUpgradeProcess;
+import com.liferay.commerce.product.internal.upgrade.v5_21_0.util.CPConfigurationEntryTable;
+import com.liferay.commerce.product.internal.upgrade.v5_21_0.util.CPConfigurationListTable;
+import com.liferay.commerce.product.internal.upgrade.v5_22_0.CPSpecificationOptionUpgradeProcess;
+import com.liferay.commerce.product.internal.upgrade.v5_25_0.util.CPConfigurationListRelTable;
 import com.liferay.commerce.product.internal.upgrade.v5_4_0.CommercePermissionUpgradeProcess;
 import com.liferay.commerce.product.internal.upgrade.v5_5_0.util.CPInstanceUnitOfMeasureTable;
 import com.liferay.counter.kernel.service.CounterLocalService;
@@ -52,9 +63,14 @@ import com.liferay.portal.kernel.upgrade.DummyUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
 import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeProcessFactory;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
+import com.liferay.portlet.display.template.upgrade.BaseUpgradePortletPreferences;
 
+import javax.portlet.PortletPreferences;
+
+import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -407,6 +423,199 @@ public class CommerceProductServiceUpgradeStepRegistrator
 				"CPOption", "DDMFormFieldTypeName",
 				"commerceOptionTypeKey VARCHAR(75) null"));
 
+		registry.register(
+			"5.10.0", "5.11.0",
+			new CPAttachmentFileEntryGalleryEnabledUpgradeProcess());
+
+		registry.register(
+			"5.11.0", "5.11.1",
+			new ProductDefinitionConfigurationUpgradeProcess(
+				_configurationAdmin));
+
+		registry.register(
+			"5.11.1", "5.12.0",
+			new com.liferay.commerce.product.internal.upgrade.v5_12_0.
+				CPAttachmentFileEntryUpgradeProcess(_assetEntryLocalService));
+
+		registry.register(
+			"5.12.0", "5.12.1",
+			new com.liferay.commerce.product.internal.upgrade.v5_12_1.
+				CommerceChannelUpgradeProcess(
+					_accountEntryGroupSettings, _configurationProvider));
+
+		registry.register(
+			"5.12.1", "5.13.0",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {
+						{"CPMeasurementUnit", "CPMeasurementUnitId"}
+					};
+				}
+
+			});
+
+		registry.register(
+			"5.13.0", "5.14.0",
+			new CPDefinitionSpecificationOptionValueUpgradeProcess());
+
+		registry.register(
+			"5.14.0", "5.15.0",
+			UpgradeProcessFactory.addColumns(
+				"CPSpecificationOption", "priority DOUBLE"));
+
+		registry.register(
+			"5.15.0", "5.16.0",
+			UpgradeProcessFactory.addColumns(
+				"CPSpecificationOption", "listTypeDefinitionId LONG"));
+
+		registry.register(
+			"5.16.0", "5.17.0",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {
+						{"CPOptionCategory", "CPOptionCategoryId"}
+					};
+				}
+
+			});
+
+		registry.register(
+			"5.17.0", "5.18.0",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {
+						{"CPSpecificationOption", "CPSpecificationOptionId"}
+					};
+				}
+
+			});
+
+		registry.register(
+			"5.18.0", "5.19.0",
+			UpgradeProcessFactory.addColumns(
+				"CPInstanceUOM", "pricingQuantity BIGDECIMAL"));
+
+		registry.register(
+			"5.19.0", "5.20.0",
+			new BaseExternalReferenceCodeUpgradeProcess() {
+
+				@Override
+				protected String[][] getTableAndPrimaryKeyColumnNames() {
+					return new String[][] {
+						{
+							"CPDSpecificationOptionValue",
+							"CPDSpecificationOptionValueId"
+						}
+					};
+				}
+
+			});
+
+		registry.register(
+			"5.20.0", "5.21.0", CPConfigurationEntryTable.create(),
+			CPConfigurationListTable.create());
+
+		registry.register(
+			"5.21.0", "5.21.1",
+			new BaseUpgradePortletPreferences() {
+
+				@Override
+				protected String[] getPortletIds() {
+					return new String[] {
+						CPPortletKeys.CP_ASSET_CATEGORIES_NAVIGATION +
+							"_INSTANCE_%"
+					};
+				}
+
+				@Override
+				protected void upgradePreferences(
+						long companyId, long ownerId, int ownerType, long plid,
+						String portletId, PortletPreferences portletPreferences)
+					throws Exception {
+
+					long assetVocabularyId = GetterUtil.getLong(
+						portletPreferences.getValue("assetVocabularyId", null));
+
+					AssetVocabulary assetVocabulary =
+						_assetVocabularyLocalService.fetchAssetVocabulary(
+							assetVocabularyId);
+
+					if (assetVocabulary != null) {
+						portletPreferences.setValue(
+							"assetVocabularyExternalReferenceCode",
+							assetVocabulary.getExternalReferenceCode());
+					}
+
+					long rootAssetCategoryId = GetterUtil.getLong(
+						portletPreferences.getValue(
+							"rootAssetCategoryId", null));
+
+					AssetCategory assetCategory =
+						_assetCategoryLocalService.fetchAssetCategory(
+							rootAssetCategoryId);
+
+					if (assetCategory != null) {
+						portletPreferences.setValue(
+							"rootAssetCategoryExternalReferenceCode",
+							assetCategory.getExternalReferenceCode());
+					}
+				}
+
+			});
+
+		registry.register(
+			"5.21.1", "5.22.0", new CPSpecificationOptionUpgradeProcess());
+
+		registry.register(
+			"5.22.0", "5.23.0",
+			UpgradeProcessFactory.addColumns(
+				"CPConfigurationEntry", "commerceAvailabilityEstimateId LONG"));
+
+		registry.register(
+			"5.23.0", "5.23.1",
+			new BaseUpgradePortletPreferences() {
+
+				@Override
+				protected String[] getPortletIds() {
+					return new String[] {CPPortletKeys.CP_CATEGORY_CONTENT_WEB};
+				}
+
+				@Override
+				protected void upgradePreferences(
+						long companyId, long ownerId, int ownerType, long plid,
+						String portletId, PortletPreferences portletPreferences)
+					throws Exception {
+
+					long assetCategoryId = GetterUtil.getLong(
+						portletPreferences.getValue("assetCategoryId", null));
+
+					AssetCategory assetCategory =
+						_assetCategoryLocalService.fetchAssetCategory(
+							assetCategoryId);
+
+					if (assetCategory != null) {
+						portletPreferences.setValue(
+							"assetCategoryExternalReferenceCode",
+							assetCategory.getExternalReferenceCode());
+					}
+				}
+
+			});
+
+		registry.register(
+			"5.23.1", "5.24.0",
+			UpgradeProcessFactory.addColumns(
+				"CPConfigurationEntry", "groupId LONG"));
+
+		registry.register(
+			"5.24.0", "5.25.0", CPConfigurationListRelTable.create());
+
 		if (_log.isInfoEnabled()) {
 			_log.info("Commerce product upgrade step registrator finished");
 		}
@@ -425,10 +634,16 @@ public class CommerceProductServiceUpgradeStepRegistrator
 	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
+	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private ConfigurationAdmin _configurationAdmin;
 
 	@Reference
 	private ConfigurationProvider _configurationProvider;

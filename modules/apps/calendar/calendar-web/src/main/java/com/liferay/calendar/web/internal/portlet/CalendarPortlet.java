@@ -1196,14 +1196,14 @@ public class CalendarPortlet extends MVCPortlet {
 	}
 
 	private TimeZone _getTimeZone(PortletRequest portletRequest) {
-		PortletPreferences preferences = portletRequest.getPreferences();
+		PortletPreferences portletPreferences = portletRequest.getPreferences();
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		User user = themeDisplay.getUser();
 
-		String timeZoneId = preferences.getValue(
+		String timeZoneId = portletPreferences.getValue(
 			"timeZoneId", user.getTimeZoneId());
 
 		if (Validator.isNull(timeZoneId)) {
@@ -1323,7 +1323,7 @@ public class CalendarPortlet extends MVCPortlet {
 			resourceRequest, "calendarIds");
 		TimeZone timeZone = _getTimeZone(resourceRequest);
 
-		if (!ArrayUtil.isEmpty(calendarIds)) {
+		if (ArrayUtil.isNotEmpty(calendarIds)) {
 			java.util.Calendar endTimeJCalendar = _getJCalendar(
 				resourceRequest, "endTime");
 			java.util.Calendar startTimeJCalendar = _getJCalendar(
@@ -1336,7 +1336,7 @@ public class CalendarPortlet extends MVCPortlet {
 				new long[0], -1, null, startTimeJCalendar.getTimeInMillis(),
 				endTimeJCalendar.getTimeInMillis(), timeZone, true, statuses,
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new CalendarBookingStartTimeComparator(true));
+				CalendarBookingStartTimeComparator.getInstance(true));
 
 			int eventsPerPage = ParamUtil.getInteger(
 				resourceRequest, "eventsPerPage");
@@ -1521,7 +1521,8 @@ public class CalendarPortlet extends MVCPortlet {
 
 			List<User> users = _userLocalService.search(
 				themeDisplay.getCompanyId(), keywords, 0, null, 0,
-				SearchContainer.DEFAULT_DELTA, new UserFirstNameComparator());
+				SearchContainer.DEFAULT_DELTA,
+				UserFirstNameComparator.getInstance(false));
 
 			for (User user : users) {
 				_addCalendar(

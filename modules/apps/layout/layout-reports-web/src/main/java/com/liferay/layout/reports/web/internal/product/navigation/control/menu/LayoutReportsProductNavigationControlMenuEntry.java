@@ -7,7 +7,6 @@ package com.liferay.layout.reports.web.internal.product.navigation.control.menu;
 
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.document.library.kernel.model.DLFileEntry;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.taglib.clay.servlet.taglib.ButtonTag;
 import com.liferay.frontend.taglib.clay.servlet.taglib.IconTag;
 import com.liferay.journal.model.JournalArticle;
@@ -17,8 +16,8 @@ import com.liferay.learn.LearnMessageUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -26,7 +25,6 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -48,9 +46,7 @@ import com.liferay.taglib.util.BodyBottomTag;
 import java.io.IOException;
 import java.io.Writer;
 
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import javax.servlet.http.HttpServletRequest;
@@ -113,47 +109,48 @@ public class LayoutReportsProductNavigationControlMenuEntry
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		Map<String, String> values = new HashMap<>();
-
-		if (isPanelStateOpen(
-				httpServletRequest,
-				ProductNavigationControlMenuEntryConstants.
-					SESSION_CLICKS_KEY)) {
-
-			values.put("cssClass", "active");
-		}
-		else {
-			values.put("cssClass", StringPool.BLANK);
-		}
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			_portal.getLocale(httpServletRequest), getClass());
-
-		values.put("title", _language.get(resourceBundle, "page-audit"));
-
-		IconTag iconTag = new IconTag();
-
-		iconTag.setCssClass("icon-monospaced");
-
-		if (FeatureFlagManagerUtil.isEnabled("LPS-187284")) {
-			iconTag.setSymbol("search-experiences");
-		}
-		else {
-			iconTag.setSymbol("info-circle");
-		}
-
 		try {
-			values.put(
-				"iconTag",
-				iconTag.doTagAsString(httpServletRequest, httpServletResponse));
+			Writer writer = httpServletResponse.getWriter();
+
+			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+				_portal.getLocale(httpServletRequest), getClass());
+
+			IconTag iconTag = new IconTag();
+
+			iconTag.setCssClass("icon-monospaced");
+			iconTag.setSymbol("search-experiences");
+
+			writer.write(
+				StringUtil.replace(
+					_ICON_TMPL_CONTENT, "${", "}",
+					HashMapBuilder.put(
+						"cssClass",
+						() -> {
+							if (isPanelStateOpen(
+									httpServletRequest,
+									ProductNavigationControlMenuEntryConstants.
+										SESSION_CLICKS_KEY)) {
+
+								return "active";
+							}
+
+							return StringPool.BLANK;
+						}
+					).put(
+						"iconTag",
+						iconTag.doTagAsString(
+							httpServletRequest, httpServletResponse)
+					).put(
+						"nonceAttribute",
+						ContentSecurityPolicyNonceProviderUtil.
+							getNonceAttribute(httpServletRequest)
+					).put(
+						"title", _language.get(resourceBundle, "page-audit")
+					).build()));
 		}
 		catch (JspException jspException) {
 			throw new IOException(jspException);
 		}
-
-		Writer writer = httpServletResponse.getWriter();
-
-		writer.write(StringUtil.replace(_ICON_TMPL_CONTENT, "${", "}", values));
 
 		return true;
 	}
@@ -166,17 +163,9 @@ public class LayoutReportsProductNavigationControlMenuEntry
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187284") &&
-			!_layoutReportsGooglePageSpeedConfigurationProvider.isEnabled(
-				themeDisplay.getScopeGroup())) {
-
-			return false;
-		}
-
 		Layout layout = themeDisplay.getLayout();
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-187284") &&
-			!_layoutReportsGooglePageSpeedConfigurationProvider.isEnabled(
+		if (!_layoutReportsGooglePageSpeedConfigurationProvider.isEnabled(
 				themeDisplay.getScopeGroup()) &&
 			!layout.isTypeContent() && !layout.isTypeAssetDisplay()) {
 
@@ -328,9 +317,7 @@ public class LayoutReportsProductNavigationControlMenuEntry
 			jspWriter.write(sb.toString());
 
 			_reactRenderer.renderReact(
-				new ComponentDescriptor(
-					_npmResolver.resolveModuleName("layout-reports-web") +
-						"/js/App"),
+				new ComponentDescriptor("{App} from layout-reports-web"),
 				HashMapBuilder.<String, Object>put(
 					"isPanelStateOpen",
 					isPanelStateOpen(
@@ -344,36 +331,27 @@ public class LayoutReportsProductNavigationControlMenuEntry
 							(ThemeDisplay)httpServletRequest.getAttribute(
 								WebKeys.THEME_DISPLAY);
 
-						if (FeatureFlagManagerUtil.isEnabled("LPS-187284")) {
-							String layoutReportsDataURL =
-								HttpComponentsUtil.addParameters(
-									StringBundler.concat(
-										themeDisplay.getPortalURL(),
-										themeDisplay.getPathMain(),
-										"/layout_reports",
-										"/get_layout_reports_data"),
-									"p_l_id", themeDisplay.getPlid());
+						String layoutReportsDataURL =
+							HttpComponentsUtil.addParameters(
+								StringBundler.concat(
+									themeDisplay.getPortalURL(),
+									themeDisplay.getPathMain(),
+									"/layout_reports",
+									"/get_layout_reports_data"),
+								"p_l_id", themeDisplay.getPlid());
 
-							long segmentsExperienceId = ParamUtil.getLong(
-								_portal.getOriginalServletRequest(
-									httpServletRequest),
-								"segmentsExperienceId", -1);
+						long segmentsExperienceId = ParamUtil.getLong(
+							_portal.getOriginalServletRequest(
+								httpServletRequest),
+							"segmentsExperienceId", -1);
 
-							if (segmentsExperienceId == -1) {
-								return layoutReportsDataURL;
-							}
-
-							return HttpComponentsUtil.addParameter(
-								layoutReportsDataURL, "segmentsExperienceId",
-								segmentsExperienceId);
+						if (segmentsExperienceId == -1) {
+							return layoutReportsDataURL;
 						}
 
-						return HttpComponentsUtil.addParameters(
-							StringBundler.concat(
-								themeDisplay.getPortalURL(),
-								themeDisplay.getPathMain(), "/layout_reports",
-								"/get_google_page_speed_data"),
-							"p_l_id", themeDisplay.getPlid());
+						return HttpComponentsUtil.addParameter(
+							layoutReportsDataURL, "segmentsExperienceId",
+							segmentsExperienceId);
 					}
 				).put(
 					"learnResources",
@@ -396,9 +374,6 @@ public class LayoutReportsProductNavigationControlMenuEntry
 		LayoutReportsProductNavigationControlMenuEntry.class);
 
 	@Reference
-	private GroupLocalService _groupLocalService;
-
-	@Reference
 	private Language _language;
 
 	@Reference
@@ -407,9 +382,6 @@ public class LayoutReportsProductNavigationControlMenuEntry
 	@Reference
 	private LayoutReportsGooglePageSpeedConfigurationProvider
 		_layoutReportsGooglePageSpeedConfigurationProvider;
-
-	@Reference
-	private NPMResolver _npmResolver;
 
 	@Reference
 	private Portal _portal;

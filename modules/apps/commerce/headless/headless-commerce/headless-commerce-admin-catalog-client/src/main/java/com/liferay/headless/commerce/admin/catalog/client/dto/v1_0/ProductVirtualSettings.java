@@ -110,6 +110,25 @@ public class ProductVirtualSettings implements Cloneable, Serializable {
 
 	protected Long duration;
 
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
+		try {
+			id = idUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long id;
+
 	public Integer getMaxUsages() {
 		return maxUsages;
 	}
@@ -130,6 +149,35 @@ public class ProductVirtualSettings implements Cloneable, Serializable {
 	}
 
 	protected Integer maxUsages;
+
+	public ProductVirtualSettingsFileEntry[]
+		getProductVirtualSettingsFileEntries() {
+
+		return productVirtualSettingsFileEntries;
+	}
+
+	public void setProductVirtualSettingsFileEntries(
+		ProductVirtualSettingsFileEntry[] productVirtualSettingsFileEntries) {
+
+		this.productVirtualSettingsFileEntries =
+			productVirtualSettingsFileEntries;
+	}
+
+	public void setProductVirtualSettingsFileEntries(
+		UnsafeSupplier<ProductVirtualSettingsFileEntry[], Exception>
+			productVirtualSettingsFileEntriesUnsafeSupplier) {
+
+		try {
+			productVirtualSettingsFileEntries =
+				productVirtualSettingsFileEntriesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected ProductVirtualSettingsFileEntry[]
+		productVirtualSettingsFileEntries;
 
 	public String getSampleAttachment() {
 		return sampleAttachment;

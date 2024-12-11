@@ -13,6 +13,7 @@ import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -44,7 +45,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.settings.ArchivedSettings;
@@ -111,6 +112,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -278,15 +280,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		Portlet portlet = ActionUtil.getPortlet(actionRequest);
-
-		PortletPreferences portletPreferences =
-			ActionUtil.getLayoutPortletSetup(actionRequest, portlet);
-
-		actionRequest = ActionUtil.getWrappedActionRequest(
-			actionRequest, portletPreferences);
-
-		_updateScope(actionRequest, portlet);
+		_updateScope(actionRequest);
 
 		if (!SessionErrors.isEmpty(actionRequest)) {
 			return;
@@ -561,7 +555,9 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 
 		PermissionPropagator permissionPropagator = null;
 
-		if (PropsValues.PERMISSIONS_PROPAGATION_ENABLED) {
+		if (PropsValues.PERMISSIONS_PROPAGATION_ENABLED &&
+			Validator.isNotNull(portletResource)) {
+
 			Portlet portlet = _portletLocalService.getPortletById(
 				themeDisplay.getCompanyId(), portletResource);
 
@@ -614,6 +610,15 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			themeDisplay.getLayout(),
 			ServiceContextFactory.getInstance(actionRequest),
 			themeDisplay.getUserId());
+
+		if (resourcePrimKeys.length > 1) {
+			SessionMessages.add(
+				actionRequest, "requestProcessed",
+				_language.format(
+					themeDisplay.getLocale(),
+					"x-permissions-were-updated-successfully",
+					resourcePrimKeys.length));
+		}
 	}
 
 	@Activate
@@ -628,6 +633,11 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 
 				emitter.emit(modelClass.getName());
 			});
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_serviceTrackerMap.close();
 	}
 
 	@Override
@@ -765,7 +775,7 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 		String portletResource = ParamUtil.getString(
 			request, "portletResource");
 
-		_portletPermission.check(
+		PortletPermissionUtil.check(
 			themeDisplay.getPermissionChecker(), resourceGroupId,
 			PortletConfigurationLayoutUtil.getLayout(themeDisplay),
 			portletResource, ActionKeys.PERMISSIONS);
@@ -937,7 +947,8 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			WebKeys.THEME_DISPLAY);
 
 		String portletTitle = PortletConfigurationUtil.getPortletTitle(
-			portletPreferences, themeDisplay.getLanguageId());
+			portlet.getPortletId(), portletPreferences,
+			themeDisplay.getLanguageId());
 
 		if (Validator.isNull(portletTitle)) {
 			ServletContext servletContext =
@@ -1051,12 +1062,20 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			String.valueOf(netvibesShowAddAppLink));
 	}
 
-	private void _updateScope(ActionRequest actionRequest, Portlet portlet)
-		throws Exception {
+	private void _updateScope(ActionRequest actionRequest) throws Exception {
+		Portlet portlet = ActionUtil.getPortlet(actionRequest);
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		PortletPreferences portletPreferences =
+			themeDisplay.getStrictLayoutPortletSetup(
+				themeDisplay.getLayout(), portlet.getPortletId());
+
+		actionRequest = ActionUtil.getWrappedActionRequest(
+			actionRequest, portletPreferences);
 
 		String oldScopeName = _getOldScopeName(actionRequest);
-
-		PortletPreferences portletPreferences = actionRequest.getPreferences();
 
 		String[] scopes = StringUtil.split(
 			ParamUtil.getString(actionRequest, "scope"));
@@ -1084,9 +1103,6 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 			portletTitle, oldScopeName, newScopeName);
 
 		if (!newPortletTitle.equals(portletTitle)) {
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
-
 			portletPreferences.setValue(
 				"portletSetupTitle_" + themeDisplay.getLanguageId(),
 				newPortletTitle);
@@ -1116,6 +1132,9 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 	private GroupLocalService _groupLocalService;
 
 	@Reference
+	private Language _language;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
 
 	@Reference
@@ -1129,9 +1148,6 @@ public class PortletConfigurationPortlet extends MVCPortlet {
 
 	@Reference
 	private PortletLocalService _portletLocalService;
-
-	@Reference
-	private PortletPermission _portletPermission;
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;

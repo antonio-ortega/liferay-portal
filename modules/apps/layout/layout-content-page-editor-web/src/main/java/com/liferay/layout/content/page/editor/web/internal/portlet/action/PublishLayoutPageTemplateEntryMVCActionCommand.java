@@ -8,7 +8,6 @@ package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
@@ -113,13 +112,13 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 			Layout draftLayout, Layout layout)
 		throws Exception {
 
-		LayoutStructureUtil.deleteMarkedForDeletionItems(
-			draftLayout.getGroupId(), draftLayout.getPlid());
-
 		UnicodeProperties previousLayouTypeSettingsUnicodeProperties =
 			layout.getTypeSettingsProperties();
 
-		_layoutCopyHelper.copyLayoutContent(draftLayout, layout);
+		_layoutLocalService.copyLayoutContent(draftLayout, layout);
+
+		LayoutStructureUtil.deleteMarkedForDeletionItems(
+			draftLayout.getGroupId(), draftLayout.getPlid());
 
 		draftLayout = _layoutLocalService.fetchLayout(draftLayout.getPlid());
 
@@ -148,6 +147,10 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 
 		layout = _layoutLocalService.fetchLayout(layout.getPlid());
 
+		layout.setStatus(WorkflowConstants.STATUS_APPROVED);
+
+		layout = _layoutLocalService.updateLayout(layout);
+
 		_layoutLocalService.updateLayout(
 			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),
 			_copySEOTypeSettingsUnicodeProperties(
@@ -156,9 +159,6 @@ public class PublishLayoutPageTemplateEntryMVCActionCommand
 
 		return layoutPageTemplateEntry;
 	}
-
-	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

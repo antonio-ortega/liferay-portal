@@ -1,6 +1,7 @@
 definition {
 
-	macro _deleteBatchPlannerLogs {
+	@summary = "Default summary"
+	macro _deleteBatchPlannerLogs() {
 		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
@@ -8,6 +9,7 @@ definition {
 		}
 
 		var batchPlannerLogIds = JSONBatchPlannerLogAPI._getBatchPlannerLogIds();
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		if (${batchPlannerLogIds} != "") {
 			for (var batchPlannerLogId : list ${batchPlannerLogIds}) {
@@ -15,7 +17,7 @@ definition {
 
 				var curl = '''
 					${baseURL}/api/jsonws/batchplanner.batchplannerlog/delete-batch-planner-log \
-						-u test@liferay.com:test \
+						-u test@liferay.com:${userPassword} \
 						-d batchPlannerLogId=${batchPlannerLogId}
 				''';
 
@@ -27,7 +29,8 @@ definition {
 		}
 	}
 
-	macro _getBatchPlannerLogIds {
+	@summary = "Default summary"
+	macro _getBatchPlannerLogIds() {
 		var baseURL = ${baseURL};
 
 		if (!(isSet(baseURL))) {
@@ -35,10 +38,11 @@ definition {
 		}
 
 		var companyId = JSONCompany.getCompanyId();
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		var curl = '''
 			${baseURL}/api/jsonws/batchplanner.batchplannerlog/get-company-batch-planner-logs \
-				-u test@liferay.com:test \
+				-u test@liferay.com:${userPassword} \
 				-d companyId=${companyId} \
 				-d start=0 \
 				-d end=100 \

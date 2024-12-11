@@ -8,7 +8,6 @@ import ClayCard from '@clayui/card';
 import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayProgressBar from '@clayui/progress-bar';
-import axios from 'axios';
 import {
 	PagesVisitor,
 	convertToFormData,
@@ -18,16 +17,16 @@ import {
 import {formatStorage, openSelectionModal, sub} from 'frontend-js-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
-import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import FieldBase from '../FieldBase/ReactFieldBase.es';
 
 const CardItem = ({fileEntryTitle, fileEntryURL}) => {
 	return (
 		<ClayCard horizontal>
 			<ClayCard.Body>
 				<div className="card-col-content card-col-gutters">
-					<h4 className="text-truncate" title={fileEntryTitle}>
+					<div className="h4 text-truncate" title={fileEntryTitle}>
 						{fileEntryTitle}
-					</h4>
+					</div>
 				</div>
 
 				<div className="card-col-field">
@@ -67,8 +66,8 @@ function transformFileEntryProperties({fileEntryTitle, value}) {
 	return value && fileEntryTitle !== ''
 		? [fileEntryTitle]
 		: fileEntryTitle === ''
-		? [value.title]
-		: [];
+			? [value.title]
+			: [];
 }
 
 const DocumentLibrary = ({
@@ -113,6 +112,8 @@ const DocumentLibrary = ({
 							id={`${name}inputFile`}
 							lang={editingLanguageId}
 							onClick={onSelectButtonClicked}
+							readonly="true"
+							tabindex="-1"
 							value={transformedFileEntryTitle || ''}
 						/>
 					</ClayInput.GroupItem>
@@ -122,6 +123,7 @@ const DocumentLibrary = ({
 							className="select-button"
 							disabled={readOnly}
 							displayType="secondary"
+							id={name}
 							onClick={onSelectButtonClicked}
 						>
 							<span className="lfr-btn-label">
@@ -188,6 +190,7 @@ const GuestUploadFile = ({
 					<ClayInput
 						className="bg-light"
 						disabled={readOnly}
+						id={name}
 						onClick={onUploadSelectButtonClicked}
 						type="text"
 						value={transformedFileEntryTitle || ''}
@@ -340,9 +343,8 @@ const Main = ({
 	}, [allowGuestUsers, isSignedIn, showUploadPermissionMessage]);
 
 	useEffect(() => {
-		const objectFieldInvalidExtension = isObjectFieldInvalidExtension(
-			value
-		);
+		const objectFieldInvalidExtension =
+			isObjectFieldInvalidExtension(value);
 
 		setCurrentValue(objectFieldInvalidExtension ? null : value);
 		setDisplayErrors(
@@ -461,9 +463,8 @@ const Main = ({
 			return false;
 		}
 
-		const supportedExtensions = objectFieldAcceptedFileExtensions.split(
-			', '
-		);
+		const supportedExtensions =
+			objectFieldAcceptedFileExtensions.split(', ');
 
 		if (supportedExtensions.includes(fileExtension)) {
 			return false;
@@ -483,50 +484,53 @@ const Main = ({
 			return;
 		}
 
-		const data = {
-			[`${portletNamespace}file`]: file,
-		};
+		const request = new XMLHttpRequest();
 
-		axios
-			.post(guestUploadURL, convertToFormData(data), {
-				onUploadProgress: (event) => {
-					const progress = Math.round(
-						(event.loaded * 100) / event.total
-					);
+		request.upload.addEventListener('progress', (event) => {
+			disableSubmitButton();
 
-					setCurrentValue(null);
+			setCurrentValue(null);
 
-					setProgress(progress);
-
-					disableSubmitButton();
-				},
-			})
-			.then((response) => {
-				const {error, file} = response.data;
-
+			setProgress(Math.round((event.loaded * 100) / event.total));
+		});
+		request.addEventListener('readystatechange', (event) => {
+			if (request.readyState === 4) {
 				disableSubmitButton(false);
 
-				if (error) {
-					handleGuestUploadFileChanged(error.message, event, null);
+				let response;
+
+				try {
+					response = JSON.parse(request.responseText);
 				}
-				else {
+				catch (error) {
+					response = request.responseText;
+				}
+
+				if (response.success) {
 					handleGuestUploadFileChanged(
 						'',
 						event,
-						JSON.stringify(file)
+						JSON.stringify(response.file)
+					);
+				}
+				else {
+					handleGuestUploadFileChanged(
+						response.error.message,
+						event,
+						null
 					);
 				}
 
 				setProgress(0);
-			})
-			.catch(() => {
-				disableSubmitButton(false);
+			}
+		});
 
-				setProgress(0);
+		request.open('POST', guestUploadURL);
+		request.send(
+			convertToFormData({
+				[`${portletNamespace}file`]: file,
 			})
-			.finally(() => {
-				onBlur(event);
-			});
+		);
 	};
 
 	const hasCustomError =

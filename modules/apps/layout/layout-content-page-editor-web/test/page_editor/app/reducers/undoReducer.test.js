@@ -67,14 +67,14 @@ describe('undoReducer', () => {
 
 		const undoAction = undoHistory[0];
 
-		expect(undoAction.itemId).toBe(ITEM_ID);
+		expect(undoAction.itemIds).toStrictEqual([ITEM_ID]);
 	});
 
 	it('saves needed state for undo when dispatching DUPLICATE_ITEM action', () => {
 		const ITEM_ID = 'itemId';
 		const initialState = {...STATE};
 
-		const action = duplicateItem({itemId: ITEM_ID});
+		const action = duplicateItem({itemIds: [ITEM_ID]});
 
 		const {undoHistory} = undoReducer(initialState, {
 			...action,
@@ -84,7 +84,7 @@ describe('undoReducer', () => {
 
 		const undoAction = undoHistory[0];
 
-		expect(undoAction.itemId).toBe(ITEM_ID);
+		expect(undoAction.itemIds).toStrictEqual([ITEM_ID]);
 	});
 
 	it('saves needed state for undo when dispatching SELECT_SEGMENTS_EXPERIENCE action', () => {
@@ -220,7 +220,7 @@ describe('undoReducer', () => {
 		};
 
 		const action = {
-			itemId: ITEM_ID,
+			itemIds: [ITEM_ID],
 		};
 
 		const {undoHistory} = undoReducer(initialState, {
@@ -231,7 +231,7 @@ describe('undoReducer', () => {
 
 		const undoAction = undoHistory[0];
 
-		expect(undoAction.itemId).toBe(ITEM_ID);
+		expect(undoAction.itemIds).toStrictEqual([ITEM_ID]);
 	});
 
 	it('saves needed state for undo when dispatching MOVE_ITEM action', () => {
@@ -267,7 +267,7 @@ describe('undoReducer', () => {
 		};
 
 		const action = {
-			itemId: ITEM_ID,
+			itemIds: [ITEM_ID],
 			layoutData: {items: []},
 		};
 
@@ -279,9 +279,9 @@ describe('undoReducer', () => {
 
 		const undoAction = undoHistory[0];
 
-		expect(undoAction.itemId).toBe(ITEM_ID);
-		expect(undoAction.parentItemId).toBe('rootId');
-		expect(undoAction.position).toBe(0);
+		expect(undoAction.itemIds).toStrictEqual([ITEM_ID]);
+		expect(undoAction.parentItemIds).toStrictEqual(['rootId']);
+		expect(undoAction.positions).toStrictEqual([0]);
 	});
 
 	it('saves needed state for undo when dispatching UPDATE_ITEM_CONFIG action', () => {
@@ -317,7 +317,7 @@ describe('undoReducer', () => {
 		};
 
 		const action = {
-			itemId: ITEM_ID,
+			itemIds: [ITEM_ID],
 			layoutData: {items: []},
 		};
 
@@ -329,10 +329,12 @@ describe('undoReducer', () => {
 
 		const undoAction = undoHistory[0];
 
-		expect(undoAction.itemId).toBe(ITEM_ID);
+		expect(undoAction.itemIds).toStrictEqual([ITEM_ID]);
 		expect(undoAction.config).toStrictEqual({
-			paddingBottom: 3,
-			paddingTop: 1,
+			[ITEM_ID]: {
+				paddingBottom: 3,
+				paddingTop: 1,
+			},
 		});
 	});
 

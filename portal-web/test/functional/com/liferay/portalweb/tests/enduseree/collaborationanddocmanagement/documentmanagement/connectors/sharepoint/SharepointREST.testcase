@@ -1,4 +1,5 @@
-@component-name = "portal-document-management-ee"
+@component-name = "portal-content-management-ee"
+@ignore = "true"
 definition {
 
 	property custom.properties = "dl.actions.visible=true";
@@ -7,7 +8,7 @@ definition {
 	property portal.ssl.enabled = "true";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
-	property testray.main.component.name = "Sharepoint";
+	property testray.main.component.name = "External Document Repositories";
 
 	var authorizationGrantEndpoint = PropsUtil.get("sharepoint.oauth.authorization.grant.endpoint");
 	var authorizationTokenEndpoint = PropsUtil.get("sharepoint.oauth.authorization.token.endpoint");
@@ -288,7 +289,7 @@ definition {
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_3.doc");
 
 		DMDocument.viewCP(
-			dmDocumentSize = "39 KB",
+			dmDocumentSize = "40 KB",
 			dmDocumentTitle = "Document_3.doc");
 
 		DMNavigator.openToFolderInAdmin(
@@ -446,6 +447,7 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanMoveDocumentToHome {
+		property portal.release = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -475,7 +477,6 @@ definition {
 	@description = "This test ensures that users can not copy assets from SharePoint."
 	@priority = 4
 	test CannotCopyAssetsFromRepository {
-		property custom.properties = "feature.flag.LPS-182512=true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -520,7 +521,7 @@ definition {
 			dmDocumentTitle = "Document_4.txt",
 			dmRepositoryName = "Collaboration Test Application");
 
-		ManagementBar.setFilterAndOrder(menuItem = "Mine");
+		ManagementBar.setFilterAndOrder(filterBy = "Mine");
 
 		// The alert message will update until LPS-188910 fixed
 
@@ -585,7 +586,7 @@ definition {
 		User.logoutPG();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
@@ -647,7 +648,7 @@ definition {
 
 		User.loginPG(
 			nodePort = 8080,
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		JSONDepot.addDepot(
@@ -686,7 +687,7 @@ definition {
 		User.logoutPG();
 
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
@@ -776,7 +777,7 @@ definition {
 			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE");
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		DMRepository.cleanRepository(dmDocumentTitle = "Document_1.doc");

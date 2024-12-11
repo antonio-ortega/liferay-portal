@@ -5,7 +5,7 @@
 
 import {openSelectionModal} from 'frontend-js-web';
 
-import openDeletePageTemplateModal from './modal/openDeletePageTemplateModal';
+import openDeletePageTemplateModal from './commands/openDeletePageTemplateModal';
 
 const ACTIONS = {
 	deleteCollections({
@@ -13,9 +13,8 @@ const ACTIONS = {
 		portletNamespace,
 		viewLayoutPageTemplateCollectionURL,
 	}) {
-		const layoutPageTemplateCollectionsForm = document.createElement(
-			'form'
-		);
+		const layoutPageTemplateCollectionsForm =
+			document.createElement('form');
 
 		layoutPageTemplateCollectionsForm.setAttribute('method', 'post');
 

@@ -172,7 +172,7 @@
 
 <tr>
 	<td>DOCUMENT_EXTRACTED_METADATA_FIELD</td>
-	<td>//div[@role="tablist"][contains(.,'Metadata')]//label[contains(.,'${key_metadataLabel}')]/../../div[contains(.,'${key_metadataData}')]</td>
+	<td>//div[contains(@class,'panel-group')][contains(.,'Metadata')]//label[contains(.,'${key_metadataLabel}')]/../../div[contains(.,'${key_metadataData}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -408,7 +408,7 @@
 </tr>
 <tr>
 	<td>METADATA_PANEL_UPLOAD</td>
-	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::div//h4</td>
+	<td>//label[normalize-space(text())='${key_fieldFieldLabel}']//following-sibling::div//div[contains(@class,'h4')]</td>
 	<td></td>
 </tr>
 <tr>

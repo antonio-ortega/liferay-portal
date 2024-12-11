@@ -13,6 +13,7 @@ import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalSer
 import com.liferay.exportimport.kernel.service.ExportImportLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.image.ImageToolUtil;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.events.Action;
 import com.liferay.portal.kernel.events.ActionException;
@@ -20,7 +21,6 @@ import com.liferay.portal.kernel.exception.LayoutPermissionException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
-import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.interval.IntervalActionProcessor;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -49,7 +49,6 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ImageLocalServiceUtil;
@@ -105,6 +104,7 @@ import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -274,20 +274,25 @@ public class ServicePreAction extends Action {
 			long userId, long groupId)
 		throws Exception {
 
-		Map<Locale, String> nameMap = Collections.singletonMap(
-			LocaleUtil.getSiteDefault(),
-			LanguageUtil.get(
-				LocaleUtil.getSiteDefault(),
-				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_NAME));
+		Map<Locale, String> nameMap = new HashMap<>();
+
+		for (Locale locale : LanguageUtil.getAvailableLocales(groupId)) {
+			nameMap.put(
+				locale,
+				LanguageUtil.get(
+					locale, PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_NAME));
+		}
+
 		Map<Locale, String> friendlyURLMap = Collections.singletonMap(
 			LocaleUtil.getSiteDefault(),
 			_getFriendlyURL(
 				PropsValues.DEFAULT_USER_PRIVATE_LAYOUT_FRIENDLY_URL));
 
 		Layout layout = LayoutLocalServiceUtil.addLayout(
-			userId, groupId, true, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			nameMap, null, null, null, null, LayoutConstants.TYPE_PORTLET,
-			StringPool.BLANK, false, friendlyURLMap, new ServiceContext());
+			null, userId, groupId, true,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, null, null, null,
+			null, LayoutConstants.TYPE_PORTLET, StringPool.BLANK, false,
+			friendlyURLMap, new ServiceContext());
 
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
@@ -356,20 +361,25 @@ public class ServicePreAction extends Action {
 			long userId, long groupId)
 		throws Exception {
 
-		Map<Locale, String> nameMap = Collections.singletonMap(
-			LocaleUtil.getSiteDefault(),
-			LanguageUtil.get(
-				LocaleUtil.getSiteDefault(),
-				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_NAME));
+		Map<Locale, String> nameMap = new HashMap<>();
+
+		for (Locale locale : LanguageUtil.getAvailableLocales(groupId)) {
+			nameMap.put(
+				locale,
+				LanguageUtil.get(
+					locale, PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_NAME));
+		}
+
 		Map<Locale, String> friendlyURLMap = Collections.singletonMap(
 			LocaleUtil.getSiteDefault(),
 			_getFriendlyURL(
 				PropsValues.DEFAULT_USER_PUBLIC_LAYOUT_FRIENDLY_URL));
 
 		Layout layout = LayoutLocalServiceUtil.addLayout(
-			userId, groupId, false, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			nameMap, null, null, null, null, LayoutConstants.TYPE_PORTLET,
-			StringPool.BLANK, false, friendlyURLMap, new ServiceContext());
+			null, userId, groupId, false,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, null, null, null,
+			null, LayoutConstants.TYPE_PORTLET, StringPool.BLANK, false,
+			friendlyURLMap, new ServiceContext());
 
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
@@ -935,15 +945,8 @@ public class ServicePreAction extends Action {
 		// Permission checker
 
 		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		if ((initPermissionChecker && (permissionChecker == null)) ||
-			(permissionChecker.getUserId() != user.getUserId())) {
-
-			permissionChecker = PermissionCheckerFactoryUtil.create(user);
-
-			PermissionThreadLocal.setPermissionChecker(permissionChecker);
-		}
+			PermissionThreadLocal.getPermissionChecker(
+				user, initPermissionChecker);
 
 		// Cookie support
 
@@ -1002,7 +1005,8 @@ public class ServicePreAction extends Action {
 			if (layoutGroup.isUser() &&
 				(layoutGroup.getClassPK() != user.getUserId())) {
 
-				if (!GetterUtil.getBoolean(
+				if ((plid > 0) &&
+					!GetterUtil.getBoolean(
 						PropsUtil.get(
 							PropsKeys.LAYOUT_USER_ACCESS_VIA_PLID_ENABLED))) {
 
@@ -1052,16 +1056,19 @@ public class ServicePreAction extends Action {
 		boolean viewableSourceGroup = true;
 
 		if (layout != null) {
+			Group sourceGroup = null;
+
 			long sourceGroupId = ParamUtil.getLong(
 				httpServletRequest, "p_v_l_s_g_id");
 
 			if ((sourceGroupId > 0) && (sourceGroupId != layout.getGroupId())) {
+				sourceGroup = GroupLocalServiceUtil.fetchGroup(sourceGroupId);
+			}
+
+			if (sourceGroup != null) {
 				if (layout.isTypeControlPanel() || layout.isPublicLayout() ||
 					SitesUtil.isUserGroupLayoutSetViewable(
 						permissionChecker, layout.getGroup())) {
-
-					Group sourceGroup = GroupLocalServiceUtil.getGroup(
-						sourceGroupId);
 
 					if (layout.isTypeControlPanel() && sourceGroup.isUser() &&
 						(sourceGroup.getClassPK() != user.getUserId()) &&
@@ -1776,10 +1783,6 @@ public class ServicePreAction extends Action {
 
 		themeDisplay.setURLPortal(portalURL.concat(contextPath));
 
-		if (!secure && PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS) {
-			secure = true;
-		}
-
 		String securePortalURL = PortalUtil.getPortalURL(
 			httpServletRequest, secure);
 
@@ -1991,9 +1994,68 @@ public class ServicePreAction extends Action {
 		httpServletResponse.setHeader(
 			"X-Liferay-Request-Company",
 			String.valueOf(themeDisplay.getCompanyId()));
+
+		List<String> liferayRequestGroupHeaderValues = new ArrayList<>();
+
+		liferayRequestGroupHeaderValues.add(
+			String.valueOf(themeDisplay.getScopeGroupId()));
+
+		Group group = themeDisplay.getScopeGroup();
+
+		liferayRequestGroupHeaderValues.add(group.getType() + "t");
+
+		Layout layout = themeDisplay.getLayout();
+
+		if (group.getGroupId() == themeDisplay.getCompanyGroupId()) {
+			liferayRequestGroupHeaderValues.add("1x");
+		}
+
+		if (group.getParentGroupId() != 0) {
+			liferayRequestGroupHeaderValues.add("2x");
+		}
+
+		if (group.isStaged()) {
+			liferayRequestGroupHeaderValues.add("3x");
+		}
+
+		if (group.isControlPanel() || layout.isTypeControlPanel()) {
+			liferayRequestGroupHeaderValues.add("4x");
+		}
+
+		if (group.isUser()) {
+			if (layout.isPrivateLayout()) {
+				liferayRequestGroupHeaderValues.add("5x");
+			}
+			else {
+				liferayRequestGroupHeaderValues.add("10x");
+			}
+
+			if (layout instanceof VirtualLayout) {
+				liferayRequestGroupHeaderValues.add("6x");
+			}
+		}
+
+		if (group.isLayoutSetPrototype()) {
+			liferayRequestGroupHeaderValues.add("7x");
+		}
+
+		if (group.isLayoutPrototype() || (layout.getMasterLayoutPlid() > 0)) {
+			liferayRequestGroupHeaderValues.add("8x");
+		}
+
+		if (group.isOrganization()) {
+			liferayRequestGroupHeaderValues.add("9x");
+		}
+
+		if (group.isSite()) {
+			liferayRequestGroupHeaderValues.add("s");
+		}
+
 		httpServletResponse.setHeader(
 			"X-Liferay-Request-Group",
-			String.valueOf(themeDisplay.getScopeGroupId()));
+			ListUtil.toString(
+				liferayRequestGroupHeaderValues, (String)null,
+				StringPool.SPACE));
 
 		User user = themeDisplay.getUser();
 
@@ -2036,7 +2098,7 @@ public class ServicePreAction extends Action {
 
 		if (addDefaultUserPrivateLayouts) {
 			hasPrivateLayouts = LayoutLocalServiceUtil.hasLayouts(
-				user, true, false);
+				user.getGroup(), true, false);
 
 			if (!hasPrivateLayouts) {
 				_addDefaultUserPrivateLayouts(user);
@@ -2064,7 +2126,7 @@ public class ServicePreAction extends Action {
 		if (deleteDefaultUserPrivateLayouts) {
 			if (hasPrivateLayouts == null) {
 				hasPrivateLayouts = LayoutLocalServiceUtil.hasLayouts(
-					user, true, false);
+					user.getGroup(), true, false);
 			}
 
 			if (hasPrivateLayouts) {
@@ -2100,7 +2162,7 @@ public class ServicePreAction extends Action {
 
 		if (addDefaultUserPublicLayouts) {
 			hasPublicLayouts = LayoutLocalServiceUtil.hasLayouts(
-				user, false, false);
+				user.getGroup(), false, false);
 
 			if (!hasPublicLayouts) {
 				_addDefaultUserPublicLayouts(user);
@@ -2128,7 +2190,7 @@ public class ServicePreAction extends Action {
 		if (deleteDefaultUserPublicLayouts) {
 			if (hasPublicLayouts == null) {
 				hasPublicLayouts = LayoutLocalServiceUtil.hasLayouts(
-					user, false, false);
+					user.getGroup(), false, false);
 			}
 
 			if (hasPublicLayouts) {

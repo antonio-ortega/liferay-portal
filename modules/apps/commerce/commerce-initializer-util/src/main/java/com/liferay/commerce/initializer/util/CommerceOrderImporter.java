@@ -90,11 +90,12 @@ public class CommerceOrderImporter {
 	protected ServiceContext getServiceContext(long scopeGroupId, long userId)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(userId);
-
 		ServiceContext serviceContext = new ServiceContext();
 
+		User user = _userLocalService.getUser(userId);
+
 		serviceContext.setCompanyId(user.getCompanyId());
+
 		serviceContext.setScopeGroupId(scopeGroupId);
 		serviceContext.setUserId(userId);
 
@@ -185,7 +186,7 @@ public class CommerceOrderImporter {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				userId, serviceContext.getScopeGroupId(),
-				accountEntry.getAccountEntryId(), 0, 0);
+				accountEntry.getAccountEntryId(), null, 0);
 
 		// We update the order create date to the one in the data set
 

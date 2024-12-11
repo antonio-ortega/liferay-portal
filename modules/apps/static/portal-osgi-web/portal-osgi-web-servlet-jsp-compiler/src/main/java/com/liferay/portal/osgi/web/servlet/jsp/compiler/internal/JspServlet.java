@@ -5,18 +5,33 @@
 
 package com.liferay.portal.osgi.web.servlet.jsp.compiler.internal;
 
+import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
+import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.taglib.servlet.JspFactorySwapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -34,6 +49,8 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.naming.NamingException;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterRegistration;
@@ -55,8 +72,11 @@ import javax.servlet.jsp.JspFactory;
 
 import org.apache.jasper.runtime.JspFactoryImpl;
 import org.apache.jasper.runtime.TagHandlerPool;
+import org.apache.tomcat.InstanceManager;
+import org.apache.tomcat.SimpleInstanceManager;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleReference;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
@@ -138,25 +158,21 @@ public class JspServlet extends HttpServlet {
 
 		final ServletContext servletContext = servletConfig.getServletContext();
 
+		servletContext.setAttribute(
+			InstanceManager.class.getName(), new JspBundleInstanceManager());
+
 		ClassLoader classLoader = servletContext.getClassLoader();
 
 		if (!(classLoader instanceof BundleReference)) {
 			throw new IllegalStateException();
 		}
 
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		try {
-			currentThread.setContextClassLoader(classLoader);
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				classLoader)) {
 
 			JspFactory.setDefaultFactory(new JspFactoryImpl());
 
 			JspFactorySwapper.swap();
-		}
-		finally {
-			currentThread.setContextClassLoader(contextClassLoader);
 		}
 
 		List<Bundle> bundles = new ArrayList<>();
@@ -178,33 +194,28 @@ public class JspServlet extends HttpServlet {
 		_jspBundleClassloader = new JspBundleClassloader(
 			_allParticipatingBundles);
 
-		final Map<String, String> defaults = HashMapBuilder.put(
-			_INIT_PARAMETER_NAME_SCRATCH_DIR,
+		File scratchDir = new File(
 			StringBundler.concat(
 				_WORK_DIR, _bundle.getSymbolicName(), StringPool.DASH,
-				_bundle.getVersion())
+				_bundle.getVersion(), StringPool.SLASH));
+
+		scratchDir.mkdirs();
+
+		Map<String, String> defaults = HashMapBuilder.put(
+			_INIT_PARAMETER_NAME_SCRATCH_DIR, scratchDir.getPath()
 		).put(
 			"compilerClassName",
-			"com.liferay.portal.osgi.web.servlet.jsp.compiler.internal." +
-				"JspCompiler"
+			"com.liferay.portal.jsp.engine.internal.compiler.BridgeCompiler"
 		).put(
 			"compilerSourceVM", "1.8"
 		).put(
 			"compilerTargetVM", "1.8"
 		).put(
-			"development", String.valueOf(PropsValues.WORK_DIR_OVERRIDE_ENABLED)
-		).put(
-			"httpMethods", "GET,POST,HEAD"
-		).put(
-			"jspCompilerClassName",
-			"com.liferay.portal.osgi.web.servlet.jsp.compiler.internal." +
-				"CompilerWrapper"
+			"development", "false"
 		).put(
 			"keepgenerated", "false"
 		).put(
-			"logVerbosityLevel", "NONE"
-		).put(
-			"saveBytecode", "true"
+			"strictQuoteEscaping", "false"
 		).build();
 
 		if (_fragmentHosts.contains(_bundle.getSymbolicName())) {
@@ -282,12 +293,8 @@ public class JspServlet extends HttpServlet {
 			HttpServletResponse httpServletResponse)
 		throws IOException, ServletException {
 
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		try {
-			currentThread.setContextClassLoader(_jspBundleClassloader);
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				_jspBundleClassloader)) {
 
 			if (_logVerbosityLevelDebug) {
 				String path = (String)httpServletRequest.getAttribute(
@@ -317,9 +324,6 @@ public class JspServlet extends HttpServlet {
 			}
 
 			_jspServlet.service(httpServletRequest, httpServletResponse);
-		}
-		finally {
-			currentThread.setContextClassLoader(contextClassLoader);
 		}
 	}
 
@@ -371,6 +375,7 @@ public class JspServlet extends HttpServlet {
 
 	private static final Log _log = LogFactoryUtil.getLog(JspServlet.class);
 
+	private static final MethodHandle _defineClassMethodHandle;
 	private static final Properties _initParams = PropsUtil.getProperties(
 		"jsp.servlet.init.param.", true);
 	private static final Bundle _jspBundle = FrameworkUtil.getBundle(
@@ -379,6 +384,21 @@ public class JspServlet extends HttpServlet {
 		"^(?<file>.*)(\\.(portal|original))(?<extension>\\.(jsp|jspf))$");
 	private static final Bundle _utilTaglibBundle = FrameworkUtil.getBundle(
 		JspFactorySwapper.class);
+
+	static {
+		try {
+			MethodHandles.Lookup lookup = ReflectionUtil.getImplLookup();
+
+			_defineClassMethodHandle = lookup.findVirtual(
+				ClassLoader.class, "defineClass",
+				MethodType.methodType(
+					Class.class, String.class, byte[].class, int.class,
+					int.class));
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new ExceptionInInitializerError(reflectiveOperationException);
+		}
+	}
 
 	private Bundle[] _allParticipatingBundles;
 	private Bundle _bundle;
@@ -389,6 +409,142 @@ public class JspServlet extends HttpServlet {
 	private boolean _logVerbosityLevelDebug;
 	private final List<ServiceRegistration<?>> _serviceRegistrations =
 		new CopyOnWriteArrayList<>();
+
+	private static class JspBundleInstanceManager
+		extends SimpleInstanceManager {
+
+		@Override
+		public Object newInstance(String className, ClassLoader classLoader)
+			throws ClassNotFoundException, IllegalAccessException,
+				   InstantiationException, InvocationTargetException,
+				   NamingException, NoSuchMethodException {
+
+			Class<?> clazz = null;
+
+			try {
+				clazz = classLoader.loadClass(className);
+			}
+			catch (ClassNotFoundException classNotFoundException) {
+				ClassLoader parentClassLoader = classLoader.getParent();
+
+				String resourceName = StringUtil.replace(
+					className, CharPool.PERIOD, CharPool.SLASH);
+
+				URL url = parentClassLoader.getResource(
+					resourceName + ".class");
+
+				if (url == null) {
+					throw classNotFoundException;
+				}
+
+				clazz = _loadClass(
+					className, classLoader, classNotFoundException, url);
+
+				if (clazz == null) {
+					throw classNotFoundException;
+				}
+
+				// Preload inner classes
+
+				List<URL> innerClassURLs = _getInnerClassURLs(
+					url, resourceName);
+
+				for (URL innerClassURL : innerClassURLs) {
+					_loadClass(
+						_getClassName(innerClassURL), classLoader,
+						classNotFoundException, innerClassURL);
+				}
+
+				if (ArrayUtil.isNotEmpty(
+						classNotFoundException.getSuppressed())) {
+
+					throw classNotFoundException;
+				}
+			}
+
+			Constructor<?> constructor = clazz.getConstructor();
+
+			return constructor.newInstance();
+		}
+
+		private long _extractBundleId(URL url) {
+			String path = url.getHost();
+
+			String[] strings = StringUtil.split(path, CharPool.PERIOD);
+
+			if (strings.length > 1) {
+				return GetterUtil.getLong(strings[0]);
+			}
+
+			return -1;
+		}
+
+		private String _getClassName(URL url) {
+			String path = url.getPath();
+
+			if (path.startsWith(StringPool.SLASH)) {
+				path = path.substring(1);
+			}
+
+			path = path.substring(0, path.indexOf(".class"));
+
+			return StringUtil.replace(path, CharPool.SLASH, CharPool.PERIOD);
+		}
+
+		private List<URL> _getInnerClassURLs(URL url, String resourceName) {
+			String protocol = url.getProtocol();
+
+			if (protocol.equals("bundle") ||
+				protocol.equals("bundleresource")) {
+
+				BundleContext bundleContext = _jspBundle.getBundleContext();
+
+				long bundleId = _extractBundleId(url);
+
+				Bundle bundle = bundleContext.getBundle(bundleId);
+
+				if (bundle == null) {
+					return Collections.emptyList();
+				}
+
+				int index = resourceName.lastIndexOf(CharPool.SLASH);
+
+				Enumeration<URL> urlEnumeration = bundle.findEntries(
+					resourceName.substring(0, index),
+					resourceName.substring(index + 1) + "$*.class", false);
+
+				if (urlEnumeration == null) {
+					return Collections.emptyList();
+				}
+
+				return ListUtil.fromEnumeration(urlEnumeration);
+			}
+
+			return Collections.emptyList();
+		}
+
+		private Class<?> _loadClass(
+			String className, ClassLoader classLoader,
+			ClassNotFoundException classNotFoundException, URL url) {
+
+			Class<?> clazz = null;
+
+			try {
+				byte[] bytes = StreamUtil.toByteArray(url.openStream());
+
+				if (bytes != null) {
+					clazz = (Class<?>)_defineClassMethodHandle.invokeExact(
+						classLoader, className, bytes, 0, bytes.length);
+				}
+			}
+			catch (Throwable throwable) {
+				classNotFoundException.addSuppressed(throwable);
+			}
+
+			return clazz;
+		}
+
+	}
 
 	private class ServletContextWrapper implements ServletContext {
 

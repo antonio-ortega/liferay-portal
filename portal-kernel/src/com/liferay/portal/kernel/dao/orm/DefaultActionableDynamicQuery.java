@@ -6,15 +6,17 @@
 package com.liferay.portal.kernel.dao.orm;
 
 import com.liferay.petra.executor.PortalExecutorManager;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -266,20 +268,31 @@ public class DefaultActionableDynamicQuery implements ActionableDynamicQuery {
 				return -1L;
 			}
 
+			PortalExecutorManager portalExecutorManager =
+				_portalExecutorManagerSnapshot.get();
+
 			ExecutorService executorService =
-				_portalExecutorManager.getPortalExecutor(
+				portalExecutorManager.getPortalExecutor(
 					DefaultActionableDynamicQuery.class.getName());
 
 			if (_parallel && (executorService != null)) {
+				long companyId = CompanyThreadLocal.getCompanyId();
+
 				List<Future<Void>> futures = new ArrayList<>(objects.size());
 
-				for (final Object object : objects) {
+				for (Object object : objects) {
 					futures.add(
 						executorService.submit(
 							() -> {
-								performAction(object);
+								try (SafeCloseable safeCloseable =
+										CompanyThreadLocal.
+											setCompanyIdWithSafeCloseable(
+												companyId)) {
 
-								return null;
+									performAction(object);
+
+									return null;
+								}
 							}));
 				}
 
@@ -379,10 +392,9 @@ public class DefaultActionableDynamicQuery implements ActionableDynamicQuery {
 		}
 	}
 
-	private static volatile PortalExecutorManager _portalExecutorManager =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			PortalExecutorManager.class, DefaultActionableDynamicQuery.class,
-			"_portalExecutorManager", false);
+	private static final Snapshot<PortalExecutorManager>
+		_portalExecutorManagerSnapshot = new Snapshot<>(
+			DefaultActionableDynamicQuery.class, PortalExecutorManager.class);
 
 	private AddCriteriaMethod _addCriteriaMethod;
 	private AddOrderCriteriaMethod _addOrderCriteriaMethod;

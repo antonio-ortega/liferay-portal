@@ -4,11 +4,14 @@ definition {
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Product Info Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -29,6 +32,8 @@ definition {
 			specificationDescription = "Specification-1 Description",
 			specificationTitle = "specification-1");
 
+		Navigator.gotoBack();
+
 		CommerceEntry.viewSpecificationLabels(
 			specificationDescription = "Specification-1 Description",
 			specificationTitle = "specification-1");
@@ -42,6 +47,8 @@ definition {
 		CommerceEntry.createNewSpecificationGroups(
 			specificationDescription = "Specification-1 Description",
 			specificationTitle = "specification-1");
+
+		Navigator.gotoBack();
 
 		CommerceEntry.viewSpecificationGroups(
 			specificationDescription = "Specification-1 Description",
@@ -62,9 +69,7 @@ definition {
 			productName = "Simple T-Shirt",
 			productType = "Simple");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Simple T-Shirt");
 

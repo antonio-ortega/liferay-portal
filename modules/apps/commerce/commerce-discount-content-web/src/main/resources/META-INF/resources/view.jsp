@@ -10,12 +10,15 @@
 <%
 CommerceContext commerceContext = (CommerceContext)request.getAttribute(CommerceWebKeys.COMMERCE_CONTEXT);
 
+CommerceOrder commerceOrder = null;
 String couponCode = null;
 
-CommerceOrder commerceOrder = commerceContext.getCommerceOrder();
+if (commerceContext != null) {
+	commerceOrder = commerceContext.getCommerceOrder();
 
-if (commerceOrder != null) {
-	couponCode = commerceOrder.getCouponCode();
+	if (commerceOrder != null) {
+		couponCode = commerceOrder.getCouponCode();
+	}
 }
 %>
 
@@ -39,13 +42,13 @@ if (commerceOrder != null) {
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 
 	<c:choose>
-		<c:when test="<%= Validator.isNull(commerceOrder) %>">
+		<c:when test="<%= commerceOrder == null %>">
 		</c:when>
 		<c:when test="<%= Validator.isNotNull(couponCode) %>">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.REMOVE %>" />
 
 			<div class="coupon-code-header">
-				<h5><liferay-ui:message key="coupon-code" /></h5>
+				<div class="h5"><liferay-ui:message key="coupon-code" /></div>
 			</div>
 
 			<div class="coupon-code-body">

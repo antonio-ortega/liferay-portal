@@ -129,43 +129,39 @@ currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() +
 			(event) => {
 				var link = event.currentTarget;
 
-				document.<portlet:namespace />fm.<portlet:namespace />deleteOrganizationIds.value = link.attr(
-					'data-rowId'
-				);
+				document.<portlet:namespace />fm.<portlet:namespace />deleteOrganizationIds.value =
+					link.attr('data-rowId');
 
 				submitForm(document.<portlet:namespace />fm);
 			},
 			'.modify-link'
 		);
 
-		var selectOrganizationLink = A.one(
-			'#<portlet:namespace />selectOrganizationLink'
+		const selectOrganizationLink = document.getElementById(
+			'<portlet:namespace />selectOrganizationLink'
 		);
 
 		if (selectOrganizationLink) {
-			selectOrganizationLink.on('click', (event) => {
+			selectOrganizationLink.addEventListener('click', (event) => {
 				Liferay.Util.openSelectionModal({
 					multiple: true,
 					onSelect(data) {
 						if (data.value && data.value.length) {
-							document.<portlet:namespace />fm.<portlet:namespace />addOrganizationIds.value = Array.from(
-								data.value
-							)
-								.map((selectedItem) => {
-									const organization = JSON.parse(selectedItem);
+							document.<portlet:namespace />fm.<portlet:namespace />addOrganizationIds.value =
+								Array.from(data.value)
+									.map((selectedItem) => {
+										const organization = JSON.parse(selectedItem);
 
-									return organization.organizationId;
-								})
-								.join(',');
+										return organization.organizationId;
+									})
+									.join(',');
 
 							submitForm(document.<portlet:namespace />fm);
 						}
 					},
 					selectEventName: '<portlet:namespace />selectOrganization',
-					title:
-						'<liferay-ui:message arguments="organization" key="select-x" />',
-					url:
-						'<%= userDisplayContext.getOrganizationItemSelectorURL(true) %>',
+					title: '<liferay-ui:message arguments="organization" key="select-x" />',
+					url: '<%= userDisplayContext.getOrganizationItemSelectorURL(true) %>',
 				});
 			});
 		}

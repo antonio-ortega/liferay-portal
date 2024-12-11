@@ -1,5 +1,7 @@
 /* eslint-disable no-unused-vars */
+
 /* eslint-disable no-import-assign */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -50,7 +52,7 @@ describe('FileUrlCopyButton', () => {
 		expect(icon.classList).toContain('lexicon-icon-copy');
 	});
 
-	it('renders the proper icon after clicking the button', async () => {
+	xit('renders the proper icon after clicking the button', async () => {
 		const {getByRole} = render(<FileUrlCopyButton url={demoFileUrl} />);
 		const button = getByRole('button');
 

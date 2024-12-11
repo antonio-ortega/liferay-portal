@@ -1,6 +1,7 @@
 definition {
 
-	macro editAndDeleteBlogEntry {
+	@summary = "Default summary"
+	macro editAndDeleteBlogEntry() {
 		if (isSet(video)) {
 			Navigator.gotoPage(pageName = "Blogs");
 
@@ -52,7 +53,8 @@ definition {
 			entryTitle = "Blogs Entry Title Edit");
 	}
 
-	macro viewAndAddBlogEntry {
+	@summary = "Default summary"
+	macro viewAndAddBlogEntry() {
 		BlogsNavigator.openToBlogEntry(
 			entryTitle = "Blogs Entry Title",
 			layoutName = "Blogs",
@@ -78,7 +80,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "user1@liferay.com");
 
 		Navigator.gotoPage(pageName = "Blogs");
@@ -88,7 +90,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Navigator.gotoPage(pageName = "Blogs");

@@ -9,13 +9,14 @@ import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.taglib.util.internal.NPMResolverRef;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.taglib.util.OutputData;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -57,7 +58,10 @@ public class TagResourceHandler {
 			StringBundler.concat(
 				"<link data-senna-track=\"temporary\" href=\"",
 				PortalUtil.getPathModule(), _webContextPath, StringPool.SLASH,
-				bundleCssPath, "\" rel=\"stylesheet\">"));
+				bundleCssPath, StringPool.QUOTE,
+				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+					_getHttpServletRequest()),
+				" rel=\"stylesheet\">"));
 	}
 
 	public void outputNPMResource(String npmResourcePath) {
@@ -70,7 +74,7 @@ public class TagResourceHandler {
 			URL url = _bundle.getEntry(
 				"META-INF/resources/node_modules/" + resourcePath);
 
-			outputResource(Position.BOTTOM, StringUtil.read(url.openStream()));
+			outputResource(Position.BOTTOM, URLUtil.toString(url));
 		}
 		catch (Exception exception) {
 			_log.error(
@@ -89,7 +93,10 @@ public class TagResourceHandler {
 				StringBundler.concat(
 					"<link href=\"", PortalUtil.getPathModule(),
 					_webContextPath, "/node_modules/", cssPath,
-					"\" rel=\"stylesheet\">"));
+					StringPool.QUOTE,
+					ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+						_getHttpServletRequest()),
+					" rel=\"stylesheet\">"));
 		}
 		catch (Exception exception) {
 			_log.error(

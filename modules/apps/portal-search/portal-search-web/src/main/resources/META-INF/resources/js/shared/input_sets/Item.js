@@ -51,7 +51,6 @@ function Item({
 						<ClayButton
 							aria-label={Liferay.Language.get('move')}
 							borderless
-							className="shadow-none"
 							displayType="secondary"
 							monospaced
 							small
@@ -66,10 +65,15 @@ function Item({
 						<ClayButton
 							aria-label={Liferay.Language.get('delete')}
 							borderless
-							className="c-ml-2 shadow-none"
+							className="c-ml-2"
+							disabled={!onInputSetItemDelete}
 							displayType="secondary"
 							monospaced
-							onClick={onInputSetItemDelete(index)}
+							onClick={
+								onInputSetItemDelete
+									? onInputSetItemDelete(index)
+									: undefined
+							}
 							small
 						>
 							<ClayIcon symbol="trash" />

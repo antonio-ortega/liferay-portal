@@ -64,9 +64,8 @@ export default function CartItemsList({showPriceOnApplicationInfo = false}) {
 					<div className="mini-cart-cart-items">
 						{cartItems.map((currentCartItem, index) => {
 							const updateCartItem = (callback) => {
-								const updatedCartItem = callback(
-									currentCartItem
-								);
+								const updatedCartItem =
+									callback(currentCartItem);
 
 								setCartState((cartState) => ({
 									...cartState,
@@ -81,7 +80,7 @@ export default function CartItemsList({showPriceOnApplicationInfo = false}) {
 							return (
 								<CartViews.Item
 									index={index}
-									key={currentCartItem.id}
+									key={`${currentCartItem.id}_${currentCartItem.quantity}`}
 									updateCartItem={updateCartItem}
 									{...currentCartItem}
 								/>

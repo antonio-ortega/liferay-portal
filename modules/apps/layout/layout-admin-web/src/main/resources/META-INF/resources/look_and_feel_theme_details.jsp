@@ -168,13 +168,13 @@ String styleBookWarningMessage = layoutsAdminDisplayContext.getStyleBookWarningM
 					"themeContainerId", liferayPortletResponse.getNamespace() + "currentThemeContainer"
 				).build()
 			%>'
-			module="js/LookAndFeelThemeEdit"
+			module="{LookAndFeelThemeEdit} from layout-admin-web"
 		/>
 	</clay:col>
 </clay:row>
 
 <c:if test="<%= (selPluginPackage != null) && Validator.isNotNull(selPluginPackage.getShortDescription()) %>">
-	<h4><liferay-ui:message key="description" /></h4>
+	<div class="h4"><liferay-ui:message key="description" /></div>
 
 	<p class="text-default">
 		<%= HtmlUtil.escape(selPluginPackage.getShortDescription()) %>
@@ -236,6 +236,6 @@ List<ColorScheme> colorSchemes = selTheme.getColorSchemes();
 				"regularColorSchemeInputId", liferayPortletResponse.getNamespace() + "regularColorSchemeId"
 			).build()
 		%>'
-		module="js/LookAndFeelThemeDetails"
+		module="{LookAndFeelThemeDetails} from layout-admin-web"
 	/>
 </c:if>

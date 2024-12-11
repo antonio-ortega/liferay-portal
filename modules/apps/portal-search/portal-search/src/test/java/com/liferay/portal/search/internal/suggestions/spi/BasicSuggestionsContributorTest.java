@@ -6,10 +6,8 @@
 package com.liferay.portal.search.internal.suggestions.spi;
 
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
-import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
-import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -19,6 +17,8 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.search.asset.AssetURLViewProvider;
+import com.liferay.portal.search.constants.SearchContextAttributes;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
@@ -36,6 +36,7 @@ import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,6 +45,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -62,7 +64,7 @@ public class BasicSuggestionsContributorTest {
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
 
-		_setUpAssetEntryLocalService();
+		_setUpAssetURLViewProvider();
 		_setUpBasicSuggestionsContributor();
 		_setUpLiferayPortletRequest();
 		_setUpSearchContext();
@@ -175,6 +177,36 @@ public class BasicSuggestionsContributorTest {
 		);
 	}
 
+	@Test
+	public void testSearchTuningRankingsIsContributed() throws Exception {
+		_setUpSearcher(0);
+
+		_getSuggestionsContributorResults();
+
+		SearchContext searchContext = Mockito.mock(SearchContext.class);
+
+		ArgumentCaptor<Consumer<SearchContext>> argumentCaptor =
+			ArgumentCaptor.forClass(
+				(Class<Consumer<SearchContext>>)(Class)Consumer.class);
+
+		Mockito.verify(
+			_searchRequestBuilder
+		).withSearchContext(
+			argumentCaptor.capture()
+		);
+
+		Consumer<SearchContext> argumentCaptorValue = argumentCaptor.getValue();
+
+		argumentCaptorValue.accept(searchContext);
+
+		Mockito.verify(
+			searchContext
+		).setAttribute(
+			SearchContextAttributes.ATTRIBUTE_KEY_CONTRIBUTE_TUNING_RANKINGS,
+			Boolean.TRUE
+		);
+	}
+
 	@Rule
 	public TestName testName = new TestName();
 
@@ -182,16 +214,6 @@ public class BasicSuggestionsContributorTest {
 		return _basicSuggestionsContributor.getSuggestionsContributorResults(
 			_liferayPortletRequest, _liferayPortletResponse, _searchContext,
 			_suggestionsContributorConfiguration);
-	}
-
-	private void _setUpAssetEntryLocalService() throws Exception {
-		Mockito.doReturn(
-			Mockito.mock(AssetEntry.class)
-		).when(
-			_assetEntryLocalService
-		).getEntry(
-			Mockito.anyString(), Mockito.anyLong()
-		);
 	}
 
 	private void _setUpAssetRendererFactoryRegistryUtil(
@@ -250,12 +272,23 @@ public class BasicSuggestionsContributorTest {
 		);
 	}
 
+	private void _setUpAssetURLViewProvider() {
+		Mockito.doReturn(
+			RandomTestUtil.randomString()
+		).when(
+			_assetURLViewProvider
+		).getAssetURLView(
+			Mockito.any(), Mockito.any(), Mockito.anyString(),
+			Mockito.anyLong(), Mockito.any(), Mockito.any()
+		);
+	}
+
 	private void _setUpBasicSuggestionsContributor() {
 		_basicSuggestionsContributor = new BasicSuggestionsContributor();
 
 		ReflectionTestUtil.setFieldValue(
-			_basicSuggestionsContributor, "_assetEntryLocalService",
-			_assetEntryLocalService);
+			_basicSuggestionsContributor, "_assetURLViewProvider",
+			_assetURLViewProvider);
 		ReflectionTestUtil.setFieldValue(
 			_basicSuggestionsContributor, "_searcher", _searcher);
 		ReflectionTestUtil.setFieldValue(
@@ -367,41 +400,38 @@ public class BasicSuggestionsContributorTest {
 	}
 
 	private void _setUpSearchRequestBuilderFactory() {
-		SearchRequestBuilder searchRequestBuilder = Mockito.mock(
-			SearchRequestBuilder.class);
-
 		Mockito.doReturn(
 			Mockito.mock(SearchRequest.class)
 		).when(
-			searchRequestBuilder
+			_searchRequestBuilder
 		).build();
 
 		Mockito.doReturn(
-			searchRequestBuilder
+			_searchRequestBuilder
 		).when(
-			searchRequestBuilder
+			_searchRequestBuilder
 		).from(
 			Mockito.anyInt()
 		);
 
 		Mockito.doReturn(
-			searchRequestBuilder
+			_searchRequestBuilder
 		).when(
-			searchRequestBuilder
+			_searchRequestBuilder
 		).queryString(
 			Mockito.any()
 		);
 
 		Mockito.doReturn(
-			searchRequestBuilder
+			_searchRequestBuilder
 		).when(
-			searchRequestBuilder
+			_searchRequestBuilder
 		).size(
 			Mockito.anyInt()
 		);
 
 		Mockito.doReturn(
-			searchRequestBuilder
+			_searchRequestBuilder
 		).when(
 			_searchRequestBuilderFactory
 		).builder();
@@ -416,10 +446,10 @@ public class BasicSuggestionsContributorTest {
 	}
 
 	@Mock
-	private AssetEntryLocalService _assetEntryLocalService;
+	private AssetRendererFactory<?> _assetRendererFactory;
 
 	@Mock
-	private AssetRendererFactory<?> _assetRendererFactory;
+	private AssetURLViewProvider _assetURLViewProvider;
 
 	private BasicSuggestionsContributor _basicSuggestionsContributor;
 
@@ -434,6 +464,9 @@ public class BasicSuggestionsContributorTest {
 
 	@Mock
 	private Searcher _searcher;
+
+	private final SearchRequestBuilder _searchRequestBuilder = Mockito.mock(
+		SearchRequestBuilder.class);
 
 	@Mock
 	private SearchRequestBuilderFactory _searchRequestBuilderFactory;

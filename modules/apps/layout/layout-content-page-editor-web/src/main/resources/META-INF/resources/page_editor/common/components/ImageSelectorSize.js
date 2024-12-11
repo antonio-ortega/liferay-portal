@@ -55,10 +55,6 @@ export function ImageSelectorSize({
 	);
 
 	const showImageSizeWarning = useMemo(() => {
-		if (!Liferay.FeatureFlags['LPS-187285']) {
-			return false;
-		}
-
 		if (isNullOrUndefined(imageSizeLimit)) {
 			return false;
 		}
@@ -173,6 +169,12 @@ export function ImageSelectorSize({
 		});
 	}, [fileEntryId]);
 
+	const warningText = `${Liferay.Language.get(
+		'big-image-file-size-used'
+	)} ${Liferay.Language.get(
+		'please-consider-configuring-adaptive-media-lazy-loading-or-reducing-the-image-size'
+	)}`;
+
 	return (
 		<ClayForm.Group
 			className={classNames('mb-3', {
@@ -183,6 +185,10 @@ export function ImageSelectorSize({
 				<ClayForm.Group className="mb-2">
 					<label htmlFor={imageSizeSelectId}>
 						{Liferay.Language.get('resolution')}
+
+						{showImageSizeWarning ? (
+							<span className="sr-only">({warningText})</span>
+						) : null}
 					</label>
 
 					<ClaySelectWithOption
@@ -224,11 +230,7 @@ export function ImageSelectorSize({
 					<ClayForm.FeedbackItem className="font-weight-normal text-2">
 						<ClayForm.FeedbackIndicator symbol="warning-full" />
 
-						{`${Liferay.Language.get(
-							'big-image-file-size-used'
-						)} ${Liferay.Language.get(
-							'please-consider-configuring-adaptive-media-lazy-loading-or-reducing-the-image-size'
-						)}`}
+						{warningText}
 					</ClayForm.FeedbackItem>
 				</ClayForm.FeedbackGroup>
 			) : null}

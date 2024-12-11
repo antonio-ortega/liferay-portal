@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.cache.PortalCacheManagerNames;
 import com.liferay.portal.kernel.cache.PortalCacheManagerProvider;
 import com.liferay.portal.kernel.cache.SingleVMPool;
 import com.liferay.portal.kernel.cache.key.CacheKeyGeneratorUtil;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
@@ -25,12 +26,10 @@ import com.liferay.portal.kernel.security.auth.DefaultFullNameGenerator;
 import com.liferay.portal.kernel.security.auth.FullNameGenerator;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.xml.SecureXMLFactoryProviderUtil;
-import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
-import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
@@ -38,7 +37,6 @@ import com.liferay.portal.kernel.xml.UnsecureSAXReaderUtil;
 import com.liferay.portal.model.DefaultModelHintsImpl;
 import com.liferay.portal.security.permission.ResourceActionsImpl;
 import com.liferay.portal.security.xml.SecureXMLFactoryProviderImpl;
-import com.liferay.portal.service.permission.PortletPermissionImpl;
 import com.liferay.portal.util.DigesterImpl;
 import com.liferay.portal.util.FastDateFormatFactoryImpl;
 import com.liferay.portal.util.FileImpl;
@@ -73,7 +71,14 @@ public class ToolDependencies {
 		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
 		bundleContext.registerService(
-			FullNameGenerator.class, new DefaultFullNameGenerator(), null);
+			FriendlyURLNormalizer.class,
+			(FriendlyURLNormalizer)ProxyUtil.newProxyInstance(
+				ToolDependencies.class.getClassLoader(),
+				new Class<?>[] {FriendlyURLNormalizer.class},
+				(proxy, method, args) -> null),
+			null);
+		bundleContext.registerService(
+			FullNameGenerator.class, DefaultFullNameGenerator.INSTANCE, null);
 
 		CacheKeyGeneratorUtil cacheKeyGeneratorUtil =
 			new CacheKeyGeneratorUtil();
@@ -95,23 +100,9 @@ public class ToolDependencies {
 
 		fileUtil.setFile(new FileImpl());
 
-		FriendlyURLNormalizerUtil friendlyURLNormalizerUtil =
-			new FriendlyURLNormalizerUtil();
-
-		friendlyURLNormalizerUtil.setFriendlyURLNormalizer(
-			(FriendlyURLNormalizer)ProxyUtil.newProxyInstance(
-				ToolDependencies.class.getClassLoader(),
-				new Class<?>[] {FriendlyURLNormalizer.class},
-				(proxy, method, args) -> null));
-
 		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
 
 		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
-
-		PortletPermissionUtil portletPermissionUtil =
-			new PortletPermissionUtil();
-
-		portletPermissionUtil.setPortletPermission(new PortletPermissionImpl());
 
 		SAXReaderUtil saxReaderUtil = new SAXReaderUtil();
 
@@ -385,7 +376,8 @@ public class ToolDependencies {
 				String portalCacheName, boolean mvcc)
 			throws PortalCacheException {
 
-			return getPortalCache(portalCacheName, mvcc, false);
+			return getPortalCache(
+				portalCacheName, mvcc, DBPartition.isPartitionEnabled());
 		}
 
 		@Override

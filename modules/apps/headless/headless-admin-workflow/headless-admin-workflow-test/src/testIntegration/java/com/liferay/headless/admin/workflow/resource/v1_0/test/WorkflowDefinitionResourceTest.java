@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -25,6 +26,8 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.workflow.kaleo.definition.util.WorkflowDefinitionContentUtil;
 import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
@@ -36,6 +39,8 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -49,12 +54,19 @@ import org.skyscreamer.jsonassert.JSONAssert;
 public class WorkflowDefinitionResourceTest
 	extends BaseWorkflowDefinitionResourceTestCase {
 
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
+
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		BaseWorkflowDefinitionResourceTestCase.setUpClass();
 
 		_workflowDefinition =
-			_workflowDefinitionManager.getLatestWorkflowDefinition(
+			_workflowDefinitionManager.liberalGetLatestWorkflowDefinition(
 				TestPropsValues.getCompanyId(), "Single Approver");
 
 		_undeployWorkflowDefinition(
@@ -66,9 +78,9 @@ public class WorkflowDefinitionResourceTest
 		String content = _workflowDefinition.getContent();
 
 		_workflowDefinitionManager.deployWorkflowDefinition(
-			_workflowDefinition.getCompanyId(), _workflowDefinition.getUserId(),
-			_workflowDefinition.getTitle(), _workflowDefinition.getName(),
-			content.getBytes());
+			null, _workflowDefinition.getCompanyId(),
+			_workflowDefinition.getUserId(), _workflowDefinition.getTitle(),
+			_workflowDefinition.getName(), content.getBytes());
 	}
 
 	@After
@@ -114,15 +126,15 @@ public class WorkflowDefinitionResourceTest
 		assertHttpResponseStatusCode(
 			200,
 			workflowDefinitionResource.getWorkflowDefinitionByNameHttpResponse(
-				workflowDefinition.getName(), null));
+				workflowDefinition.getName(), null, null));
 		assertHttpResponseStatusCode(
 			200,
 			workflowDefinitionResource.getWorkflowDefinitionByNameHttpResponse(
-				workflowDefinition.getName(), 1));
+				workflowDefinition.getName(), null, 1));
 		assertHttpResponseStatusCode(
 			404,
 			workflowDefinitionResource.getWorkflowDefinitionByNameHttpResponse(
-				workflowDefinition.getName(), 2));
+				workflowDefinition.getName(), null, 2));
 
 		testPostWorkflowDefinitionDeploy_addWorkflowDefinition(
 			workflowDefinition);
@@ -130,11 +142,11 @@ public class WorkflowDefinitionResourceTest
 		assertHttpResponseStatusCode(
 			200,
 			workflowDefinitionResource.getWorkflowDefinitionByNameHttpResponse(
-				workflowDefinition.getName(), 2));
+				workflowDefinition.getName(), null, 2));
 
 		WorkflowDefinition latestWorkflowDefinition =
 			workflowDefinitionResource.getWorkflowDefinitionByName(
-				workflowDefinition.getName(), null);
+				workflowDefinition.getName(), null, null);
 
 		Assert.assertEquals(
 			workflowDefinition.getDateCreated(),

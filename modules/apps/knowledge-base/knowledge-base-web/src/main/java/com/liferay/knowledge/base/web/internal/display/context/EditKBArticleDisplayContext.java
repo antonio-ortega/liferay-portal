@@ -25,6 +25,7 @@ import com.liferay.portal.configuration.module.configuration.ConfigurationProvid
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
@@ -44,6 +45,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.util.PropsValues;
 
 import java.text.Format;
 
@@ -103,6 +105,30 @@ public class EditKBArticleDisplayContext {
 		}
 
 		return sections;
+	}
+
+	public String getCancelURL() {
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-11003")) {
+			return getRedirect();
+		}
+
+		long resourcePrimKey = getResourcePrimKey();
+
+		if (resourcePrimKey == 0) {
+			return getRedirect();
+		}
+
+		return PortletURLBuilder.createActionURL(
+			_liferayPortletResponse
+		).setActionName(
+			"/knowledge_base/update_kb_article"
+		).setCMD(
+			Constants.CANCEL
+		).setRedirect(
+			getRedirect()
+		).setParameter(
+			"resourcePrimKey", resourcePrimKey
+		).buildString();
 	}
 
 	public String getContent() {
@@ -480,6 +506,14 @@ public class EditKBArticleDisplayContext {
 		KBArticle kbArticle = getKBArticle();
 
 		if ((kbArticle != null) && kbArticle.isScheduled()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean isSchedulerEnabled() {
+		if (PropsValues.SCHEDULER_ENABLED) {
 			return true;
 		}
 

@@ -6,7 +6,7 @@
 import {act, cleanup, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 
 import TranslationAdminSelector from '../../src/main/resources/META-INF/resources/translation_manager/TranslationAdminSelector';
 
@@ -95,12 +95,15 @@ const availableLocales = [
 
 const defaultLanguageId = 'en_US';
 
+const selectedLanguageId = 'en_US';
+
 const props = {
 	activeLanguageIds,
 	availableLocales,
 	defaultLanguageId,
 	onActiveLanguageIdsChange: jest.fn(),
 	onSelectedLanguageIdChange: jest.fn(),
+	selectedLanguageId,
 };
 
 jest.mock(
@@ -168,13 +171,17 @@ describe('TranslationAdminSelector', () => {
 	it('renders a dropdown trigger with the selected locale flag icon as content', () => {
 		const {asFragment} = render(<TranslationAdminSelector {...props} />);
 
+		const buttonElement = document.querySelector('button');
+
+		buttonElement.id = '';
+
 		expect(asFragment()).toMatchSnapshot();
 	});
 
 	it('renders an open dropdown with the list of active languages', async () => {
 		const {getByTitle} = render(<TranslationAdminSelector {...props} />);
 
-		const trigger = getByTitle('select-translation-language');
+		const trigger = getByTitle('select-a-language');
 
 		fireEvent.click(trigger);
 
@@ -188,7 +195,7 @@ describe('TranslationAdminSelector', () => {
 			<TranslationAdminSelector adminMode={true} {...props} />
 		);
 
-		const trigger = getByTitle('select-translation-language');
+		const trigger = getByTitle('select-a-language');
 
 		fireEvent.click(trigger);
 
@@ -202,7 +209,7 @@ describe('TranslationAdminSelector', () => {
 			<TranslationAdminSelector adminMode={true} {...props} />
 		);
 
-		const trigger = getByTitle('select-translation-language');
+		const trigger = getByTitle('select-a-language');
 
 		fireEvent.click(trigger);
 
@@ -228,7 +235,7 @@ describe('TranslationAdminSelector', () => {
 			<TranslationAdminSelector adminMode={true} {...props} />
 		);
 
-		const trigger = getByTitle('select-translation-language');
+		const trigger = getByTitle('select-a-language');
 
 		fireEvent.click(trigger);
 
@@ -269,7 +276,7 @@ describe('TranslationAdminSelector', () => {
 	it('calls onSelectedLocaleChange callback on dropdown locale selection', () => {
 		const {getByTitle} = render(<TranslationAdminSelector {...props} />);
 
-		const trigger = getByTitle('select-translation-language');
+		const trigger = getByTitle('select-a-language');
 
 		fireEvent.click(trigger);
 
@@ -279,9 +286,8 @@ describe('TranslationAdminSelector', () => {
 
 		const dropdownMenu = document.querySelector('.dropdown-menu');
 
-		const localeElement = dropdownMenu.querySelectorAll(
-			'.dropdown-item'
-		)[1];
+		const localeElement =
+			dropdownMenu.querySelectorAll('.dropdown-item')[1];
 
 		fireEvent.click(localeElement);
 
@@ -307,7 +313,7 @@ describe('TranslationAdminSelector', () => {
 			jest.runAllTimers();
 		});
 
-		const trigger = getByTitle('select-translation-language');
+		const trigger = getByTitle('select-a-language');
 
 		fireEvent.click(trigger);
 
@@ -329,7 +335,7 @@ describe('TranslationAdminSelector', () => {
 			/>
 		);
 
-		const trigger = getByTitle('select-translation-language');
+		const trigger = getByTitle('select-a-language');
 
 		fireEvent.click(trigger);
 
@@ -354,5 +360,39 @@ describe('TranslationAdminSelector', () => {
 		});
 
 		expect(asFragment()).toMatchSnapshot();
+	});
+
+	it('renders horizontal selector when the display type is HORIZONTAL', () => {
+		render(
+			<TranslationAdminSelector
+				displayType="HORIZONTAL"
+				selectedLanguageId="ca_ES"
+				{...props}
+			/>
+		);
+
+		const horizontalSelector = document.querySelector(
+			'.form-control-select'
+		);
+
+		expect(horizontalSelector).toBeTruthy();
+	});
+
+	it('calls onSelectorActiveChange when the trigger is clicked', () => {
+		const onSelectorActiveChange = jest.fn();
+
+		const {getByTitle} = render(
+			<TranslationAdminSelector
+				{...props}
+				onSelectorActiveChange={onSelectorActiveChange}
+				selectedLanguageId="en_US"
+			/>
+		);
+
+		const trigger = getByTitle('select-a-language');
+
+		fireEvent.click(trigger);
+
+		expect(onSelectorActiveChange).toBeCalled();
 	});
 });

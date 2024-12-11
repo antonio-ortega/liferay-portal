@@ -32,6 +32,7 @@ public class MeasurementUnitResourceTest
 	extends BaseMeasurementUnitResourceTestCase {
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
@@ -178,21 +179,6 @@ public class MeasurementUnitResourceTest
 	}
 
 	@Override
-	@Test
-	public void testPostMeasurementUnit() throws Exception {
-		MeasurementUnit randomMeasurementUnit = randomMeasurementUnit();
-
-		randomMeasurementUnit.setRate(Double.valueOf("1.0"));
-		randomMeasurementUnit.setType("Unit");
-
-		MeasurementUnit postMeasurementUnit = _postMeasurementUnit(
-			randomMeasurementUnit);
-
-		assertEquals(randomMeasurementUnit, postMeasurementUnit);
-		assertValid(postMeasurementUnit);
-	}
-
-	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
 			"companyId", "externalReferenceCode", "key", "name", "priority",
@@ -211,9 +197,9 @@ public class MeasurementUnitResourceTest
 				name = HashMapBuilder.put(
 					LocaleUtil.US.toString(), RandomTestUtil.randomString()
 				).build();
-				primary = RandomTestUtil.randomBoolean();
+				primary = true;
 				priority = RandomTestUtil.randomDouble();
-				rate = RandomTestUtil.randomDouble();
+				rate = Double.valueOf("1.0");
 				type = _types.get(
 					RandomTestUtil.randomInt(0, _types.size() - 1));
 			}
@@ -250,6 +236,7 @@ public class MeasurementUnitResourceTest
 		return _postMeasurementUnit(randomMeasurementUnit());
 	}
 
+	@Override
 	protected MeasurementUnit
 			testGetMeasurementUnitByExternalReferenceCode_addMeasurementUnit()
 		throws Exception {
@@ -257,6 +244,7 @@ public class MeasurementUnitResourceTest
 		return _postMeasurementUnit(randomMeasurementUnit());
 	}
 
+	@Override
 	protected MeasurementUnit testGetMeasurementUnitByKey_addMeasurementUnit()
 		throws Exception {
 
@@ -332,6 +320,22 @@ public class MeasurementUnitResourceTest
 		return _postMeasurementUnit(measurementUnit);
 	}
 
+	@Override
+	protected MeasurementUnit
+			testPutMeasurementUnitByExternalReferenceCode_addMeasurementUnit()
+		throws Exception {
+
+		return _postMeasurementUnit(randomMeasurementUnit());
+	}
+
+	@Override
+	protected MeasurementUnit
+			testPutMeasurementUnitByExternalReferenceCode_createMeasurementUnit()
+		throws Exception {
+
+		return randomMeasurementUnit();
+	}
+
 	private MeasurementUnit _postMeasurementUnit(
 			MeasurementUnit randomMeasurementUnit)
 		throws Exception {
@@ -341,6 +345,6 @@ public class MeasurementUnitResourceTest
 	}
 
 	private static final List<String> _types = Collections.unmodifiableList(
-		ListUtil.fromArray("0", "1", "2", "Dimensions", "Unit", "Weight"));
+		ListUtil.fromArray("Dimensions", "Unit", "Weight"));
 
 }

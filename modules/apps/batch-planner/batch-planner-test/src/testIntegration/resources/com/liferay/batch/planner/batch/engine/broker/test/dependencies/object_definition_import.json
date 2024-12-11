@@ -50,9 +50,10 @@
 					"en_US": "actionLabel"
 				},
 				"name": "actionLabel",
-				"objectActionExecutorKey": "groovy",
+				"objectActionExecutorKey": "webhook",
 				"objectActionTriggerKey": "standalone",
 				"parameters": {
+					"url": "http://localhost:8080"
 				},
 				"status": {
 					"code": 0,
@@ -83,7 +84,8 @@
 				"required": false,
 				"state": false,
 				"system": true,
-				"type": "String"
+				"type": "String",
+				"unique": false
 			},
 			{
 				"DBType": "Date",
@@ -105,7 +107,8 @@
 				"required": false,
 				"state": false,
 				"system": true,
-				"type": "Date"
+				"type": "Date",
+				"unique": false
 			},
 			{
 				"DBType": "String",
@@ -127,7 +130,8 @@
 				"required": false,
 				"state": false,
 				"system": true,
-				"type": "String"
+				"type": "String",
+				"unique": false
 			},
 			{
 				"DBType": "Long",
@@ -149,7 +153,8 @@
 				"required": false,
 				"state": false,
 				"system": true,
-				"type": "Long"
+				"type": "Long",
+				"unique": false
 			},
 			{
 				"DBType": "Date",
@@ -171,7 +176,8 @@
 				"required": false,
 				"state": false,
 				"system": true,
-				"type": "Date"
+				"type": "Date",
+				"unique": false
 			},
 			{
 				"DBType": "String",
@@ -193,7 +199,8 @@
 				"required": false,
 				"state": false,
 				"system": true,
-				"type": "String"
+				"type": "String",
+				"unique": false
 			},
 			{
 				"DBType": "Long",
@@ -231,7 +238,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "Long"
+				"type": "Long",
+				"unique": false
 			},
 			{
 				"DBType": "Boolean",
@@ -253,7 +261,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "Boolean"
+				"type": "Boolean",
+				"unique": false
 			},
 			{
 				"DBType": "Date",
@@ -275,7 +284,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "Date"
+				"type": "Date",
+				"unique": false
 			},
 			{
 				"DBType": "DateTime",
@@ -301,7 +311,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "DateTime"
+				"type": "DateTime",
+				"unique": false
 			},
 			{
 				"DBType": "Double",
@@ -323,7 +334,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "Double"
+				"type": "Double",
+				"unique": false
 			},
 			{
 				"DBType": "Integer",
@@ -345,7 +357,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "Integer"
+				"type": "Integer",
+				"unique": false
 			},
 			{
 				"DBType": "Long",
@@ -367,7 +380,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "Long"
+				"type": "Long",
+				"unique": false
 			},
 			{
 				"DBType": "Clob",
@@ -393,7 +407,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "Clob"
+				"type": "Clob",
+				"unique": false
 			},
 			{
 				"DBType": "BigDecimal",
@@ -415,7 +430,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "BigDecimal"
+				"type": "BigDecimal",
+				"unique": false
 			},
 			{
 				"DBType": "Clob",
@@ -437,7 +453,8 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "Clob"
+				"type": "Clob",
+				"unique": false
 			},
 			{
 				"DBType": "String",
@@ -459,10 +476,11 @@
 				"required": false,
 				"state": false,
 				"system": false,
-				"type": "String"
+				"type": "String",
+				"unique": false
 			}
 		],
-		"objectFolderExternalReferenceCode": "uncategorized",
+		"objectFolderExternalReferenceCode": "default",
 		"objectLayouts": [
 			{
 				"dateCreated": "2023-09-19T13:44:14Z",
@@ -482,6 +500,7 @@
 			{
 				"deletionType": "prevent",
 				"edge": false,
+				"externalReferenceCode": "TEST-OBJECT-RELATIONSHIP",
 				"id": 35639,
 				"label": {
 					"en_US": "relationship"
@@ -504,8 +523,8 @@
 				"active": false,
 				"dateCreated": "2023-09-19T14:02:26Z",
 				"dateModified": "2023-09-19T14:02:26Z",
-				"engine": "groovy",
-				"engineLabel": "Groovy",
+				"engine": "ddm",
+				"engineLabel": "Expression Builder",
 				"errorLabel": {
 				},
 				"externalReferenceCode": "74ad169a-6ed2-d875-aff8-a5afde81682e",

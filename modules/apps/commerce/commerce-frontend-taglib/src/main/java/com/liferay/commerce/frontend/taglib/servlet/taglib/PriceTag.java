@@ -9,10 +9,9 @@ import com.liferay.commerce.configuration.CommercePriceConfiguration;
 import com.liferay.commerce.constants.CommerceConstants;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.model.PriceModel;
-import com.liferay.commerce.frontend.model.ProductSettingsModel;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.pricing.constants.CommercePricingConstants;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPSku;
@@ -82,11 +81,7 @@ public class PriceTag extends IncludeTag {
 			}
 
 			if (BigDecimalUtil.lte(_quantity, BigDecimal.ZERO)) {
-				ProductSettingsModel productSettingsModel =
-					_productHelper.getProductSettingsModel(
-						_cpCatalogEntry.getCPDefinitionId());
-
-				_quantity = productSettingsModel.getMinQuantity();
+				_quantity = BigDecimal.ONE;
 			}
 
 			_displayDiscountLevels = _isDisplayDiscountLevels();
@@ -232,6 +227,8 @@ public class PriceTag extends IncludeTag {
 				CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
 					cpInstanceUnitOfMeasures.get(0);
 
+				_quantity =
+					cpInstanceUnitOfMeasure.getIncrementalOrderQuantity();
 				_unitOfMeasureKey = cpInstanceUnitOfMeasure.getKey();
 			}
 

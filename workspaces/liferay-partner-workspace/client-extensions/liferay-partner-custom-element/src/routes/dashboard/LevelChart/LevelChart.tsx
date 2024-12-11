@@ -6,6 +6,7 @@
 import ClayAlert from '@clayui/alert';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 
+import './LevelChart.css';
 import Container from '../../../common/components/dashboard/components/Container';
 import ClayIconProvider from '../../../common/components/dashboard/utils/ClayIconProvider';
 import PartnershipLevel from './components/PartnershipLevel';
@@ -16,20 +17,22 @@ const LevelChart = () => {
 		aRRResults,
 		account,
 		checkedProperties,
+		currency,
 		headcount,
 		loading,
+		opportunitiesCount,
 		partnerLevel,
 	} = useGetAccountInformation();
 
 	const BuildPartnershipLevel = () => {
 		if (loading) {
-			return <ClayLoadingIndicator className="mb-10 mt-9" size="md" />;
+			return <ClayLoadingIndicator className="mb-10 mt-10" size="md" />;
 		}
 
-		if (!account || !partnerLevel) {
+		if (!account || !partnerLevel || opportunitiesCount === undefined) {
 			return (
 				<ClayAlert
-					className="mb-8 mt-8 mx-auto text-center w-50"
+					className="mx-auto my-9 text-center w-75"
 					displayType="info"
 					title="Info:"
 				>
@@ -41,9 +44,10 @@ const LevelChart = () => {
 		return (
 			<PartnershipLevel
 				aRRResults={aRRResults}
-				account={account}
 				checkedProperties={checkedProperties}
+				currency={currency}
 				headcount={headcount}
+				opportunitiesCount={opportunitiesCount}
 				partnerLevel={partnerLevel}
 			/>
 		);
@@ -51,7 +55,10 @@ const LevelChart = () => {
 
 	return (
 		<ClayIconProvider>
-			<Container title="Partnership Level">
+			<Container
+				className="dashboard-level-chart justify-content-start"
+				title="Partnership Level"
+			>
 				<BuildPartnershipLevel />
 			</Container>
 		</ClayIconProvider>

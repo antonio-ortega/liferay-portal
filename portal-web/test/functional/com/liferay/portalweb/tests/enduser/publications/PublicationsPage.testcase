@@ -5,13 +5,16 @@ definition {
 	property osgi.module.configurations = "enabled=B\"true\"";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Page Administration";
 	property testray.main.component.name = "Publications";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 	}
 
 	tearDown {
@@ -182,12 +185,11 @@ definition {
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Asset",
-				changeOrder = 5,
 				changeSite = "Site Name",
 				changeTitle = "Custom Master Page Template",
 				changeType = "Added",
 				changeUser = "Test Test",
-				showAllItems = "true");
+				showSystemChanges = "true");
 		}
 
 		Publications.publishPublication(publicationName = "Publication Name");
@@ -230,8 +232,6 @@ definition {
 			ContentPages.addPage(pageName = "Example Page");
 
 			PageEditor.gotoTab(tabName = "Page Design Options");
-
-			Navigator.gotoNavTab(navTab = "Style Book");
 
 			StyleBooks.selectStyleBookViaPageDesignOptions(styleBookName = "Test Style Book Name");
 
@@ -276,7 +276,7 @@ definition {
 
 			Navigator.gotoNavTab(navTab = "Widget Templates");
 
-			ApplicationDisplayTemplates.addCP(
+			WidgetTemplates.addCP(
 				adtFile = "adt_blogs_basic.ftl",
 				adtType = "Blogs");
 		}
@@ -295,7 +295,7 @@ definition {
 				pageName = "Test Widget Page Name",
 				siteName = "Test Site Name");
 
-			ApplicationDisplayTemplates.selectPortletADT(
+			WidgetTemplates.selectPortletADT(
 				portletName = "Blogs",
 				templateName = "Blogs Test ADT");
 		}
@@ -371,6 +371,8 @@ definition {
 				collectionName = "Page Template Collection",
 				pageName = "Test Page Name",
 				pageTemplateName = "Content Page Template Name");
+
+			PageEditor.publish();
 		}
 
 		task ("View the fragments are shown in content page") {
@@ -505,18 +507,100 @@ definition {
 			publicationName = "Publication Name");
 	}
 
+	@description = "This is a use case for LPS-198982."
+	@priority = 3
+	test CannotPublishLayoutDrafts {
+		task ("Add and select a new publication") {
+			JSONPublications.addPublication(publicationName = "Publication 1");
+
+			JSONPublications.selectPublication(publicationName = "Publication 1");
+		}
+
+		task ("Go to the home page, change the heading text, and let the draft auto save") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Home",
+				siteName = "Guest");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Paragraph",
+				id = "element-text",
+				text = "Test Heading Edit");
+		}
+
+		task ("Assert that publishing Publication 1 is blocked due to the layout draft") {
+			PublicationsNavigator.gotoPublish(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Publication 1");
+
+			Publications.viewConflictingChangesWarning(warningMessage = "This publication contains unapproved changes that must be approved before publishing.");
+		}
+	}
+
+	@description = "This is a use case for LPS-198982."
+	@priority = 3
+	test CannotPublishPageTemplateDrafts {
+		task ("Create and select a new publication") {
+			JSONPublications.addPublication(publicationName = "Test Publication");
+
+			JSONPublications.selectPublication(publicationName = "Test Publication");
+		}
+
+		task ("Create a page template with any subtype") {
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "guest");
+
+			MastersPageTemplatesAdmin.addMasters(masterLayoutName = "Test Master Page Template");
+		}
+
+		task ("Add fragments/widgets to that template page and let the draft auto save") {
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				dropTarget = "Header",
+				fragmentName = "Heading",
+				scope = "Master");
+
+			PageEditor.addWidget(
+				dropTarget = "Header",
+				portletName = "Asset Publisher",
+				scope = "Master");
+		}
+
+		task ("Attempt to publish the test publication and assert it is blocked with an alert message") {
+			PublicationsNavigator.gotoPublish(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Test Publication");
+
+			Publications.viewConflictingChangesWarning(warningMessage = "This publication contains unapproved changes that must be approved before publishing.");
+		}
+
+		task ("Publish the page template") {
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "guest");
+
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Test Master Page Template");
+
+			MastersPageTemplates.publishMaster();
+		}
+
+		task ("Attempt to publish the test publication and assert it is ready to publish without conflicts") {
+			Publications.publishPublication(
+				gotoPublicationsAdmin = "true",
+				publicationName = "Test Publication");
+		}
+	}
+
 	@description = "This is a use cas for LPS-176197. As a publication admin, I would like to preview fragment before publishing"
 	@priority = 3
 	test CanPreviewAfterChangeFragmentBeforePublishing {
 		task ("Add Content Page with paragraph fragment") {
+			HeadlessSite.addSite(siteName = "Site Name");
+
 			JSONLayout.addPublicLayout(
-				groupName = "Guest",
+				groupName = "Site Name",
 				layoutName = "Test Page",
 				type = "content");
 
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page",
-				siteName = "Guest");
+				siteName = "Site Name");
 
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
@@ -532,7 +616,7 @@ definition {
 		task ("Edit paragraph fragment and assert the preview before and after the change") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Page",
-				siteName = "Guest");
+				siteName = "Site Name");
 
 			PageEditor.editFragmentText(
 				fragmentName = "Paragraph",
@@ -545,7 +629,7 @@ definition {
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Page",
-				changeSite = "Guest",
+				changeSite = "Site Name",
 				changeTitle = "Test Page",
 				changeType = "Modified",
 				changeUser = "Test Test");
@@ -557,8 +641,8 @@ definition {
 			var ctCollectionId = JSONPublicationsAPI._getCTCollectionId(publicationName = "Test Publication");
 
 			PublicationsChangeDetails.viewFragmentChangePreviewInDisplay(
-				fragmentPreviewInProduction = "previewCTCollectionId=0",
-				fragmentPreviewInPublication = "previewCTCollectionId=${ctCollectionId}");
+				fragmentPreviewInProduction = "previewCTCollectionId%3D0",
+				fragmentPreviewInPublication = "previewCTCollectionId%3D${ctCollectionId}");
 		}
 	}
 
@@ -606,6 +690,10 @@ definition {
 		}
 
 		task ("Add Content Display Fragment to the page and configure it to display WC2") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Guest");
+
 			PageEditor.addFragment(
 				collectionName = "Content Display",
 				fragmentName = "Content Display",
@@ -638,14 +726,16 @@ definition {
 	@priority = 3
 	test CanPublishWithAssetPublisherConfigurations {
 		task ("Create two widget pages and add to each page an Asset Publisher") {
+			HeadlessSite.addSite(siteName = "Site Name");
+
 			for (var pageNumber : list "1,2") {
 				JSONLayout.addPublicLayout(
-					groupName = "Guest",
-					layoutName = "Widget Page Name ${pageNumber}");
+					groupName = "Site Name",
+					layoutName = "Test Page Name ${pageNumber}");
 
 				JSONLayout.addWidgetToPublicLayout(
-					groupName = "Guest",
-					layoutName = "Widget Page Name ${pageNumber}",
+					groupName = "Site Name",
+					layoutName = "Test Page Name ${pageNumber}",
 					widgetName = "Asset Publisher");
 			}
 		}
@@ -655,7 +745,7 @@ definition {
 				JSONDocument.addFileWithUploadedFile(
 					dmDocumentDescription = "DM Document Description",
 					dmDocumentTitle = "Document_${count}.jpg",
-					groupName = "Guest",
+					groupName = "Site Name",
 					mimeType = "image/jpeg",
 					sourceFileName = "Document_${count}.jpg");
 			}
@@ -667,16 +757,20 @@ definition {
 			Publications.selectPublication(publicationName = "Publication Name");
 		}
 
-		task ("Go to Widget Page Name 1 and configure Asset Publisher") {
-			Navigator.gotoPage(pageName = "Widget Page Name 1");
+		task ("Go to Test Page Name 1 and configure Asset Publisher") {
+			Navigator.openSitePage(
+				pageName = "Test Page Name 1",
+				siteName = "Site Name");
 
 			AssetPublisherPortlet.configureManualAssetSelectionPG(
 				assetTitle = "Document_1.jpg",
 				assetType = "Basic Document");
 		}
 
-		task ("Go to Widget Page Name 2 and configure Asset Publisher") {
-			Navigator.gotoPage(pageName = "Widget Page Name 2");
+		task ("Go to Test Page Name 2 and configure Asset Publisher") {
+			Navigator.openSitePage(
+				pageName = "Test Page Name 2",
+				siteName = "Site Name");
 
 			AssetPublisherPortlet.configureManualAssetSelectionPG(
 				assetTitle = "Document_2.jpg",
@@ -690,16 +784,15 @@ definition {
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Page",
-				changeSite = "Guest",
-				changeTitle = "Widget Page Name 1",
+				changeSite = "Site Name",
+				changeTitle = "Test Page Name 1",
 				changeType = "Modified",
 				changeUser = "Test Test");
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Page",
-				changeOrder = 2,
-				changeSite = "Guest",
-				changeTitle = "Widget Page Name 2",
+				changeSite = "Site Name",
+				changeTitle = "Test Page Name 2",
 				changeType = "Modified",
 				changeUser = "Test Test");
 		}
@@ -710,16 +803,20 @@ definition {
 				publicationName = "Publication Name");
 		}
 
-		task ("Go to Widget Page Name 1 and assert that Asset Publisher kept the changes") {
-			Navigator.gotoPage(pageName = "Widget Page Name 1");
+		task ("Go to Test Page Name 1 and assert that Asset Publisher kept the changes") {
+			Navigator.openSitePage(
+				pageName = "Test Page Name 1",
+				siteName = "Site Name");
 
 			DMDocument.viewPGViaAP(
 				dmDocumentDescription = "DM Document Description",
 				dmDocumentTitle = "Document_1.jpg");
 		}
 
-		task ("Go to Widget Page Name 2 and assert that Asset Publisher kept the changes") {
-			Navigator.gotoPage(pageName = "Widget Page Name 2");
+		task ("Go to Test Page Name 2 and assert that Asset Publisher kept the changes") {
+			Navigator.openSitePage(
+				pageName = "Test Page Name 2",
+				siteName = "Site Name");
 
 			DMDocument.viewPGViaAP(
 				dmDocumentDescription = "DM Document Description",
@@ -731,8 +828,10 @@ definition {
 	@priority = 3
 	test CanRevertTagAddedToPage {
 		task ("Add a content page") {
+			HeadlessSite.addSite(siteName = "Site Name");
+
 			JSONLayout.addPublicLayout(
-				groupName = "Guest",
+				groupName = "Site Name",
 				layoutName = "Test Page Name",
 				type = "content");
 		}
@@ -745,12 +844,12 @@ definition {
 
 		task ("Add new tag") {
 			JSONAssettag.addTag(
-				groupName = "Guest",
+				groupName = "Site Name",
 				tagName = "tag name");
 		}
 
 		task ("Go to content page and add a tag to it") {
-			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+			PagesAdmin.openPagesAdmin(siteURLKey = "site-name");
 
 			PagesAdmin.gotoPageEllipsisMenuItem(
 				menuItem = "Configure",
@@ -780,7 +879,7 @@ definition {
 
 			PublicationsChanges.viewChanges(
 				changeCategory = "Tag",
-				changeSite = "Guest",
+				changeSite = "Site Name",
 				changeTitle = "tag name",
 				changeType = "Deleted",
 				changeUser = "Test Test");
@@ -845,8 +944,6 @@ definition {
 
 	@priority = 4
 	test ContentPageChangesCanBeAutomaticallyResolved {
-		property test.assert.warning.exceptions = "true";
-
 		HeadlessSite.addSite(siteName = "Site Name");
 
 		JSONLayout.addPublicLayout(
@@ -895,9 +992,7 @@ definition {
 
 		PageEditor.gotoStyle(fragmentName = "Paragraph");
 
-		PageEditor.configureFragment(
-			alignment = "Align Right",
-			textColor = "Warning");
+		PageEditor.configureFragment(alignment = "Align Right");
 
 		PageEditor.addWidget(
 			portletName = "Asset Publisher",
@@ -984,7 +1079,7 @@ definition {
 		PublicationsNavigator.gotoNavbar(navBarTitle = "Display");
 
 		AssertVisible(
-			key_pageURL = "site-name/test-page?p_l_mode=preview&previewCTCollection",
+			key_pageURL = "previewCTCollectionId",
 			locator1 = "PublicationsChangeDetails#PAGE_VIEWPORT_PREVIEW");
 	}
 
@@ -1045,7 +1140,9 @@ definition {
 
 	@priority = 4
 	test PublishPrivateContentPageWithFragment {
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		JSONPublications.addPublication(publicationName = "Publication Name");
 
@@ -1115,10 +1212,7 @@ definition {
 				groupName = "Guest",
 				layoutName = "Test Page Name");
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Custom Fields");
+			CustomFields.openCustomFieldAdmin();
 
 			CustomFields.addCP(
 				customFieldName = "Text Field",
@@ -1187,11 +1281,12 @@ definition {
 		}
 	}
 
-	@description = "This is use case for LPS-179333. Verify that timline and conflict icon can display for the conflict pulication bar."
+	@description = "This is use case for LPS-179333. Verify that timeline and conflict icon can display for the conflict publication bar."
 	@priority = 3
 	test TimelineAndConflictIconCanAppearOnConflictPublicationBar {
-		property custom.properties = "feature.flag.LPS-161033=true";
 		property test.assert.warning.exceptions = "true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		task ("Make change to the Home page on Publication 1 Name") {
 			JSONPublications.addPublication(publicationName = "Publication 1 Name");
@@ -1251,8 +1346,6 @@ definition {
 	@description = "Verify that changes made across multiple Publications are shown in the history"
 	@priority = 3
 	test ViewChangesAcrossMultiplePublications {
-		property custom.properties = "feature.flag.LPS-161033=true";
-
 		task ("Add new site and a new page in it with Documents and Media widget") {
 			HeadlessSite.addSite(siteName = "Site Name");
 

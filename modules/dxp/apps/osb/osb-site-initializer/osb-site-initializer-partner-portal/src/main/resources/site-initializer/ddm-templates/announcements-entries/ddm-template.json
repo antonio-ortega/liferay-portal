@@ -1,6 +1,0 @@
-{
-	"className": "com.liferay.asset.kernel.model.AssetEntry",
-	"ddmTemplateKey": "ANNOUNCEMENTS-ENTRIES",
-	"name": "Announcements Entries",
-	"resourceClassName": "com.liferay.portlet.display.template.PortletDisplayTemplate"
-}

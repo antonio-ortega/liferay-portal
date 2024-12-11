@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -292,6 +293,12 @@ public class DEDataDefinitionFieldLinkLocalServiceUtil {
 		return getService().getActionableDynamicQuery();
 	}
 
+	public static List<Long> getClassPKS(
+		long classNameId, long ddmStructureId) {
+
+		return getService().getClassPKS(classNameId, ddmStructureId);
+	}
+
 	/**
 	 * Returns the de data definition field link with the primary key.
 	 *
@@ -484,15 +491,12 @@ public class DEDataDefinitionFieldLinkLocalServiceUtil {
 	}
 
 	public static DEDataDefinitionFieldLinkLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		DEDataDefinitionFieldLinkLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile DEDataDefinitionFieldLinkLocalService _service;
+	private static final Snapshot<DEDataDefinitionFieldLinkLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			DEDataDefinitionFieldLinkLocalServiceUtil.class,
+			DEDataDefinitionFieldLinkLocalService.class);
 
 }

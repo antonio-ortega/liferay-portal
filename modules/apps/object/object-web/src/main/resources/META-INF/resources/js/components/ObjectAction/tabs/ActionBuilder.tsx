@@ -4,9 +4,9 @@
  */
 
 import ClayAlert from '@clayui/alert';
+import {Option, Text} from '@clayui/core';
 import {
 	Card,
-	CustomItem,
 	SidebarCategory,
 	SingleSelect,
 	invalidateRequired,
@@ -15,18 +15,24 @@ import {InputLocalized} from 'frontend-js-components-web';
 import React, {useEffect, useMemo, useState} from 'react';
 
 import {defaultLanguageId} from '../../../utils/constants';
-import {ActionError} from '../index';
+import {DisabledGroovyScriptAlert} from '../../DisabledGroovyScriptAlert';
+import {ActionError} from '../ObjectActionContainer';
 import {ActionContainer} from './ActionContainer/ActionContainer';
 import {ConditionContainer} from './ConditionContainer';
+
+import './ActionBuilder.scss';
+
 interface ActionBuilderProps {
+	disableGroovyAction: boolean;
 	errors: ActionError;
 	isApproved: boolean;
 	objectActionCodeEditorElements: SidebarCategory[];
-	objectActionExecutors: CustomItem[];
-	objectActionTriggers: CustomItem[];
+	objectActionExecutors: ObjectActionTriggerExecutorItem[];
+	objectActionTriggers: ObjectActionTriggerExecutorItem[];
 	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectDefinitionsRelationshipsURL: string;
+	scriptManagementConfigurationPortletURL: string;
 	setValues: (values: Partial<ObjectAction>) => void;
 	systemObject: boolean;
 	validateExpressionURL: string;
@@ -49,6 +55,7 @@ const triggerKeys = [
 ];
 
 export default function ActionBuilder({
+	disableGroovyAction,
 	errors,
 	isApproved,
 	objectActionCodeEditorElements,
@@ -57,13 +64,14 @@ export default function ActionBuilder({
 	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectDefinitionsRelationshipsURL,
+	scriptManagementConfigurationPortletURL,
 	setValues,
 	systemObject,
 	validateExpressionURL,
 	values,
 }: ActionBuilderProps) {
 	const [newObjectActionExecutors, setNewObjectActionExecutors] = useState<
-		CustomItem[]
+		ObjectActionTriggerExecutorItem[]
 	>(objectActionExecutors);
 
 	const [infoAlert, setInfoAlert] = useState(true);
@@ -73,22 +81,10 @@ export default function ActionBuilder({
 		requiredFields: false,
 	});
 
-	const [
-		currentObjectDefinitionFields,
-		setCurrentObjectDefinitionFields,
-	] = useState<ObjectField[]>([]);
+	const [currentObjectDefinitionFields, setCurrentObjectDefinitionFields] =
+		useState<ObjectField[]>([]);
 
 	const [errorAlert, setErrorAlert] = useState(false);
-
-	const actionTriggers = useMemo(() => {
-		const triggers = new Map<string, string>();
-
-		objectActionTriggers.forEach(({label, value}) => {
-			value && triggers.set(value, label);
-		});
-
-		return triggers;
-	}, [objectActionTriggers]);
 
 	const objectFieldsMap = useMemo(() => {
 		const fields = new Map<string, ObjectField>();
@@ -110,7 +106,7 @@ export default function ActionBuilder({
 		const requiredFields = predefinedValues
 			? predefinedValues.filter(
 					({name}) => objectFieldsMap.get(name)?.required
-			  )
+				)
 			: [];
 
 		const hasEmptyValues = requiredFields?.some((item) =>
@@ -140,7 +136,7 @@ export default function ActionBuilder({
 		const requiredFields = predefinedValues
 			? predefinedValues.filter(
 					({name}) => objectFieldsMap.get(name)?.required
-			  )
+				)
 			: [];
 
 		const hasEmptyValues = requiredFields?.some((item) =>
@@ -199,11 +195,20 @@ export default function ActionBuilder({
 
 			setNewObjectActionExecutors(newObjectActionExecutors);
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [values.objectActionTriggerKey]);
 
 	return (
 		<>
+			{disableGroovyAction && (
+				<DisabledGroovyScriptAlert
+					scriptManagementConfigurationPortletURL={
+						scriptManagementConfigurationPortletURL
+					}
+				/>
+			)}
+
 			{infoAlert && (
 				<ClayAlert
 					className="lfr-objects__side-panel-content-container"
@@ -244,25 +249,44 @@ export default function ActionBuilder({
 					viewMode="inline"
 				>
 					<SingleSelect
-						disabled={isApproved || values.system}
+						disabled={
+							isApproved || values.system || disableGroovyAction
+						}
 						error={errors.objectActionTriggerKey}
-						onChange={({value}) =>
+						items={objectActionTriggers}
+						onSelectionChange={(value) =>
 							setValues({
 								conditionExpression: undefined,
-								objectActionTriggerKey: value,
+								objectActionTriggerKey: value as string,
 							})
 						}
-						options={objectActionTriggers}
 						placeholder={Liferay.Language.get('choose-a-trigger')}
-						value={actionTriggers.get(
-							values.objectActionTriggerKey ?? ''
+						selectedKey={values.objectActionTriggerKey}
+					>
+						{(item) => (
+							<Option key={item.value} textValue={item.label}>
+								<div className="lfr-objects__object-action-builder-when-option">
+									<Text size={3} weight="semi-bold">
+										{item.label}
+									</Text>
+
+									<Text
+										aria-hidden
+										color="secondary"
+										size={2}
+									>
+										{item.description}
+									</Text>
+								</div>
+							</Option>
 						)}
-					/>
+					</SingleSelect>
 				</Card>
 			</Card>
 
 			{showConditionContainer && (
 				<ConditionContainer
+					disabled={disableGroovyAction}
 					errors={errors}
 					setValues={setValues}
 					validateExpressionURL={validateExpressionURL}
@@ -295,9 +319,9 @@ export default function ActionBuilder({
 					)}
 				</ClayAlert>
 			)}
-
 			<ActionContainer
 				currentObjectDefinitionFields={currentObjectDefinitionFields}
+				disableGroovyAction={disableGroovyAction}
 				errors={errors}
 				newObjectActionExecutors={newObjectActionExecutors}
 				objectActionCodeEditorElements={objectActionCodeEditorElements}

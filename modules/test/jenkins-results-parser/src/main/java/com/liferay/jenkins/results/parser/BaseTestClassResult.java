@@ -205,7 +205,11 @@ public abstract class BaseTestClassResult implements TestClassResult {
 		sb.append(build.getBuildURL());
 
 		sb.append("testReport/");
-		sb.append(getPackageName());
+
+		String packageName = getPackageName();
+
+		sb.append(packageName.replaceAll("/", "_"));
+
 		sb.append("/");
 		sb.append(getSimpleClassName());
 
@@ -256,6 +260,17 @@ public abstract class BaseTestClassResult implements TestClassResult {
 		}
 
 		return true;
+	}
+
+	@Override
+	public boolean isSkipped() {
+		Status status = Status.valueOf(getStatus());
+
+		if (status == Status.SKIPPED) {
+			return true;
+		}
+
+		return false;
 	}
 
 	protected BaseTestClassResult(Build build, JSONObject suiteJSONObject) {

@@ -5,9 +5,11 @@
 
 package com.liferay.object.internal.validation.rule;
 
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectValidationRuleConstants;
 import com.liferay.object.constants.ObjectValidationRuleSettingConstants;
 import com.liferay.object.internal.entry.util.ObjectEntrySearchUtil;
+import com.liferay.object.model.ObjectEntryTable;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectValidationRule;
 import com.liferay.object.model.ObjectValidationRuleSetting;
@@ -24,6 +26,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Locale;
 import java.util.Map;
@@ -62,6 +65,7 @@ public class UniqueCompositeKeyObjectValidationRuleEngineImpl
 				_objectDefinitionLocalService.fetchObjectDefinition(
 					objectValidationRule.getObjectDefinitionId()),
 				_getPredicate(
+					GetterUtil.getLong(entryDTO.get("id")),
 					(Map<String, Object>)entryDTO.get("properties"),
 					objectValidationRule));
 		}
@@ -89,10 +93,11 @@ public class UniqueCompositeKeyObjectValidationRuleEngineImpl
 	}
 
 	private Predicate _getPredicate(
-		Map<String, Object> entryValues,
+		long objectEntryId, Map<String, Object> entryValues,
 		ObjectValidationRule objectValidationRule) {
 
-		Predicate predicate = null;
+		Predicate predicate = ObjectEntryTable.INSTANCE.objectEntryId.neq(
+			objectEntryId);
 
 		for (ObjectValidationRuleSetting objectValidationRuleSetting :
 				objectValidationRule.getObjectValidationRuleSettings()) {
@@ -125,19 +130,32 @@ public class UniqueCompositeKeyObjectValidationRuleEngineImpl
 				continue;
 			}
 
+			Object value = entryValues.get(objectField.getName());
+
+			if (StringUtil.equals(
+					objectField.getBusinessType(),
+					ObjectFieldConstants.BUSINESS_TYPE_PICKLIST)) {
+
+				Map<String, Object> objectFieldProperties =
+					(Map<String, Object>)entryValues.get(objectField.getName());
+
+				if (objectFieldProperties != null) {
+					value = objectFieldProperties.get("key");
+				}
+				else {
+					value = null;
+				}
+			}
+
 			Predicate uniqueCompositeKeyObjectFieldPredicate =
 				ObjectEntrySearchUtil.getUniqueCompositeKeyObjectFieldPredicate(
-					(Column<?, Object>)column, objectField.getDBType(),
-					GetterUtil.getString(
-						entryValues.get(objectField.getName())));
+					(Column<?, Object>)column, objectField.getDBType(), value);
 
-			if (predicate == null) {
-				predicate = uniqueCompositeKeyObjectFieldPredicate;
+			if (uniqueCompositeKeyObjectFieldPredicate == null) {
+				continue;
 			}
-			else {
-				predicate = predicate.and(
-					uniqueCompositeKeyObjectFieldPredicate);
-			}
+
+			predicate = predicate.and(uniqueCompositeKeyObjectFieldPredicate);
 		}
 
 		return predicate;

@@ -6,12 +6,12 @@
 package com.liferay.product.navigation.personal.menu.web.internal.control.menu;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationDeliveryConstants;
 import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
 import com.liferay.product.navigation.control.menu.BaseJSPProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.ProductNavigationControlMenuEntry;
 import com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys;
@@ -59,7 +59,13 @@ public class PersonalMenuProductNavigationControlMenuEntry
 
 		User user = themeDisplay.getUser();
 
-		if (!user.isGuestUser() &&
+		PersonalMenuConfiguration personalMenuConfiguration =
+			_personalMenuConfigurationRegistry.
+				getCompanyPersonalMenuConfiguration(
+					themeDisplay.getCompanyId());
+
+		if (personalMenuConfiguration.showNotificationBadgeInPersonalMenu() &&
+			!user.isGuestUser() &&
 			(_userNotificationEventLocalService != null)) {
 
 			httpServletRequest.setAttribute(
@@ -97,11 +103,9 @@ public class PersonalMenuProductNavigationControlMenuEntry
 			return true;
 		}
 
-		String themeId = themeDisplay.getThemeId();
+		Layout layout = themeDisplay.getLayout();
 
-		if (!themeId.equals(
-				PropsValues.CONTROL_PANEL_LAYOUT_REGULAR_THEME_ID)) {
-
+		if (!layout.isTypeControlPanel()) {
 			return false;
 		}
 

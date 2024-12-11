@@ -5,13 +5,24 @@
 
 import {useCallback, useEffect, useState} from 'react';
 
-import getSearchFilterTerm from '../../../common/utils/getSearchFilterTerm';
+import {Filters} from '../../../common/utils/constants/filters';
+import getCloseDateFilterTerm from '../utils/constants/getCloseDateFilterTerm';
 import {INITIAL_FILTER} from '../utils/constants/initialFilter';
 
-export default function useFilters(renewalOpportunitiesFilter?: string) {
-	const [filters, setFilters] = useState(INITIAL_FILTER);
+export default function useFilters(
+	sort: string,
+	urlParams: URLSearchParams,
+	isRenewalListing?: boolean
+) {
+	const [filters, setFilters] = useState(
+		(JSON.parse(
+			sessionStorage.getItem('opportunitiesFilters')!
+		) as typeof INITIAL_FILTER) || INITIAL_FILTER
+	);
 
-	const [filtersTerm, setFilterTerm] = useState('');
+	const opportunitiesInitialFilter = isRenewalListing
+		? Filters.RENEWAL_LISTING.opportunities
+		: Filters.OPPORTUNITY_LISTING.opportunities;
 
 	const onFilter = useCallback(
 		(newFilters: Partial<typeof INITIAL_FILTER>) =>
@@ -22,23 +33,59 @@ export default function useFilters(renewalOpportunitiesFilter?: string) {
 		[]
 	);
 
+	sessionStorage.setItem('opportunitiesFilters', JSON.stringify(filters));
+
 	useEffect(() => {
-		let initialFilter = '';
+		let initialFilter = ``;
+		let hasFilter = false;
 
-		if (renewalOpportunitiesFilter) {
+		if (opportunitiesInitialFilter) {
 			initialFilter = initialFilter
-				? initialFilter.concat(renewalOpportunitiesFilter)
-				: `${renewalOpportunitiesFilter}`;
+				? initialFilter.concat(opportunitiesInitialFilter)
+				: `${opportunitiesInitialFilter}`;
 		}
 
-		if (filters.searchTerm) {
-			initialFilter = initialFilter
-				? initialFilter.concat(getSearchFilterTerm(filters.searchTerm))
-				: getSearchFilterTerm(filters.searchTerm);
+		if (
+			filters.closeDate?.dates?.endDate ||
+			filters.closeDate?.dates?.startDate
+		) {
+			hasFilter = true;
+			initialFilter = getCloseDateFilterTerm(
+				initialFilter,
+				filters.closeDate
+			);
 		}
 
-		setFilterTerm(initialFilter);
-	}, [filters.searchTerm, renewalOpportunitiesFilter, setFilters]);
+		if (filters.stage.value.length) {
+			hasFilter = true;
 
-	return {filters, filtersTerm, onFilter};
+			const stageFilter = filters.stage.value
+				.map((stage) => {
+					return `(stage eq '${stage}')`;
+				})
+				.join(' or ');
+
+			initialFilter = initialFilter
+				? initialFilter.concat(` and (${stageFilter})`)
+				: initialFilter.concat(`(${stageFilter})`);
+		}
+
+		onFilter({
+			hasValue: hasFilter,
+		});
+
+		urlParams.set('filter', initialFilter);
+		urlParams.set('sort', sort);
+	}, [
+		filters.closeDate,
+		filters.searchTerm,
+		filters.stage,
+		onFilter,
+		opportunitiesInitialFilter,
+		setFilters,
+		sort,
+		urlParams,
+	]);
+
+	return {filters, onFilter, setFilters};
 }

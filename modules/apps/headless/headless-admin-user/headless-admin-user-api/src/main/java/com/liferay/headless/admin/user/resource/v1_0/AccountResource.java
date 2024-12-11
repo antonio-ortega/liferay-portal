@@ -48,6 +48,21 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface AccountResource {
 
+	public Page<Account> getAccountGroupByExternalReferenceCodeAccountsPage(
+			String accountGroupExternalReferenceCode, String search,
+			Filter filter, Pagination pagination, Sort[] sorts)
+		throws Exception;
+
+	public Page<Account> getAccountGroupAccountsPage(
+			Long accountGroupId, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception;
+
+	public Response postAccountGroupAccountsPageExportBatch(
+			Long accountGroupId, String search, Filter filter, Sort[] sorts,
+			String callbackURL, String contentType, String fieldNames)
+		throws Exception;
+
 	public Page<Account> getAccountsPage(
 			String search, Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
@@ -91,6 +106,35 @@ public interface AccountResource {
 	public Account putAccount(Long accountId, Account account) throws Exception;
 
 	public Response putAccountBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteOrganizationByExternalReferenceCodeAccounts(
+			String externalReferenceCode, Long[] longs)
+		throws Exception;
+
+	public Page<Account> getOrganizationByExternalReferenceCodeAccountsPage(
+			String externalReferenceCode, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception;
+
+	public void postOrganizationByExternalReferenceCodeAccounts(
+			String externalReferenceCode, Long[] longs)
+		throws Exception;
+
+	public void
+			deleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode(
+				String organizationExternalReferenceCode, String[] strings)
+		throws Exception;
+
+	public Page<Account>
+			getOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountsByExternalReferenceCodePage(
+				String organizationExternalReferenceCode, String search,
+				Filter filter, Pagination pagination, Sort[] sorts)
+		throws Exception;
+
+	public void
+			postOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode(
+				String organizationExternalReferenceCode, String[] strings)
 		throws Exception;
 
 	public void patchOrganizationMoveAccounts(

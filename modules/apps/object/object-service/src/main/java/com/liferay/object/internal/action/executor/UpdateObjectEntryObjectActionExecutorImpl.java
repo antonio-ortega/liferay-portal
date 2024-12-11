@@ -7,6 +7,7 @@ package com.liferay.object.internal.action.executor;
 
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.object.action.executor.ObjectActionExecutor;
+import com.liferay.object.action.util.ObjectActionThreadLocal;
 import com.liferay.object.constants.ObjectActionConstants;
 import com.liferay.object.constants.ObjectActionExecutorConstants;
 import com.liferay.object.entry.util.ObjectEntryThreadLocal;
@@ -61,6 +62,8 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 
 		TransactionCommitCallbackUtil.registerCallback(
 			() -> {
+				ObjectActionThreadLocal.setSkipObjectActionExecution(false);
+
 				_execute(
 					objectActionId, objectDefinition,
 					GetterUtil.getLong(payloadJSONObject.getLong("classPK")),
@@ -102,6 +105,7 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 			ObjectEntryThreadLocal.isSkipObjectEntryResourcePermission();
 
 		try {
+			ObjectActionThreadLocal.setClearObjectEntryIdsMap(false);
 			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(true);
 			ObjectEntryThreadLocal.setSkipReadOnlyObjectFieldsValidation(true);
 
@@ -110,29 +114,29 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 					_objectEntryManagerRegistry.getObjectEntryManager(
 						objectDefinition.getStorageType()));
 
-			defaultObjectEntryManager.updateObjectEntry(
+			defaultObjectEntryManager.partialUpdateObjectEntry(
 				new DefaultDTOConverterContext(
 					false, Collections.emptyMap(), _dtoConverterRegistry, null,
 					user.getLocale(), null, user),
 				objectDefinition, primaryKey,
 				new ObjectEntry() {
 					{
-						properties = values;
-
+						setProperties(() -> values);
 						setStatus(
-							() -> {
-								com.liferay.object.model.ObjectEntry
-									serviceBuilderObjectEntry =
-										_objectEntryService.getObjectEntry(
-											primaryKey);
+							() -> new Status() {
+								{
+									setCode(
+										() -> {
+											com.liferay.object.model.ObjectEntry
+												serviceBuilderObjectEntry =
+													_objectEntryService.
+														getObjectEntry(
+															primaryKey);
 
-								return new Status() {
-									{
-										code =
-											serviceBuilderObjectEntry.
+											return serviceBuilderObjectEntry.
 												getStatus();
-									}
-								};
+										});
+								}
 							});
 					}
 				});
@@ -144,6 +148,7 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 			throw exception;
 		}
 		finally {
+			ObjectActionThreadLocal.setClearObjectEntryIdsMap(true);
 			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(
 				skipObjectEntryResourcePermission);
 			ObjectEntryThreadLocal.setSkipReadOnlyObjectFieldsValidation(false);
@@ -158,6 +163,10 @@ public class UpdateObjectEntryObjectActionExecutorImpl
 
 		Map<String, Object> values = ObjectEntryVariablesUtil.getValues(
 			_ddmExpressionFactory, parametersUnicodeProperties, variables);
+
+		if (!objectDefinition.isUnmodifiableSystemObject()) {
+			return values;
+		}
 
 		Map<String, Object> baseModel = (Map<String, Object>)variables.get(
 			"baseModel");

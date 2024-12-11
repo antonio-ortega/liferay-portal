@@ -6,8 +6,8 @@
 package com.liferay.object.web.internal.object.definitions.display.context;
 
 import com.liferay.application.list.PanelCategory;
-import com.liferay.application.list.PanelCategoryRegistry;
 import com.liferay.application.list.constants.PanelCategoryKeys;
+import com.liferay.application.list.util.PanelCategoryRegistryUtil;
 import com.liferay.change.tracking.configuration.CTSettingsConfiguration;
 import com.liferay.object.constants.ObjectActionKeys;
 import com.liferay.object.constants.ObjectWebKeys;
@@ -16,18 +16,18 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.scope.ObjectScopeProvider;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.web.internal.display.context.helper.ObjectRequestHelper;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -56,15 +56,16 @@ public class ObjectDefinitionsDetailsDisplayContext
 		ModelResourcePermission<ObjectDefinition>
 			objectDefinitionModelResourcePermission,
 		ObjectEntryManagerRegistry objectEntryManagerRegistry,
-		ObjectScopeProviderRegistry objectScopeProviderRegistry,
-		PanelCategoryRegistry panelCategoryRegistry) {
+		ObjectFolderLocalService objectFolderLocalService,
+		ObjectScopeProviderRegistry objectScopeProviderRegistry) {
 
-		super(httpServletRequest, objectDefinitionModelResourcePermission);
+		super(
+			httpServletRequest, objectDefinitionModelResourcePermission,
+			objectFolderLocalService);
 
 		_configurationProvider = configurationProvider;
 		_objectEntryManagerRegistry = objectEntryManagerRegistry;
 		_objectScopeProviderRegistry = objectScopeProviderRegistry;
-		_panelCategoryRegistry = panelCategoryRegistry;
 
 		_objectRequestHelper = new ObjectRequestHelper(httpServletRequest);
 	}
@@ -80,12 +81,12 @@ public class ObjectDefinitionsDetailsDisplayContext
 	}
 
 	public List<Map<String, Object>> getNonrelationshipObjectFieldsInfo() {
+		List<Map<String, Object>> nonrelationshipObjectFieldsInfo =
+			new ArrayList<>();
+
 		List<ObjectField> objectFields = ListUtil.filter(
 			getObjectFields(),
 			objectField -> Validator.isNull(objectField.getRelationshipType()));
-
-		List<Map<String, Object>> nonrelationshipObjectFieldsInfo =
-			new ArrayList<>();
 
 		for (ObjectField objectField : objectFields) {
 			nonrelationshipObjectFieldsInfo.add(
@@ -100,6 +101,7 @@ public class ObjectDefinitionsDetailsDisplayContext
 		return nonrelationshipObjectFieldsInfo;
 	}
 
+	@Override
 	public ObjectDefinition getObjectDefinition() {
 		HttpServletRequest httpServletRequest =
 			objectRequestHelper.getRequest();
@@ -153,8 +155,8 @@ public class ObjectDefinitionsDetailsDisplayContext
 			objectDefinition.getScope());
 	}
 
-	public List<KeyValuePair> getScopeKeyValuePairs(String scope) {
-		List<KeyValuePair> keyValuePairs = new ArrayList<>();
+	public JSONArray getScopeJSONArray(String scope) {
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		ObjectScopeProvider objectScopeProvider =
 			_objectScopeProviderRegistry.getObjectScopeProvider(scope);
@@ -167,26 +169,35 @@ public class ObjectDefinitionsDetailsDisplayContext
 			}
 
 			PanelCategory panelCategory =
-				_panelCategoryRegistry.getPanelCategory(panelCategoryKey);
+				PanelCategoryRegistryUtil.getPanelCategory(panelCategoryKey);
 
 			List<PanelCategory> childPanelCategories =
-				_panelCategoryRegistry.getChildPanelCategories(
+				PanelCategoryRegistryUtil.getChildPanelCategories(
 					panelCategoryKey);
 
+			JSONArray itemsJSONArray = JSONFactoryUtil.createJSONArray();
+
 			for (PanelCategory childPanelCategory : childPanelCategories) {
-				keyValuePairs.add(
-					new KeyValuePair(
-						childPanelCategory.getKey(),
-						StringBundler.concat(
-							panelCategory.getLabel(
-								objectRequestHelper.getLocale()),
-							" > ",
-							childPanelCategory.getLabel(
-								objectRequestHelper.getLocale()))));
+				itemsJSONArray.put(
+					JSONUtil.put(
+						"label",
+						childPanelCategory.getLabel(
+							objectRequestHelper.getLocale())
+					).put(
+						"value", childPanelCategory.getKey()
+					));
 			}
+
+			jsonArray.put(
+				JSONUtil.put(
+					"items", itemsJSONArray
+				).put(
+					"label",
+					panelCategory.getLabel(objectRequestHelper.getLocale())
+				));
 		}
 
-		return keyValuePairs;
+		return jsonArray;
 	}
 
 	public JSONArray getStorageTypesJSONArray() throws Exception {
@@ -225,6 +236,5 @@ public class ObjectDefinitionsDetailsDisplayContext
 	private final ObjectEntryManagerRegistry _objectEntryManagerRegistry;
 	private final ObjectRequestHelper _objectRequestHelper;
 	private final ObjectScopeProviderRegistry _objectScopeProviderRegistry;
-	private final PanelCategoryRegistry _panelCategoryRegistry;
 
 }

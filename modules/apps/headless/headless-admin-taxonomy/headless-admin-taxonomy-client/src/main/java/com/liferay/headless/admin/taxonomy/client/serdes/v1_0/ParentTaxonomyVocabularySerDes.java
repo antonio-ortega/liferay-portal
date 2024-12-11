@@ -48,6 +48,21 @@ public class ParentTaxonomyVocabularySerDes {
 
 		sb.append("{");
 
+		if (parentTaxonomyVocabulary.getExternalReferenceCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				_escape(parentTaxonomyVocabulary.getExternalReferenceCode()));
+
+			sb.append("\"");
+		}
+
 		if (parentTaxonomyVocabulary.getId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -72,6 +87,16 @@ public class ParentTaxonomyVocabularySerDes {
 			sb.append("\"");
 		}
 
+		if (parentTaxonomyVocabulary.getName_i18n() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"name_i18n\": ");
+
+			sb.append(_toJSON(parentTaxonomyVocabulary.getName_i18n()));
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -93,6 +118,16 @@ public class ParentTaxonomyVocabularySerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (parentTaxonomyVocabulary.getExternalReferenceCode() == null) {
+			map.put("externalReferenceCode", null);
+		}
+		else {
+			map.put(
+				"externalReferenceCode",
+				String.valueOf(
+					parentTaxonomyVocabulary.getExternalReferenceCode()));
+		}
+
 		if (parentTaxonomyVocabulary.getId() == null) {
 			map.put("id", null);
 		}
@@ -105,6 +140,15 @@ public class ParentTaxonomyVocabularySerDes {
 		}
 		else {
 			map.put("name", String.valueOf(parentTaxonomyVocabulary.getName()));
+		}
+
+		if (parentTaxonomyVocabulary.getName_i18n() == null) {
+			map.put("name_i18n", null);
+		}
+		else {
+			map.put(
+				"name_i18n",
+				String.valueOf(parentTaxonomyVocabulary.getName_i18n()));
 		}
 
 		return map;
@@ -124,11 +168,35 @@ public class ParentTaxonomyVocabularySerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "name")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "name_i18n")) {
+				return true;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			ParentTaxonomyVocabulary parentTaxonomyVocabulary,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "id")) {
+			if (Objects.equals(jsonParserFieldName, "externalReferenceCode")) {
+				if (jsonParserFieldValue != null) {
+					parentTaxonomyVocabulary.setExternalReferenceCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
 				if (jsonParserFieldValue != null) {
 					parentTaxonomyVocabulary.setId(
 						Long.valueOf((String)jsonParserFieldValue));
@@ -138,6 +206,12 @@ public class ParentTaxonomyVocabularySerDes {
 				if (jsonParserFieldValue != null) {
 					parentTaxonomyVocabulary.setName(
 						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "name_i18n")) {
+				if (jsonParserFieldValue != null) {
+					parentTaxonomyVocabulary.setName_i18n(
+						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
 		}
@@ -172,36 +246,7 @@ public class ParentTaxonomyVocabularySerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -211,6 +256,38 @@ public class ParentTaxonomyVocabularySerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

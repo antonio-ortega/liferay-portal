@@ -15,7 +15,6 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.Collection;
@@ -92,6 +91,18 @@ public class ObjectValidationRuleEngineRegistryImpl
 			});
 	}
 
+	@Override
+	public boolean hasObjectValidationRuleEngine(long companyId, String key) {
+		if (_serviceTrackerMap.containsKey(key) ||
+			_serviceTrackerMap.containsKey(
+				_getCompanyScopedKey(companyId, key))) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
@@ -112,12 +123,7 @@ public class ObjectValidationRuleEngineRegistryImpl
 						key);
 				}
 
-				if (!(objectValidationRuleEngine instanceof
-						UniqueCompositeKeyObjectValidationRuleEngineImpl) ||
-					FeatureFlagManagerUtil.isEnabled("LPS-187854")) {
-
-					emitter.emit(key);
-				}
+				emitter.emit(key);
 			});
 	}
 

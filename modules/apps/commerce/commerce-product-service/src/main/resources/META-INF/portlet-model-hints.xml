@@ -95,6 +95,7 @@
 		</field>
 		<field name="displayDate" type="Date" />
 		<field name="expirationDate" type="Date" />
+		<field name="galleryEnabled" type="boolean" />
 		<field localized="true" name="title" type="String" />
 		<field name="json" type="String">
 			<hint-collection name="CLOB" />
@@ -108,6 +109,82 @@
 		<field name="statusByUserId" type="long" />
 		<field name="statusByUserName" type="String" />
 		<field name="statusDate" type="Date" />
+	</model>
+	<model name="com.liferay.commerce.product.model.CPConfigurationEntry">
+		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
+		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
+		<field name="CPConfigurationEntryId" type="long" />
+		<field name="groupId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="classNameId" type="long" />
+		<field name="classPK" type="long" />
+		<field name="CPConfigurationListId" type="long" />
+		<field name="CPTaxCategoryId" type="long" />
+		<field name="allowedOrderQuantities" type="String" />
+		<field name="backOrders" type="boolean" />
+		<field name="commerceAvailabilityEstimateId" type="long" />
+		<field name="CPDefinitionInventoryEngine" type="String" />
+		<field name="depth" type="double" />
+		<field name="displayAvailability" type="boolean" />
+		<field name="displayStockQuantity" type="boolean" />
+		<field name="freeShipping" type="boolean" />
+		<field name="height" type="double" />
+		<field name="lowStockActivity" type="String" />
+		<field name="maxOrderQuantity" type="BigDecimal" />
+		<field name="minOrderQuantity" type="BigDecimal" />
+		<field name="minStockQuantity" type="BigDecimal" />
+		<field name="multipleOrderQuantity" type="BigDecimal" />
+		<field name="purchasable" type="boolean" />
+		<field name="shippable" type="boolean" />
+		<field name="shippingExtraPrice" type="double" />
+		<field name="shipSeparately" type="boolean" />
+		<field name="taxExempt" type="boolean" />
+		<field name="visible" type="boolean" />
+		<field name="weight" type="double" />
+		<field name="width" type="double" />
+	</model>
+	<model name="com.liferay.commerce.product.model.CPConfigurationList">
+		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
+		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
+		<field name="CPConfigurationListId" type="long" />
+		<field name="groupId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="parentCPConfigurationListId" type="long" />
+		<field name="masterCPConfigurationList" type="boolean" />
+		<field name="name" type="String" />
+		<field name="priority" type="double" />
+		<field name="displayDate" type="Date" />
+		<field name="expirationDate" type="Date" />
+		<field name="lastPublishDate" type="Date" />
+		<field name="status" type="int" />
+		<field name="statusByUserId" type="long" />
+		<field name="statusByUserName" type="String" />
+		<field name="statusDate" type="Date" />
+	</model>
+	<model name="com.liferay.commerce.product.model.CPConfigurationListRel">
+		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
+		<field name="CPConfigurationListRelId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="userName" type="String" />
+		<field name="createDate" type="Date" />
+		<field name="modifiedDate" type="Date" />
+		<field name="classNameId" type="long" />
+		<field name="classPK" type="long" />
+		<field name="CPConfigurationListId" type="long" />
 	</model>
 	<model name="com.liferay.commerce.product.model.CPDefinition">
 		<field name="mvccVersion" type="long" />
@@ -207,9 +284,11 @@
 		<field name="languageId" type="String" />
 		<field name="name" type="String">
 			<hint-collection name="TEXTAREA" />
+			<sanitize content-type="text/html" modes="ALL" />
 		</field>
 		<field name="shortDescription" type="String">
 			<hint-collection name="TEXTAREA" />
+			<sanitize content-type="text/html" modes="ALL" />
 		</field>
 		<field name="description" type="String">
 			<hint-collection name="CLOB" />
@@ -217,12 +296,15 @@
 		</field>
 		<field name="metaTitle" type="String">
 			<hint name="max-length">255</hint>
+			<sanitize content-type="text/html" modes="ALL" />
 		</field>
 		<field name="metaDescription" type="String">
 			<hint name="max-length">255</hint>
+			<sanitize content-type="text/html" modes="ALL" />
 		</field>
 		<field name="metaKeywords" type="String">
 			<hint name="max-length">255</hint>
+			<sanitize content-type="text/html" modes="ALL" />
 		</field>
 	</model>
 	<model name="com.liferay.commerce.product.model.CPDefinitionOptionRel">
@@ -295,6 +377,7 @@
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="CPDefinitionSpecificationOptionValueId" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />
@@ -305,11 +388,14 @@
 		<field name="CPDefinitionId" type="long" />
 		<field name="CPSpecificationOptionId" type="long" />
 		<field name="CPOptionCategoryId" type="long" />
-		<field localized="true" name="value" type="String">
-			<hint-collection name="TEXTAREA" />
+		<field name="key" type="String">
+			<validator name="required" />
 		</field>
 		<field name="priority" type="double">
 			<validator name="number" />
+		</field>
+		<field localized="true" name="value" type="String">
+			<hint-collection name="TEXTAREA" />
 		</field>
 		<field name="lastPublishDate" type="Date" />
 	</model>
@@ -440,6 +526,7 @@
 		<field name="precision" type="int">
 			<validator name="required" />
 		</field>
+		<field name="pricingQuantity" type="BigDecimal" />
 		<field name="primary" type="boolean" />
 		<field name="priority" type="double" />
 		<field name="rate" type="BigDecimal">
@@ -507,6 +594,7 @@
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="CPOptionCategoryId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
@@ -567,6 +655,7 @@
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="CPSpecificationOptionId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="userId" type="long" />
@@ -584,7 +673,16 @@
 		<field name="key" type="String">
 			<validator name="required" />
 		</field>
+		<field name="priority" type="double" />
 		<field name="lastPublishDate" type="Date" />
+	</model>
+	<model name="com.liferay.commerce.product.model.CPSpecificationOptionListTypeDefinitionRel">
+		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
+		<field name="CPSpecificationOptionListTypeDefinitionRelId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="CPSpecificationOptionId" type="long" />
+		<field name="listTypeDefinitionId" type="long" />
 	</model>
 	<model name="com.liferay.commerce.product.model.CPTaxCategory">
 		<field name="mvccVersion" type="long" />

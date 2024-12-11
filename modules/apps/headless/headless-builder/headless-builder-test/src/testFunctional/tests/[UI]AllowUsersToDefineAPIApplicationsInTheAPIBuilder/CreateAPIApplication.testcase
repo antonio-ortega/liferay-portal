@@ -2,10 +2,10 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -36,7 +36,6 @@ definition {
 
 	@priority = 4
 	test CanAutoGenerateUrlBasedOnTitle {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -56,13 +55,11 @@ definition {
 
 	@priority = 4
 	test CanCreateAPIOnVirtualInstance {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 
 		task ("And Given create an API with title "test"") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "test",
-				status = "unpublished",
 				title = "test");
 		}
 
@@ -75,7 +72,7 @@ definition {
 
 		task ("When I create an API with title "test" on the virtual instance") {
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@liferay.com");
 
@@ -92,8 +89,7 @@ definition {
 	}
 
 	@priority = 4
-	test CanCreateApiWithValidFieldValues {
-		property portal.acceptance = "true";
+	test CanCreateAPIWithValidFieldValues {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -121,6 +117,7 @@ definition {
 				value1 = "/my-title-123/");
 
 			AssertTextEquals(
+				cell_name = "description",
 				key_text = "This is an application",
 				locator1 = "APIBuilder#DND_TD_WITH_TEXT",
 				value1 = "This is an application");
@@ -134,8 +131,7 @@ definition {
 	}
 
 	@priority = 4
-	test CanCustomUrlInNewApiForm {
-		property portal.acceptance = "true";
+	test CanCustomUrlInNewAPIForm {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -162,15 +158,13 @@ definition {
 	}
 
 	@priority = 4
-	test CannotCreateApiWithExistingTitle {
-		property portal.acceptance = "true";
+	test CannotCreateAPIWithExistingTitle {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("And Given I create an API with title "test"") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "test1",
-				status = "unpublished",
 				title = "test");
 		}
 
@@ -210,7 +204,6 @@ definition {
 		task ("And Given I create an API with url "test-url"") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "test-url",
-				status = "unpublished",
 				title = "test1");
 		}
 
@@ -244,7 +237,7 @@ definition {
 	}
 
 	@priority = 3
-	test CannotCreateApiWithoutRequiredTitleAndUrlFieldValues {
+	test CannotCreateAPIWithoutRequiredTitleAndUrlFieldValues {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -313,7 +306,9 @@ definition {
 
 			AssertElementPresent(locator1 = "APIBuilder#AUTOMATED_URL");
 
-			AssertElementPresent(locator1 = "APIBuilder#DESCRIPTION");
+			AssertElementPresent(
+				key_value = "API",
+				locator1 = "APIBuilder#DESCRIPTION");
 		}
 
 		task ("And Then I can see example url /o/ and note about url can be modified") {

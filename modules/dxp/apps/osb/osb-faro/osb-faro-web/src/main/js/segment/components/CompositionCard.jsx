@@ -2,6 +2,7 @@ import Card from 'shared/components/Card';
 import CompositionChart from 'shared/components/CompositionChart';
 import React from 'react';
 import {PropTypes} from 'prop-types';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 
 export default class CompositionCard extends React.Component {
 	static propTypes = {
@@ -18,7 +19,10 @@ export default class CompositionCard extends React.Component {
 		} = this.props;
 
 		return (
-			<Card className='composition-card-root'>
+			<Card
+				className='composition-card-root'
+				reportContainer={ReportContainer.SegmentCompositionCard}
+			>
 				<Card.Header>
 					<Card.Title>
 						{Liferay.Language.get('segment-composition')}

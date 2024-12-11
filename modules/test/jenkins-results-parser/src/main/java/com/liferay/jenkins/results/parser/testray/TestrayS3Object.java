@@ -9,6 +9,8 @@ import com.google.cloud.storage.Blob;
 
 import com.liferay.jenkins.results.parser.JenkinsResultsParserUtil;
 
+import java.io.File;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -21,6 +23,22 @@ public class TestrayS3Object {
 
 	public void delete() {
 		_blob.delete();
+	}
+
+	public void downloadTo(File file) {
+		downloadTo(file, false);
+	}
+
+	public void downloadTo(File file, boolean replaceExisting) {
+		if (replaceExisting || !file.exists()) {
+			File parentDir = file.getParentFile();
+
+			parentDir.mkdirs();
+
+			System.out.println("Downloading " + getURL() + " to " + file);
+
+			_blob.downloadTo(file.toPath());
+		}
 	}
 
 	public boolean exists() {
@@ -48,7 +66,20 @@ public class TestrayS3Object {
 			return null;
 		}
 
-		return new String(_blob.getContent(), StandardCharsets.UTF_8);
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
+
+		try {
+			return new String(_blob.getContent(), StandardCharsets.UTF_8);
+		}
+		finally {
+			long duration =
+				JenkinsResultsParserUtil.getCurrentTimeMillis() - start;
+
+			System.out.println(
+				JenkinsResultsParserUtil.combine(
+					getURLString(), " in ",
+					JenkinsResultsParserUtil.toDurationString(duration)));
+		}
 	}
 
 	@Override

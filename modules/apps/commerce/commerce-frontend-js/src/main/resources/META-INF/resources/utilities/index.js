@@ -17,7 +17,7 @@ export const fetchParams = {
 	headers: fetchHeaders,
 };
 
-export function getData(apiURL, query, page, pageSize) {
+function callAPI(apiURL, query, page, pageSize) {
 	const url = new URL(apiURL, Liferay.ThemeDisplay.getPortalURL());
 
 	if (query) {
@@ -35,6 +35,18 @@ export function getData(apiURL, query, page, pageSize) {
 	return fetch(url.pathname + url.search, {
 		...fetchParams,
 	}).then((data) => data.json());
+}
+
+export function getData(apiURL, query, page, pageSize) {
+	if (Array.isArray(apiURL)) {
+		return Promise.all(
+			apiURL.map((currentURL) => {
+				return callAPI(currentURL, query, page, pageSize);
+			})
+		);
+	}
+
+	return callAPI(apiURL, query, page, pageSize);
 }
 
 export function liferayNavigate(url) {
@@ -100,7 +112,7 @@ export function getLabelFromItem(item, itemsLabel, secondaryItemsLabel) {
 		.join(' - ');
 }
 
-export function formatActionUrl(url, item) {
+export function formatActionUrl(url, item, queryParams = {}) {
 	let regex = new RegExp('{(.*?)}', 'mg');
 
 	let replacedUrl = url.replace(regex, (matched) =>
@@ -118,6 +130,16 @@ export function formatActionUrl(url, item) {
 			matched.substring(3, matched.length - 3).split('.')
 		)
 	);
+
+	if (Object.keys(queryParams).length) {
+		replacedUrl = new URL(replacedUrl);
+
+		Object.entries(queryParams).forEach(([key, value]) => {
+			replacedUrl.searchParams.set(key, value);
+		});
+
+		replacedUrl = replacedUrl.toString();
+	}
 
 	return replacedUrl;
 }

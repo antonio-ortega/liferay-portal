@@ -4,6 +4,7 @@ import Card from '../Card';
 import React from 'react';
 import {AssetAudienceReportQuery, PageAudienceReportQuery} from './queries';
 import {IAudienceReportBaseCardProps, Name} from './types';
+import {ReportContainer} from '../download-report/DownloadPDFReport';
 
 function AudienceReportBaseCard({
 	query: {metricName, name},
@@ -18,6 +19,7 @@ function AudienceReportBaseCard({
 			label={Liferay.Language.get('audience')}
 			legacyDropdownRangeKey={false}
 			minHeight={536}
+			reportContainer={ReportContainer.AudienceCard}
 		>
 			{({filters, rangeSelectors}) => (
 				<Card.Body>

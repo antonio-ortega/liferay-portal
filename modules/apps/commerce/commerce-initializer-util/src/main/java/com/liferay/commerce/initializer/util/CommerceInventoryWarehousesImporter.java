@@ -67,11 +67,12 @@ public class CommerceInventoryWarehousesImporter {
 	protected ServiceContext getServiceContext(long scopeGroupId, long userId)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(userId);
-
 		ServiceContext serviceContext = new ServiceContext();
 
+		User user = _userLocalService.getUser(userId);
+
 		serviceContext.setCompanyId(user.getCompanyId());
+
 		serviceContext.setScopeGroupId(scopeGroupId);
 		serviceContext.setUserId(userId);
 
@@ -89,7 +90,7 @@ public class CommerceInventoryWarehousesImporter {
 
 		CommerceInventoryWarehouse commerceInventoryWarehouse =
 			_commerceInventoryWarehouseLocalService.
-				fetchCommerceInventoryWarehouseByReferenceCode(
+				fetchCommerceInventoryWarehouseByExternalReferenceCode(
 					externalReferenceCode, serviceContext.getCompanyId());
 
 		if (Validator.isNotNull(externalReferenceCode) &&

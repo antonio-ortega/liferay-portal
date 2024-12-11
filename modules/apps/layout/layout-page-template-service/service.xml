@@ -3,7 +3,7 @@
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" change-tracking-enabled="true" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.layout.page.template">
 	<namespace>Layout</namespace>
-	<entity local-service="true" name="LayoutPageTemplateCollection" remote-service="true" uuid="true">
+	<entity external-reference-code="group" local-service="true" name="LayoutPageTemplateCollection" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -49,12 +49,17 @@
 			<finder-column name="groupId" />
 			<finder-column name="type" />
 		</finder>
+		<finder name="G_P_T" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="parentLayoutPageTemplateCollectionId" />
+			<finder-column name="type" />
+		</finder>
 		<finder name="G_LPTCK_T" return-type="LayoutPageTemplateCollection" unique="true">
 			<finder-column name="groupId" />
 			<finder-column name="layoutPageTemplateCollectionKey" />
 			<finder-column name="type" />
 		</finder>
-		<finder name="G_N_T" return-type="LayoutPageTemplateCollection" unique="true">
+		<finder name="G_N_T" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="name" />
 			<finder-column name="type" />
@@ -64,8 +69,14 @@
 			<finder-column comparator="LIKE" name="name" />
 			<finder-column name="type" />
 		</finder>
+		<finder name="G_P_N_T" return-type="LayoutPageTemplateCollection" unique="true">
+			<finder-column name="groupId" />
+			<finder-column name="parentLayoutPageTemplateCollectionId" />
+			<finder-column name="name" />
+			<finder-column name="type" />
+		</finder>
 	</entity>
-	<entity local-service="true" name="LayoutPageTemplateEntry" remote-service="true" uuid="true">
+	<entity external-reference-code="group" local-service="true" name="LayoutPageTemplateEntry" remote-service="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -134,6 +145,10 @@
 			<finder-column name="groupId" />
 			<finder-column arrayable-operator="OR" name="type" />
 		</finder>
+		<finder name="G_S" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="status" />
+		</finder>
 		<finder name="G_L_LikeN" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="layoutPageTemplateCollectionId" />
@@ -149,7 +164,7 @@
 			<finder-column name="layoutPageTemplateCollectionId" />
 			<finder-column name="status" />
 		</finder>
-		<finder name="G_N_T" return-type="LayoutPageTemplateEntry" unique="true">
+		<finder name="G_N_T" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="name" />
 			<finder-column name="type" />
@@ -163,6 +178,12 @@
 			<finder-column name="groupId" />
 			<finder-column arrayable-operator="OR" name="type" />
 			<finder-column name="status" />
+		</finder>
+		<finder name="G_L_N_T" return-type="LayoutPageTemplateEntry" unique="true">
+			<finder-column name="groupId" />
+			<finder-column name="layoutPageTemplateCollectionId" />
+			<finder-column name="name" />
+			<finder-column name="type" />
 		</finder>
 		<finder name="G_L_LikeN_S" return-type="Collection">
 			<finder-column name="groupId" />
@@ -284,7 +305,7 @@
 
 		<column name="layoutPageTemplateStructureId" type="long" />
 		<column name="segmentsExperienceId" type="long" />
-		<column change-tracking-resolution-type="merge" name="data" type="String" />
+		<column name="data" type="String" />
 		<column name="lastPublishDate" type="Date" />
 		<column name="status" type="int" />
 		<column name="statusByUserId" type="long" />
@@ -309,6 +330,7 @@
 		<exception>DuplicateLayoutPageTemplateCollectionType</exception>
 		<exception>DuplicateLayoutPageTemplateEntry</exception>
 		<exception>LayoutPageTemplateCollectionName</exception>
+		<exception>LayoutPageTemplateEntryDefaultTemplate</exception>
 		<exception>LayoutPageTemplateEntryName</exception>
 		<exception>RequiredLayoutPageTemplateEntry</exception>
 	</exceptions>

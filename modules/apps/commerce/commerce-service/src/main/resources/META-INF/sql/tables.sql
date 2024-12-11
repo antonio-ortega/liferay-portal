@@ -92,7 +92,7 @@ create table CommerceOrder (
 	modifiedDate DATE null,
 	billingAddressId LONG,
 	commerceAccountId LONG,
-	commerceCurrencyId LONG,
+	commerceCurrencyCode VARCHAR(75) null,
 	commerceOrderTypeId LONG,
 	commerceShippingMethodId LONG,
 	deliveryCommerceTermEntryId LONG,
@@ -105,6 +105,7 @@ create table CommerceOrder (
 	deliveryCommerceTermEntryName VARCHAR(75) null,
 	lastPriceUpdateDate DATE null,
 	manuallyAdjusted BOOLEAN,
+	name VARCHAR(75) null,
 	orderDate DATE null,
 	orderStatus INTEGER,
 	paymentCTermEntryDescription TEXT null,
@@ -113,6 +114,7 @@ create table CommerceOrder (
 	printedNote STRING null,
 	purchaseOrderNumber VARCHAR(75) null,
 	requestedDeliveryDate DATE null,
+	shippable BOOLEAN,
 	shippingAmount BIGDECIMAL null,
 	shippingDiscountAmount BIGDECIMAL null,
 	shippingDiscountPercentLevel1 BIGDECIMAL null,
@@ -178,7 +180,7 @@ create table CommerceOrderItem (
 	customerCommerceOrderItemId LONG,
 	parentCommerceOrderItemId LONG,
 	shippingAddressId LONG,
-	deliveryGroup VARCHAR(75) null,
+	deliveryGroupName VARCHAR(75) null,
 	deliveryMaxSubscriptionCycles LONG,
 	deliverySubscriptionLength INTEGER,
 	deliverySubscriptionType VARCHAR(75) null,
@@ -354,7 +356,8 @@ create table CommerceShippingMethod (
 	engineKey VARCHAR(75) null,
 	imageId LONG,
 	priority DOUBLE,
-	trackingURL STRING null
+	trackingURL STRING null,
+	typeSettings TEXT null
 );
 
 create table CommerceSubscriptionEntry (

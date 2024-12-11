@@ -7,10 +7,17 @@ package com.liferay.users.admin.internal.search;
 
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.IndexWriterHelper;
+import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
+import com.liferay.portal.search.indexer.IndexerDocumentBuilder;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.registrar.ModelSearchConfigurator;
 import com.liferay.portal.search.spi.model.result.contributor.ModelSummaryContributor;
+import com.liferay.users.admin.internal.search.spi.model.index.contributor.UserModelIndexerWriterContributor;
+import com.liferay.users.admin.internal.search.spi.model.result.contributor.UserModelSummaryContributor;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -52,14 +59,30 @@ public class UserModelSearchConfigurator
 		return true;
 	}
 
-	@Reference(
-		target = "(indexer.class.name=com.liferay.portal.kernel.model.User)"
-	)
-	private ModelIndexerWriterContributor<User> _modelIndexWriterContributor;
+	@Activate
+	protected void activate() {
+		_modelIndexWriterContributor = new UserModelIndexerWriterContributor(
+			_indexerDocumentBuilder, _indexWriterHelper,
+			_dynamicQueryBatchIndexingActionableFactory, _userLocalService);
+	}
+
+	@Reference
+	private DynamicQueryBatchIndexingActionableFactory
+		_dynamicQueryBatchIndexingActionableFactory;
 
 	@Reference(
-		target = "(indexer.class.name=com.liferay.portal.kernel.model.User)"
+		target = "(indexer.class.name=com.liferay.portal.kernel.model.Contact)"
 	)
-	private ModelSummaryContributor _modelSummaryContributor;
+	private IndexerDocumentBuilder _indexerDocumentBuilder;
+
+	@Reference
+	private IndexWriterHelper _indexWriterHelper;
+
+	private ModelIndexerWriterContributor<User> _modelIndexWriterContributor;
+	private final ModelSummaryContributor _modelSummaryContributor =
+		new UserModelSummaryContributor();
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

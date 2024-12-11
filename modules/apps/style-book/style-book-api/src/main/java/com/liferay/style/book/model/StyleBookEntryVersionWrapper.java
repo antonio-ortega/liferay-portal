@@ -42,6 +42,7 @@ public class StyleBookEntryVersionWrapper
 		attributes.put("styleBookEntryVersionId", getStyleBookEntryVersionId());
 		attributes.put("version", getVersion());
 		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("styleBookEntryId", getStyleBookEntryId());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
@@ -54,6 +55,7 @@ public class StyleBookEntryVersionWrapper
 		attributes.put("name", getName());
 		attributes.put("previewFileEntryId", getPreviewFileEntryId());
 		attributes.put("styleBookEntryKey", getStyleBookEntryKey());
+		attributes.put("themeId", getThemeId());
 
 		return attributes;
 	}
@@ -89,6 +91,13 @@ public class StyleBookEntryVersionWrapper
 
 		if (uuid != null) {
 			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long styleBookEntryId = (Long)attributes.get("styleBookEntryId");
@@ -164,6 +173,12 @@ public class StyleBookEntryVersionWrapper
 		if (styleBookEntryKey != null) {
 			setStyleBookEntryKey(styleBookEntryKey);
 		}
+
+		String themeId = (String)attributes.get("themeId");
+
+		if (themeId != null) {
+			setThemeId(themeId);
+		}
 	}
 
 	@Override
@@ -209,6 +224,16 @@ public class StyleBookEntryVersionWrapper
 	@Override
 	public boolean getDefaultStyleBookEntry() {
 		return model.getDefaultStyleBookEntry();
+	}
+
+	/**
+	 * Returns the external reference code of this style book entry version.
+	 *
+	 * @return the external reference code of this style book entry version
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
 	}
 
 	/**
@@ -312,6 +337,16 @@ public class StyleBookEntryVersionWrapper
 	}
 
 	/**
+	 * Returns the theme ID of this style book entry version.
+	 *
+	 * @return the theme ID of this style book entry version
+	 */
+	@Override
+	public String getThemeId() {
+		return model.getThemeId();
+	}
+
+	/**
 	 * Returns the user ID of this style book entry version.
 	 *
 	 * @return the user ID of this style book entry version
@@ -412,6 +447,16 @@ public class StyleBookEntryVersionWrapper
 	}
 
 	/**
+	 * Sets the external reference code of this style book entry version.
+	 *
+	 * @param externalReferenceCode the external reference code of this style book entry version
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
+	}
+
+	/**
 	 * Sets the frontend tokens values of this style book entry version.
 	 *
 	 * @param frontendTokensValues the frontend tokens values of this style book entry version
@@ -509,6 +554,16 @@ public class StyleBookEntryVersionWrapper
 	@Override
 	public void setStyleBookEntryVersionId(long styleBookEntryVersionId) {
 		model.setStyleBookEntryVersionId(styleBookEntryVersionId);
+	}
+
+	/**
+	 * Sets the theme ID of this style book entry version.
+	 *
+	 * @param themeId the theme ID of this style book entry version
+	 */
+	@Override
+	public void setThemeId(String themeId) {
+		model.setThemeId(themeId);
 	}
 
 	/**

@@ -7,6 +7,7 @@ package com.liferay.commerce.pricing.service;
 
 import com.liferay.commerce.pricing.model.CommercePricingClass;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -61,19 +62,20 @@ public class CommercePricingClassServiceUtil {
 		return getService().deleteCommercePricingClass(commercePricingClassId);
 	}
 
-	public static CommercePricingClass fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CommercePricingClass fetchCommercePricingClass(
 			long commercePricingClassId)
 		throws PortalException {
 
 		return getService().fetchCommercePricingClass(commercePricingClassId);
+	}
+
+	public static CommercePricingClass
+			fetchCommercePricingClassByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().fetchCommercePricingClassByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static CommercePricingClass getCommercePricingClass(
@@ -161,13 +163,12 @@ public class CommercePricingClassServiceUtil {
 	}
 
 	public static CommercePricingClassService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommercePricingClassService service) {
-		_service = service;
-	}
-
-	private static volatile CommercePricingClassService _service;
+	private static final Snapshot<CommercePricingClassService>
+		_serviceSnapshot = new Snapshot<>(
+			CommercePricingClassServiceUtil.class,
+			CommercePricingClassService.class);
 
 }

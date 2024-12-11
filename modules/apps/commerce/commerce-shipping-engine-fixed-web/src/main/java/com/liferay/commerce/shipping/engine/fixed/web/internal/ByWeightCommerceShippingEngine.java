@@ -7,11 +7,11 @@ package com.liferay.commerce.shipping.engine.fixed.web.internal;
 
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
-import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.service.CommerceCurrencyLocalService;
 import com.liferay.commerce.exception.CommerceShippingEngineException;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
+import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.model.CommerceShippingEngine;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.model.CommerceShippingOption;
@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
@@ -62,7 +63,16 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 
 	@Override
 	public String getCommerceShippingOptionLabel(String name, Locale locale) {
-		return ResourceBundleUtil.getString(_getResourceBundle(locale), name);
+		CommerceShippingFixedOption commerceShippingFixedOption =
+			_commerceShippingFixedOptionLocalService.
+				fetchCommerceShippingFixedOption(
+					CompanyThreadLocal.getCompanyId(), name);
+
+		if (commerceShippingFixedOption == null) {
+			return StringPool.BLANK;
+		}
+
+		return commerceShippingFixedOption.getName(locale);
 	}
 
 	@Override
@@ -116,6 +126,11 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 	}
 
 	@Override
+	public String getKey() {
+		return KEY;
+	}
+
+	@Override
 	public String getName(Locale locale) {
 		return _language.get(_getResourceBundle(locale), "variable-rate");
 	}
@@ -135,7 +150,8 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 			getCommerceShippingFixedOptions(
 				commerceShippingMethod.getCommerceShippingMethodId(),
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new CommerceShippingFixedOptionPriorityComparator());
+				CommerceShippingFixedOptionPriorityComparator.getInstance(
+					false));
 	}
 
 	private CommerceShippingOption _getCommerceShippingOption(
@@ -190,9 +206,7 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 		BigDecimal ratePercentage = new BigDecimal(
 			commerceShippingFixedOptionRel.getRatePercentage());
 
-		CommerceMoney commerceMoney = commerceOrder.getSubtotalMoney();
-
-		BigDecimal orderPrice = commerceMoney.getPrice();
+		BigDecimal orderPrice = _getOrderShippableSubtotal(commerceOrder);
 
 		amount = amount.add(
 			ratePercentage.multiply(orderPrice.divide(new BigDecimal(100))));
@@ -283,6 +297,20 @@ public class ByWeightCommerceShippingEngine implements CommerceShippingEngine {
 		return ListUtil.sort(
 			commerceShippingOptions,
 			new CommerceShippingOptionPriorityComparator());
+	}
+
+	private BigDecimal _getOrderShippableSubtotal(CommerceOrder commerceOrder) {
+		BigDecimal subtotal = BigDecimal.ZERO;
+		List<CommerceOrderItem> commerceOrderItems =
+			commerceOrder.getCommerceOrderItems();
+
+		for (CommerceOrderItem commerceOrderItem : commerceOrderItems) {
+			if (commerceOrderItem.isShippable()) {
+				subtotal = subtotal.add(commerceOrderItem.getFinalPrice());
+			}
+		}
+
+		return subtotal;
 	}
 
 	private ResourceBundle _getResourceBundle(Locale locale) {

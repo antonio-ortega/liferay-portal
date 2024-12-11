@@ -87,7 +87,7 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 
 		if (cpDefinition == null) {
 			throw new NoSuchCPDefinitionException(
-				"Unable to find Product with ID: " + id);
+				"Unable to find product with ID " + id);
 		}
 
 		return _getRelatedProductPage(cpDefinition, type, pagination);
@@ -127,7 +127,7 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 
 		if (cpDefinition == null) {
 			throw new NoSuchCPDefinitionException(
-				"Unable to find Product with ID: " + id);
+				"Unable to find product with ID " + id);
 		}
 
 		return _addOrUpdateRelatedProduct(cpDefinition, relatedProduct);
@@ -152,14 +152,14 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 		throws Exception {
 
 		List<CPDefinitionLink> cpDefinitionLinks;
-		int totalItems;
+		int totalCount;
 
 		if (Validator.isNull(type)) {
 			cpDefinitionLinks = _cpDefinitionLinkService.getCPDefinitionLinks(
 				cpDefinition.getCPDefinitionId(), pagination.getStartPosition(),
 				pagination.getEndPosition());
 
-			totalItems = _cpDefinitionLinkService.getCPDefinitionLinksCount(
+			totalCount = _cpDefinitionLinkService.getCPDefinitionLinksCount(
 				cpDefinition.getCPDefinitionId());
 		}
 		else {
@@ -168,12 +168,12 @@ public class RelatedProductResourceImpl extends BaseRelatedProductResourceImpl {
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-			totalItems = _cpDefinitionLinkService.getCPDefinitionLinksCount(
+			totalCount = _cpDefinitionLinkService.getCPDefinitionLinksCount(
 				cpDefinition.getCPDefinitionId(), type);
 		}
 
 		return Page.of(
-			_toRelatedProducts(cpDefinitionLinks), pagination, totalItems);
+			_toRelatedProducts(cpDefinitionLinks), pagination, totalCount);
 	}
 
 	private RelatedProduct _toRelatedProduct(Long cpDefinitionLinkId)

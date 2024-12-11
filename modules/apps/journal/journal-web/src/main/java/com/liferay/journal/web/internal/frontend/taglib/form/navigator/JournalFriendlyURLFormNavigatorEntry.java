@@ -36,11 +36,7 @@ public class JournalFriendlyURLFormNavigatorEntry
 
 	@Override
 	public boolean isVisible(User user, JournalArticle article) {
-		if (isEditDefaultValues(article)) {
-			return false;
-		}
-
-		return true;
+		return false;
 	}
 
 	@Override

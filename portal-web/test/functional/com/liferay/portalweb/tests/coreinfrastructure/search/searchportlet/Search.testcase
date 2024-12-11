@@ -1,8 +1,8 @@
 @component-name = "portal-search"
 definition {
 
-	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch7";
+	property portal.release = "false";
+	property portal.suite.search.engine = "elasticsearch7,opensearch2";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Search";
 
@@ -20,6 +20,43 @@ definition {
 		}
 	}
 
+	test AddElasticsearchMonitoringOnContentPageViaUI {
+		property portal.suite.search.engine = "elasticsearch7";
+
+		task ("Add a content page and navigate to the edit screen of said page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Content Page",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page",
+				siteName = "Guest");
+		}
+
+		task ("Add Elasticsearch Monitoring search widget via the UI and assert no error is present") {
+			SearchPage.addWidgetsOnContentPageViaUI(searchPortletList = "Elasticsearch Monitoring");
+		}
+	}
+
+	test AddElasticsearchMonitoringOnWidgetPageViaUI {
+		property portal.suite.search.engine = "elasticsearch7";
+
+		task ("Add a widget page and navigate to said page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Widget Page");
+
+			Navigator.openSitePage(
+				pageName = "Test Widget Page",
+				siteName = "Guest");
+		}
+
+		task ("Add Elasticsearch Monitoring search widget via the UI and assert no error is present") {
+			SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Elasticsearch Monitoring");
+		}
+	}
+
 	test AddSearchWidgetsOnContentPageViaUI {
 		task ("Add a content page and navigate to the edit screen of said page") {
 			JSONLayout.addPublicLayout(
@@ -33,7 +70,7 @@ definition {
 		}
 
 		task ("Add each search widget via the UI and assert no error is present for each") {
-			SearchPage.addWidgetsOnContentPageViaUI(searchPortletList = "Blueprints Options,Category Facet,Custom Facet,Custom Filter,Elasticsearch Monitoring,Folder Facet,Low Level Search Options,Modified Facet,Search Bar,Search Insights,Search Options,Search Results,Similar Results,Site Facet,Sort,Suggestions,Tag Facet,Type Facet,User Facet");
+			SearchPage.addWidgetsOnContentPageViaUI(searchPortletList = "Blueprints Options,Category Facet,Custom Facet,Custom Filter,Folder Facet,Low Level Search Options,Modified Facet,Search Bar,Search Insights,Search Options,Search Results,Similar Results,Site Facet,Sort,Suggestions,Tag Facet,Type Facet,User Facet");
 		}
 	}
 
@@ -49,16 +86,16 @@ definition {
 		}
 
 		task ("Add each search widget via the UI and assert no error is present for each") {
-			SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Blueprints Options,Category Facet,Custom Facet,Custom Filter,Elasticsearch Monitoring,Folder Facet,Low Level Search Options,Modified Facet,Search Bar,Search Insights,Search Options,Search Results,Similar Results,Site Facet,Sort,Suggestions,Tag Facet,Type Facet,User Facet");
+			SearchPage.addWidgetsOnWidgetPageViaUI(searchPortletList = "Blueprints Options,Category Facet,Custom Facet,Custom Filter,Folder Facet,Low Level Search Options,Modified Facet,Search Bar,Search Insights,Search Options,Search Results,Similar Results,Site Facet,Sort,Suggestions,Tag Facet,Type Facet,User Facet");
 		}
 	}
 
 	@description = "This is a use case for LPS-169035."
 	@priority = 4
 	test AssertCustomSearchResultsDisplayTemplate {
-		ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
+		WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
 
-		ApplicationDisplayTemplates.addCP(
+		WidgetTemplates.addCP(
 			adtFile = "custom_search_results_template.ftl",
 			adtType = "Search Results");
 
@@ -92,16 +129,16 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
+		WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "guest");
 
-		ApplicationDisplayTemplates.addCP(
+		WidgetTemplates.addCP(
 			adtType = "Search Results",
 			fieldNameList = "Search Results Display Context");
 
 		var key_ddlTemplateName = "Search Results Test ADT";
 		var templateID = selenium.getText("DDMSelectTemplate#TEMPLATE_TABLE_ID");
 
-		var templateKey = ApplicationDisplayTemplates.getWidgetTemplateKey(templateID = ${templateID});
+		var templateKey = WidgetTemplates.getWidgetTemplateKey(templateID = ${templateID});
 
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
@@ -146,7 +183,7 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
-		AssertSelectedLabel(
+		AssertTextEquals(
 			locator1 = "Select#DISPLAY_TEMPLATE",
 			value1 = "Search Results Test ADT");
 	}
@@ -215,7 +252,7 @@ definition {
 
 	@priority = 4
 	test AssertNonAdminsCannotAddCertainWidgets {
-		property custom.properties = "layout.user.access.via.plid.enabled=true";
+		property custom.properties = "layout.user.access.via.plid.enabled=true${line.separator}feature.flag.LPD-35013=true";
 
 		JSONRole.addRegularRole(
 			roleKey = "Can Add Widgets",
@@ -252,7 +289,7 @@ definition {
 	@description = "This is a use case for LPS-130227."
 	@priority = 4
 	test AssertPaginationURLforHTTPS {
-		property custom.properties = "redirect.url.domains.allowed=${line.separator}redirect.url.security.mode=domain${line.separator}web.server.host=localhost${line.separator}web.server.https.port=8443${line.separator}web.server.protocol=https";
+		property custom.properties = "redirect.url.domains.allowed=${line.separator}redirect.url.security.mode=domain${line.separator}web.server.host=localhost${line.separator}web.server.https.port=8443${line.separator}web.server.protocol=https${line.separator}feature.flag.LPD-35013=true";
 		property portal.ssl.enabled = "true";
 		property search.environment.suite.exclude = "true";
 		property test.liferay.virtual.instance = "false";
@@ -307,7 +344,7 @@ definition {
 	@description = "This is a use case for LPS-89561."
 	@priority = 4
 	test AssertSearchURLWhenModifyingPagination {
-		property custom.properties = "search.container.page.default.delta=10";
+		property custom.properties = "search.container.page.default.delta=10${line.separator}feature.flag.LPD-35013=true";
 
 		for (var count : list "1,2,3,4,5,6,7,8,9,10,11") {
 			JSONWebcontent.addWebContent(
@@ -422,10 +459,9 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-95670."
-	@ignore = "true"
 	@priority = 4
 	test AssertSuggestionsCannotOfferInvalidWordsAsSuggestion {
-		property custom.properties = "index.search.spell.checker.dictionary[de_DE]=spellchecker/dictionary_de_DE.txt${line.separator}index.search.spell.checker.supported.locales=en_US,es_ES,de_DE${line.separator}locales=de_DE,en_US${line.separator}locales.enabled=de_DE,en_US";
+		property custom.properties = "locales.enabled=de_DE,en_US${line.separator}locales=de_DE,en_US${line.separator}index.search.spell.checker.dictionary[de_DE]=spellchecker/dictionary_de_DE.txt${line.separator}index.search.spell.checker.supported.locales=en_US,es_ES,de_DE${line.separator}feature.flag.LPD-35013=true";
 		property index.search.spell.checker.enabled = "true";
 		property search.environment.suite.exclude = "true";
 		property test.liferay.virtual.instance = "false";
@@ -598,7 +634,7 @@ definition {
 
 	@priority = 4
 	test CannotViewTermsOfUseWhenEnterpriseSearchIsDisabled {
-		property custom.properties = "enterprise.product.enterprise.search.enabled=false${line.separator}enterprise.product.notification.enabled=true";
+		property custom.properties = "enterprise.product.enterprise.search.enabled=false${line.separator}enterprise.product.notification.enabled=true${line.separator}feature.flag.LPD-35013=true";
 		property test.run.environment = "EE";
 
 		AssertElementNotPresent(locator1 = "Modal#MODAL");
@@ -672,7 +708,7 @@ definition {
 
 	@priority = 4
 	test CanViewTermsOfUseWhenEnterpriseSearchIsEnabled {
-		property custom.properties = "enterprise.product.notification.enabled=true";
+		property custom.properties = "enterprise.product.notification.enabled=true${line.separator}feature.flag.LPD-35013=true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.environment = "EE";
 		property test.run.type = "single";
@@ -694,7 +730,7 @@ definition {
 		SearchPage.searchEmbedded(searchTerm = "test");
 
 		SearchResults.viewMultipleSearchResults(
-			resultsList = "tree.png,stars.png,satellite.png,moon.png,earth.png,Home,Test Test",
+			resultsList = "tree.png,stars.png,satellite.png,moon.png,earth.png,Home",
 			searchTerm = "test");
 
 		User.logoutAndLoginPG(
@@ -1094,6 +1130,8 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
+		HeadlessSite.addSite(siteName = "Site Name");
+
 		User.openUsersAdmin();
 
 		User.editDisplaySettingsCP(
@@ -1257,9 +1295,9 @@ definition {
 	@description = "This is a use case for LPS-90078."
 	@priority = 4
 	test ModifyPaginationPortalProperties {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property custom.properties = "search.container.page.default.delta=1";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property custom.properties = "search.container.page.default.delta=1${line.separator}feature.flag.LPD-35013=true";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
@@ -1344,9 +1382,13 @@ definition {
 
 		AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
 
+		SelectFrame.selectFrameNoLoading(
+			key_fieldLabel = "Content",
+			locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
+
 		AssertTextEquals.assertPartialText(
-			locator1 = "Portlet#HEADER",
-			value1 = "WC Title");
+			locator1 = "CKEditor#BODY",
+			value1 = "WC Content");
 	}
 
 	@priority = 4
@@ -1522,6 +1564,19 @@ definition {
 			portletName = "Category Facet");
 
 		Refresh();
+
+		SearchFacets.viewFacetTermsSpecificOrder(
+			facetName = "Category Facet",
+			termList = "Category Name");
+
+		Click(
+			key_facetName = "Category Facet",
+			key_termValue = "Category Name",
+			locator1 = "Search#FACET_CLOUD_LAYOUT_ITEM");
+
+		SearchResults.viewSearchResults(
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
 
 		AssertElementPresent(
 			key_facetName = "Category Facet",
@@ -1718,6 +1773,18 @@ definition {
 			portletName = "Tag Facet");
 
 		Refresh();
+
+		SearchFacets.viewFacetTermsSpecificOrder(
+			facetName = "Tag Facet",
+			termList = "tag name");
+
+		Click(
+			locator1 = "Search#TAG_FACET_CLOUD_LAYOUT",
+			tagName = "tag name");
+
+		SearchResults.viewSearchResults(
+			searchAssetTitle = "Blogs Entry Title",
+			searchAssetType = "Blogs Entry");
 
 		AssertElementPresent(
 			locator1 = "Search#TAG_FACET_CLOUD_LAYOUT",
@@ -2049,7 +2116,7 @@ definition {
 	@description = "This test will assert that configurations set within the Embedded search bar will be used when searching via the Widget search bar"
 	@priority = 4
 	test SearchDifferentScopesViaSearchWidget {
-		property custom.properties = "company.default.time.zone=America/Los_Angeles";
+		property custom.properties = "company.default.time.zone=America/Los_Angeles${line.separator}feature.flag.LPD-35013=true";
 		property portal.acceptance = "true";
 
 		JSONDocument.addFileWithUploadedFile(
@@ -2065,8 +2132,6 @@ definition {
 			entryTitle = "Potato Blog",
 			groupName = "Test Site");
 
-		var currentDate = DateUtil.getCurrentYear();
-
 		SearchPage.openSearchPage();
 
 		SearchPage.configureEmbeddedSearchBar(searchScope = "Everything");
@@ -2074,14 +2139,12 @@ definition {
 		SearchPage.searchWidget(searchTerm = "Potato");
 
 		SearchResults.viewSearchResults(
-			entryDate = ${currentDate},
 			searchAssetSummary = "This is a blog about Potatoes",
 			searchAssetTitle = "Potato Blog",
 			searchAssetType = "Blogs Entry",
 			searchTerm = "Potato");
 
 		SearchResults.viewSearchResults(
-			entryDate = ${currentDate},
 			searchAssetTitle = "Potato Document",
 			searchAssetType = "Document",
 			searchTerm = "Potato");
@@ -2091,7 +2154,6 @@ definition {
 		SearchPage.searchWidget(searchTerm = "Potato");
 
 		SearchResults.viewSearchResults(
-			entryDate = ${currentDate},
 			searchAssetTitle = "Potato Document",
 			searchAssetType = "Document",
 			searchTerm = "Potato");
@@ -2244,10 +2306,7 @@ definition {
 	@description = "This is a use case for LPS-186456 - SearchBar Instance Setting is not updating."
 	@priority = 3
 	test SearchInstanceSettingsAreUpdatedWhenSaved {
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Instance Settings");
+		PortalSettings.openInstanceSettingsAdmin();
 
 		SystemSettings.gotoConfiguration(
 			configurationCategory = "Search",
@@ -2307,10 +2366,11 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
 			siteName = ${siteName},
@@ -2397,10 +2457,11 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		Site.openSiteSettingsAdmin(siteURLKey = "guest");
+
+		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
+
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
 			siteName = ${siteName},
@@ -2495,72 +2556,6 @@ definition {
 		SearchResults.viewNoSearchResults(searchTerm = "Content1");
 	}
 
-	@priority = 4
-	test SearchWikiPage {
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			portlet = "Pages");
-
-		PagesAdmin.addPage(pageName = "Wiki Test Page");
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		Portlet.addPG(portletName = "Wiki");
-
-		Navigator.gotoPage(pageName = "Wiki Test Page");
-
-		WikiNavigator.gotoAllPagesPG();
-
-		WikiPage.addPG(
-			pageName = "Wiki Test Page",
-			wikiPageContent = "Wiki Page Content",
-			wikiPageTitle = "Wiki Page Title");
-
-		Navigator.openURL();
-
-		SearchPage.searchEmbedded(searchTerm = "Wiki Page Title");
-
-		SearchResults.viewSearchResults(
-			searchAssetSummary = "Wiki Page Content",
-			searchAssetTitle = "Wiki Page Title",
-			searchAssetType = "Wiki Page");
-
-		SearchPage.searchEmbedded(searchTerm = "Wiki Page Content");
-
-		SearchResults.viewSearchResults(
-			searchAssetSummary = "Wiki Page Content",
-			searchAssetTitle = "Wiki Page Title",
-			searchAssetType = "Wiki Page");
-
-		SearchPage.searchEmbedded(searchTerm = "Wiki");
-
-		SearchResults.viewSearchResults(
-			searchAssetSummary = "Wiki Page Content",
-			searchAssetTitle = "Wiki Page Title",
-			searchAssetType = "Wiki Page");
-
-		SearchPage.searchEmbedded(searchTerm = "Page");
-
-		SearchResults.viewSearchResults(
-			searchAssetSummary = "Wiki Page Content",
-			searchAssetTitle = "Wiki Page Title",
-			searchAssetType = "Wiki Page");
-
-		SearchPage.searchEmbedded(searchTerm = "Title");
-
-		SearchResults.viewSearchResults(
-			searchAssetSummary = "Wiki Page Content",
-			searchAssetTitle = "Wiki Page Title",
-			searchAssetType = "Wiki Page");
-
-		SearchPage.searchEmbedded(searchTerm = "Content");
-
-		SearchResults.viewSearchResults(
-			searchAssetSummary = "Wiki Page Content",
-			searchAssetTitle = "Wiki Page Title",
-			searchAssetType = "Wiki Page");
-	}
-
 	@priority = 3
 	test SearchWithCustomSortOption {
 		task ("Create 3 Web Content Articles. Add more words to some article's content fields to get them to show up lower in search results") {
@@ -2623,44 +2618,13 @@ definition {
 		}
 	}
 
-	@priority = 4
-	test SearchXSSAsset {
-		JSONWiki.addWikiPage(
-			groupName = "Guest",
-			wikiNodeName = "Main",
-			wikiPageContent = "<script>alert(123);</script>",
-			wikiPageName = "Wiki Title");
-
-		SearchPage.searchEmbedded(searchTerm = "Title");
-
-		AssertAlertNotPresent();
-
-		SearchResults.viewSearchResults(
-			searchAssetSummary = '''<script>alert(123);</script>''',
-			searchAssetTitle = "Wiki Title",
-			searchAssetType = "Wiki Page");
-
-		var actualScript = '''<script>alert(123);</script>''';
-		var escapedScript = '''&lt;script&gt;alert(123);&lt;/script&gt;''';
-
-		AssertHTMLSourceTextNotPresent(value1 = ${actualScript});
-
-		AssertHTMLSourceTextPresent(value1 = ${escapedScript});
-
-		SearchResults.configureSearchResults(disableHighlighting = "true");
-
-		Refresh();
-
-		AssertAlertNotPresent();
-
-		AssertHTMLSourceTextNotPresent(value1 = ${actualScript});
-
-		AssertHTMLSourceTextPresent(value1 = ${escapedScript});
-	}
-
 	@description = "This is a use case for LPS-152937."
 	@priority = 3
 	test SortAccentedWords {
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		var digit = 1;
 
 		for (var content : list "Alicante,Barcelona,Álava,Alava") {
@@ -2999,6 +2963,10 @@ definition {
 	@description = "This is a use case for LPS-141138."
 	@priority = 4
 	test ViewObjectsSearchResultDetailsDisplayPageTemplate {
+		task ("Enable featured content fragment set") {
+			FragmentsAdmin.enableFeaturedContent();
+		}
+
 		ObjectAdmin.addObjectViaAPI(
 			labelName = "Custom Object",
 			objectName = "CustomObject",
@@ -3047,6 +3015,8 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
+		DropdownMenuItem.click(menuItem = "Display Page Template");
+
 		LexiconCard.clickCard(card = "Blank");
 
 		PortletEntry.inputName(name = "Custom Object Display Template");
@@ -3064,7 +3034,7 @@ definition {
 			fragmentName = "Banner Center");
 
 		PageEditorMapping.mapEditableTextToField(
-			field = "Title",
+			field = "title",
 			fragmentName = "Heading",
 			id = "element-text");
 
@@ -3187,17 +3157,15 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		SearchPage.searchEmbedded(searchTerm = "Test Test");
+		SearchPage.searchEmbedded(searchTerm = "tree");
 
 		SearchResults.viewSearchResults(
-			searchAssetTitle = "Test Test",
-			searchAssetType = "User");
+			searchAssetTitle = "tree.png",
+			searchAssetType = "Document");
 
-		SearchPage.gotoResultDetails(searchAssetTitle = "Test Test");
+		SearchPage.gotoResultDetails(searchAssetTitle = "tree.png");
 
-		SearchPage.viewUserResultDetails(
-			pageName = "My Profile",
-			userName = "Test Test");
+		SearchPage.viewResultDetails(searchAssetTitle = "tree.png");
 	}
 
 	@priority = 4

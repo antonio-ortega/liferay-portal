@@ -9,14 +9,15 @@ import {ERRORS} from './errors';
 import {stringToURLParameterFormat} from './string';
 
 interface Actions {
-	delete: HTTPMethod;
-	get: HTTPMethod;
-	permissions: HTTPMethod;
-	update: HTTPMethod;
+	delete?: HTTPMethod;
+	get?: HTTPMethod;
+	permissions?: HTTPMethod;
+	update?: HTTPMethod;
 }
 
-interface ErrorDetails extends Error {
+export interface ErrorDetails extends Error {
 	detail?: string;
+	type?: string;
 }
 
 interface HTTPMethod {
@@ -50,10 +51,13 @@ type RecipientType = 'role' | 'term' | 'user';
 
 type Recipient = {
 	bcc: string;
+	bccType: string;
 	cc: string;
+	ccType: string;
 	from: string;
 	fromName: LocalizedValue<string>;
 	to: LocalizedValue<string>;
+	toType: string;
 };
 
 export interface NotificationTemplate {
@@ -73,8 +77,14 @@ export interface NotificationTemplate {
 	recipientType: RecipientType;
 	recipients: Recipient[];
 	subject: LocalizedValue<string>;
+	system: boolean;
 	to: LocalizedValue<string>;
 	type: NotificationTemplateType;
+}
+
+interface ObjectDefinitions {
+	actions: Actions;
+	items: ObjectDefinition[];
 }
 
 interface ObjectFolderItem {
@@ -93,6 +103,11 @@ interface ObjectFolder {
 	label: LocalizedValue<string>;
 	name: string;
 	objectFolderItems: ObjectFolderItem[];
+}
+
+interface ObjectFolderRequestInfo {
+	actions: Actions;
+	items: ObjectFolder[];
 }
 
 type ObjectRelationshipType = 'manyToMany' | 'oneToMany' | 'oneToOne';
@@ -145,6 +160,12 @@ export async function deleteItem(url: string) {
 	}
 }
 
+export function deleteListTypeEntry(listTypeEntryId: number) {
+	return deleteItem(
+		`/o/headless-admin-list-type/v1.0/list-type-entries/${listTypeEntryId}`
+	);
+}
+
 export function deleteObjectDefinition(objectDefinitionId: number) {
 	return deleteItem(
 		`/o/object-admin/v1.0/object-definitions/${objectDefinitionId}`
@@ -172,13 +193,15 @@ export async function fetchJSON<T>(input: RequestInfo, init?: RequestInit) {
 }
 
 export async function getAllObjectDefinitions() {
-	return await getList<ObjectDefinition>(
+	const fetchData = fetchJSON<ObjectDefinitions>(
 		'/o/object-admin/v1.0/object-definitions?page=-1'
 	);
+
+	return await fetchData;
 }
 
 export async function getAllObjectFolders() {
-	return await getList<ObjectFolder>(
+	return await fetchJSON<ObjectFolderRequestInfo | undefined>(
 		'/o/object-admin/v1.0/object-folders?pageSize=-1'
 	);
 }
@@ -318,6 +341,19 @@ export async function getObjectValidationRuleById<T>(
 	);
 }
 
+export async function patchObjectDefinitionById(
+	objectDefinition: Partial<ObjectDefinition>
+) {
+	return await fetch(
+		`/o/object-admin/v1.0/object-definitions/${objectDefinition.id}`,
+		{
+			body: JSON.stringify(objectDefinition),
+			headers,
+			method: 'PATCH',
+		}
+	);
+}
+
 export async function postListTypeEntry({
 	key,
 	listTypeDefinitionId,
@@ -345,6 +381,7 @@ export async function postObjectDefinitionPublish(objectDefinitionId: number) {
 	return await fetch(
 		`/o/object-admin/v1.0/object-definitions/${objectDefinitionId}/publish`,
 		{
+			headers,
 			method: 'POST',
 		}
 	);
@@ -429,10 +466,12 @@ export async function save<T>({
 	else if (!response.ok) {
 		const {
 			detail,
+			message,
 			title,
 			type,
 		}: {
 			detail?: string;
+			message?: string | T[];
 			title?: string;
 			type?: string;
 		} = await response.json();
@@ -440,13 +479,16 @@ export async function save<T>({
 		const errorMessage =
 			(type && ERRORS[type]) ??
 			title ??
+			message ??
 			Liferay.Language.get('an-error-occurred');
 
 		const ErrorDetails = () => {
 			return {
 				detail,
-				message: errorMessage,
-				name: '',
+				message: Array.isArray(errorMessage)
+					? JSON.stringify(errorMessage)
+					: errorMessage,
+				type,
 			} as ErrorDetails;
 		};
 		throw ErrorDetails();

@@ -1,7 +1,9 @@
 @component-name = "portal-frontend-infrastructure"
 definition {
 
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.component.names = "WYSIWYG";
 	property testray.main.component.name = "User Interface";
@@ -12,6 +14,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 
 		HeadlessSite.addSite(siteName = "WYSIWYG Site Name");
 	}
@@ -234,7 +238,7 @@ definition {
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
 
-		Open(locator1 = "http://www.standards-schmandards.com/exhibits/wysiwyg/sampledoc.htm");
+		Open(value1 = "http://www.standards-schmandards.com/exhibits/wysiwyg/sampledoc.htm");
 
 		var browserType = PropsUtil.get("browser.type");
 
@@ -342,7 +346,7 @@ definition {
 			groupName = "WYSIWYG Site Name",
 			title = "Web Content Title");
 
-		Open(locator1 = "http://www.standards-schmandards.com/exhibits/wysiwyg/sampledoc.htm");
+		Open(value1 = "http://www.standards-schmandards.com/exhibits/wysiwyg/sampledoc.htm");
 
 		Type.sendKeys(
 			locator1 = "//body",

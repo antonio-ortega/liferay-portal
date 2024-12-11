@@ -28,19 +28,21 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -100,10 +100,16 @@ public abstract class BaseFormResourceTestCase {
 
 		_formResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		FormResource.Builder builder = FormResource.builder();
 
 		formResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +123,32 @@ public abstract class BaseFormResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Form form1 = randomForm();
+
+		String json = objectMapper.writeValueAsString(form1);
+
+		Form form2 = FormSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(form1, form2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Form form = randomForm();
+
+		String json1 = objectMapper.writeValueAsString(form);
+		String json2 = FormSerDes.toJSON(form);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +163,6 @@ public abstract class BaseFormResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Form form1 = randomForm();
-
-		String json = objectMapper.writeValueAsString(form1);
-
-		Form form2 = FormSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(form1, form2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Form form = randomForm();
-
-		String json1 = objectMapper.writeValueAsString(form);
-		String json2 = FormSerDes.toJSON(form);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -208,6 +205,8 @@ public abstract class BaseFormResourceTestCase {
 	public void testGraphQLGetForm() throws Exception {
 		Form form = testGraphQLGetForm_addForm();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				form,
@@ -223,11 +222,34 @@ public abstract class BaseFormResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/form"))));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertTrue(
+			equals(
+				form,
+				FormSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessForm_v1_0",
+								new GraphQLField(
+									"form",
+									new HashMap<String, Object>() {
+										{
+											put("formId", form.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/headlessForm_v1_0",
+						"Object/form"))));
 	}
 
 	@Test
 	public void testGraphQLGetFormNotFound() throws Exception {
 		Long irrelevantFormId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -241,6 +263,25 @@ public abstract class BaseFormResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessForm_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessForm_v1_0",
+						new GraphQLField(
+							"form",
+							new HashMap<String, Object>() {
+								{
+									put("formId", irrelevantFormId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -257,19 +298,18 @@ public abstract class BaseFormResourceTestCase {
 		Page<Form> page = formResource.getSiteFormsPage(
 			siteId, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantSiteId != null) {
 			Form irrelevantForm = testGetSiteFormsPage_addForm(
 				irrelevantSiteId, randomIrrelevantForm());
 
 			page = formResource.getSiteFormsPage(
-				irrelevantSiteId, Pagination.of(1, 2));
+				irrelevantSiteId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantForm), (List<Form>)page.getItems());
+			assertContains(irrelevantForm, (List<Form>)page.getItems());
 			assertValid(
 				page,
 				testGetSiteFormsPage_getExpectedActions(irrelevantSiteId));
@@ -281,10 +321,10 @@ public abstract class BaseFormResourceTestCase {
 
 		page = formResource.getSiteFormsPage(siteId, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(form1, form2), (List<Form>)page.getItems());
+		assertContains(form1, (List<Form>)page.getItems());
+		assertContains(form2, (List<Form>)page.getItems());
 		assertValid(page, testGetSiteFormsPage_getExpectedActions(siteId));
 	}
 
@@ -301,33 +341,72 @@ public abstract class BaseFormResourceTestCase {
 	public void testGetSiteFormsPageWithPagination() throws Exception {
 		Long siteId = testGetSiteFormsPage_getSiteId();
 
+		Page<Form> formPage = formResource.getSiteFormsPage(siteId, null);
+
+		int totalCount = GetterUtil.getInteger(formPage.getTotalCount());
+
 		Form form1 = testGetSiteFormsPage_addForm(siteId, randomForm());
 
 		Form form2 = testGetSiteFormsPage_addForm(siteId, randomForm());
 
 		Form form3 = testGetSiteFormsPage_addForm(siteId, randomForm());
 
-		Page<Form> page1 = formResource.getSiteFormsPage(
-			siteId, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Form> forms1 = (List<Form>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(forms1.toString(), 2, forms1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Form> page1 = formResource.getSiteFormsPage(
+				siteId,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<Form> page2 = formResource.getSiteFormsPage(
-			siteId, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(form1, (List<Form>)page1.getItems());
 
-		List<Form> forms2 = (List<Form>)page2.getItems();
+			Page<Form> page2 = formResource.getSiteFormsPage(
+				siteId,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(forms2.toString(), 1, forms2.size());
+			assertContains(form2, (List<Form>)page2.getItems());
 
-		Page<Form> page3 = formResource.getSiteFormsPage(
-			siteId, Pagination.of(1, 3));
+			Page<Form> page3 = formResource.getSiteFormsPage(
+				siteId,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(form1, form2, form3), (List<Form>)page3.getItems());
+			assertContains(form3, (List<Form>)page3.getItems());
+		}
+		else {
+			Page<Form> page1 = formResource.getSiteFormsPage(
+				siteId, Pagination.of(1, totalCount + 2));
+
+			List<Form> forms1 = (List<Form>)page1.getItems();
+
+			Assert.assertEquals(
+				forms1.toString(), totalCount + 2, forms1.size());
+
+			Page<Form> page2 = formResource.getSiteFormsPage(
+				siteId, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Form> forms2 = (List<Form>)page2.getItems();
+
+			Assert.assertEquals(forms2.toString(), 1, forms2.size());
+
+			Page<Form> page3 = formResource.getSiteFormsPage(
+				siteId, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(form1, (List<Form>)page3.getItems());
+			assertContains(form2, (List<Form>)page3.getItems());
+			assertContains(form3, (List<Form>)page3.getItems());
+		}
 	}
 
 	protected Form testGetSiteFormsPage_addForm(Long siteId, Form form)
@@ -362,11 +441,13 @@ public abstract class BaseFormResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject formsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/forms");
 
-		Assert.assertEquals(0, formsJSONObject.get("totalCount"));
+		long totalCount = formsJSONObject.getLong("totalCount");
 
 		Form form1 = testGraphQLGetSiteFormsPage_addForm();
 		Form form2 = testGraphQLGetSiteFormsPage_addForm();
@@ -375,10 +456,35 @@ public abstract class BaseFormResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/forms");
 
-		Assert.assertEquals(2, formsJSONObject.getLong("totalCount"));
+		Assert.assertEquals(
+			totalCount + 2, formsJSONObject.getLong("totalCount"));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(form1, form2),
+		assertContains(
+			form1,
+			Arrays.asList(
+				FormSerDes.toDTOs(formsJSONObject.getString("items"))));
+		assertContains(
+			form2,
+			Arrays.asList(
+				FormSerDes.toDTOs(formsJSONObject.getString("items"))));
+
+		// Using the namespace headlessForm_v1_0
+
+		formsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessForm_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessForm_v1_0",
+			"JSONObject/forms");
+
+		Assert.assertEquals(
+			totalCount + 2, formsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			form1,
+			Arrays.asList(
+				FormSerDes.toDTOs(formsJSONObject.getString("items"))));
+		assertContains(
+			form2,
 			Arrays.asList(
 				FormSerDes.toDTOs(formsJSONObject.getString("items"))));
 	}
@@ -1236,6 +1342,10 @@ public abstract class BaseFormResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1314,20 +1424,20 @@ public abstract class BaseFormResourceTestCase {
 
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = form.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(form.getDateCreated(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(form.getDateCreated(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1345,20 +1455,20 @@ public abstract class BaseFormResourceTestCase {
 
 		if (entityFieldName.equals("dateModified")) {
 			if (operator.equals("between")) {
+				Date date = form.getDateModified();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(form.getDateModified(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(form.getDateModified(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1376,20 +1486,20 @@ public abstract class BaseFormResourceTestCase {
 
 		if (entityFieldName.equals("datePublished")) {
 			if (operator.equals("between")) {
+				Date date = form.getDatePublished();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(form.getDatePublished(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(form.getDatePublished(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1597,7 +1707,8 @@ public abstract class BaseFormResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1681,21 +1792,21 @@ public abstract class BaseFormResourceTestCase {
 	}
 
 	protected FormResource formResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1704,11 +1815,16 @@ public abstract class BaseFormResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1740,6 +1856,24 @@ public abstract class BaseFormResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1761,16 +1895,6 @@ public abstract class BaseFormResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

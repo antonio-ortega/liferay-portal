@@ -2,7 +2,6 @@ import * as API from 'shared/api';
 import * as data from 'test/data';
 import mockStore from 'test/mock-store';
 import ModalRenderer from 'shared/components/ModalRenderer';
-import Promise from 'metal-promise';
 import React from 'react';
 import View from '../View';
 import {
@@ -16,6 +15,7 @@ import {
 import {Provider} from 'react-redux';
 import {StaticRouter} from 'react-router';
 import {User} from 'shared/util/records';
+import {waitForLoadingToBeRemoved} from 'test/helpers';
 
 jest.unmock('react-dom');
 
@@ -45,22 +45,22 @@ describe('View Channel', () => {
 		jest.clearAllMocks();
 	});
 
-	it('should render', () => {
+	it('should render', async () => {
 		const {container} = render(<DefaultComponent />);
 
-		jest.runAllTimers();
+		await waitForLoadingToBeRemoved(container);
 
 		expect(container).toMatchSnapshot();
 	});
 
-	it('should render w/ Select Users view', () => {
+	it('should render w/ Select Users view', async () => {
 		API.channels.fetch.mockReturnValueOnce(
 			Promise.resolve(data.mockChannel(1, 1))
 		);
 
 		const {container} = render(<DefaultComponent />);
 
-		jest.runAllTimers();
+		await waitForLoadingToBeRemoved(container);
 
 		expect(screen.getByLabelText('Select Users').checked).toBeTrue();
 		expect(container.querySelector('.table-root')).toBeTruthy();
@@ -73,20 +73,18 @@ describe('View Channel', () => {
 
 		const {queryByLabelText, queryByText} = render(<DefaultComponent />);
 
-		jest.runAllTimers();
-
 		expect(queryByText('Delete')).toBeNull();
 		expect(queryByLabelText('Edit')).toBeNull();
 	});
 
-	it('should check if DELETE and CLEAR DATA buttons are displayed', () => {
+	it('should check if DELETE and CLEAR DATA buttons are displayed', async () => {
 		API.user.fetchCurrentUser.mockReturnValueOnce(
 			Promise.resolve(data.mockUser())
 		);
 
-		const {queryByText} = render(<DefaultComponent />);
+		const {container, queryByText} = render(<DefaultComponent />);
 
-		jest.runAllTimers();
+		await waitForLoadingToBeRemoved(container);
 
 		expect(queryByText('Delete')).toBeInTheDocument();
 		expect(queryByText('Clear Data')).toBeInTheDocument();
@@ -108,7 +106,7 @@ describe('View Channel', () => {
 
 		const {container} = render(<DefaultComponent />);
 
-		jest.runAllTimers();
+		await waitForLoadingToBeRemoved(container);
 
 		expect(
 			screen.getByText(
@@ -135,7 +133,7 @@ describe('View Channel', () => {
 		const modalText = screen.getByText((content, node) => {
 			const hasText = node =>
 				node.textContent ===
-				'Ensure no sites and channels are assigned to it before deleting a property. To disconnect them from a property, navigate to Instance Settings > Analytics Cloud > Properties and select the properties with synchronizations that you wish to undo. Access our documentation to learn more.';
+				'Ensure no sites and channels are assigned to it before deleting a property. To disconnect them from a property, navigate to Instance Settings > Analytics Cloud > Properties and select the properties with synchronizations that you wish to undo. Access our documentation to learn more.(Opens a new window)';
 			const nodeHasText = hasText(node);
 			const childrenDontHaveText = Array.from(node.children).every(
 				child => !hasText(child)
@@ -174,7 +172,7 @@ describe('View Channel', () => {
 
 		const {container} = render(<DefaultComponent />);
 
-		jest.runAllTimers();
+		await waitForLoadingToBeRemoved(container);
 
 		expect(
 			screen.getByText(
@@ -226,7 +224,7 @@ describe('View Channel', () => {
 
 		const {container} = render(<DefaultComponent />);
 
-		jest.runAllTimers();
+		await waitForLoadingToBeRemoved(container);
 
 		expect(
 			screen.getByText(
@@ -255,18 +253,16 @@ describe('View Channel', () => {
 		).toBeInTheDocument();
 	});
 
-	it('should render a warning modal when the user toggles from All User to Select User property permissions', () => {
+	it('should render a warning modal when the user toggles from All User to Select User property permissions', async () => {
 		const {container} = render(<DefaultComponent />);
 		const modalContainer = container.querySelector('.modal-renderer-root');
 		const customMatcher = content => content === 'Permissions Change';
 
-		jest.runAllTimers();
+		await waitForLoadingToBeRemoved(container);
 
 		expect(queryByText(modalContainer, customMatcher)).toBeNull();
 
 		fireEvent.click(screen.getByLabelText('Select Users'));
-
-		jest.runAllTimers();
 
 		expect(getByText(modalContainer, customMatcher)).toBeTruthy();
 	});

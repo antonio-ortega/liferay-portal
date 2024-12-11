@@ -17,7 +17,6 @@ import com.liferay.commerce.product.util.comparator.CPInstanceUnitOfMeasurePrior
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -47,13 +46,10 @@ public class CPInstanceUnitOfMeasureLocalServiceImpl
 	public CPInstanceUnitOfMeasure addCPInstanceUnitOfMeasure(
 			long userId, long cpInstanceId, boolean active,
 			BigDecimal incrementalOrderQuantity, String key,
-			Map<Locale, String> nameMap, int precision, boolean primary,
-			double priority, BigDecimal rate, String sku)
+			Map<Locale, String> nameMap, int precision,
+			BigDecimal pricingQuantity, boolean primary, double priority,
+			BigDecimal rate, String sku)
 		throws PortalException {
-
-		if (!FeatureFlagManagerUtil.isEnabled("COMMERCE-11287")) {
-			throw new UnsupportedOperationException();
-		}
 
 		_validateCPInstanceUnitOfMeasureIncrementalOrderQuantity(
 			incrementalOrderQuantity, precision);
@@ -80,6 +76,7 @@ public class CPInstanceUnitOfMeasureLocalServiceImpl
 		cpInstanceUnitOfMeasure.setKey(key);
 		cpInstanceUnitOfMeasure.setNameMap(nameMap);
 		cpInstanceUnitOfMeasure.setPrecision(precision);
+		cpInstanceUnitOfMeasure.setPricingQuantity(pricingQuantity);
 		cpInstanceUnitOfMeasure.setPrimary(primary);
 		cpInstanceUnitOfMeasure.setPriority(priority);
 		cpInstanceUnitOfMeasure.setRate(rate);
@@ -99,8 +96,9 @@ public class CPInstanceUnitOfMeasureLocalServiceImpl
 	public CPInstanceUnitOfMeasure addOrUpdateCPInstanceUnitOfMeasure(
 			long userId, long cpInstanceId, boolean active,
 			BigDecimal incrementalOrderQuantity, String key,
-			Map<Locale, String> nameMap, int precision, boolean primary,
-			double priority, BigDecimal rate, String sku)
+			Map<Locale, String> nameMap, int precision,
+			BigDecimal pricingQuantity, boolean primary, double priority,
+			BigDecimal rate, String sku)
 		throws PortalException {
 
 		CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
@@ -111,14 +109,15 @@ public class CPInstanceUnitOfMeasureLocalServiceImpl
 			return cpInstanceUnitOfMeasureLocalService.
 				addCPInstanceUnitOfMeasure(
 					userId, cpInstanceId, active, incrementalOrderQuantity, key,
-					nameMap, precision, primary, priority, rate, sku);
+					nameMap, precision, pricingQuantity, primary, priority,
+					rate, sku);
 		}
 
 		return cpInstanceUnitOfMeasureLocalService.
 			updateCPInstanceUnitOfMeasure(
 				cpInstanceUnitOfMeasure.getCPInstanceUnitOfMeasureId(),
 				cpInstanceId, active, incrementalOrderQuantity, key, nameMap,
-				precision, primary, priority, rate, sku);
+				precision, pricingQuantity, primary, priority, rate, sku);
 	}
 
 	@Override
@@ -136,6 +135,7 @@ public class CPInstanceUnitOfMeasureLocalServiceImpl
 			companyId, key, sku, null);
 	}
 
+	@Override
 	public CPInstanceUnitOfMeasure fetchPrimaryCPInstanceUnitOfMeasure(
 		long cpInstanceId) {
 
@@ -149,7 +149,7 @@ public class CPInstanceUnitOfMeasureLocalServiceImpl
 
 		return cpInstanceUnitOfMeasurePersistence.findByC_A(
 			cpInstanceId, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			new CPInstanceUnitOfMeasurePriorityComparator());
+			CPInstanceUnitOfMeasurePriorityComparator.getInstance(true));
 	}
 
 	@Override
@@ -197,8 +197,9 @@ public class CPInstanceUnitOfMeasureLocalServiceImpl
 	public CPInstanceUnitOfMeasure updateCPInstanceUnitOfMeasure(
 			long cpInstanceUnitOfMeasureId, long cpInstanceId, boolean active,
 			BigDecimal incrementalOrderQuantity, String key,
-			Map<Locale, String> nameMap, int precision, boolean primary,
-			double priority, BigDecimal rate, String sku)
+			Map<Locale, String> nameMap, int precision,
+			BigDecimal pricingQuantity, boolean primary, double priority,
+			BigDecimal rate, String sku)
 		throws PortalException {
 
 		CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
@@ -220,6 +221,7 @@ public class CPInstanceUnitOfMeasureLocalServiceImpl
 		cpInstanceUnitOfMeasure.setKey(key);
 		cpInstanceUnitOfMeasure.setNameMap(nameMap);
 		cpInstanceUnitOfMeasure.setPrecision(precision);
+		cpInstanceUnitOfMeasure.setPricingQuantity(pricingQuantity);
 		cpInstanceUnitOfMeasure.setPrimary(primary);
 		cpInstanceUnitOfMeasure.setPriority(priority);
 		cpInstanceUnitOfMeasure.setRate(rate);

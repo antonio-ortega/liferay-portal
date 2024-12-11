@@ -13,7 +13,9 @@ import com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceReportModelImp
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceReportPersistence;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceReportUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.impl.constants.DDMPersistenceConstants;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
@@ -94,7 +96,6 @@ public class DDMFormInstanceReportPersistenceImpl
 	private FinderPath _finderPathWithoutPaginationFindAll;
 	private FinderPath _finderPathCountAll;
 	private FinderPath _finderPathFetchByFormInstanceId;
-	private FinderPath _finderPathCountByFormInstanceId;
 
 	/**
 	 * Returns the ddm form instance report where formInstanceId = &#63; or throws a <code>NoSuchFormInstanceReportException</code> if it could not be found.
@@ -152,104 +153,101 @@ public class DDMFormInstanceReportPersistenceImpl
 	public DDMFormInstanceReport fetchByFormInstanceId(
 		long formInstanceId, boolean useFinderCache) {
 
-		Object[] finderArgs = null;
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					DDMFormInstanceReport.class)) {
 
-		if (useFinderCache) {
-			finderArgs = new Object[] {formInstanceId};
-		}
+			Object[] finderArgs = null;
 
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByFormInstanceId, finderArgs, this);
-		}
-
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			DDMFormInstanceReport.class);
-
-		if (result instanceof DDMFormInstanceReport) {
-			DDMFormInstanceReport ddmFormInstanceReport =
-				(DDMFormInstanceReport)result;
-
-			if (formInstanceId != ddmFormInstanceReport.getFormInstanceId()) {
-				result = null;
+			if (useFinderCache) {
+				finderArgs = new Object[] {formInstanceId};
 			}
-			else if (!ctPersistenceHelper.isProductionMode(
-						DDMFormInstanceReport.class,
-						ddmFormInstanceReport.getPrimaryKey())) {
 
-				result = null;
+			Object result = null;
+
+			if (useFinderCache) {
+				result = finderCache.getResult(
+					_finderPathFetchByFormInstanceId, finderArgs, this);
 			}
-		}
-		else if (!productionMode && (result instanceof List<?>)) {
-			result = null;
-		}
 
-		if (result == null) {
-			StringBundler sb = new StringBundler(3);
+			if (result instanceof DDMFormInstanceReport) {
+				DDMFormInstanceReport ddmFormInstanceReport =
+					(DDMFormInstanceReport)result;
 
-			sb.append(_SQL_SELECT_DDMFORMINSTANCEREPORT_WHERE);
+				if (formInstanceId !=
+						ddmFormInstanceReport.getFormInstanceId()) {
 
-			sb.append(_FINDER_COLUMN_FORMINSTANCEID_FORMINSTANCEID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(formInstanceId);
-
-				List<DDMFormInstanceReport> list = query.list();
-
-				if (list.isEmpty()) {
-					if (useFinderCache && productionMode) {
-						finderCache.putResult(
-							_finderPathFetchByFormInstanceId, finderArgs, list);
-					}
+					result = null;
 				}
-				else {
-					if (list.size() > 1) {
-						Collections.sort(list, Collections.reverseOrder());
+			}
 
-						if (_log.isWarnEnabled()) {
-							if (!productionMode || !useFinderCache) {
-								finderArgs = new Object[] {formInstanceId};
-							}
+			if (result == null) {
+				StringBundler sb = new StringBundler(3);
 
-							_log.warn(
-								"DDMFormInstanceReportPersistenceImpl.fetchByFormInstanceId(long, boolean) with parameters (" +
-									StringUtil.merge(finderArgs) +
-										") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
+				sb.append(_SQL_SELECT_DDMFORMINSTANCEREPORT_WHERE);
+
+				sb.append(_FINDER_COLUMN_FORMINSTANCEID_FORMINSTANCEID_2);
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					queryPos.add(formInstanceId);
+
+					List<DDMFormInstanceReport> list = query.list();
+
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							finderCache.putResult(
+								_finderPathFetchByFormInstanceId, finderArgs,
+								list);
 						}
 					}
+					else {
+						if (list.size() > 1) {
+							Collections.sort(list, Collections.reverseOrder());
 
-					DDMFormInstanceReport ddmFormInstanceReport = list.get(0);
+							if (_log.isWarnEnabled()) {
+								if (!useFinderCache) {
+									finderArgs = new Object[] {formInstanceId};
+								}
 
-					result = ddmFormInstanceReport;
+								_log.warn(
+									"DDMFormInstanceReportPersistenceImpl.fetchByFormInstanceId(long, boolean) with parameters (" +
+										StringUtil.merge(finderArgs) +
+											") yields a result set with more than 1 result. This violates the logical unique restriction. There is no order guarantee on which result is returned by this finder.");
+							}
+						}
 
-					cacheResult(ddmFormInstanceReport);
+						DDMFormInstanceReport ddmFormInstanceReport = list.get(
+							0);
+
+						result = ddmFormInstanceReport;
+
+						cacheResult(ddmFormInstanceReport);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (DDMFormInstanceReport)result;
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (DDMFormInstanceReport)result;
+			}
 		}
 	}
 
@@ -277,57 +275,14 @@ public class DDMFormInstanceReportPersistenceImpl
 	 */
 	@Override
 	public int countByFormInstanceId(long formInstanceId) {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			DDMFormInstanceReport.class);
+		DDMFormInstanceReport ddmFormInstanceReport = fetchByFormInstanceId(
+			formInstanceId);
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		Long count = null;
-
-		if (productionMode) {
-			finderPath = _finderPathCountByFormInstanceId;
-
-			finderArgs = new Object[] {formInstanceId};
-
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		if (ddmFormInstanceReport == null) {
+			return 0;
 		}
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
-
-			sb.append(_SQL_COUNT_DDMFORMINSTANCEREPORT_WHERE);
-
-			sb.append(_FINDER_COLUMN_FORMINSTANCEID_FORMINSTANCEID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(formInstanceId);
-
-				count = (Long)query.uniqueResult();
-
-				if (productionMode) {
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_FORMINSTANCEID_FORMINSTANCEID_2 =
@@ -355,18 +310,19 @@ public class DDMFormInstanceReportPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(DDMFormInstanceReport ddmFormInstanceReport) {
-		if (ddmFormInstanceReport.getCtCollectionId() != 0) {
-			return;
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ddmFormInstanceReport.getCtCollectionId())) {
+
+			entityCache.putResult(
+				DDMFormInstanceReportImpl.class,
+				ddmFormInstanceReport.getPrimaryKey(), ddmFormInstanceReport);
+
+			finderCache.putResult(
+				_finderPathFetchByFormInstanceId,
+				new Object[] {ddmFormInstanceReport.getFormInstanceId()},
+				ddmFormInstanceReport);
 		}
-
-		entityCache.putResult(
-			DDMFormInstanceReportImpl.class,
-			ddmFormInstanceReport.getPrimaryKey(), ddmFormInstanceReport);
-
-		finderCache.putResult(
-			_finderPathFetchByFormInstanceId,
-			new Object[] {ddmFormInstanceReport.getFormInstanceId()},
-			ddmFormInstanceReport);
 	}
 
 	private int _valueObjectFinderCacheListThreshold;
@@ -391,15 +347,16 @@ public class DDMFormInstanceReportPersistenceImpl
 		for (DDMFormInstanceReport ddmFormInstanceReport :
 				ddmFormInstanceReports) {
 
-			if (ddmFormInstanceReport.getCtCollectionId() != 0) {
-				continue;
-			}
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						ddmFormInstanceReport.getCtCollectionId())) {
 
-			if (entityCache.getResult(
-					DDMFormInstanceReportImpl.class,
-					ddmFormInstanceReport.getPrimaryKey()) == null) {
+				if (entityCache.getResult(
+						DDMFormInstanceReportImpl.class,
+						ddmFormInstanceReport.getPrimaryKey()) == null) {
 
-				cacheResult(ddmFormInstanceReport);
+					cacheResult(ddmFormInstanceReport);
+				}
 			}
 		}
 	}
@@ -454,15 +411,18 @@ public class DDMFormInstanceReportPersistenceImpl
 	protected void cacheUniqueFindersCache(
 		DDMFormInstanceReportModelImpl ddmFormInstanceReportModelImpl) {
 
-		Object[] args = new Object[] {
-			ddmFormInstanceReportModelImpl.getFormInstanceId()
-		};
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ddmFormInstanceReportModelImpl.getCtCollectionId())) {
 
-		finderCache.putResult(
-			_finderPathCountByFormInstanceId, args, Long.valueOf(1));
-		finderCache.putResult(
-			_finderPathFetchByFormInstanceId, args,
-			ddmFormInstanceReportModelImpl);
+			Object[] args = new Object[] {
+				ddmFormInstanceReportModelImpl.getFormInstanceId()
+			};
+
+			finderCache.putResult(
+				_finderPathFetchByFormInstanceId, args,
+				ddmFormInstanceReportModelImpl);
+		}
 	}
 
 	/**
@@ -654,16 +614,6 @@ public class DDMFormInstanceReportPersistenceImpl
 			closeSession(session);
 		}
 
-		if (ddmFormInstanceReport.getCtCollectionId() != 0) {
-			if (isNew) {
-				ddmFormInstanceReport.setNew(false);
-			}
-
-			ddmFormInstanceReport.resetOriginalValues();
-
-			return ddmFormInstanceReport;
-		}
-
 		entityCache.putResult(
 			DDMFormInstanceReportImpl.class, ddmFormInstanceReportModelImpl,
 			false, true);
@@ -730,10 +680,21 @@ public class DDMFormInstanceReportPersistenceImpl
 		if (ctPersistenceHelper.isProductionMode(
 				DDMFormInstanceReport.class, primaryKey)) {
 
-			return super.fetchByPrimaryKey(primaryKey);
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.
+						setProductionModeWithSafeCloseable()) {
+
+				return super.fetchByPrimaryKey(primaryKey);
+			}
 		}
 
-		DDMFormInstanceReport ddmFormInstanceReport = null;
+		DDMFormInstanceReport ddmFormInstanceReport =
+			(DDMFormInstanceReport)entityCache.getResult(
+				DDMFormInstanceReportImpl.class, primaryKey);
+
+		if (ddmFormInstanceReport != null) {
+			return ddmFormInstanceReport;
+		}
 
 		Session session = null;
 
@@ -773,7 +734,12 @@ public class DDMFormInstanceReportPersistenceImpl
 		Set<Serializable> primaryKeys) {
 
 		if (ctPersistenceHelper.isProductionMode(DDMFormInstanceReport.class)) {
-			return super.fetchByPrimaryKeys(primaryKeys);
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.
+						setProductionModeWithSafeCloseable()) {
+
+				return super.fetchByPrimaryKeys(primaryKeys);
+			}
 		}
 
 		if (primaryKeys.isEmpty()) {
@@ -795,6 +761,34 @@ public class DDMFormInstanceReportPersistenceImpl
 				map.put(primaryKey, ddmFormInstanceReport);
 			}
 
+			return map;
+		}
+
+		Set<Serializable> uncachedPrimaryKeys = null;
+
+		for (Serializable primaryKey : primaryKeys) {
+			try (SafeCloseable safeCloseable =
+					ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+						DDMFormInstanceReport.class, primaryKey)) {
+
+				DDMFormInstanceReport ddmFormInstanceReport =
+					(DDMFormInstanceReport)entityCache.getResult(
+						DDMFormInstanceReportImpl.class, primaryKey);
+
+				if (ddmFormInstanceReport == null) {
+					if (uncachedPrimaryKeys == null) {
+						uncachedPrimaryKeys = new HashSet<>();
+					}
+
+					uncachedPrimaryKeys.add(primaryKey);
+				}
+				else {
+					map.put(primaryKey, ddmFormInstanceReport);
+				}
+			}
+		}
+
+		if (uncachedPrimaryKeys == null) {
 			return map;
 		}
 
@@ -929,78 +923,81 @@ public class DDMFormInstanceReportPersistenceImpl
 		OrderByComparator<DDMFormInstanceReport> orderByComparator,
 		boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			DDMFormInstanceReport.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					DDMFormInstanceReport.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath = _finderPathWithoutPaginationFindAll;
-				finderArgs = FINDER_ARGS_EMPTY;
-			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindAll;
-			finderArgs = new Object[] {start, end, orderByComparator};
-		}
-
-		List<DDMFormInstanceReport> list = null;
-
-		if (useFinderCache && productionMode) {
-			list = (List<DDMFormInstanceReport>)finderCache.getResult(
-				finderPath, finderArgs, this);
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-			String sql = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					2 + (orderByComparator.getOrderByFields().length * 2));
-
-				sb.append(_SQL_SELECT_DDMFORMINSTANCEREPORT);
-
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-
-				sql = sb.toString();
-			}
-			else {
-				sql = _SQL_SELECT_DDMFORMINSTANCEREPORT;
-
-				sql = sql.concat(DDMFormInstanceReportModelImpl.ORDER_BY_JPQL);
-			}
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				list = (List<DDMFormInstanceReport>)QueryUtil.list(
-					query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderPath = _finderPathWithoutPaginationFindAll;
+					finderArgs = FINDER_ARGS_EMPTY;
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindAll;
+				finderArgs = new Object[] {start, end, orderByComparator};
 			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return list;
+			List<DDMFormInstanceReport> list = null;
+
+			if (useFinderCache) {
+				list = (List<DDMFormInstanceReport>)finderCache.getResult(
+					finderPath, finderArgs, this);
+			}
+
+			if (list == null) {
+				StringBundler sb = null;
+				String sql = null;
+
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						2 + (orderByComparator.getOrderByFields().length * 2));
+
+					sb.append(_SQL_SELECT_DDMFORMINSTANCEREPORT);
+
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+
+					sql = sb.toString();
+				}
+				else {
+					sql = _SQL_SELECT_DDMFORMINSTANCEREPORT;
+
+					sql = sql.concat(
+						DDMFormInstanceReportModelImpl.ORDER_BY_JPQL);
+				}
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					list = (List<DDMFormInstanceReport>)QueryUtil.list(
+						query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			return list;
+		}
 	}
 
 	/**
@@ -1021,41 +1018,37 @@ public class DDMFormInstanceReportPersistenceImpl
 	 */
 	@Override
 	public int countAll() {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			DDMFormInstanceReport.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					DDMFormInstanceReport.class)) {
 
-		Long count = null;
-
-		if (productionMode) {
-			count = (Long)finderCache.getResult(
+			Long count = (Long)finderCache.getResult(
 				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
-		}
 
-		if (count == null) {
-			Session session = null;
+			if (count == null) {
+				Session session = null;
 
-			try {
-				session = openSession();
+				try {
+					session = openSession();
 
-				Query query = session.createQuery(
-					_SQL_COUNT_DDMFORMINSTANCEREPORT);
+					Query query = session.createQuery(
+						_SQL_COUNT_DDMFORMINSTANCEREPORT);
 
-				count = (Long)query.uniqueResult();
+					count = (Long)query.uniqueResult();
 
-				if (productionMode) {
 					finderCache.putResult(
 						_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	@Override
@@ -1117,6 +1110,7 @@ public class DDMFormInstanceReportPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -1125,13 +1119,14 @@ public class DDMFormInstanceReportPersistenceImpl
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("formInstanceId");
-		ctStrictColumnNames.add("data_");
+		ctMergeColumnNames.add("formInstanceId");
+		ctMergeColumnNames.add("data_");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("formInstanceReportId"));
@@ -1163,11 +1158,6 @@ public class DDMFormInstanceReportPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByFormInstanceId",
 			new String[] {Long.class.getName()},
 			new String[] {"formInstanceId"}, true);
-
-		_finderPathCountByFormInstanceId = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByFormInstanceId",
-			new String[] {Long.class.getName()},
-			new String[] {"formInstanceId"}, false);
 
 		DDMFormInstanceReportUtil.setPersistence(this);
 	}

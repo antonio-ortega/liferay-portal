@@ -7,6 +7,7 @@ package com.liferay.object.service;
 
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.io.Serializable;
 
@@ -111,10 +112,10 @@ public class ObjectEntryServiceUtil {
 
 	public static com.liferay.portal.kernel.security.permission.resource.
 		ModelResourcePermission<ObjectEntry> getModelResourcePermission(
-				ObjectEntry objectEntry)
+				long objectDefinitionId)
 			throws PortalException {
 
-		return getService().getModelResourcePermission(objectEntry);
+		return getService().getModelResourcePermission(objectDefinitionId);
 	}
 
 	public static ObjectEntry getObjectEntry(long objectEntryId)
@@ -201,13 +202,10 @@ public class ObjectEntryServiceUtil {
 	}
 
 	public static ObjectEntryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(ObjectEntryService service) {
-		_service = service;
-	}
-
-	private static volatile ObjectEntryService _service;
+	private static final Snapshot<ObjectEntryService> _serviceSnapshot =
+		new Snapshot<>(ObjectEntryServiceUtil.class, ObjectEntryService.class);
 
 }

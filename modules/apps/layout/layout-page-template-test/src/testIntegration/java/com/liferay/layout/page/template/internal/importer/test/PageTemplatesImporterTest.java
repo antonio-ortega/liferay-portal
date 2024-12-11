@@ -63,7 +63,7 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -76,6 +76,7 @@ import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -88,6 +89,7 @@ import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import java.net.URL;
 
@@ -164,7 +166,7 @@ public class PageTemplatesImporterTest {
 			LayoutPageTemplateCollection layoutPageTemplateCollection =
 				_layoutPageTemplateCollectionLocalService.
 					addLayoutPageTemplateCollection(
-						TestPropsValues.getUserId(), _group.getGroupId(),
+						null, TestPropsValues.getUserId(), _group.getGroupId(),
 						LayoutPageTemplateConstants.
 							PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 						name, RandomTestUtil.randomString(),
@@ -174,7 +176,7 @@ public class PageTemplatesImporterTest {
 			String layoutPageTemplateEntryName = RandomTestUtil.randomString();
 
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
 				layoutPageTemplateEntryName,
@@ -196,7 +198,7 @@ public class PageTemplatesImporterTest {
 			List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
 				_layoutsImporter.importFile(
 					TestPropsValues.getUserId(), _group.getGroupId(), 0, file,
-					LayoutsImportStrategy.DO_NOT_OVERWRITE);
+					LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 
 			Assert.assertEquals(
 				layoutsImporterResultEntries.toString(), 1,
@@ -223,7 +225,7 @@ public class PageTemplatesImporterTest {
 
 			layoutsImporterResultEntries = _layoutsImporter.importFile(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 
 			Assert.assertEquals(
 				layoutsImporterResultEntries.toString(), 1,
@@ -459,7 +461,7 @@ public class PageTemplatesImporterTest {
 			configProperty2,
 			jxPortletPreferences.getValue("config-property-2", null));
 
-		String resourcePrimKey = _portletPermission.getPrimaryKey(
+		String resourcePrimKey = PortletPermissionUtil.getPrimaryKey(
 			layoutPageTemplateEntry.getPlid(),
 			PortletIdCodec.encode(portletId, instanceId));
 
@@ -540,7 +542,7 @@ public class PageTemplatesImporterTest {
 			LayoutPageTemplateCollection layoutPageTemplateCollection =
 				_layoutPageTemplateCollectionLocalService.
 					addLayoutPageTemplateCollection(
-						TestPropsValues.getUserId(), _group.getGroupId(),
+						null, TestPropsValues.getUserId(), _group.getGroupId(),
 						LayoutPageTemplateConstants.
 							PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 						RandomTestUtil.randomString(),
@@ -550,7 +552,7 @@ public class PageTemplatesImporterTest {
 
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
 				_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					layoutPageTemplateCollection.
 						getLayoutPageTemplateCollectionId(),
 					RandomTestUtil.randomString(),
@@ -559,13 +561,13 @@ public class PageTemplatesImporterTest {
 
 			FragmentCollection fragmentCollection =
 				_fragmentCollectionLocalService.addFragmentCollection(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					RandomTestUtil.randomString(),
 					RandomTestUtil.randomString(), serviceContext);
 
 			FragmentEntry fragmentEntry =
 				_fragmentEntryLocalService.addFragmentEntry(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					fragmentCollection.getFragmentCollectionId(),
 					StringUtil.randomString(), StringUtil.randomString(),
 					RandomTestUtil.randomString(),
@@ -574,7 +576,7 @@ public class PageTemplatesImporterTest {
 						"<lfr-drop-zone></lfr-drop-zone><h1> Drop Zone 2 </h1>",
 						"<lfr-drop-zone></lfr-drop-zone></div>"),
 					RandomTestUtil.randomString(), false, "{fieldSets: []}",
-					null, 0, FragmentConstants.TYPE_COMPONENT, null,
+					null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
 					WorkflowConstants.STATUS_APPROVED,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId(), TestPropsValues.getUserId()));
@@ -598,7 +600,7 @@ public class PageTemplatesImporterTest {
 
 			_layoutsImporter.importFile(
 				TestPropsValues.getUserId(), _group.getGroupId(), file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 
 			_assertLayoutPageTemplateEntryFragmentDropZoneLayoutStructureItems(
 				new String[] {StringPool.BLANK, StringPool.BLANK},
@@ -623,7 +625,7 @@ public class PageTemplatesImporterTest {
 			LayoutPageTemplateCollection layoutPageTemplateCollection =
 				_layoutPageTemplateCollectionLocalService.
 					addLayoutPageTemplateCollection(
-						TestPropsValues.getUserId(), _group.getGroupId(),
+						null, TestPropsValues.getUserId(), _group.getGroupId(),
 						LayoutPageTemplateConstants.
 							PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 						RandomTestUtil.randomString(),
@@ -633,7 +635,7 @@ public class PageTemplatesImporterTest {
 
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
 				_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					layoutPageTemplateCollection.
 						getLayoutPageTemplateCollectionId(),
 					RandomTestUtil.randomString(),
@@ -642,7 +644,7 @@ public class PageTemplatesImporterTest {
 
 			FragmentCollection fragmentCollection =
 				_fragmentCollectionLocalService.addFragmentCollection(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					RandomTestUtil.randomString(),
 					RandomTestUtil.randomString(), serviceContext);
 
@@ -651,7 +653,7 @@ public class PageTemplatesImporterTest {
 
 			FragmentEntry fragmentEntry =
 				_fragmentEntryLocalService.addFragmentEntry(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					fragmentCollection.getFragmentCollectionId(),
 					StringUtil.randomString(), StringUtil.randomString(),
 					RandomTestUtil.randomString(),
@@ -662,7 +664,7 @@ public class PageTemplatesImporterTest {
 						"<lfr-drop-zone data-lfr-drop-zone-id=\"", dropZoneId2,
 						"\"></lfr-drop-zone></div>"),
 					RandomTestUtil.randomString(), false, "{fieldSets: []}",
-					null, 0, FragmentConstants.TYPE_COMPONENT, null,
+					null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
 					WorkflowConstants.STATUS_APPROVED,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId(), TestPropsValues.getUserId()));
@@ -685,7 +687,7 @@ public class PageTemplatesImporterTest {
 
 			_layoutsImporter.importFile(
 				TestPropsValues.getUserId(), _group.getGroupId(), file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 
 			_assertLayoutPageTemplateEntryFragmentDropZoneLayoutStructureItems(
 				new String[] {dropZoneId1, dropZoneId2}, fragmentEntry,
@@ -709,7 +711,7 @@ public class PageTemplatesImporterTest {
 			LayoutPageTemplateCollection layoutPageTemplateCollection =
 				_layoutPageTemplateCollectionLocalService.
 					addLayoutPageTemplateCollection(
-						TestPropsValues.getUserId(), _group.getGroupId(),
+						null, TestPropsValues.getUserId(), _group.getGroupId(),
 						LayoutPageTemplateConstants.
 							PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 						RandomTestUtil.randomString(),
@@ -719,7 +721,7 @@ public class PageTemplatesImporterTest {
 
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
 				_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					layoutPageTemplateCollection.
 						getLayoutPageTemplateCollectionId(),
 					RandomTestUtil.randomString(),
@@ -728,7 +730,7 @@ public class PageTemplatesImporterTest {
 
 			FragmentCollection fragmentCollection =
 				_fragmentCollectionLocalService.addFragmentCollection(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					RandomTestUtil.randomString(),
 					RandomTestUtil.randomString(), serviceContext);
 
@@ -737,7 +739,7 @@ public class PageTemplatesImporterTest {
 
 			FragmentEntry fragmentEntry =
 				_fragmentEntryLocalService.addFragmentEntry(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					fragmentCollection.getFragmentCollectionId(),
 					StringUtil.randomString(), StringUtil.randomString(),
 					RandomTestUtil.randomString(),
@@ -748,7 +750,7 @@ public class PageTemplatesImporterTest {
 						"<lfr-drop-zone data-lfr-drop-zone-id=\"", dropZoneId2,
 						"\"></lfr-drop-zone></div>"),
 					RandomTestUtil.randomString(), false, "{fieldSets: []}",
-					null, 0, FragmentConstants.TYPE_COMPONENT, null,
+					null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
 					WorkflowConstants.STATUS_APPROVED,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId(), TestPropsValues.getUserId()));
@@ -786,7 +788,7 @@ public class PageTemplatesImporterTest {
 
 			_layoutsImporter.importFile(
 				TestPropsValues.getUserId(), _group.getGroupId(), file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 
 			_assertLayoutPageTemplateEntryFragmentDropZoneLayoutStructureItems(
 				new String[] {dropZoneId1, dropZoneId3, dropZoneId2},
@@ -811,7 +813,7 @@ public class PageTemplatesImporterTest {
 			LayoutPageTemplateCollection layoutPageTemplateCollection =
 				_layoutPageTemplateCollectionLocalService.
 					addLayoutPageTemplateCollection(
-						TestPropsValues.getUserId(), _group.getGroupId(),
+						null, TestPropsValues.getUserId(), _group.getGroupId(),
 						LayoutPageTemplateConstants.
 							PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
 						RandomTestUtil.randomString(),
@@ -821,7 +823,7 @@ public class PageTemplatesImporterTest {
 
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
 				_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					layoutPageTemplateCollection.
 						getLayoutPageTemplateCollectionId(),
 					RandomTestUtil.randomString(),
@@ -830,13 +832,13 @@ public class PageTemplatesImporterTest {
 
 			FragmentCollection fragmentCollection =
 				_fragmentCollectionLocalService.addFragmentCollection(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					RandomTestUtil.randomString(),
 					RandomTestUtil.randomString(), serviceContext);
 
 			FragmentEntry fragmentEntry =
 				_fragmentEntryLocalService.addFragmentEntry(
-					TestPropsValues.getUserId(), _group.getGroupId(),
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
 					fragmentCollection.getFragmentCollectionId(),
 					StringUtil.randomString(), StringUtil.randomString(),
 					RandomTestUtil.randomString(),
@@ -845,7 +847,7 @@ public class PageTemplatesImporterTest {
 						"<lfr-drop-zone></lfr-drop-zone><h1> Drop Zone 2 </h1>",
 						"<lfr-drop-zone></lfr-drop-zone></div>"),
 					RandomTestUtil.randomString(), false, "{fieldSets: []}",
-					null, 0, FragmentConstants.TYPE_COMPONENT, null,
+					null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
 					WorkflowConstants.STATUS_APPROVED,
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId(), TestPropsValues.getUserId()));
@@ -879,7 +881,7 @@ public class PageTemplatesImporterTest {
 
 			_layoutsImporter.importFile(
 				TestPropsValues.getUserId(), _group.getGroupId(), file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 
 			_assertLayoutPageTemplateEntryFragmentDropZoneLayoutStructureItems(
 				new String[] {
@@ -1055,7 +1057,7 @@ public class PageTemplatesImporterTest {
 	public void testImportLayoutPageTemplateWithMasterPage() throws Exception {
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				"Test Master Page",
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_DRAFT,
@@ -1139,10 +1141,9 @@ public class PageTemplatesImporterTest {
 		String zipPath = StringUtil.removeSubstring(
 			entryPath, _LAYOUT_PATE_TEMPLATES_PATH);
 
-		String content = StringUtil.read(url.openStream());
-
 		zipWriter.addEntry(
-			zipPath, StringUtil.replace(content, "${", "}", valuesMap));
+			zipPath,
+			StringUtil.replace(URLUtil.toString(url), "${", "}", valuesMap));
 	}
 
 	private void
@@ -1235,14 +1236,14 @@ public class PageTemplatesImporterTest {
 
 		FragmentCollection fragmentCollection =
 			_fragmentCollectionLocalService.addFragmentCollection(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				"Test Collection", StringPool.BLANK, serviceContext);
 
 		_fragmentEntryLocalService.addFragmentEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), key, name,
 			StringPool.BLANK, html, StringPool.BLANK, false, StringPool.BLANK,
-			null, 0, FragmentConstants.TYPE_COMPONENT, null,
+			null, 0, false, FragmentConstants.TYPE_COMPONENT, null,
 			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
@@ -1319,7 +1320,7 @@ public class PageTemplatesImporterTest {
 		try {
 			layoutsImporterResultEntries = _layoutsImporter.importFile(
 				_user.getUserId(), _group.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -1383,9 +1384,9 @@ public class PageTemplatesImporterTest {
 			String testCaseName, Map<String, String> valuesMap)
 		throws Exception {
 
-		File file = _generateZipFile(testCaseName, valuesMap);
-
 		List<LayoutsImporterResultEntry> layoutsImporterResultEntries = null;
+
+		File file = _generateZipFile(testCaseName, valuesMap);
 
 		ServiceContextThreadLocal.pushServiceContext(
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
@@ -1393,7 +1394,7 @@ public class PageTemplatesImporterTest {
 		try {
 			layoutsImporterResultEntries = _layoutsImporter.importFile(
 				_user.getUserId(), _group.getGroupId(), 0, file,
-				LayoutsImportStrategy.DO_NOT_OVERWRITE);
+				LayoutsImportStrategy.DO_NOT_OVERWRITE, true);
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -1428,7 +1429,9 @@ public class PageTemplatesImporterTest {
 		String zipPath = StringUtil.removeSubstring(
 			url.getFile(), _LAYOUT_PATE_TEMPLATES_PATH);
 
-		zipWriter.addEntry(zipPath, url.openStream());
+		try (InputStream inputStream = url.openStream()) {
+			zipWriter.addEntry(zipPath, inputStream);
+		}
 
 		String path = FileUtil.getPath(url.getPath());
 
@@ -1681,9 +1684,6 @@ public class PageTemplatesImporterTest {
 
 	@Inject
 	private LayoutsImporter _layoutsImporter;
-
-	@Inject
-	private PortletPermission _portletPermission;
 
 	@Inject
 	private PortletPreferencesLocalService _portletPreferencesLocalService;

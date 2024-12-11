@@ -86,7 +86,8 @@ public interface CommerceInventoryWarehouseItemLocalService
 				String sku, String unitOfMeasureKey)
 		throws PortalException;
 
-	public int countItemsByCompanyId(long companyId, String sku);
+	public int countItemsByCompanyId(
+		long companyId, String sku, boolean replacePermissionCheck);
 
 	/**
 	 * Creates a new commerce inventory warehouse item with the primary key. Does not add the commerce inventory warehouse item to the database.
@@ -317,7 +318,7 @@ public interface CommerceInventoryWarehouseItemLocalService
 	public List<CommerceInventoryWarehouseItem>
 		getCommerceInventoryWarehouseItemsByCompanyIdSkuAndUnitOfMeasureKey(
 			long companyId, String sku, String unitOfMeasureKey, int start,
-			int end);
+			int end, boolean replacePermissionCheck);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CommerceInventoryWarehouseItem>
@@ -338,11 +339,13 @@ public interface CommerceInventoryWarehouseItemLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCommerceInventoryWarehouseItemsCount(
-		long companyId, long groupId, String sku, String unitOfMeasureKey);
+		long companyId, long accountEntryId, long groupId, String sku,
+		String unitOfMeasureKey);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCommerceInventoryWarehouseItemsCount(
-		long companyId, String sku, String unitOfMeasureKey);
+		long companyId, String sku, String unitOfMeasureKey,
+		boolean replacePermissionCheck);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getCommerceInventoryWarehouseItemsCountByCompanyId(
@@ -361,7 +364,8 @@ public interface CommerceInventoryWarehouseItemLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CIWarehouseItem> getItemsByCompanyId(
-		long companyId, String sku, int start, int end);
+		long companyId, String sku, int start, int end,
+		boolean replacePermissionCheck);
 
 	/**
 	 * Returns the OSGi service identifier.
@@ -380,7 +384,8 @@ public interface CommerceInventoryWarehouseItemLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public BigDecimal getStockQuantity(
-		long companyId, long groupId, String sku, String unitOfMeasureKey);
+		long companyId, long accountEntryId, long groupId, String sku,
+		String unitOfMeasureKey);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public BigDecimal getStockQuantity(

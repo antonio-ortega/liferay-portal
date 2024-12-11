@@ -21,7 +21,6 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -159,18 +158,11 @@ public class MasterLayoutActionDropdownItemsProvider {
 		).addGroup(
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
-					DropdownItemListBuilder.add(
+					DropdownItemListBuilder.addContext(
 						() ->
 							(layoutPageTemplateEntryId > 0) &&
-							hasUpdatePermission &&
-							!FeatureFlagManagerUtil.isEnabled("LPS-197408"),
-						_getCopyMasterLayoutActionUnsafeConsumer()
-					).addContext(
-						() ->
-							(layoutPageTemplateEntryId > 0) &&
-							hasUpdatePermission &&
-							FeatureFlagManagerUtil.isEnabled("LPS-197408"),
-						_getCopyMasterLayoutActionUnsafeConsumerWithPermissions()
+							hasUpdatePermission,
+						_getCopyMasterLayoutWithPermissionsActionUnsafeConsumer()
 					).build());
 				dropdownGroupItem.setSeparator(true);
 			}
@@ -204,47 +196,40 @@ public class MasterLayoutActionDropdownItemsProvider {
 		).build();
 	}
 
-	private UnsafeConsumer<DropdownItem, Exception>
-		_getCopyMasterLayoutActionUnsafeConsumer() {
-
-		return dropdownItem -> {
-			dropdownItem.putData("action", "copyMasterLayout");
-			dropdownItem.putData("copyMasterLayoutURL", _getCopyURL(false));
-			dropdownItem.setIcon("copy");
-			dropdownItem.setLabel(
-				LanguageUtil.get(_httpServletRequest, "make-a-copy"));
-		};
-	}
-
 	private UnsafeConsumer<DropdownContextItem, Exception>
-		_getCopyMasterLayoutActionUnsafeConsumerWithPermissions() {
+		_getCopyMasterLayoutWithPermissionsActionUnsafeConsumer() {
 
 		return dropdownContextItem -> {
-			dropdownContextItem.setDropdownItems(
-				DropdownItemListBuilder.add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "copyMasterLayout");
-						dropdownItem.putData(
-							"copyMasterLayoutURL", _getCopyURL(false));
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest, "master-page"));
-					}
-				).add(
-					dropdownItem -> {
-						dropdownItem.putData("action", "copyMasterLayout");
-						dropdownItem.putData(
-							"copyMasterLayoutURL", _getCopyURL(true));
-						dropdownItem.setLabel(
-							LanguageUtil.get(
-								_httpServletRequest,
-								"master-page-with-permissions"));
-					}
-				).build());
+			if (_layoutPageTemplateEntry.isDraft()) {
+				dropdownContextItem.setDisabled(true);
+			}
+			else {
+				dropdownContextItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						dropdownItem -> {
+							dropdownItem.putData("action", "copyMasterLayout");
+							dropdownItem.putData(
+								"copyMasterLayoutURL", _getCopyURL(false));
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest, "master-page"));
+						}
+					).add(
+						dropdownItem -> {
+							dropdownItem.putData("action", "copyMasterLayout");
+							dropdownItem.putData(
+								"copyMasterLayoutURL", _getCopyURL(true));
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									_httpServletRequest,
+									"master-page-with-permissions"));
+						}
+					).build());
+			}
+
 			dropdownContextItem.setIcon("copy");
 			dropdownContextItem.setLabel(
 				LanguageUtil.get(_httpServletRequest, "make-a-copy"));
-			dropdownContextItem.setDisabled(_layoutPageTemplateEntry.isDraft());
 		};
 	}
 
@@ -252,17 +237,18 @@ public class MasterLayoutActionDropdownItemsProvider {
 		return PortletURLBuilder.createActionURL(
 			_renderResponse
 		).setActionName(
-			"/layout_page_template_admin/copy_layout_page_template_entry"
+			"/layout_page_template_admin/copy_layout_page_template_entries_" +
+				"and_layout_page_template_collections"
 		).setRedirect(
 			_themeDisplay.getURLCurrent()
 		).setParameter(
 			"copyPermissions", copyPermissions
 		).setParameter(
-			"layoutPageTemplateCollectionId",
-			_layoutPageTemplateEntry.getLayoutPageTemplateCollectionId()
-		).setParameter(
-			"layoutPageTemplateEntryId",
+			"layoutPageTemplateEntriesIds",
 			_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+		).setParameter(
+			"layoutParentPageTemplateCollectionId",
+			_layoutPageTemplateEntry.getLayoutPageTemplateCollectionId()
 		).buildString();
 	}
 

@@ -6,17 +6,16 @@
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
+import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
-import com.liferay.layout.content.LayoutContentProvider;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.content.page.editor.web.internal.util.layout.structure.LayoutStructureUtil;
-import com.liferay.layout.helper.LayoutCopyHelper;
-import com.liferay.layout.service.LayoutLocalizationLocalService;
-import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.search.IndexStatusManagerThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutRevisionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -26,7 +25,6 @@ import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -36,13 +34,11 @@ import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.sites.kernel.util.Sites;
 
 import java.util.Collections;
-import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -87,8 +83,7 @@ public class PublishLayoutMVCActionCommand
 			actionRequest);
 
 		_publishLayout(
-			actionRequest, actionResponse, draftLayout, layout, serviceContext,
-			themeDisplay.getUserId());
+			draftLayout, layout, serviceContext, themeDisplay.getUserId());
 
 		String portletId = _portal.getPortletId(actionRequest);
 
@@ -103,14 +98,29 @@ public class PublishLayoutMVCActionCommand
 		MultiSessionMessages.add(actionRequest, "layoutPublished");
 	}
 
+	private void _cleanWidgetLayoutTypeSettings(
+		UnicodeProperties typeSettingsUnicodeProperties) {
+
+		typeSettingsUnicodeProperties.remove(
+			LayoutConstants.CUSTOMIZABLE_LAYOUT);
+		typeSettingsUnicodeProperties.remove(
+			LayoutTypePortletConstants.LAYOUT_TEMPLATE_ID);
+
+		Set<Map.Entry<String, String>> entrySet =
+			typeSettingsUnicodeProperties.entrySet();
+
+		entrySet.removeIf(
+			entry -> {
+				String key = entry.getKey();
+
+				return key.startsWith("column-");
+			});
+	}
+
 	private void _publishLayout(
-			ActionRequest actionRequest, ActionResponse actionResponse,
 			Layout draftLayout, Layout layout, ServiceContext serviceContext,
 			long userId)
 		throws Exception {
-
-		LayoutStructureUtil.deleteMarkedForDeletionItems(
-			draftLayout.getGroupId(), draftLayout.getPlid());
 
 		if (_workflowDefinitionLinkLocalService.hasWorkflowDefinitionLink(
 				layout.getCompanyId(), layout.getGroupId(),
@@ -127,12 +137,22 @@ public class PublishLayoutMVCActionCommand
 			UnicodeProperties originalTypeSettingsUnicodeProperties =
 				layout.getTypeSettingsProperties();
 
-			_layoutCopyHelper.copyLayoutContent(draftLayout, layout);
+			boolean indexReadOnly =
+				IndexStatusManagerThreadLocal.isIndexReadOnly();
+
+			IndexStatusManagerThreadLocal.setIndexReadOnly(true);
+
+			try {
+				_layoutLocalService.copyLayoutContent(draftLayout, layout);
+			}
+			finally {
+				IndexStatusManagerThreadLocal.setIndexReadOnly(indexReadOnly);
+			}
 
 			layout = _layoutLocalService.getLayout(layout.getPlid());
 
-			_updateLayoutContent(
-				actionRequest, actionResponse, layout, serviceContext);
+			LayoutStructureUtil.deleteMarkedForDeletionItems(
+				draftLayout.getGroupId(), draftLayout.getPlid());
 
 			draftLayout = _layoutLocalService.getLayout(draftLayout.getPlid());
 
@@ -153,16 +173,45 @@ public class PublishLayoutMVCActionCommand
 				LayoutTypeSettingsConstants.KEY_PUBLISHED,
 				Boolean.TRUE.toString());
 
+			_cleanWidgetLayoutTypeSettings(typeSettingsUnicodeProperties);
+
 			draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
 
 			draftLayout = _layoutLocalService.updateLayout(draftLayout);
 
 			LayoutSet layoutSet = layout.getLayoutSet();
 
-			if (layoutSet.isLayoutSetPrototypeLinkActive()) {
-				UnicodeProperties updatedTypeSettingsUnicodeProperties =
-					layout.getTypeSettingsProperties();
+			UnicodeProperties updatedTypeSettingsUnicodeProperties =
+				layout.getTypeSettingsProperties();
 
+			if (originalTypeSettingsUnicodeProperties.containsKey(
+					LayoutTypePortletConstants.SITEMAP_CHANGEFREQ)) {
+
+				updatedTypeSettingsUnicodeProperties.put(
+					LayoutTypePortletConstants.SITEMAP_CHANGEFREQ,
+					originalTypeSettingsUnicodeProperties.get(
+						LayoutTypePortletConstants.SITEMAP_CHANGEFREQ));
+			}
+
+			if (originalTypeSettingsUnicodeProperties.containsKey(
+					LayoutTypePortletConstants.SITEMAP_INCLUDE)) {
+
+				updatedTypeSettingsUnicodeProperties.put(
+					LayoutTypePortletConstants.SITEMAP_INCLUDE,
+					originalTypeSettingsUnicodeProperties.get(
+						LayoutTypePortletConstants.SITEMAP_INCLUDE));
+			}
+
+			if (originalTypeSettingsUnicodeProperties.containsKey(
+					LayoutTypePortletConstants.SITEMAP_PRIORITY)) {
+
+				updatedTypeSettingsUnicodeProperties.put(
+					LayoutTypePortletConstants.SITEMAP_PRIORITY,
+					originalTypeSettingsUnicodeProperties.get(
+						LayoutTypePortletConstants.SITEMAP_PRIORITY));
+			}
+
+			if (layoutSet.isLayoutSetPrototypeLinkActive()) {
 				if (originalTypeSettingsUnicodeProperties.containsKey(
 						Sites.LAST_MERGE_LAYOUT_MODIFIED_TIME)) {
 
@@ -182,6 +231,9 @@ public class PublishLayoutMVCActionCommand
 				}
 			}
 
+			_cleanWidgetLayoutTypeSettings(
+				updatedTypeSettingsUnicodeProperties);
+
 			layout.setType(draftLayout.getType());
 			layout.setLayoutPrototypeUuid(null);
 			layout.setStatus(WorkflowConstants.STATUS_APPROVED);
@@ -189,26 +241,6 @@ public class PublishLayoutMVCActionCommand
 			layout = _layoutLocalService.updateLayout(layout);
 
 			_updateLayoutRevision(layout, serviceContext);
-		}
-	}
-
-	private void _updateLayoutContent(
-		ActionRequest actionRequest, ActionResponse actionResponse,
-		Layout layout, ServiceContext serviceContext) {
-
-		HttpServletRequest httpServletRequest = _portal.getHttpServletRequest(
-			actionRequest);
-		HttpServletResponse httpServletResponse =
-			_portal.getHttpServletResponse(actionResponse);
-
-		for (Locale locale :
-				_language.getAvailableLocales(layout.getGroupId())) {
-
-			_layoutLocalizationLocalService.updateLayoutLocalization(
-				_layoutContentProvider.getLayoutContent(
-					httpServletRequest, httpServletResponse, layout, locale),
-				LocaleUtil.toLanguageId(locale), layout.getPlid(),
-				serviceContext);
 		}
 	}
 
@@ -233,18 +265,6 @@ public class PublishLayoutMVCActionCommand
 			layoutRevision.getColorSchemeId(), layoutRevision.getCss(),
 			serviceContext);
 	}
-
-	@Reference
-	private Language _language;
-
-	@Reference
-	private LayoutContentProvider _layoutContentProvider;
-
-	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
-
-	@Reference
-	private LayoutLocalizationLocalService _layoutLocalizationLocalService;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

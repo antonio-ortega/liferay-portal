@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodParameter;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodSignature;
+import com.liferay.portal.tools.rest.builder.internal.freemarker.util.ConfigUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.util.OpenAPIUtil;
 import com.liferay.portal.tools.rest.builder.internal.util.FileUtil;
 import com.liferay.portal.tools.rest.builder.internal.yaml.YAMLUtil;
@@ -52,7 +53,9 @@ import java.util.TreeSet;
  */
 public class OpenAPIParserUtil {
 
-	public static Map<String, Schema> getAllOfPropertySchemas(Schema schema) {
+	public static Map<String, Schema> getAllOfPropertySchemas(
+		ConfigYAML configYAML, Schema schema, Map<String, Schema> schemas) {
+
 		List<Schema> allOfSchemas = schema.getAllOfSchemas();
 
 		if (allOfSchemas.size() == 1) {
@@ -63,16 +66,31 @@ public class OpenAPIParserUtil {
 
 		for (Schema allOfSchema : allOfSchemas) {
 			if (allOfSchema.getReference() != null) {
-				Schema itemSchema = new Schema();
+				Schema referenceSchema = schemas.get(
+					getReferenceName(allOfSchema.getReference()));
 
-				String reference = allOfSchema.getReference();
+				if (referenceSchema.getDiscriminator() != null) {
+					continue;
+				}
 
-				itemSchema.setReference(reference);
+				if (allOfSchema.isMergeProperties() &&
+					ConfigUtil.isVersionCompatible(configYAML, 4)) {
 
-				propertySchemas.put(
-					StringUtil.lowerCaseFirstLetter(
-						getReferenceName(reference)),
-					itemSchema);
+					propertySchemas.putAll(
+						referenceSchema.getPropertySchemas());
+				}
+				else {
+					Schema itemSchema = new Schema();
+
+					String reference = allOfSchema.getReference();
+
+					itemSchema.setReference(reference);
+
+					propertySchemas.put(
+						StringUtil.lowerCaseFirstLetter(
+							getReferenceName(reference)),
+						itemSchema);
+				}
 			}
 			else {
 				propertySchemas.putAll(allOfSchema.getPropertySchemas());
@@ -203,7 +221,7 @@ public class OpenAPIParserUtil {
 	}
 
 	public static Map<String, Schema> getExternalSchemas(
-			OpenAPIYAML openAPIYAML)
+			ConfigYAML configYAML, OpenAPIYAML openAPIYAML)
 		throws Exception {
 
 		Map<String, Schema> externalReferencesMap = new HashMap<>();
@@ -228,7 +246,7 @@ public class OpenAPIParserUtil {
 				FileUtil.read(new File(path)));
 
 			externalReferencesMap.putAll(
-				OpenAPIUtil.getAllSchemas(openAPIYAML));
+				OpenAPIUtil.getAllSchemas(configYAML, openAPIYAML));
 
 			for (String curExternalReference :
 					getExternalReferences(openAPIYAML)) {
@@ -338,7 +356,8 @@ public class OpenAPIParserUtil {
 			throw new RuntimeException(ioException);
 		}
 
-		Map<String, Schema> allSchemas = OpenAPIUtil.getAllSchemas(openAPIYAML);
+		Map<String, Schema> allSchemas = OpenAPIUtil.getAllSchemas(
+			configYAML, openAPIYAML);
 
 		for (String schemaName : allSchemas.keySet()) {
 			StringBuilder sb = new StringBuilder();
@@ -375,7 +394,7 @@ public class OpenAPIParserUtil {
 		}
 
 		Map<String, Schema> globalEnumSchemas =
-			OpenAPIUtil.getGlobalEnumSchemas(openAPIYAML);
+			OpenAPIUtil.getGlobalEnumSchemas(configYAML, allSchemas);
 
 		for (String schemaName : globalEnumSchemas.keySet()) {
 			javaDataTypeMap.put(

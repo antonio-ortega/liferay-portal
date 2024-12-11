@@ -5,20 +5,22 @@
 
 package com.liferay.client.extension.web.internal.display.context;
 
-import com.liferay.client.extension.model.ClientExtensionEntry;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.web.internal.display.context.util.CETLabelUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.SelectOption;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.PortletCategory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -27,7 +29,9 @@ import com.liferay.portal.util.WebAppPool;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.portlet.PortletRequest;
 
@@ -39,12 +43,22 @@ import javax.servlet.http.HttpServletRequest;
 public class EditClientExtensionEntryDisplayContext<T extends CET> {
 
 	public EditClientExtensionEntryDisplayContext(
-		T cet, ClientExtensionEntry clientExtensionEntry,
-		PortletRequest portletRequest) {
+		boolean adding, T cet, PortletRequest portletRequest) {
 
+		_adding = adding;
 		_cet = cet;
-		_clientExtensionEntry = clientExtensionEntry;
 		_portletRequest = portletRequest;
+
+		HttpServletRequest httpServletRequest =
+			PortalUtil.getHttpServletRequest(portletRequest);
+
+		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+	}
+
+	public Set<Locale> getAvailableLocales() {
+		return LanguageUtil.getCompanyAvailableLocales(
+			_themeDisplay.getCompanyId());
 	}
 
 	public T getCET() {
@@ -52,16 +66,21 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	}
 
 	public String getCmd() {
-		if (_clientExtensionEntry == null) {
+		if (_adding) {
 			return Constants.ADD;
 		}
 
 		return Constants.UPDATE;
 	}
 
+	public String getDefaultLanguageId() throws PortalException {
+		Company company = _themeDisplay.getCompany();
+
+		return LanguageUtil.getLanguageId(company.getLocale());
+	}
+
 	public String getDescription() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "description");
+		return BeanParamUtil.getString(_cet, _portletRequest, "description");
 	}
 
 	public String getEditJSP() {
@@ -70,13 +89,11 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 
 	public String getExternalReferenceCode() {
 		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "externalReferenceCode");
+			_cet, _portletRequest, "externalReferenceCode");
 	}
 
 	public String getHelpLabel() {
-		ThemeDisplay themeDisplay = _getThemeDisplay();
-
-		return CETLabelUtil.getHelpLabel(themeDisplay.getLocale(), getType());
+		return CETLabelUtil.getHelpLabel(_themeDisplay.getLocale(), getType());
 	}
 
 	public String getLearnResourceKey() {
@@ -84,8 +101,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	}
 
 	public String getName() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "name");
+		return BeanParamUtil.getString(_cet, _portletRequest, "name");
 	}
 
 	public List<SelectOption> getPortletCategoryNameSelectOptions(
@@ -152,8 +168,9 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	}
 
 	public String getProperties() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "properties");
+		return ParamUtil.getString(
+			_portletRequest, "properties",
+			PropertiesUtil.toString(_cet.getProperties()));
 	}
 
 	public String getRedirect() {
@@ -161,8 +178,7 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	}
 
 	public String getSourceCodeURL() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "sourceCodeURL");
+		return BeanParamUtil.getString(_cet, _portletRequest, "sourceCodeURL");
 	}
 
 	public String[] getStrings(String urls) {
@@ -176,54 +192,35 @@ public class EditClientExtensionEntryDisplayContext<T extends CET> {
 	}
 
 	public String getTitle() {
-		ThemeDisplay themeDisplay = _getThemeDisplay();
-
-		if (_clientExtensionEntry == null) {
+		if (_adding) {
 			return CETLabelUtil.getNewLabel(
-				themeDisplay.getLocale(), _cet.getType());
+				_themeDisplay.getLocale(), _cet.getType());
 		}
 
-		return _cet.getName(themeDisplay.getLocale());
+		return _cet.getName(_themeDisplay.getLocale());
 	}
 
 	public String getType() {
-		return BeanParamUtil.getString(
-			_clientExtensionEntry, _portletRequest, "type");
+		return BeanParamUtil.getString(_cet, _portletRequest, "type");
 	}
 
 	public String getTypeLabel() {
-		ThemeDisplay themeDisplay = _getThemeDisplay();
-
-		return CETLabelUtil.getTypeLabel(themeDisplay.getLocale(), getType());
+		return CETLabelUtil.getTypeLabel(_themeDisplay.getLocale(), getType());
 	}
 
-	public boolean isNew() {
-		if (_clientExtensionEntry == null) {
-			return true;
-		}
-
-		return false;
+	public boolean isAdding() {
+		return _adding;
 	}
 
 	public boolean isPropertiesVisible() {
 		return _cet.hasProperties();
 	}
 
-	private HttpServletRequest _getHttpServletRequest() {
-		return PortalUtil.getHttpServletRequest(_portletRequest);
-	}
-
-	private ThemeDisplay _getThemeDisplay() {
-		HttpServletRequest httpServletRequest = _getHttpServletRequest();
-
-		return (ThemeDisplay)httpServletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-	}
-
 	private static final String[] _EMPTY_STRINGS = {StringPool.BLANK};
 
+	private final boolean _adding;
 	private final T _cet;
-	private final ClientExtensionEntry _clientExtensionEntry;
 	private final PortletRequest _portletRequest;
+	private final ThemeDisplay _themeDisplay;
 
 }

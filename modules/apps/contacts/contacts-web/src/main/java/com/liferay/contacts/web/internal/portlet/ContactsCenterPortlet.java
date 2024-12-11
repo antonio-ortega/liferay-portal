@@ -17,7 +17,6 @@ import com.liferay.contacts.util.ContactsUtil;
 import com.liferay.contacts.web.internal.constants.ContactsPortletKeys;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.AddressCityException;
@@ -85,17 +84,16 @@ import com.liferay.social.kernel.model.SocialRequest;
 import com.liferay.social.kernel.model.SocialRequestConstants;
 import com.liferay.social.kernel.service.SocialRelationLocalService;
 import com.liferay.social.kernel.service.SocialRequestLocalService;
-import com.liferay.users.admin.configuration.UserFileUploadsConfiguration;
 
-import java.io.IOException;
 import java.io.InputStream;
+
+import java.net.URLEncoder;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.portlet.ActionRequest;
@@ -104,20 +102,17 @@ import javax.portlet.Portlet;
 import javax.portlet.PortletException;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
-import javax.portlet.RenderRequest;
-import javax.portlet.RenderResponse;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Ryan Park
  * @author Jonathan Lee
  * @author Eudaldo Alonso
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	configurationPid = "com.liferay.users.admin.configuration.UserFileUploadsConfiguration",
@@ -127,7 +122,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.display-category=category.social",
 		"com.liferay.portlet.friendly-url-mapping=contacts",
 		"com.liferay.portlet.header-portlet-css=/css/main.css",
-		"com.liferay.portlet.header-portlet-javascript=/js/main.js",
+		"com.liferay.portlet.header-portlet-javascript=/js/legacy/main.js",
 		"com.liferay.portlet.icon=/icons/contacts_center.png",
 		"javax.portlet.display-name=Contacts Center",
 		"javax.portlet.expiration-cache=0",
@@ -144,6 +139,7 @@ import org.osgi.service.component.annotations.Reference;
 	},
 	service = Portlet.class
 )
+@Deprecated
 public class ContactsCenterPortlet extends MVCPortlet {
 
 	public void addSocialRelation(
@@ -231,7 +227,8 @@ public class ContactsCenterPortlet extends MVCPortlet {
 		String vCard = ContactsUtil.getVCard(user);
 
 		PortletResponseUtil.sendFile(
-			resourceRequest, resourceResponse, user.getFullName() + ".vcf",
+			resourceRequest, resourceResponse,
+			URLEncoder.encode(user.getFullName(), "UTF-8") + ".vcf",
 			vCard.getBytes(StringPool.UTF8), "text/x-vcard; charset=UTF-8");
 	}
 
@@ -715,25 +712,6 @@ public class ContactsCenterPortlet extends MVCPortlet {
 		writeJSON(actionRequest, actionResponse, jsonObject);
 	}
 
-	@Activate
-	@Modified
-	protected void activate(Map<String, Object> properties) {
-		_userFileUploadsConfiguration = ConfigurableUtil.createConfigurable(
-			UserFileUploadsConfiguration.class, properties);
-	}
-
-	@Override
-	protected void doDispatch(
-			RenderRequest renderRequest, RenderResponse renderResponse)
-		throws IOException, PortletException {
-
-		renderRequest.setAttribute(
-			UserFileUploadsConfiguration.class.getName(),
-			_userFileUploadsConfiguration);
-
-		super.doDispatch(renderRequest, renderResponse);
-	}
-
 	@Reference
 	protected AnnouncementsDeliveryLocalService
 		announcementsDeliveryLocalService;
@@ -992,7 +970,8 @@ public class ContactsCenterPortlet extends MVCPortlet {
 
 				usersList = new ArrayList<>(users);
 
-				ListUtil.sort(usersList, new UserLastNameComparator(true));
+				ListUtil.sort(
+					usersList, UserLastNameComparator.getInstance(true));
 			}
 			else {
 				int usersCount = userLocalService.searchCount(
@@ -1004,7 +983,7 @@ public class ContactsCenterPortlet extends MVCPortlet {
 				usersList = userLocalService.search(
 					themeDisplay.getCompanyId(), keywords,
 					WorkflowConstants.STATUS_APPROVED, params, start, end,
-					new UserLastNameComparator(true));
+					UserLastNameComparator.getInstance(true));
 			}
 
 			for (User user : usersList) {
@@ -1330,7 +1309,5 @@ public class ContactsCenterPortlet extends MVCPortlet {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ContactsCenterPortlet.class);
-
-	private volatile UserFileUploadsConfiguration _userFileUploadsConfiguration;
 
 }

@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-site-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -24,6 +24,10 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		task ("Given: Add a WC on Global site and an assert publisher widget to a page on "Test Site Name" site") {
 			JSONWebcontent.addWebContent(
 				content = "Web Content Content",
@@ -46,14 +50,6 @@ definition {
 				siteName = "Test Site Name");
 
 			AssetPublisherPortlet.configureDisplaySettings(displaySettings = "Comments");
-
-			SelectFrame(locator1 = "IFrame#MODAL_BODY");
-
-			Navigator.gotoNavTab(navTab = "Asset Selection");
-
-			Click(locator1 = "APConfiguration#ASSET_SELECTION_DYNAMIC");
-
-			Alert.viewSuccessMessage();
 
 			IFrame.closeFrame();
 
@@ -87,7 +83,7 @@ definition {
 				virtualHost = "www.able.com");
 
 			User.firstLoginPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com",
 				virtualHostsURL = "http://www.able.com:8080");
 		}
@@ -105,7 +101,6 @@ definition {
 	@priority = 5
 	test ExportImportSiteWithEmbeddedWCDInFragment {
 		property portal.acceptance = "true";
-		property testray.component.names = "Content Pages,Sites Administration";
 
 		task ("Add a fragment collection in site") {
 			JSONFragment.addFragmentCollection(
@@ -222,11 +217,82 @@ definition {
 		}
 	}
 
+	@description = "This is a test case for LPS-169440. It verifies that importing a LAR file can be done successfully when there is a fragment with a deleted file entry."
+	@priority = 3
+	test ExportImportSiteWithFragmentReferenceToNonExistentImage {
+		task ("Given a fragment mapped to an non-existent image") {
+			var newLine = '''
+''';
+			var htmlSnippet = '''
+<div class="fragment-name">
+	<img data-lfr-editable-id="testId" data-lfr-editable-type="image"/>
+</div>''';
+
+			var htmlSnippet = StringUtil.regexReplaceAll(${htmlSnippet}, ${newLine}, "");
+
+			JSONFragment.addFragmentCollection(
+				groupName = "Test Site Name",
+				name = "Fragment Set Name");
+
+			JSONFragment.addSection(
+				collectionName = "Fragment Set Name",
+				fragmentStatus = "Approved",
+				groupName = "Test Site Name",
+				html = ${htmlSnippet},
+				name = "Fragment Name");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			PageEditor.addFragment(
+				collectionName = "Fragment Set Name",
+				fragmentName = "Fragment Name");
+
+			PageEditor.editFragmentImage(
+				fileName = "Document_1.jpg",
+				fragmentName = "Fragment Name",
+				id = "testId");
+
+			PageEditor.publish();
+
+			JSONDocument.deleteFile(
+				dmDocumentTitle = "Document_1.jpg",
+				groupName = "Test Site Name");
+		}
+
+		task ("When export the site as a lar file") {
+			LAR.exportSiteCP(siteScopeName = "Test Site Name");
+
+			var key_larFileName = ${larFileName};
+			var larFileName = LAR.getLarFileName();
+
+			LAR.downloadLar();
+		}
+
+		task ("Then could import the lar to a new site") {
+			HeadlessSite.addSite(siteName = "Site Name");
+
+			for (var layoutUtilityPageName : list "404 Error,500 Error") {
+				JSONLayoututilitypage.deleteLayoutUtilityPage(
+					groupName = "Site Name",
+					layoutUtilityPageName = ${layoutUtilityPageName});
+			}
+
+			LAR.importSiteCP(
+				larFileName = ${larFileName},
+				siteName = "Site Name");
+		}
+	}
+
 	@description = "This is a test for LPS-98501. Export and import the whole site where a content page with a global fragment."
 	@priority = 4
 	test ExportImportSiteWithGlobalFragmentInContentPage {
-		property testray.main.component.name = "Content Pages";
-
 		task ("Add a fragment collection in Global site") {
 			JSONFragment.addFragmentCollection(
 				groupName = "Global",
@@ -435,7 +501,7 @@ definition {
 
 			AssertVisible(
 				id = "image-square",
-				key_image = "document_1-jpg",
+				key_image = "Document_1",
 				key_imageDescription = "",
 				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_EDITABLE_FIELD_IMAGE_PROPERTIES");
 		}

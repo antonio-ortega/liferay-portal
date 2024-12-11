@@ -20,7 +20,9 @@ export function BasicInfoContainer({
 	return (
 		<Card title={Liferay.Language.get('basic-info')}>
 			<Input
+				disabled={values.system}
 				error={errors.name}
+				id="name"
 				label={Liferay.Language.get('name')}
 				name="name"
 				onChange={({target}) =>
@@ -35,6 +37,8 @@ export function BasicInfoContainer({
 
 			<Input
 				component="textarea"
+				disabled={values.system}
+				id="description"
 				label={Liferay.Language.get('description')}
 				name="description"
 				onChange={({target}) =>

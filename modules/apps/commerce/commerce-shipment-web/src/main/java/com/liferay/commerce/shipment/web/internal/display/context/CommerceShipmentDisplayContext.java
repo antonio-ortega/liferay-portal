@@ -22,7 +22,7 @@ import com.liferay.commerce.model.CommerceShipmentItem;
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.service.CommerceChannelService;
-import com.liferay.commerce.service.CommerceAddressLocalService;
+import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.commerce.service.CommerceShipmentItemService;
@@ -76,7 +76,7 @@ public class CommerceShipmentDisplayContext
 	public CommerceShipmentDisplayContext(
 		ActionHelper actionHelper,
 		CommerceAddressFormatter commerceAddressFormatter,
-		CommerceAddressLocalService commerceAddressLocalService,
+		CommerceAddressService commerceAddressService,
 		CommerceChannelService commerceChannelService,
 		CommerceOrderItemService commerceOrderItemService,
 		CommerceOrderLocalService commerceOrderLocalService,
@@ -89,7 +89,7 @@ public class CommerceShipmentDisplayContext
 		super(actionHelper, httpServletRequest, portletResourcePermission);
 
 		_commerceAddressFormatter = commerceAddressFormatter;
-		_commerceAddressLocalService = commerceAddressLocalService;
+		_commerceAddressService = commerceAddressService;
 		_commerceChannelService = commerceChannelService;
 		_commerceOrderItemService = commerceOrderItemService;
 		_commerceOrderLocalService = commerceOrderLocalService;
@@ -186,7 +186,7 @@ public class CommerceShipmentDisplayContext
 		}
 
 		CommerceAddress commerceAddress =
-			_commerceAddressLocalService.getCommerceAddress(
+			_commerceAddressService.getCommerceAddress(
 				commerceShipment.getCommerceAddressId());
 
 		return _commerceShippingMethodService.getCommerceShippingMethods(
@@ -199,7 +199,9 @@ public class CommerceShipmentDisplayContext
 			cpRequestHelper.getCompanyId(), true);
 	}
 
-	public String getDescriptiveShippingAddress() throws PortalException {
+	public String getDescriptiveShippingAddress(Locale locale)
+		throws PortalException {
+
 		CommerceShipment commerceShipment = getCommerceShipment();
 
 		if (commerceShipment.getCommerceAddressId() == 0) {
@@ -213,7 +215,7 @@ public class CommerceShipmentDisplayContext
 		}
 
 		return _commerceAddressFormatter.getDescriptiveAddress(
-			commerceAddress, true);
+			commerceAddress, locale, true);
 	}
 
 	public String getFDSName() throws PortalException {
@@ -413,7 +415,7 @@ public class CommerceShipmentDisplayContext
 	public CommerceAddress getShippingAddress() throws PortalException {
 		CommerceShipment commerceShipment = getCommerceShipment();
 
-		return _commerceAddressLocalService.fetchCommerceAddress(
+		return _commerceAddressService.fetchCommerceAddress(
 			commerceShipment.getCommerceAddressId());
 	}
 
@@ -488,7 +490,7 @@ public class CommerceShipmentDisplayContext
 		CommerceShipmentDisplayContext.class);
 
 	private final CommerceAddressFormatter _commerceAddressFormatter;
-	private final CommerceAddressLocalService _commerceAddressLocalService;
+	private final CommerceAddressService _commerceAddressService;
 	private final CommerceChannelService _commerceChannelService;
 	private final CommerceOrderItemService _commerceOrderItemService;
 	private final CommerceOrderLocalService _commerceOrderLocalService;

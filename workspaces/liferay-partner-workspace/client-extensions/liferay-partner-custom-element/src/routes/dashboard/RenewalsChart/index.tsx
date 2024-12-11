@@ -15,6 +15,7 @@ import {status} from '../../../common/components/dashboard/utils/constants/statu
 import getFilteredRenewals from '../../../common/components/dashboard/utils/getFilteredRenewalsData';
 import {siteURL} from '../../../common/components/dashboard/utils/siteURL';
 import {Liferay} from '../../../common/services/liferay';
+import {Filters} from '../../../common/utils/constants/filters';
 import {retry} from '../../../common/utils/retry';
 
 export default function () {
@@ -23,20 +24,22 @@ export default function () {
 
 	const getRenewalsData = async () => {
 		setIsLoading(true);
+
 		// eslint-disable-next-line @liferay/portal/no-global-fetch
-		const response = await retry<Response>(() =>
-			fetch('/o/c/opportunitysfs?pageSize=200&sort=closeDate:asc', {
-				headers: {
-					'accept': 'application/json',
-					'x-csrf-token': Liferay.authToken,
-				},
-			})
+		const opportunities = await retry<any>(() =>
+			fetch(
+				`/o/c/opportunitysfs?pageSize=200&sort=closeDate:asc&filter=${Filters.RENEWAL_DASHBOARD.renewals}`,
+				{
+					headers: {
+						'accept': 'application/json',
+						'x-csrf-token': Liferay.authToken,
+					},
+				}
+			)
 		);
 
-		if (response.ok) {
-			const renewalsData = await response.json();
-
-			setData(renewalsData);
+		if (opportunities) {
+			setData(opportunities);
 			setIsLoading(false);
 
 			return;
@@ -61,25 +64,45 @@ export default function () {
 		}
 	};
 
+	const getExpirationText = (item: any) => {
+		if (item.expirationDays > 1) {
+			return `Expires in ${item.expirationDays} days`;
+		}
+
+		if (item.expirationDays === 1) {
+			return `Expires in 1 day`;
+		}
+
+		if (item.expirationDays === 0) {
+			return 'Expires today';
+		}
+
+		if (item.expirationDays === -1) {
+			return 'Expired 1 day ago';
+		}
+
+		return `Expired ${Math.abs(item.expirationDays)} days ago`;
+	};
+
 	const buildChart = () => {
 		if (isLoading) {
-			return <ClayLoadingIndicator className="mb-10 mt-9" size="md" />;
+			return <ClayLoadingIndicator className="mb-10 mt-10" size="md" />;
 		}
 
 		if (!renewalsData.length && !isLoading) {
 			return (
 				<ClayAlert
-					className="mb-8 mt-8 mx-auto text-center w-50"
+					className="h-75 mx-auto text-center"
 					displayType="info"
 					title="Info:"
 				>
-					No Data Available
+					You have no expiring renewals at this time
 				</ClayAlert>
 			);
 		}
 
 		return (
-			<div className="align-items-start d-flex flex-column justify-content-center mt-3">
+			<div className="align-items-baseline d-flex flex-column justify-content-center px-2">
 				{renewalsData?.map((item, index) => {
 					getCurrentStatusColor(item);
 
@@ -96,14 +119,13 @@ export default function () {
 							></div>
 
 							<div>
-								<div className="font-weight-semi-bold">
+								<div className="font-weight-semi-bold responsive-text">
 									{item.opportunityName}
 								</div>
 
 								<div>
-									Expires in &nbsp;
 									<span className="font-weight-semi-bold">
-										{item.expirationDays} days.
+										{getExpirationText(item)}
 									</span>
 									&nbsp;
 									<span className="ml-2">
@@ -120,18 +142,21 @@ export default function () {
 
 	return (
 		<Container
-			className="renewal-chart-card-height"
+			className="dashboard-renewal-chart justify-content-between"
 			footer={
-				<ClayButton
-					className="border-brand-primary-darken-1 mt-2 text-brand-primary-darken-1"
-					displayType="secondary"
-					onClick={() =>
-						Liferay.Util.navigate(`${siteURL}/sales/renewals`)
-					}
-					type="button"
-				>
-					View all
-				</ClayButton>
+				<div className="pt-4">
+					<ClayButton
+						className="bg-neutral-0 border-brand-primary-darken-1 text-brand-primary-darken-1"
+						displayType="secondary"
+						onClick={() =>
+							Liferay.Util.navigate(`${siteURL}/sales/renewals`)
+						}
+						size="sm"
+						type="button"
+					>
+						View all
+					</ClayButton>
+				</div>
 			}
 			title="Renewals"
 		>

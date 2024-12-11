@@ -17,45 +17,53 @@ public class LocalJethr0Client extends BaseJethr0Client {
 	protected LocalJethr0Client(JenkinsMaster jenkinsMaster) {
 		super(jenkinsMaster);
 
-		_activeMQBrokerURL = getBuildPropertyString(
-			"jethr0.activemq.broker.url");
-		_activeMQQueueName = getBuildPropertyString(
-			"jethr0.activemq.queue.name");
-		_activeMQURL = getBuildPropertyURL("jethr0.activemq.url");
-		_activeMQUserName = getBuildPropertyString("jethr0.activemq.user.name");
-		_activeMQUserPassword = getBuildPropertyString(
-			"jethr0.activemq.user.password");
+		_jmsBrokerURL = getBuildPropertyString("jethr0.jms.broker.url");
+		_jmsGitHubToJethr0QueueName = getBuildPropertyString(
+			"jethr0.jms.github.jethr0.queue.name");
+		_jmsJethr0ToJRPQueueName = getBuildPropertyString(
+			"jethr0.jms.jethr0.jrp.queue.name");
+		_jmsJRPToJethr0QueueName = getBuildPropertyString(
+			"jethr0.jms.jrp.jethr0.queue.name");
+		_jmsUserName = getBuildPropertyString("jethr0.jms.user.name");
+		_jmsUserPassword = getBuildPropertyString("jethr0.jms.user.password");
 		_liferayDXPURL = getBuildPropertyURL("jethr0.liferay.dxp.url");
 		_oAuthClientSecret = getBuildPropertyString(
 			"jethr0.liferay.oauth.client.secret");
 		_oAuthExternalReferenceCode = getBuildPropertyString(
 			"jethr0.liferay.oauth.external.reference.code");
 		_springBootURL = getBuildPropertyURL("jethr0.spring.boot.url");
+
+		connect();
 	}
 
 	@Override
-	protected String getActiveMQBrokerURL() {
-		return _activeMQBrokerURL;
+	protected String getJMSBrokerURL() {
+		return _jmsBrokerURL;
 	}
 
 	@Override
-	protected String getActiveMQQueueName() {
-		return _activeMQQueueName;
+	protected String getJMSGitHubToJethr0QueueName() {
+		return _jmsGitHubToJethr0QueueName;
 	}
 
 	@Override
-	protected URL getActiveMQURL() {
-		return _activeMQURL;
+	protected String getJMSJethr0ToJRPQueueName() {
+		return _jmsJethr0ToJRPQueueName;
 	}
 
 	@Override
-	protected String getActiveMQUserName() {
-		return _activeMQUserName;
+	protected String getJMSJRPToJethr0QueueName() {
+		return _jmsJRPToJethr0QueueName;
 	}
 
 	@Override
-	protected String getActiveMQUserPassword() {
-		return _activeMQUserPassword;
+	protected String getJMSUserName() {
+		return _jmsUserName;
+	}
+
+	@Override
+	protected String getJMSUserPassword() {
+		return _jmsUserPassword;
 	}
 
 	@Override
@@ -78,11 +86,12 @@ public class LocalJethr0Client extends BaseJethr0Client {
 		return _springBootURL;
 	}
 
-	private final String _activeMQBrokerURL;
-	private final String _activeMQQueueName;
-	private final URL _activeMQURL;
-	private final String _activeMQUserName;
-	private final String _activeMQUserPassword;
+	private final String _jmsBrokerURL;
+	private final String _jmsGitHubToJethr0QueueName;
+	private final String _jmsJethr0ToJRPQueueName;
+	private final String _jmsJRPToJethr0QueueName;
+	private final String _jmsUserName;
+	private final String _jmsUserPassword;
 	private final URL _liferayDXPURL;
 	private final String _oAuthClientSecret;
 	private final String _oAuthExternalReferenceCode;

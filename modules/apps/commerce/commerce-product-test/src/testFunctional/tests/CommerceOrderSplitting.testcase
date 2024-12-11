@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-10890=true${line.separator}feature.flag.COMMERCE-11026=true${line.separator}jsonws.web.service.paths.excludes=";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Order Management";
@@ -13,18 +13,168 @@ definition {
 	tearDown {
 		CommerceConfiguration.commerceTearDown();
 
+		User.logoutAndLoginPG();
+
 		ObjectAdmin.openObjectAdmin();
 
-		ObjectPortlet.selectCustomObject(label = "Commerce Order");
+		ObjectPortlet.selectObject(label = "Commerce Order");
 
 		ObjectAdmin.goToActionsTab();
 
-		while (IsElementNotPresent(locator1 = "CommerceNavigation#EMPTY_SEARCH_CONTAINER")) {
-			Click(
-				key_value = "",
-				locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+		while (IsElementPresent(locator1 = "xpath=(//div[@class='table-list-title'])[1]")) {
+			var actionLabel = selenium.getText("xpath=(//div[@class='table-list-title'])[1]/a");
 
-			MenuItem.click(menuItem = "Delete");
+			ObjectAdmin.deleteActionViaUI(actionLabel = ${actionLabel});
+		}
+	}
+
+	@description = "This is a test for COMMERCE-12574. Admin can view an order with a single line item that can be split."
+	@priority = 5
+	test CanAssertAnOrderWithSingleLineItemSplit {
+		property portal.acceptance = "true";
+
+		task ("Given a Minium site with a business account and a buyer user is created") {
+			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
+
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("And a Supplier account with a supplier user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Supplier Account",
+				accountType = "Supplier",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "supplier@liferay.com",
+				userFirstName = "Supplier",
+				userLastName = "User",
+				userRole = "Account Supplier",
+				userScreenName = "supplieruser");
+		}
+
+		task ("And a catalog linked to the supplier account is created") {
+			var accountEntryId = JSONAccountEntryAPI._getAccountEntryId(accountEntryName = "Supplier Account");
+
+			CommerceJSONCatalogsAPI._addCatalog(catalogName = "Supplier Catalog");
+
+			CommerceJSONCatalogsAPI._patchCommerceCatalog(
+				accountId = ${accountEntryId},
+				catalogName = "Supplier Catalog");
+		}
+
+		task ("And the admin can assert that the catalog is successfully linked to the account using GET API") {
+			var accountId = CommerceJSONCatalogsAPI._getCommerceAccountIdByCatalogId(catalogName = "Supplier Catalog");
+
+			TestUtils.assertEquals(
+				actual = ${accountId},
+				expected = ${accountEntryId});
+		}
+
+		task ("And a channel is created and the supplier account is linked to it") {
+			CommerceJSONChannelsAPI._addChannel(
+				accountId = ${accountEntryId},
+				channelName = "Supplier Channel",
+				channelType = "site",
+				currencyCode = "USD");
+		}
+
+		task ("And a product is created") {
+			CommerceJSONProductsAPI._addCommerceProduct(
+				catalogName = "Supplier Catalog",
+				price = 5,
+				productName = "Simple Product",
+				productType = "simple",
+				sku = "TESTSKU");
+		}
+
+		task ("And the 'Order Split by Catalog Action' health check is checked") {
+			CommerceNavigator.goToHealthCheckAdmin();
+
+			Click(
+				key_buttonRowName = "Order Split by Catalog Action",
+				key_buttonStatus = "",
+				locator1 = "CommerceEntry#FIX_ISSUE_BUTTON_NAME");
+
+			WaitForElementPresent(
+				key_value = "Order Split by Catalog Action",
+				locator1 = "CommerceEntry#HEALTH_CHECK_ICON_CHECK_NAME");
+
+			CommerceJSONOrdersAPI._patchCommerceOrderObjectAction(
+				active = "true",
+				objectActionName = "SplitOrderByCatalog",
+				objectDefinitionName = "CommerceOrder");
+		}
+
+		task ("And the buyer creates an order with a single product") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = PropsUtil.get("default.admin.password"),
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "Simple Product",
+				productQuantity = 1);
+
+			CommerceCheckout.gotoCheckout();
+
+			CommerceCheckout.checkout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				shippingMethod = "Standard");
+		}
+
+		task ("And the admin reaches the Orders Admin page") {
+			User.logoutAndLoginPG();
+
+			CommerceOrders.openOrdersAdmin();
+		}
+
+		task ("And the admin checks that only one order is displayed") {
+			var orderIdBuyer = CommerceJSONOrdersAPI._getCommerceOrderIds(email = "buyer@liferay.com");
+
+			AssertTextEquals(
+				locator1 = "CommerceOrders#PLACED_ORDERS_ID",
+				value1 = ${orderIdBuyer});
+		}
+
+		task ("When the customer order is split") {
+			CommerceNavigator.gotoOrderEntryViaAdmin(status = "Pending");
+
+			Click(
+				key_text = "Accept Order",
+				locator1 = "Link#ANY");
+
+			Alert.viewSuccessMessage();
+
+			CommerceOrders.openOrdersAdmin();
+		}
+
+		task ("Then admin can view both orders") {
+			var orderIdBuyer = CommerceJSONOrdersAPI._getCommerceOrderIds(email = "buyer@liferay.com");
+			var orderIdSupplier = CommerceJSONOrdersAPI._getCommerceOrderIds(email = "supplier@liferay.com");
+
+			for (var orderId : list "${orderIdBuyer},${orderIdSupplier}") {
+				AssertElementPresent(
+					key_entryName = ${orderId},
+					locator1 = "CommerceNavigation#ENTRY_NAME");
+			}
 		}
 	}
 
@@ -86,7 +236,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -108,9 +258,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -150,7 +298,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 1,
 				productSku = "TESTSKU",
-				productTotalPrice = "100.00");
+				productTotalPrice = "$ 100.00");
 		}
 	}
 
@@ -212,7 +360,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -234,9 +382,7 @@ definition {
 		}
 
 		task ("And the customer order is splitted") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -252,8 +398,12 @@ definition {
 		task ("When the admin creates 1 quantity of the shipment in a supplier order with 'Simple Product' and edits the tracking URL for the shipment") {
 			CommerceOrders.openOrdersAdmin();
 
-			var customerOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 64.00')]//..//div[(@class='dnd-td')][1]");
-			var supplierOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 25.00')]//..//div[(@class='dnd-td')][1]");
+			var customerOrderId = selenium.getText("//*[contains(@class,'dnd-td') and contains(string(), '$ 64.00')]//..//div[contains(@class,'dnd-td')][2]");
+			var supplierOrderId = selenium.getText("//*[contains(@class,'dnd-td') and contains(string(), '$ 25.00')]//..//div[contains(@class,'dnd-td')][2]");
+
+			echo("customerOrderId:${customerOrderId}");
+
+			echo("supplierOrderId:${supplierOrderId}");
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "$ 25.00");
 
@@ -342,7 +492,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -364,9 +514,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -382,7 +530,7 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			var supplierOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 25.00')]//..//div[(@class='dnd-td')][1]");
+			var supplierOrderId = selenium.getText("//div[contains(@class,'dnd-td') and contains(string(), '$ 25.00')]//..//div[contains(@class,'dnd-td')][1]");
 		}
 
 		task ("And the admin navigates into a supplier order") {
@@ -476,7 +624,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -500,9 +648,7 @@ definition {
 		}
 
 		task ("And the customer order is splitted") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -521,7 +667,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -626,7 +772,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -654,9 +800,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -770,7 +914,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -792,9 +936,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -817,7 +959,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 25.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Supplier Channel");
 		}
@@ -826,7 +968,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 24.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -917,7 +1059,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -939,9 +1081,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -964,7 +1104,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 25.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -973,7 +1113,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 24.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -1063,7 +1203,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1085,9 +1225,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1110,7 +1248,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 25.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -1119,7 +1257,7 @@ definition {
 			AssertTextEquals(
 				key_cellName1 = "$ 24.00",
 				key_cellName2 = "",
-				key_columnNumber = 4,
+				key_columnNumber = 5,
 				locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 				value1 = "Minium Portal");
 		}
@@ -1188,7 +1326,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1210,9 +1348,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page and accepts the order") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -1243,7 +1379,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("When the admin opens the customer order") {
@@ -1258,14 +1394,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("But if the admin changes the quantity inside the customer order") {
@@ -1278,14 +1414,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 6,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 
 		task ("Then the changes are not updated inside the supplier order") {
@@ -1298,7 +1434,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 		}
 	}
 
@@ -1418,7 +1554,17 @@ definition {
 
 			CommerceSKUs.generateAllSkuCombinations();
 
-			CommerceNavigator.gotoEntry(entryName = "VALUE1VALUE2");
+			WaitForElementPresent(locator1 = "//div[@class='dnd-tbody']//div[(@class='dnd-tr')]//span[text()='Approved']/../../..//div[@class='table-list-title']/a");
+
+			var skuCombinationName = selenium.getText("//div[@class='dnd-tbody']//div[(@class='dnd-tr')]//span[text()='Approved']/../../..//div[@class='table-list-title']/a");
+
+			CommerceNavigator.gotoEntry(entryName = ${skuCombinationName});
+
+			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
+			CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+			CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 
 			CommerceEntry.editSkuPricingAndInventory(
 				basePrice = "20.00",
@@ -1430,7 +1576,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1438,12 +1584,12 @@ definition {
 
 			FrontStore.addToCartFromProductDetails(
 				productName = "ABS Sensor",
-				productSku = "VALUE1VALUE2");
+				productSku = ${skuCombinationName});
 
 			CommerceNavigator.gotoMiniCart();
 
 			CommerceNavigator.editMiniCartItemQuantity(
-				cartItemSku = "VALUE1VALUE2",
+				cartItemSku = ${skuCombinationName},
 				productQuantity = 3);
 
 			CommerceCheckout.gotoCheckout();
@@ -1473,9 +1619,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1508,22 +1652,22 @@ definition {
 				productListPrice = "49.00",
 				productName = "ABS Sensor",
 				productQuantity = 3,
-				productSku = "VALUE1VALUE2",
-				productTotalPrice = "147.00");
+				productSku = ${skuCombinationName},
+				productTotalPrice = "$ 147.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "24.00",
 				productName = "U-Joint",
 				productQuantity = 3,
 				productSku = "MIN55861",
-				productTotalPrice = "72.00");
+				productTotalPrice = "$ 72.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "15.00");
+				productTotalPrice = "$ 15.00");
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -1534,7 +1678,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 3,
 				productSku = "TESTSKU",
-				productTotalPrice = "15.00");
+				productTotalPrice = "$ 15.00");
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -1544,15 +1688,15 @@ definition {
 				productListPrice = "20.00",
 				productName = "ABS Sensor",
 				productQuantity = 3,
-				productSku = "VALUE1VALUE2",
-				productTotalPrice = "60.00");
+				productSku = ${skuCombinationName},
+				productTotalPrice = "$ 60.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "24.00",
 				productName = "U-Joint",
 				productQuantity = 3,
 				productSku = "MIN55861",
-				productTotalPrice = "72.00");
+				productTotalPrice = "$ 72.00");
 		}
 	}
 
@@ -1586,7 +1730,7 @@ definition {
 		task ("Then a new Commerce Order action rule with default settings is created") {
 			ObjectAdmin.openObjectAdmin();
 
-			ObjectPortlet.selectCustomObject(label = "Commerce Order");
+			ObjectPortlet.selectObject(label = "Commerce Order");
 
 			ObjectAdmin.goToActionsTab();
 
@@ -1595,7 +1739,9 @@ definition {
 				key_secondRowValue = "No",
 				locator1 = "CommerceEntry#GENERIC_TABLE_ROW_VALUE");
 
-			ObjectAdmin.selectKebabMenuOption(kebabOption = "Edit");
+			ObjectAdmin.selectSpecificKebabMenuOption(
+				kebabOption = "Edit",
+				objectLabel = "Split order by catalog");
 
 			SelectFrame(locator1 = "IFrame#IFRAME");
 
@@ -1610,7 +1756,8 @@ definition {
 				value1 = "orderStatus = 10");
 
 			AssertTextEquals(
-				locator1 = "ObjectAction#SELECT_ACTION_TYPE",
+				key_objectName = "Then",
+				locator1 = "CommerceEntry#COMBOBOX_BUTTON",
 				value1 = "Split Order by Catalog");
 		}
 	}
@@ -1684,7 +1831,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1706,9 +1853,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1830,7 +1975,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1852,9 +1997,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -1967,7 +2110,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1989,9 +2132,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2076,7 +2217,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2098,9 +2239,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2210,7 +2349,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2232,9 +2371,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2252,8 +2389,8 @@ definition {
 		task ("And the admin goes inside a supplier order (e.g. the one containing the product from the Master catalog)") {
 			CommerceOrders.openOrdersAdmin();
 
-			var supplierOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 25.00')]//..//div[(@class='dnd-td')][1]");
-			var customerOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 64.00')]//..//div[(@class='dnd-td')][1]");
+			var supplierOrderId = selenium.getText("//*[contains(@class,'dnd-td') and contains(string(), '$ 25.00')]//..//*[contains(@class,'dnd-td')][2]");
+			var customerOrderId = selenium.getText("//*[contains(@class,'dnd-td') and contains(string(), '$ 64.00')]//..//*[contains(@class,'dnd-td')][2]");
 
 			CommerceNavigator.gotoOrderEntryViaAdmin(status = "$ 25.00");
 		}
@@ -2345,7 +2482,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2367,9 +2504,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2502,15 +2637,16 @@ definition {
 				key_tabName = "Action Builder",
 				locator1 = "ObjectAction#TAB_GENERIC");
 
-			Click(locator1 = "ObjectAction#SELECT_ACTION_TYPE");
+			AssertClick(
+				key_objectName = "Then",
+				locator1 = "CommerceEntry#COMBOBOX_BUTTON",
+				value1 = "Split Order by Catalog");
 
 			Click(
-				key_type = "Update an Object Entry",
-				locator1 = "ObjectAdmin#SELECT_RELATIONSHIPS_TYPE_OPTION");
+				key_optionName = "Update an Object Entry",
+				locator1 = "ObjectAdmin#CLAY_GENERIC_DROPDOWN_ITEM");
 
-			PortletEntry.save();
-
-			Refresh();
+			Button.clickSave();
 		}
 
 		task ("Then the health check is clickable again") {
@@ -2595,7 +2731,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2617,9 +2753,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2711,7 +2845,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2733,9 +2867,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -2876,7 +3008,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2898,9 +3030,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -3005,7 +3135,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -3027,9 +3157,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -3063,14 +3191,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersEntry(
 				productListPrice = "5.00",
 				productName = "Simple Product",
 				productQuantity = 1,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -3081,7 +3209,7 @@ definition {
 				productName = "Simple Product",
 				productQuantity = 1,
 				productSku = "TESTSKU",
-				productTotalPrice = "5.00");
+				productTotalPrice = "$ 5.00");
 
 			CommerceOrders.openOrdersAdmin();
 
@@ -3092,7 +3220,7 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -3159,7 +3287,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -3181,9 +3309,7 @@ definition {
 		}
 
 		task ("When the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -3203,7 +3329,7 @@ definition {
 
 			for (var rowIndex : list "1,2,3") {
 				AssertTextEquals(
-					key_columnIndex = 4,
+					key_columnIndex = 5,
 					key_rowIndex = ${rowIndex},
 					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
 					value1 = "Minium Portal");
@@ -3269,7 +3395,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -3291,9 +3417,7 @@ definition {
 		}
 
 		task ("And the admin reaches the Orders Admin page") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceOrders.openOrdersAdmin();
 		}
@@ -3309,15 +3433,13 @@ definition {
 
 			CommerceOrders.openOrdersAdmin();
 
-			var customerOrderId = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 64.00')]//..//div[(@class='dnd-td')][1]");
-			var supplierOrderId1 = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 24.00')]//..//div[(@class='dnd-td')][1]");
-			var supplierOrderId2 = selenium.getText("//div[(@class='dnd-td') and contains(string(), '$ 25.00')]//..//div[(@class='dnd-td')][1]");
+			var customerOrderId = selenium.getText("//*[contains(@class,'dnd-td') and contains(string(), '$ 64.00')]//..//*[contains(@class,'dnd-td')][2]");
+			var supplierOrderId1 = selenium.getText("//*[contains(@class,'dnd-td') and contains(string(), '$ 24.00')]//..//*[contains(@class,'dnd-td')][2]");
+			var supplierOrderId2 = selenium.getText("//*[contains(@class,'dnd-td') and contains(string(), '$ 25.00')]//..//*[contains(@class,'dnd-td')][2]");
 		}
 
 		task ("When the admin navigates to Commerce -> Inventory -> SKU (e.g. the one relating to the product from the Minium catalog) -> On Order tab") {
-			CommerceNavigator.gotoPortlet(
-				category = "Inventory Management",
-				portlet = "Inventory");
+			CommerceInventory.openInventoryAdmin();
 
 			AppBuilderAdmin.searchByItem(itemName = "MIN55861");
 
@@ -3341,9 +3463,7 @@ definition {
 		}
 
 		task ("When the admin navigates to Commerce -> Inventory -> SKU (the other one) -> On Order tab") {
-			CommerceNavigator.gotoPortlet(
-				category = "Inventory Management",
-				portlet = "Inventory");
+			CommerceInventory.openInventoryAdmin();
 
 			AppBuilderAdmin.searchByItem(itemName = "TESTSKU");
 

@@ -29,11 +29,13 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
+import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
+import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -75,13 +77,11 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 	@Override
 	public List<InfoFieldValue<Object>> getInfoFieldValues(
 			InfoItemReference infoItemReference,
-			String infoItemFormVariationKey, String namespace,
+			String infoItemFormVariationKey, String namespace, Object object,
 			ThemeDisplay themeDisplay)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-195205") ||
-			(themeDisplay == null)) {
-
+		if (themeDisplay == null) {
 			return Collections.emptyList();
 		}
 
@@ -98,21 +98,21 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 				).labelInfoLocalizedValue(
 					InfoLocalizedValue.localize(getClass(), "default")
 				).build(),
-				_getDefaultDisplayPageURL(infoItemReference, themeDisplay)));
+				_getDefaultDisplayPageURL(
+					infoItemReference, object, themeDisplay)));
 
 		Group group = themeDisplay.getScopeGroup();
 
 		String groupFriendlyURL = _portal.getGroupFriendlyURL(
 			group.getPublicLayoutSet(), themeDisplay, false, false);
 
-		String url = groupFriendlyURL + "/e";
-
 		List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
 			_layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
 				themeDisplay.getScopeGroupId(),
 				_portal.getClassNameId(infoItemReference.getClassName()),
 				GetterUtil.getLong(infoItemFormVariationKey),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
+				WorkflowConstants.STATUS_APPROVED);
 
 		for (LayoutPageTemplateEntry layoutPageTemplateEntry :
 				layoutPageTemplateEntries) {
@@ -121,44 +121,26 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 				layoutPageTemplateEntry.getPlid());
 
 			infoFieldValues.add(
-				new InfoFieldValue<>(
-					InfoField.builder(
-					).infoFieldType(
-						URLInfoFieldType.INSTANCE
-					).uniqueId(
-						_getUniqueId(
-							layoutPageTemplateEntry.
-								getLayoutPageTemplateEntryKey())
-					).name(
-						layoutPageTemplateEntry.getName()
-					).attribute(
-						URLInfoFieldType.NOFOLLOW, Boolean.TRUE
-					).labelInfoLocalizedValue(
-						InfoLocalizedValue.singleValue(
-							layoutPageTemplateEntry.getName())
-					).build(),
-					new FunctionInfoLocalizedValue<>(
-						locale -> {
-							WebURL webURL = new WebURL(
-								StringBundler.concat(
-									url, layout.getFriendlyURL(locale),
-									StringPool.SLASH,
-									_portal.getClassNameId(
-										infoItemReference.getClassName()),
-									StringPool.SLASH,
-									_getInfoItemIdentifier(infoItemReference)));
-
-							webURL.setNofollow(true);
-
-							return webURL;
-						})));
+				_getInfoFieldValue(
+					groupFriendlyURL,
+					String.valueOf(
+						layoutPageTemplateEntry.getLayoutPageTemplateEntryId()),
+					infoItemReference, layout, layoutPageTemplateEntry,
+					themeDisplay));
+			infoFieldValues.add(
+				_getInfoFieldValue(
+					groupFriendlyURL,
+					layoutPageTemplateEntry.getLayoutPageTemplateEntryKey(),
+					infoItemReference, layout, layoutPageTemplateEntry,
+					themeDisplay));
 		}
 
 		return infoFieldValues;
 	}
 
 	private String _getDefaultDisplayPageURL(
-			InfoItemReference infoItemReference, ThemeDisplay themeDisplay)
+			InfoItemReference infoItemReference, Object object,
+			ThemeDisplay themeDisplay)
 		throws Exception {
 
 		AssetRendererFactory<?> assetRendererFactory =
@@ -167,7 +149,7 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 
 		if (assetRendererFactory == null) {
 			return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-				infoItemReference, themeDisplay);
+				infoItemReference, object, themeDisplay);
 		}
 
 		try {
@@ -186,7 +168,7 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 
 			if (assetRenderer == null) {
 				return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-					infoItemReference, themeDisplay);
+					infoItemReference, object, themeDisplay);
 			}
 
 			String viewInContextURL = assetRenderer.getURLViewInContext(
@@ -203,7 +185,7 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 		}
 
 		return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-			infoItemReference, themeDisplay);
+			infoItemReference, object, themeDisplay);
 	}
 
 	private InfoField<InfoFieldType> _getDefaultDisplayPageURLInfoField(
@@ -248,7 +230,9 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 					_getDisplayPageInfoFieldType()
 				).uniqueId(
 					_getUniqueId(
-						layoutPageTemplateEntry.getLayoutPageTemplateEntryKey())
+						String.valueOf(
+							layoutPageTemplateEntry.
+								getLayoutPageTemplateEntryId()))
 				).name(
 					layoutPageTemplateEntry.getName()
 				).labelInfoLocalizedValue(
@@ -258,6 +242,44 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 		}
 
 		return infoFieldSetEntries;
+	}
+
+	private InfoFieldValue<Object> _getInfoFieldValue(
+		String groupFriendlyURL, String id, InfoItemReference infoItemReference,
+		Layout layout, LayoutPageTemplateEntry layoutPageTemplateEntry,
+		ThemeDisplay themeDisplay) {
+
+		return new InfoFieldValue<>(
+			InfoField.builder(
+			).infoFieldType(
+				URLInfoFieldType.INSTANCE
+			).uniqueId(
+				_getUniqueId(id)
+			).name(
+				layoutPageTemplateEntry.getName()
+			).attribute(
+				URLInfoFieldType.NOFOLLOW, Boolean.TRUE
+			).labelInfoLocalizedValue(
+				InfoLocalizedValue.singleValue(
+					layoutPageTemplateEntry.getName())
+			).build(),
+			new FunctionInfoLocalizedValue<>(
+				locale -> {
+					WebURL webURL = new WebURL(
+						_portal.addPreservedParameters(
+							themeDisplay,
+							StringBundler.concat(
+								groupFriendlyURL + _getURLSeparator(),
+								layout.getFriendlyURL(locale), StringPool.SLASH,
+								_portal.getClassNameId(
+									infoItemReference.getClassName()),
+								StringPool.SLASH,
+								_getInfoItemIdentifier(infoItemReference))));
+
+					webURL.setNofollow(true);
+
+					return webURL;
+				}));
 	}
 
 	private String _getInfoItemIdentifier(InfoItemReference infoItemReference) {
@@ -281,9 +303,24 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 		return StringPool.BLANK;
 	}
 
-	private String _getUniqueId(String layoutPageTemplateEntryKey) {
+	private String _getUniqueId(String id) {
 		return LayoutPageTemplateEntry.class.getSimpleName() +
-			StringPool.UNDERLINE + layoutPageTemplateEntryKey;
+			StringPool.UNDERLINE + id;
+	}
+
+	private String _getURLSeparator() {
+		FriendlyURLResolver friendlyURLResolver =
+			FriendlyURLResolverRegistryUtil.
+				getFriendlyURLResolverByDefaultURLSeparator(
+					FriendlyURLResolverConstants.URL_SEPARATOR_CUSTOM_ASSET);
+
+		if (friendlyURLResolver != null) {
+			String urlSeparator = friendlyURLResolver.getURLSeparator();
+
+			return urlSeparator.substring(0, urlSeparator.length() - 1);
+		}
+
+		return FriendlyURLResolverConstants.URL_SEPARATOR_X_CUSTOM_ASSET;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

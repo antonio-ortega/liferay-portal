@@ -10,9 +10,12 @@ import com.liferay.analytics.settings.rest.dto.v1_0.ContactConfiguration;
 import com.liferay.analytics.settings.rest.internal.client.AnalyticsCloudClient;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.analytics.settings.rest.resource.v1_0.ContactConfigurationResource;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Http;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ServiceScope;
@@ -29,20 +32,24 @@ public class ContactConfigurationResourceImpl
 
 	@Override
 	public ContactConfiguration getContactConfiguration() throws Exception {
+		if (_contactConfiguration != null) {
+			return _contactConfiguration;
+		}
+
 		AnalyticsConfiguration analyticsConfiguration =
 			_analyticsSettingsManager.getAnalyticsConfiguration(
 				contextCompany.getCompanyId());
 
 		return new ContactConfiguration() {
 			{
-				syncAllAccounts = analyticsConfiguration.syncAllAccounts();
-				syncAllContacts = analyticsConfiguration.syncAllContacts();
-				syncedAccountGroupIds =
-					analyticsConfiguration.syncedAccountGroupIds();
-				syncedOrganizationIds =
-					analyticsConfiguration.syncedOrganizationIds();
-				syncedUserGroupIds =
-					analyticsConfiguration.syncedUserGroupIds();
+				setSyncAllAccounts(analyticsConfiguration::syncAllAccounts);
+				setSyncAllContacts(analyticsConfiguration::syncAllContacts);
+				setSyncedAccountGroupIds(
+					analyticsConfiguration::syncedAccountGroupIds);
+				setSyncedOrganizationIds(
+					analyticsConfiguration::syncedOrganizationIds);
+				setSyncedUserGroupIds(
+					analyticsConfiguration::syncedUserGroupIds);
 			}
 		};
 	}
@@ -55,7 +62,7 @@ public class ContactConfigurationResourceImpl
 		boolean accountsSelected = false;
 
 		if (contactConfiguration.getSyncAllAccounts() ||
-			!ArrayUtil.isEmpty(
+			ArrayUtil.isNotEmpty(
 				contactConfiguration.getSyncedAccountGroupIds())) {
 
 			accountsSelected = true;
@@ -64,16 +71,19 @@ public class ContactConfigurationResourceImpl
 		boolean contactsSelected = false;
 
 		if (contactConfiguration.getSyncAllContacts() ||
-			!ArrayUtil.isEmpty(
+			ArrayUtil.isNotEmpty(
 				contactConfiguration.getSyncedOrganizationIds()) ||
-			!ArrayUtil.isEmpty(contactConfiguration.getSyncedUserGroupIds())) {
+			ArrayUtil.isNotEmpty(
+				contactConfiguration.getSyncedUserGroupIds())) {
 
 			contactsSelected = true;
 		}
 
 		_analyticsCloudClient.updateAnalyticsDataSourceDetails(
-			accountsSelected, contextCompany.getCompanyId(), null,
-			contactsSelected, null);
+			accountsSelected,
+			_configurationProvider.getCompanyConfiguration(
+				AnalyticsConfiguration.class, contextCompany.getCompanyId()),
+			null, contactsSelected, null);
 
 		_analyticsSettingsManager.updateCompanyConfiguration(
 			contextCompany.getCompanyId(),
@@ -91,12 +101,26 @@ public class ContactConfigurationResourceImpl
 				"syncedUserGroupIds",
 				contactConfiguration.getSyncedUserGroupIds()
 			).build());
+
+		_contactConfiguration = contactConfiguration;
 	}
 
-	@Reference
+	@Activate
+	protected void activate() {
+		_analyticsCloudClient = new AnalyticsCloudClient(_http);
+	}
+
 	private AnalyticsCloudClient _analyticsCloudClient;
 
 	@Reference
 	private AnalyticsSettingsManager _analyticsSettingsManager;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	private ContactConfiguration _contactConfiguration;
+
+	@Reference
+	private Http _http;
 
 }

@@ -28,20 +28,21 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -62,8 +63,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -101,10 +100,16 @@ public abstract class BaseCountryResourceTestCase {
 
 		_countryResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		CountryResource.Builder builder = CountryResource.builder();
 
 		countryResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -118,7 +123,32 @@ public abstract class BaseCountryResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Country country1 = randomCountry();
+
+		String json = objectMapper.writeValueAsString(country1);
+
+		Country country2 = CountrySerDes.toDTO(json);
+
+		Assert.assertTrue(equals(country1, country2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		Country country = randomCountry();
+
+		String json1 = objectMapper.writeValueAsString(country);
+		String json2 = CountrySerDes.toJSON(country);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -133,40 +163,6 @@ public abstract class BaseCountryResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		Country country1 = randomCountry();
-
-		String json = objectMapper.writeValueAsString(country1);
-
-		Country country2 = CountrySerDes.toDTO(json);
-
-		Assert.assertTrue(equals(country1, country2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		Country country = randomCountry();
-
-		String json1 = objectMapper.writeValueAsString(country);
-		String json2 = CountrySerDes.toJSON(country);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -226,10 +222,10 @@ public abstract class BaseCountryResourceTestCase {
 
 	@Test
 	public void testGetCountriesPageWithPagination() throws Exception {
-		Page<Country> totalPage = countryResource.getCountriesPage(
+		Page<Country> countryPage = countryResource.getCountriesPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(countryPage.getTotalCount());
 
 		Country country1 = testGetCountriesPage_addCountry(randomCountry());
 
@@ -237,29 +233,65 @@ public abstract class BaseCountryResourceTestCase {
 
 		Country country3 = testGetCountriesPage_addCountry(randomCountry());
 
-		Page<Country> page1 = countryResource.getCountriesPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<Country> countries1 = (List<Country>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			countries1.toString(), totalCount + 2, countries1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<Country> page1 = countryResource.getCountriesPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<Country> page2 = countryResource.getCountriesPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(country1, (List<Country>)page1.getItems());
 
-		List<Country> countries2 = (List<Country>)page2.getItems();
+			Page<Country> page2 = countryResource.getCountriesPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(countries2.toString(), 1, countries2.size());
+			assertContains(country2, (List<Country>)page2.getItems());
 
-		Page<Country> page3 = countryResource.getCountriesPage(
-			null, null, Pagination.of(1, totalCount + 3), null);
+			Page<Country> page3 = countryResource.getCountriesPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(country1, (List<Country>)page3.getItems());
-		assertContains(country2, (List<Country>)page3.getItems());
-		assertContains(country3, (List<Country>)page3.getItems());
+			assertContains(country3, (List<Country>)page3.getItems());
+		}
+		else {
+			Page<Country> page1 = countryResource.getCountriesPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<Country> countries1 = (List<Country>)page1.getItems();
+
+			Assert.assertEquals(
+				countries1.toString(), totalCount + 2, countries1.size());
+
+			Page<Country> page2 = countryResource.getCountriesPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<Country> countries2 = (List<Country>)page2.getItems();
+
+			Assert.assertEquals(countries2.toString(), 1, countries2.size());
+
+			Page<Country> page3 = countryResource.getCountriesPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(country1, (List<Country>)page3.getItems());
+			assertContains(country2, (List<Country>)page3.getItems());
+			assertContains(country3, (List<Country>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -269,7 +301,7 @@ public abstract class BaseCountryResourceTestCase {
 			(entityField, country1, country2) -> {
 				BeanTestUtil.setProperty(
 					country1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -367,22 +399,23 @@ public abstract class BaseCountryResourceTestCase {
 
 		country2 = testGetCountriesPage_addCountry(country2);
 
+		Page<Country> page = countryResource.getCountriesPage(
+			null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<Country> ascPage = countryResource.getCountriesPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(country1, country2),
-				(List<Country>)ascPage.getItems());
+			assertContains(country1, (List<Country>)ascPage.getItems());
+			assertContains(country2, (List<Country>)ascPage.getItems());
 
 			Page<Country> descPage = countryResource.getCountriesPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(country2, country1),
-				(List<Country>)descPage.getItems());
+			assertContains(country2, (List<Country>)descPage.getItems());
+			assertContains(country1, (List<Country>)descPage.getItems());
 		}
 	}
 
@@ -406,6 +439,8 @@ public abstract class BaseCountryResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject countriesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/countries");
@@ -417,6 +452,26 @@ public abstract class BaseCountryResourceTestCase {
 
 		countriesJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/countries");
+
+		Assert.assertEquals(
+			totalCount + 2, countriesJSONObject.getLong("totalCount"));
+
+		assertContains(
+			country1,
+			Arrays.asList(
+				CountrySerDes.toDTOs(countriesJSONObject.getString("items"))));
+		assertContains(
+			country2,
+			Arrays.asList(
+				CountrySerDes.toDTOs(countriesJSONObject.getString("items"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		countriesJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessAdminAddress_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessAdminAddress_v1_0",
 			"JSONObject/countries");
 
 		Assert.assertEquals(
@@ -475,6 +530,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountryByA2() throws Exception {
 		Country country = testGraphQLGetCountryByA2_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -492,11 +549,37 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/countryByA2"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"countryByA2",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"a2",
+												"\"" + country.getA2() + "\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/countryByA2"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryByA2NotFound() throws Exception {
 		String irrelevantA2 = "\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -510,6 +593,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"countryByA2",
+							new HashMap<String, Object>() {
+								{
+									put("a2", irrelevantA2);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -538,6 +640,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountryByA3() throws Exception {
 		Country country = testGraphQLGetCountryByA3_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -555,11 +659,37 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/countryByA3"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"countryByA3",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"a3",
+												"\"" + country.getA3() + "\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/countryByA3"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryByA3NotFound() throws Exception {
 		String irrelevantA3 = "\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -573,6 +703,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"countryByA3",
+							new HashMap<String, Object>() {
+								{
+									put("a3", irrelevantA3);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -601,6 +750,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountryByName() throws Exception {
 		Country country = testGraphQLGetCountryByName_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -618,11 +769,38 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/countryByName"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"countryByName",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"name",
+												"\"" + country.getName() +
+													"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/countryByName"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryByNameNotFound() throws Exception {
 		String irrelevantName = "\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -636,6 +814,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"countryByName",
+							new HashMap<String, Object>() {
+								{
+									put("name", irrelevantName);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -666,6 +863,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountryByNumber() throws Exception {
 		Country country = testGraphQLGetCountryByNumber_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -681,11 +880,35 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/countryByNumber"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"countryByNumber",
+									new HashMap<String, Object>() {
+										{
+											put("number", country.getNumber());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/countryByNumber"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryByNumberNotFound() throws Exception {
 		Integer irrelevantNumber = RandomTestUtil.randomInt();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -699,6 +922,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"countryByNumber",
+							new HashMap<String, Object>() {
+								{
+									put("number", irrelevantNumber);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -731,7 +973,10 @@ public abstract class BaseCountryResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteCountry() throws Exception {
-		Country country = testGraphQLDeleteCountry_addCountry();
+
+		// No namespace
+
+		Country country1 = testGraphQLDeleteCountry_addCountry();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -740,23 +985,59 @@ public abstract class BaseCountryResourceTestCase {
 						"deleteCountry",
 						new HashMap<String, Object>() {
 							{
-								put("countryId", country.getId());
+								put("countryId", country1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteCountry"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"country",
 					new HashMap<String, Object>() {
 						{
-							put("countryId", country.getId());
+							put("countryId", country1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Country country2 = testGraphQLDeleteCountry_addCountry();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"deleteCountry",
+							new HashMap<String, Object>() {
+								{
+									put("countryId", country2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminAddress_v1_0",
+				"Object/deleteCountry"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminAddress_v1_0",
+					new GraphQLField(
+						"country",
+						new HashMap<String, Object>() {
+							{
+								put("countryId", country2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected Country testGraphQLDeleteCountry_addCountry() throws Exception {
@@ -782,6 +1063,8 @@ public abstract class BaseCountryResourceTestCase {
 	public void testGraphQLGetCountry() throws Exception {
 		Country country = testGraphQLGetCountry_addCountry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				country,
@@ -797,11 +1080,35 @@ public abstract class BaseCountryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/country"))));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertTrue(
+			equals(
+				country,
+				CountrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminAddress_v1_0",
+								new GraphQLField(
+									"country",
+									new HashMap<String, Object>() {
+										{
+											put("countryId", country.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminAddress_v1_0",
+						"Object/country"))));
 	}
 
 	@Test
 	public void testGraphQLGetCountryNotFound() throws Exception {
 		Long irrelevantCountryId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -815,6 +1122,25 @@ public abstract class BaseCountryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminAddress_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminAddress_v1_0",
+						new GraphQLField(
+							"country",
+							new HashMap<String, Object>() {
+								{
+									put("countryId", irrelevantCountryId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1364,6 +1690,10 @@ public abstract class BaseCountryResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1645,7 +1975,8 @@ public abstract class BaseCountryResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1703,21 +2034,21 @@ public abstract class BaseCountryResourceTestCase {
 	}
 
 	protected CountryResource countryResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1726,11 +2057,16 @@ public abstract class BaseCountryResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1762,6 +2098,24 @@ public abstract class BaseCountryResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1783,16 +2137,6 @@ public abstract class BaseCountryResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

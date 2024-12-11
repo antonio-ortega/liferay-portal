@@ -419,6 +419,13 @@ public class CPDefinitionWrapper
 		return model.equals(object);
 	}
 
+	@Override
+	public CPConfigurationEntry fetchMasterCPConfigurationEntry()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.fetchMasterCPConfigurationEntry();
+	}
+
 	/**
 	 * Returns the account group filter enabled of this cp definition.
 	 *
@@ -775,6 +782,13 @@ public class CPDefinitionWrapper
 	@Override
 	public Date getLastPublishDate() {
 		return model.getLastPublishDate();
+	}
+
+	@Override
+	public CPConfigurationList getMasterCPConfigurationList()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getMasterCPConfigurationList();
 	}
 
 	/**

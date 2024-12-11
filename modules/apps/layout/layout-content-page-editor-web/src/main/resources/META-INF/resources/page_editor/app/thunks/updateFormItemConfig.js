@@ -6,30 +6,15 @@
 import {openToast} from 'frontend-js-web';
 
 import updateFormItemConfigAction from '../actions/updateFormItemConfig';
-import updateItemLocalConfig from '../actions/updateItemLocalConfig';
 import FormService from '../services/FormService';
 
-export default function updateFormItemConfig({
-	itemConfig,
-	itemId,
-	overridePreviousConfig = true,
-}) {
+export default function updateFormItemConfig({fields, itemConfig, itemIds}) {
 	const isMapping = Boolean(itemConfig.classNameId);
+	const [itemId] = itemIds;
 
 	return (dispatch, getState) => {
-		if (isMapping) {
-			dispatch(
-				updateItemLocalConfig({
-					disableUndo: true,
-					itemConfig: {
-						loading: true,
-					},
-					itemId,
-				})
-			);
-		}
-
 		return FormService.updateFormItemConfig({
+			fields,
 			itemConfig,
 			itemId,
 			onNetworkStatus: dispatch,
@@ -37,18 +22,35 @@ export default function updateFormItemConfig({
 		}).then(
 			({
 				addedFragmentEntryLinks,
+				addedItemIds,
 				errorMessage,
 				layoutData,
-				removedFragmentEntryLinkIds,
+				movedItemIds,
+				removedItemIds,
 			}) => {
 				dispatch(
 					updateFormItemConfigAction({
 						addedFragmentEntryLinks,
+						addedItemIds,
 						isMapping,
-						itemId,
+						itemIds: [itemId],
 						layoutData,
-						overridePreviousConfig,
-						removedFragmentEntryLinkIds,
+						movedItemIds,
+						removedFragmentEntryLinkIds: removedItemIds
+							.map((itemId) => {
+								const item = layoutData.items[itemId];
+
+								return item?.config?.fragmentEntryLinkId;
+							})
+							.filter(Boolean),
+						removedItemIds,
+						restoredFragmentEntryLinkIds: addedItemIds
+							.map((itemId) => {
+								const item = layoutData.items[itemId];
+
+								return item?.config?.fragmentEntryLinkId;
+							})
+							.filter(Boolean),
 					})
 				);
 

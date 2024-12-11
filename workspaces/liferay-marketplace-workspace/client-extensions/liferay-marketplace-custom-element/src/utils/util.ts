@@ -5,19 +5,20 @@
 
 import accountPlaceholder from '../assets/images/account_placeholder.png';
 import appPlaceholder from '../assets/images/app_placeholder.png';
+import i18n from '../i18n';
 import {
 	createProductSpecification,
-	getAccountGroup,
-	getCatalogs,
-	getSpecifications,
-	getUserAccountsById,
+	getProductSpecifications,
+	getSiteStructuredContentByKey,
 	updateProductSpecification,
 } from './api';
 
 type FileRequest = {
 	appERC: string;
+	callback?: (progress: number) => void;
 	file: File | string;
 	index?: number;
+	isAppIcon: boolean;
 	requestFunction: Function;
 	title: string;
 };
@@ -32,10 +33,77 @@ export function createSkuName(
 	}`;
 }
 
-export async function getCatalogId() {
-	const catalogs = await getCatalogs();
+export function getCloudOptionBody() {
+	return {
+		fieldType: 'radio',
+		key: 'cloud-license-usage-type',
+		name: {en_US: i18n.translate('cloud-license-usage-type')},
+	};
+}
 
-	return catalogs[0].id;
+export function getCloudProductOptionBody(newOptionId: number) {
+	return {
+		facetable: false,
+		fieldType: 'radio',
+		key: 'cloud-license-usage-type',
+		name: {
+			en_US: i18n.translate('cloud-license-usage-type'),
+		},
+		optionId: newOptionId,
+		productOptionValues: [],
+		required: true,
+		skuContributor: true,
+	};
+}
+
+export function getDxpOptionBody() {
+	return {
+		fieldType: 'radio',
+		key: 'dxp-license-usage-type',
+		name: {en_US: i18n.translate('dxp-license-usage-type')},
+	};
+}
+
+export function getDxpProductOptionBody(newOptionId: number) {
+	return {
+		facetable: false,
+		fieldType: 'radio',
+		key: 'dxp-license-usage-type',
+		name: {
+			en_US: i18n.translate('dxp-license-usage-type'),
+		},
+		optionId: newOptionId,
+		productOptionValues: [],
+		required: true,
+		skuContributor: true,
+	};
+}
+
+export async function getEulaDescription() {
+	const keyEula = 'EULA';
+	const response = await getSiteStructuredContentByKey(keyEula);
+
+	return response?.contentFields[0]?.contentFieldValue?.data;
+}
+
+export function getLicenceTypesObject() {
+	return [
+		{code: 'd', key: 'developer', name: 'DEVELOPER'},
+		{code: 's', key: 'standard', name: 'STANDARD'},
+		{code: 'ts', key: 'trial', name: 'TRIAL'},
+	];
+}
+
+export function getOptionDeveloperBody() {
+	return {key: 'developer', name: {en_US: 'Developer'}, priority: 1};
+}
+
+export function getOptionStandardBody() {
+	return {key: 'standard', name: {en_US: 'Standard'}, priority: 0};
+}
+
+export function getOptionTrialBody() {
+	return {key: 'trial', name: {en_US: 'Trial'}, priority: 2};
 }
 
 export function getInitials(userName: string) {
@@ -53,54 +121,17 @@ export function getInitials(userName: string) {
 	return initials;
 }
 
-export async function userAccountChecker(verifiedAccounts: string[]) {
-	const response = await getUserAccountsById();
-
-	if (response.ok) {
-		const userAccounts = (await response.json()) as UserAccount;
-
-		const userHasPublisherGroup = await Promise.all(
-			userAccounts.accountBriefs.map(async (currentAccount) => {
-				const accountGroup = await getAccountGroup(currentAccount.id);
-
-				const accountGroupPublisher = accountGroup.some(
-					(currentAccountGroup) =>
-						verifiedAccounts.includes(currentAccountGroup.name)
-				);
-
-				return accountGroupPublisher;
-			})
-		);
-
-		return userHasPublisherGroup.some((item) => item);
-	}
-
-	return false;
-}
-
 export function getThumbnailByProductAttachment(
-	attachments: Partial<ProductAttachment>[]
+	images?: Partial<ProductAttachment | DeliveryProductAttachment>[]
 ): string | undefined {
-	if (!Array.isArray(attachments)) {
+	if (!Array.isArray(images)) {
 		return undefined;
 	}
 
-	const findThumbnailWithAppIcon = (
-		attachment: Partial<ProductAttachment>
-	): boolean => {
-		if (attachment.customFields === undefined) {
-			return false;
-		}
-		const customField = attachment.customFields?.find(
-			({customValue, name}) =>
-				name === 'App Icon' &&
-				customValue?.data?.[0].toLowerCase() === 'yes'
-		);
-
-		return !!customField;
-	};
-
-	const thumbnail = attachments.find(findThumbnailWithAppIcon);
+	const thumbnail =
+		images.find((images) => {
+			return (images.tags || []).indexOf('app icon') >= 0;
+		}) || images[0];
 
 	return thumbnail?.src;
 }
@@ -108,7 +139,7 @@ export function getThumbnailByProductAttachment(
 export function getProductVersionFromSpecifications(
 	specifications: ProductSpecification[]
 ) {
-	let productVersion = '0';
+	let productVersion = '';
 
 	specifications.forEach((specification) => {
 		if (specification.specificationKey === 'latest-version') {
@@ -119,22 +150,57 @@ export function getProductVersionFromSpecifications(
 	return productVersion;
 }
 
-export function getValueFromSpecifications(
-	specifications: ProductSpecification[],
+export function getValueFromDeliverySpecifications(
+	specifications: DeliveryProductSpecification[],
 	valueKey: string
 ) {
 	let value = '';
-	specifications.forEach((specification) => {
-		if (specification.specificationKey === valueKey) {
-			value = specification.value.en_US;
+	specifications?.forEach((specification) => {
+		if (specification?.specificationKey === valueKey) {
+			value = specification?.value;
 		}
 	});
 
 	return value;
 }
 
-export function showAccountImage(url?: string) {
+export function getAccountImage(url?: string) {
 	return url?.includes('img_id=0') || !url ? accountPlaceholder : url;
+}
+
+type LicenceTiersPrices = {
+	developer: {key: number; value: number}[];
+	standard: {key: number; value: number}[];
+};
+
+export function getSkuPrice(appLicensePrice: LicenceTiersPrices, sku: SKU) {
+	const dxpLicenseUsageType = sku.skuOptions.find(
+		({key}) => key === 'dxp-license-usage-type'
+	);
+
+	if (!dxpLicenseUsageType) {
+		if (sku.sku.endsWith('ts')) {
+			return 0;
+		}
+
+		if (sku?.sku.endsWith('d')) {
+			appLicensePrice.developer[0]?.value ?? 0;
+		}
+
+		return appLicensePrice.standard[0]?.value ?? 0;
+	}
+
+	const dxpLicenseUsageTypeValue = dxpLicenseUsageType.value;
+
+	if (dxpLicenseUsageTypeValue === 'standard') {
+		return appLicensePrice['standard'][0]?.value;
+	}
+	else if (dxpLicenseUsageTypeValue === 'developer') {
+		return appLicensePrice['developer'][0]?.value;
+	}
+	else {
+		return 0;
+	}
 }
 
 export function showAppImage(url?: string) {
@@ -152,94 +218,72 @@ export function removeProtocolURL(url: string) {
 	return url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '').split('/')[0];
 }
 
-async function submitSpecification(
-	appId: string,
+export async function submitSpecification(
 	productId: number,
-	productSpecificationId: number,
-	key: string,
-	title: string,
-	value: string
-): Promise<number> {
-	const specifications = await getSpecifications();
-
-	const specification = specifications.items.map(
-		({specificationKey}: {specificationKey: string}) =>
-			specificationKey === key
-	);
-
-	if (productSpecificationId) {
-		updateProductSpecification({
-			body: {
-				specificationKey: key,
-				value: {en_US: value},
-			},
-			id: productSpecificationId,
-		});
-
-		return -1;
-	}
-	else {
-		const {id} = await createProductSpecification({
-			appId,
-			body: {
-				productId,
-				specificationId: specification.id,
-				specificationKey: key,
-				value: {en_US: value},
-			},
-		});
-
-		return id;
-	}
-}
-
-export async function saveSpecification(
-	appId: string,
-	productId: number,
-	productSpecificationId: number,
-	key: string,
-	title: string,
-	value: string
+	productSpecifications: {specificationKey: string; value: string}[]
 ) {
-	return await submitSpecification(
-		appId,
-		productId,
-		productSpecificationId,
-		key,
-		title,
-		value
-	);
+	const dataSpecificationList = await getProductSpecifications({
+		appProductId: productId as number,
+	});
+
+	for (const productSpecification of productSpecifications) {
+		const dataSpecification = dataSpecificationList?.find(
+			(specification) =>
+				specification?.specificationKey ===
+				productSpecification.specificationKey
+		);
+
+		const fn = dataSpecification?.id
+			? updateProductSpecification
+			: createProductSpecification;
+
+		await fn({
+			body: {
+				specificationKey: productSpecification.specificationKey,
+				value: {en_US: productSpecification.value},
+			},
+			id: dataSpecification?.id || productId,
+		});
+	}
 }
 
 export async function submitFile({
 	appERC,
+	callback,
 	file: fileBase64,
 	index,
+	isAppIcon,
 	requestFunction,
 	title,
 }: FileRequest) {
 	const response = await requestFunction({
 		body: {
 			attachment: fileBase64,
+			galleryEnabled: !isAppIcon,
+			neverExpire: true,
 			priority: index,
+			tags: isAppIcon ? ['app icon'] : [],
 			title: {en_US: title},
 		},
+		callback,
 		externalReferenceCode: appERC,
 	});
 
-	return (await response.json()) as ProductAttachment;
+	return response as ProductAttachment;
 }
 
 export async function submitBase64EncodedFile({
 	appERC,
+	callback,
 	file,
 	index,
+	isAppIcon,
 	requestFunction,
 	title,
 }: FileRequest) {
-	return new Promise((resolve) => {
-		let attachmentId;
+	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
+
 		reader.addEventListener(
 			'load',
 			async () => {
@@ -257,21 +301,55 @@ export async function submitBase64EncodedFile({
 				else if (result?.includes('image/jpeg')) {
 					result = result?.substring(23);
 				}
+				else if (
+					result?.includes('application/octet-stream') ||
+					result?.includes('application/java-archive')
+				) {
+					result = result?.substring(37);
+				}
 
 				if (result) {
-					const {id} = await submitFile({
+					const response = await submitFile({
 						appERC,
+						callback,
 						file: result,
 						index,
+						isAppIcon,
 						requestFunction,
 						title,
+					}).catch((error) => {
+						reject(error);
 					});
-					attachmentId = id;
-					resolve(attachmentId);
+
+					resolve(response);
 				}
 			},
 			false
 		);
 		reader.readAsDataURL(file as File);
 	});
+}
+
+export function safeJSONParse<T = any>(
+	value: string | null,
+	defaultValue: unknown = null
+): T {
+	if (defaultValue && typeof value !== 'string') {
+		return defaultValue as T;
+	}
+
+	try {
+		return JSON.parse(value as string);
+	}
+	catch (error) {
+		return defaultValue as T;
+	}
+}
+
+export function isCloudEnvironment() {
+	return window.location.protocol === 'https:';
+}
+
+export function waitTimeout(timer: number) {
+	return new Promise((resolve) => setTimeout(() => resolve(null), timer));
 }

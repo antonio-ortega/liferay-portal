@@ -7,12 +7,15 @@ package com.liferay.portal.search.tuning.rankings.web.internal.index.name;
 
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexName;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.mockito.Mockito;
 
 /**
  * @author André de Oliveira
@@ -27,7 +30,7 @@ public class RankingIndexNameBuilderImplTest {
 	@Test
 	public void testMultiTenancy() {
 		_assertIndexName(
-			2021, companyId -> "liferay-" + companyId,
+			2021, _createIndexNameBuilder(),
 			"liferay-2021-search-tuning-rankings");
 	}
 
@@ -44,6 +47,21 @@ public class RankingIndexNameBuilderImplTest {
 			rankingIndexNameBuilderImpl.getRankingIndexName(companyId);
 
 		Assert.assertEquals(expected, rankingIndexName.getIndexName());
+	}
+
+	private IndexNameBuilder _createIndexNameBuilder() {
+		IndexNameBuilder indexNameBuilder = Mockito.mock(
+			IndexNameBuilder.class);
+
+		Mockito.when(
+			indexNameBuilder.getIndexName(Mockito.anyLong())
+		).then(
+			invocation ->
+				"liferay-" +
+					String.valueOf(invocation.getArgument(0, Long.class))
+		);
+
+		return indexNameBuilder;
 	}
 
 }

@@ -6,6 +6,7 @@
 package com.liferay.search.experiences.service;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.search.experiences.model.SXPElement;
 
 import java.util.Map;
@@ -32,15 +33,16 @@ public class SXPElementServiceUtil {
 	public static SXPElement addSXPElement(
 			String externalReferenceCode,
 			Map<java.util.Locale, String> descriptionMap,
-			String elementDefinitionJSON, boolean readOnly,
-			String schemaVersion, Map<java.util.Locale, String> titleMap,
-			int type,
+			String elementDefinitionJSON, String fallbackDescription,
+			String fallbackTitle, boolean readOnly, String schemaVersion,
+			Map<java.util.Locale, String> titleMap, int type,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addSXPElement(
 			externalReferenceCode, descriptionMap, elementDefinitionJSON,
-			readOnly, schemaVersion, titleMap, type, serviceContext);
+			fallbackDescription, fallbackTitle, readOnly, schemaVersion,
+			titleMap, type, serviceContext);
 	}
 
 	public static SXPElement deleteSXPElement(long sxpElementId)
@@ -101,13 +103,10 @@ public class SXPElementServiceUtil {
 	}
 
 	public static SXPElementService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(SXPElementService service) {
-		_service = service;
-	}
-
-	private static volatile SXPElementService _service;
+	private static final Snapshot<SXPElementService> _serviceSnapshot =
+		new Snapshot<>(SXPElementServiceUtil.class, SXPElementService.class);
 
 }

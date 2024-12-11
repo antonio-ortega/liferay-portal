@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
@@ -37,16 +38,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Jürgen Kappler
  */
-@Component(service = LayoutStructureItemImporter.class)
 public class WidgetLayoutStructureItemImporter
 	extends BaseLayoutStructureItemImporter
 	implements LayoutStructureItemImporter {
+
+	public WidgetLayoutStructureItemImporter(
+		FragmentEntryLinkLocalService fragmentEntryLinkLocalService,
+		FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
+		PortletConfigurationImporterHelper portletConfigurationImporterHelper,
+		PortletLocalService portletLocalService,
+		PortletPermissionsImporterHelper portletPermissionsImporterHelper,
+		PortletPreferencesLocalService portletPreferencesLocalService,
+		SegmentsExperienceLocalService segmentsExperienceLocalService) {
+
+		_fragmentEntryLinkLocalService = fragmentEntryLinkLocalService;
+		_fragmentEntryProcessorRegistry = fragmentEntryProcessorRegistry;
+		_portletConfigurationImporterHelper =
+			portletConfigurationImporterHelper;
+		_portletLocalService = portletLocalService;
+		_portletPermissionsImporterHelper = portletPermissionsImporterHelper;
+		_portletPreferencesLocalService = portletPreferencesLocalService;
+		_segmentsExperienceLocalService = segmentsExperienceLocalService;
+	}
 
 	@Override
 	public LayoutStructureItem addLayoutStructureItem(
@@ -68,6 +84,7 @@ public class WidgetLayoutStructureItemImporter
 			(FragmentStyledLayoutStructureItem)
 				layoutStructure.addFragmentStyledLayoutStructureItem(
 					fragmentEntryLink.getFragmentEntryLinkId(),
+					layoutStructureItemImporterContext.getItemId(pageElement),
 					layoutStructureItemImporterContext.getParentItemId(),
 					layoutStructureItemImporterContext.getPosition());
 
@@ -209,15 +226,17 @@ public class WidgetLayoutStructureItemImporter
 			PortletIdCodec.encode(widgetName, widgetInstanceId),
 			warningMessages, widgetPermissionsMaps);
 
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
 		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
-			layout.getUserId(), layout.getGroupId(), 0, 0,
+			null, serviceContext.getUserId(), layout.getGroupId(), 0, 0,
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				layout.getPlid()),
 			layout.getPlid(), StringPool.BLANK, StringPool.BLANK,
 			StringPool.BLANK, StringPool.BLANK,
 			editableValueJSONObject.toString(), widgetInstanceId, 0, null,
-			FragmentConstants.TYPE_PORTLET,
-			ServiceContextThreadLocal.getServiceContext());
+			FragmentConstants.TYPE_PORTLET, serviceContext);
 	}
 
 	private String _getPortletInstanceId(
@@ -240,26 +259,17 @@ public class WidgetLayoutStructureItemImporter
 		return StringPool.BLANK;
 	}
 
-	@Reference
-	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
-
-	@Reference
-	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
-
-	@Reference
-	private PortletConfigurationImporterHelper
+	private final FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+	private final FragmentEntryProcessorRegistry
+		_fragmentEntryProcessorRegistry;
+	private final PortletConfigurationImporterHelper
 		_portletConfigurationImporterHelper;
-
-	@Reference
-	private PortletLocalService _portletLocalService;
-
-	@Reference
-	private PortletPermissionsImporterHelper _portletPermissionsImporterHelper;
-
-	@Reference
-	private PortletPreferencesLocalService _portletPreferencesLocalService;
-
-	@Reference
-	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
+	private final PortletLocalService _portletLocalService;
+	private final PortletPermissionsImporterHelper
+		_portletPermissionsImporterHelper;
+	private final PortletPreferencesLocalService
+		_portletPreferencesLocalService;
+	private final SegmentsExperienceLocalService
+		_segmentsExperienceLocalService;
 
 }

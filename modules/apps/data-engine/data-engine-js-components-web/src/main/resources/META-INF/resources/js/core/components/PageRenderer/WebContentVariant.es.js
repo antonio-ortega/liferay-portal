@@ -106,7 +106,8 @@ export const Column = forwardRef(
 											field={field}
 											index={index + 1}
 											nestedFieldIndex={
-												field.nestedFieldIndex
+												typeof field.nestedFieldIndex ===
+												'number'
 													? field.nestedFieldIndex + 1
 													: field.nestedFieldIndex
 											}
@@ -163,6 +164,10 @@ function Placeholder({field, index, nestedFieldIndex}) {
 					targetNestedFieldIndex,
 				},
 				type: EVENT_TYPES.FORM_VIEW.REPEATABLE_FIELD.CHANGE_ORDER,
+			});
+
+			Liferay.fire('journal:storeState', {
+				fieldName: Liferay.Language.get('move-repeatable-field'),
 			});
 
 			item.index = targetIndex;

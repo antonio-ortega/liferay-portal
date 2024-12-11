@@ -1,9 +1,8 @@
-@component-name = "portal-solutions"
+@component-name = "portal-site-management"
 definition {
 
 	property portal.release = "false";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Raylife D2C";
 
 	var testSiteName = "Raylife D2C";
@@ -14,10 +13,11 @@ definition {
 
 		User.firstLoginPG();
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Instance Settings");
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
+
+		PortalSettings.openInstanceSettingsAdmin();
 
 		SystemSettings.gotoConfiguration(
 			configurationCategory = "Digital Signature",

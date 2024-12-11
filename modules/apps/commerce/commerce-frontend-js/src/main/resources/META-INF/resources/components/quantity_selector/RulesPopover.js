@@ -30,22 +30,16 @@ export default function RulesPopover({
 			return setPopoverPosition({
 				...position,
 				alignment,
-				[alignment === 'bottom'
-					? 'top'
-					: 'bottom']: 'calc(100% + 10px)',
+				[alignment === 'bottom' ? 'top' : 'bottom']:
+					'calc(100% + 10px)',
 				left: '50px',
 			});
 		}
 
-		const {
-			bottom,
-			left,
-			top,
-			width,
-		} = inputRef.current.getBoundingClientRect();
-		const {
-			height: popoverHeight,
-		} = popoverRef.current.getBoundingClientRect();
+		const {bottom, left, top, width} =
+			inputRef.current.getBoundingClientRect();
+		const {height: popoverHeight} =
+			popoverRef.current.getBoundingClientRect();
 
 		position.left = left + width / 2;
 
@@ -102,7 +96,7 @@ export default function RulesPopover({
 									Liferay.Language.get(
 										'min-quantity-per-order-is-x'
 									),
-									`<b>${min}</b>`
+									`<b>${Number(min)}</b>`
 								),
 							}}
 						/>
@@ -120,7 +114,7 @@ export default function RulesPopover({
 									Liferay.Language.get(
 										'max-quantity-per-order-is-x'
 									),
-									`<b>${max}</b>`
+									`<b>${Number(max)}</b>`
 								),
 							}}
 						/>

@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -23,6 +23,10 @@ definition {
 
 		task ("Sign in") {
 			User.firstLoginPG();
+		}
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
 		}
 
 		task ("Add a site") {
@@ -121,7 +125,7 @@ definition {
 
 			PageAudit.openPageAuditSidebar();
 
-			AssertTextPresent(value1 = "Check issues that impact on your page's accessibility and SEO.");
+			AssertTextPresent(value1 = "Render times are approximate and subject to slight variations due to server status and load.");
 		}
 
 		task ("Given a page marketer with update-basic permission has a content page") {
@@ -166,7 +170,7 @@ definition {
 
 			PageAudit.openPageAuditSidebar();
 
-			AssertTextPresent(value1 = "Check issues that impact on your page's accessibility and SEO.");
+			AssertTextPresent(value1 = "Render times are approximate and subject to slight variations due to server status and load.");
 		}
 	}
 
@@ -217,7 +221,7 @@ definition {
 
 			Type(
 				ariaLabel = "Padding Right",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 				value1 = 20);
 
 			Click(
@@ -280,7 +284,7 @@ definition {
 		task ("Then the new user should not see the input field for custom values") {
 			AssertElementNotPresent(
 				ariaLabel = "Padding Top",
-				locator1 = "TextInput#ANY_WITH_AIRA_LABEL");
+				locator1 = "TextInput#ANY_WITH_ARIA_LABEL");
 
 			AssertElementNotPresent(
 				key_fieldLabel = "Padding Top",
@@ -510,8 +514,6 @@ definition {
 	@description = "This is a test for LPS-173440. The user with Add Object Entry but without View permission for object cannot see mapped Collection Display or Content Display at view and preview mode."
 	@priority = 4
 	test CannotViewMappedCollectionDisplayOrContentDisplayWithAddObjectEntryButWithoutViewPermissionForObjectOnViewAndPreviewMode {
-		property custom.properties = "feature.flag.LPS-169923=true${line.separator}jsonws.web.service.paths.excludes=";
-
 		var labelName = StringUtil.randomString(8);
 
 		var objectName = "A${labelName}";
@@ -644,6 +646,8 @@ definition {
 			}
 
 			task ("Assert the Name of object entries are respectively shown in each cell") {
+				ContentPages.gotoPageEditor();
+
 				var n = 1;
 
 				for (var title : list "Banana,Apple") {
@@ -688,7 +692,7 @@ definition {
 			}
 
 			task ("View the user cannot see the Collection Display") {
-				PageEditor.viewFragmentNotPresent(fragmentName = "Collection Display");
+				ContentPages.viewFragmentNotPresent(fragmentName = "Collection");
 			}
 
 			task ("When the user navigates to the content page at preview mode") {
@@ -698,7 +702,7 @@ definition {
 			}
 
 			task ("View the user cannot see the Collection Display") {
-				PageEditor.viewFragmentNotPresent(fragmentName = "Collection Display");
+				ContentPages.viewFragmentNotPresent(fragmentName = "Collection");
 			}
 
 			task ("Navigate to the second content page at view mode") {
@@ -708,7 +712,7 @@ definition {
 			}
 
 			task ("View the user cannot see the Content Display") {
-				PageEditor.viewFragmentNotPresent(fragmentName = "Content Display");
+				ContentPages.viewFragmentNotPresent(fragmentName = "Content");
 			}
 
 			task ("When the user navigates to the content page at preview mode") {
@@ -718,7 +722,7 @@ definition {
 			}
 
 			task ("View the user cannot see the Content Display") {
-				PageEditor.viewFragmentNotPresent(fragmentName = "Content Display");
+				ContentPages.viewFragmentNotPresent(fragmentName = "Content");
 			}
 		}
 	}
@@ -726,8 +730,6 @@ definition {
 	@description = "This is a test for LPS-173440. The user without View permission for object cannot see mapped Collection Display or Content Display at view and preview mode."
 	@priority = 4
 	test CannotViewMappedCollectionDisplayOrContentDisplayWithoutViewPermissionForObjectOnViewAndPreviewMode {
-		property custom.properties = "feature.flag.LPS-169923=true${line.separator}jsonws.web.service.paths.excludes=";
-
 		var labelName = StringUtil.randomString(8);
 
 		var objectName = "A${labelName}";
@@ -858,6 +860,8 @@ definition {
 			}
 
 			task ("Assert the Name of object entries are respectively shown in each cell") {
+				ContentPages.gotoPageEditor();
+
 				var n = 1;
 
 				for (var title : list "Banana,Apple") {
@@ -940,8 +944,6 @@ definition {
 	@description = "This is a test for LPS-173440. The user without View permission for object cannot see that object in Collection Display or Content Display selector."
 	@priority = 4
 	test CannotViewObjectInCollectionDisplayOrContentDisplayWithoutViewPermissionForObject {
-		property custom.properties = "feature.flag.LPS-169923=true${line.separator}jsonws.web.service.paths.excludes=";
-
 		var labelName = StringUtil.randomString(8);
 
 		var objectName = "A${labelName}";
@@ -1106,8 +1108,6 @@ definition {
 	@description = "This is a test for LPS-173440. The user with View and Add Object Entry permissions for object can see the mapped Collection Display or Content Display."
 	@priority = 4
 	test CanViewMappedCollectionDisplayAndContentDisplayWithAddObjectDefinitionAndViewPermissionForObject {
-		property custom.properties = "feature.flag.LPS-169923=true${line.separator}jsonws.web.service.paths.excludes=";
-
 		var labelName = StringUtil.randomString(8);
 
 		var objectName = "A${labelName}";
@@ -1162,8 +1162,10 @@ definition {
 			task ("Define the permissions of regular role") {
 				var objectDefinitionId = JSONObject.getObjectId(objectName = ${objectName});
 
+				var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${objectDefinitionId});
+
 				Permissions.definePermissionsViaJSONAPI(
-					resourceNameActionList = "com.liferay.portal.kernel.model.Layout,UPDATE,VIEW:com.liferay.object#${objectDefinitionId},ADD_OBJECT_ENTRY:com.liferay.object.model.ObjectDefinition#${objectDefinitionId},VIEW",
+					resourceNameActionList = "com.liferay.portal.kernel.model.Layout,UPDATE,VIEW:com.liferay.object#${objectDefinitionId},ADD_OBJECT_ENTRY:${objectDefinitionClassName},VIEW",
 					roleTitle = ${randomRoleKey},
 					roleType = "regular");
 			}
@@ -1224,6 +1226,8 @@ definition {
 			}
 
 			task ("Assert the Name of object entries are respectively shown in each cell") {
+				ContentPages.gotoPageEditor();
+
 				var n = 1;
 
 				for (var title : list "Banana,Apple") {
@@ -1388,8 +1392,6 @@ definition {
 		task ("Then the page marketer could configue the page via options menu") {
 			LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
 
-			SelectWindow.selectPopUp(locator1 = "null");
-
 			AssertVisible(
 				key_title = "General",
 				locator1 = "Header#H2_TITLE");
@@ -1400,7 +1402,7 @@ definition {
 		}
 
 		task ("When the page marketer goes back to the page editor") {
-			Close.closeWindow();
+			Navigator.gotoBack();
 		}
 
 		task ("Then the page marketer could preview changes in a new tab via options menu") {
@@ -1441,8 +1443,6 @@ definition {
 		task ("Then the page marketer could configue the page via options menu") {
 			LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
 
-			SelectWindow.selectPopUp(locator1 = "null");
-
 			AssertVisible(
 				key_title = "General",
 				locator1 = "Header#H2_TITLE");
@@ -1453,7 +1453,7 @@ definition {
 		}
 
 		task ("When the page marketer goes back to the page editor") {
-			Close.closeWindow();
+			Navigator.gotoBack();
 		}
 
 		task ("Then the page marketer could preview changes in a new tab via options menu") {
@@ -1463,76 +1463,6 @@ definition {
 				fragmentName = "heading",
 				id = "element-text",
 				text = "Heading Example");
-		}
-	}
-
-	@description = "This is a test for LPS-103454. Content author having permission to update blog entry could see edit icon in the content page displaying the blog and could edit blog in editmode. "
-	@priority = 4
-	test EditBlogsEntryWithBlogEntryUpdatePermission {
-		task ("Define the permissions of new role") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "UPDATE",
-				resourceName = "com.liferay.blogs.model.BlogsEntry",
-				roleTitle = ${randomRoleKey},
-				roleType = "site");
-		}
-
-		task ("Assign the site role to new user") {
-			JSONRole.assignSiteRoleToUser(
-				groupName = ${randomSiteName},
-				roleTitle = ${randomRoleKey},
-				userEmailAddress = StringUtil.toLowerCase("${randomUserEmailAddress}@liferay.com"));
-		}
-
-		task ("Add a blogs entry") {
-			HeadlessBlog.addBlogEntry(
-				content = "Blogs Entry Content",
-				groupName = ${randomSiteName},
-				title = "Blogs Entry Title");
-		}
-
-		task ("Add an Asset Publisher to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addWidget(portletName = "Asset Publisher");
-		}
-
-		task ("Select the blogs entry in Asset Publisher") {
-			AssetPublisherPortlet.configureManualAssetSelectionPG(
-				assetTitle = "Blogs Entry Title",
-				assetType = "Blogs Entry");
-
-			Refresh();
-
-			PageEditor.assertFragmentSidebarLoaded();
-
-			PageEditor.publish();
-		}
-
-		task ("Sign in as new user") {
-			User.logoutAndLoginPG(userLoginEmailAddress = StringUtil.toLowerCase("${randomUserEmailAddress}@liferay.com"));
-		}
-
-		task ("Open the Contents panel") {
-			Navigator.gotoSitePage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			ContentPages.gotoPageEditor();
-
-			PageEditor.gotoTab(tabName = "Page Content");
-		}
-
-		task ("View access to blogs entry editor via Contents panel") {
-			LexiconEntry.gotoFragmentPageContentEllipsisMenuItem(
-				menuItem = "Edit",
-				rowEntry = "Blogs Entry Title");
-
-			AssertTextEquals(
-				locator1 = "ControlMenu#HEADING",
-				value1 = "Blogs Entry Title");
 		}
 	}
 
@@ -1785,111 +1715,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-103454. Content author having permission to update web content could see edit icon in the content page displaying the web contents and could edit web content in editmode, but could not edit editable field "
-	@priority = 5
-	test EditContentWithWebContentArticleUpdatePermission {
-		property portal.acceptance = "true";
-
-		task ("Define the permissions of new user") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "UPDATE",
-				resourceName = "com.liferay.journal.model.JournalArticle",
-				roleTitle = ${randomRoleKey},
-				roleType = "site");
-		}
-
-		task ("Assign the site role to new user") {
-			var groupId = JSONGroupSetter.setGroupId(groupName = ${randomSiteName});
-
-			JSONRole.assignSiteRoleToUser(
-				groupId = ${groupId},
-				roleTitle = ${randomRoleKey},
-				userEmailAddress = StringUtil.toLowerCase("${randomUserEmailAddress}@liferay.com"));
-		}
-
-		task ("Add two web contents") {
-			for (var webContentTitle : list "WC WebContent Title 1,WC WebContent Title 2") {
-				JSONWebcontent.addWebContent(
-					content = "WC WebContent Content",
-					groupId = ${groupId},
-					title = ${webContentTitle});
-			}
-		}
-
-		task ("Add a Heading fragment to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading");
-		}
-
-		task ("Map the Title of the first web content to editable field") {
-			PageEditorMapping.gotoEditableFieldMapping(
-				fragmentName = "Heading",
-				id = "text");
-
-			PageEditorMapping.mapEditableFieldToAsset(
-				entryTitle = "WC WebContent Title 1",
-				navItem = "Web Content");
-
-			Select(
-				locator1 = "PageEditorEditableLink#FIELD",
-				value1 = "Title");
-
-			PageEditor.waitForAutoSave();
-		}
-
-		task ("Add a Web Content Display below the Heading") {
-			PageEditor.addWidget(
-				portletName = "Web Content Display",
-				targetFragmentName = "Heading");
-		}
-
-		task ("Select the second web content") {
-			WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title 2");
-
-			IFrame.closeFrame();
-		}
-
-		task ("Add a Paragraph fragment below the Web Content Display") {
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Paragraph",
-				targetFragmentName = "Web Content Display");
-
-			PageEditor.publish();
-		}
-
-		task ("Sign in as new user") {
-			User.logoutAndLoginPG(userLoginEmailAddress = StringUtil.toLowerCase("${randomUserEmailAddress}@liferay.com"));
-		}
-
-		task ("Edit the web contents via Contents panel") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			for (var webContentTitle : list "WC WebContent Title 1,WC WebContent Title 2") {
-				PageEditor.gotoTab(tabName = "Page Content");
-
-				LexiconEntry.gotoFragmentPageContentEllipsisMenuItem(
-					menuItem = "Edit",
-					rowEntry = ${webContentTitle});
-
-				AssertVisible(locator1 = "WCEditWebContent#SIDEBAR");
-
-				Click(locator1 = "Icon#ANGLE_LEFT_BACK");
-			}
-		}
-
-		task ("Assert the Paragraph is invisible to new user") {
-			PageEditor.viewFragmentNotPresent(fragmentName = "Paragraph");
-		}
-	}
-
 	@description = "This is a test for LPS-105109. Content author having permissions to update page content can introduce new inline content after clicking edit icon in content page."
 	@priority = 5
 	test EditInlineContentWithUpdatePageContentPermission {
@@ -1962,56 +1787,6 @@ definition {
 				fragmentName = "paragraph",
 				id = "element-text",
 				text = "New editable fragment text");
-		}
-	}
-
-	@description = "This is a test for LPS-125388. The new user can edit specific content page as site member with update permission."
-	@priority = 4
-	test EditSpecificContentPageAsSiteMemberWithUpdatePermission {
-		task ("Grant Update permission of specific content page to Site Member") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
-
-			PagesAdmin.gotoPageEllipsisMenuItem(
-				menuItem = "Permissions",
-				pageName = "Test Content Page Name");
-
-			IFrame.selectPermissionsFrame();
-
-			Check.checkNotVisible(
-				key_actionName = "UPDATE",
-				key_roleTitle = "site-member",
-				locator1 = "Permissions#PERMISSIONS_MODAL_CHECKBOX");
-
-			PortletEntry.save();
-		}
-
-		task ("Sign in as new user") {
-			User.logoutAndLoginPG(userLoginEmailAddress = StringUtil.toLowerCase("${randomUserEmailAddress}@liferay.com"));
-		}
-
-		task ("Add a Paragraph fragment to content page") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			ContentPages.gotoPageEditor();
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Paragraph");
-		}
-
-		task ("Publish the content page") {
-			PageEditor.publish();
-		}
-
-		task ("View the Paragraph shown on content page at view mode") {
-			WaitForVisible(locator1 = "Icon#EDIT_PENCIL");
-
-			ContentPages.viewFragmentText(
-				fragmentName = "paragraph",
-				id = "element-text",
-				text = "A paragraph is a self-contained unit of a discourse in writing dealing with a particular point or idea. Paragraphs are usually an expected part of formal writing, used to organize longer prose.");
 		}
 	}
 
@@ -2107,60 +1882,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-126159. The user can publish a content page without permissions for custom fields."
-	@priority = 4
-	test PublishContentPageWithoutCustomFieldsPermission {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Add a custom field for Page") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Custom Fields");
-
-			CustomFields.addCP(
-				customFieldName = "Text Field",
-				customFieldType = "Input Field",
-				customInputDataType = "Text",
-				resourceName = "Page");
-		}
-
-		task ("Define the permissions of site role") {
-			Permissions.definePermissionsViaJSONAPI(
-				resourceNameActionList = "com_liferay_layout_admin_web_portlet_GroupPagesPortlet,ACCESS_IN_CONTROL_PANEL:com.liferay.layout.seo,VIEW:com.liferay.portal.kernel.model.Group,ADD_LAYOUT,VIEW_SITE_ADMINISTRATION:com.liferay.depot.model.DepotEntry,VIEW_SITE_ADMINISTRATION:com.liferay.portal.kernel.model.Layout,UPDATE",
-				roleTitle = ${randomRoleKey},
-				roleType = "site");
-		}
-
-		task ("Assign the site role to new user") {
-			JSONRole.assignSiteRoleToUser(
-				groupName = ${randomSiteName},
-				roleTitle = ${randomRoleKey},
-				userEmailAddress = StringUtil.toLowerCase("${randomUserEmailAddress}@liferay.com"));
-		}
-
-		task ("Sign in as new user") {
-			User.logoutAndLoginPG(userLoginEmailAddress = StringUtil.toLowerCase("${randomUserEmailAddress}@liferay.com"));
-		}
-
-		task ("Add a content page") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
-
-			ContentPages.addPage(pageName = "Test Content Page Name");
-		}
-
-		task ("Add a Heading fragment to page") {
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading");
-		}
-
-		task ("Publish the page") {
-			PageEditor.publish();
-		}
-	}
-
 	@description = "This is a test for LPS-137155. The page creator can change permissions of content page via header ellipsis icon at edit mode."
 	@priority = 3
 	test RemoveViewPermissionForGuestViaHeaderEllipsisIcon {
@@ -2204,8 +1925,6 @@ definition {
 	@description = "This is a test for LPS-173440. The user without View permission for object should see alert message on mapped Collection Display or Content Display at edit mode."
 	@priority = 4
 	test ViewAlertOnMappedCollectionDisplayOrContentDisplayWithoutViewPermissionForObjectAtEditMode {
-		property custom.properties = "feature.flag.LPS-169923=true${line.separator}jsonws.web.service.paths.excludes=";
-
 		var labelName = StringUtil.randomString(8);
 
 		var objectName = "A${labelName}";
@@ -2331,8 +2050,6 @@ definition {
 					collectionName = "Basic Components",
 					entryTitle = "",
 					fragmentName = "Heading");
-
-				PageEditor.publish();
 			}
 
 			task ("Map the Text field to Heading fragment") {
@@ -2532,8 +2249,6 @@ definition {
 	@description = "This is a test for LPS-165556. The page creator without trigger permission could see the available actions in Action selector."
 	@priority = 4
 	test ViewAvailableActionsInActionSelectorAsUserWithoutTriggerPermission {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
-
 		var labelName = StringUtil.randomString(8);
 
 		var objectName = "A${labelName}";
@@ -2585,9 +2300,11 @@ definition {
 				fieldName = "name",
 				objectName = "${objectName}2",
 				value = "Liferay");
+			var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${objectDefinitionId});
+			var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectDefinitionId});
 
 			Permissions.definePermissionsViaJSONAPI(
-				resourceNameActionList = "com.liferay.portal.kernel.model.Layout,UPDATE:com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectDefinitionId},VIEW:com.liferay.object.model.ObjectDefinition#${objectDefinitionId},VIEW",
+				resourceNameActionList = "com.liferay.portal.kernel.model.Layout,UPDATE:${objectDefinitionPortletId},VIEW:${objectDefinitionClassName},VIEW",
 				roleTitle = ${randomRoleKey},
 				roleType = "regular");
 
@@ -2642,110 +2359,6 @@ definition {
 				key_fieldLabel = "Action",
 				key_value = "Vote",
 				locator1 = "Select#GENERIC_SELECT_VALUE");
-		}
-	}
-
-	@description = "This is a test for LPS-103454. When one WC displayed in multiple fields in a content page, there should be one WC entry in Contents Panel list."
-	@priority = 4
-	test ViewDisplayedWebContentInContentsPanelWithWebContentArticleUpdatePermission {
-		task ("Define the permissions of new user") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "UPDATE",
-				resourceName = "com.liferay.journal.model.JournalArticle",
-				roleTitle = ${randomRoleKey},
-				roleType = "site");
-		}
-
-		task ("Assign the site role to new user") {
-			JSONRole.assignSiteRoleToUser(
-				groupName = ${randomSiteName},
-				roleTitle = ${randomRoleKey},
-				userEmailAddress = StringUtil.toLowerCase("${randomUserEmailAddress}@liferay.com"));
-		}
-
-		task ("Add a web content") {
-			JSONWebcontent.addWebContent(
-				content = "WC WebContent Content",
-				groupName = ${randomSiteName},
-				title = "WC WebContent Title");
-		}
-
-		task ("Add a Heading fragment to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading");
-		}
-
-		task ("Map the Title of the web content to editable field") {
-			PageEditorMapping.gotoEditableFieldMapping(
-				fragmentName = "Heading",
-				id = "text");
-
-			PageEditorMapping.mapEditableFieldToAsset(
-				entryTitle = "WC WebContent Title",
-				navItem = "Web Content");
-
-			Select(
-				locator1 = "PageEditorEditableLink#FIELD",
-				value1 = "Title");
-
-			PageEditor.waitForAutoSave();
-		}
-
-		task ("Add a Web Content Display below the Heading") {
-			PageEditor.addWidget(
-				portletName = "Web Content Display",
-				targetFragmentName = "Heading");
-		}
-
-		task ("Select the web content") {
-			WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
-		}
-
-		task ("Add an Asset Publisher below the Web Content Display") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addWidget(
-				portletName = "Asset Publisher",
-				targetFragmentName = "Web Content Display");
-		}
-
-		task ("Select the web content in Asset Publisher") {
-			AssetPublisherPortlet.configureManualAssetSelectionPG(
-				assetTitle = "WC WebContent Title",
-				assetType = "Basic Web Content");
-
-			Refresh();
-
-			PageEditor.assertFragmentSidebarLoaded();
-
-			PageEditor.publish();
-		}
-
-		task ("Sign in as new user") {
-			User.logoutAndLoginPG(userLoginEmailAddress = StringUtil.toLowerCase("${randomUserEmailAddress}@liferay.com"));
-		}
-
-		task ("View the displayed web content in Contents panel") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.gotoTab(tabName = "Page Content");
-
-			AssertVisible(
-				key_itemName = "WC WebContent Title",
-				locator1 = "PageEditor#PAGE_CONTENTS_ITEM");
-
-			AssertElementNotPresent(
-				index = 2,
-				locator1 = "PageEditor#PAGE_CONTENTS_ITEM_POSITION");
 		}
 	}
 

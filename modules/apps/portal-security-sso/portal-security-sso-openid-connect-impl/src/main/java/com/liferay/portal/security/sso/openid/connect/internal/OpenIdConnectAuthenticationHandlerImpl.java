@@ -12,6 +12,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -28,6 +29,7 @@ import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnec
 import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnectTokenRequestUtil;
 
 import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.langtag.LangTag;
 import com.nimbusds.langtag.LangTagException;
 import com.nimbusds.oauth2.sdk.ErrorObject;
@@ -137,8 +139,18 @@ public class OpenIdConnectAuthenticationHandlerImpl
 			_getLoginRedirectURI(httpServletRequest),
 			oAuthClientEntry.getTokenRequestParametersJSON());
 
-		String userInfoJSON = _requestUserInfoJSON(
-			oidcTokens.getAccessToken(), oidcProviderMetadata);
+		String userInfoJSON = null;
+
+		if (oidcProviderMetadata.getUserInfoEndpointURI() == null) {
+			UserInfo userInfo = new UserInfo(
+				JWTClaimsSet.parse(getUserInfoClaims(oidcTokens.getIDToken())));
+
+			userInfoJSON = userInfo.toJSONString();
+		}
+		else {
+			userInfoJSON = _requestUserInfoJSON(
+				oidcTokens.getAccessToken(), oidcProviderMetadata);
+		}
 
 		long userId = _oidcUserInfoProcessor.processUserInfo(
 			_portal.getCompanyId(httpServletRequest),
@@ -200,7 +212,7 @@ public class OpenIdConnectAuthenticationHandlerImpl
 			).put(
 				"state", new State()
 			).put(
-				"ui_Locals", _getLangTags(httpServletRequest)
+				"ui_locales", _getLangTags(httpServletRequest)
 			).build();
 
 		try {
@@ -247,6 +259,20 @@ public class OpenIdConnectAuthenticationHandlerImpl
 				_portal.getCompanyId(httpServletRequest),
 				openIdConnectProviderName, _oAuthClientEntryLocalService),
 			httpServletRequest, httpServletResponse);
+	}
+
+	protected Map<String, Object> getUserInfoClaims(JWT jwt)
+		throws java.text.ParseException {
+
+		JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
+
+		Map<String, Object> claims = jwtClaimsSet.toJSONObject();
+
+		claims.put("email", jwtClaimsSet.getStringClaim("email"));
+		claims.put("family_name", jwtClaimsSet.getStringClaim("family_name"));
+		claims.put("given_name", jwtClaimsSet.getStringClaim("given_name"));
+
+		return claims;
 	}
 
 	private URI _getAuthenticationRequestURI(
@@ -340,7 +366,8 @@ public class OpenIdConnectAuthenticationHandlerImpl
 		}
 
 		try {
-			return Collections.singletonList(new LangTag(locale.getLanguage()));
+			return Collections.singletonList(
+				LangTag.parse(_language.getBCP47LangTag(locale)));
 		}
 		catch (LangTagException langTagException) {
 			if (_log.isDebugEnabled()) {
@@ -455,6 +482,9 @@ public class OpenIdConnectAuthenticationHandlerImpl
 	@Reference
 	private AuthorizationServerMetadataResolver
 		_authorizationServerMetadataResolver;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private OAuthClientEntryLocalService _oAuthClientEntryLocalService;

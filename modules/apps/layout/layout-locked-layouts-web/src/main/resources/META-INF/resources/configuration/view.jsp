@@ -27,7 +27,10 @@ LockedLayoutsConfigurationDisplayContext lockedLayoutsConfigurationDisplayContex
 	</clay:content-col>
 </clay:content-row>
 
-<clay:sheet-section role="group" aria-labelledby='<%= liferayPortletResponse.getNamespace() + "automaticUnlockingTitle" %>'>
+<clay:sheet-section
+	aria-labelledby='<%= liferayPortletResponse.getNamespace() + "automaticUnlockingTitle" %>'
+	role="group"
+>
 	<clay:content-row
 		containerElement="h3"
 		cssClass="c-mb-3 sheet-subtitle"
@@ -69,7 +72,23 @@ LockedLayoutsConfigurationDisplayContext lockedLayoutsConfigurationDisplayContex
 				<aui:validator name="max">99999</aui:validator>
 			</aui:input>
 
-			<p class="text-3 text-secondary" id="<portlet:namespace />autosaveMinutesHiddenDescription"><liferay-ui:message key="set-a-value-in-minutes-between-1-and-99.999" /></p>
+			<p class="text-3 text-secondary" id="<portlet:namespace />autosaveMinutesHiddenDescription"><liferay-ui:message arguments='<%= new String[] {"1", "99999"} %>' key="set-a-value-in-minutes-between-x-and-x" translateArguments="<%= false %>" /></p>
 		</clay:content-col>
 	</clay:content-row>
 </clay:sheet-section>
+
+<aui:script>
+	const numericInput = document.getElementById(
+		'<portlet:namespace />autosaveMinutes'
+	);
+
+	if (numericInput) {
+		const keysNotAllowed = new Set(['e', '-']);
+
+		numericInput.addEventListener('keydown', (event) => {
+			if (keysNotAllowed.has(event.key)) {
+				event.preventDefault();
+			}
+		});
+	}
+</aui:script>

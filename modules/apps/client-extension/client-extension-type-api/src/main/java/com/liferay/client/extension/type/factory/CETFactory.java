@@ -28,19 +28,19 @@ public interface CETFactory {
 
 	public CET create(
 			CETConfiguration cetConfiguration, long companyId,
-			String externalReferenceCode)
+			String externalReferenceCode, boolean replaceVariables)
 		throws PortalException;
 
-	public CET create(ClientExtensionEntry clientExtensionEntry)
+	public CET create(
+			ClientExtensionEntry clientExtensionEntry, boolean replaceVariables)
 		throws PortalException;
 
-	public CET create(PortletRequest portletRequest, String type)
-		throws PortalException;
+	public CET create(PortletRequest portletRequest) throws PortalException;
 
 	public Collection<String> getTypes();
 
 	public void validate(
-			UnicodeProperties newTypeSettingsUnicodeProperties,
+			long companyId, UnicodeProperties newTypeSettingsUnicodeProperties,
 			UnicodeProperties oldTypeSettingsUnicodeProperties, String type)
 		throws PortalException;
 
@@ -54,16 +54,6 @@ public interface CETFactory {
 		// feature.flag.LPS-164563
 
 		ClientExtensionEntryConstants.TYPE_FDS_FILTER, "LPS-164563"
-	).put(
-
-		// feature.flag.LPS-166479
-
-		ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP, "LPS-166479"
-	).put(
-
-		// feature.flag.LPS-172903
-
-		ClientExtensionEntryConstants.TYPE_JS_IMPORT_MAPS_ENTRY, "LPS-172903"
 	).put(
 
 		// feature.flag.LPS-177027

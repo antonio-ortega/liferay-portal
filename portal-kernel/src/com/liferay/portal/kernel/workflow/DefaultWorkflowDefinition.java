@@ -34,6 +34,11 @@ public class DefaultWorkflowDefinition
 	}
 
 	@Override
+	public String getContentAsXML() {
+		return _contentAsXML;
+	}
+
+	@Override
 	public Date getCreateDate() {
 		return _createDate;
 	}
@@ -45,6 +50,11 @@ public class DefaultWorkflowDefinition
 		}
 
 		return _description;
+	}
+
+	@Override
+	public String getExternalReferenceCode() {
+		return _externalReferenceCode;
 	}
 
 	@Override
@@ -128,12 +138,20 @@ public class DefaultWorkflowDefinition
 		_content = content;
 	}
 
+	public void setContentAsXML(String contentAsXML) {
+		_contentAsXML = contentAsXML;
+	}
+
 	public void setCreateDate(Date createDate) {
 		_createDate = createDate;
 	}
 
 	public void setDescription(String description) {
 		_description = description;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		_externalReferenceCode = externalReferenceCode;
 	}
 
 	public void setInputStream(InputStream inputStream) {
@@ -185,8 +203,10 @@ public class DefaultWorkflowDefinition
 	private boolean _active;
 	private long _companyId;
 	private String _content;
+	private String _contentAsXML;
 	private Date _createDate;
 	private String _description;
+	private String _externalReferenceCode;
 	private InputStream _inputStream;
 	private Date _modifiedDate;
 	private String _name;

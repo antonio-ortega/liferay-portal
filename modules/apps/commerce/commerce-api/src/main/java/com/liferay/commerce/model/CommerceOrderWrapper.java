@@ -48,7 +48,7 @@ public class CommerceOrderWrapper
 		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("billingAddressId", getBillingAddressId());
 		attributes.put("commerceAccountId", getCommerceAccountId());
-		attributes.put("commerceCurrencyId", getCommerceCurrencyId());
+		attributes.put("commerceCurrencyCode", getCommerceCurrencyCode());
 		attributes.put("commerceOrderTypeId", getCommerceOrderTypeId());
 		attributes.put(
 			"commerceShippingMethodId", getCommerceShippingMethodId());
@@ -69,6 +69,7 @@ public class CommerceOrderWrapper
 			getDeliveryCommerceTermEntryName());
 		attributes.put("lastPriceUpdateDate", getLastPriceUpdateDate());
 		attributes.put("manuallyAdjusted", isManuallyAdjusted());
+		attributes.put("name", getName());
 		attributes.put("orderDate", getOrderDate());
 		attributes.put("orderStatus", getOrderStatus());
 		attributes.put(
@@ -80,6 +81,7 @@ public class CommerceOrderWrapper
 		attributes.put("printedNote", getPrintedNote());
 		attributes.put("purchaseOrderNumber", getPurchaseOrderNumber());
 		attributes.put("requestedDeliveryDate", getRequestedDeliveryDate());
+		attributes.put("shippable", isShippable());
 		attributes.put("shippingAmount", getShippingAmount());
 		attributes.put("shippingDiscountAmount", getShippingDiscountAmount());
 		attributes.put(
@@ -255,10 +257,11 @@ public class CommerceOrderWrapper
 			setCommerceAccountId(commerceAccountId);
 		}
 
-		Long commerceCurrencyId = (Long)attributes.get("commerceCurrencyId");
+		String commerceCurrencyCode = (String)attributes.get(
+			"commerceCurrencyCode");
 
-		if (commerceCurrencyId != null) {
-			setCommerceCurrencyId(commerceCurrencyId);
+		if (commerceCurrencyCode != null) {
+			setCommerceCurrencyCode(commerceCurrencyCode);
 		}
 
 		Long commerceOrderTypeId = (Long)attributes.get("commerceOrderTypeId");
@@ -340,6 +343,12 @@ public class CommerceOrderWrapper
 			setManuallyAdjusted(manuallyAdjusted);
 		}
 
+		String name = (String)attributes.get("name");
+
+		if (name != null) {
+			setName(name);
+		}
+
 		Date orderDate = (Date)attributes.get("orderDate");
 
 		if (orderDate != null) {
@@ -391,6 +400,12 @@ public class CommerceOrderWrapper
 
 		if (requestedDeliveryDate != null) {
 			setRequestedDeliveryDate(requestedDeliveryDate);
+		}
+
+		Boolean shippable = (Boolean)attributes.get("shippable");
+
+		if (shippable != null) {
+			setShippable(shippable);
 		}
 
 		BigDecimal shippingAmount = (BigDecimal)attributes.get(
@@ -742,6 +757,21 @@ public class CommerceOrderWrapper
 	}
 
 	@Override
+	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
+			getAttachmentFileEntries(int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getAttachmentFileEntries(start, end);
+	}
+
+	@Override
+	public int getAttachmentFileEntriesCount()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getAttachmentFileEntriesCount();
+	}
+
+	@Override
 	public CommerceAddress getBillingAddress()
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -784,13 +814,13 @@ public class CommerceOrderWrapper
 	}
 
 	/**
-	 * Returns the commerce currency ID of this commerce order.
+	 * Returns the commerce currency code of this commerce order.
 	 *
-	 * @return the commerce currency ID of this commerce order
+	 * @return the commerce currency code of this commerce order
 	 */
 	@Override
-	public long getCommerceCurrencyId() {
-		return model.getCommerceCurrencyId();
+	public String getCommerceCurrencyCode() {
+		return model.getCommerceCurrencyCode();
 	}
 
 	/**
@@ -937,6 +967,13 @@ public class CommerceOrderWrapper
 		return model.getExternalReferenceCode();
 	}
 
+	@Override
+	public com.liferay.portal.kernel.repository.model.Folder getFolder(
+		com.liferay.portal.kernel.repository.LocalRepository localRepository) {
+
+		return model.getFolder(localRepository);
+	}
+
 	/**
 	 * Returns the group ID of this commerce order.
 	 *
@@ -955,6 +992,14 @@ public class CommerceOrderWrapper
 	@Override
 	public Date getLastPriceUpdateDate() {
 		return model.getLastPriceUpdateDate();
+	}
+
+	@Override
+	public com.liferay.portal.kernel.repository.LocalRepository
+			getLocalRepository()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getLocalRepository();
 	}
 
 	/**
@@ -985,6 +1030,16 @@ public class CommerceOrderWrapper
 	@Override
 	public long getMvccVersion() {
 		return model.getMvccVersion();
+	}
+
+	/**
+	 * Returns the name of this commerce order.
+	 *
+	 * @return the name of this commerce order
+	 */
+	@Override
+	public String getName() {
+		return model.getName();
 	}
 
 	/**
@@ -1092,6 +1147,16 @@ public class CommerceOrderWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getScopeGroupId();
+	}
+
+	/**
+	 * Returns the shippable of this commerce order.
+	 *
+	 * @return the shippable of this commerce order
+	 */
+	@Override
+	public boolean getShippable() {
+		return model.getShippable();
 	}
 
 	@Override
@@ -1765,6 +1830,16 @@ public class CommerceOrderWrapper
 		return model.isScheduled();
 	}
 
+	/**
+	 * Returns <code>true</code> if this commerce order is shippable.
+	 *
+	 * @return <code>true</code> if this commerce order is shippable; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isShippable() {
+		return model.isShippable();
+	}
+
 	@Override
 	public boolean isSubscription() {
 		return model.isSubscription();
@@ -1811,13 +1886,13 @@ public class CommerceOrderWrapper
 	}
 
 	/**
-	 * Sets the commerce currency ID of this commerce order.
+	 * Sets the commerce currency code of this commerce order.
 	 *
-	 * @param commerceCurrencyId the commerce currency ID of this commerce order
+	 * @param commerceCurrencyCode the commerce currency code of this commerce order
 	 */
 	@Override
-	public void setCommerceCurrencyId(long commerceCurrencyId) {
-		model.setCommerceCurrencyId(commerceCurrencyId);
+	public void setCommerceCurrencyCode(String commerceCurrencyCode) {
+		model.setCommerceCurrencyCode(commerceCurrencyCode);
 	}
 
 	/**
@@ -1988,6 +2063,16 @@ public class CommerceOrderWrapper
 	}
 
 	/**
+	 * Sets the name of this commerce order.
+	 *
+	 * @param name the name of this commerce order
+	 */
+	@Override
+	public void setName(String name) {
+		model.setName(name);
+	}
+
+	/**
 	 * Sets the order date of this commerce order.
 	 *
 	 * @param orderDate the order date of this commerce order
@@ -2090,6 +2175,16 @@ public class CommerceOrderWrapper
 	@Override
 	public void setRequestedDeliveryDate(Date requestedDeliveryDate) {
 		model.setRequestedDeliveryDate(requestedDeliveryDate);
+	}
+
+	/**
+	 * Sets whether this commerce order is shippable.
+	 *
+	 * @param shippable the shippable of this commerce order
+	 */
+	@Override
+	public void setShippable(boolean shippable) {
+		model.setShippable(shippable);
 	}
 
 	/**

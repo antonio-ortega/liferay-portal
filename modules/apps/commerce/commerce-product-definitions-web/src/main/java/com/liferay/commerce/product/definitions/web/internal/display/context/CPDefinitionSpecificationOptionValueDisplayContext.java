@@ -10,14 +10,20 @@ import com.liferay.commerce.product.display.context.BaseCPDefinitionsDisplayCont
 import com.liferay.commerce.product.item.selector.criterion.CPSpecificationOptionItemSelectorCriterion;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPOptionCategory;
+import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.portlet.action.ActionHelper;
 import com.liferay.commerce.product.service.CPOptionCategoryService;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.SelectOption;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.list.type.model.ListTypeDefinition;
+import com.liferay.list.type.model.ListTypeEntry;
+import com.liferay.list.type.service.ListTypeEntryService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
@@ -26,11 +32,17 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.CustomAttributesUtil;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
 import javax.portlet.PortletURL;
 
@@ -46,12 +58,13 @@ public class CPDefinitionSpecificationOptionValueDisplayContext
 	public CPDefinitionSpecificationOptionValueDisplayContext(
 		ActionHelper actionHelper, HttpServletRequest httpServletRequest,
 		CPOptionCategoryService cpOptionCategoryService,
-		ItemSelector itemSelector) {
+		ItemSelector itemSelector, ListTypeEntryService listTypeEntryService) {
 
 		super(actionHelper, httpServletRequest);
 
 		_cpOptionCategoryService = cpOptionCategoryService;
 		_itemSelector = itemSelector;
+		_listTypeEntryService = listTypeEntryService;
 	}
 
 	public CPDefinitionSpecificationOptionValue
@@ -147,6 +160,43 @@ public class CPDefinitionSpecificationOptionValueDisplayContext
 		).buildPortletURL();
 	}
 
+	public Map<String, List<SelectOption>> getSelectOptionsMap()
+		throws Exception {
+
+		Map<String, List<SelectOption>> selectOptionsMap = new TreeMap<>();
+
+		CPSpecificationOption cpSpecificationOption =
+			_cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
+
+		Locale locale = LocaleUtil.fromLanguageId(
+			LanguageUtil.getLanguageId(httpServletRequest));
+
+		for (ListTypeDefinition listTypeDefinition :
+				cpSpecificationOption.getListTypeDefinitions()) {
+
+			List<SelectOption> selectOptions = new ArrayList<>();
+
+			for (ListTypeEntry listTypeEntry :
+					_listTypeEntryService.getListTypeEntries(
+						listTypeDefinition.getListTypeDefinitionId(),
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
+
+				selectOptions.add(
+					new SelectOption(
+						listTypeEntry.getName(locale), listTypeEntry.getKey(),
+						Objects.equals(
+							_cpDefinitionSpecificationOptionValue.getValue(
+								locale),
+							listTypeEntry.getName(locale))));
+			}
+
+			selectOptionsMap.put(
+				listTypeDefinition.getName(locale), selectOptions);
+		}
+
+		return selectOptionsMap;
+	}
+
 	public boolean hasCustomAttributesAvailable() throws Exception {
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
@@ -177,5 +227,6 @@ public class CPDefinitionSpecificationOptionValueDisplayContext
 		_cpDefinitionSpecificationOptionValue;
 	private final CPOptionCategoryService _cpOptionCategoryService;
 	private final ItemSelector _itemSelector;
+	private final ListTypeEntryService _listTypeEntryService;
 
 }

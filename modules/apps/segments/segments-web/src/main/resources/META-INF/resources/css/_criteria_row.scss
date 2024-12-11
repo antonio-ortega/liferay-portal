@@ -31,6 +31,10 @@
 		padding: 0;
 		width: 100%;
 
+		&.dnd-drag {
+			opacity: 0.4;
+		}
+
 		.criterion-input {
 			flex: 1;
 			margin-right: 8px;
@@ -47,7 +51,9 @@
 			&--error {
 				border-color: var(--danger);
 				&:focus {
-					box-shadow: 0 0 0 0.125rem #fff, 0 0 0 0.25rem var(--danger);
+					box-shadow:
+						0 0 0 0.125rem #fff,
+						0 0 0 0.25rem var(--danger);
 				}
 			}
 		}
@@ -60,10 +66,6 @@
 	.operator,
 	.operator-input {
 		text-transform: lowercase;
-	}
-
-	&.dnd-drag {
-		opacity: 0.4;
 	}
 
 	&.dnd-hover {

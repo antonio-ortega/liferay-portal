@@ -337,14 +337,6 @@ public class CommercePriceEntryLocalServiceWrapper
 	}
 
 	@Override
-	public CommercePriceEntry fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		return _commercePriceEntryLocalService.fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
-	@Override
 	public CommercePriceEntry fetchCommercePriceEntry(
 		long commercePriceEntryId) {
 
@@ -553,6 +545,16 @@ public class CommercePriceEntryLocalServiceWrapper
 		return _commercePriceEntryLocalService.
 			getInstanceBaseCommercePriceEntry(
 				cpInstanceUuid, priceListType, unitOfMeasureKey);
+	}
+
+	@Override
+	public java.util.List<CommercePriceEntry> getInstanceCommercePriceEntries(
+		String cpInstanceUuid, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<CommercePriceEntry>
+			orderByComparator) {
+
+		return _commercePriceEntryLocalService.getInstanceCommercePriceEntries(
+			cpInstanceUuid, start, end, orderByComparator);
 	}
 
 	@Override

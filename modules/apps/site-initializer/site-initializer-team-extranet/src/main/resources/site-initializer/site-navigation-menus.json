@@ -1,5 +1,6 @@
 [
 	{
+		"externalReferenceCode": "SITENAVIGATIONMENU1",
 		"menuItems": [
 			{
 				"friendlyURL": "/team",
@@ -25,6 +26,7 @@
 		"name": "Main Navigation"
 	},
 	{
+		"externalReferenceCode": "SITENAVIGATIONMENU2",
 		"menuItems": [
 			{
 				"friendlyURL": "/privacy-policy",
@@ -37,7 +39,9 @@
 				"type": "layout"
 			},
 			{
-				"name": "Github",
+				"name_i18n": {
+					"en_US": "Github"
+				},
 				"type": "url",
 				"url": "https://github.com",
 				"useNewTab": false

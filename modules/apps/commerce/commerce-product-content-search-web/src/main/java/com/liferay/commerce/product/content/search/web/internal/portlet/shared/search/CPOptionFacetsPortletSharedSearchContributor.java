@@ -88,6 +88,7 @@ public class CPOptionFacetsPortletSharedSearchContributor
 				(ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
 			int frequencyThreshold = 1;
+			int maxOptions = 10;
 			int maxTerms = 10;
 
 			PortletPreferences portletPreferences =
@@ -97,6 +98,9 @@ public class CPOptionFacetsPortletSharedSearchContributor
 				frequencyThreshold = GetterUtil.getInteger(
 					portletPreferences.getValue("frequencyThreshold", null),
 					frequencyThreshold);
+				maxOptions = GetterUtil.getInteger(
+					portletPreferences.getValue("maxOptions", null),
+					maxOptions);
 				maxTerms = GetterUtil.getInteger(
 					portletPreferences.getValue("maxTerms", null), maxTerms);
 			}
@@ -104,12 +108,12 @@ public class CPOptionFacetsPortletSharedSearchContributor
 			serializableFacet.setFacetConfiguration(
 				buildFacetConfiguration(
 					serializableFacet.getFieldName(), frequencyThreshold,
-					maxTerms));
+					maxOptions));
 
 			portletSharedSearchSettings.addFacet(serializableFacet);
 
 			for (Facet facet :
-					getFacets(frequencyThreshold, maxTerms, renderRequest)) {
+					getFacets(frequencyThreshold, maxOptions, renderRequest)) {
 
 				String cpOptionKey =
 					CPOptionFacetsUtil.getCPOptionKeyFromIndexFieldName(
@@ -225,6 +229,8 @@ public class CPOptionFacetsPortletSharedSearchContributor
 
 			if (accountEntry != null) {
 				searchContext.setAttribute(
+					"accountEntryId", accountEntry.getAccountEntryId());
+				searchContext.setAttribute(
 					"commerceAccountGroupIds",
 					_accountGroupLocalService.getAccountGroupIds(
 						accountEntry.getAccountEntryId()));
@@ -240,10 +246,10 @@ public class CPOptionFacetsPortletSharedSearchContributor
 			int frequencyThreshold, int maxTerms, RenderRequest renderRequest)
 		throws PortalException {
 
+		List<Facet> facets = new ArrayList<>();
+
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
-
-		List<Facet> facets = new ArrayList<>();
 
 		AssetCategory assetCategory = (AssetCategory)renderRequest.getAttribute(
 			WebKeys.ASSET_CATEGORY);

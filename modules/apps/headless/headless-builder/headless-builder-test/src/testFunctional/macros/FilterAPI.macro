@@ -1,6 +1,7 @@
 definition {
 
-	macro _curlAPIFilter {
+	@summary = "Default summary"
+	macro _curlAPIFilter(virtualHost = null) {
 		if (isSet(virtualHost)) {
 			if (!(isSet(port))) {
 				var port = 8080;
@@ -13,23 +14,25 @@ definition {
 		}
 
 		var api = "headless-builder/filters";
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		var curl = '''
 			${portalURL}/o/${api} \
-				-u test@liferay.com:test \
+				-u test@liferay.com:${userPassword} \
 				-H Content-Type: application/json
 		''';
 
 		return ${curl};
 	}
 
-	macro createAPIFilter {
-		Variables.assertDefined(parameterList = "${filterValue},${endpointId}");
+	@summary = "Default summary"
+	macro createAPIFilter(filterValue = null, endpointERC = null, virtualHost = null) {
+		Variables.assertDefined(parameterList = "${filterValue},${endpointERC}");
 
 		var curl = FilterAPI._curlAPIFilter(virtualHost = ${virtualHost});
 		var body = '''
 			"oDataFilter": "${filterValue}",
-			"r_apiEndpointToAPIFilters_c_apiEndpointId": ${endpointId}
+			"r_apiEndpointToAPIFilters_l_apiEndpointERC": "${endpointERC}"
 		''';
 
 		var curl = StringUtil.add(${curl}, " -d { ${body} }", "");

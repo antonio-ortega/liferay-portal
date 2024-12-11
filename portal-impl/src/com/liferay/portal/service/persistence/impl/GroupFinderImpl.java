@@ -1162,39 +1162,48 @@ public class GroupFinderImpl
 			return;
 		}
 
+		if (params.containsKey("actionId")) {
+			Long userId = _getUserId(params);
+
+			queryPos.add(userId);
+			queryPos.add(userId);
+		}
+
 		for (Map.Entry<String, Object> entry : params.entrySet()) {
 			String key = entry.getKey();
 
 			if (key.equals("actionId")) {
+				Long userId = _getUserId(params);
+
+				int hasUserRole = 0;
+
 				Long companyId = CompanyThreadLocal.getCompanyId();
 
 				Role adminRole = RoleLocalServiceUtil.fetchRole(
 					companyId, RoleConstants.ADMINISTRATOR);
+
+				if (RoleLocalServiceUtil.hasUserRole(
+						userId, adminRole.getRoleId())) {
+
+					hasUserRole = 1;
+				}
+
+				queryPos.add(hasUserRole);
+
 				Role siteAdminRole = RoleLocalServiceUtil.fetchRole(
 					companyId, RoleConstants.SITE_ADMINISTRATOR);
+
+				queryPos.add(siteAdminRole.getRoleId());
+
 				Role siteOwnerRole = RoleLocalServiceUtil.fetchRole(
 					companyId, RoleConstants.SITE_OWNER);
 
-				Long userId = (Long)params.get("userId");
-
-				if (Validator.isNull(userId)) {
-					PermissionChecker permissionChecker =
-						PermissionThreadLocal.getPermissionChecker();
-
-					userId = permissionChecker.getUserId();
-				}
+				queryPos.add(siteOwnerRole.getRoleId());
 
 				ResourceAction resourceAction =
 					ResourceActionLocalServiceUtil.getResourceAction(
 						Group.class.getName(), (String)entry.getValue());
 
-				queryPos.add(
-					RoleLocalServiceUtil.hasUserRole(
-						userId, adminRole.getRoleId()));
-				queryPos.add(userId);
-
-				queryPos.add(siteAdminRole.getRoleId());
-				queryPos.add(siteOwnerRole.getRoleId());
 				queryPos.add(resourceAction.getBitwiseValue());
 			}
 			else if (key.equals("active") || key.equals("layout") ||
@@ -1366,7 +1375,7 @@ public class GroupFinderImpl
 
 	private String _getCondition(String join) {
 		if (Validator.isNotNull(join)) {
-			int pos = join.indexOf("WHERE");
+			int pos = join.lastIndexOf("WHERE");
 
 			if (pos != -1) {
 				join = StringPool.OPEN_PARENTHESIS + join.substring(pos + 5);
@@ -1434,6 +1443,19 @@ public class GroupFinderImpl
 		_joinMap = joinMap;
 
 		return _joinMap;
+	}
+
+	private Long _getUserId(Map<String, Object> params) {
+		Long currentUserId = (Long)params.get("userId");
+
+		if (Validator.isNull(currentUserId)) {
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker();
+
+			currentUserId = permissionChecker.getUserId();
+		}
+
+		return currentUserId;
 	}
 
 	private Map<String, String> _getWhereMap() {
@@ -1563,7 +1585,7 @@ public class GroupFinderImpl
 
 	private String _removeWhere(String join) {
 		if (Validator.isNotNull(join)) {
-			int pos = join.indexOf("WHERE");
+			int pos = join.lastIndexOf("WHERE");
 
 			if (pos != -1) {
 				join = join.substring(0, pos);

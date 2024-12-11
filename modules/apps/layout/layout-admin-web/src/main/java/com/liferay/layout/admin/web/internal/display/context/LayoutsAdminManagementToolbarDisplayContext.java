@@ -20,13 +20,16 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.taglib.security.PermissionsURLTag;
 import com.liferay.translation.url.provider.TranslationURLProvider;
 
 import java.util.List;
@@ -93,12 +96,38 @@ public class LayoutsAdminManagementToolbarDisplayContext
 								httpServletRequest))
 					).setRedirect(
 						_themeDisplay.getURLCurrent()
+					).setParameter(
+						"backURLTitle",
+						() -> {
+							PortletDisplay portletDisplay =
+								_themeDisplay.getPortletDisplay();
+
+							return portletDisplay.getPortletDisplayName();
+						}
 					).buildString());
 				dropdownItem.setDisabled(false);
 				dropdownItem.setIcon("upload");
 				dropdownItem.setLabel(
 					LanguageUtil.get(
 						httpServletRequest, "export-for-translations"));
+				dropdownItem.setQuickAction(true);
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "changePermissions");
+				dropdownItem.putData(
+					"changePermissionsURL",
+					PermissionsURLTag.doTag(
+						StringPool.BLANK, Layout.class.getName(),
+						_themeDisplay.getScopeGroupId(),
+						LiferayWindowState.POP_UP.toString(),
+						_themeDisplay.getRequest()));
+				dropdownItem.putData(
+					"maxItemsToShowInfoMessage", String.valueOf(200));
+				dropdownItem.setIcon("password-policies");
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "permissions"));
+				dropdownItem.setMultipleTypesBulkActionDisabled(true);
 				dropdownItem.setQuickAction(true);
 			}
 		).add(
@@ -228,6 +257,11 @@ public class LayoutsAdminManagementToolbarDisplayContext
 			return super.getSortingOrder();
 		}
 
+		return null;
+	}
+
+	@Override
+	public String getSortingURL() {
 		return null;
 	}
 

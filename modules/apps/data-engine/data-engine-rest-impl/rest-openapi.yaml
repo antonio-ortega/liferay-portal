@@ -28,14 +28,15 @@ components:
                     format: date-time
                     type: string
                 defaultDataLayout:
-                    allOf:
-                        - $ref: "#/components/schemas/DataLayout"
+                    $ref: "#/components/schemas/DataLayout"
                 defaultLanguageId:
                     type: string
                 description:
                     additionalProperties:
                         type: object
                     type: object
+                externalReferenceCode:
+                    type: string
                 id:
                     format: int64
                     type: integer
@@ -109,8 +110,7 @@ components:
         DataDefinitionFieldLink:
             properties:
                 dataDefinition:
-                    allOf:
-                        - $ref: "#/components/schemas/DataDefinition"
+                    $ref: "#/components/schemas/DataDefinition"
                 dataLayouts:
                     items:
                         $ref: "#/components/schemas/DataLayout"
@@ -329,7 +329,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.data.engine.rest.client', and version '3.0.24'."
+        'com.liferay.data.engine.rest.client', and version '3.0.34'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -905,6 +905,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -1260,6 +1264,10 @@ paths:
                   schema:
                       format: int64
                       type: integer
+            requestBody:
+                content:
+                    application/json: {}
+                    application/xml: {}
             responses:
                 204:
                     content:
@@ -1473,6 +1481,98 @@ paths:
                   required: true
                   schema:
                       type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DataDefinition"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DataDefinition"
+            tags: ["DataDefinition"]
+    "/sites/{siteId}/data-definitions/by-content-type/{contentType}/by-external-reference-code/{externalReferenceCode}":
+        delete:
+            operationId: deleteSiteDataDefinitionByContentTypeByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: contentType
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                204:
+                    content:
+                        application/json: {}
+                        application/xml: {}
+            tags: ["DataDefinition"]
+        get:
+            operationId: getSiteDataDefinitionByContentTypeByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: contentType
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/DataDefinition"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/DataDefinition"
+            tags: ["DataDefinition"]
+        put:
+            operationId: putSiteDataDefinitionByContentTypeByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: siteId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+                - in: path
+                  name: contentType
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/DataDefinition"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/DataDefinition"
             responses:
                 200:
                     content:

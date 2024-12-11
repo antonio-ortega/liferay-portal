@@ -8,7 +8,9 @@ package com.liferay.portal.test.rule;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.ArrayUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -73,14 +75,15 @@ public class InjectTestBag {
 			if (serviceReference != null) {
 				_serviceReferences.add(serviceReference);
 
-				field.set(_target, bundleContext.getService(serviceReference));
+				ReflectionTestUtil.setFieldValue(
+					field, _target, bundleContext.getService(serviceReference));
 			}
 		}
 	}
 
 	public void resetFields() throws Exception {
 		for (Field field : _fields) {
-			field.set(_target, null);
+			ReflectionTestUtil.setFieldValue(field, _target, null);
 		}
 
 		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
@@ -232,7 +235,7 @@ public class InjectTestBag {
 		ServiceReference<?>[] serviceReferences =
 			bundleContext.getAllServiceReferences(className, filterString);
 
-		if ((serviceReferences == null) || (serviceReferences.length == 0)) {
+		if (ArrayUtil.isEmpty(serviceReferences)) {
 			return null;
 		}
 

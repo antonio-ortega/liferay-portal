@@ -10,7 +10,7 @@ import com.liferay.document.library.kernel.store.Store;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
 import com.liferay.portal.db.index.IndexUpdaterUtil;
-import com.liferay.portal.db.partition.DBPartitionUtil;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
@@ -55,7 +55,6 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.logging.log4j.core.Appender;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 /**
  * @author Michael C. Han
@@ -167,7 +166,7 @@ public class DBUpgrader {
 
 			InitUtil.registerContext();
 
-			upgradeModules(false);
+			upgradeModules();
 
 			BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
@@ -222,18 +221,12 @@ public class DBUpgrader {
 
 			_appender.stop();
 		}
-
-		if (_appenderServiceReference != null) {
-			BundleContext bundleContext = SystemBundleUtil.getBundleContext();
-
-			bundleContext.ungetService(_appenderServiceReference);
-		}
 	}
 
-	public static void upgradeModules(boolean autoUpgrade) {
+	public static void upgradeModules() {
 		_registerModuleServiceLifecycle("portal.initialized");
 
-		if (!autoUpgrade) {
+		if (_upgradeClient) {
 			DependencyManagerSyncUtil.sync();
 		}
 
@@ -241,6 +234,12 @@ public class DBUpgrader {
 			PortalCacheManagerNames.MULTI_VM);
 
 		_registerModuleServiceLifecycle("portlets.initialized");
+
+		if ((_upgradeClient && isUpgradeDatabaseAutoRunEnabled()) ||
+			StartupHelperUtil.isNewRelease()) {
+
+			IndexUpdaterUtil.updateAllIndexes();
+		}
 	}
 
 	public static void upgradePortal() throws Exception {
@@ -429,8 +428,6 @@ public class DBUpgrader {
 	private static final Log _log = LogFactoryUtil.getLog(DBUpgrader.class);
 
 	private static volatile Appender _appender;
-	private static volatile ServiceReference<Appender>
-		_appenderServiceReference;
 	private static volatile StopWatch _stopWatch;
 	private static volatile boolean _upgradeClient;
 	private static Boolean _upgradeDatabaseAutoRun;

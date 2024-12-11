@@ -11,7 +11,8 @@
 ItemSelectorViewDescriptorRendererDisplayContext itemSelectorViewDescriptorRendererDisplayContext = (ItemSelectorViewDescriptorRendererDisplayContext)request.getAttribute(ItemSelectorViewDescriptorRendererDisplayContext.class.getName());
 
 ItemSelectorViewDescriptor<Object> itemSelectorViewDescriptor = itemSelectorViewDescriptorRendererDisplayContext.getItemSelectorViewDescriptor();
-
+boolean listView = Objects.equals(itemSelectorViewDescriptorRendererDisplayContext.getDisplayStyle(), "list");
+boolean multipleSelection = itemSelectorViewDescriptorRendererDisplayContext.isMultipleSelection();
 SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisplayContext.getSearchContainer();
 %>
 
@@ -37,9 +38,12 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 		var="entriesSearch"
 	>
 		<liferay-ui:search-container-row
+			ariaLabel='<%= multipleSelection ? StringPool.BLANK : LanguageUtil.get(request, "press-enter-to-select-the-item-and-close-the-modal") %>'
 			className="Object"
+			cssClass='<%= (listView && !multipleSelection) ? "entry entry-selector" : StringPool.BLANK %>'
 			keyProperty="<%= itemSelectorViewDescriptor.getKeyProperty() %>"
 			modelVar="entry"
+			tabIndex='<%= multipleSelection ? StringPool.BLANK : "0" %>'
 		>
 
 			<%
@@ -74,7 +78,10 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 
 							<liferay-ui:search-container-column-text>
 								<clay:horizontal-card
+									aria-label='<%= LanguageUtil.format(request, "select-x", horizontalCard.getTitle()) %>'
 									horizontalCard="<%= horizontalCard %>"
+									role="button"
+									tabIndex="0"
 								/>
 							</liferay-ui:search-container-column-text>
 						</c:when>
@@ -190,6 +197,7 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 		<liferay-ui:search-iterator
 			displayStyle="<%= itemSelectorViewDescriptorRendererDisplayContext.getDisplayStyle() %>"
 			markupView="lexicon"
+			resultRowSplitter="<%= itemSelectorViewDescriptor.getResultRowSplitter() %>"
 			searchContainer="<%= searchContainer %>"
 		/>
 	</liferay-ui:search-container>
@@ -203,5 +211,5 @@ SearchContainer<Object> searchContainer = itemSelectorViewDescriptorRendererDisp
 			"itemSelectorSelectedEvent", HtmlUtil.escapeJS(itemSelectorViewDescriptorRendererDisplayContext.getItemSelectedEventName())
 		).build()
 	%>'
-	module='<%= itemSelectorViewDescriptorRendererDisplayContext.isMultipleSelection() ? "js/ViewItemSelectorViewDescriptorMultiple" : "js/ViewItemSelectorViewDescriptor" %>'
+	module='<%= multipleSelection ? "{ViewItemSelectorViewDescriptorMultiple} from item-selector-web" : "{ViewItemSelectorViewDescriptor} from item-selector-web" %>'
 />

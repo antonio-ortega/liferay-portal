@@ -5,10 +5,13 @@
 
 package com.liferay.portal.workflow.kaleo.model.impl;
 
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.model.cache.CacheField;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.workflow.WorkflowException;
+import com.liferay.portal.workflow.kaleo.definition.util.WorkflowDefinitionContentUtil;
 import com.liferay.portal.workflow.kaleo.model.KaleoDefinition;
 import com.liferay.portal.workflow.kaleo.model.KaleoNode;
 import com.liferay.portal.workflow.kaleo.service.KaleoDefinitionLocalServiceUtil;
@@ -20,13 +23,25 @@ import com.liferay.portal.workflow.kaleo.service.KaleoNodeLocalServiceUtil;
 public class KaleoDefinitionVersionImpl extends KaleoDefinitionVersionBaseImpl {
 
 	@Override
+	public String getContentAsXML() {
+		if (_contentAsXML != null) {
+			return _contentAsXML;
+		}
+
+		try {
+			_contentAsXML = WorkflowDefinitionContentUtil.toXML(getContent());
+		}
+		catch (WorkflowException workflowException) {
+			ReflectionUtil.throwException(workflowException);
+		}
+
+		return _contentAsXML;
+	}
+
+	@Override
 	public KaleoDefinition getKaleoDefinition() throws PortalException {
-		ServiceContext serviceContext = new ServiceContext();
-
-		serviceContext.setCompanyId(getCompanyId());
-
 		return KaleoDefinitionLocalServiceUtil.getKaleoDefinition(
-			getName(), serviceContext);
+			getKaleoDefinitionId());
 	}
 
 	@Override
@@ -39,5 +54,8 @@ public class KaleoDefinitionVersionImpl extends KaleoDefinitionVersionBaseImpl {
 
 		return versionParts[0];
 	}
+
+	@CacheField(propagateToInterface = true)
+	private String _contentAsXML;
 
 }

@@ -6,6 +6,7 @@
 package com.liferay.portal.search.tuning.rankings.web.internal.storage;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -16,11 +17,12 @@ import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.spi.reindexer.IndexReindexer;
+import com.liferay.portal.search.tuning.rankings.index.Ranking;
+import com.liferay.portal.search.tuning.rankings.index.RankingBuilderFactory;
+import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexName;
+import com.liferay.portal.search.tuning.rankings.index.name.RankingIndexNameBuilder;
 import com.liferay.portal.search.tuning.rankings.storage.RankingsDatabaseImporter;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.DocumentToRankingTranslator;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.Ranking;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexName;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.name.RankingIndexNameBuilder;
+import com.liferay.portal.search.tuning.rankings.web.internal.index.DocumentToRankingTranslatorUtil;
 import com.liferay.portal.search.tuning.rankings.web.internal.storage.helper.RankingJSONStorageHelper;
 
 import java.util.List;
@@ -51,9 +53,6 @@ public class RankingsDatabaseImporterImpl implements RankingsDatabaseImporter {
 			}
 		}
 	}
-
-	@Reference
-	protected DocumentToRankingTranslator documentToRankingTranslator;
 
 	@Reference
 	protected Queries queries;
@@ -97,6 +96,7 @@ public class RankingsDatabaseImporterImpl implements RankingsDatabaseImporter {
 
 		searchSearchRequest.setFetchSource(true);
 		searchSearchRequest.setQuery(queries.matchAll());
+		searchSearchRequest.setSelectedFieldNames(StringPool.BLANK);
 
 		SearchSearchResponse searchSearchResponse = searchEngineAdapter.execute(
 			searchSearchRequest);
@@ -110,8 +110,9 @@ public class RankingsDatabaseImporterImpl implements RankingsDatabaseImporter {
 				continue;
 			}
 
-			Ranking ranking = documentToRankingTranslator.translate(
-				searchHit.getDocument(), searchHit.getId());
+			Ranking ranking = DocumentToRankingTranslatorUtil.translate(
+				_rankingBuilderFactory, searchHit.getDocument(),
+				searchHit.getId());
 
 			if (_log.isInfoEnabled()) {
 				_log.info(
@@ -138,5 +139,8 @@ public class RankingsDatabaseImporterImpl implements RankingsDatabaseImporter {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		RankingsDatabaseImporterImpl.class);
+
+	@Reference
+	private RankingBuilderFactory _rankingBuilderFactory;
 
 }

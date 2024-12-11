@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Summary;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
-import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.MissingFilter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -69,11 +68,10 @@ public class CommerceShipmentIndexer extends BaseIndexer<CommerceShipment> {
 			BooleanFilter commerceAccountIdBooleanFilter = new BooleanFilter();
 
 			for (long commerceAccountId : commerceAccountIds) {
-				Filter termFilter = new TermFilter(
-					"commerceAccountId", String.valueOf(commerceAccountId));
-
 				commerceAccountIdBooleanFilter.add(
-					termFilter, BooleanClauseOccur.SHOULD);
+					new TermFilter(
+						"commerceAccountId", String.valueOf(commerceAccountId)),
+					BooleanClauseOccur.SHOULD);
 			}
 
 			commerceAccountIdBooleanFilter.add(
@@ -91,11 +89,10 @@ public class CommerceShipmentIndexer extends BaseIndexer<CommerceShipment> {
 			BooleanFilter shipmentStatusesBooleanFilter = new BooleanFilter();
 
 			for (long shipmentStatus : shipmentStatuses) {
-				Filter termFilter = new TermFilter(
-					Field.STATUS, String.valueOf(shipmentStatus));
-
 				shipmentStatusesBooleanFilter.add(
-					termFilter, BooleanClauseOccur.SHOULD);
+					new TermFilter(
+						Field.STATUS, String.valueOf(shipmentStatus)),
+					BooleanClauseOccur.SHOULD);
 			}
 
 			shipmentStatusesBooleanFilter.add(

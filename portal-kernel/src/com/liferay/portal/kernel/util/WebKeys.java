@@ -426,6 +426,8 @@ public interface WebKeys {
 
 	public static final String PAGE_KEYWORDS = "LIFERAY_SHARED_PAGE_KEYWORDS";
 
+	public static final String PAGE_ROBOTS = "LIFERAY_SHARED_PAGE_ROBOTS";
+
 	public static final String PAGE_SUBTITLE = "LIFERAY_SHARED_PAGE_SUBTITLE";
 
 	public static final String PAGE_TITLE = "LIFERAY_SHARED_PAGE_TITLE";
@@ -493,7 +495,7 @@ public interface WebKeys {
 		"PORTLET_RENDER_PARAMETERS_";
 
 	public static final String PORTLET_RESOURCE_STATIC_URLS =
-		"PORTLET_RESOURCE_STATIC_URLS";
+		"LIFERAY_SHARED_PORTLET_RESOURCE_STATIC_URLS";
 
 	public static final String PORTLET_SESSION = "PORTLET_SESSION";
 
@@ -683,6 +685,8 @@ public interface WebKeys {
 
 	public static final String USER = "USER";
 
+	public static final String USER_DIGEST = "USER_DIGEST";
+
 	public static final String USER_GROUP = "USER_GROUP";
 
 	public static final String USER_ID = "USER_ID";
@@ -726,5 +730,8 @@ public interface WebKeys {
 	public static final String WORKFLOW_INSTANCE = "WORKFLOW_INSTANCE";
 
 	public static final String WORKFLOW_TASK = "WORKFLOW_TASK";
+
+	public static final String WORKFLOW_TASK_READ_ONLY =
+		"WORKFLOW_TASK_READ_ONLY";
 
 }

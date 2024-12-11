@@ -11,6 +11,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
 import com.liferay.portal.kernel.db.partition.DBPartition;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
@@ -24,6 +25,9 @@ import com.liferay.portal.kernel.util.TimeZoneThreadLocal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Brian Wing Shun Chan
@@ -91,6 +95,16 @@ public class CompanyThreadLocal {
 		return companyId;
 	}
 
+	public static long getNonsystemCompanyId() {
+		long companyId = _companyId.get();
+
+		if (companyId == CompanyConstants.SYSTEM) {
+			return PortalInstancePool.getDefaultCompanyId();
+		}
+
+		return companyId;
+	}
+
 	public static boolean isInitializingPortalInstance() {
 		return _initializingPortalInstance.get();
 	}
@@ -100,18 +114,24 @@ public class CompanyThreadLocal {
 	}
 
 	public static SafeCloseable lock(long companyId) {
-		if (isLocked()) {
-			Long currentCompanyId = _companyId.get();
+		long currentCompanyId = _companyId.get();
 
-			if (companyId == currentCompanyId.longValue()) {
+		if (companyId == currentCompanyId) {
+			if (isLocked()) {
 				return () -> {
 				};
 			}
 
+			_locked.set(true);
+
+			return () -> _locked.set(false);
+		}
+
+		if (isLocked()) {
 			throw new UnsupportedOperationException(
 				StringBundler.concat(
 					"Company ID ", companyId, " and company ID ",
-					currentCompanyId.longValue(), " are different"));
+					currentCompanyId, " are different"));
 		}
 
 		_syncLastDBPartitionSessionState();
@@ -131,75 +151,8 @@ public class CompanyThreadLocal {
 	}
 
 	public static void setCompanyId(Long companyId) {
-		if (_setCompanyId(companyId)) {
-			CTCollectionThreadLocal.removeCTCollectionId();
-		}
-	}
-
-	public static SafeCloseable setInitializingCompanyIdWithSafeCloseable(
-		long companyId) {
-
-		if (companyId > 0) {
-			return _companyId.setWithSafeCloseable(companyId);
-		}
-
-		return _companyId.setWithSafeCloseable(CompanyConstants.SYSTEM);
-	}
-
-	public static SafeCloseable setInitializingPortalInstance(
-		boolean initializingPortalInstance) {
-
-		return _initializingPortalInstance.setWithSafeCloseable(
-			initializingPortalInstance);
-	}
-
-	public static SafeCloseable setWithSafeCloseable(Long companyId) {
-		return setWithSafeCloseable(
-			companyId, CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION);
-	}
-
-	public static SafeCloseable setWithSafeCloseable(
-		Long companyId, Long ctCollectionId) {
-
-		long currentCompanyId = _companyId.get();
-
-		boolean changed = _setCompanyId(companyId);
-
-		SafeCloseable ctCollectionSafeCloseable =
-			CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
-				ctCollectionId);
-
-		return () -> {
-			if (changed) {
-				_syncLastDBPartitionSessionState();
-			}
-
-			_companyId.set(currentCompanyId);
-
-			_clearUserThreadLocals();
-
-			ctCollectionSafeCloseable.close();
-		};
-	}
-
-	private static void _clearUserThreadLocals() {
-		LocaleThreadLocal.removeDefaultLocale();
-		TimeZoneThreadLocal.removeDefaultTimeZone();
-	}
-
-	private static boolean _setCompanyId(Long companyId) {
 		if (companyId.equals(_companyId.get())) {
-			if (!isLocked()) {
-				return false;
-			}
-
-			if ((LocaleThreadLocal.getDefaultLocale() == null) ||
-				(TimeZoneThreadLocal.getDefaultTimeZone() == null)) {
-
-				_clearUserThreadLocals();
-			}
-
-			return false;
+			return;
 		}
 
 		if (isLocked()) {
@@ -215,16 +168,89 @@ public class CompanyThreadLocal {
 
 		if (companyId > 0) {
 			_companyId.set(companyId);
-
-			_clearUserThreadLocals();
 		}
 		else {
 			_companyId.set(CompanyConstants.SYSTEM);
+		}
+
+		_clearUserThreadLocals();
+
+		CTCollectionThreadLocal.removeCTCollectionId();
+	}
+
+	public static SafeCloseable setCompanyIdWithSafeCloseable(Long companyId) {
+		return setCompanyIdWithSafeCloseable(
+			companyId, CTCollectionThreadLocal.CT_COLLECTION_ID_PRODUCTION);
+	}
+
+	public static SafeCloseable setCompanyIdWithSafeCloseable(
+		Long companyId, Long ctCollectionId) {
+
+		List<SafeCloseable> safeCloseables = new ArrayList<>();
+
+		if (!companyId.equals(_companyId.get())) {
+			if (isLocked()) {
+				throw new UnsupportedOperationException(
+					"CompanyThreadLocal modification is not allowed");
+			}
+
+			_syncLastDBPartitionSessionState();
+
+			if (_log.isDebugEnabled()) {
+				_log.debug("setCompanyId " + companyId);
+			}
+
+			if (companyId > 0) {
+				safeCloseables.add(_companyId.setWithSafeCloseable(companyId));
+			}
+			else {
+				safeCloseables.add(
+					_companyId.setWithSafeCloseable(CompanyConstants.SYSTEM));
+			}
+
+			safeCloseables.add(
+				LocaleThreadLocal.setDefaultLocaleWithSafeCloseable(null));
+			safeCloseables.add(
+				TimeZoneThreadLocal.setDefaultTimeZoneWithSafeCloseable(null));
 
 			_clearUserThreadLocals();
 		}
 
-		return true;
+		safeCloseables.add(
+			CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+				ctCollectionId));
+
+		return () -> {
+			if (safeCloseables.size() > 1) {
+				_syncLastDBPartitionSessionState();
+			}
+
+			for (SafeCloseable safeCloseable : safeCloseables) {
+				safeCloseable.close();
+			}
+		};
+	}
+
+	public static SafeCloseable setInitializingCompanyIdWithSafeCloseable(
+		long companyId) {
+
+		if (companyId > 0) {
+			return _companyId.setWithSafeCloseable(companyId);
+		}
+
+		return _companyId.setWithSafeCloseable(CompanyConstants.SYSTEM);
+	}
+
+	public static SafeCloseable setInitializingPortalInstanceWithSafeCloseable(
+		boolean initializingPortalInstance) {
+
+		return _initializingPortalInstance.setWithSafeCloseable(
+			initializingPortalInstance);
+	}
+
+	private static void _clearUserThreadLocals() {
+		LocaleThreadLocal.removeDefaultLocale();
+		TimeZoneThreadLocal.removeDefaultTimeZone();
 	}
 
 	private static void _syncLastDBPartitionSessionState() {

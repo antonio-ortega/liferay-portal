@@ -1,7 +1,6 @@
 import * as API from 'shared/api';
 import client from 'shared/apollo/client';
 import EventDefinitionsQuery from 'event-analysis/queries/EventDefinitionsQuery';
-import Promise from 'metal-promise';
 import React from 'react';
 import {compose} from 'redux';
 import {
@@ -12,7 +11,6 @@ import {
 } from '../utils/utils';
 import {createInterestProperty} from '../utils/utils';
 import {
-	DEVELOPER_MODE,
 	ENABLE_ACCOUNTS,
 	FieldContexts,
 	FieldOwnerTypes
@@ -33,7 +31,13 @@ import {withRequest} from 'shared/hoc';
 
 const MAX_DELTA = 500;
 
-const fetchPropertyGroups = ({groupId}: {groupId: string}): Promise<any> =>
+const fetchPropertyGroups = ({
+	channelId,
+	groupId
+}: {
+	channelId: string;
+	groupId: string;
+}): Promise<any> =>
 	Promise.all([
 		API.fieldMappings.search({
 			context: FieldContexts.Demographics,
@@ -60,25 +64,22 @@ const fetchPropertyGroups = ({groupId}: {groupId: string}): Promise<any> =>
 			groupId,
 			ownerType: FieldOwnerTypes.Organization
 		}),
-		API.interests.searchKeywords({delta: MAX_DELTA, groupId}),
+		API.interests.searchKeywords({channelId, delta: MAX_DELTA, groupId}),
 		Promise.resolve(SESSION_PROPERTIES),
-		// TODO: LRAC-8210 Remove for release 3.1
-		DEVELOPER_MODE
-			? client.query({
-					fetchPolicy: 'network-only',
-					query: EventDefinitionsQuery,
-					variables: {
-						eventType: EventTypes.Custom,
-						hidden: false,
-						page: 0,
-						size: MAX_DELTA,
-						sort: {
-							column: NAME,
-							type: OrderByDirections.Ascending
-						}
-					}
-			  })
-			: Promise.resolve([]),
+		client.query({
+			fetchPolicy: 'network-only',
+			query: EventDefinitionsQuery,
+			variables: {
+				eventType: EventTypes.Custom,
+				hidden: false,
+				page: 0,
+				size: MAX_DELTA,
+				sort: {
+					column: NAME,
+					type: OrderByDirections.Ascending
+				}
+			}
+		}),
 		Promise.resolve(WEB_BEHAVIORS)
 	]);
 
@@ -142,22 +143,19 @@ const mapResultToProps = ([
 				propertySubgroups: List(
 					[
 						new PropertySubgroup({
-							// TODO: LRAC-8210 Remove for release 3.1
-							label: DEVELOPER_MODE
-								? Liferay.Language.get('default-events')
-								: null,
+							label: Liferay.Language.get('default-events'),
+
 							properties: webBehaviors
 						}),
-						// TODO: LRAC-8210 Remove for release 3.1
-						DEVELOPER_MODE &&
-							new PropertySubgroup({
-								label: Liferay.Language.get('custom-events'),
-								properties: List(
-									eventProperties?.data?.eventDefinitions?.eventDefinitions?.map(
-										convertEventToProperty
-									)
+
+						new PropertySubgroup({
+							label: Liferay.Language.get('custom-events'),
+							properties: List(
+								eventProperties?.data?.eventDefinitions?.eventDefinitions?.map(
+									convertEventToProperty
 								)
-							})
+							)
+						})
 					].filter(Boolean)
 				)
 			}),

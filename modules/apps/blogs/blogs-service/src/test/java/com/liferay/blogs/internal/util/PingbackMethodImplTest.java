@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.comment.DuplicateCommentException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.portlet.FriendlyURLMapper;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -21,16 +22,18 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.xmlrpc.Fault;
 import com.liferay.portal.kernel.xmlrpc.XmlRpcConstants;
-import com.liferay.portal.kernel.xmlrpc.XmlRpcUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+import com.liferay.portal.xmlrpc.Fault;
+import com.liferay.portal.xmlrpc.XmlRpcUtil;
 
 import java.io.IOException;
 
@@ -41,14 +44,19 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author André de Oliveira
@@ -60,10 +68,21 @@ public class PingbackMethodImplTest {
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
+	@BeforeClass
+	public static void setUpClass() {
+		_inetAddressUtilMockedStatic = Mockito.mockStatic(
+			InetAddressUtil.class);
+	}
+
+	@AfterClass
+	public static void tearDownClass() {
+		_inetAddressUtilMockedStatic.close();
+	}
+
 	@Before
 	public void setUp() throws Exception {
 		_setUpBlogsEntryLocalService();
-		_setUpHttpUtil();
+		_setUpHttp();
 		_setUpInetAddressLookup();
 		_setUpLanguageUtil();
 		_setUpPingbackProperties();
@@ -73,10 +92,25 @@ public class PingbackMethodImplTest {
 		_setUpPropsTestUtil();
 		_setUpUserLocalService();
 		_setUpXmlRpcUtil();
+
+		_inetAddressUtilMockedStatic.when(
+			() -> InetAddressUtil.isLocalInetAddress(
+				Mockito.argThat(
+					inetAddress -> ArrayUtil.contains(
+						_localAddresses, inetAddress)))
+		).thenReturn(
+			true
+		);
 	}
 
 	@After
 	public void tearDown() {
+		if (_serviceRegistration != null) {
+			_serviceRegistration.unregister();
+
+			_serviceRegistration = null;
+		}
+
 		_xmlRpcUtilMockedStatic.close();
 	}
 
@@ -457,13 +491,14 @@ public class PingbackMethodImplTest {
 		);
 	}
 
-	private void _setUpHttpUtil() throws Exception {
+	private void _setUpHttp() throws Exception {
 		_whenHttpURLToString(
 			StringBundler.concat(
 				"<body><a href='http://", _TARGET_URI, "'>", _EXCERPT_BODY,
 				"</a></body>"));
 
-		ReflectionTestUtil.setFieldValue(HttpUtil.class, "_http", _http);
+		_serviceRegistration = _bundleContext.registerService(
+			Http.class, _http, null);
 	}
 
 	private void _setUpInetAddressLookup() throws Exception {
@@ -707,6 +742,9 @@ public class PingbackMethodImplTest {
 
 	private static final long _USER_ID = RandomTestUtil.randomLong();
 
+	private static final BundleContext _bundleContext =
+		SystemBundleUtil.getBundleContext();
+	private static MockedStatic<InetAddressUtil> _inetAddressUtilMockedStatic;
 	private static MockedStatic<XmlRpcUtil> _xmlRpcUtilMockedStatic;
 
 	private final BlogsEntry _blogsEntry = Mockito.mock(BlogsEntry.class);
@@ -728,6 +766,7 @@ public class PingbackMethodImplTest {
 		Mockito.mock(PingbackMethodImpl.PortletIdLookup.class);
 	private final PortletLocalService _portletLocalService = Mockito.mock(
 		PortletLocalService.class);
+	private ServiceRegistration<Http> _serviceRegistration;
 	private final UserLocalService _userLocalService = Mockito.mock(
 		UserLocalService.class);
 

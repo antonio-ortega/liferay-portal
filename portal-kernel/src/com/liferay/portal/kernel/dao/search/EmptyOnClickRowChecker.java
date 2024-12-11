@@ -7,6 +7,7 @@ package com.liferay.portal.kernel.dao.search;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyHTMLRewriterUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -38,6 +39,19 @@ public class EmptyOnClickRowChecker extends RowChecker {
 		boolean disabled, String name, String value, String checkBoxRowIds,
 		String checkBoxAllRowIds, String checkBoxPostOnClick) {
 
+		return StringBundler.concat(
+			"<div class=\"custom-checkbox custom-control\"><label>",
+			_getInput(
+				httpServletRequest, checked, disabled, name, value,
+				checkBoxRowIds, checkBoxAllRowIds, checkBoxPostOnClick),
+			"<span class=\"custom-control-label\"></span></label></div>");
+	}
+
+	private String _getInput(
+		HttpServletRequest httpServletRequest, boolean checked,
+		boolean disabled, String name, String value, String checkBoxRowIds,
+		String checkBoxAllRowIds, String checkBoxPostOnClick) {
+
 		StringBundler sb = new StringBundler(18);
 
 		sb.append("<input ");
@@ -55,7 +69,7 @@ public class EmptyOnClickRowChecker extends RowChecker {
 			sb.append("checked ");
 		}
 
-		sb.append("class=\"");
+		sb.append("class=\"custom-control-input ");
 		sb.append(getCssClass());
 		sb.append("\" ");
 
@@ -79,7 +93,8 @@ public class EmptyOnClickRowChecker extends RowChecker {
 
 		sb.append(">");
 
-		return sb.toString();
+		return ContentSecurityPolicyHTMLRewriterUtil.rewriteInlineEventHandlers(
+			sb.toString(), httpServletRequest, false);
 	}
 
 }

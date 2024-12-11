@@ -211,6 +211,17 @@ public class SettingsSerDes {
 			}
 		}
 
+		if (settings.getThemeSpritemapClientExtension() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"themeSpritemapClientExtension\": ");
+
+			sb.append(
+				String.valueOf(settings.getThemeSpritemapClientExtension()));
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -315,6 +326,15 @@ public class SettingsSerDes {
 				"themeSettings", String.valueOf(settings.getThemeSettings()));
 		}
 
+		if (settings.getThemeSpritemapClientExtension() == null) {
+			map.put("themeSpritemapClientExtension", null);
+		}
+		else {
+			map.put(
+				"themeSpritemapClientExtension",
+				String.valueOf(settings.getThemeSpritemapClientExtension()));
+		}
+
 		return map;
 	}
 
@@ -328,6 +348,56 @@ public class SettingsSerDes {
 		@Override
 		protected Settings[] createDTOArray(int size) {
 			return new Settings[size];
+		}
+
+		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "colorSchemeName")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "css")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "favIcon")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "globalCSSClientExtensions")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "globalJSClientExtensions")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "javascript")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "masterPage")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "styleBook")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "themeCSSClientExtension")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "themeName")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "themeSettings")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "themeSpritemapClientExtension")) {
+
+				return false;
+			}
+
+			return false;
 		}
 
 		@Override
@@ -430,6 +500,15 @@ public class SettingsSerDes {
 					settings.setThemeSettings((Object)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "themeSpritemapClientExtension")) {
+
+				if (jsonParserFieldValue != null) {
+					settings.setThemeSpritemapClientExtension(
+						ClientExtensionSerDes.toDTO(
+							(String)jsonParserFieldValue));
+				}
+			}
 		}
 
 	}
@@ -462,36 +541,7 @@ public class SettingsSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -501,6 +551,38 @@ public class SettingsSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

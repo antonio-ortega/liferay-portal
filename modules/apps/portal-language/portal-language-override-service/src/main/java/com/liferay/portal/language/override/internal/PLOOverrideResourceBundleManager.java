@@ -11,6 +11,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.language.LanguageResources;
 import com.liferay.portal.language.override.internal.provider.PLOOriginalTranslationThreadLocal;
 import com.liferay.portal.language.override.model.PLOEntry;
 import com.liferay.portal.language.override.service.PLOEntryLocalService;
@@ -51,40 +52,10 @@ public class PLOOverrideResourceBundleManager {
 				_language.getLanguageId(locale)));
 	}
 
-	protected void add(PLOEntry ploEntry) {
-		_add(
-			_overrideResourceBundlesDCLSingleton.getSingleton(_supplier),
-			ploEntry);
-	}
+	protected static void clearCache() {
+		_overrideResourceBundlesDCLSingleton.destroy(null);
 
-	protected void remove(PLOEntry ploEntry) {
-		Map<String, OverrideResourceBundle> overrideResourceBundles =
-			_overrideResourceBundlesDCLSingleton.getSingleton(_supplier);
-
-		overrideResourceBundles.computeIfPresent(
-			_encodeKey(ploEntry.getCompanyId(), ploEntry.getLanguageId()),
-			(key, value) -> {
-				value.remove(ploEntry.getKey());
-
-				if (value.isEmpty()) {
-					return null;
-				}
-
-				return value;
-			});
-	}
-
-	protected void update(PLOEntry ploEntry) {
-		Map<String, OverrideResourceBundle> overrideResourceBundles =
-			_overrideResourceBundlesDCLSingleton.getSingleton(_supplier);
-
-		overrideResourceBundles.computeIfPresent(
-			_encodeKey(ploEntry.getCompanyId(), ploEntry.getLanguageId()),
-			(key, value) -> {
-				value.put(ploEntry.getKey(), ploEntry.getValue());
-
-				return value;
-			});
+		LanguageResources.clearResourceBundles();
 	}
 
 	private void _add(
@@ -126,14 +97,14 @@ public class PLOOverrideResourceBundleManager {
 		return StringBundler.concat(companyId, StringPool.POUND, languageId);
 	}
 
+	private static final DCLSingleton<Map<String, OverrideResourceBundle>>
+		_overrideResourceBundlesDCLSingleton = new DCLSingleton<>();
+
 	@Reference
 	private CompanyLocalService _companyLocalService;
 
 	@Reference
 	private Language _language;
-
-	private final DCLSingleton<Map<String, OverrideResourceBundle>>
-		_overrideResourceBundlesDCLSingleton = new DCLSingleton<>();
 
 	@Reference
 	private PLOEntryLocalService _ploEntryLocalService;

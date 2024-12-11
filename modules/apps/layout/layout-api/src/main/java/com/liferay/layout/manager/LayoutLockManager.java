@@ -5,10 +5,7 @@
 
 package com.liferay.layout.manager;
 
-import com.liferay.layout.constants.LockedLayoutType;
 import com.liferay.layout.model.LockedLayout;
-import com.liferay.layout.model.LockedLayoutOrder;
-import com.liferay.portal.kernel.exception.LockedLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -26,13 +23,12 @@ import javax.servlet.http.HttpServletRequest;
  */
 public interface LayoutLockManager {
 
-	public String getLayoutType(long classPK, Locale locale, String type);
-
 	public void getLock(ActionRequest actionRequest) throws PortalException;
 
+	public void getLock(Layout layout, long userId) throws PortalException;
+
 	public List<LockedLayout> getLockedLayouts(
-		long companyId, long groupId, LockedLayoutOrder lockedLayoutOrder,
-		LockedLayoutType lockedLayoutType);
+		long companyId, long groupId, Locale locale);
 
 	public String getLockedLayoutURL(ActionRequest actionRequest);
 
@@ -47,8 +43,9 @@ public interface LayoutLockManager {
 	public void unlock(Layout layout, long userId);
 
 	public void unlockLayouts(long companyId, long autosaveMinutes)
-		throws LockedLayoutException;
+		throws PortalException;
 
-	public void unlockLayoutsByUserId(long companyId, long userId);
+	public void unlockLayoutsByUserId(long companyId, long userId)
+		throws PortalException;
 
 }

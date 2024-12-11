@@ -20,10 +20,12 @@ const CheckboxMultipleWithProvider = (props) => (
 );
 
 describe('Field Checkbox Multiple', () => {
+
 	// eslint-disable-next-line no-console
 	const originalWarn = console.warn;
 
 	beforeAll(() => {
+
 		// eslint-disable-next-line no-console
 		console.warn = (...args) => {
 			if (/DataProvider: Trying/.test(args[0])) {
@@ -34,6 +36,7 @@ describe('Field Checkbox Multiple', () => {
 	});
 
 	afterAll(() => {
+
 		// eslint-disable-next-line no-console
 		console.warn = originalWarn;
 	});
@@ -284,6 +287,48 @@ describe('Field Checkbox Multiple', () => {
 		expect(getByLabelText('Option 1')).toBeChecked();
 		expect(getByLabelText('Option 2')).toBeChecked();
 		expect(getByLabelText('Option 3')).not.toBeChecked();
+	});
+
+	it('renders data-option-reference attribute regardless of the element being a switcher', () => {
+		const otherProps = {
+			options: [
+				{
+					label: 'Option 1',
+					reference: 'option1Reference',
+					value: 'option1',
+				},
+				{
+					label: 'Option 2',
+					reference: 'option2Reference',
+					value: 'option2',
+				},
+			],
+			predefinedValue: ['option1', 'option2'],
+			spritemap,
+			value: [],
+		};
+
+		const allProps = [
+			{showAsSwitcher: false, ...otherProps},
+			{showAsSwitcher: true, ...otherProps},
+		];
+
+		allProps.forEach((props) => {
+			const {container} = render(
+				<CheckboxMultipleWithProvider {...props} />
+			);
+
+			const checkboxInputElement1 = container.querySelector(
+				`input[value][type="checkbox"][data-option-reference="option1Reference"]`
+			);
+
+			const checkboxInputElement2 = container.querySelector(
+				`input[value][type="checkbox"][data-option-reference="option2Reference"]`
+			);
+
+			expect(checkboxInputElement1).toBeTruthy();
+			expect(checkboxInputElement2).toBeTruthy();
+		});
 	});
 
 	it('uncheck all values if the user has edited the field to clear the predefinedValue', () => {

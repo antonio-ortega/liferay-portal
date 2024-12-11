@@ -119,11 +119,22 @@ public class CETUtil {
 			}
 		}
 
+		Collections.sort(
+			cetProperties,
+			(cetProperty1, cetProperty2) -> {
+				String cetPropertyName1 = cetProperty1.getName();
+				String cetPropertyName2 = cetProperty2.getName();
+
+				return cetPropertyName1.compareTo(cetPropertyName2);
+			});
+
 		return new CET(cetProperties, description, name);
 	}
 
 	private static List<CET> _getCETs(List<String> fileNames)
 		throws IOException, ParseException {
+
+		List<CET> cets = new ArrayList<>();
 
 		JavaClass baseCETJavaClass = null;
 		List<JavaClass> cetJavaClasses = new ArrayList<>();
@@ -151,8 +162,6 @@ public class CETUtil {
 
 			defaultCETProperties.addAll(cet.getCETProperties());
 		}
-
-		List<CET> cets = new ArrayList<>();
 
 		for (JavaClass cetJavaClass : cetJavaClasses) {
 			CET cet = _getCET(defaultCETProperties, cetJavaClass);

@@ -55,7 +55,9 @@ exports[`BaseFieldMappingView should render 1`] = `
               <div
                 class="sheet-section"
               >
-                <h4 />
+                <div
+                  class="h4"
+                />
                 <div
                   class="sheet-text"
                 />
@@ -101,7 +103,7 @@ exports[`BaseFieldMappingView should render 1`] = `
                           role="presentation"
                         >
                           <use
-                            xlink:href="#caret-bottom"
+                            href="#caret-bottom"
                           />
                         </svg>
                       </button>
@@ -121,7 +123,7 @@ exports[`BaseFieldMappingView should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#faro-connection-success-ovals"
+                      href="#faro-connection-success-ovals"
                     />
                   </svg>
                 </div>
@@ -147,7 +149,7 @@ exports[`BaseFieldMappingView should render 1`] = `
                           role="presentation"
                         >
                           <use
-                            xlink:href="#caret-bottom"
+                            href="#caret-bottom"
                           />
                         </svg>
                       </button>

@@ -127,7 +127,7 @@ public class BlankSiteInitializer implements SiteInitializer {
 
 		_layoutsImporter.importPageElement(
 			layout, layoutStructure, layoutStructure.getMainItemId(),
-			pageElementJSON, 0);
+			pageElementJSON, 0, true);
 	}
 
 	private void _updateLayoutUtilityPageEntryLayouts(
@@ -149,6 +149,10 @@ public class BlankSiteInitializer implements SiteInitializer {
 		_layoutLocalService.updateLayout(draftLayout);
 
 		Layout layout = _layoutLocalService.getLayout(layoutPlid);
+
+		layout.setStatus(WorkflowConstants.STATUS_APPROVED);
+
+		layout = _layoutLocalService.updateLayout(layout);
 
 		_layoutLocalService.updateLayout(
 			layout.getGroupId(), layout.isPrivateLayout(), layout.getLayoutId(),

@@ -9,9 +9,6 @@ import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.AutoEscape;
-import com.liferay.portal.kernel.cache.thread.local.Lifecycle;
-import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCache;
-import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCacheManager;
 import com.liferay.portal.kernel.encryptor.EncryptorUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -133,32 +130,37 @@ public class CompanyImpl extends CompanyBaseImpl {
 	@Override
 	public Group getGroup() throws PortalException {
 		if (getCompanyId() > CompanyConstants.SYSTEM) {
-			ThreadLocalCache<Group> threadLocalCache =
-				ThreadLocalCacheManager.getThreadLocalCache(
-					Lifecycle.REQUEST, Company.class.getName());
+			if (_group == null) {
+				if (_groupId == -1) {
+					_group = GroupLocalServiceUtil.fetchCompanyGroup(
+						getCompanyId());
 
-			String cacheKey = StringUtil.toHexString(getCompanyId());
-
-			Group companyGroup = threadLocalCache.get(cacheKey);
-
-			if (companyGroup == null) {
-				companyGroup = GroupLocalServiceUtil.getCompanyGroup(
-					getCompanyId());
-
-				threadLocalCache.put(cacheKey, companyGroup);
+					if (_group != null) {
+						_groupId = _group.getGroupId();
+					}
+				}
+				else {
+					_group = GroupLocalServiceUtil.fetchGroup(_groupId);
+				}
 			}
 
-			return companyGroup;
+			return _group;
 		}
 
 		return new GroupImpl();
 	}
 
 	@Override
-	public long getGroupId() throws PortalException {
-		Group group = getGroup();
+	public long getGroupId() {
+		if (_groupId == -1) {
+			_group = GroupLocalServiceUtil.fetchCompanyGroup(getCompanyId());
 
-		return group.getGroupId();
+			if (_group != null) {
+				_groupId = _group.getGroupId();
+			}
+		}
+
+		return _groupId;
 	}
 
 	@Override
@@ -384,8 +386,14 @@ public class CompanyImpl extends CompanyBaseImpl {
 		return companySecurityBag._updatePasswordRequired;
 	}
 
-	public void setCompanySecurityBag(Object companySecurityBag) {
-		_companySecurityBag = (CompanySecurityBag)companySecurityBag;
+	@Override
+	public void setCompanySecurityBag(CompanySecurityBag companySecurityBag) {
+		_companySecurityBag = companySecurityBag;
+	}
+
+	@Override
+	public void setGroupId(long groupId) {
+		_groupId = groupId;
 	}
 
 	@Override
@@ -475,6 +483,11 @@ public class CompanyImpl extends CompanyBaseImpl {
 
 	@CacheField
 	private CompanySecurityBag _companySecurityBag;
+
+	private Group _group;
+
+	@CacheField(permanent = true, propagateToInterface = true)
+	private long _groupId = -1;
 
 	private Key _keyObj;
 

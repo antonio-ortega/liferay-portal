@@ -7,6 +7,7 @@ package com.liferay.portal.search.web.internal.facet.display.context.builder;
 
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
@@ -60,15 +61,16 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 	public AssetEntriesSearchFacetDisplayContext build() {
 		setTypeNames(getTypeNames());
 
-		List<BucketDisplayContext> bucketDisplayContexts =
-			buildBucketDisplayContexts();
-
 		AssetEntriesSearchFacetDisplayContext
 			assetEntriesSearchFacetDisplayContext =
 				new AssetEntriesSearchFacetDisplayContext();
 
+		List<BucketDisplayContext> bucketDisplayContexts =
+			_buildBucketDisplayContexts();
+
 		assetEntriesSearchFacetDisplayContext.setBucketDisplayContexts(
 			bucketDisplayContexts);
+
 		assetEntriesSearchFacetDisplayContext.setDisplayStyleGroupId(
 			getDisplayStyleGroupId());
 		assetEntriesSearchFacetDisplayContext.setNothingSelected(
@@ -98,75 +100,10 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 		bucketDisplayContext.setFilterValue(assetType);
 		bucketDisplayContext.setFrequency(frequency);
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setLocale(_locale);
 		bucketDisplayContext.setSelected(selected);
 
 		return bucketDisplayContext;
-	}
-
-	public List<BucketDisplayContext> buildBucketDisplayContexts() {
-		if (_facet == null) {
-			return Collections.emptyList();
-		}
-
-		FacetCollector facetCollector = _facet.getFacetCollector();
-
-		if (facetCollector == null) {
-			return Collections.emptyList();
-		}
-
-		List<BucketDisplayContext> bucketDisplayContexts = new ArrayList<>();
-
-		List<String> assetTypes = new SortedArrayList<>(
-			new ModelResourceComparator(_locale));
-
-		for (String className : _classNames) {
-			if (assetTypes.contains(className)) {
-				continue;
-			}
-
-			assetTypes.add(className);
-		}
-
-		for (String assetType : assetTypes) {
-			TermCollector termCollector = facetCollector.getTermCollector(
-				assetType);
-
-			int frequency = 0;
-
-			if (termCollector != null) {
-				frequency = termCollector.getFrequency();
-			}
-
-			if (_frequencyThreshold > frequency) {
-				continue;
-			}
-
-			boolean selected = false;
-
-			if (termCollector != null) {
-				selected = _parameterValues.contains(termCollector.getTerm());
-			}
-
-			String typeName = _typeNames.get(assetType);
-
-			if (Validator.isBlank(typeName)) {
-				typeName = assetType;
-			}
-
-			BucketDisplayContext bucketDisplayContext =
-				buildBucketDisplayContext(
-					typeName, selected, assetType, frequency);
-
-			bucketDisplayContexts.add(bucketDisplayContext);
-		}
-
-		if (_order != null) {
-			bucketDisplayContexts.sort(
-				BucketDisplayContextComparatorFactoryUtil.
-					getBucketDisplayContextComparator(_order));
-		}
-
-		return bucketDisplayContexts;
 	}
 
 	public int getPopularity(
@@ -276,13 +213,13 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 					_themeDisplay.getLocale());
 			}
 			else if (className.startsWith(
-						ObjectDefinition.class.getName() + "#")) {
-
-				String[] parts = StringUtil.split(className, "#");
+						ObjectDefinitionConstants.
+							CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION)) {
 
 				ObjectDefinition objectDefinition =
-					ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
-						Long.valueOf(parts[1]));
+					ObjectDefinitionLocalServiceUtil.
+						fetchObjectDefinitionByClassName(
+							_themeDisplay.getCompanyId(), className);
 
 				if (objectDefinition == null) {
 					continue;
@@ -295,6 +232,72 @@ public class AssetEntriesSearchFacetDisplayContextBuilder
 		}
 
 		return assetTypesTypeNames;
+	}
+
+	private List<BucketDisplayContext> _buildBucketDisplayContexts() {
+		if (_facet == null) {
+			return Collections.emptyList();
+		}
+
+		FacetCollector facetCollector = _facet.getFacetCollector();
+
+		if (facetCollector == null) {
+			return Collections.emptyList();
+		}
+
+		List<BucketDisplayContext> bucketDisplayContexts = new ArrayList<>();
+
+		List<String> assetTypes = new SortedArrayList<>(
+			new ModelResourceComparator(_locale));
+
+		for (String className : _classNames) {
+			if (assetTypes.contains(className)) {
+				continue;
+			}
+
+			assetTypes.add(className);
+		}
+
+		for (String assetType : assetTypes) {
+			TermCollector termCollector = facetCollector.getTermCollector(
+				assetType);
+
+			int frequency = 0;
+
+			if (termCollector != null) {
+				frequency = termCollector.getFrequency();
+			}
+
+			if (_frequencyThreshold > frequency) {
+				continue;
+			}
+
+			boolean selected = false;
+
+			if (termCollector != null) {
+				selected = _parameterValues.contains(termCollector.getTerm());
+			}
+
+			String typeName = _typeNames.get(assetType);
+
+			if (Validator.isBlank(typeName)) {
+				typeName = assetType;
+			}
+
+			BucketDisplayContext bucketDisplayContext =
+				buildBucketDisplayContext(
+					typeName, selected, assetType, frequency);
+
+			bucketDisplayContexts.add(bucketDisplayContext);
+		}
+
+		if (_order != null) {
+			bucketDisplayContexts.sort(
+				BucketDisplayContextComparatorFactoryUtil.
+					getBucketDisplayContextComparator(_order));
+		}
+
+		return bucketDisplayContexts;
 	}
 
 	private String[] _classNames;

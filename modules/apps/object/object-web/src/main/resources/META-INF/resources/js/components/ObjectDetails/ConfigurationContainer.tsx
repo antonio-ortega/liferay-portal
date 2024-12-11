@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayForm from '@clayui/form';
 import {Toggle} from '@liferay/object-js-components-web';
 import {sub} from 'frontend-js-web';
 import React from 'react';
@@ -33,91 +34,124 @@ export function ConfigurationContainer({
 
 	return (
 		<div className="lfr-objects__object-definition-details-configuration">
-			<Toggle
-				disabled={disabled || isRootDescendantNode}
-				label={sub(
-					Liferay.Language.get('show-widget-in-x'),
-					Liferay.Language.get('page-builder')
-				)}
-				name="showWidget"
-				onBlur={(event) => {
-					event.stopPropagation();
+			<ClayForm.Group>
+				<Toggle
+					disabled={disabled || isRootDescendantNode}
+					label={sub(
+						Liferay.Language.get('show-widget-in-x'),
+						Liferay.Language.get('page-builder')
+					)}
+					name="showWidget"
+					onBlur={(event) => {
+						event.stopPropagation();
 
-					if (onSubmit) {
-						onSubmit();
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+					onToggle={() => setValues({portlet: !values.portlet})}
+					toggled={values.portlet}
+				/>
+			</ClayForm.Group>
+
+			<ClayForm.Group>
+				<Toggle
+					disabled={disabled}
+					label={sub(
+						Liferay.Language.get('enable-x'),
+						Liferay.Language.get('categorization-of-object-entries')
+					)}
+					name="enableCategorization"
+					onBlur={(event) => {
+						event.stopPropagation();
+
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+					onToggle={() =>
+						setValues({
+							enableCategorization: !values.enableCategorization,
+						})
 					}
-				}}
-				onToggle={() => setValues({portlet: !values.portlet})}
-				toggled={values.portlet}
-			/>
+					toggled={values.enableCategorization}
+				/>
+			</ClayForm.Group>
 
-			<Toggle
-				disabled={disabled}
-				label={sub(
-					Liferay.Language.get('enable-x'),
-					Liferay.Language.get('categorization-of-object-entries')
-				)}
-				name="enableCategorization"
-				onBlur={(event) => {
-					event.stopPropagation();
+			<ClayForm.Group>
+				<Toggle
+					disabled={disabled}
+					label={sub(
+						Liferay.Language.get('enable-x'),
+						Liferay.Language.get('comments-in-page-builder')
+					)}
+					name="enableComments"
+					onBlur={(event) => {
+						event.stopPropagation();
 
-					if (onSubmit) {
-						onSubmit();
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+					onToggle={() =>
+						setValues({
+							enableComments: !values.enableComments,
+						})
 					}
-				}}
-				onToggle={() =>
-					setValues({
-						enableCategorization: !values.enableCategorization,
-					})
-				}
-				toggled={values.enableCategorization}
-			/>
+					toggled={values.enableComments}
+				/>
+			</ClayForm.Group>
 
-			<Toggle
-				disabled={disabled}
-				label={sub(
-					Liferay.Language.get('enable-x'),
-					Liferay.Language.get('comments-in-page-builder')
-				)}
-				name="enableComments"
-				onBlur={(event) => {
-					event.stopPropagation();
+			<ClayForm.Group>
+				<Toggle
+					disabled={disabled || values.active}
+					label={sub(
+						Liferay.Language.get('enable-x'),
+						Liferay.Language.get('indexed-search')
+					)}
+					name="enableIndexSearch"
+					onBlur={(event) => {
+						event.stopPropagation();
 
-					if (onSubmit) {
-						onSubmit();
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+					onToggle={() =>
+						setValues({
+							enableIndexSearch: !values.enableIndexSearch,
+						})
 					}
-				}}
-				onToggle={() =>
-					setValues({
-						enableComments: !values.enableComments,
-					})
-				}
-				toggled={values.enableComments}
-			/>
+					toggled={values.enableIndexSearch}
+				/>
+			</ClayForm.Group>
 
-			<Toggle
-				disabled={isLinkedObjectDefinition || isReadOnly}
-				label={sub(
-					Liferay.Language.get('enable-x'),
-					Liferay.Language.get('entry-history-in-audit-framework')
-				)}
-				name="enableEntryHistory"
-				onBlur={(event) => {
-					event.stopPropagation();
+			<ClayForm.Group>
+				<Toggle
+					disabled={isLinkedObjectDefinition || isReadOnly}
+					label={sub(
+						Liferay.Language.get('enable-x'),
+						Liferay.Language.get('entry-history-in-audit-framework')
+					)}
+					name="enableEntryHistory"
+					onBlur={(event) => {
+						event.stopPropagation();
 
-					if (onSubmit) {
-						onSubmit();
+						if (onSubmit) {
+							onSubmit();
+						}
+					}}
+					onToggle={() =>
+						setValues({
+							enableObjectEntryHistory:
+								!values.enableObjectEntryHistory,
+						})
 					}
-				}}
-				onToggle={() =>
-					setValues({
-						enableObjectEntryHistory: !values.enableObjectEntryHistory,
-					})
-				}
-				toggled={values.enableObjectEntryHistory}
-			/>
+					toggled={values.enableObjectEntryHistory}
+				/>
+			</ClayForm.Group>
 
-			{Liferay.FeatureFlags['LPS-181663'] && (
+			<ClayForm.Group>
 				<Toggle
 					disabled={
 						isReadOnly || !hasUpdateObjectDefinitionPermission
@@ -135,12 +169,13 @@ export function ConfigurationContainer({
 					}}
 					onToggle={() =>
 						setValues({
-							enableObjectEntryDraft: !values.enableObjectEntryDraft,
+							enableObjectEntryDraft:
+								!values.enableObjectEntryDraft,
 						})
 					}
 					toggled={values.enableObjectEntryDraft}
 				/>
-			)}
+			</ClayForm.Group>
 		</div>
 	);
 }

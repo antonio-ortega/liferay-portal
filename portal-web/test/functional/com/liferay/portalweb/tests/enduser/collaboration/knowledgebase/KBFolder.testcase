@@ -1,4 +1,4 @@
-@component-name = "portal-knowledge-base"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -51,9 +51,9 @@ definition {
 
 		KBFolder.gotoCP(kbFolderName = "KB Folder");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Title");
+		ManagementBar.setFilterAndOrder(orderBy = "Title");
 
-		Click(locator1 = "ManagementBar#ORDER_ICON_GENERIC_BUTTON");
+		ManagementBar.setFilterAndOrder(orderBy = "Descending");
 
 		KBArticle.viewCP(
 			indexNumber = 1,
@@ -95,9 +95,9 @@ definition {
 
 		KBFolder.gotoCP(kbFolderName = "KB Folder");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Modified Date");
+		ManagementBar.setFilterAndOrder(orderBy = "Modified Date");
 
-		Click(locator1 = "ManagementBar#ORDER_ICON_GENERIC_BUTTON");
+		ManagementBar.setFilterAndOrder(orderBy = "Descending");
 
 		KBArticle.viewCP(
 			indexNumber = 1,
@@ -146,9 +146,9 @@ definition {
 
 		KBFolder.gotoCP(kbFolderName = "KB Folder");
 
-		ManagementBar.setFilterAndOrder(filterBy = "View Count");
+		ManagementBar.setFilterAndOrder(orderBy = "View Count");
 
-		Click(locator1 = "ManagementBar#ORDER_ICON_GENERIC_BUTTON");
+		ManagementBar.setFilterAndOrder(orderBy = "Descending");
 
 		KBArticle.viewCP(
 			indexNumber = 1,
@@ -188,7 +188,7 @@ definition {
 
 		KBFolder.viewFolderNameCP(kbFolderName = "KB Folder");
 
-		Button.viewNotPresent(button = "New");
+		AssertElementNotPresent(locator1 = "Dropdown#EMPTY_MESSAGE_DROPDOWN");
 	}
 
 	@description = "This test checks that all articles in a folder can be deleted via Toolbar."
@@ -219,7 +219,9 @@ definition {
 
 		KBArticle.selectAllCP();
 
-		KBArticle.deleteCP();
+		KBArticle.deleteCP(
+			itemsNumber = 2,
+			moveToRecycleBin = "multipleArticles");
 
 		KBArticle.viewDefaultCP(newFolder = "true");
 	}
@@ -240,7 +242,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can delete folder in the table view."
-	@priority = 5
+	@priority = 4
 	test CanDeleteFolderInTableView {
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",
@@ -259,7 +261,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can delete a KB folder from the navigation pane."
-	@priority = 5
+	@priority = 4
 	test CanDeleteFolderViaNavigationPane {
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",
@@ -298,7 +300,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can edit folder in the table view."
-	@priority = 5
+	@priority = 4
 	test CanEditFolderInTableView {
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",
@@ -320,7 +322,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can manage permissions for a KB folder from the navigation pane."
-	@priority = 5
+	@priority = 4
 	test CanEditFolderPermissionsViaNavigationPane {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -368,7 +370,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can edit a KB folder from the navigation pane."
-	@priority = 5
+	@priority = 4
 	test CanEditFolderViaNavigationPane {
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",
@@ -389,7 +391,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can manage permissions for the KB home folder from the navigation pane."
-	@priority = 5
+	@priority = 4
 	test CanEditHomeFolderPermissionsViaNavigationPane {
 		KBAdmin.openKBAdmin(siteURLKey = "guest");
 
@@ -416,7 +418,7 @@ definition {
 	}
 
 	@description = "This test ensures that users can move a KB folder from the navigation pane."
-	@priority = 5
+	@priority = 4
 	test CanMoveFolderViaNavigationPane {
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",
@@ -488,10 +490,7 @@ definition {
 	@priority = 3
 	@refactorneeded
 	test EditKBFolderWithCustomField {
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Custom Fields");
+		CustomFields.openCustomFieldAdmin();
 
 		CustomFields.addCP(
 			customFieldName = "Date",
@@ -568,7 +567,7 @@ definition {
 	}
 
 	@description = "This test ensures that some folder info only display in panel."
-	@priority = 5
+	@priority = 3
 	test SomeFolderInfoOnlyDisplayInPanel {
 		JSONKnowledgeBase.addkBFolder(
 			groupName = "Guest",

@@ -1,4 +1,4 @@
-@component-name = "portal-server-administration"
+@component-name = "portal-core-infra"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -10,6 +10,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 	}
 
 	tearDown {
@@ -43,7 +47,7 @@ definition {
 			entryTitle = "Test Title",
 			groupName = "Test Site Name");
 
-		ApplicationDisplayTemplates.openWidgetTemplatesAdmin(siteURLKey = "test-site-name");
+		WidgetTemplates.openWidgetTemplatesAdmin(siteURLKey = "test-site-name");
 
 		var templateScript = '''
 <#if entries?has_content>
@@ -58,7 +62,7 @@ definition {
 		/>
 		''';
 
-		ApplicationDisplayTemplates.addCP(
+		WidgetTemplates.addCP(
 			adtType = "Asset Publisher",
 			templateScript = ${templateScript});
 
@@ -89,7 +93,7 @@ definition {
 	@priority = 3
 	test ExecuteScriptWithEmbeddedHTML {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		ServerAdministration.openServerAdmin();
 
@@ -126,7 +130,7 @@ definition {
 	test ExecuteScriptWithLiferayClasses {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		ServerAdministration.openServerAdmin();
 
@@ -188,7 +192,7 @@ definition {
 	@priority = 4
 	test ExecuteScriptWithPredefinedVariables {
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		ServerAdministration.openServerAdmin();
 
@@ -215,7 +219,7 @@ definition {
 	test ExecuteSimpleScript {
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
+		property test.run.type = "sequential";
 
 		ServerAdministration.openServerAdmin();
 

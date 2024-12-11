@@ -8,6 +8,7 @@ package com.liferay.commerce.checkout.web.internal.display.context;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
+import com.liferay.commerce.checkout.web.internal.util.CommerceOrderUtil;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceOrderActionKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
@@ -21,11 +22,13 @@ import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalS
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.util.comparator.CommerceAddressNameComparator;
+import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.util.List;
 
@@ -76,7 +79,55 @@ public abstract class BaseAddressCheckoutStepDisplayContext {
 		return commerceAddressService.getCommerceAddressesByCompanyId(
 			_commerceOrder.getCompanyId(), AccountEntry.class.getName(),
 			_commerceOrder.getCommerceAccountId(), QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, new CommerceAddressNameComparator());
+			QueryUtil.ALL_POS,
+			CommerceAddressNameComparator.getInstance(false));
+	}
+
+	public long getCommerceAddressId(HttpServletRequest httpServletRequest)
+		throws PortalException {
+
+		CommerceOrder commerceOrder = getCommerceOrder();
+
+		if (commerceOrder.isGuestOrder()) {
+			return 0;
+		}
+
+		long commerceAddressId = BeanParamUtil.getLong(
+			commerceOrder, httpServletRequest, getParamName());
+
+		CommerceAddress orderCommerceAddress = getCommerceAddress(
+			commerceAddressId);
+
+		if ((orderCommerceAddress == null) ||
+			(orderCommerceAddress.getClassNameId() != PortalUtil.getClassNameId(
+				AccountEntry.class))) {
+
+			CommerceContext commerceContext = getCommerceContext();
+
+			commerceAddressId = getDefaultCommerceAddressId(
+				commerceContext.getCommerceChannelId());
+
+			for (CommerceAddress validCommerceAddress :
+					getCommerceAddresses()) {
+
+				if (commerceAddressId ==
+						validCommerceAddress.getCommerceAddressId()) {
+
+					return commerceAddressId;
+				}
+			}
+		}
+		else {
+			for (CommerceAddress validCommerceAddress :
+					getCommerceAddresses()) {
+
+				if (orderCommerceAddress.isSameAddress(validCommerceAddress)) {
+					return validCommerceAddress.getCommerceAddressId();
+				}
+			}
+		}
+
+		return 0;
 	}
 
 	public CommerceContext getCommerceContext() {
@@ -127,6 +178,10 @@ public abstract class BaseAddressCheckoutStepDisplayContext {
 		}
 
 		return false;
+	}
+
+	public boolean isCommerceOrderMultishipping() {
+		return CommerceOrderUtil.isCommerceOrderMultishipping(_commerceOrder);
 	}
 
 	public boolean isShippingUsedAsBilling() throws PortalException {
@@ -186,22 +241,28 @@ public abstract class BaseAddressCheckoutStepDisplayContext {
 				defaultShippingCommerceAddress.getCommerceAddressId();
 		}
 
-		CommerceAddress shippingAddress = _commerceOrder.getShippingAddress();
-		CommerceAddress billingAddress = _commerceOrder.getBillingAddress();
+		CommerceAddress billingCommerceAddress =
+			_commerceOrder.getBillingAddress();
+		CommerceAddress shippingCommerceAddress =
+			_commerceOrder.getShippingAddress();
 
 		if (((accountEntry != null) &&
 			 (defaultBillingCommerceAddressId ==
 				 defaultShippingCommerceAddressId) &&
-			 (billingAddress == null) && (shippingAddress == null)) ||
-			((billingAddress != null) && (shippingAddress != null) &&
-			 (billingAddress.getCommerceAddressId() ==
-				 shippingAddress.getCommerceAddressId())) ||
-			((billingAddress != null) && (shippingAddress == null) &&
+			 (billingCommerceAddress == null) &&
+			 (shippingCommerceAddress == null)) ||
+			((billingCommerceAddress != null) &&
+			 (shippingCommerceAddress != null) &&
+			 (billingCommerceAddress.getCommerceAddressId() ==
+				 shippingCommerceAddress.getCommerceAddressId())) ||
+			((billingCommerceAddress != null) &&
+			 (shippingCommerceAddress == null) &&
 			 (defaultShippingCommerceAddressId ==
-				 billingAddress.getCommerceAddressId())) ||
-			((billingAddress == null) && (shippingAddress != null) &&
+				 billingCommerceAddress.getCommerceAddressId())) ||
+			((billingCommerceAddress == null) &&
+			 (shippingCommerceAddress != null) &&
 			 (defaultBillingCommerceAddressId ==
-				 shippingAddress.getCommerceAddressId()))) {
+				 shippingCommerceAddress.getCommerceAddressId()))) {
 
 			return true;
 		}

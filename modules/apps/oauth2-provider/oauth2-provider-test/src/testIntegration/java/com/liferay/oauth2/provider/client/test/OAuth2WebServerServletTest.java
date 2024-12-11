@@ -35,7 +35,6 @@ import org.apache.cxf.jaxrs.impl.RuntimeDelegateImpl;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,7 +53,6 @@ public class OAuth2WebServerServletTest extends BaseClientTestCase {
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
-	@Ignore
 	@Test
 	public void test() throws Exception {
 		String tokenString = getToken("oauthTestApplication");
@@ -106,7 +104,7 @@ public class OAuth2WebServerServletTest extends BaseClientTestCase {
 				FileEntry fileEntry = dlAppLocalService.addFileEntry(
 					null, user.getUserId(), user.getGroupId(), 0,
 					"test-file.txt", "text/plain",
-					_TEST_FILE_CONTENT.getBytes(), null, null,
+					_TEST_FILE_CONTENT.getBytes(), null, null, null,
 					new ServiceContext());
 
 				autoCloseables.add(

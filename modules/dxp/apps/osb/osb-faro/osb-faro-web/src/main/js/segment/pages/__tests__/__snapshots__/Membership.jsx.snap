@@ -8,11 +8,11 @@ exports[`Membership should render 1`] = `
     <div
       class="card-header"
     >
-      <h5
+      <div
         class="card-title"
       >
         Segment Membership
-      </h5>
+      </div>
     </div>
     <div
       class="card-body segment-growth-root no-padding"
@@ -25,20 +25,18 @@ exports[`Membership should render 1`] = `
         >
           <div
             class="recharts-responsive-container"
-            style="width: 100%; height: 360px;"
-          >
-            <div
-              style="position: absolute; width: 0px; height: 0px; visibility: hidden; display: none;"
-            />
-          </div>
+            style="width: 100%; height: 360px; min-width: 0;"
+          />
         </div>
       </div>
       <div
         class="selected-point-info"
       >
-        <h4>
+        <div
+          class="h4"
+        >
           Known Members
-        </h4>
+        </div>
       </div>
       <div
         class="base-results-root d-flex flex-column flex-grow-1 searchable-table-root searchable-table-borderless"
@@ -70,7 +68,7 @@ exports[`Membership should render 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#order-arrow-ascending"
+                        href="#order-arrow-ascending"
                       />
                     </svg>
                   </button>
@@ -104,7 +102,7 @@ exports[`Membership should render 1`] = `
                           role="presentation"
                         >
                           <use
-                            xlink:href="#search"
+                            href="#search"
                           />
                         </svg>
                       </button>
@@ -143,7 +141,7 @@ exports[`Membership should render 1`] = `
                         role="presentation"
                       >
                         <use
-                          xlink:href="#order-arrow-up"
+                          href="#order-arrow-up"
                         />
                       </svg>
                     </span>
@@ -223,7 +221,7 @@ exports[`Membership should render 1`] = `
                   role="presentation"
                 >
                   <use
-                    xlink:href="#caret-bottom"
+                    href="#caret-bottom"
                   />
                 </svg>
               </button>
@@ -250,7 +248,7 @@ exports[`Membership should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-left-small"
+                      href="#angle-left-small"
                     />
                   </svg>
                 </button>
@@ -280,7 +278,7 @@ exports[`Membership should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#angle-right-small"
+                      href="#angle-right-small"
                     />
                   </svg>
                 </button>
@@ -307,20 +305,18 @@ exports[`MembershipChart should render 1`] = `
       >
         <div
           class="recharts-responsive-container"
-          style="width: 100%; height: 360px;"
-        >
-          <div
-            style="position: absolute; width: 0px; height: 0px; visibility: hidden; display: none;"
-          />
-        </div>
+          style="width: 100%; height: 360px; min-width: 0;"
+        />
       </div>
     </div>
     <div
       class="selected-point-info"
     >
-      <h4>
+      <div
+        class="h4"
+      >
         Known Members
-      </h4>
+      </div>
     </div>
     <div
       class="base-results-root d-flex flex-column flex-grow-1 searchable-table-root searchable-table-borderless"
@@ -352,7 +348,7 @@ exports[`MembershipChart should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#order-arrow-ascending"
+                      href="#order-arrow-ascending"
                     />
                   </svg>
                 </button>
@@ -386,7 +382,7 @@ exports[`MembershipChart should render 1`] = `
                         role="presentation"
                       >
                         <use
-                          xlink:href="#search"
+                          href="#search"
                         />
                       </svg>
                     </button>
@@ -425,7 +421,7 @@ exports[`MembershipChart should render 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#order-arrow-up"
+                        href="#order-arrow-up"
                       />
                     </svg>
                   </span>
@@ -505,7 +501,7 @@ exports[`MembershipChart should render 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#caret-bottom"
+                  href="#caret-bottom"
                 />
               </svg>
             </button>
@@ -532,7 +528,7 @@ exports[`MembershipChart should render 1`] = `
                   role="presentation"
                 >
                   <use
-                    xlink:href="#angle-left-small"
+                    href="#angle-left-small"
                   />
                 </svg>
               </button>
@@ -562,7 +558,7 @@ exports[`MembershipChart should render 1`] = `
                   role="presentation"
                 >
                   <use
-                    xlink:href="#angle-right-small"
+                    href="#angle-right-small"
                   />
                 </svg>
               </button>

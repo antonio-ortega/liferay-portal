@@ -8,11 +8,11 @@ exports[`KnownIndividualsCard should render 1`] = `
     <div
       class="card-header"
     >
-      <h5
+      <div
         class="card-title"
       >
         Known Individuals
-      </h5>
+      </div>
     </div>
     <div
       class="table-responsive table-root flex-grow-1"
@@ -139,7 +139,7 @@ exports[`KnownIndividualsCard should render 1`] = `
           role="presentation"
         >
           <use
-            xlink:href="#angle-right-small"
+            href="#angle-right-small"
           />
         </svg>
       </a>
@@ -156,11 +156,11 @@ exports[`KnownIndividualsCard should render w/ NoResultsDisplay 1`] = `
     <div
       class="card-header"
     >
-      <h5
+      <div
         class="card-title"
       >
         Known Individuals
-      </h5>
+      </div>
     </div>
     <div
       class="no-results-root flex-grow-1"
@@ -168,11 +168,11 @@ exports[`KnownIndividualsCard should render w/ NoResultsDisplay 1`] = `
       <div
         class="no-results-content spacer"
       >
-        <h4
-          class="no-results-title"
+        <div
+          class="h4 no-results-title"
         >
           There are no individuals found.
-        </h4>
+        </div>
         <div
           class="no-results-description"
         >
@@ -182,10 +182,17 @@ exports[`KnownIndividualsCard should render w/ NoResultsDisplay 1`] = `
             Check back later to verify if data has been received from your data sources.
           </span>
           <a
+            class=""
             href="https://learn.liferay.com/analytics-cloud/latest/en/people/individuals/individuals-dashboard.html"
+            rel="noreferrer noopener"
             target="_blank"
           >
             Learn more about individuals.
+            <span
+              class="sr-only"
+            >
+              (Opens a new window)
+            </span>
           </a>
         </div>
       </div>
@@ -203,7 +210,7 @@ exports[`KnownIndividualsCard should render w/ NoResultsDisplay 1`] = `
           role="presentation"
         >
           <use
-            xlink:href="#angle-right-small"
+            href="#angle-right-small"
           />
         </svg>
       </a>

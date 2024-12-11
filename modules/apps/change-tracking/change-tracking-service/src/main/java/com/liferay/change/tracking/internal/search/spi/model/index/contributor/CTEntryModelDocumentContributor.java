@@ -6,24 +6,45 @@
 package com.liferay.change.tracking.internal.search.spi.model.index.contributor;
 
 import com.liferay.change.tracking.constants.CTConstants;
+import com.liferay.change.tracking.constants.CTDestinationNames;
+import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
-import com.liferay.change.tracking.service.CTEntryLocalService;
+import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
+import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.model.JournalArticleLocalization;
+import com.liferay.journal.service.JournalArticleLocalService;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.scheduler.SchedulerEngineHelper;
+import com.liferay.portal.kernel.scheduler.SchedulerException;
+import com.liferay.portal.kernel.scheduler.StorageType;
+import com.liferay.portal.kernel.scheduler.messaging.SchedulerResponse;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Localization;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -56,6 +77,44 @@ public class CTEntryModelDocumentContributor
 		}
 
 		document.addKeyword("ctCollectionId", ctEntry.getCtCollectionId());
+
+		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
+			ctEntry.getCtCollectionId());
+
+		if (ctCollection != null) {
+			document.addKeywordSortable(
+				"ctCollectionName", ctCollection.getName());
+			document.addKeyword("ctCollectionStatus", ctCollection.getStatus());
+			document.addLocalizedKeyword(
+				"ctCollectionStatusLabel",
+				_localization.getLocalizationMap(
+					_language.getAvailableLocales(), LocaleUtil.getDefault(),
+					WorkflowConstants.getStatusLabel(ctCollection.getStatus())),
+				true, true);
+
+			if ((ctCollection.getStatus() ==
+					WorkflowConstants.STATUS_APPROVED) ||
+				(ctCollection.getStatus() ==
+					WorkflowConstants.STATUS_SCHEDULED)) {
+
+				document.addDateSortable(
+					"ctCollectionStatusDate",
+					_getCTCollectionStatusDate(ctCollection));
+
+				User ctCollectionStatusUser = _userLocalService.fetchUser(
+					ctCollection.getStatusByUserId());
+
+				if (ctCollectionStatusUser != null) {
+					document.addKeyword(
+						"ctCollectionStatusUserId",
+						ctCollectionStatusUser.getUserId());
+					document.addKeywordSortable(
+						"ctCollectionStatusUserName",
+						ctCollectionStatusUser.getFullName());
+				}
+			}
+		}
+
 		document.addKeyword("modelClassNameId", ctEntry.getModelClassNameId());
 		document.addKeyword("modelClassPK", ctEntry.getModelClassPK());
 
@@ -94,16 +153,110 @@ public class CTEntryModelDocumentContributor
 		return map;
 	}
 
+	private Date _getCTCollectionStatusDate(CTCollection ctCollection) {
+		if (ctCollection.getStatus() == WorkflowConstants.STATUS_APPROVED) {
+			return ctCollection.getStatusDate();
+		}
+
+		try {
+			SchedulerResponse schedulerResponse =
+				_schedulerEngineHelper.getScheduledJob(
+					StringBundler.concat(
+						ctCollection.getCtCollectionId(), StringPool.AT,
+						ctCollection.getCompanyId()),
+					CTDestinationNames.CT_COLLECTION_SCHEDULED_PUBLISH,
+					StorageType.PERSISTED);
+
+			if (schedulerResponse != null) {
+				return _schedulerEngineHelper.getStartTime(schedulerResponse);
+			}
+		}
+		catch (SchedulerException schedulerException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(schedulerException);
+			}
+		}
+
+		return null;
+	}
+
+	private <T extends BaseModel<T>> Group _getGroup(
+		long ctCollectionId, T model) {
+
+		long groupId = 0;
+
+		if (model instanceof GroupedModel) {
+			GroupedModel groupedModel = (GroupedModel)model;
+
+			groupId = groupedModel.getGroupId();
+		}
+		else if (model instanceof JournalArticleLocalization) {
+			JournalArticleLocalization journalArticleLocalization =
+				(JournalArticleLocalization)model;
+
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						ctCollectionId)) {
+
+				JournalArticle journalArticle =
+					_journalArticleLocalService.getJournalArticle(
+						journalArticleLocalization.getArticlePK());
+
+				groupId = journalArticle.getGroupId();
+			}
+			catch (PortalException portalException) {
+				throw new RuntimeException(portalException);
+			}
+		}
+		else {
+			Map<String, Object> modelAttributes = model.getModelAttributes();
+
+			if (modelAttributes.containsKey("groupId")) {
+				groupId = (long)modelAttributes.get("groupId");
+			}
+			else if (modelAttributes.containsKey("plid")) {
+				long plid = (long)modelAttributes.get("plid");
+
+				try (SafeCloseable safeCloseable =
+						CTCollectionThreadLocal.
+							setCTCollectionIdWithSafeCloseable(
+								ctCollectionId)) {
+
+					Layout layout = _layoutLocalService.fetchLayout(plid);
+
+					if (layout != null) {
+						groupId = layout.getGroupId();
+					}
+				}
+			}
+		}
+
+		if (groupId == 0) {
+			return null;
+		}
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ctCollectionId)) {
+
+			return _groupLocalService.fetchGroup(groupId);
+		}
+	}
+
 	private <T extends BaseModel<T>> Map<Locale, String> _getTitleMap(
-		CTEntry ctEntry, Locale[] locales) {
+		long ctCollectionId, CTEntry ctEntry, Locale[] locales) {
 
 		Map<Locale, String> map = new HashMap<>();
+
+		if (ctEntry.getChangeType() == CTConstants.CT_CHANGE_TYPE_DELETION) {
+			ctCollectionId = CTConstants.CT_COLLECTION_ID_PRODUCTION;
+		}
 
 		for (Locale locale : locales) {
 			map.put(
 				locale,
 				_ctDisplayRendererRegistry.getTitle(
-					ctEntry.getCtCollectionId(), ctEntry, locale));
+					ctCollectionId, ctEntry, locale));
 		}
 
 		return map;
@@ -129,8 +282,19 @@ public class CTEntryModelDocumentContributor
 
 		long ctCollectionId = ctEntry.getCtCollectionId();
 
-		if (ctEntry.getChangeType() == CTConstants.CT_CHANGE_TYPE_DELETION) {
-			ctCollectionId = CTConstants.CT_COLLECTION_ID_PRODUCTION;
+		CTCollection ctCollection = _ctCollectionLocalService.fetchCTCollection(
+			ctCollectionId);
+
+		if (ctCollection != null) {
+			try {
+				ctCollectionId = _ctDisplayRendererRegistry.getCtCollectionId(
+					ctCollection, ctEntry);
+			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
+			}
 		}
 
 		T model = _ctDisplayRendererRegistry.fetchCTModel(
@@ -159,22 +323,30 @@ public class CTEntryModelDocumentContributor
 			return;
 		}
 
-		if (model instanceof GroupedModel) {
-			GroupedModel groupedModel = (GroupedModel)model;
+		Group group = _getGroup(ctCollectionId, model);
 
-			Group group = _groupLocalService.fetchGroup(
-				groupedModel.getGroupId());
+		if (group != null) {
+			document.addKeyword(Field.GROUP_ID, group.getGroupId());
 
-			if (group != null) {
-				document.addKeyword(Field.GROUP_ID, group.getGroupId());
-				document.addLocalizedKeyword(
-					Field.getSortableFieldName("groupName"), group.getNameMap(),
-					true, true);
+			Map<Locale, String> groupNameMap = null;
+
+			try {
+				groupNameMap = group.getDescriptiveNameMap();
 			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
+
+				groupNameMap = group.getNameMap();
+			}
+
+			document.addLocalizedKeyword(
+				"groupName", groupNameMap, false, true);
 		}
 
 		document.addLocalizedText(
-			Field.TITLE, _getTitleMap(ctEntry, locales), true);
+			Field.TITLE, _getTitleMap(ctCollectionId, ctEntry, locales), true);
 
 		document.addKeyword(
 			"hideable",
@@ -184,22 +356,44 @@ public class CTEntryModelDocumentContributor
 		Map<String, Object> modelAttributes = model.getModelAttributes();
 
 		if (modelAttributes.containsKey("status")) {
-			document.addKeyword(
-				"workflowStatus", (Integer)modelAttributes.get("status"));
+			int status = (int)modelAttributes.get("status");
+
+			document.addKeyword(Field.STATUS, status);
+			document.addLocalizedKeyword(
+				"statusLabel",
+				_localization.getLocalizationMap(
+					_language.getAvailableLocales(), LocaleUtil.getDefault(),
+					WorkflowConstants.getStatusLabel(status)),
+				true, true);
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CTEntryModelDocumentContributor.class);
+
+	@Reference
+	private CTCollectionLocalService _ctCollectionLocalService;
 
 	@Reference
 	private CTDisplayRendererRegistry _ctDisplayRendererRegistry;
 
 	@Reference
-	private CTEntryLocalService _ctEntryLocalService;
-
-	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
+	private JournalArticleLocalService _journalArticleLocalService;
+
+	@Reference
 	private Language _language;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private Localization _localization;
+
+	@Reference
+	private SchedulerEngineHelper _schedulerEngineHelper;
 
 	@Reference
 	private UserLocalService _userLocalService;

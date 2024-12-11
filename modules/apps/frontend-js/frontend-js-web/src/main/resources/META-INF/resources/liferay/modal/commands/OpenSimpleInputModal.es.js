@@ -5,7 +5,6 @@
 
 import {render} from '@liferay/frontend-js-react-web';
 import React from 'react';
-import {unmountComponentAtNode} from 'react-dom';
 
 import SimpleInputModal from '../components/SimpleInputModal.es';
 
@@ -15,24 +14,13 @@ const DEFAULT_RENDER_DATA = {
 	portletId: 'UNKNOWN_PORTLET_ID',
 };
 
-function getDefaultModalContainer() {
-	let container = document.getElementById(DEFAULT_MODAL_CONTAINER_ID);
-
-	if (!container) {
-		container = document.createElement('div');
-		container.id = DEFAULT_MODAL_CONTAINER_ID;
-		document.body.appendChild(container);
-	}
-
-	return container;
-}
-
-function dispose() {
-	unmountComponentAtNode(getDefaultModalContainer());
-}
+let container;
+let root;
 
 function openSimpleInputModalImplementation({
 	alert,
+	buttonSubmitLabel,
+	center,
 	checkboxFieldLabel,
 	checkboxFieldName,
 	checkboxFieldValue,
@@ -40,38 +28,62 @@ function openSimpleInputModalImplementation({
 	formSubmitURL,
 	idFieldName,
 	idFieldValue,
+	mainFieldComponent,
 	mainFieldLabel,
 	mainFieldName,
+	mainFieldPlaceholder,
 	mainFieldValue,
 	method,
 	namespace,
 	onFormSuccess,
-	placeholder,
+	required,
+	size,
 }) {
-	dispose();
+	const cleanUp = () => {
+		if (container && root) {
+			root.unmount();
 
-	render(
+			document.body.removeChild(container);
+
+			root = null;
+			container = null;
+		}
+	};
+
+	if (!container) {
+		container = document.createElement('div');
+		container.id = DEFAULT_MODAL_CONTAINER_ID;
+
+		document.body.appendChild(container);
+	}
+
+	root = render(
 		<SimpleInputModal
 			alert={alert}
+			buttonSubmitLabel={buttonSubmitLabel}
+			center={center}
 			checkboxFieldLabel={checkboxFieldLabel}
 			checkboxFieldName={checkboxFieldName}
 			checkboxFieldValue={checkboxFieldValue}
-			closeModal={dispose}
+			closeModal={cleanUp}
 			dialogTitle={dialogTitle}
 			formSubmitURL={formSubmitURL}
 			idFieldName={idFieldName}
 			idFieldValue={idFieldValue}
 			initialVisible="true"
+			mainFieldComponent={mainFieldComponent}
 			mainFieldLabel={mainFieldLabel}
 			mainFieldName={mainFieldName}
+			mainFieldPlaceholder={mainFieldPlaceholder}
 			mainFieldValue={mainFieldValue}
 			method={method}
 			namespace={namespace}
 			onFormSuccess={onFormSuccess}
-			placeholder={placeholder}
+			required={required}
+			size={size}
 		/>,
 		DEFAULT_RENDER_DATA,
-		getDefaultModalContainer()
+		container
 	);
 }
 

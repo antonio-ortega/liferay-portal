@@ -109,8 +109,8 @@ public class BNDExportsCheck extends BaseFileCheck {
 		if (!moduleName.endsWith("-service")) {
 			addMessage(
 				fileName,
-				"Exporting packages not allowed in module '" + moduleName +
-					"'");
+				"Exporting packages not allowed in module \"" + moduleName +
+					"\"");
 
 			return;
 		}
@@ -119,8 +119,8 @@ public class BNDExportsCheck extends BaseFileCheck {
 			if (!exportPackage.endsWith(".http")) {
 				addMessage(
 					fileName,
-					"Only allowed to export package '*.http' in module '" +
-						moduleName + "'");
+					"Only allowed to export package \"*.http\" in module \"" +
+						moduleName + "\"");
 
 				return;
 			}
@@ -244,14 +244,23 @@ public class BNDExportsCheck extends BaseFileCheck {
 				continue;
 			}
 
+			if (bundleSymbolicName.endsWith(".test.util")) {
+				String s = bundleSymbolicName.substring(
+					0, bundleSymbolicName.length() - 10);
+
+				if (line.startsWith(s + ".test.rule")) {
+					continue;
+				}
+			}
+
 			StringBundler sb = new StringBundler(6);
 
 			sb.append(definitionKey);
-			sb.append(" '");
+			sb.append(" \"");
 			sb.append(line);
-			sb.append("' should match Bundle-SymbolicName '");
+			sb.append("\" should match Bundle-SymbolicName \"");
 			sb.append(bundleSymbolicName);
-			sb.append("'");
+			sb.append("\"");
 
 			addMessage(
 				fileName, sb.toString(),

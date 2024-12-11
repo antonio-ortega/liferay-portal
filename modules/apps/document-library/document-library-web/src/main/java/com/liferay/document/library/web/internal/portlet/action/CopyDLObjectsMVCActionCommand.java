@@ -6,7 +6,9 @@
 package com.liferay.document.library.web.internal.portlet.action;
 
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
+import com.liferay.document.library.configuration.DLSizeLimitConfigurationProvider;
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFileEntryTypeConstants;
@@ -17,19 +19,27 @@ import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeService;
 import com.liferay.document.library.kernel.service.DLFileShortcutLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
+import com.liferay.document.library.web.internal.exception.DLObjectSizeLimitExceededException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.RepositoryLocalService;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.upload.FileItem;
+import com.liferay.portal.kernel.upload.UploadException;
+import com.liferay.portal.kernel.upload.configuration.UploadServletRequestConfigurationProvider;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -69,31 +79,71 @@ public class CopyDLObjectsMVCActionCommand extends BaseMVCActionCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		try {
-			_copyDLObjects(actionRequest, errorMessages, themeDisplay);
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
-			}
+		UploadException uploadException =
+			(UploadException)actionRequest.getAttribute(
+				WebKeys.UPLOAD_EXCEPTION);
 
+		if (uploadException != null) {
 			errorMessages.add(
-				themeDisplay.translate(portalException.getMessage()));
-		}
-
-		if (!errorMessages.isEmpty()) {
-			JSONPortletResponseUtil.writeJSON(
-				actionRequest, actionResponse,
-				JSONUtil.put(
-					"errorMessages",
-					JSONUtil.toJSONArray(
-						errorMessages, errorMessage -> errorMessage)));
-
-			hideDefaultSuccessMessage(actionRequest);
+				_getUploadExceptionErrorMessage(uploadException, themeDisplay));
 		}
 		else {
-			JSONPortletResponseUtil.writeJSON(
-				actionRequest, actionResponse, _jsonFactory.createJSONObject());
+			try {
+				_copyDLObjects(actionRequest, errorMessages, themeDisplay);
+			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
+
+				errorMessages.add(
+					themeDisplay.translate(portalException.getMessage()));
+			}
+		}
+
+		JSONObject jsonObject = _jsonFactory.createJSONObject();
+
+		if (!errorMessages.isEmpty()) {
+			int failedItems = errorMessages.size();
+
+			if (failedItems <= 10) {
+				jsonObject.put(
+					"errorMessages",
+					JSONUtil.toJSONArray(
+						errorMessages, errorMessage -> errorMessage));
+			}
+
+			jsonObject.put("failedItems", failedItems);
+		}
+
+		JSONPortletResponseUtil.writeJSON(
+			actionRequest, actionResponse,
+			jsonObject.put(
+				"successItems", _getItemsCopied(actionRequest, errorMessages)));
+
+		hideDefaultSuccessMessage(actionRequest);
+	}
+
+	private void _checkDestinationCopyToSizeLimit(
+			Group group, long size, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		if (!DLCopyValidationUtil.isCopyToAllowed(
+				_dlSizeLimitConfigurationProvider.getCompanyMaxSizeToCopy(
+					group.getCompanyId()),
+				_dlSizeLimitConfigurationProvider.getGroupMaxSizeToCopy(
+					group.getGroupId()),
+				_dlSizeLimitConfigurationProvider.getSystemMaxSizeToCopy(),
+				size)) {
+
+			throw new DLObjectSizeLimitExceededException(
+				DLCopyValidationUtil.getCopyToValidationMessage(
+					_dlSizeLimitConfigurationProvider.getCompanyMaxSizeToCopy(
+						group.getCompanyId()),
+					_dlSizeLimitConfigurationProvider.getGroupMaxSizeToCopy(
+						group.getGroupId()),
+					_dlSizeLimitConfigurationProvider.getSystemMaxSizeToCopy(),
+					size, themeDisplay.getLocale(), true));
 		}
 	}
 
@@ -140,15 +190,19 @@ public class CopyDLObjectsMVCActionCommand extends BaseMVCActionCommand {
 		long sourceRepositoryId = ParamUtil.getLong(
 			actionRequest, "sourceRepositoryId");
 
-		Group group = _groupLocalService.getGroup(destinationRepositoryId);
+		Group group = _getRepositoryGroup(destinationRepositoryId);
 
 		long[] groupIds =
 			_siteConnectedGroupGroupProvider.
 				getCurrentAndAncestorSiteAndDepotGroupIds(group.getGroupId());
 
-		Group sourceGroup = _groupLocalService.getGroup(sourceRepositoryId);
+		Group sourceGroup = _getRepositoryGroup(sourceRepositoryId);
 
 		_checkDestinationGroup(group, groupIds, sourceGroup.getGroupId());
+
+		_checkDestinationCopyToSizeLimit(
+			group, ParamUtil.getLong(actionRequest, "size"),
+			(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY));
 
 		long[] dlObjectIds = ParamUtil.getLongValues(
 			actionRequest, "dlObjectIds");
@@ -215,7 +269,7 @@ public class CopyDLObjectsMVCActionCommand extends BaseMVCActionCommand {
 
 		long[] groupIds =
 			_siteConnectedGroupGroupProvider.
-				getCurrentAndAncestorSiteAndDepotGroupIds(groupId, true);
+				getCurrentAndAncestorSiteAndDepotGroupIds(groupId, false, true);
 
 		if (ArrayUtil.isEmpty(groupIds)) {
 			return DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT;
@@ -247,7 +301,7 @@ public class CopyDLObjectsMVCActionCommand extends BaseMVCActionCommand {
 
 		long[] groupIds =
 			_siteConnectedGroupGroupProvider.
-				getCurrentAndAncestorSiteAndDepotGroupIds(groupId, true);
+				getCurrentAndAncestorSiteAndDepotGroupIds(groupId, false, true);
 
 		if (ArrayUtil.isEmpty(groupIds) ||
 			!ArrayUtil.contains(groupIds, folder.getGroupId())) {
@@ -257,6 +311,63 @@ public class CopyDLObjectsMVCActionCommand extends BaseMVCActionCommand {
 
 		return _dlFileEntryLocalService.getFileEntryTypeIds(
 			folder.getCompanyId(), groupIds, folder.getTreePath());
+	}
+
+	private int _getItemsCopied(
+		ActionRequest actionRequest, List<String> errorMessages) {
+
+		long[] dlObjectIds = ParamUtil.getLongValues(
+			actionRequest, "dlObjectIds");
+
+		return dlObjectIds.length - errorMessages.size();
+	}
+
+	private Group _getRepositoryGroup(long repositoryId) throws Exception {
+		Group group = _groupLocalService.fetchGroup(repositoryId);
+
+		if (group != null) {
+			return group;
+		}
+
+		Repository repository = _repositoryLocalService.getRepository(
+			repositoryId);
+
+		return _groupLocalService.getGroup(repository.getGroupId());
+	}
+
+	private String _getUploadExceptionErrorMessage(
+		UploadException uploadException, ThemeDisplay themeDisplay) {
+
+		if (uploadException.isExceededFileSizeLimit()) {
+			Throwable throwable = uploadException.getCause();
+
+			FileSizeException fileSizeException = new FileSizeException(
+				throwable);
+
+			return themeDisplay.translate(
+				"please-enter-a-file-with-a-valid-file-size-no-larger-than-x",
+				_language.formatStorageSize(
+					fileSizeException.getMaxSize(), themeDisplay.getLocale()));
+		}
+
+		if (uploadException.isExceededLiferayFileItemSizeLimit()) {
+			return themeDisplay.translate(
+				"please-enter-valid-content-with-valid-content-size-no-" +
+					"larger-than-x",
+				_language.formatStorageSize(
+					FileItem.THRESHOLD_SIZE, themeDisplay.getLocale()));
+		}
+
+		if (uploadException.isExceededUploadRequestSizeLimit()) {
+			return themeDisplay.translate(
+				"please-enter-a-file-with-a-valid-file-size-no-larger-than-x",
+				_language.formatStorageSize(
+					_uploadServletRequestConfigurationProvider.getMaxSize(),
+					themeDisplay.getLocale()));
+		}
+
+		return themeDisplay.translate(
+			"an-unexpected-error-occurred-while-saving-your-document");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -278,12 +389,25 @@ public class CopyDLObjectsMVCActionCommand extends BaseMVCActionCommand {
 	private DLFolderLocalService _dlFolderLocalService;
 
 	@Reference
+	private DLSizeLimitConfigurationProvider _dlSizeLimitConfigurationProvider;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	@Reference
 	private JSONFactory _jsonFactory;
 
 	@Reference
+	private Language _language;
+
+	@Reference
+	private RepositoryLocalService _repositoryLocalService;
+
+	@Reference
 	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;
+
+	@Reference
+	private UploadServletRequestConfigurationProvider
+		_uploadServletRequestConfigurationProvider;
 
 }

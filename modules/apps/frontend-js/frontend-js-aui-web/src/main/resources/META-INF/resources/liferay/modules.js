@@ -23,7 +23,7 @@
 			'/aui/',
 		combine: COMBINE,
 		comboBase: LiferayAUI.getComboPath(),
-		filter: process.env.NODE_ENV === 'development' ? 'raw' : 'min',
+		filter: 'min', // If you need to debug this file, replace this with 'raw'
 		groups: {
 			editor: {
 				base: PATH_EDITOR_CKEDITOR,
@@ -135,10 +135,6 @@
 						path: 'logo_editor.js',
 						requires: ['aui-image-cropper', 'liferay-portlet-base'],
 					},
-					'liferay-logo-selector': {
-						path: 'logo_selector.js',
-						requires: ['aui-base'],
-					},
 					'liferay-menu': {
 						path: 'menu.js',
 						requires: ['aui-debounce', 'aui-node'],
@@ -169,8 +165,7 @@
 						plugins: {
 							'liferay-navigation-interaction-touch': {
 								condition: {
-									name:
-										'liferay-navigation-interaction-touch',
+									name: 'liferay-navigation-interaction-touch',
 									test(A) {
 										return A.UA.touchEnabled;
 									},

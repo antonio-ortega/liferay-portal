@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -136,7 +137,7 @@ public class CommerceServiceTest {
 
 		_commerceOrderService.addCommerceOrder(
 			_commerceChannel.getGroupId(), accountEntry.getAccountEntryId(),
-			_commerceCurrency.getCommerceCurrencyId(), 0);
+			_commerceCurrency.getCode(), 0);
 	}
 
 	@Test(expected = PrincipalException.MustHavePermission.class)
@@ -172,7 +173,7 @@ public class CommerceServiceTest {
 
 		_commerceOrderService.addCommerceOrder(
 			_commerceChannel.getGroupId(), accountEntry.getAccountEntryId(),
-			_commerceCurrency.getCommerceCurrencyId(), 0);
+			_commerceCurrency.getCode(), 0);
 	}
 
 	@Test
@@ -200,7 +201,7 @@ public class CommerceServiceTest {
 
 		_commerceOrderService.addCommerceOrder(
 			_commerceChannel.getGroupId(), accountEntry.getAccountEntryId(),
-			_commerceCurrency.getCommerceCurrencyId(), 0);
+			_commerceCurrency.getCode(), 0);
 	}
 
 	@Test
@@ -227,7 +228,7 @@ public class CommerceServiceTest {
 
 		_commerceOrderService.addCommerceOrder(
 			_commerceChannel.getGroupId(), accountEntry.getAccountEntryId(),
-			_commerceCurrency.getCommerceCurrencyId(), 0);
+			_commerceCurrency.getCode(), 0);
 	}
 
 	@Rule
@@ -235,7 +236,8 @@ public class CommerceServiceTest {
 
 	private Role _addBuyerRole() throws Exception {
 		Role role = _roleLocalService.addRole(
-			_user.getUserId(), null, 0, "Test Buyer",
+			RandomTestUtil.randomString(), _user.getUserId(), null, 0,
+			"Test Buyer",
 			HashMapBuilder.put(
 				_serviceContext.getLocale(), "Test Buyer"
 			).build(),

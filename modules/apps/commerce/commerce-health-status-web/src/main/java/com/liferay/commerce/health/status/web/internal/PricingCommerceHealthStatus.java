@@ -21,7 +21,6 @@ import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPInstanceLocalService;
-import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -225,8 +224,7 @@ public class PricingCommerceHealthStatus implements CommerceHealthStatus {
 			commercePriceList =
 				_commercePriceListLocalService.addCatalogBaseCommercePriceList(
 					commerceCatalog.getGroupId(), serviceContext.getUserId(),
-					commerceCurrency.getCommerceCurrencyId(), type, name,
-					serviceContext);
+					commerceCurrency.getCode(), type, name, serviceContext);
 
 			List<CPDefinition> cpDefinitions =
 				_cpDefinitionLocalService.getCPDefinitions(
@@ -268,10 +266,6 @@ public class PricingCommerceHealthStatus implements CommerceHealthStatus {
 
 	@Reference
 	private CPInstanceLocalService _cpInstanceLocalService;
-
-	@Reference
-	private CPInstanceUnitOfMeasureLocalService
-		_cpInstanceUnitOfMeasureLocalService;
 
 	@Reference
 	private Language _language;

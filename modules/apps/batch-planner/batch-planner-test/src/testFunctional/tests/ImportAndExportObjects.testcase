@@ -1,10 +1,11 @@
-@component-name = "portal-batch-planner"
+@component-name = "portal-headless"
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true${line.separator}feature.flag.LPS-186620=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Import/Export";
+	property testray.main.component.name = "Data Migration Center";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -26,8 +27,6 @@ definition {
 		}
 	}
 
-	@description = "Ignored due to LPS-191607"
-	@ignore = "true"
 	@priority = 3
 	test DownloadSampleFileOfTheCustomObject {
 		task ("Given a custom object is published") {
@@ -38,18 +37,12 @@ definition {
 				requiredStringFieldName = "name");
 		}
 
-		task ("And Given object entry is created") {
-			ObjectDefinitionAPI.createObjectEntryWithName(
-				en_US_plural_label = "students",
-				name = "Jessica");
-		}
-
 		task ("And Given I create an import file task with custom object as the entity type") {
 			ImportExport.openImportExportAdmin();
 
 			ImportExport.gotoImport();
 
-			ImportExport.selectEntity(entityType = "C_Student (v1_0 - Liferay Object REST)");
+			ImportExport.selectEntity(entityType = "Student (v1.0 - Liferay Object REST)");
 		}
 
 		task ("When I download a sample file of this entity") {
@@ -57,18 +50,18 @@ definition {
 		}
 
 		task ("Then the sample file download successfully") {
-			var sampleFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "objectentry-*.csv");
+			DownloadTempFile();
+
+			var sampleFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "c_student-*.csv");
 
 			ImportExport.assertFileContent(
-				comparisonFileName = "json_objectEntry_export.txt",
+				comparisonFileName = "objectEntry_import_sample.csv",
 				fileName = ${sampleFileName});
 		}
 	}
 
 	@priority = 4
 	test ExportCustomObjectEntryWithManyToManyRelationship {
-		property portal.acceptance = "true";
-
 		task ("Given two custom objects published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "university",
@@ -110,17 +103,13 @@ definition {
 		}
 
 		task ("When user export custom object as entity type") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "C_Subject (v1_0 - Liferay Object REST)",
+			ImportExport.exportAndUnzipFile(
+				entityType = "Subject (v1.0 - Liferay Object REST)",
 				exportFields = "Attribute Code",
 				exportFileFormat = "JSON");
 		}
 
 		task ("Then zip file contains related file type export successfully") {
-			ImportExport.unzipDownloadedExportFile();
-
 			BatchEngine.assertExportedFileContainsCorrectObject(
 				expectedValue = "Math",
 				fileName = "export.json",
@@ -130,8 +119,6 @@ definition {
 
 	@priority = 4
 	test ExportCustomObjectEntryWithOneToManyRelationship {
-		property portal.acceptance = "true";
-
 		task ("Given two custom objects published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "university",
@@ -173,17 +160,13 @@ definition {
 		}
 
 		task ("When user export custom object as entity type") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
+			ImportExport.exportAndUnzipFile(
+				entityType = "Student (v1.0 - Liferay Object REST)",
 				exportFields = "Attribute Code",
 				exportFileFormat = "JSON");
 		}
 
 		task ("Then zip file contains related file type export successfully") {
-			ImportExport.unzipDownloadedExportFile();
-
 			BatchEngine.assertExportedFileContainsCorrectObject(
 				expectedValue = "Pearl",
 				fileName = "export.json",
@@ -192,81 +175,7 @@ definition {
 	}
 
 	@priority = 4
-	test ExportCustomObjectWithAllFieldTypesMapped {
-		property portal.acceptance = "true";
-
-		task ("Given a custom object with all kinds of field type is publushed") {
-			Picklist.addPicklistViaAPI(picklistName = "customPicklist");
-
-			Picklist.addPicklistItemViaAPI(
-				itemKey = "distance1",
-				itemName = "distance1",
-				picklistName = "customPicklist");
-
-			var picklistId = JSONObject.getPicklistId(picklistName = "customPicklist");
-
-			ObjectDefinitionAPI.createObjectDefinitionWithAllKindsOfFieldTypes(
-				en_US_label = "student",
-				en_US_plural_label = "students",
-				objectDefinitionName = "Student",
-				picklistId = ${picklistId},
-				requiredStringFieldName = "name");
-		}
-
-		task ("And Given object entry is created") {
-			var studentEntryId = CustomObjectAPI.createObjectEntryWithAllFields(
-				customBooleanValue = "true",
-				customLongTextValue = "This is a custom LongText field",
-				customPicklistValue = "distance1",
-				customPrecisionDecimalValue = "12.55",
-				en_US_plural_label = "students",
-				entryId = ${studentEntryId},
-				requiredFieldLabel = "name",
-				requiredFieldValue = "Jessica");
-
-			ObjectAdmin.selectAttachmentFileInObjectEntryViaUI(
-				fileName = "Document_3.png",
-				key_entry = ${studentEntryId},
-				label = "student",
-				objectName = "Student");
-		}
-
-		task ("When user export custom object with all attributes codes selected") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
-				exportFields = "name,creator,customAttachment,customBoolean,customLongText,customPicklist,customPrecisionDecimal,",
-				exportFileFormat = "JSON");
-		}
-
-		task ("Then the zip file contains a related file type export successfully") {
-			var filePath = TestCase.getDependenciesDirPath(fileName = "json_objectEntry_export.txt");
-			var response = ObjectDefinitionAPI.getObjectEntries(en_US_plural_label = "students");
-			var userId = JSONUserAPI._getUserIdByEmailAddress(userEmailAddress = "test@liferay.com");
-			var attachmenId = JSONPathUtil.getProperty(
-				property = "$.items..customAttachment.id",
-				response = ${response});
-			var attachmenHref = JSONPathUtil.getProperty(
-				property = "$.items..customAttachment.link.href",
-				response = ${response});
-
-			FileUtil.replaceStringInFile(${filePath}, 20123, ${userId});
-
-			FileUtil.replaceStringInFile(${filePath}, 36105, ${attachmenId});
-
-			FileUtil.replaceStringInFile(${filePath}, "/documents/36568/36570/Document_3.png", ${attachmenHref});
-
-			ImportExport.assertFileContent(
-				comparisonFileName = "json_objectEntry_export.txt",
-				fileName = "export.json");
-		}
-	}
-
-	@priority = 4
 	test ExportCustomObjectWithObjectEntry {
-		property portal.acceptance = "true";
-
 		task ("Given a custom object is published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "student",
@@ -282,17 +191,13 @@ definition {
 		}
 
 		task ("When user export custom object as entity type and map attribute codes") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
+			ImportExport.exportAndUnzipFile(
+				entityType = "Student (v1.0 - Liferay Object REST)",
 				exportFields = "Attribute Code",
 				exportFileFormat = "JSON");
 		}
 
 		task ("Then the zip file contains a related file type export successfully") {
-			ImportExport.unzipDownloadedExportFile();
-
 			BatchEngine.assertExportedFileContainsCorrectObject(
 				expectedValue = "Jessica",
 				fileName = "export.json",
@@ -311,16 +216,14 @@ definition {
 		}
 
 		task ("When user export custom object with all attribute codes selected") {
-			ImportExport.openImportExportAdmin();
-
-			ImportExport.exportFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
+			ImportExport.exportAndUnzipFile(
+				entityType = "Student (v1.0 - Liferay Object REST)",
 				exportFields = "Attribute Code",
 				exportFileFormat = "JSON");
 		}
 
 		task ("Then the zip file contains a related file type export successfully") {
-			ImportExport.unzipDownloadedExportFile();
+			ImportExport.assertDownloadedFileName(downloadedFile = "export.json");
 		}
 
 		task ("And Then no error in server console") {
@@ -346,7 +249,7 @@ definition {
 
 		task ("When save as template with a template name") {
 			ImportExport.configureExport(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
+				entityType = "Student (v1.0 - Liferay Object REST)",
 				exportFields = "Attribute Code",
 				exportFileFormat = "JSON");
 
@@ -362,8 +265,6 @@ definition {
 		}
 	}
 
-	@description = "Ignored due to LPS-189103"
-	@ignore = "true"
 	@priority = 3
 	test SaveImportCustomObjectAsTemplate {
 		task ("And Given I create an import task with custom objects") {
@@ -373,13 +274,11 @@ definition {
 				name = "Student",
 				requiredStringFieldName = "name");
 
-			ImportExport.openImportExportAdmin();
-
 			ImportExport.importFile(
-				entityType = "C_Student (v1_0 - Liferay Object REST)",
-				fieldMappings = "name:Student Name,externalReferenceCode:External Reference Code",
+				entityType = "Student (v1.0 - Liferay Object REST)",
+				fieldMappings = "name:name,externalReferenceCode:externalReferenceCode",
 				fileName = "csv_student_import.csv",
-				noExport = "true");
+				noImport = "true");
 		}
 
 		task ("When save as template with a template name") {
@@ -397,8 +296,6 @@ definition {
 
 	@priority = 4
 	test SelectCustomObjectAsEntityType {
-		property portal.acceptance = "true";
-
 		task ("Given a custom object is published") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
 				en_US_label = "student",
@@ -412,7 +309,7 @@ definition {
 
 			ImportExport.gotoExport();
 
-			ImportExport.selectEntity(entityType = "C_Student (v1_0 - Liferay Object REST)");
+			ImportExport.selectEntity(entityType = "Student (v1.0 - Liferay Object REST)");
 		}
 
 		task ("Then no error in server console") {

@@ -168,8 +168,8 @@ public class LayoutSEOEntryLocalServiceImpl
 		}
 
 		layoutSEOEntry.setModifiedDate(DateUtil.newDate());
-		layoutSEOEntry.setCanonicalURLEnabled(canonicalURLEnabled);
 		layoutSEOEntry.setCanonicalURLMap(canonicalURLMap);
+		layoutSEOEntry.setCanonicalURLEnabled(canonicalURLEnabled);
 
 		DDMStructure ddmStructure = _getDDMStructure(
 			_groupLocalService.getGroup(groupId));
@@ -180,9 +180,9 @@ public class LayoutSEOEntryLocalServiceImpl
 
 		layoutSEOEntry.setDDMStorageId(ddmStorageId);
 
+		layoutSEOEntry.setOpenGraphDescriptionMap(openGraphDescriptionMap);
 		layoutSEOEntry.setOpenGraphDescriptionEnabled(
 			openGraphDescriptionEnabled);
-		layoutSEOEntry.setOpenGraphDescriptionMap(openGraphDescriptionMap);
 
 		if (openGraphImageFileEntryId != 0) {
 			layoutSEOEntry.setOpenGraphImageAltMap(openGraphImageAltMap);
@@ -192,8 +192,51 @@ public class LayoutSEOEntryLocalServiceImpl
 		}
 
 		layoutSEOEntry.setOpenGraphImageFileEntryId(openGraphImageFileEntryId);
-		layoutSEOEntry.setOpenGraphTitleEnabled(openGraphTitleEnabled);
 		layoutSEOEntry.setOpenGraphTitleMap(openGraphTitleMap);
+		layoutSEOEntry.setOpenGraphTitleEnabled(openGraphTitleEnabled);
+
+		return layoutSEOEntryPersistence.update(layoutSEOEntry);
+	}
+
+	@Override
+	public LayoutSEOEntry updateLayoutSEOEntry(
+			long userId, long groupId, boolean privateLayout, long layoutId,
+			boolean openGraphDescriptionEnabled,
+			Map<Locale, String> openGraphDescriptionMap,
+			Map<Locale, String> openGraphImageAltMap,
+			long openGraphImageFileEntryId, boolean openGraphTitleEnabled,
+			Map<Locale, String> openGraphTitleMap,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		LayoutSEOEntry layoutSEOEntry = layoutSEOEntryPersistence.fetchByG_P_L(
+			groupId, privateLayout, layoutId);
+
+		if (layoutSEOEntry == null) {
+			return _addLayoutSEOEntry(
+				userId, groupId, privateLayout, layoutId, false,
+				Collections.emptyMap(), 0, openGraphDescriptionEnabled,
+				openGraphDescriptionMap, openGraphImageAltMap,
+				openGraphImageFileEntryId, openGraphTitleEnabled,
+				openGraphTitleMap, serviceContext);
+		}
+
+		layoutSEOEntry.setModifiedDate(DateUtil.newDate());
+
+		layoutSEOEntry.setOpenGraphDescriptionMap(openGraphDescriptionMap);
+		layoutSEOEntry.setOpenGraphDescriptionEnabled(
+			openGraphDescriptionEnabled);
+
+		if (openGraphImageFileEntryId != 0) {
+			layoutSEOEntry.setOpenGraphImageAltMap(openGraphImageAltMap);
+		}
+		else {
+			layoutSEOEntry.setOpenGraphImageAltMap(Collections.emptyMap());
+		}
+
+		layoutSEOEntry.setOpenGraphImageFileEntryId(openGraphImageFileEntryId);
+		layoutSEOEntry.setOpenGraphTitleMap(openGraphTitleMap);
+		layoutSEOEntry.setOpenGraphTitleEnabled(openGraphTitleEnabled);
 
 		return layoutSEOEntryPersistence.update(layoutSEOEntry);
 	}
@@ -217,8 +260,8 @@ public class LayoutSEOEntryLocalServiceImpl
 		}
 
 		layoutSEOEntry.setModifiedDate(DateUtil.newDate());
-		layoutSEOEntry.setCanonicalURLEnabled(canonicalURLEnabled);
 		layoutSEOEntry.setCanonicalURLMap(canonicalURLMap);
+		layoutSEOEntry.setCanonicalURLEnabled(canonicalURLEnabled);
 
 		return layoutSEOEntryPersistence.update(layoutSEOEntry);
 	}
@@ -253,8 +296,8 @@ public class LayoutSEOEntryLocalServiceImpl
 
 		layoutSEOEntry.setPrivateLayout(privateLayout);
 		layoutSEOEntry.setLayoutId(layoutId);
-		layoutSEOEntry.setCanonicalURLEnabled(canonicalURLEnabled);
 		layoutSEOEntry.setCanonicalURLMap(canonicalURLMap);
+		layoutSEOEntry.setCanonicalURLEnabled(canonicalURLEnabled);
 
 		DDMStructure ddmStructure = _getDDMStructure(
 			_groupLocalService.getGroup(groupId));
@@ -265,17 +308,17 @@ public class LayoutSEOEntryLocalServiceImpl
 
 		layoutSEOEntry.setDDMStorageId(ddmStorageId);
 
+		layoutSEOEntry.setOpenGraphDescriptionMap(openGraphDescriptionMap);
 		layoutSEOEntry.setOpenGraphDescriptionEnabled(
 			openGraphDescriptionEnabled);
-		layoutSEOEntry.setOpenGraphDescriptionMap(openGraphDescriptionMap);
 
 		if (openGraphImageFileEntryId != 0) {
 			layoutSEOEntry.setOpenGraphImageAltMap(openGraphImageAltMap);
 		}
 
 		layoutSEOEntry.setOpenGraphImageFileEntryId(openGraphImageFileEntryId);
-		layoutSEOEntry.setOpenGraphTitleEnabled(openGraphTitleEnabled);
 		layoutSEOEntry.setOpenGraphTitleMap(openGraphTitleMap);
+		layoutSEOEntry.setOpenGraphTitleEnabled(openGraphTitleEnabled);
 
 		return layoutSEOEntryPersistence.update(layoutSEOEntry);
 	}

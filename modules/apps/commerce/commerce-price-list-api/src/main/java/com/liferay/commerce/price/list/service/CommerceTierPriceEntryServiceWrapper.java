@@ -133,34 +133,23 @@ public class CommerceTierPriceEntryServiceWrapper
 	}
 
 	@Override
-	public CommerceTierPriceEntry fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceTierPriceEntryService.fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x)
-	 */
-	@Deprecated
-	@Override
-	public java.util.List<CommerceTierPriceEntry> fetchCommerceTierPriceEntries(
-			long companyId, int start, int end)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _commerceTierPriceEntryService.fetchCommerceTierPriceEntries(
-			companyId, start, end);
-	}
-
-	@Override
 	public CommerceTierPriceEntry fetchCommerceTierPriceEntry(
 			long commerceTierPriceEntryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceTierPriceEntryService.fetchCommerceTierPriceEntry(
 			commerceTierPriceEntryId);
+	}
+
+	@Override
+	public CommerceTierPriceEntry
+			fetchCommerceTierPriceEntryByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceTierPriceEntryService.
+			fetchCommerceTierPriceEntryByExternalReferenceCode(
+				externalReferenceCode, companyId);
 	}
 
 	@Override

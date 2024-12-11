@@ -106,7 +106,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -214,7 +214,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -236,7 +236,7 @@ definition {
 		}
 
 		task ("And the user is able to create new orders") {
-			Button.click(button = "Create New Order");
+			CommerceAcceleratorsInitializer.createNewOrderFromAccountSelectorDropdown();
 
 			WaitForVisible(locator1 = "CommerceOrders#PENDING_ORDERS_ORDER_ID");
 

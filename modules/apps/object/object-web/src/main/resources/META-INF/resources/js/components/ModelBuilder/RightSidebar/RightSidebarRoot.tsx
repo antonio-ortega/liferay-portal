@@ -4,13 +4,14 @@
  */
 
 import {CustomVerticalBar} from '@liferay/object-js-components-web';
-import React, {ReactNode, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import './RightSidebarRoot.scss';
 import {useObjectFolderContext} from '../ModelBuilderContext/objectFolderContext';
+import {getRightSidebarWidth} from './rightSidebarUtil';
 
 interface IRightSidebarRoot {
-	children: ReactNode;
+	children: React.ReactNode;
 }
 
 export function RightSideBarRoot({children}: IRightSidebarRoot) {
@@ -19,6 +20,7 @@ export function RightSideBarRoot({children}: IRightSidebarRoot) {
 			selectedObjectDefinitionNode,
 			selectedObjectField,
 			selectedObjectRelationship,
+			showSidebars,
 		},
 	] = useObjectFolderContext();
 	const [loading, setLoading] = useState(false);
@@ -33,18 +35,12 @@ export function RightSideBarRoot({children}: IRightSidebarRoot) {
 	};
 
 	useEffect(() => {
-		if (
-			selectedObjectField &&
-			selectedObjectField.businessType === 'Aggregation'
-		) {
-			setNewVerticalBarWidthValue(950);
+		const newRightSidebarWidth = getRightSidebarWidth(
+			selectedObjectField,
+			selectedObjectRelationship
+		);
 
-			return;
-		}
-
-		setNewVerticalBarWidthValue(320);
-
-		return;
+		setNewVerticalBarWidthValue(newRightSidebarWidth);
 	}, [
 		selectedObjectDefinitionNode,
 		selectedObjectField,
@@ -55,11 +51,12 @@ export function RightSideBarRoot({children}: IRightSidebarRoot) {
 		<>
 			{!loading && (
 				<CustomVerticalBar
+					className="lfr-objects__model-builder-custom-vertical-bar"
 					defaultActive="objectsModelBuilderRightSidebar"
 					panelWidth={verticalBarWidth}
 					position="right"
 					resize={false}
-					triggerSideBarAnimation={true}
+					triggerSideBarAnimation={showSidebars}
 					verticalBarItems={[
 						{
 							title: 'objectsModelBuilderRightSidebar',

@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -24,6 +25,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.io.Serializable;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -37,6 +39,9 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see ClassNameLocalServiceUtil
  * @generated
  */
+@OSGiBeanProperties(
+	property = {"model.class.name=com.liferay.portal.kernel.model.ClassName"}
+)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -221,6 +226,12 @@ public interface ClassNameLocalService
 
 	@Transactional(enabled = false)
 	public long getClassNameId(String value);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Supplier<long[]> getClassNameIdsSupplier(String[] classNames);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Supplier<Long> getClassNameIdSupplier(String className);
 
 	/**
 	 * Returns a range of all the class names.

@@ -5,20 +5,18 @@
 
 import {FDSTableCellHTMLElementBuilderArgs} from '@liferay/js-api/data-set';
 import {ClientExtension} from 'frontend-js-components-web';
-import {TRenderer, getRenderer} from 'frontend-js-web';
 import React, {ComponentType, useContext, useEffect, useState} from 'react';
 
 import FrontendDataSetContext, {
 	IFrontendDataSetContext,
+	TRenderer,
 } from '../../FrontendDataSetContext';
 import {getInternalCellRenderer} from '../../cell_renderers/getInternalCellRenderer';
 import {getInputRendererById} from '../../utils/renderer';
-
-// @ts-ignore
-
+import ViewsContext from '../ViewsContext';
 import DndTableCell from './dnd_table/Cell';
 
-function InlineEditInputRenderer({
+export function InlineEditInputRenderer({
 	itemId,
 	options,
 	rootPropertyName,
@@ -78,61 +76,45 @@ function TableCell({
 		loadData,
 		openSidePanel,
 	}: IFrontendDataSetContext = useContext(FrontendDataSetContext);
+	const [{modifiedFields}] = useContext(ViewsContext) as any;
 
-	const [loading, setLoading] = useState(false);
+	const [cellRenderer, setCellRenderer] = useState<TRenderer | null>(null);
 
-	const contentRenderer = field.contentRenderer || 'default';
+	useEffect(() => {
+		if (field.contentRendererClientExtension) {
+			const mergedField = {...field, ...modifiedFields[field.fieldName]};
 
-	const [cellRenderer, setCellRenderer] = useState<TRenderer | null>(() => {
-		if (field.contentRendererModuleURL) {
-			return null;
+			setCellRenderer({
+				htmlElementBuilder: mergedField.htmlElementBuilder,
+				type: 'clientExtension',
+			});
+
+			return;
 		}
+
+		const contentRenderer = field.contentRenderer || 'default';
 
 		const customTableCellRenderer = customRenderers?.tableCell?.find(
 			(renderer: TRenderer) => renderer.name === contentRenderer
 		);
 
 		if (customTableCellRenderer) {
-			return customTableCellRenderer;
+			setCellRenderer(customTableCellRenderer);
+
+			return;
 		}
 
 		if (customDataRenderers && customDataRenderers[contentRenderer]) {
-			return {
+			setCellRenderer({
 				component: customDataRenderers[contentRenderer],
 				type: 'internal',
-			};
+			});
+
+			return;
 		}
 
-		return getInternalCellRenderer(contentRenderer);
-	});
-
-	useEffect(() => {
-		if (!loading && field.contentRendererModuleURL && !cellRenderer) {
-			setLoading(true);
-
-			getRenderer({
-				type: field.contentRendererClientExtension
-					? 'clientExtension'
-					: 'internal',
-				url: field.contentRendererModuleURL,
-			})
-				.then((renderer: TRenderer) => {
-					setCellRenderer(() => renderer);
-
-					setLoading(false);
-				})
-				.catch((error: string) => {
-					console.error(
-						`Unable to load FDS cell renderer at ${field.contentRendererModuleURL}:`,
-						error
-					);
-
-					setCellRenderer(() => getInternalCellRenderer('default'));
-
-					setLoading(false);
-				});
-		}
-	}, [field, loading, cellRenderer]);
+		setCellRenderer(getInternalCellRenderer(contentRenderer));
+	}, [customDataRenderers, customRenderers, field, modifiedFields]);
 
 	if (
 		inlineEditingSettings &&
@@ -154,21 +136,7 @@ function TableCell({
 		);
 	}
 
-	if (!cellRenderer || loading) {
-		return (
-			<DndTableCell columnName={String(field.fieldName)}>
-				<span
-					aria-hidden="true"
-					className="loading-animation loading-animation-sm"
-				/>
-			</DndTableCell>
-		);
-	}
-
-	if (
-		cellRenderer.type === 'clientExtension' &&
-		cellRenderer.htmlElementBuilder
-	) {
+	if (cellRenderer?.type === 'clientExtension') {
 		return (
 			<DndTableCell columnName={String(field.fieldName)}>
 				<ClientExtension<FDSTableCellHTMLElementBuilderArgs>
@@ -179,7 +147,7 @@ function TableCell({
 		);
 	}
 
-	if (cellRenderer.type === 'internal' && cellRenderer.component) {
+	if (cellRenderer?.type === 'internal' && cellRenderer.component) {
 		const CellRendererComponent = cellRenderer.component;
 
 		return (
@@ -200,6 +168,8 @@ function TableCell({
 			</DndTableCell>
 		);
 	}
+
+	return null;
 }
 
 export default TableCell;

@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
+import com.liferay.portal.kernel.lock.Lock;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.service.BaseService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -117,6 +118,9 @@ public interface KBArticleService extends BaseService {
 			long groupId, long kbFolderId, String urlTitle, int status)
 		throws PortalException;
 
+	public Lock forceLockKBArticle(long groupId, long resourcePrimKey)
+		throws PortalException;
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<KBArticle> getAllDescendantKBArticles(
 			long groupId, long resourcePrimKey, int status,
@@ -198,6 +202,10 @@ public interface KBArticleService extends BaseService {
 		long groupId, long resourcePrimKey, int status);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public KBArticle getLatestKBArticle(long resourcePrimKey)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public KBArticle getLatestKBArticle(long resourcePrimKey, int status)
 		throws PortalException;
 
@@ -230,9 +238,14 @@ public interface KBArticleService extends BaseService {
 	public String[] getTempAttachmentNames(long groupId, String tempFolderName)
 		throws PortalException;
 
+	public Lock lockKBArticle(long resourcePrimKey) throws PortalException;
+
 	public void moveKBArticle(
 			long resourcePrimKey, long parentResourceClassNameId,
 			long parentResourcePrimKey, double priority)
+		throws PortalException;
+
+	public KBArticle moveKBArticleToTrash(long resourcePrimKey)
 		throws PortalException;
 
 	public KBArticle revertKBArticle(
@@ -245,10 +258,20 @@ public interface KBArticleService extends BaseService {
 	public void subscribeKBArticle(long groupId, long resourcePrimKey)
 		throws PortalException;
 
+	public void unlockKBArticle(long resourcePrimKey) throws PortalException;
+
 	public void unsubscribeGroupKBArticles(long groupId, String portletId)
 		throws PortalException;
 
 	public void unsubscribeKBArticle(long resourcePrimKey)
+		throws PortalException;
+
+	public KBArticle updateAndUnlockKBArticle(
+			long resourcePrimKey, String title, String content,
+			String description, String[] sections, String sourceURL,
+			Date displayDate, Date expirationDate, Date reviewDate,
+			String[] selectedFileNames, long[] removeFileEntryIds,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public KBArticle updateKBArticle(

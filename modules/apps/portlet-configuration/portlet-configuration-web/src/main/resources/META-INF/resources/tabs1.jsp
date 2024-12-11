@@ -32,10 +32,11 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, tabs1), 
 							});
 					}
 
-					if (selPortlet.hasMultipleMimeTypes()) {
+					if (FeatureFlagManagerUtil.isEnabled("LPD-40533") && selPortlet.hasMultipleMimeTypes()) {
 						add(
 							navigationItem -> {
 								navigationItem.setActive(tabs1.equals("supported-clients"));
+								navigationItem.setDeprecated(true);
 								navigationItem.setHref(renderResponse.createRenderURL(), "mvcPath", "/edit_supported_clients.jsp", "redirect", redirect, "returnToFullPageURL", returnToFullPageURL, "portletConfiguration", Boolean.TRUE.toString(), "portletResource", portletResource);
 								navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "supported-clients"));
 							});
@@ -52,12 +53,15 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, tabs1), 
 							});
 					}
 
-					add(
-						navigationItem -> {
-							navigationItem.setActive(tabs1.equals("sharing"));
-							navigationItem.setHref(renderResponse.createRenderURL(), "mvcPath", "/edit_sharing.jsp", "redirect", redirect, "returnToFullPageURL", returnToFullPageURL, "portletConfiguration", Boolean.TRUE.toString(), "portletResource", portletResource);
-							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "sharing"));
-						});
+					if (FeatureFlagManagerUtil.isEnabled("LPD-40534")) {
+						add(
+							navigationItem -> {
+								navigationItem.setActive(tabs1.equals("sharing"));
+								navigationItem.setDeprecated(true);
+								navigationItem.setHref(renderResponse.createRenderURL(), "mvcPath", "/edit_sharing.jsp", "redirect", redirect, "returnToFullPageURL", returnToFullPageURL, "portletConfiguration", Boolean.TRUE.toString(), "portletResource", portletResource);
+								navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "sharing"));
+							});
+					}
 
 					if (selPortlet.isScopeable()) {
 						add(

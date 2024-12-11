@@ -1,4 +1,4 @@
-.lfr-notification__rich-text-localized {
+.lfr-objects__rich-text-localized {
 	display: flex;
 
 	&-editor {
@@ -7,5 +7,9 @@
 
 	&-flag {
 		margin-left: 0.5rem;
+	}
+
+	&-readonly {
+		pointer-events: none;
 	}
 }

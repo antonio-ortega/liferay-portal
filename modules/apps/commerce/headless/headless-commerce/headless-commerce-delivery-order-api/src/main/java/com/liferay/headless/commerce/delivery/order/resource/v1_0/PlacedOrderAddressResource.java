@@ -43,11 +43,21 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface PlacedOrderAddressResource {
 
-	public PlacedOrderAddress getPlacedOrderPlacedOrderBillingAddres(
+	public PlacedOrderAddress
+			getPlacedOrderByExternalReferenceCodePlacedOrderBillingAddress(
+				String externalReferenceCode)
+		throws Exception;
+
+	public PlacedOrderAddress
+			getPlacedOrderByExternalReferenceCodePlacedOrderShippingAddress(
+				String externalReferenceCode)
+		throws Exception;
+
+	public PlacedOrderAddress getPlacedOrderPlacedOrderBillingAddress(
 			Long placedOrderId)
 		throws Exception;
 
-	public PlacedOrderAddress getPlacedOrderPlacedOrderShippingAddres(
+	public PlacedOrderAddress getPlacedOrderPlacedOrderShippingAddress(
 			Long placedOrderId)
 		throws Exception;
 

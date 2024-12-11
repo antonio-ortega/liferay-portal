@@ -10,6 +10,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
 import com.liferay.portal.kernel.exception.NoSuchRegionException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -28,7 +29,6 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.service.TeamLocalService;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -85,7 +85,20 @@ public class UserModelDocumentContributor
 			document.addText("fullName", user.getFullName());
 			document.addKeyword("groupIds", user.getGroupIds());
 			document.addText("jobTitle", user.getJobTitle());
-			document.addDate("lastLoginDate", user.getLastLoginDate());
+
+			if (FeatureFlagManagerUtil.isEnabled("LPD-36010")) {
+				boolean hasLoginDate = false;
+
+				if (user.getLastLoginDate() != null) {
+					hasLoginDate = true;
+				}
+
+				document.addKeyword("hasLoginDate", hasLoginDate);
+			}
+			else {
+				document.addDate("lastLoginDate", user.getLastLoginDate());
+			}
+
 			document.addText("lastName", user.getLastName());
 			document.addText("middleName", user.getMiddleName());
 			document.addKeyword("organizationIds", organizationIds);
@@ -293,9 +306,6 @@ public class UserModelDocumentContributor
 
 	@Reference
 	private RoleLocalService _roleLocalService;
-
-	@Reference
-	private TeamLocalService _teamLocalService;
 
 	@Reference
 	private UserGroupLocalService _userGroupLocalService;

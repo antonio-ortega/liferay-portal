@@ -7,7 +7,6 @@ package com.liferay.layout.type.controller.content.internal.product.navigation.c
 
 import com.liferay.exportimport.kernel.staging.LayoutStaging;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.security.permission.resource.LayoutContentModelResourcePermission;
 import com.liferay.petra.string.StringPool;
@@ -106,7 +105,7 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 					ServiceContextFactory.getInstance(httpServletRequest);
 
 				draftLayout = _layoutLocalService.addLayout(
-					layout.getUserId(), layout.getGroupId(),
+					null, layout.getUserId(), layout.getGroupId(),
 					layout.isPrivateLayout(), layout.getParentLayoutId(),
 					_portal.getClassNameId(Layout.class), layout.getPlid(),
 					layout.getNameMap(), layout.getTitleMap(),
@@ -116,7 +115,7 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 					Collections.emptyMap(), layout.getMasterLayoutPlid(),
 					serviceContext);
 
-				draftLayout = _layoutCopyHelper.copyLayoutContent(
+				draftLayout = _layoutLocalService.copyLayoutContent(
 					layout, draftLayout);
 
 				_layoutLocalService.updateStatus(
@@ -207,16 +206,8 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 		return false;
 	}
 
-	private String _getRedirect(
-			HttpServletRequest httpServletRequest, String fullLayoutURL,
-			Layout layout, ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		String redirect = HttpComponentsUtil.addParameters(
-			fullLayoutURL, "p_l_back_url",
-			_portal.getLayoutFullURL(layout, themeDisplay),
-			"p_l_back_url_title", layout.getName(themeDisplay.getLocale()),
-			"p_l_mode", Constants.EDIT);
+	private String _addSegmentsExperienceId(
+		HttpServletRequest httpServletRequest, Layout layout, String url) {
 
 		long segmentsExperienceId = ParamUtil.getLong(
 			httpServletRequest, "segmentsExperienceId", -1);
@@ -230,12 +221,28 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 				((layout.getPlid() == segmentsExperience.getPlid()) ||
 				 (layout.getClassPK() == segmentsExperience.getPlid()))) {
 
-				redirect = HttpComponentsUtil.setParameter(
-					redirect, "segmentsExperienceId", segmentsExperienceId);
+				return HttpComponentsUtil.setParameter(
+					url, "segmentsExperienceId", segmentsExperienceId);
 			}
 		}
 
-		return redirect;
+		return url;
+	}
+
+	private String _getRedirect(
+			HttpServletRequest httpServletRequest, String fullLayoutURL,
+			Layout layout, ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		String redirect = HttpComponentsUtil.addParameters(
+			fullLayoutURL, "p_l_back_url",
+			_addSegmentsExperienceId(
+				httpServletRequest, layout,
+				_portal.getLayoutFullURL(layout, themeDisplay)),
+			"p_l_back_url_title", layout.getName(themeDisplay.getLocale()),
+			"p_l_mode", Constants.EDIT);
+
+		return _addSegmentsExperienceId(httpServletRequest, layout, redirect);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -243,9 +250,6 @@ public class EditLayoutModeProductNavigationControlMenuEntry
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

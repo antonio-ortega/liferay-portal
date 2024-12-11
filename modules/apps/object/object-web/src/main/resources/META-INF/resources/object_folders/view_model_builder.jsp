@@ -8,7 +8,13 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String backURL = ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL()));
+String backURL = ParamUtil.getString(
+	request, "backURL",
+	URLBuilder.create(
+		String.valueOf(renderResponse.createRenderURL())
+	).setParameter(
+		"objectFolderName", "Default"
+	).build());
 ObjectDefinitionsDetailsDisplayContext objectDefinitionsDetailsDisplayContext = (ObjectDefinitionsDetailsDisplayContext)request.getAttribute(ObjectWebKeys.OBJECT_DEFINITIONS_DETAILS_DISPLAY_CONTEXT);
 ObjectDefinitionsFieldsDisplayContext objectDefinitionsFieldsDisplayContext = (ObjectDefinitionsFieldsDisplayContext)request.getAttribute(ObjectWebKeys.OBJECT_DEFINITIONS_FIELD_DISPLAY_CONTEXT);
 ObjectDefinitionsRelationshipsDisplayContext objectDefinitionsRelationshipsDisplayContext = (ObjectDefinitionsRelationshipsDisplayContext)request.getAttribute(ObjectWebKeys.OBJECT_DEFINITIONS_RELATIONSHIP_DISPLAY_CONTEXT);
@@ -23,12 +29,12 @@ renderResponse.setTitle(LanguageUtil.get(request, "object-model-builder"));
 
 <div>
 	<react:component
-		module="js/components/ModelBuilder/index"
+		module="{ModelBuilder} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"baseResourceURL", String.valueOf(baseResourceURL)
 			).put(
-				"companyKeyValuePairs", objectDefinitionsDetailsDisplayContext.getScopeKeyValuePairs("company")
+				"companies", objectDefinitionsDetailsDisplayContext.getScopeJSONArray("company")
 			).put(
 				"editObjectDefinitionURL", objectDefinitionsDetailsDisplayContext.getEditObjectDefinitionURL()
 			).put(
@@ -40,19 +46,21 @@ renderResponse.setTitle(LanguageUtil.get(request, "object-model-builder"));
 			).put(
 				"forbiddenNames", PropsUtil.getArray(PropsKeys.DL_NAME_BLACKLIST)
 			).put(
+				"learnResourceContext", LearnMessageUtil.getReactDataJSONObject(new String[] {"frontend-js-components-web", "object-web"})
+			).put(
 				"objectDefinitionPermissionsURL", objectDefinitionsDetailsDisplayContext.getPermissionsURL(ObjectDefinition.class.getName())
 			).put(
 				"objectDefinitionsStorageTypes", objectDefinitionsDetailsDisplayContext.getStorageTypesJSONArray()
 			).put(
 				"objectRelationshipDeletionTypes", objectDefinitionsRelationshipsDisplayContext.getObjectRelationshipDeletionTypesJSONArray()
 			).put(
-				"objectWebLearnResources", LearnMessageUtil.getReactDataJSONObject("object-web")
-			).put(
-				"siteKeyValuePairs", objectDefinitionsDetailsDisplayContext.getScopeKeyValuePairs("site")
+				"sites", objectDefinitionsDetailsDisplayContext.getScopeJSONArray("site")
 			).put(
 				"viewApiURL", "/o/object-admin/v1.0/object-definitions"
 			).put(
-				"workflowStatusJSONArray", LocalizedJSONArrayUtil.getWorkflowStatusJSONArray(locale)
+				"viewObjectDefinitionsURL", backURL
+			).put(
+				"workflowStatuses", LocalizedJSONArrayUtil.getWorkflowStatusJSONArray(locale)
 			).build()
 		%>'
 	/>
@@ -60,6 +68,12 @@ renderResponse.setTitle(LanguageUtil.get(request, "object-model-builder"));
 
 <div>
 	<react:component
-		module="js/components/ExpressionBuilderModal"
+		module="{ExpressionBuilderModal} from object-web"
+	/>
+</div>
+
+<div>
+	<react:component
+		module="{ModalDisableInheritance} from object-web"
 	/>
 </div>

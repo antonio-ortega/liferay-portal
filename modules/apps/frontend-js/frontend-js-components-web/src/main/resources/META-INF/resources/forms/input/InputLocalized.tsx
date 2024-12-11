@@ -13,9 +13,9 @@ import './InputLocalized.scss';
 
 interface InputLocalizedProps {
 	className?: string;
-	disableFlag?: boolean;
 	disabled?: boolean;
 	error?: string;
+	helpMessage?: string;
 	id?: string;
 	label: string;
 	name?: string;
@@ -30,7 +30,11 @@ interface InputLocalizedProps {
 	resultFormatter?: (value: string) => React.ReactNode;
 	selectedLocale?: Liferay.Language.Locale;
 	tooltip?: string;
-	translations: Liferay.Language.LocalizedValue<string>;
+	translations: Liferay.Language.LocalizedValue<string> &
+		Partial<{
+			zh_Hans_CN: string;
+			zh_Hant_TW: string;
+		}>;
 }
 
 interface InputLocale {
@@ -47,10 +51,26 @@ const availableLocales = Object.keys(Liferay.Language.available)
 		symbol: language.replace(/_/g, '-').toLowerCase(),
 	}));
 
+export function translationsNormalizer(
+	translations: Liferay.Language.LocalizedValue<string>
+): Liferay.Language.LocalizedValue<string> {
+	const {zh_Hans_CN, zh_Hant_TW, ...normalizedTranslations} = translations;
+
+	if (zh_Hans_CN) {
+		normalizedTranslations['zh_CN'] = zh_Hans_CN;
+	}
+
+	if (zh_Hant_TW) {
+		normalizedTranslations['zh_TW'] = zh_Hant_TW;
+	}
+
+	return normalizedTranslations;
+}
+
 export default function InputLocalized({
-	disableFlag,
 	disabled,
 	error,
+	helpMessage,
 	id,
 	label,
 	name,
@@ -62,31 +82,25 @@ export default function InputLocalized({
 	resultFormatter = () => null,
 	selectedLocale,
 	tooltip,
-	translations,
+	translations: initialTranslations,
 	...otherProps
 }: InputLocalizedProps) {
 	const [locale, setLocale] = useState<InputLocale>(availableLocales[0]);
+	const translations = translationsNormalizer(initialTranslations);
 
 	useEffect(() => {
-		if (disableFlag) {
-			const localizationButton = document.querySelector(
-				'.dropdown-toggle'
-			);
-
-			localizationButton?.setAttribute('disabled', 'true');
-		}
-
 		const locale =
 			availableLocales.find(({label}) => label === selectedLocale)! ??
 			availableLocales[0];
 		setLocale(locale);
-	}, [disableFlag, selectedLocale]);
+	}, [selectedLocale]);
 
 	return (
 		<FieldBase
 			className="input-localized"
 			disabled={disabled}
 			errorMessage={error}
+			helpMessage={helpMessage}
 			id={id}
 			label={label}
 			required={required}

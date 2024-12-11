@@ -7,6 +7,7 @@ package com.liferay.commerce.order.rule.service;
 
 import com.liferay.commerce.order.rule.model.COREntry;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.util.List;
 
@@ -54,18 +55,18 @@ public class COREntryServiceUtil {
 		return getService().deleteCOREntry(corEntryId);
 	}
 
-	public static COREntry fetchByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
-		throws PortalException {
-
-		return getService().fetchByExternalReferenceCode(
-			companyId, externalReferenceCode);
-	}
-
 	public static COREntry fetchCOREntry(long corEntryId)
 		throws PortalException {
 
 		return getService().fetchCOREntry(corEntryId);
+	}
+
+	public static COREntry fetchCOREntryByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().fetchCOREntryByExternalReferenceCode(
+			companyId, externalReferenceCode);
 	}
 
 	public static List<COREntry> getCOREntries(
@@ -128,14 +129,19 @@ public class COREntryServiceUtil {
 			externalReferenceCode, corEntryId);
 	}
 
+	public static COREntry updateCOREntryTypeSettings(
+			long corEntryId, String typeSettings)
+		throws PortalException {
+
+		return getService().updateCOREntryTypeSettings(
+			corEntryId, typeSettings);
+	}
+
 	public static COREntryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(COREntryService service) {
-		_service = service;
-	}
-
-	private static volatile COREntryService _service;
+	private static final Snapshot<COREntryService> _serviceSnapshot =
+		new Snapshot<>(COREntryServiceUtil.class, COREntryService.class);
 
 }

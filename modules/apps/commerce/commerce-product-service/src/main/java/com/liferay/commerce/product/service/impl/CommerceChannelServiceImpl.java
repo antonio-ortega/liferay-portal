@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.security.permission.resource.PortletResourcePer
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
@@ -90,24 +91,6 @@ public class CommerceChannelServiceImpl extends CommerceChannelServiceBaseImpl {
 	}
 
 	@Override
-	public CommerceChannel fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		CommerceChannel commerceChannel =
-			commerceChannelLocalService.fetchByExternalReferenceCode(
-				externalReferenceCode, companyId);
-
-		if (commerceChannel != null) {
-			_commerceChannelModelResourcePermission.check(
-				getPermissionChecker(), commerceChannel.getCommerceChannelId(),
-				ActionKeys.VIEW);
-		}
-
-		return commerceChannel;
-	}
-
-	@Override
 	public CommerceChannel fetchCommerceChannel(long commerceChannelId)
 		throws PortalException {
 
@@ -117,6 +100,25 @@ public class CommerceChannelServiceImpl extends CommerceChannelServiceBaseImpl {
 		if (commerceChannel != null) {
 			_commerceChannelModelResourcePermission.check(
 				getPermissionChecker(), commerceChannelId, ActionKeys.VIEW);
+		}
+
+		return commerceChannel;
+	}
+
+	@Override
+	public CommerceChannel fetchCommerceChannelByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		CommerceChannel commerceChannel =
+			commerceChannelLocalService.
+				fetchCommerceChannelByExternalReferenceCode(
+					externalReferenceCode, companyId);
+
+		if (commerceChannel != null) {
+			_commerceChannelModelResourcePermission.check(
+				getPermissionChecker(), commerceChannel.getCommerceChannelId(),
+				ActionKeys.VIEW);
 		}
 
 		return commerceChannel;
@@ -152,6 +154,27 @@ public class CommerceChannelServiceImpl extends CommerceChannelServiceBaseImpl {
 		throws PortalException {
 
 		return commerceChannelPersistence.filterFindByCompanyId(companyId);
+	}
+
+	@Override
+	public List<CommerceChannel> getEligibleCommerceChannels(
+			long accountEntryId, String name, int start, int end)
+		throws PortalException {
+
+		List<CommerceChannel> commerceChannels = new ArrayList<>();
+
+		for (CommerceChannel commerceChannel :
+				commerceChannelLocalService.getEligibleCommerceChannels(
+					accountEntryId, name, start, end)) {
+
+			if (_commerceChannelModelResourcePermission.contains(
+					getPermissionChecker(), commerceChannel, ActionKeys.VIEW)) {
+
+				commerceChannels.add(commerceChannel);
+			}
+		}
+
+		return commerceChannels;
 	}
 
 	@Override

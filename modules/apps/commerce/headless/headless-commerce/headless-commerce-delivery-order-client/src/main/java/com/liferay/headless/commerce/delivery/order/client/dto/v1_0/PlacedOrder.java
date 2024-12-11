@@ -69,6 +69,27 @@ public class PlacedOrder implements Cloneable, Serializable {
 
 	protected Long accountId;
 
+	public Attachment[] getAttachments() {
+		return attachments;
+	}
+
+	public void setAttachments(Attachment[] attachments) {
+		this.attachments = attachments;
+	}
+
+	public void setAttachments(
+		UnsafeSupplier<Attachment[], Exception> attachmentsUnsafeSupplier) {
+
+		try {
+			attachments = attachmentsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Attachment[] attachments;
+
 	public String getAuthor() {
 		return author;
 	}
@@ -216,6 +237,48 @@ public class PlacedOrder implements Cloneable, Serializable {
 
 	protected String[] errorMessages;
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
+	public String getFriendlyURLSeparator() {
+		return friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(String friendlyURLSeparator) {
+		this.friendlyURLSeparator = friendlyURLSeparator;
+	}
+
+	public void setFriendlyURLSeparator(
+		UnsafeSupplier<String, Exception> friendlyURLSeparatorUnsafeSupplier) {
+
+		try {
+			friendlyURLSeparator = friendlyURLSeparatorUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String friendlyURLSeparator;
+
 	public Long getId() {
 		return id;
 	}
@@ -277,6 +340,25 @@ public class PlacedOrder implements Cloneable, Serializable {
 
 	protected Date modifiedDate;
 
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setName(UnsafeSupplier<String, Exception> nameUnsafeSupplier) {
+		try {
+			name = nameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String name;
+
 	public Status getOrderStatusInfo() {
 		return orderStatusInfo;
 	}
@@ -297,6 +379,27 @@ public class PlacedOrder implements Cloneable, Serializable {
 	}
 
 	protected Status orderStatusInfo;
+
+	public String getOrderType() {
+		return orderType;
+	}
+
+	public void setOrderType(String orderType) {
+		this.orderType = orderType;
+	}
+
+	public void setOrderType(
+		UnsafeSupplier<String, Exception> orderTypeUnsafeSupplier) {
+
+		try {
+			orderType = orderTypeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String orderType;
 
 	public String getOrderTypeExternalReferenceCode() {
 		return orderTypeExternalReferenceCode;
@@ -720,6 +823,27 @@ public class PlacedOrder implements Cloneable, Serializable {
 	}
 
 	protected String status;
+
+	public Step[] getSteps() {
+		return steps;
+	}
+
+	public void setSteps(Step[] steps) {
+		this.steps = steps;
+	}
+
+	public void setSteps(
+		UnsafeSupplier<Step[], Exception> stepsUnsafeSupplier) {
+
+		try {
+			steps = stepsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Step[] steps;
 
 	public Summary getSummary() {
 		return summary;

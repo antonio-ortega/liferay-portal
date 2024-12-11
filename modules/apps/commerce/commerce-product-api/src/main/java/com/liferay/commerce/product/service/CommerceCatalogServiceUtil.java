@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.util.List;
 
@@ -46,18 +47,18 @@ public class CommerceCatalogServiceUtil {
 		return getService().deleteCommerceCatalog(commerceCatalogId);
 	}
 
-	public static CommerceCatalog fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CommerceCatalog fetchCommerceCatalog(long commerceCatalogId)
 		throws PortalException {
 
 		return getService().fetchCommerceCatalog(commerceCatalogId);
+	}
+
+	public static CommerceCatalog fetchCommerceCatalogByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().fetchCommerceCatalogByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static CommerceCatalog fetchCommerceCatalogByGroupId(long groupId)
@@ -121,13 +122,11 @@ public class CommerceCatalogServiceUtil {
 	}
 
 	public static CommerceCatalogService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceCatalogService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceCatalogService _service;
+	private static final Snapshot<CommerceCatalogService> _serviceSnapshot =
+		new Snapshot<>(
+			CommerceCatalogServiceUtil.class, CommerceCatalogService.class);
 
 }

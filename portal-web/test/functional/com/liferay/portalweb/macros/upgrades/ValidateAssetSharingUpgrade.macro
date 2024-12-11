@@ -1,6 +1,7 @@
 definition {
 
-	macro revokeAndUpdateSharedEntry {
+	@summary = "Default summary"
+	macro revokeAndUpdateSharedEntry(blogsEntryTitleUpdate = null, blogsEntryTitleView = null, dmDocumentTitleUpdate = null, dmDocumentTitleView = null) {
 		Asset.openTosharedContent(
 			navTab = "Shared by Me",
 			siteURLKey = "guest");
@@ -25,7 +26,7 @@ definition {
 			User.logoutPG();
 
 			User.loginUserPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "user2@liferay.com");
 
 			DMDocumentSharing.editViaSharedwithMe(
@@ -36,7 +37,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "user1@liferay.com");
 
 		DMDocumentSharing.editViaSharedwithMe(
@@ -46,13 +47,14 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 
-	macro viewNoShareOptionAfterDisabled {
+	@summary = "Default summary"
+	macro viewNoShareOptionAfterDisabled() {
 		User.firstLoginUI(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://www.able.com:8080",
 			userEmailAddress = "test@www.able.com");
 
@@ -73,11 +75,12 @@ definition {
 			rowEntry = "Blogs Entry with sharing disabled");
 	}
 
-	macro viewSharedBlog {
+	@summary = "Default summary"
+	macro viewSharedBlog() {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "user2@liferay.com");
 
 		Notifications.viewBadgeCount(notificationCount = 2);
@@ -98,15 +101,16 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 
-	macro viewSharedDocument {
+	@summary = "Default summary"
+	macro viewSharedDocument(dmDocumentTitle = null) {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "user1@liferay.com");
 
 		Notifications.gotoNotifications();
@@ -124,7 +128,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 	}
 

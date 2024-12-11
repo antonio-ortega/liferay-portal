@@ -5,6 +5,7 @@
 
 package com.liferay.knowledge.base.web.internal.portlet;
 
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
@@ -28,6 +29,8 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.trash.TrashHelper;
+import com.liferay.trash.util.TrashWebKeys;
 
 import java.io.IOException;
 
@@ -102,6 +105,8 @@ public class AdminPortlet extends BaseKBPortlet {
 				resourceRequest.setAttribute(
 					KBWebKeys.KNOWLEDGE_BASE_KB_FOLDERS,
 					_getKBFolders(httpServletRequest));
+				resourceRequest.setAttribute(
+					TrashWebKeys.TRASH_HELPER, _trashHelper);
 
 				PortletSession portletSession =
 					resourceRequest.getPortletSession();
@@ -171,6 +176,9 @@ public class AdminPortlet extends BaseKBPortlet {
 
 				kbArticle = kbArticleService.getLatestKBArticle(
 					resourcePrimKey, status);
+
+				CTTimelineUtil.setCTTimelineKeys(
+					renderRequest, KBArticle.class, kbArticle.getKbArticleId());
 			}
 
 			renderRequest.setAttribute(
@@ -193,6 +201,10 @@ public class AdminPortlet extends BaseKBPortlet {
 				if (parentResourceClassNameId == kbFolderClassNameId) {
 					parentKBFolder = kbFolderService.getKBFolder(
 						parentResourcePrimKey);
+
+					CTTimelineUtil.setCTTimelineKeys(
+						renderRequest, KBFolder.class,
+						parentKBFolder.getKbFolderId());
 				}
 				else {
 					parentKBArticle = kbArticleService.getLatestKBArticle(
@@ -212,10 +224,15 @@ public class AdminPortlet extends BaseKBPortlet {
 
 			if (kbTemplateId > 0) {
 				kbTemplate = kbTemplateService.getKBTemplate(kbTemplateId);
+
+				CTTimelineUtil.setCTTimelineKeys(
+					renderRequest, KBTemplate.class,
+					kbTemplate.getKbTemplateId());
 			}
 
 			renderRequest.setAttribute(
 				KBWebKeys.KNOWLEDGE_BASE_KB_TEMPLATE, kbTemplate);
+
 			renderRequest.setAttribute(KBWebKeys.KNOWLEDGE_BASE_STATUS, status);
 		}
 		catch (NoSuchArticleException | NoSuchFolderException |
@@ -232,10 +249,10 @@ public class AdminPortlet extends BaseKBPortlet {
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
+		List<KBArticle> kbArticles = new ArrayList<>();
+
 		long[] kbArticleResourcePrimKeys = ParamUtil.getLongValues(
 			httpServletRequest, "rowIdsKBArticle");
-
-		List<KBArticle> kbArticles = new ArrayList<>();
 
 		for (long kbArticleResourcePrimKey : kbArticleResourcePrimKeys) {
 			KBArticle kbArticle = kbArticleService.getLatestKBArticle(
@@ -264,10 +281,10 @@ public class AdminPortlet extends BaseKBPortlet {
 	private List<KBFolder> _getKBFolders(HttpServletRequest httpServletRequest)
 		throws PortalException {
 
+		List<KBFolder> kbFolders = new ArrayList<>();
+
 		long[] kbFolderIds = ParamUtil.getLongValues(
 			httpServletRequest, "rowIdsKBFolder");
-
-		List<KBFolder> kbFolders = new ArrayList<>();
 
 		for (long kbFolderId : kbFolderIds) {
 			kbFolders.add(kbFolderService.getKBFolder(kbFolderId));
@@ -283,5 +300,8 @@ public class AdminPortlet extends BaseKBPortlet {
 		target = "(&(release.bundle.symbolic.name=com.liferay.knowledge.base.web)(&(release.schema.version>=1.2.0)(!(release.schema.version>=2.0.0))))"
 	)
 	private Release _release;
+
+	@Reference
+	private TrashHelper _trashHelper;
 
 }

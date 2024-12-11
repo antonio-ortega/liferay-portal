@@ -82,6 +82,10 @@ public class SearchBarPortletDisplayContext {
 		return _destinationUnreachable;
 	}
 
+	public boolean isDisplayIncludeAttachments() {
+		return _displayIncludeAttachments;
+	}
+
 	public boolean isDisplayWarningIgnoredConfiguration() {
 		return _displayWarningIgnoredConfiguration;
 	}
@@ -96,6 +100,10 @@ public class SearchBarPortletDisplayContext {
 
 	public boolean isRenderNothing() {
 		return _renderNothing;
+	}
+
+	public boolean isRetainFacetSelections() {
+		return _retainFacetSelections;
 	}
 
 	public boolean isSearchExperiencesSupported() {
@@ -137,6 +145,12 @@ public class SearchBarPortletDisplayContext {
 
 	public void setDestinationUnreachable(boolean destinationUnreachable) {
 		_destinationUnreachable = destinationUnreachable;
+	}
+
+	public void setDisplayIncludeAttachments(
+		boolean displayIncludeAttachments) {
+
+		_displayIncludeAttachments = displayIncludeAttachments;
 	}
 
 	public void setDisplayStyleGroupId(long displayStyleGroupId) {
@@ -187,6 +201,10 @@ public class SearchBarPortletDisplayContext {
 
 	public void setRenderNothing(boolean renderNothing) {
 		_renderNothing = renderNothing;
+	}
+
+	public void setRetainFacetSelections(boolean retainFacetSelections) {
+		_retainFacetSelections = retainFacetSelections;
 	}
 
 	public void setScopeParameterName(String scopeParameterName) {
@@ -258,6 +276,7 @@ public class SearchBarPortletDisplayContext {
 	private String _currentSiteSearchScopeParameterString;
 	private String _destinationFriendlyURL;
 	private boolean _destinationUnreachable;
+	private boolean _displayIncludeAttachments;
 	private long _displayStyleGroupId;
 	private boolean _displayWarningIgnoredConfiguration;
 	private boolean _emptySearchEnabled;
@@ -268,6 +287,7 @@ public class SearchBarPortletDisplayContext {
 	private boolean _letTheUserChooseTheSearchScope;
 	private String _paginationStartParameterName;
 	private boolean _renderNothing;
+	private boolean _retainFacetSelections;
 	private String _scopeParameterName;
 	private String _scopeParameterValue;
 	private SearchBarPortletInstanceConfiguration

@@ -11,7 +11,7 @@ import ClayForm, {ClayInput} from '@clayui/form';
 import React, {useEffect, useState} from 'react';
 
 import {contextUrl} from '../../../../../constants';
-import {headers, userBaseURL} from '../../../../../util/fetchUtil';
+import {HEADERS, userBaseURL} from '../../../../../util/fetchUtil';
 
 const BaseUser = ({
 	errors,
@@ -37,11 +37,7 @@ const BaseUser = ({
 
 	const {resource} = useResource({
 		fetchOptions: {
-			headers: {
-				...headers,
-				'accept': `application/json`,
-				'x-csrf-token': Liferay.authToken,
-			},
+			headers: HEADERS,
 		},
 		link: `${window.location.origin}${contextUrl}${userBaseURL}/user-accounts`,
 		onNetworkStatusChange: setNetworkStatus,
@@ -85,6 +81,16 @@ const BaseUser = ({
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [search, user]);
+
+	useEffect(() => {
+		setUser({
+			emailAddress,
+			screenName,
+			userId,
+		});
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [emailAddress, screenName, userId]);
 
 	const deleteSection = () => {
 		setSections((prevSections) => {

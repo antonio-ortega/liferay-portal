@@ -12,14 +12,20 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServ
 import com.liferay.layout.service.base.LayoutClassedModelUsageLocalServiceBaseImpl;
 import com.liferay.layout.util.constants.LayoutClassedModelUsageConstants;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.mass.delete.MassDeleteCacheThreadLocal;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -74,7 +80,31 @@ public class LayoutClassedModelUsageLocalServiceImpl
 
 	@Override
 	public void deleteLayoutClassedModelUsages(long classNameId, long classPK) {
-		layoutClassedModelUsagePersistence.removeByCN_CPK(classNameId, classPK);
+		Map<Long, List<LayoutClassedModelUsage>>
+			partitionLayoutClassedModelUsages =
+				MassDeleteCacheThreadLocal.getMassDeleteCache(
+					LayoutClassedModelUsageLocalServiceImpl.class.getName() +
+						".deleteLayoutClassedModelUsages#" + classNameId,
+					() -> MapUtil.toPartitionMap(
+						layoutClassedModelUsagePersistence.findByC_CN(
+							CompanyThreadLocal.getCompanyId(), classNameId),
+						LayoutClassedModelUsage::getClassPK));
+
+		if (partitionLayoutClassedModelUsages == null) {
+			layoutClassedModelUsagePersistence.removeByCN_CPK(
+				classNameId, classPK);
+
+			return;
+		}
+
+		List<LayoutClassedModelUsage> layoutClassedModelUsages =
+			partitionLayoutClassedModelUsages.remove(classPK);
+
+		ListUtil.isNotEmptyForEach(
+			layoutClassedModelUsages,
+			layoutClassedModelUsage ->
+				layoutClassedModelUsagePersistence.remove(
+					layoutClassedModelUsage));
 	}
 
 	@Override
@@ -92,12 +122,12 @@ public class LayoutClassedModelUsageLocalServiceImpl
 
 	@Override
 	public LayoutClassedModelUsage fetchLayoutClassedModelUsage(
-		long classNameId, long classPK,
+		long groupId, long classNameId, long classPK,
 		String classedModelExternalReferenceCode, String containerKey,
 		long containerType, long plid) {
 
-		return layoutClassedModelUsagePersistence.fetchByCN_CPK_CMERC_CK_CT_P(
-			classNameId, classPK, classedModelExternalReferenceCode,
+		return layoutClassedModelUsagePersistence.fetchByG_CN_CPK_CMERC_CK_CT_P(
+			groupId, classNameId, classPK, classedModelExternalReferenceCode,
 			containerKey, containerType, plid);
 	}
 
@@ -156,6 +186,26 @@ public class LayoutClassedModelUsageLocalServiceImpl
 
 		return layoutClassedModelUsagePersistence.countByCN_CPK_T(
 			classNameId, classPK, type);
+	}
+
+	@Override
+	public LayoutClassedModelUsage updateLayoutClassedModelUsage(
+			long classNameId, long classPK, String containerKey,
+			long containerType, long layoutClassedModelUsageId, long plid)
+		throws PortalException {
+
+		LayoutClassedModelUsage layoutClassedModelUsage =
+			layoutClassedModelUsagePersistence.findByPrimaryKey(
+				layoutClassedModelUsageId);
+
+		layoutClassedModelUsage.setClassNameId(classNameId);
+		layoutClassedModelUsage.setClassPK(classPK);
+		layoutClassedModelUsage.setContainerKey(containerKey);
+		layoutClassedModelUsage.setContainerType(containerType);
+		layoutClassedModelUsage.setPlid(plid);
+
+		return layoutClassedModelUsagePersistence.update(
+			layoutClassedModelUsage);
 	}
 
 	private int _getType(long plid) {

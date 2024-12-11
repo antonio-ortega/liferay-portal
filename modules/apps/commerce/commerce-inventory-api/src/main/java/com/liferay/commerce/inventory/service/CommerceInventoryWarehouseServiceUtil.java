@@ -7,6 +7,7 @@ package com.liferay.commerce.inventory.service;
 
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouse;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -62,12 +63,14 @@ public class CommerceInventoryWarehouseServiceUtil {
 			commerceInventoryWarehouseId);
 	}
 
-	public static CommerceInventoryWarehouse fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
+	public static CommerceInventoryWarehouse
+			fetchCommerceInventoryWarehouseByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
 		throws PortalException {
 
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
+		return getService().
+			fetchCommerceInventoryWarehouseByExternalReferenceCode(
+				externalReferenceCode, companyId);
 	}
 
 	public static CommerceInventoryWarehouse
@@ -122,11 +125,12 @@ public class CommerceInventoryWarehouseServiceUtil {
 
 	public static List<CommerceInventoryWarehouse>
 			getCommerceInventoryWarehouses(
-				long companyId, long groupId, boolean active)
+				long companyId, long accountEntryId, long groupId,
+				boolean active)
 		throws PortalException {
 
 		return getService().getCommerceInventoryWarehouses(
-			companyId, groupId, active);
+			companyId, accountEntryId, groupId, active);
 	}
 
 	public static int getCommerceInventoryWarehousesCount(long companyId)
@@ -206,13 +210,12 @@ public class CommerceInventoryWarehouseServiceUtil {
 	}
 
 	public static CommerceInventoryWarehouseService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceInventoryWarehouseService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceInventoryWarehouseService _service;
+	private static final Snapshot<CommerceInventoryWarehouseService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceInventoryWarehouseServiceUtil.class,
+			CommerceInventoryWarehouseService.class);
 
 }

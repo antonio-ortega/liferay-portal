@@ -5,17 +5,15 @@
 
 import {useEffect, useState} from 'react';
 
-import {PartnerRoles} from '../../../../common/components/dashboard/enums/partnerRoles';
-import {PartnershipLevels} from '../../../../common/components/dashboard/enums/partnershipLevels';
 import {partnerLevelProperties} from '../../../../common/components/dashboard/mock';
 import AccountEntry from '../../../../common/interfaces/accountEntry';
 import Opportunity from '../../../../common/interfaces/opportunity';
 import PartnerLevel from '../../../../common/interfaces/partnerLevel';
-import Role from '../../../../common/interfaces/role';
 import UserAccount from '../../../../common/interfaces/userAccount';
 import {LiferayAPIs} from '../../../../common/services/liferay/common/enums/apis';
 import LiferayItems from '../../../../common/services/liferay/common/interfaces/liferayItems';
 import useGet from '../../../../common/services/liferay/object/useGet';
+import {Filters} from '../../../../common/utils/constants/filters';
 
 export default function useAccountInformation() {
 	const [headcountAccumulator, setHeadcountAccumulator] = useState({
@@ -23,9 +21,8 @@ export default function useAccountInformation() {
 		partnerSalesUser: 0,
 	});
 	const [aRRResults, setARRResults] = useState({
-		aRRAmountTotal: 0,
 		growthArrTotal: 0,
-		renewalArrTotal: 0,
+		targetArr: 0,
 	});
 	const [checkedProperties, setCheckedProperties] = useState({
 		arr: false,
@@ -39,53 +36,76 @@ export default function useAccountInformation() {
 		`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/my-user-account`
 	);
 
-	const {data: account, isValidating: isValidatingAccount} = useGet<
-		AccountEntry
-	>(
-		userAccount?.accountBriefs[0]?.externalReferenceCode &&
-			`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/accounts/by-external-reference-code/${userAccount.accountBriefs[0].externalReferenceCode}`
-	);
+	const {data: account, isValidating: isValidatingAccount} =
+		useGet<AccountEntry>(
+			userAccount?.accountBriefs[0]?.externalReferenceCode &&
+				`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/accounts/by-external-reference-code/${userAccount.accountBriefs[0].externalReferenceCode}`
+		);
+
+	const currency = account ? account.currency : 'USD';
 
 	const {data: accountUserAccounts} = useGet<LiferayItems<UserAccount[]>>(
 		account?.externalReferenceCode &&
-			`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/accounts/by-external-reference-code/${account.externalReferenceCode}/user-accounts`
+			`/o/${LiferayAPIs.HEADERLESS_ADMIN_USER}/accounts/by-external-reference-code/${account.externalReferenceCode}/user-accounts?pageSize=-1`
 	);
 
-	const {
-		data: opportunities,
-		isValidating: isValidatingOpportunities,
-	} = useGet<LiferayItems<Opportunity[]>>(
-		account?.name &&
-			`/o/${LiferayAPIs.OBJECT}/opportunitysfs?pageSize=200&filter=accountName eq '${account.name}'`
-	);
+	const {data: opportunities, isValidating: isValidatingOpportunities} =
+		useGet<LiferayItems<Opportunity[]>>(
+			account?.name &&
+				`/o/${LiferayAPIs.OBJECT}/opportunitysfs?pageSize=200&sort=closeDate:desc&filter=${Filters.LEVEL_DASHBOARD.opportunities}`
+		);
 
-	const {data: partnerLevel, isValidating: isValidatingPartnerLevel} = useGet<
-		PartnerLevel
-	>(
-		account?.r_prtLvlToAcc_c_partnerLevelERC &&
-			`/o/${LiferayAPIs.OBJECT}/partnerlevels/by-external-reference-code/${account.r_prtLvlToAcc_c_partnerLevelERC}`
-	);
+	const {data: partnerLevel, isValidating: isValidatingPartnerLevel} =
+		useGet<PartnerLevel>(
+			account?.r_prtLvlToAcc_c_partnerLevelERC &&
+				`/o/${LiferayAPIs.OBJECT}/partnerlevels/by-external-reference-code/${account.r_prtLvlToAcc_c_partnerLevelERC}`
+		);
+
+	const opportunitiesNB =
+		opportunities &&
+		opportunities.items.filter(
+			(opportunity) => opportunity.type === 'New Business'
+		);
+
+	const opportunitiesNPEB =
+		opportunities &&
+		opportunities.items.filter(
+			(opportunity) =>
+				opportunity.type === 'New Project Existing Business'
+		);
+
+	const opportunitiesEB =
+		opportunities &&
+		opportunities.items.filter(
+			(opportunity) =>
+				opportunity.type === 'Existing Business' &&
+				opportunity.hasRenewal &&
+				opportunity.growthArr > 0
+		);
+
+	const opportunitiesCount =
+		opportunitiesNPEB &&
+		opportunitiesNB &&
+		opportunitiesEB &&
+		opportunitiesNPEB.length +
+			opportunitiesNB.length +
+			opportunitiesEB.length;
 
 	useEffect(() => {
 		const getARRValues = (
-			accountData: AccountEntry,
-			opportunitiesData: LiferayItems<Opportunity[]>
+			opportunitiesData: LiferayItems<Opportunity[]>,
+			accountData: AccountEntry
 		) => {
 			const aRRResults = opportunitiesData.items.reduce(
 				(aRRAccumulator, data: Opportunity) => ({
-					aRRAmountTotal:
-						aRRAccumulator.aRRAmountTotal +
-						data.growthArr +
-						data.renewalArr,
 					growthArrTotal:
-						aRRAccumulator.growthArrTotal + data.growthArr,
-					renewalArrTotal:
-						aRRAccumulator.renewalArrTotal + data.renewalArr,
+						(Number(aRRAccumulator.growthArrTotal) || 0) +
+						(Number(data.growthArr) || 0),
+					targetArr: Number(accountData.targetArr) || 0,
 				}),
 				{
-					aRRAmountTotal: 0,
 					growthArrTotal: 0,
-					renewalArrTotal: 0,
+					targetArr: Number(accountData.targetArr) || 0,
 				}
 			);
 
@@ -94,7 +114,8 @@ export default function useAccountInformation() {
 
 		const formatCheckedProperties = (
 			aRRResults: {[key: string]: number},
-			accountData: AccountEntry
+			accountData: AccountEntry,
+			opportunitiesCount?: number
 		) => {
 			const properties = {
 				arr: false,
@@ -127,70 +148,19 @@ export default function useAccountInformation() {
 						].goalARR;
 
 					const hasMatchingNPOrNB =
-						(accountData.newProjectExistingBusiness as number) >=
+						(opportunitiesCount as number) >=
 						partnerLevelProperties[
 							partnerLevel.partnerLevelType.key
-						].newProjectExistingBusiness;
+						].opportunitiesCount;
 
 					properties.arr = hasMatchingARR || hasMatchingNPOrNB;
 				}
 
 				if (
 					partnerLevel?.partnerLevelType.key === 'platinum' &&
-					aRRResults.aRRAmountTotal > 0
+					aRRResults.growthArrTotal > 0
 				) {
 					properties.arr = true;
-				}
-
-				accountUserAccounts?.items.forEach((user: UserAccount) => {
-					if (
-						user.accountBriefs
-							?.find(
-								(entry) =>
-									entry.externalReferenceCode ===
-									accountData.externalReferenceCode
-							)
-							?.roleBriefs?.find(
-								(role: Role) =>
-									role.name === PartnerRoles.MARKETING_USER
-							)
-					) {
-						headcount.partnerMarketingUser += 1;
-					}
-
-					if (
-						user.accountBriefs
-							.find(
-								(entry) =>
-									entry.externalReferenceCode ===
-									accountData.externalReferenceCode
-							)
-							?.roleBriefs?.find(
-								(role: Role) =>
-									role.name === PartnerRoles.SALES_USER
-							)
-					) {
-						headcount.partnerSalesUser += 1;
-					}
-				});
-
-				const hasEnoughPartnerMarketingUser =
-					headcount.partnerMarketingUser >=
-					partnerLevelProperties[
-						partnerLevel?.partnerLevelType.key as PartnershipLevels
-					].partnerMarketingUser;
-
-				const hasEnoughPartnerSalesUser =
-					headcount.partnerSalesUser >=
-					partnerLevelProperties[
-						partnerLevel?.partnerLevelType.key as PartnershipLevels
-					].partnerSalesUser;
-
-				if (
-					hasEnoughPartnerMarketingUser &&
-					hasEnoughPartnerSalesUser
-				) {
-					properties.headcount = true;
 				}
 			}
 
@@ -207,11 +177,12 @@ export default function useAccountInformation() {
 			accountUserAccounts &&
 			partnerLevel
 		) {
-			const aRRResults = getARRValues(account, opportunities);
+			const aRRResults = getARRValues(opportunities, account);
 
 			const {headcount, properties} = formatCheckedProperties(
 				aRRResults,
-				account
+				account,
+				opportunitiesCount
 			);
 
 			setARRResults(aRRResults);
@@ -224,17 +195,20 @@ export default function useAccountInformation() {
 		account,
 		accountUserAccounts,
 		partnerLevel,
+		opportunitiesCount,
 	]);
 
 	return {
 		aRRResults,
 		account,
 		checkedProperties,
+		currency,
 		headcount: headcountAccumulator,
 		loading:
 			isValidatingOpportunities ||
 			isValidatingPartnerLevel ||
 			isValidatingAccount,
+		opportunitiesCount,
 		partnerLevel,
 	};
 }

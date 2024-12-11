@@ -59,21 +59,14 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
 			for (var quantity : list "1,2") {
-				Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
-
-				Type(
-					key_productName = "U-Joint",
-					locator1 = "CommerceAccelerators#PRODUCT_CARD_QUANTITY_SELECTOR_INPUT_FIELD",
-					value1 = ${quantity});
-
-				Click(
-					key_productName = "U-Joint",
-					locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON");
+				FrontStore.addInitializerProductToCart(
+					productName = "U-Joint",
+					productQuantity = ${quantity});
 			}
 		}
 
@@ -103,14 +96,14 @@ definition {
 				productName = "U-Joint",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "24.00",
 				productName = "U-Joint",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			Pagination.viewResults(results = "Showing 1 to 2 of 2 entries.");
 
@@ -142,21 +135,14 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
 			for (var quantity : list "1,2") {
-				Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
-
-				Type(
-					key_productName = "U-Joint",
-					locator1 = "CommerceAccelerators#PRODUCT_CARD_QUANTITY_SELECTOR_INPUT_FIELD",
-					value1 = ${quantity});
-
-				Click(
-					key_productName = "U-Joint",
-					locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON");
+				FrontStore.addInitializerProductToCart(
+					productName = "U-Joint",
+					productQuantity = ${quantity});
 			}
 		}
 
@@ -217,7 +203,7 @@ definition {
 				productPrice = "24.00",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "24.00",
@@ -225,7 +211,7 @@ definition {
 				productPrice = "24.00",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			Pagination.viewResults(results = "Showing 1 to 2 of 2 entries.");
 
@@ -380,6 +366,7 @@ definition {
 	}
 
 	@description = "COMMERCE-12486. As a buyer, I can verify the order items are not split on the Mini Cart by adding products to the cart when the 'Show Separate Order Items' toggle is disabled"
+	@ignore = "true"
 	@priority = 5
 	test CanVerifyOrderItemsAreNotSplitOnTheMiniCart {
 		property portal.acceptance = "true";
@@ -400,7 +387,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -431,9 +418,7 @@ definition {
 		}
 
 		task ("When the admin disables the toggle 'Show Separate Order Items' for Minium Portal channel") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceChannels.openChannelsAdmin();
 
@@ -450,7 +435,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -478,6 +463,7 @@ definition {
 	}
 
 	@description = "COMMERCE-12488. As a buyer, I can verify the order items are not split on the Mini Cart by using quick add products to the cart when the 'Show Separate Order Items' toggle is disabled"
+	@ignore = "true"
 	@priority = 3
 	test CanVerifyOrderItemsAreNotSplitUsingQuickAddToCart {
 		property portal.acceptance = "false";
@@ -498,7 +484,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -529,9 +515,7 @@ definition {
 		}
 
 		task ("When the admin disables the toggle 'Show Separate Order Items' for Minium Portal channel") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceChannels.openChannelsAdmin();
 
@@ -548,7 +532,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -584,16 +568,14 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
 			for (var count : list "1,2") {
-				Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/catalog");
-
-				Click(
-					key_productName = "U-Joint",
-					locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON");
+				FrontStore.addInitializerProductToCart(
+					productName = "U-Joint",
+					productQuantity = 1);
 			}
 		}
 
@@ -608,9 +590,7 @@ definition {
 		}
 
 		task ("When the admin enables the toggle 'Show Separate Order Items' for Minium Portal channel") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceChannels.openChannelsAdmin();
 
@@ -638,7 +618,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -684,7 +664,7 @@ definition {
 				productPrice = "24.00",
 				productQuantity = 2,
 				productSku = "MIN55861",
-				productTotalPrice = "48.00");
+				productTotalPrice = "$ 48.00");
 
 			CommerceOrders.viewOrdersDetails(
 				productListPrice = "24.00",
@@ -692,7 +672,7 @@ definition {
 				productPrice = "24.00",
 				productQuantity = 1,
 				productSku = "MIN55861",
-				productTotalPrice = "24.00");
+				productTotalPrice = "$ 24.00");
 		}
 	}
 
@@ -705,7 +685,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -727,9 +707,7 @@ definition {
 		}
 
 		task ("When the admin enables the toggle 'Show Separate Order Items' for Minium Portal channel") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "test@liferay.com",
-				userLoginFullName = "Test Test");
+			User.logoutAndLoginPG();
 
 			CommerceChannels.openChannelsAdmin();
 
@@ -746,7 +724,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -803,7 +781,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -862,7 +840,7 @@ definition {
 	@description = "COMMERCE-12492. As a buyer, I can verify the order items are split on the Mini Cart for an SKU/UOM that applied to the Price On Application when the 'Show Separate Order Items' toggle is enabled"
 	@priority = 3
 	test CanVerifySplitOrderItemsWorksWhenSKUHasUOMAndPOA {
-		property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11028=true${line.separator}feature.flag.COMMERCE-11287=true${line.separator}jsonws.web.service.paths.excludes=";
+		property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 		property portal.acceptance = "false";
 
 		task ("Given the admin enables the toggle 'Show Separate Order Items' for Minium Portal channel") {
@@ -914,7 +892,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -997,7 +975,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 

@@ -15,9 +15,9 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sharing.constants.SharingPortletKeys;
 import com.liferay.sharing.display.context.util.SharingJavaScriptFactory;
 import com.liferay.sharing.security.permission.SharingPermission;
+import com.liferay.sharing.taglib.internal.permission.util.SharingPermissionUtil;
 import com.liferay.sharing.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.sharing.taglib.internal.servlet.SharingJavaScriptFactoryUtil;
-import com.liferay.sharing.taglib.internal.servlet.SharingPermissionUtil;
 import com.liferay.sharing.taglib.internal.util.CollaboratorsUtil;
 
 import java.util.HashMap;
@@ -89,7 +89,7 @@ public class SharingCollaboratorsTag extends BaseSharingTag {
 			SharingJavaScriptFactory sharingJavaScriptFactory =
 				SharingJavaScriptFactoryUtil.getSharingJavaScriptFactory();
 
-			sharingJavaScriptFactory.requestSharingJavascript();
+			sharingJavaScriptFactory.requestSharingJavaScript();
 
 			data.put("canManageCollaborators", true);
 		}

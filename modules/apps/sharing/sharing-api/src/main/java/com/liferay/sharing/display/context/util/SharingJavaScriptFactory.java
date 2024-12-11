@@ -15,6 +15,11 @@ import javax.servlet.http.HttpServletRequest;
  */
 public interface SharingJavaScriptFactory {
 
+	public String createCopyLinkClickMethod(
+			String className, long classPK,
+			HttpServletRequest httpServletRequest)
+		throws PortalException;
+
 	/**
 	 * @deprecated As of Mueller (7.2.x), with no direct replacement
 	 */
@@ -47,7 +52,7 @@ public interface SharingJavaScriptFactory {
 			HttpServletRequest httpServletRequest)
 		throws PortalException;
 
-	public default void requestSharingJavascript() {
+	public default void requestSharingJavaScript() {
 	}
 
 }

@@ -7,10 +7,11 @@ import {ClayCheckbox} from '@clayui/form';
 import classNames from 'classnames';
 import React, {useEffect, useState} from 'react';
 
-import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import FieldBase from '../FieldBase/ReactFieldBase.es';
 import {setJSONArrayValue} from '../util/setters.es';
 
 const Switcher = ({
+	accessibleProps,
 	checked,
 	disabled,
 	inline,
@@ -20,33 +21,40 @@ const Switcher = ({
 	onChange,
 	onFocus,
 	value,
-}) => (
-	<div
-		className={classNames('lfr-ddm-form-field-checkbox-switch', {
-			'lfr-ddm-form-field-checkbox-switch-inline': inline,
-		})}
-	>
-		<label className="simple-toggle-switch toggle-switch">
-			<input
-				checked={checked}
-				className="toggle-switch-check"
-				disabled={disabled}
-				name={name}
-				onBlur={onBlur}
-				onChange={onChange}
-				onFocus={onFocus}
-				type="checkbox"
-				value={value}
-			/>
+	...otherProps
+}) => {
+	const {'data-option-reference': dataOptionReference} = otherProps;
 
-			<span aria-hidden="true" className="toggle-switch-bar">
-				<span className="toggle-switch-handle"></span>
-			</span>
+	return (
+		<div
+			className={classNames('lfr-ddm-form-field-checkbox-switch', {
+				'lfr-ddm-form-field-checkbox-switch-inline': inline,
+			})}
+		>
+			<label className="simple-toggle-switch toggle-switch">
+				<input
+					{...accessibleProps}
+					checked={checked}
+					className="toggle-switch-check"
+					data-option-reference={dataOptionReference}
+					disabled={disabled}
+					name={name}
+					onBlur={onBlur}
+					onChange={onChange}
+					onFocus={onFocus}
+					type="checkbox"
+					value={value}
+				/>
 
-			<span className="toggle-switch-label">{label}</span>
-		</label>
-	</div>
-);
+				<span aria-hidden="true" className="toggle-switch-bar">
+					<span className="toggle-switch-handle"></span>
+				</span>
+
+				<span className="toggle-switch-label">{label}</span>
+			</label>
+		</div>
+	);
+};
 
 const CheckboxMultiple = ({
 	accessibleProps,
@@ -89,10 +97,12 @@ const CheckboxMultiple = ({
 	};
 
 	return (
-		<div {...accessibleProps} className="lfr-ddm-checkbox-multiple">
+		<div className="lfr-ddm-checkbox-multiple">
 			{options.map((option, index) => (
 				<Toggle
+					{...accessibleProps}
 					checked={displayValues.includes(option.value)}
+					data-option-reference={option.reference}
 					disabled={disabled}
 					inline={inline}
 					key={option.value}

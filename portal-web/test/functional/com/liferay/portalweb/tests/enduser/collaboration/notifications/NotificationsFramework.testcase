@@ -1,4 +1,4 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -79,7 +79,7 @@ definition {
 				entryContent = "Blogs Entry${entryCount} Content",
 				entryTitle = "Blogs Entry${entryCount} Title",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		User.logoutAndLoginPG(
@@ -125,7 +125,7 @@ definition {
 				threadBody = "MB Thread Message Body${threadCount}",
 				threadSubject = "MB Thread Message Subject${threadCount}",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		User.logoutAndLoginPG(
@@ -161,7 +161,9 @@ definition {
 
 		PortletEntry.selectAll();
 
-		Click(locator1 = "Icon#MARK_AS_UNREAD");
+		Click(
+			key_text = "envelope-closed",
+			locator1 = "ManagementBar#ANY_ICON");
 
 		Notifications.viewBadgeCount(notificationCount = 2);
 	}
@@ -184,7 +186,7 @@ definition {
 				entryContent = "Blogs Entry${entryCount} Content",
 				entryTitle = "Blogs Entry${entryCount} Title",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		Notifications.viewNoNotifications(activePanel = "Profile");
@@ -274,7 +276,7 @@ definition {
 	}
 
 	@description = "This ensures that a user can mark all selected notifications as read via the management bar no matter if they are all in the same state or not."
-	@priority = 5
+	@priority = 4
 	test CanMarkNotificationsWithDifferentStatesAsRead {
 		Workflow.openWorkflowAdmin(siteURLKey = "guest");
 
@@ -304,7 +306,7 @@ definition {
 	}
 
 	@description = "This ensures that a user can mark all selected notifications as unread via the management bar no matter if they are all in the same state or not."
-	@priority = 5
+	@priority = 4
 	test CanMarkNotificationsWithDifferentStatesAsUnread {
 		Workflow.openWorkflowAdmin(siteURLKey = "guest");
 
@@ -334,7 +336,7 @@ definition {
 	}
 
 	@description = "This ensures that an obsolete notification can not be selected."
-	@priority = 5
+	@priority = 4
 	test CannotSelectObsoleteNotification {
 		Workflow.openWorkflowAdmin(siteURLKey = "guest");
 
@@ -356,7 +358,7 @@ definition {
 
 		Notifications.gotoNotifications();
 
-		AssertVisible(
+		AssertElementPresent(
 			key_rowEntry = "Notification no longer applies",
 			locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_CHECKBOX_DISABLED");
 
@@ -513,7 +515,7 @@ definition {
 				entryContent = "Blogs Entry${entryCount} Content",
 				entryTitle = "Blogs Entry${entryCount} Title",
 				userEmailAddress = "userea@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		Notifications.viewNoNotifications(activePanel = "Profile");

@@ -12,14 +12,13 @@ import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.layout.model.LayoutLocalization;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
-import com.liferay.layout.service.LayoutLocalizationLocalService;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -29,12 +28,16 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
+import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalServiceUtil;
+import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletRenderResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -45,9 +48,12 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
@@ -56,9 +62,11 @@ import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
+import com.liferay.portal.search.test.util.IndexerFixture;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
@@ -69,6 +77,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -132,10 +141,70 @@ public class LayoutWorkflowHandlerTest {
 	}
 
 	@Test
+	public void testGetURLViewInContext() throws Exception {
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		MockHttpServletRequest mockHttpServletRequest =
+			(MockHttpServletRequest)_serviceContext.getRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)mockHttpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		themeDisplay.setURLCurrent(RandomTestUtil.randomString());
+
+		_assertGetURLViewInContext(
+			layout.getPlid(),
+			draftLayout.getFriendlyURL(_portal.getSiteDefaultLocale(_group)),
+			mockHttpServletRequest,
+			HashMapBuilder.put(
+				"p_l_back_url", themeDisplay.getURLCurrent()
+			).build());
+
+		themeDisplay.setDoAsUserId(RandomTestUtil.randomString());
+		themeDisplay.setDoAsUserLanguageId(RandomTestUtil.randomString());
+
+		_assertGetURLViewInContext(
+			layout.getPlid(),
+			draftLayout.getFriendlyURL(_portal.getSiteDefaultLocale(_group)),
+			mockHttpServletRequest,
+			HashMapBuilder.put(
+				"doAsUserId", themeDisplay.getDoAsUserId()
+			).put(
+				"doAsUserLanguageId", themeDisplay.getDoAsUserLanguageId()
+			).put(
+				"p_l_back_url", themeDisplay.getURLCurrent()
+			).build());
+	}
+
+	@Test
 	public void testWorkflowHandlerContentLayout() throws Exception {
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
 		Assert.assertEquals(WorkflowConstants.STATUS_DRAFT, layout.getStatus());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		Assert.assertNotNull(draftLayout);
+
+		long segmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				draftLayout.getPlid());
+
+		FragmentEntryLink fragmentEntryLink =
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				"{}", draftLayout, segmentsExperienceId);
+
+		String keywords = fragmentEntryLink.getHtml();
+
+		Assert.assertTrue(keywords, Validator.isNotNull(keywords));
+
+		IndexerFixture<Layout> layoutIndexerFixture = new IndexerFixture<>(
+			Layout.class);
+
+		layoutIndexerFixture.searchNoOne(keywords);
 
 		WorkflowHandler<?> workflowHandler =
 			WorkflowHandlerRegistryUtil.getWorkflowHandler(
@@ -156,13 +225,7 @@ public class LayoutWorkflowHandlerTest {
 		Assert.assertEquals(
 			WorkflowConstants.STATUS_PENDING, layout.getStatus());
 
-		LayoutLocalization layoutLocalization =
-			_layoutLocalizationLocalService.fetchLayoutLocalization(
-				layout.getGroupId(),
-				LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
-				layout.getPlid());
-
-		Assert.assertNull(layoutLocalization);
+		layoutIndexerFixture.searchNoOne(keywords);
 
 		workflowHandler.updateStatus(
 			WorkflowConstants.STATUS_APPROVED,
@@ -181,13 +244,22 @@ public class LayoutWorkflowHandlerTest {
 		Assert.assertEquals(
 			WorkflowConstants.STATUS_APPROVED, layout.getStatus());
 
-		layoutLocalization =
-			_layoutLocalizationLocalService.fetchLayoutLocalization(
-				layout.getGroupId(),
-				LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
-				layout.getPlid());
+		Locale locale = LocaleUtil.getSiteDefault();
 
-		Assert.assertNotNull(layoutLocalization);
+		Document document = layoutIndexerFixture.searchOnlyOne(
+			keywords, locale);
+
+		Assert.assertNotNull(document);
+
+		String content = document.get(
+			Field.getLocalizedName(locale, Field.CONTENT));
+
+		Assert.assertTrue(
+			content, StringUtil.contains(content, keywords, StringPool.BLANK));
+
+		Assert.assertEquals(
+			document.get(Field.ENTRY_CLASS_PK),
+			String.valueOf(layout.getPlid()));
 	}
 
 	@Test
@@ -358,6 +430,46 @@ public class LayoutWorkflowHandlerTest {
 	}
 
 	@Test
+	public void testWorkflowHandlerDeleteContentLayout() throws Exception {
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Assert.assertEquals(WorkflowConstants.STATUS_DRAFT, layout.getStatus());
+
+		WorkflowHandler<?> workflowHandler =
+			WorkflowHandlerRegistryUtil.getWorkflowHandler(
+				Layout.class.getName());
+
+		Assert.assertNotNull(
+			workflowHandler.getWorkflowDefinitionLink(
+				TestPropsValues.getCompanyId(), _group.getGroupId(),
+				layout.getPlid()));
+
+		WorkflowHandlerRegistryUtil.startWorkflowInstance(
+			TestPropsValues.getCompanyId(), _group.getGroupId(),
+			TestPropsValues.getUserId(), Layout.class.getName(),
+			layout.getPlid(), layout, _serviceContext, Collections.emptyMap());
+
+		layout = _layoutLocalService.getLayout(layout.getPlid());
+
+		Assert.assertEquals(
+			WorkflowConstants.STATUS_PENDING, layout.getStatus());
+
+		Assert.assertNotNull(
+			WorkflowInstanceLinkLocalServiceUtil.fetchWorkflowInstanceLink(
+				layout.getCompanyId(), layout.getGroupId(),
+				Layout.class.getName(), layout.getPlid()));
+
+		_layoutLocalService.deleteLayout(layout.getPlid());
+
+		Assert.assertNull(
+			WorkflowInstanceLinkLocalServiceUtil.fetchWorkflowInstanceLink(
+				layout.getCompanyId(), layout.getGroupId(),
+				Layout.class.getName(), layout.getPlid()));
+
+		Assert.assertNull(_layoutLocalService.fetchLayout(layout.getPlid()));
+	}
+
+	@Test
 	public void testWorkflowHandlerWidgetLayout() throws Exception {
 		Layout layout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), StringPool.BLANK);
@@ -422,6 +534,42 @@ public class LayoutWorkflowHandlerTest {
 				StringPool.BLANK, null);
 
 			Assert.assertTrue(workflowTask.isCompleted());
+		}
+	}
+
+	private void _assertGetURLViewInContext(
+		long classPK, String expectedFriendlyURL,
+		MockHttpServletRequest mockHttpServletRequest,
+		Map<String, String> parameterMap) {
+
+		WorkflowHandler<?> workflowHandler =
+			WorkflowHandlerRegistryUtil.getWorkflowHandler(
+				Layout.class.getName());
+
+		String url = workflowHandler.getURLViewInContext(
+			classPK,
+			new MockLiferayPortletRenderRequest(mockHttpServletRequest),
+			new MockLiferayPortletRenderResponse(), null);
+
+		Assert.assertEquals(
+			StringBundler.concat(
+				PropsValues.LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING,
+				_group.getFriendlyURL(), expectedFriendlyURL),
+			HttpComponentsUtil.getPath(url));
+
+		Map<String, String[]> currentParameterMap =
+			HttpComponentsUtil.getParameterMap(
+				HttpComponentsUtil.getQueryString(url));
+
+		Assert.assertEquals(
+			currentParameterMap.toString(), parameterMap.size(),
+			currentParameterMap.size());
+
+		for (Map.Entry<String, String> entry : parameterMap.entrySet()) {
+			String[] values = currentParameterMap.get(entry.getKey());
+
+			Assert.assertEquals(values.toString(), 1, values.length);
+			Assert.assertEquals(entry.getValue(), values[0]);
 		}
 	}
 
@@ -507,9 +655,6 @@ public class LayoutWorkflowHandlerTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
-
-	@Inject
-	private LayoutLocalizationLocalService _layoutLocalizationLocalService;
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;

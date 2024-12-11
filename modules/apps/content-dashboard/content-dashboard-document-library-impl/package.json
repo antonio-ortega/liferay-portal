@@ -1,14 +1,15 @@
 {
 	"dependencies": {
 		"@liferay/content-dashboard-web": "*",
-		"react": "16.12.0"
+		"react": "18.2.0"
 	},
+	"main": "js/components/SelectFileExtensionWrapper.js",
 	"name": "@liferay/content-dashboard-document-library-impl",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
-	"version": "1.0.40"
+	"version": "1.0.54"
 }

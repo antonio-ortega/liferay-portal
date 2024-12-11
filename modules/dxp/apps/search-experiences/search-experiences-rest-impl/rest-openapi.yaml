@@ -86,6 +86,21 @@ components:
             properties:
                 advancedConfiguration:
                     properties:
+                        collapse:
+                            properties:
+                                field:
+                                    type: string
+                                innerHits:
+                                    items:
+                                        $ref: "#/components/schemas/InnerHit"
+                                    type: array
+                                maxConcurrentGroupRequests:
+                                    type: integer
+                            type: object
+                        fields:
+                            items:
+                                type: string
+                            type: array
                         source:
                             properties:
                                 excludes:
@@ -320,29 +335,6 @@ components:
                         type: object
                     type: object
             type: object
-        EmbeddingProviderConfiguration:
-            properties:
-                attributes:
-                    type: object
-                embeddingVectorDimensions:
-                    type: integer
-                languageIds:
-                    items:
-                        type: string
-                    type: array
-                modelClassNames:
-                    items:
-                        type: string
-                    type: array
-                providerName:
-                    type: string
-            type: object
-        EmbeddingProviderValidationResult:
-            properties:
-                errorMessage:
-                    type: string
-                expectedDimensions:
-                    type: integer
         FieldMappingInfo:
             properties:
                 languageIdPosition:
@@ -359,13 +351,24 @@ components:
                     type: integer
                 number_of_fragments:
                     type: integer
+        InnerHit:
+            properties:
+                innerCollapse:
+                    properties:
+                        field:
+                            type: string
+                    type: object
+                name:
+                    type: string
+                size:
+                    type: integer
+                sorts:
+                    items:
+                        type: object
+                    type: array
         KeywordQueryContributor:
             properties:
                 className:
-                    type: string
-        MLModel:
-            properties:
-                modelId:
                     type: string
         ModelPrefilterContributor:
             properties:
@@ -457,6 +460,10 @@ components:
                     $ref: "#/components/schemas/ElementDefinition"
                 externalReferenceCode:
                     example: AB-34098-789-N
+                    type: string
+                fallbackDescription:
+                    type: string
+                fallbackTitle:
                     type: string
                 hidden:
                     type: boolean
@@ -569,7 +576,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.search.experiences.rest.client', and version '3.0.22'."
+        'com.liferay.search.experiences.rest.client', and version '3.0.33'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -579,12 +586,11 @@ openapi: "3.0.1"
 paths:
     "/search":
         post:
+            description:
+                This API is only for the Blueprints application's preview. For a search API, use search/v1.0/search
+                instead.
             operationId: postSearch
             parameters:
-                - in: query
-                  name: query
-                  schema:
-                      type: string
                 - in: query
                   name: page
                   schema:
@@ -593,6 +599,10 @@ paths:
                   name: pageSize
                   schema:
                       type: integer
+                - in: query
+                  name: query
+                  schema:
+                      type: string
             requestBody:
                 content:
                     application/json:
@@ -749,40 +759,6 @@ paths:
                                     $ref: "#/components/schemas/SearchableAssetNameDisplay"
                                 type: array
             tags: ["SearchableAssetNameDisplay"]
-    /sentence-transformer/ml-models:
-        get:
-            operationId: getSentenceTransformerMLModelsPage
-            parameters:
-                - in: query
-                  name: limit
-                  schema:
-                      type: integer
-                - in: query
-                  name: pipelineTag
-                  schema:
-                      type: string
-                - in: query
-                  name: query
-                  schema:
-                      type: string
-                - in: query
-                  name: tag
-                  schema:
-                      type: string
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/MLModel"
-                                type: array
-                        application/xml:
-                            schema:
-                                items:
-                                    $ref: "#/components/schemas/MLModel"
-                                type: array
-            tags: ["MLModel"]
     /sxp-blueprints:
         get:
             operationId: getSXPBlueprintsPage
@@ -1339,24 +1315,3 @@ paths:
                                     $ref: "#/components/schemas/SXPParameterContributorDefinition"
                                 type: array
             tags: ["SXPParameterContributorDefinition"]
-    /text-embeddings/validate-provider-configuration:
-        post:
-            operationId: postTextEmbeddingValidateProviderConfiguration
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/EmbeddingProviderConfiguration"
-                    application/xml:
-                        schema:
-                            $ref: "#/components/schemas/EmbeddingProviderConfiguration"
-            responses:
-                200:
-                    content:
-                        application/json:
-                            schema:
-                                $ref: "#/components/schemas/EmbeddingProviderValidationResult"
-                        application/xml:
-                            schema:
-                                $ref: "#/components/schemas/EmbeddingProviderValidationResult"
-            tags: ["EmbeddingProviderValidationResult"]

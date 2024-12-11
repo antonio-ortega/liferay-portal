@@ -1,11 +1,11 @@
-@component-name = "portal-wcm"
+@component-name = "portal-content-management"
 @disable-webdriver = "true"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Echo Headless";
+	property testray.main.component.name = "Content Management Headless";
 
 	static var randomSiteName = StringUtil.randomString(8);
 
@@ -90,18 +90,22 @@ definition {
 				optionFieldLabel = "Options",
 				optionValue = "First");
 
+			FormFields.clickAddOptionButton();
+
 			DataEngine.addFieldOption(
 				index = 2,
 				optionFieldLabel = "Options",
 				optionValue = "Second");
+
+			FormFields.clickAddOptionButton();
 
 			DataEngine.addFieldOption(
 				index = 3,
 				optionFieldLabel = "Options",
 				optionValue = "Third");
 
-			var value1 = selenium.getElementValue("xpath=(//label[normalize-space(text())='Options']//following-sibling::div[contains(@class,'options-container')]//div[contains(@class,'ddm-option-entry')]//input[contains(@class,'key-value-reference')])[1]");
-			var value2 = selenium.getElementValue("xpath=(//label[normalize-space(text())='Options']//following-sibling::div[contains(@class,'options-container')]//div[contains(@class,'ddm-option-entry')]//input[contains(@class,'key-value-reference')])[2]");
+			var value1 = selenium.getElementValue("xpath=(//label[normalize-space(text())='Options']//following-sibling::div[contains(@class,'options-container')]//div[contains(@class,'ddm-option-entry')]//input[contains(@id,'keyValueReference')])[1]");
+			var value2 = selenium.getElementValue("xpath=(//label[normalize-space(text())='Options']//following-sibling::div[contains(@class,'options-container')]//div[contains(@class,'ddm-option-entry')]//input[contains(@id,'keyValueReference')])[2]");
 
 			WebContentStructures.saveCP();
 		}

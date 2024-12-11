@@ -6,30 +6,28 @@
 import ClayAlert from '@clayui/alert';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import classNames from 'classnames';
-import React, {useCallback} from 'react';
+import React from 'react';
 
 import FormMappingOptions from '../../../plugins/browser/components/page_structure/components/item_configuration_panels/FormMappingOptions';
-import {
-	useDispatch,
-	useSelector,
-	useSelectorCallback,
-} from '../../contexts/StoreContext';
+import {config} from '../../config';
+import {useItemLocalConfig} from '../../contexts/LocalConfigContext';
+import {useSelector, useSelectorCallback} from '../../contexts/StoreContext';
 import selectLanguageId from '../../selectors/selectLanguageId';
-import updateFormItemConfig from '../../thunks/updateFormItemConfig';
 import {formIsMapped} from '../../utils/formIsMapped';
 import {formIsRestricted} from '../../utils/formIsRestricted';
 import {formIsUnavailable} from '../../utils/formIsUnavailable';
 import {getEditableLocalizedValue} from '../../utils/getEditableLocalizedValue';
 import isItemEmpty from '../../utils/isItemEmpty';
+import {useSaveFormConfig} from '../../utils/useSaveFormConfig';
 import ContainerWithControls from './ContainerWithControls';
 
 const FormWithControls = React.forwardRef(({children, item, ...rest}, ref) => {
-	const showMessagePreview = item.config?.showMessagePreview;
+	const localConfig = useItemLocalConfig(item.itemId);
 
 	return (
 		<form
 			className={classNames('page-editor__form', {
-				'page-editor__form--success': showMessagePreview,
+				'page-editor__form--success': localConfig.showMessagePreview,
 			})}
 			onSubmit={(event) => event.preventDefault()}
 			ref={ref}
@@ -42,7 +40,9 @@ const FormWithControls = React.forwardRef(({children, item, ...rest}, ref) => {
 });
 
 function Form({children, item}) {
-	const showLoadingState = item.config?.loading;
+	const localConfig = useItemLocalConfig(item.itemId);
+
+	const showLoadingState = localConfig.loading;
 
 	const isEmpty = useSelectorCallback(
 		(state) =>
@@ -54,28 +54,26 @@ function Form({children, item}) {
 		return <FormLoadingState />;
 	}
 
-	if (Liferay.FeatureFlags['LPS-169923']) {
-		if (formIsUnavailable(item)) {
-			return (
-				<ClayAlert
-					displayType="warning"
-					title={`${Liferay.Language.get('warning')}:`}
-				>
-					{Liferay.Language.get(
-						'this-content-is-currently-unavailable-or-has-been-deleted.-users-cannot-see-this-fragment'
-					)}
-				</ClayAlert>
-			);
-		}
-		else if (formIsRestricted(item)) {
-			return (
-				<ClayAlert displayType="secondary">
-					{Liferay.Language.get(
-						'this-content-cannot-be-displayed-due-to-permission-restrictions'
-					)}
-				</ClayAlert>
-			);
-		}
+	if (formIsUnavailable(item)) {
+		return (
+			<ClayAlert
+				displayType="warning"
+				title={`${Liferay.Language.get('warning')}:`}
+			>
+				{Liferay.Language.get(
+					'this-content-is-currently-unavailable-or-has-been-deleted.-users-cannot-see-this-fragment'
+				)}
+			</ClayAlert>
+		);
+	}
+	else if (formIsRestricted(item)) {
+		return (
+			<ClayAlert displayType="secondary">
+				{Liferay.Language.get(
+					'this-content-cannot-be-displayed-due-to-permission-restrictions'
+				)}
+			</ClayAlert>
+		);
 	}
 
 	const isMapped = formIsMapped(item);
@@ -84,7 +82,7 @@ function Form({children, item}) {
 		return <FormEmptyState isMapped={isMapped} item={item} />;
 	}
 
-	const {showMessagePreview} = item.config;
+	const {showMessagePreview} = localConfig;
 
 	return (
 		<>
@@ -102,28 +100,26 @@ function Form({children, item}) {
 }
 
 function FormEmptyState({isMapped, item}) {
-	const dispatch = useDispatch();
+	const saveFormConfig = useSaveFormConfig(item);
 
-	const onValueSelect = useCallback(
-		(nextConfig) =>
-			dispatch(
-				updateFormItemConfig({
-					itemConfig: nextConfig,
-					itemId: item.itemId,
-				})
-			),
-		[dispatch, item.itemId]
-	);
+	const localConfig = useItemLocalConfig(item.itemId);
 
-	if (item.config.showMessagePreview) {
+	if (localConfig.showMessagePreview) {
 		return <FormSuccessMessage item={item} />;
 	}
 
 	if (isMapped) {
 		return (
-			<div className="page-editor__no-fragments-state">
-				<p className="m-0 page-editor__no-fragments-state__message">
-					{Liferay.Language.get('place-fragments-here')}
+			<div className="page-editor__no-fragments-state text-center">
+				<img
+					className="page-editor__no-fragments-state__image"
+					src={`${config.imagesPath}/drag_and_drop.svg`}
+				/>
+
+				<p className="page-editor__no-fragments-state__message">
+					{Liferay.Language.get(
+						'drag-and-drop-fragments-or-widgets-here'
+					)}
 				</p>
 			</div>
 		);
@@ -148,7 +144,7 @@ function FormEmptyState({isMapped, item}) {
 				<FormMappingOptions
 					hideLabel={true}
 					item={item}
-					onValueSelect={onValueSelect}
+					onValueSelect={saveFormConfig}
 				/>
 			</div>
 		</div>

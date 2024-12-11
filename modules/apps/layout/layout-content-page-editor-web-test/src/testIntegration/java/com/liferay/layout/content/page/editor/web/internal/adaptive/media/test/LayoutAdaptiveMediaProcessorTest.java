@@ -231,7 +231,7 @@ public class LayoutAdaptiveMediaProcessorTest {
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(getClass(), "dependencies/image.jpg"), null, null,
-			_serviceContext);
+			null, _serviceContext);
 
 		JSONObject editableValuesJSONObject = JSONUtil.put(
 			FragmentEntryProcessorConstants.
@@ -247,7 +247,7 @@ public class LayoutAdaptiveMediaProcessorTest {
 					))));
 
 		_fragmentEntryLink = _fragmentEntryLinkService.addFragmentEntryLink(
-			_group.getGroupId(), 0, fragmentEntry.getFragmentEntryId(),
+			null, _group.getGroupId(), 0, fragmentEntry.getFragmentEntryId(),
 			defaultSegmentsExperienceId, layout.getPlid(),
 			fragmentEntry.getCss(), fragmentEntry.getHtml(),
 			fragmentEntry.getJs(), fragmentEntry.getConfiguration(),

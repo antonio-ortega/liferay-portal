@@ -9,6 +9,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.segments.model.SegmentsExperiment;
 
@@ -409,12 +410,12 @@ public class SegmentsExperimentLocalServiceUtil {
 
 	public static SegmentsExperiment runSegmentsExperiment(
 			long segmentsExperimentId, double confidenceLevel,
-			Map<Long, Double> segmentsExperienceIdSplitMap)
+			Map<Long, Double> segmentsExperienceIdSplitMap, String type)
 		throws PortalException {
 
 		return getService().runSegmentsExperiment(
-			segmentsExperimentId, confidenceLevel,
-			segmentsExperienceIdSplitMap);
+			segmentsExperimentId, confidenceLevel, segmentsExperienceIdSplitMap,
+			type);
 	}
 
 	public static SegmentsExperiment updateSegmentsExperiment(
@@ -460,13 +461,12 @@ public class SegmentsExperimentLocalServiceUtil {
 	}
 
 	public static SegmentsExperimentLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(SegmentsExperimentLocalService service) {
-		_service = service;
-	}
-
-	private static volatile SegmentsExperimentLocalService _service;
+	private static final Snapshot<SegmentsExperimentLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			SegmentsExperimentLocalServiceUtil.class,
+			SegmentsExperimentLocalService.class);
 
 }

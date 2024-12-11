@@ -7,6 +7,7 @@ package com.liferay.commerce.notification.service;
 
 import com.liferay.commerce.notification.model.CommerceNotificationTemplate;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -22,8 +23,10 @@ import java.util.Map;
  *
  * @author Alessio Antonio Rendina
  * @see CommerceNotificationTemplateService
+ * @deprecated As of Cavanaugh (7.4.x)
  * @generated
  */
+@Deprecated
 public class CommerceNotificationTemplateServiceUtil {
 
 	/*
@@ -142,13 +145,12 @@ public class CommerceNotificationTemplateServiceUtil {
 	}
 
 	public static CommerceNotificationTemplateService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceNotificationTemplateService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceNotificationTemplateService _service;
+	private static final Snapshot<CommerceNotificationTemplateService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceNotificationTemplateServiceUtil.class,
+			CommerceNotificationTemplateService.class);
 
 }

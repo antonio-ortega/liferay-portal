@@ -3,6 +3,7 @@ import URLConstants from 'shared/util/url-constants';
 import {BROWSER_FRAGMENT, DEVICE_FRAGMENT} from 'shared/queries/fragments';
 import {gql} from 'apollo-boost';
 import {graphql} from '@apollo/react-hoc';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {withDevicesCard} from 'shared/hoc/DevicesCard';
 
 const BROWSER_DEVICE_QUERY = gql`
@@ -60,5 +61,6 @@ export default withDevicesCard(withDocumentsAndMediaDevices, {
 	),
 	documentationUrl:
 		URLConstants.SitesDashboardDocumentsAndMediaViewsByTechnology,
+	reportContainer: ReportContainer.DownloadsByTechnologyCard,
 	title: Liferay.Language.get('there-are-no-downloads-on-the-selected-period')
 });

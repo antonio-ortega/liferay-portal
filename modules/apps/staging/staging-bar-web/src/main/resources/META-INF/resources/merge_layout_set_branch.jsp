@@ -77,9 +77,11 @@ if (layoutSetBranches.contains(layoutSetBranch)) {
 					/>
 
 					<liferay-ui:search-container-column-text>
-						<a class="layout-set-branch" data-layoutSetBranchId="<%= curLayoutSetBranchId %>" data-layoutSetBranchMessage="<%= LanguageUtil.format(request, "are-you-sure-you-want-to-merge-changes-from-x", layoutSetBranchDisplayName, false) %>" data-layoutSetBranchName="<%= HtmlUtil.escapeAttribute(curLayoutSetBranch.getName()) %>" href="#" id="<portlet:namespace /><%= curLayoutSetBranchId %>" onClick="<portlet:namespace />selectLayoutSetBranch('<%= curLayoutSetBranchId %>');">
-							<liferay-ui:message key="select" />
-						</a>
+						<liferay-ui:csp>
+							<a class="layout-set-branch" data-layoutSetBranchId="<%= curLayoutSetBranchId %>" data-layoutSetBranchMessage="<%= LanguageUtil.format(request, "are-you-sure-you-want-to-merge-changes-from-x", layoutSetBranchDisplayName, false) %>" data-layoutSetBranchName="<%= HtmlUtil.escapeAttribute(curLayoutSetBranch.getName()) %>" href="#" id="<portlet:namespace /><%= curLayoutSetBranchId %>" onClick="<portlet:namespace />selectLayoutSetBranch('<%= curLayoutSetBranchId %>');">
+								<liferay-ui:message key="select" />
+							</a>
+						</liferay-ui:csp>
 					</liferay-ui:search-container-column-text>
 				</liferay-ui:search-container-row>
 
@@ -93,7 +95,7 @@ if (layoutSetBranches.contains(layoutSetBranch)) {
 	</div>
 </clay:container-fluid>
 
-<script>
+<aui:script>
 	function <portlet:namespace />selectLayoutSetBranch(layoutSetBranchId) {
 		var layoutSetBranch = document.getElementById(
 			'<portlet:namespace />' + layoutSetBranchId
@@ -108,9 +110,10 @@ if (layoutSetBranches.contains(layoutSetBranch)) {
 					if (isConfirmed) {
 						Liferay.Util.postForm(document.<portlet:namespace />fm4, {
 							data: {
-								mergeLayoutSetBranchId: layoutSetBranch.getAttribute(
-									'data-layoutSetBranchId'
-								),
+								mergeLayoutSetBranchId:
+									layoutSetBranch.getAttribute(
+										'data-layoutSetBranchId'
+									),
 							},
 						});
 					}
@@ -118,4 +121,4 @@ if (layoutSetBranches.contains(layoutSetBranch)) {
 			});
 		}
 	}
-</script>
+</aui:script>

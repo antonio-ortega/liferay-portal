@@ -26,11 +26,16 @@ deployJar {
 	}
 }
 
+jarSources {
+	mustRunAfter patch
+}
+
 patch {
 	ext {
 		autoClean = false
 	}
 
+	fileNames "org/hibernate/internal/SessionFactoryImpl.java"
 	fileNames "org/hibernate/metamodel/internal/AttributeFactory.java"
 	fileNames "org/hibernate/tuple/component/PojoComponentTuplizer.java"
 	fileNames "org/hibernate/tuple/entity/PojoEntityTuplizer.java"

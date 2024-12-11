@@ -6,9 +6,14 @@
 package com.liferay.headless.commerce.admin.channel.internal.resource.v1_0;
 
 import com.liferay.account.constants.AccountConstants;
+import com.liferay.account.model.AccountEntry;
+import com.liferay.account.service.AccountEntryService;
 import com.liferay.commerce.product.exception.NoSuchChannelException;
 import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.model.CommerceChannelRel;
+import com.liferay.commerce.product.service.CommerceChannelRelService;
 import com.liferay.commerce.product.service.CommerceChannelService;
+import com.liferay.headless.commerce.admin.channel.dto.v1_0.AccountAddressChannel;
 import com.liferay.headless.commerce.admin.channel.dto.v1_0.Channel;
 import com.liferay.headless.commerce.admin.channel.internal.odata.entity.v1_0.ChannelEntityModel;
 import com.liferay.headless.commerce.admin.channel.resource.v1_0.ChannelResource;
@@ -20,6 +25,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
+import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
@@ -37,7 +43,8 @@ import org.osgi.service.component.annotations.ServiceScope;
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/channel.properties",
-	scope = ServiceScope.PROTOTYPE, service = ChannelResource.class
+	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
+	service = ChannelResource.class
 )
 public class ChannelResourceImpl extends BaseChannelResourceImpl {
 
@@ -52,7 +59,7 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 		throws Exception {
 
 		CommerceChannel commerceChannel =
-			_commerceChannelService.fetchByExternalReferenceCode(
+			_commerceChannelService.fetchCommerceChannelByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceChannel == null) {
@@ -63,6 +70,18 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 
 		_commerceChannelService.deleteCommerceChannel(
 			commerceChannel.getCommerceChannelId());
+	}
+
+	@NestedField(parentClass = AccountAddressChannel.class, value = "channel")
+	@Override
+	public Channel getAccountAddressChannelChannel(Long id) throws Exception {
+		CommerceChannelRel commerceChannelRel =
+			_commerceChannelRelService.getCommerceChannelRel(id);
+
+		return _channelDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				commerceChannelRel.getCommerceChannelId(),
+				contextAcceptLanguage.getPreferredLocale()));
 	}
 
 	@Override
@@ -83,7 +102,7 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 		throws Exception {
 
 		CommerceChannel commerceChannel =
-			_commerceChannelService.fetchByExternalReferenceCode(
+			_commerceChannelService.fetchCommerceChannelByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceChannel == null) {
@@ -128,9 +147,8 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 		return _toChannel(
 			_commerceChannelService.updateCommerceChannel(
 				channelId,
-				GetterUtil.getLong(
-					channel.getAccountId(),
-					commerceChannel.getAccountEntryId()),
+				_getAccountEntryId(
+					channel, commerceChannel.getAccountEntryId()),
 				commerceChannel.getSiteGroupId(),
 				GetterUtil.getString(
 					channel.getName(), commerceChannel.getName()),
@@ -150,7 +168,7 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 		throws Exception {
 
 		CommerceChannel commerceChannel =
-			_commerceChannelService.fetchByExternalReferenceCode(
+			_commerceChannelService.fetchCommerceChannelByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceChannel == null) {
@@ -162,9 +180,8 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 		return _toChannel(
 			_commerceChannelService.updateCommerceChannel(
 				commerceChannel.getCommerceChannelId(),
-				GetterUtil.getLong(
-					channel.getAccountId(),
-					commerceChannel.getAccountEntryId()),
+				_getAccountEntryId(
+					channel, commerceChannel.getAccountEntryId()),
 				commerceChannel.getSiteGroupId(),
 				GetterUtil.getString(
 					channel.getName(), commerceChannel.getName()),
@@ -183,9 +200,8 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 		return _toChannel(
 			_commerceChannelService.addCommerceChannel(
 				channel.getExternalReferenceCode(),
-				GetterUtil.get(
-					channel.getAccountId(),
-					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+				_getAccountEntryId(
+					channel, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
 				GetterUtil.get(channel.getSiteGroupId(), 0), channel.getName(),
 				channel.getType(), null, channel.getCurrencyCode(),
 				_serviceContextHelper.getServiceContext(contextUser)));
@@ -205,9 +221,8 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 		return _toChannel(
 			_commerceChannelService.updateCommerceChannel(
 				channelId,
-				GetterUtil.get(
-					channel.getAccountId(),
-					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+				_getAccountEntryId(
+					channel, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
 				channel.getSiteGroupId(), channel.getName(), channel.getType(),
 				null, channel.getCurrencyCode(), null, false));
 	}
@@ -220,12 +235,33 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 		return _toChannel(
 			_commerceChannelService.addOrUpdateCommerceChannel(
 				externalReferenceCode,
-				GetterUtil.getLong(
-					channel.getAccountId(),
-					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
-				channel.getSiteGroupId(), channel.getName(), channel.getType(),
-				null, channel.getCurrencyCode(),
+				_getAccountEntryId(
+					channel, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+				GetterUtil.getLong(channel.getSiteGroupId()), channel.getName(),
+				channel.getType(), null, channel.getCurrencyCode(),
 				_serviceContextHelper.getServiceContext()));
+	}
+
+	private long _getAccountEntryId(Channel channel, long defaultAccountEntryId)
+		throws Exception {
+
+		long accountEntryId = GetterUtil.getLong(channel.getAccountId());
+
+		if (accountEntryId > 0) {
+			return accountEntryId;
+		}
+
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
+				contextCompany.getCompanyId(),
+				GetterUtil.getString(
+					channel.getAccountExternalReferenceCode()));
+
+		if (accountEntry != null) {
+			return accountEntry.getAccountEntryId();
+		}
+
+		return defaultAccountEntryId;
 	}
 
 	private Channel _toChannel(CommerceChannel commerceChannel)
@@ -242,10 +278,16 @@ public class ChannelResourceImpl extends BaseChannelResourceImpl {
 
 	private static final EntityModel _entityModel = new ChannelEntityModel();
 
+	@Reference
+	private AccountEntryService _accountEntryService;
+
 	@Reference(
 		target = "(component.name=com.liferay.headless.commerce.admin.channel.internal.dto.v1_0.converter.ChannelDTOConverter)"
 	)
 	private DTOConverter<CommerceChannel, Channel> _channelDTOConverter;
+
+	@Reference
+	private CommerceChannelRelService _commerceChannelRelService;
 
 	@Reference
 	private CommerceChannelService _commerceChannelService;

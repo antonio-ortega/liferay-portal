@@ -1,3 +1,15 @@
+.lfr__object-model-builder-control-container {
+	height: 270px;
+	position: relative;
+	transition: all 0.5s ease;
+	width: 230px;
+}
+
+.lfr__object-model-builder-controls {
+	bottom: 170px !important;
+	inset-inline-start: 20px !important;
+}
+
 .lfr-objects__model-builder-diagram {
 	&-area {
 		width: 100%;
@@ -11,10 +23,37 @@
 			}
 		}
 	}
+}
 
-	&-container {
-		display: flex;
-		height: calc(100vh - 129px);
-		width: 100%;
+.react-flow__edges {
+	z-index: 3 !important;
+}
+
+@mixin responsiveReactFlowControlPosition($maxHeight, $top) {
+	@media (max-height: #{$maxHeight}) {
+		.lfr__object-model-builder-control-container {
+			&.sidebars-closed {
+				top: #{$top};
+			}
+
+			&.sidebars-open {
+				top: #{$top};
+
+				[dir='ltr'] & {
+					margin-inline-start: 300px;
+				}
+
+				[dir='rtl'] & {
+					margin-inline-start: 320px;
+				}
+			}
+		}
 	}
 }
+
+@include responsiveReactFlowControlPosition(2160px, 80%);
+@include responsiveReactFlowControlPosition(1440px, 75%);
+@include responsiveReactFlowControlPosition(1200px, 70%);
+@include responsiveReactFlowControlPosition(1080px, 65%);
+@include responsiveReactFlowControlPosition(900px, 60%);
+@include responsiveReactFlowControlPosition(768px, 55%);

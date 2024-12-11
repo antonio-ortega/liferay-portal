@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.product.service.persistence.impl;
 
+import com.liferay.commerce.product.exception.DuplicateCPDefinitionSpecificationOptionValueExternalReferenceCodeException;
 import com.liferay.commerce.product.exception.NoSuchCPDefinitionSpecificationOptionValueException;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValueTable;
@@ -13,7 +14,9 @@ import com.liferay.commerce.product.model.impl.CPDefinitionSpecificationOptionVa
 import com.liferay.commerce.product.service.persistence.CPDefinitionSpecificationOptionValuePersistence;
 import com.liferay.commerce.product.service.persistence.CPDefinitionSpecificationOptionValueUtil;
 import com.liferay.commerce.product.service.persistence.impl.constants.CommercePersistenceConstants;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
@@ -24,13 +27,19 @@ import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
+import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -172,117 +181,121 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			orderByComparator,
 		boolean useFinderCache) {
 
-		uuid = Objects.toString(uuid, "");
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+			uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath = _finderPathWithoutPaginationFindByUuid;
-				finderArgs = new Object[] {uuid};
+				if (useFinderCache) {
+					finderPath = _finderPathWithoutPaginationFindByUuid;
+					finderArgs = new Object[] {uuid};
+				}
 			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindByUuid;
-			finderArgs = new Object[] {uuid, start, end, orderByComparator};
-		}
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindByUuid;
+				finderArgs = new Object[] {uuid, start, end, orderByComparator};
+			}
 
-		List<CPDefinitionSpecificationOptionValue> list = null;
+			List<CPDefinitionSpecificationOptionValue> list = null;
 
-		if (useFinderCache && productionMode) {
-			list =
-				(List<CPDefinitionSpecificationOptionValue>)
-					finderCache.getResult(finderPath, finderArgs, this);
+			if (useFinderCache) {
+				list =
+					(List<CPDefinitionSpecificationOptionValue>)
+						finderCache.getResult(finderPath, finderArgs, this);
 
-			if ((list != null) && !list.isEmpty()) {
-				for (CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue : list) {
+				if ((list != null) && !list.isEmpty()) {
+					for (CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue : list) {
 
-					if (!uuid.equals(
-							cpDefinitionSpecificationOptionValue.getUuid())) {
+						if (!uuid.equals(
+								cpDefinitionSpecificationOptionValue.
+									getUuid())) {
 
-						list = null;
+							list = null;
 
-						break;
+							break;
+						}
 					}
 				}
 			}
-		}
 
-		if (list == null) {
-			StringBundler sb = null;
+			if (list == null) {
+				StringBundler sb = null;
 
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						3 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(3);
+				}
 
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_UUID_2);
-			}
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
 				sb.append(
-					CPDefinitionSpecificationOptionValueModelImpl.
-						ORDER_BY_JPQL);
-			}
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-			String sql = sb.toString();
+				boolean bindUuid = false;
 
-			Session session = null;
+				if (uuid.isEmpty()) {
+					sb.append(_FINDER_COLUMN_UUID_UUID_3);
+				}
+				else {
+					bindUuid = true;
 
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
+					sb.append(_FINDER_COLUMN_UUID_UUID_2);
 				}
 
-				list =
-					(List<CPDefinitionSpecificationOptionValue>)QueryUtil.list(
-						query, getDialect(), start, end);
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(
+						CPDefinitionSpecificationOptionValueModelImpl.
+							ORDER_BY_JPQL);
+				}
 
-				cacheResult(list);
+				String sql = sb.toString();
 
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					if (bindUuid) {
+						queryPos.add(uuid);
+					}
+
+					list =
+						(List<CPDefinitionSpecificationOptionValue>)
+							QueryUtil.list(query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+
+			return list;
 		}
-
-		return list;
 	}
 
 	/**
@@ -609,70 +622,65 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByUuid(String uuid) {
-		uuid = Objects.toString(uuid, "");
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+			uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = _finderPathCountByUuid;
 
-		Long count = null;
+			Object[] finderArgs = new Object[] {uuid};
 
-		if (productionMode) {
-			finderPath = _finderPathCountByUuid;
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
 
-			finderArgs = new Object[] {uuid};
+			if (count == null) {
+				StringBundler sb = new StringBundler(2);
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-		}
+				sb.append(
+					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
+				boolean bindUuid = false;
 
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+				if (uuid.isEmpty()) {
+					sb.append(_FINDER_COLUMN_UUID_UUID_3);
+				}
+				else {
+					bindUuid = true;
 
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_UUID_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
+					sb.append(_FINDER_COLUMN_UUID_UUID_2);
 				}
 
-				count = (Long)query.uniqueResult();
+				String sql = sb.toString();
 
-				if (productionMode) {
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					if (bindUuid) {
+						queryPos.add(uuid);
+					}
+
+					count = (Long)query.uniqueResult();
+
 					finderCache.putResult(finderPath, finderArgs, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	private static final String _FINDER_COLUMN_UUID_UUID_2 =
@@ -682,7 +690,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		"(cpDefinitionSpecificationOptionValue.uuid IS NULL OR cpDefinitionSpecificationOptionValue.uuid = '')";
 
 	private FinderPath _finderPathFetchByUUID_G;
-	private FinderPath _finderPathCountByUUID_G;
 
 	/**
 	 * Returns the cp definition specification option value where uuid = &#63; and groupId = &#63; or throws a <code>NoSuchCPDefinitionSpecificationOptionValueException</code> if it could not be found.
@@ -750,112 +757,107 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	public CPDefinitionSpecificationOptionValue fetchByUUID_G(
 		String uuid, long groupId, boolean useFinderCache) {
 
-		uuid = Objects.toString(uuid, "");
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		Object[] finderArgs = null;
+			uuid = Objects.toString(uuid, "");
 
-		if (useFinderCache) {
-			finderArgs = new Object[] {uuid, groupId};
-		}
+			Object[] finderArgs = null;
 
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
-		}
-
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
-
-		if (result instanceof CPDefinitionSpecificationOptionValue) {
-			CPDefinitionSpecificationOptionValue
-				cpDefinitionSpecificationOptionValue =
-					(CPDefinitionSpecificationOptionValue)result;
-
-			if (!Objects.equals(
-					uuid, cpDefinitionSpecificationOptionValue.getUuid()) ||
-				(groupId !=
-					cpDefinitionSpecificationOptionValue.getGroupId())) {
-
-				result = null;
-			}
-			else if (!ctPersistenceHelper.isProductionMode(
-						CPDefinitionSpecificationOptionValue.class,
-						cpDefinitionSpecificationOptionValue.getPrimaryKey())) {
-
-				result = null;
-			}
-		}
-		else if (!productionMode && (result instanceof List<?>)) {
-			result = null;
-		}
-
-		if (result == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
+			if (useFinderCache) {
+				finderArgs = new Object[] {uuid, groupId};
 			}
 
-			sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
+			Object result = null;
 
-			String sql = sb.toString();
+			if (useFinderCache) {
+				result = finderCache.getResult(
+					_finderPathFetchByUUID_G, finderArgs, this);
+			}
 
-			Session session = null;
+			if (result instanceof CPDefinitionSpecificationOptionValue) {
+				CPDefinitionSpecificationOptionValue
+					cpDefinitionSpecificationOptionValue =
+						(CPDefinitionSpecificationOptionValue)result;
 
-			try {
-				session = openSession();
+				if (!Objects.equals(
+						uuid, cpDefinitionSpecificationOptionValue.getUuid()) ||
+					(groupId !=
+						cpDefinitionSpecificationOptionValue.getGroupId())) {
 
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
+					result = null;
 				}
+			}
 
-				queryPos.add(groupId);
+			if (result == null) {
+				StringBundler sb = new StringBundler(4);
 
-				List<CPDefinitionSpecificationOptionValue> list = query.list();
+				sb.append(
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-				if (list.isEmpty()) {
-					if (useFinderCache && productionMode) {
-						finderCache.putResult(
-							_finderPathFetchByUUID_G, finderArgs, list);
-					}
+				boolean bindUuid = false;
+
+				if (uuid.isEmpty()) {
+					sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
 				}
 				else {
-					CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue = list.get(0);
+					bindUuid = true;
 
-					result = cpDefinitionSpecificationOptionValue;
+					sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
+				}
 
-					cacheResult(cpDefinitionSpecificationOptionValue);
+				sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					if (bindUuid) {
+						queryPos.add(uuid);
+					}
+
+					queryPos.add(groupId);
+
+					List<CPDefinitionSpecificationOptionValue> list =
+						query.list();
+
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							finderCache.putResult(
+								_finderPathFetchByUUID_G, finderArgs, list);
+						}
+					}
+					else {
+						CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue = list.get(0);
+
+						result = cpDefinitionSpecificationOptionValue;
+
+						cacheResult(cpDefinitionSpecificationOptionValue);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (CPDefinitionSpecificationOptionValue)result;
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (CPDefinitionSpecificationOptionValue)result;
+			}
 		}
 	}
 
@@ -886,74 +888,14 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByUUID_G(String uuid, long groupId) {
-		uuid = Objects.toString(uuid, "");
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByUUID_G(uuid, groupId);
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
-
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		Long count = null;
-
-		if (productionMode) {
-			finderPath = _finderPathCountByUUID_G;
-
-			finderArgs = new Object[] {uuid, groupId};
-
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		if (cpDefinitionSpecificationOptionValue == null) {
+			return 0;
 		}
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_G_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_G_UUID_2);
-			}
-
-			sb.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
-				}
-
-				queryPos.add(groupId);
-
-				count = (Long)query.uniqueResult();
-
-				if (productionMode) {
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_UUID_G_UUID_2 =
@@ -1050,126 +992,130 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			orderByComparator,
 		boolean useFinderCache) {
 
-		uuid = Objects.toString(uuid, "");
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+			uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath = _finderPathWithoutPaginationFindByUuid_C;
-				finderArgs = new Object[] {uuid, companyId};
+				if (useFinderCache) {
+					finderPath = _finderPathWithoutPaginationFindByUuid_C;
+					finderArgs = new Object[] {uuid, companyId};
+				}
 			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindByUuid_C;
-			finderArgs = new Object[] {
-				uuid, companyId, start, end, orderByComparator
-			};
-		}
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindByUuid_C;
+				finderArgs = new Object[] {
+					uuid, companyId, start, end, orderByComparator
+				};
+			}
 
-		List<CPDefinitionSpecificationOptionValue> list = null;
+			List<CPDefinitionSpecificationOptionValue> list = null;
 
-		if (useFinderCache && productionMode) {
-			list =
-				(List<CPDefinitionSpecificationOptionValue>)
-					finderCache.getResult(finderPath, finderArgs, this);
+			if (useFinderCache) {
+				list =
+					(List<CPDefinitionSpecificationOptionValue>)
+						finderCache.getResult(finderPath, finderArgs, this);
 
-			if ((list != null) && !list.isEmpty()) {
-				for (CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue : list) {
+				if ((list != null) && !list.isEmpty()) {
+					for (CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue : list) {
 
-					if (!uuid.equals(
-							cpDefinitionSpecificationOptionValue.getUuid()) ||
-						(companyId !=
-							cpDefinitionSpecificationOptionValue.
-								getCompanyId())) {
+						if (!uuid.equals(
+								cpDefinitionSpecificationOptionValue.
+									getUuid()) ||
+							(companyId !=
+								cpDefinitionSpecificationOptionValue.
+									getCompanyId())) {
 
-						list = null;
+							list = null;
 
-						break;
+							break;
+						}
 					}
 				}
 			}
-		}
 
-		if (list == null) {
-			StringBundler sb = null;
+			if (list == null) {
+				StringBundler sb = null;
 
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						4 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(4);
+				}
 
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
-			}
-
-			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
 				sb.append(
-					CPDefinitionSpecificationOptionValueModelImpl.
-						ORDER_BY_JPQL);
-			}
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-			String sql = sb.toString();
+				boolean bindUuid = false;
 
-			Session session = null;
+				if (uuid.isEmpty()) {
+					sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
+				}
+				else {
+					bindUuid = true;
 
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
+					sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 				}
 
-				queryPos.add(companyId);
+				sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
-				list =
-					(List<CPDefinitionSpecificationOptionValue>)QueryUtil.list(
-						query, getDialect(), start, end);
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(
+						CPDefinitionSpecificationOptionValueModelImpl.
+							ORDER_BY_JPQL);
+				}
 
-				cacheResult(list);
+				String sql = sb.toString();
 
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					if (bindUuid) {
+						queryPos.add(uuid);
+					}
+
+					queryPos.add(companyId);
+
+					list =
+						(List<CPDefinitionSpecificationOptionValue>)
+							QueryUtil.list(query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+
+			return list;
 		}
-
-		return list;
 	}
 
 	/**
@@ -1515,74 +1461,69 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByUuid_C(String uuid, long companyId) {
-		uuid = Objects.toString(uuid, "");
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+			uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = _finderPathCountByUuid_C;
 
-		Long count = null;
+			Object[] finderArgs = new Object[] {uuid, companyId};
 
-		if (productionMode) {
-			finderPath = _finderPathCountByUuid_C;
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
 
-			finderArgs = new Object[] {uuid, companyId};
+			if (count == null) {
+				StringBundler sb = new StringBundler(3);
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-		}
+				sb.append(
+					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
+				boolean bindUuid = false;
 
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+				if (uuid.isEmpty()) {
+					sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
+				}
+				else {
+					bindUuid = true;
 
-			boolean bindUuid = false;
-
-			if (uuid.isEmpty()) {
-				sb.append(_FINDER_COLUMN_UUID_C_UUID_3);
-			}
-			else {
-				bindUuid = true;
-
-				sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
-			}
-
-			sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindUuid) {
-					queryPos.add(uuid);
+					sb.append(_FINDER_COLUMN_UUID_C_UUID_2);
 				}
 
-				queryPos.add(companyId);
+				sb.append(_FINDER_COLUMN_UUID_C_COMPANYID_2);
 
-				count = (Long)query.uniqueResult();
+				String sql = sb.toString();
 
-				if (productionMode) {
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					if (bindUuid) {
+						queryPos.add(uuid);
+					}
+
+					queryPos.add(companyId);
+
+					count = (Long)query.uniqueResult();
+
 					finderCache.putResult(finderPath, finderArgs, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	private static final String _FINDER_COLUMN_UUID_C_UUID_2 =
@@ -1674,104 +1615,110 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			orderByComparator,
 		boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath = _finderPathWithoutPaginationFindByGroupId;
-				finderArgs = new Object[] {groupId};
+				if (useFinderCache) {
+					finderPath = _finderPathWithoutPaginationFindByGroupId;
+					finderArgs = new Object[] {groupId};
+				}
 			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindByGroupId;
-			finderArgs = new Object[] {groupId, start, end, orderByComparator};
-		}
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindByGroupId;
+				finderArgs = new Object[] {
+					groupId, start, end, orderByComparator
+				};
+			}
 
-		List<CPDefinitionSpecificationOptionValue> list = null;
+			List<CPDefinitionSpecificationOptionValue> list = null;
 
-		if (useFinderCache && productionMode) {
-			list =
-				(List<CPDefinitionSpecificationOptionValue>)
-					finderCache.getResult(finderPath, finderArgs, this);
+			if (useFinderCache) {
+				list =
+					(List<CPDefinitionSpecificationOptionValue>)
+						finderCache.getResult(finderPath, finderArgs, this);
 
-			if ((list != null) && !list.isEmpty()) {
-				for (CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue : list) {
+				if ((list != null) && !list.isEmpty()) {
+					for (CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue : list) {
 
-					if (groupId !=
-							cpDefinitionSpecificationOptionValue.getGroupId()) {
+						if (groupId !=
+								cpDefinitionSpecificationOptionValue.
+									getGroupId()) {
 
-						list = null;
+							list = null;
 
-						break;
+							break;
+						}
 					}
 				}
 			}
-		}
 
-		if (list == null) {
-			StringBundler sb = null;
+			if (list == null) {
+				StringBundler sb = null;
 
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						3 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(3);
+				}
 
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
 				sb.append(
-					CPDefinitionSpecificationOptionValueModelImpl.
-						ORDER_BY_JPQL);
-			}
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-			String sql = sb.toString();
+				sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
-			Session session = null;
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(
+						CPDefinitionSpecificationOptionValueModelImpl.
+							ORDER_BY_JPQL);
+				}
 
-			try {
-				session = openSession();
+				String sql = sb.toString();
 
-				Query query = session.createQuery(sql);
+				Session session = null;
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+				try {
+					session = openSession();
 
-				queryPos.add(groupId);
+					Query query = session.createQuery(sql);
 
-				list =
-					(List<CPDefinitionSpecificationOptionValue>)QueryUtil.list(
-						query, getDialect(), start, end);
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				cacheResult(list);
+					queryPos.add(groupId);
 
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+					list =
+						(List<CPDefinitionSpecificationOptionValue>)
+							QueryUtil.list(query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return list;
+			return list;
+		}
 	}
 
 	/**
@@ -2085,57 +2032,52 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByGroupId(long groupId) {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = _finderPathCountByGroupId;
 
-		Long count = null;
+			Object[] finderArgs = new Object[] {groupId};
 
-		if (productionMode) {
-			finderPath = _finderPathCountByGroupId;
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
 
-			finderArgs = new Object[] {groupId};
+			if (count == null) {
+				StringBundler sb = new StringBundler(2);
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-		}
+				sb.append(
+					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
+				sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
 
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+				String sql = sb.toString();
 
-			sb.append(_FINDER_COLUMN_GROUPID_GROUPID_2);
+				Session session = null;
 
-			String sql = sb.toString();
+				try {
+					session = openSession();
 
-			Session session = null;
+					Query query = session.createQuery(sql);
 
-			try {
-				session = openSession();
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				Query query = session.createQuery(sql);
+					queryPos.add(groupId);
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+					count = (Long)query.uniqueResult();
 
-				queryPos.add(groupId);
-
-				count = (Long)query.uniqueResult();
-
-				if (productionMode) {
 					finderCache.putResult(finderPath, finderArgs, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	private static final String _FINDER_COLUMN_GROUPID_GROUPID_2 =
@@ -2222,107 +2164,111 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			orderByComparator,
 		boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath = _finderPathWithoutPaginationFindByCPDefinitionId;
-				finderArgs = new Object[] {CPDefinitionId};
+				if (useFinderCache) {
+					finderPath =
+						_finderPathWithoutPaginationFindByCPDefinitionId;
+					finderArgs = new Object[] {CPDefinitionId};
+				}
 			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindByCPDefinitionId;
-			finderArgs = new Object[] {
-				CPDefinitionId, start, end, orderByComparator
-			};
-		}
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindByCPDefinitionId;
+				finderArgs = new Object[] {
+					CPDefinitionId, start, end, orderByComparator
+				};
+			}
 
-		List<CPDefinitionSpecificationOptionValue> list = null;
+			List<CPDefinitionSpecificationOptionValue> list = null;
 
-		if (useFinderCache && productionMode) {
-			list =
-				(List<CPDefinitionSpecificationOptionValue>)
-					finderCache.getResult(finderPath, finderArgs, this);
+			if (useFinderCache) {
+				list =
+					(List<CPDefinitionSpecificationOptionValue>)
+						finderCache.getResult(finderPath, finderArgs, this);
 
-			if ((list != null) && !list.isEmpty()) {
-				for (CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue : list) {
+				if ((list != null) && !list.isEmpty()) {
+					for (CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue : list) {
 
-					if (CPDefinitionId !=
-							cpDefinitionSpecificationOptionValue.
-								getCPDefinitionId()) {
+						if (CPDefinitionId !=
+								cpDefinitionSpecificationOptionValue.
+									getCPDefinitionId()) {
 
-						list = null;
+							list = null;
 
-						break;
+							break;
+						}
 					}
 				}
 			}
-		}
 
-		if (list == null) {
-			StringBundler sb = null;
+			if (list == null) {
+				StringBundler sb = null;
 
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						3 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(3);
+				}
 
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			sb.append(_FINDER_COLUMN_CPDEFINITIONID_CPDEFINITIONID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
 				sb.append(
-					CPDefinitionSpecificationOptionValueModelImpl.
-						ORDER_BY_JPQL);
-			}
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-			String sql = sb.toString();
+				sb.append(_FINDER_COLUMN_CPDEFINITIONID_CPDEFINITIONID_2);
 
-			Session session = null;
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(
+						CPDefinitionSpecificationOptionValueModelImpl.
+							ORDER_BY_JPQL);
+				}
 
-			try {
-				session = openSession();
+				String sql = sb.toString();
 
-				Query query = session.createQuery(sql);
+				Session session = null;
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+				try {
+					session = openSession();
 
-				queryPos.add(CPDefinitionId);
+					Query query = session.createQuery(sql);
 
-				list =
-					(List<CPDefinitionSpecificationOptionValue>)QueryUtil.list(
-						query, getDialect(), start, end);
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				cacheResult(list);
+					queryPos.add(CPDefinitionId);
 
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+					list =
+						(List<CPDefinitionSpecificationOptionValue>)
+							QueryUtil.list(query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return list;
+			return list;
+		}
 	}
 
 	/**
@@ -2640,57 +2586,52 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByCPDefinitionId(long CPDefinitionId) {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = _finderPathCountByCPDefinitionId;
 
-		Long count = null;
+			Object[] finderArgs = new Object[] {CPDefinitionId};
 
-		if (productionMode) {
-			finderPath = _finderPathCountByCPDefinitionId;
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
 
-			finderArgs = new Object[] {CPDefinitionId};
+			if (count == null) {
+				StringBundler sb = new StringBundler(2);
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-		}
+				sb.append(
+					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
+				sb.append(_FINDER_COLUMN_CPDEFINITIONID_CPDEFINITIONID_2);
 
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+				String sql = sb.toString();
 
-			sb.append(_FINDER_COLUMN_CPDEFINITIONID_CPDEFINITIONID_2);
+				Session session = null;
 
-			String sql = sb.toString();
+				try {
+					session = openSession();
 
-			Session session = null;
+					Query query = session.createQuery(sql);
 
-			try {
-				session = openSession();
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				Query query = session.createQuery(sql);
+					queryPos.add(CPDefinitionId);
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+					count = (Long)query.uniqueResult();
 
-				queryPos.add(CPDefinitionId);
-
-				count = (Long)query.uniqueResult();
-
-				if (productionMode) {
 					finderCache.putResult(finderPath, finderArgs, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	private static final String _FINDER_COLUMN_CPDEFINITIONID_CPDEFINITIONID_2 =
@@ -2783,109 +2724,113 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 				orderByComparator,
 			boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath =
-					_finderPathWithoutPaginationFindByCPSpecificationOptionId;
-				finderArgs = new Object[] {CPSpecificationOptionId};
+				if (useFinderCache) {
+					finderPath =
+						_finderPathWithoutPaginationFindByCPSpecificationOptionId;
+					finderArgs = new Object[] {CPSpecificationOptionId};
+				}
 			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindByCPSpecificationOptionId;
-			finderArgs = new Object[] {
-				CPSpecificationOptionId, start, end, orderByComparator
-			};
-		}
+			else if (useFinderCache) {
+				finderPath =
+					_finderPathWithPaginationFindByCPSpecificationOptionId;
+				finderArgs = new Object[] {
+					CPSpecificationOptionId, start, end, orderByComparator
+				};
+			}
 
-		List<CPDefinitionSpecificationOptionValue> list = null;
+			List<CPDefinitionSpecificationOptionValue> list = null;
 
-		if (useFinderCache && productionMode) {
-			list =
-				(List<CPDefinitionSpecificationOptionValue>)
-					finderCache.getResult(finderPath, finderArgs, this);
+			if (useFinderCache) {
+				list =
+					(List<CPDefinitionSpecificationOptionValue>)
+						finderCache.getResult(finderPath, finderArgs, this);
 
-			if ((list != null) && !list.isEmpty()) {
-				for (CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue : list) {
+				if ((list != null) && !list.isEmpty()) {
+					for (CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue : list) {
 
-					if (CPSpecificationOptionId !=
-							cpDefinitionSpecificationOptionValue.
-								getCPSpecificationOptionId()) {
+						if (CPSpecificationOptionId !=
+								cpDefinitionSpecificationOptionValue.
+									getCPSpecificationOptionId()) {
 
-						list = null;
+							list = null;
 
-						break;
+							break;
+						}
 					}
 				}
 			}
-		}
 
-		if (list == null) {
-			StringBundler sb = null;
+			if (list == null) {
+				StringBundler sb = null;
 
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						3 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(3);
+				}
 
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			sb.append(
-				_FINDER_COLUMN_CPSPECIFICATIONOPTIONID_CPSPECIFICATIONOPTIONID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
 				sb.append(
-					CPDefinitionSpecificationOptionValueModelImpl.
-						ORDER_BY_JPQL);
-			}
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-			String sql = sb.toString();
+				sb.append(
+					_FINDER_COLUMN_CPSPECIFICATIONOPTIONID_CPSPECIFICATIONOPTIONID_2);
 
-			Session session = null;
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(
+						CPDefinitionSpecificationOptionValueModelImpl.
+							ORDER_BY_JPQL);
+				}
 
-			try {
-				session = openSession();
+				String sql = sb.toString();
 
-				Query query = session.createQuery(sql);
+				Session session = null;
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+				try {
+					session = openSession();
 
-				queryPos.add(CPSpecificationOptionId);
+					Query query = session.createQuery(sql);
 
-				list =
-					(List<CPDefinitionSpecificationOptionValue>)QueryUtil.list(
-						query, getDialect(), start, end);
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				cacheResult(list);
+					queryPos.add(CPSpecificationOptionId);
 
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+					list =
+						(List<CPDefinitionSpecificationOptionValue>)
+							QueryUtil.list(query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return list;
+			return list;
+		}
 	}
 
 	/**
@@ -3212,58 +3157,53 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByCPSpecificationOptionId(long CPSpecificationOptionId) {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = _finderPathCountByCPSpecificationOptionId;
 
-		Long count = null;
+			Object[] finderArgs = new Object[] {CPSpecificationOptionId};
 
-		if (productionMode) {
-			finderPath = _finderPathCountByCPSpecificationOptionId;
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
 
-			finderArgs = new Object[] {CPSpecificationOptionId};
+			if (count == null) {
+				StringBundler sb = new StringBundler(2);
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-		}
+				sb.append(
+					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
+				sb.append(
+					_FINDER_COLUMN_CPSPECIFICATIONOPTIONID_CPSPECIFICATIONOPTIONID_2);
 
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+				String sql = sb.toString();
 
-			sb.append(
-				_FINDER_COLUMN_CPSPECIFICATIONOPTIONID_CPSPECIFICATIONOPTIONID_2);
+				Session session = null;
 
-			String sql = sb.toString();
+				try {
+					session = openSession();
 
-			Session session = null;
+					Query query = session.createQuery(sql);
 
-			try {
-				session = openSession();
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				Query query = session.createQuery(sql);
+					queryPos.add(CPSpecificationOptionId);
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+					count = (Long)query.uniqueResult();
 
-				queryPos.add(CPSpecificationOptionId);
-
-				count = (Long)query.uniqueResult();
-
-				if (productionMode) {
 					finderCache.putResult(finderPath, finderArgs, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	private static final String
@@ -3351,108 +3291,112 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			orderByComparator,
 		boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath =
-					_finderPathWithoutPaginationFindByCPOptionCategoryId;
-				finderArgs = new Object[] {CPOptionCategoryId};
+				if (useFinderCache) {
+					finderPath =
+						_finderPathWithoutPaginationFindByCPOptionCategoryId;
+					finderArgs = new Object[] {CPOptionCategoryId};
+				}
 			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindByCPOptionCategoryId;
-			finderArgs = new Object[] {
-				CPOptionCategoryId, start, end, orderByComparator
-			};
-		}
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindByCPOptionCategoryId;
+				finderArgs = new Object[] {
+					CPOptionCategoryId, start, end, orderByComparator
+				};
+			}
 
-		List<CPDefinitionSpecificationOptionValue> list = null;
+			List<CPDefinitionSpecificationOptionValue> list = null;
 
-		if (useFinderCache && productionMode) {
-			list =
-				(List<CPDefinitionSpecificationOptionValue>)
-					finderCache.getResult(finderPath, finderArgs, this);
+			if (useFinderCache) {
+				list =
+					(List<CPDefinitionSpecificationOptionValue>)
+						finderCache.getResult(finderPath, finderArgs, this);
 
-			if ((list != null) && !list.isEmpty()) {
-				for (CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue : list) {
+				if ((list != null) && !list.isEmpty()) {
+					for (CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue : list) {
 
-					if (CPOptionCategoryId !=
-							cpDefinitionSpecificationOptionValue.
-								getCPOptionCategoryId()) {
+						if (CPOptionCategoryId !=
+								cpDefinitionSpecificationOptionValue.
+									getCPOptionCategoryId()) {
 
-						list = null;
+							list = null;
 
-						break;
+							break;
+						}
 					}
 				}
 			}
-		}
 
-		if (list == null) {
-			StringBundler sb = null;
+			if (list == null) {
+				StringBundler sb = null;
 
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					3 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(3);
-			}
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						3 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(3);
+				}
 
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			sb.append(_FINDER_COLUMN_CPOPTIONCATEGORYID_CPOPTIONCATEGORYID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
 				sb.append(
-					CPDefinitionSpecificationOptionValueModelImpl.
-						ORDER_BY_JPQL);
-			}
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-			String sql = sb.toString();
+				sb.append(
+					_FINDER_COLUMN_CPOPTIONCATEGORYID_CPOPTIONCATEGORYID_2);
 
-			Session session = null;
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(
+						CPDefinitionSpecificationOptionValueModelImpl.
+							ORDER_BY_JPQL);
+				}
 
-			try {
-				session = openSession();
+				String sql = sb.toString();
 
-				Query query = session.createQuery(sql);
+				Session session = null;
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+				try {
+					session = openSession();
 
-				queryPos.add(CPOptionCategoryId);
+					Query query = session.createQuery(sql);
 
-				list =
-					(List<CPDefinitionSpecificationOptionValue>)QueryUtil.list(
-						query, getDialect(), start, end);
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				cacheResult(list);
+					queryPos.add(CPOptionCategoryId);
 
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+					list =
+						(List<CPDefinitionSpecificationOptionValue>)
+							QueryUtil.list(query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return list;
+			return list;
+		}
 	}
 
 	/**
@@ -3774,57 +3718,53 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByCPOptionCategoryId(long CPOptionCategoryId) {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = _finderPathCountByCPOptionCategoryId;
 
-		Long count = null;
+			Object[] finderArgs = new Object[] {CPOptionCategoryId};
 
-		if (productionMode) {
-			finderPath = _finderPathCountByCPOptionCategoryId;
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
 
-			finderArgs = new Object[] {CPOptionCategoryId};
+			if (count == null) {
+				StringBundler sb = new StringBundler(2);
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-		}
+				sb.append(
+					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(2);
+				sb.append(
+					_FINDER_COLUMN_CPOPTIONCATEGORYID_CPOPTIONCATEGORYID_2);
 
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+				String sql = sb.toString();
 
-			sb.append(_FINDER_COLUMN_CPOPTIONCATEGORYID_CPOPTIONCATEGORYID_2);
+				Session session = null;
 
-			String sql = sb.toString();
+				try {
+					session = openSession();
 
-			Session session = null;
+					Query query = session.createQuery(sql);
 
-			try {
-				session = openSession();
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				Query query = session.createQuery(sql);
+					queryPos.add(CPOptionCategoryId);
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+					count = (Long)query.uniqueResult();
 
-				queryPos.add(CPOptionCategoryId);
-
-				count = (Long)query.uniqueResult();
-
-				if (productionMode) {
 					finderCache.putResult(finderPath, finderArgs, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	private static final String
@@ -3832,7 +3772,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			"cpDefinitionSpecificationOptionValue.CPOptionCategoryId = ?";
 
 	private FinderPath _finderPathFetchByC_CSOVI;
-	private FinderPath _finderPathCountByC_CSOVI;
 
 	/**
 	 * Returns the cp definition specification option value where CPDefinitionSpecificationOptionValueId = &#63; and CPDefinitionId = &#63; or throws a <code>NoSuchCPDefinitionSpecificationOptionValueException</code> if it could not be found.
@@ -3903,103 +3842,99 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		long CPDefinitionSpecificationOptionValueId, long CPDefinitionId,
 		boolean useFinderCache) {
 
-		Object[] finderArgs = null;
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		if (useFinderCache) {
-			finderArgs = new Object[] {
-				CPDefinitionSpecificationOptionValueId, CPDefinitionId
-			};
-		}
+			Object[] finderArgs = null;
 
-		Object result = null;
-
-		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByC_CSOVI, finderArgs, this);
-		}
-
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
-
-		if (result instanceof CPDefinitionSpecificationOptionValue) {
-			CPDefinitionSpecificationOptionValue
-				cpDefinitionSpecificationOptionValue =
-					(CPDefinitionSpecificationOptionValue)result;
-
-			if ((CPDefinitionSpecificationOptionValueId !=
-					cpDefinitionSpecificationOptionValue.
-						getCPDefinitionSpecificationOptionValueId()) ||
-				(CPDefinitionId !=
-					cpDefinitionSpecificationOptionValue.getCPDefinitionId())) {
-
-				result = null;
+			if (useFinderCache) {
+				finderArgs = new Object[] {
+					CPDefinitionSpecificationOptionValueId, CPDefinitionId
+				};
 			}
-			else if (!ctPersistenceHelper.isProductionMode(
-						CPDefinitionSpecificationOptionValue.class,
-						cpDefinitionSpecificationOptionValue.getPrimaryKey())) {
 
-				result = null;
+			Object result = null;
+
+			if (useFinderCache) {
+				result = finderCache.getResult(
+					_finderPathFetchByC_CSOVI, finderArgs, this);
 			}
-		}
-		else if (!productionMode && (result instanceof List<?>)) {
-			result = null;
-		}
 
-		if (result == null) {
-			StringBundler sb = new StringBundler(4);
+			if (result instanceof CPDefinitionSpecificationOptionValue) {
+				CPDefinitionSpecificationOptionValue
+					cpDefinitionSpecificationOptionValue =
+						(CPDefinitionSpecificationOptionValue)result;
 
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+				if ((CPDefinitionSpecificationOptionValueId !=
+						cpDefinitionSpecificationOptionValue.
+							getCPDefinitionSpecificationOptionValueId()) ||
+					(CPDefinitionId !=
+						cpDefinitionSpecificationOptionValue.
+							getCPDefinitionId())) {
 
-			sb.append(
-				_FINDER_COLUMN_C_CSOVI_CPDEFINITIONSPECIFICATIONOPTIONVALUEID_2);
+					result = null;
+				}
+			}
 
-			sb.append(_FINDER_COLUMN_C_CSOVI_CPDEFINITIONID_2);
+			if (result == null) {
+				StringBundler sb = new StringBundler(4);
 
-			String sql = sb.toString();
+				sb.append(
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-			Session session = null;
+				sb.append(
+					_FINDER_COLUMN_C_CSOVI_CPDEFINITIONSPECIFICATIONOPTIONVALUEID_2);
 
-			try {
-				session = openSession();
+				sb.append(_FINDER_COLUMN_C_CSOVI_CPDEFINITIONID_2);
 
-				Query query = session.createQuery(sql);
+				String sql = sb.toString();
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+				Session session = null;
 
-				queryPos.add(CPDefinitionSpecificationOptionValueId);
+				try {
+					session = openSession();
 
-				queryPos.add(CPDefinitionId);
+					Query query = session.createQuery(sql);
 
-				List<CPDefinitionSpecificationOptionValue> list = query.list();
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				if (list.isEmpty()) {
-					if (useFinderCache && productionMode) {
-						finderCache.putResult(
-							_finderPathFetchByC_CSOVI, finderArgs, list);
+					queryPos.add(CPDefinitionSpecificationOptionValueId);
+
+					queryPos.add(CPDefinitionId);
+
+					List<CPDefinitionSpecificationOptionValue> list =
+						query.list();
+
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							finderCache.putResult(
+								_finderPathFetchByC_CSOVI, finderArgs, list);
+						}
+					}
+					else {
+						CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue = list.get(0);
+
+						result = cpDefinitionSpecificationOptionValue;
+
+						cacheResult(cpDefinitionSpecificationOptionValue);
 					}
 				}
-				else {
-					CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue = list.get(0);
-
-					result = cpDefinitionSpecificationOptionValue;
-
-					cacheResult(cpDefinitionSpecificationOptionValue);
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		if (result instanceof List<?>) {
-			return null;
-		}
-		else {
-			return (CPDefinitionSpecificationOptionValue)result;
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (CPDefinitionSpecificationOptionValue)result;
+			}
 		}
 	}
 
@@ -4033,64 +3968,15 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	public int countByC_CSOVI(
 		long CPDefinitionSpecificationOptionValueId, long CPDefinitionId) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByC_CSOVI(
+				CPDefinitionSpecificationOptionValueId, CPDefinitionId);
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
-
-		Long count = null;
-
-		if (productionMode) {
-			finderPath = _finderPathCountByC_CSOVI;
-
-			finderArgs = new Object[] {
-				CPDefinitionSpecificationOptionValueId, CPDefinitionId
-			};
-
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		if (cpDefinitionSpecificationOptionValue == null) {
+			return 0;
 		}
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			sb.append(
-				_FINDER_COLUMN_C_CSOVI_CPDEFINITIONSPECIFICATIONOPTIONVALUEID_2);
-
-			sb.append(_FINDER_COLUMN_C_CSOVI_CPDEFINITIONID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(CPDefinitionSpecificationOptionValueId);
-
-				queryPos.add(CPDefinitionId);
-
-				count = (Long)query.uniqueResult();
-
-				if (productionMode) {
-					finderCache.putResult(finderPath, finderArgs, count);
-				}
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
-
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String
@@ -4188,117 +4074,120 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			orderByComparator,
 		boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath = _finderPathWithoutPaginationFindByC_CSO;
+				if (useFinderCache) {
+					finderPath = _finderPathWithoutPaginationFindByC_CSO;
+					finderArgs = new Object[] {
+						CPDefinitionId, CPSpecificationOptionId
+					};
+				}
+			}
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindByC_CSO;
 				finderArgs = new Object[] {
-					CPDefinitionId, CPSpecificationOptionId
+					CPDefinitionId, CPSpecificationOptionId, start, end,
+					orderByComparator
 				};
 			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindByC_CSO;
-			finderArgs = new Object[] {
-				CPDefinitionId, CPSpecificationOptionId, start, end,
-				orderByComparator
-			};
-		}
 
-		List<CPDefinitionSpecificationOptionValue> list = null;
+			List<CPDefinitionSpecificationOptionValue> list = null;
 
-		if (useFinderCache && productionMode) {
-			list =
-				(List<CPDefinitionSpecificationOptionValue>)
-					finderCache.getResult(finderPath, finderArgs, this);
+			if (useFinderCache) {
+				list =
+					(List<CPDefinitionSpecificationOptionValue>)
+						finderCache.getResult(finderPath, finderArgs, this);
 
-			if ((list != null) && !list.isEmpty()) {
-				for (CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue : list) {
+				if ((list != null) && !list.isEmpty()) {
+					for (CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue : list) {
 
-					if ((CPDefinitionId !=
-							cpDefinitionSpecificationOptionValue.
-								getCPDefinitionId()) ||
-						(CPSpecificationOptionId !=
-							cpDefinitionSpecificationOptionValue.
-								getCPSpecificationOptionId())) {
+						if ((CPDefinitionId !=
+								cpDefinitionSpecificationOptionValue.
+									getCPDefinitionId()) ||
+							(CPSpecificationOptionId !=
+								cpDefinitionSpecificationOptionValue.
+									getCPSpecificationOptionId())) {
 
-						list = null;
+							list = null;
 
-						break;
+							break;
+						}
 					}
 				}
 			}
-		}
 
-		if (list == null) {
-			StringBundler sb = null;
+			if (list == null) {
+				StringBundler sb = null;
 
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						4 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(4);
+				}
 
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_CSO_CPDEFINITIONID_2);
-
-			sb.append(_FINDER_COLUMN_C_CSO_CPSPECIFICATIONOPTIONID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
 				sb.append(
-					CPDefinitionSpecificationOptionValueModelImpl.
-						ORDER_BY_JPQL);
-			}
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-			String sql = sb.toString();
+				sb.append(_FINDER_COLUMN_C_CSO_CPDEFINITIONID_2);
 
-			Session session = null;
+				sb.append(_FINDER_COLUMN_C_CSO_CPSPECIFICATIONOPTIONID_2);
 
-			try {
-				session = openSession();
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(
+						CPDefinitionSpecificationOptionValueModelImpl.
+							ORDER_BY_JPQL);
+				}
 
-				Query query = session.createQuery(sql);
+				String sql = sb.toString();
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+				Session session = null;
 
-				queryPos.add(CPDefinitionId);
+				try {
+					session = openSession();
 
-				queryPos.add(CPSpecificationOptionId);
+					Query query = session.createQuery(sql);
 
-				list =
-					(List<CPDefinitionSpecificationOptionValue>)QueryUtil.list(
-						query, getDialect(), start, end);
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				cacheResult(list);
+					queryPos.add(CPDefinitionId);
 
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+					queryPos.add(CPSpecificationOptionId);
+
+					list =
+						(List<CPDefinitionSpecificationOptionValue>)
+							QueryUtil.list(query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return list;
+			return list;
+		}
 	}
 
 	/**
@@ -4634,61 +4523,58 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByC_CSO(long CPDefinitionId, long CPSpecificationOptionId) {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = _finderPathCountByC_CSO;
 
-		Long count = null;
+			Object[] finderArgs = new Object[] {
+				CPDefinitionId, CPSpecificationOptionId
+			};
 
-		if (productionMode) {
-			finderPath = _finderPathCountByC_CSO;
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
 
-			finderArgs = new Object[] {CPDefinitionId, CPSpecificationOptionId};
+			if (count == null) {
+				StringBundler sb = new StringBundler(3);
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-		}
+				sb.append(
+					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
+				sb.append(_FINDER_COLUMN_C_CSO_CPDEFINITIONID_2);
 
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+				sb.append(_FINDER_COLUMN_C_CSO_CPSPECIFICATIONOPTIONID_2);
 
-			sb.append(_FINDER_COLUMN_C_CSO_CPDEFINITIONID_2);
+				String sql = sb.toString();
 
-			sb.append(_FINDER_COLUMN_C_CSO_CPSPECIFICATIONOPTIONID_2);
+				Session session = null;
 
-			String sql = sb.toString();
+				try {
+					session = openSession();
 
-			Session session = null;
+					Query query = session.createQuery(sql);
 
-			try {
-				session = openSession();
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				Query query = session.createQuery(sql);
+					queryPos.add(CPDefinitionId);
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+					queryPos.add(CPSpecificationOptionId);
 
-				queryPos.add(CPDefinitionId);
+					count = (Long)query.uniqueResult();
 
-				queryPos.add(CPSpecificationOptionId);
-
-				count = (Long)query.uniqueResult();
-
-				if (productionMode) {
 					finderCache.putResult(finderPath, finderArgs, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	private static final String _FINDER_COLUMN_C_CSO_CPDEFINITIONID_2 =
@@ -4785,115 +4671,120 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			orderByComparator,
 		boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath = _finderPathWithoutPaginationFindByC_COC;
-				finderArgs = new Object[] {CPDefinitionId, CPOptionCategoryId};
+				if (useFinderCache) {
+					finderPath = _finderPathWithoutPaginationFindByC_COC;
+					finderArgs = new Object[] {
+						CPDefinitionId, CPOptionCategoryId
+					};
+				}
 			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindByC_COC;
-			finderArgs = new Object[] {
-				CPDefinitionId, CPOptionCategoryId, start, end,
-				orderByComparator
-			};
-		}
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindByC_COC;
+				finderArgs = new Object[] {
+					CPDefinitionId, CPOptionCategoryId, start, end,
+					orderByComparator
+				};
+			}
 
-		List<CPDefinitionSpecificationOptionValue> list = null;
+			List<CPDefinitionSpecificationOptionValue> list = null;
 
-		if (useFinderCache && productionMode) {
-			list =
-				(List<CPDefinitionSpecificationOptionValue>)
-					finderCache.getResult(finderPath, finderArgs, this);
+			if (useFinderCache) {
+				list =
+					(List<CPDefinitionSpecificationOptionValue>)
+						finderCache.getResult(finderPath, finderArgs, this);
 
-			if ((list != null) && !list.isEmpty()) {
-				for (CPDefinitionSpecificationOptionValue
-						cpDefinitionSpecificationOptionValue : list) {
+				if ((list != null) && !list.isEmpty()) {
+					for (CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue : list) {
 
-					if ((CPDefinitionId !=
-							cpDefinitionSpecificationOptionValue.
-								getCPDefinitionId()) ||
-						(CPOptionCategoryId !=
-							cpDefinitionSpecificationOptionValue.
-								getCPOptionCategoryId())) {
+						if ((CPDefinitionId !=
+								cpDefinitionSpecificationOptionValue.
+									getCPDefinitionId()) ||
+							(CPOptionCategoryId !=
+								cpDefinitionSpecificationOptionValue.
+									getCPOptionCategoryId())) {
 
-						list = null;
+							list = null;
 
-						break;
+							break;
+						}
 					}
 				}
 			}
-		}
 
-		if (list == null) {
-			StringBundler sb = null;
+			if (list == null) {
+				StringBundler sb = null;
 
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					4 + (orderByComparator.getOrderByFields().length * 2));
-			}
-			else {
-				sb = new StringBundler(4);
-			}
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						4 + (orderByComparator.getOrderByFields().length * 2));
+				}
+				else {
+					sb = new StringBundler(4);
+				}
 
-			sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_COC_CPDEFINITIONID_2);
-
-			sb.append(_FINDER_COLUMN_C_COC_CPOPTIONCATEGORYID_2);
-
-			if (orderByComparator != null) {
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-			}
-			else {
 				sb.append(
-					CPDefinitionSpecificationOptionValueModelImpl.
-						ORDER_BY_JPQL);
-			}
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-			String sql = sb.toString();
+				sb.append(_FINDER_COLUMN_C_COC_CPDEFINITIONID_2);
 
-			Session session = null;
+				sb.append(_FINDER_COLUMN_C_COC_CPOPTIONCATEGORYID_2);
 
-			try {
-				session = openSession();
+				if (orderByComparator != null) {
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+				}
+				else {
+					sb.append(
+						CPDefinitionSpecificationOptionValueModelImpl.
+							ORDER_BY_JPQL);
+				}
 
-				Query query = session.createQuery(sql);
+				String sql = sb.toString();
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+				Session session = null;
 
-				queryPos.add(CPDefinitionId);
+				try {
+					session = openSession();
 
-				queryPos.add(CPOptionCategoryId);
+					Query query = session.createQuery(sql);
 
-				list =
-					(List<CPDefinitionSpecificationOptionValue>)QueryUtil.list(
-						query, getDialect(), start, end);
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				cacheResult(list);
+					queryPos.add(CPDefinitionId);
 
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+					queryPos.add(CPOptionCategoryId);
+
+					list =
+						(List<CPDefinitionSpecificationOptionValue>)
+							QueryUtil.list(query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return list;
+			return list;
+		}
 	}
 
 	/**
@@ -5227,61 +5118,58 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countByC_COC(long CPDefinitionId, long CPOptionCategoryId) {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = _finderPathCountByC_COC;
 
-		Long count = null;
+			Object[] finderArgs = new Object[] {
+				CPDefinitionId, CPOptionCategoryId
+			};
 
-		if (productionMode) {
-			finderPath = _finderPathCountByC_COC;
+			Long count = (Long)finderCache.getResult(
+				finderPath, finderArgs, this);
 
-			finderArgs = new Object[] {CPDefinitionId, CPOptionCategoryId};
+			if (count == null) {
+				StringBundler sb = new StringBundler(3);
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-		}
+				sb.append(
+					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
+				sb.append(_FINDER_COLUMN_C_COC_CPDEFINITIONID_2);
 
-			sb.append(_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+				sb.append(_FINDER_COLUMN_C_COC_CPOPTIONCATEGORYID_2);
 
-			sb.append(_FINDER_COLUMN_C_COC_CPDEFINITIONID_2);
+				String sql = sb.toString();
 
-			sb.append(_FINDER_COLUMN_C_COC_CPOPTIONCATEGORYID_2);
+				Session session = null;
 
-			String sql = sb.toString();
+				try {
+					session = openSession();
 
-			Session session = null;
+					Query query = session.createQuery(sql);
 
-			try {
-				session = openSession();
+					QueryPos queryPos = QueryPos.getInstance(query);
 
-				Query query = session.createQuery(sql);
+					queryPos.add(CPDefinitionId);
 
-				QueryPos queryPos = QueryPos.getInstance(query);
+					queryPos.add(CPOptionCategoryId);
 
-				queryPos.add(CPDefinitionId);
+					count = (Long)query.uniqueResult();
 
-				queryPos.add(CPOptionCategoryId);
-
-				count = (Long)query.uniqueResult();
-
-				if (productionMode) {
 					finderCache.putResult(finderPath, finderArgs, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	private static final String _FINDER_COLUMN_C_COC_CPDEFINITIONID_2 =
@@ -5290,6 +5178,451 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	private static final String _FINDER_COLUMN_C_COC_CPOPTIONCATEGORYID_2 =
 		"cpDefinitionSpecificationOptionValue.CPOptionCategoryId = ?";
 
+	private FinderPath _finderPathFetchByC_K;
+
+	/**
+	 * Returns the cp definition specification option value where CPDefinitionId = &#63; and key = &#63; or throws a <code>NoSuchCPDefinitionSpecificationOptionValueException</code> if it could not be found.
+	 *
+	 * @param CPDefinitionId the cp definition ID
+	 * @param key the key
+	 * @return the matching cp definition specification option value
+	 * @throws NoSuchCPDefinitionSpecificationOptionValueException if a matching cp definition specification option value could not be found
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue findByC_K(
+			long CPDefinitionId, String key)
+		throws NoSuchCPDefinitionSpecificationOptionValueException {
+
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByC_K(
+				CPDefinitionId, key);
+
+		if (cpDefinitionSpecificationOptionValue == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("CPDefinitionId=");
+			sb.append(CPDefinitionId);
+
+			sb.append(", key=");
+			sb.append(key);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchCPDefinitionSpecificationOptionValueException(
+				sb.toString());
+		}
+
+		return cpDefinitionSpecificationOptionValue;
+	}
+
+	/**
+	 * Returns the cp definition specification option value where CPDefinitionId = &#63; and key = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param CPDefinitionId the cp definition ID
+	 * @param key the key
+	 * @return the matching cp definition specification option value, or <code>null</code> if a matching cp definition specification option value could not be found
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue fetchByC_K(
+		long CPDefinitionId, String key) {
+
+		return fetchByC_K(CPDefinitionId, key, true);
+	}
+
+	/**
+	 * Returns the cp definition specification option value where CPDefinitionId = &#63; and key = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param CPDefinitionId the cp definition ID
+	 * @param key the key
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching cp definition specification option value, or <code>null</code> if a matching cp definition specification option value could not be found
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue fetchByC_K(
+		long CPDefinitionId, String key, boolean useFinderCache) {
+
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
+
+			key = Objects.toString(key, "");
+
+			Object[] finderArgs = null;
+
+			if (useFinderCache) {
+				finderArgs = new Object[] {CPDefinitionId, key};
+			}
+
+			Object result = null;
+
+			if (useFinderCache) {
+				result = finderCache.getResult(
+					_finderPathFetchByC_K, finderArgs, this);
+			}
+
+			if (result instanceof CPDefinitionSpecificationOptionValue) {
+				CPDefinitionSpecificationOptionValue
+					cpDefinitionSpecificationOptionValue =
+						(CPDefinitionSpecificationOptionValue)result;
+
+				if ((CPDefinitionId !=
+						cpDefinitionSpecificationOptionValue.
+							getCPDefinitionId()) ||
+					!Objects.equals(
+						key, cpDefinitionSpecificationOptionValue.getKey())) {
+
+					result = null;
+				}
+			}
+
+			if (result == null) {
+				StringBundler sb = new StringBundler(4);
+
+				sb.append(
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+
+				sb.append(_FINDER_COLUMN_C_K_CPDEFINITIONID_2);
+
+				boolean bindKey = false;
+
+				if (key.isEmpty()) {
+					sb.append(_FINDER_COLUMN_C_K_KEY_3);
+				}
+				else {
+					bindKey = true;
+
+					sb.append(_FINDER_COLUMN_C_K_KEY_2);
+				}
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					queryPos.add(CPDefinitionId);
+
+					if (bindKey) {
+						queryPos.add(key);
+					}
+
+					List<CPDefinitionSpecificationOptionValue> list =
+						query.list();
+
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							finderCache.putResult(
+								_finderPathFetchByC_K, finderArgs, list);
+						}
+					}
+					else {
+						CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue = list.get(0);
+
+						result = cpDefinitionSpecificationOptionValue;
+
+						cacheResult(cpDefinitionSpecificationOptionValue);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (CPDefinitionSpecificationOptionValue)result;
+			}
+		}
+	}
+
+	/**
+	 * Removes the cp definition specification option value where CPDefinitionId = &#63; and key = &#63; from the database.
+	 *
+	 * @param CPDefinitionId the cp definition ID
+	 * @param key the key
+	 * @return the cp definition specification option value that was removed
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue removeByC_K(
+			long CPDefinitionId, String key)
+		throws NoSuchCPDefinitionSpecificationOptionValueException {
+
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = findByC_K(
+				CPDefinitionId, key);
+
+		return remove(cpDefinitionSpecificationOptionValue);
+	}
+
+	/**
+	 * Returns the number of cp definition specification option values where CPDefinitionId = &#63; and key = &#63;.
+	 *
+	 * @param CPDefinitionId the cp definition ID
+	 * @param key the key
+	 * @return the number of matching cp definition specification option values
+	 */
+	@Override
+	public int countByC_K(long CPDefinitionId, String key) {
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByC_K(
+				CPDefinitionId, key);
+
+		if (cpDefinitionSpecificationOptionValue == null) {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private static final String _FINDER_COLUMN_C_K_CPDEFINITIONID_2 =
+		"cpDefinitionSpecificationOptionValue.CPDefinitionId = ? AND ";
+
+	private static final String _FINDER_COLUMN_C_K_KEY_2 =
+		"cpDefinitionSpecificationOptionValue.key = ?";
+
+	private static final String _FINDER_COLUMN_C_K_KEY_3 =
+		"(cpDefinitionSpecificationOptionValue.key IS NULL OR cpDefinitionSpecificationOptionValue.key = '')";
+
+	private FinderPath _finderPathFetchByERC_C;
+
+	/**
+	 * Returns the cp definition specification option value where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchCPDefinitionSpecificationOptionValueException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching cp definition specification option value
+	 * @throws NoSuchCPDefinitionSpecificationOptionValueException if a matching cp definition specification option value could not be found
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue findByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchCPDefinitionSpecificationOptionValueException {
+
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByERC_C(
+				externalReferenceCode, companyId);
+
+		if (cpDefinitionSpecificationOptionValue == null) {
+			StringBundler sb = new StringBundler(6);
+
+			sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			sb.append("externalReferenceCode=");
+			sb.append(externalReferenceCode);
+
+			sb.append(", companyId=");
+			sb.append(companyId);
+
+			sb.append("}");
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(sb.toString());
+			}
+
+			throw new NoSuchCPDefinitionSpecificationOptionValueException(
+				sb.toString());
+		}
+
+		return cpDefinitionSpecificationOptionValue;
+	}
+
+	/**
+	 * Returns the cp definition specification option value where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the matching cp definition specification option value, or <code>null</code> if a matching cp definition specification option value could not be found
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue fetchByERC_C(
+		String externalReferenceCode, long companyId) {
+
+		return fetchByERC_C(externalReferenceCode, companyId, true);
+	}
+
+	/**
+	 * Returns the cp definition specification option value where externalReferenceCode = &#63; and companyId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching cp definition specification option value, or <code>null</code> if a matching cp definition specification option value could not be found
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue fetchByERC_C(
+		String externalReferenceCode, long companyId, boolean useFinderCache) {
+
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
+
+			externalReferenceCode = Objects.toString(externalReferenceCode, "");
+
+			Object[] finderArgs = null;
+
+			if (useFinderCache) {
+				finderArgs = new Object[] {externalReferenceCode, companyId};
+			}
+
+			Object result = null;
+
+			if (useFinderCache) {
+				result = finderCache.getResult(
+					_finderPathFetchByERC_C, finderArgs, this);
+			}
+
+			if (result instanceof CPDefinitionSpecificationOptionValue) {
+				CPDefinitionSpecificationOptionValue
+					cpDefinitionSpecificationOptionValue =
+						(CPDefinitionSpecificationOptionValue)result;
+
+				if (!Objects.equals(
+						externalReferenceCode,
+						cpDefinitionSpecificationOptionValue.
+							getExternalReferenceCode()) ||
+					(companyId !=
+						cpDefinitionSpecificationOptionValue.getCompanyId())) {
+
+					result = null;
+				}
+			}
+
+			if (result == null) {
+				StringBundler sb = new StringBundler(4);
+
+				sb.append(
+					_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE_WHERE);
+
+				boolean bindExternalReferenceCode = false;
+
+				if (externalReferenceCode.isEmpty()) {
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
+				}
+				else {
+					bindExternalReferenceCode = true;
+
+					sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
+				}
+
+				sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
+
+				String sql = sb.toString();
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					QueryPos queryPos = QueryPos.getInstance(query);
+
+					if (bindExternalReferenceCode) {
+						queryPos.add(externalReferenceCode);
+					}
+
+					queryPos.add(companyId);
+
+					List<CPDefinitionSpecificationOptionValue> list =
+						query.list();
+
+					if (list.isEmpty()) {
+						if (useFinderCache) {
+							finderCache.putResult(
+								_finderPathFetchByERC_C, finderArgs, list);
+						}
+					}
+					else {
+						CPDefinitionSpecificationOptionValue
+							cpDefinitionSpecificationOptionValue = list.get(0);
+
+						result = cpDefinitionSpecificationOptionValue;
+
+						cacheResult(cpDefinitionSpecificationOptionValue);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (CPDefinitionSpecificationOptionValue)result;
+			}
+		}
+	}
+
+	/**
+	 * Removes the cp definition specification option value where externalReferenceCode = &#63; and companyId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the cp definition specification option value that was removed
+	 */
+	@Override
+	public CPDefinitionSpecificationOptionValue removeByERC_C(
+			String externalReferenceCode, long companyId)
+		throws NoSuchCPDefinitionSpecificationOptionValueException {
+
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = findByERC_C(
+				externalReferenceCode, companyId);
+
+		return remove(cpDefinitionSpecificationOptionValue);
+	}
+
+	/**
+	 * Returns the number of cp definition specification option values where externalReferenceCode = &#63; and companyId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param companyId the company ID
+	 * @return the number of matching cp definition specification option values
+	 */
+	@Override
+	public int countByERC_C(String externalReferenceCode, long companyId) {
+		CPDefinitionSpecificationOptionValue
+			cpDefinitionSpecificationOptionValue = fetchByERC_C(
+				externalReferenceCode, companyId);
+
+		if (cpDefinitionSpecificationOptionValue == null) {
+			return 0;
+		}
+
+		return 1;
+	}
+
+	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
+		"cpDefinitionSpecificationOptionValue.externalReferenceCode = ? AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3 =
+		"(cpDefinitionSpecificationOptionValue.externalReferenceCode IS NULL OR cpDefinitionSpecificationOptionValue.externalReferenceCode = '') AND ";
+
+	private static final String _FINDER_COLUMN_ERC_C_COMPANYID_2 =
+		"cpDefinitionSpecificationOptionValue.companyId = ?";
+
 	public CPDefinitionSpecificationOptionValuePersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
 
@@ -5297,6 +5630,7 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		dbColumnNames.put(
 			"CPDefinitionSpecificationOptionValueId",
 			"CPDSpecificationOptionValueId");
+		dbColumnNames.put("key", "key_");
 
 		setDBColumnNames(dbColumnNames);
 
@@ -5318,31 +5652,49 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		CPDefinitionSpecificationOptionValue
 			cpDefinitionSpecificationOptionValue) {
 
-		if (cpDefinitionSpecificationOptionValue.getCtCollectionId() != 0) {
-			return;
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					cpDefinitionSpecificationOptionValue.getCtCollectionId())) {
+
+			entityCache.putResult(
+				CPDefinitionSpecificationOptionValueImpl.class,
+				cpDefinitionSpecificationOptionValue.getPrimaryKey(),
+				cpDefinitionSpecificationOptionValue);
+
+			finderCache.putResult(
+				_finderPathFetchByUUID_G,
+				new Object[] {
+					cpDefinitionSpecificationOptionValue.getUuid(),
+					cpDefinitionSpecificationOptionValue.getGroupId()
+				},
+				cpDefinitionSpecificationOptionValue);
+
+			finderCache.putResult(
+				_finderPathFetchByC_CSOVI,
+				new Object[] {
+					cpDefinitionSpecificationOptionValue.
+						getCPDefinitionSpecificationOptionValueId(),
+					cpDefinitionSpecificationOptionValue.getCPDefinitionId()
+				},
+				cpDefinitionSpecificationOptionValue);
+
+			finderCache.putResult(
+				_finderPathFetchByC_K,
+				new Object[] {
+					cpDefinitionSpecificationOptionValue.getCPDefinitionId(),
+					cpDefinitionSpecificationOptionValue.getKey()
+				},
+				cpDefinitionSpecificationOptionValue);
+
+			finderCache.putResult(
+				_finderPathFetchByERC_C,
+				new Object[] {
+					cpDefinitionSpecificationOptionValue.
+						getExternalReferenceCode(),
+					cpDefinitionSpecificationOptionValue.getCompanyId()
+				},
+				cpDefinitionSpecificationOptionValue);
 		}
-
-		entityCache.putResult(
-			CPDefinitionSpecificationOptionValueImpl.class,
-			cpDefinitionSpecificationOptionValue.getPrimaryKey(),
-			cpDefinitionSpecificationOptionValue);
-
-		finderCache.putResult(
-			_finderPathFetchByUUID_G,
-			new Object[] {
-				cpDefinitionSpecificationOptionValue.getUuid(),
-				cpDefinitionSpecificationOptionValue.getGroupId()
-			},
-			cpDefinitionSpecificationOptionValue);
-
-		finderCache.putResult(
-			_finderPathFetchByC_CSOVI,
-			new Object[] {
-				cpDefinitionSpecificationOptionValue.
-					getCPDefinitionSpecificationOptionValueId(),
-				cpDefinitionSpecificationOptionValue.getCPDefinitionId()
-			},
-			cpDefinitionSpecificationOptionValue);
 	}
 
 	private int _valueObjectFinderCacheListThreshold;
@@ -5369,16 +5721,18 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 				cpDefinitionSpecificationOptionValue :
 					cpDefinitionSpecificationOptionValues) {
 
-			if (cpDefinitionSpecificationOptionValue.getCtCollectionId() != 0) {
-				continue;
-			}
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+						cpDefinitionSpecificationOptionValue.
+							getCtCollectionId())) {
 
-			if (entityCache.getResult(
-					CPDefinitionSpecificationOptionValueImpl.class,
-					cpDefinitionSpecificationOptionValue.getPrimaryKey()) ==
-						null) {
+				if (entityCache.getResult(
+						CPDefinitionSpecificationOptionValueImpl.class,
+						cpDefinitionSpecificationOptionValue.getPrimaryKey()) ==
+							null) {
 
-				cacheResult(cpDefinitionSpecificationOptionValue);
+					cacheResult(cpDefinitionSpecificationOptionValue);
+				}
 			}
 		}
 	}
@@ -5443,26 +5797,51 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		CPDefinitionSpecificationOptionValueModelImpl
 			cpDefinitionSpecificationOptionValueModelImpl) {
 
-		Object[] args = new Object[] {
-			cpDefinitionSpecificationOptionValueModelImpl.getUuid(),
-			cpDefinitionSpecificationOptionValueModelImpl.getGroupId()
-		};
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					cpDefinitionSpecificationOptionValueModelImpl.
+						getCtCollectionId())) {
 
-		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
-		finderCache.putResult(
-			_finderPathFetchByUUID_G, args,
-			cpDefinitionSpecificationOptionValueModelImpl);
+			Object[] args = new Object[] {
+				cpDefinitionSpecificationOptionValueModelImpl.getUuid(),
+				cpDefinitionSpecificationOptionValueModelImpl.getGroupId()
+			};
 
-		args = new Object[] {
-			cpDefinitionSpecificationOptionValueModelImpl.
-				getCPDefinitionSpecificationOptionValueId(),
-			cpDefinitionSpecificationOptionValueModelImpl.getCPDefinitionId()
-		};
+			finderCache.putResult(
+				_finderPathFetchByUUID_G, args,
+				cpDefinitionSpecificationOptionValueModelImpl);
 
-		finderCache.putResult(_finderPathCountByC_CSOVI, args, Long.valueOf(1));
-		finderCache.putResult(
-			_finderPathFetchByC_CSOVI, args,
-			cpDefinitionSpecificationOptionValueModelImpl);
+			args = new Object[] {
+				cpDefinitionSpecificationOptionValueModelImpl.
+					getCPDefinitionSpecificationOptionValueId(),
+				cpDefinitionSpecificationOptionValueModelImpl.
+					getCPDefinitionId()
+			};
+
+			finderCache.putResult(
+				_finderPathFetchByC_CSOVI, args,
+				cpDefinitionSpecificationOptionValueModelImpl);
+
+			args = new Object[] {
+				cpDefinitionSpecificationOptionValueModelImpl.
+					getCPDefinitionId(),
+				cpDefinitionSpecificationOptionValueModelImpl.getKey()
+			};
+
+			finderCache.putResult(
+				_finderPathFetchByC_K, args,
+				cpDefinitionSpecificationOptionValueModelImpl);
+
+			args = new Object[] {
+				cpDefinitionSpecificationOptionValueModelImpl.
+					getExternalReferenceCode(),
+				cpDefinitionSpecificationOptionValueModelImpl.getCompanyId()
+			};
+
+			finderCache.putResult(
+				_finderPathFetchByERC_C, args,
+				cpDefinitionSpecificationOptionValueModelImpl);
+		}
 	}
 
 	/**
@@ -5632,6 +6011,90 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			cpDefinitionSpecificationOptionValue.setUuid(uuid);
 		}
 
+		if (Validator.isNull(
+				cpDefinitionSpecificationOptionValue.
+					getExternalReferenceCode())) {
+
+			cpDefinitionSpecificationOptionValue.setExternalReferenceCode(
+				cpDefinitionSpecificationOptionValue.getUuid());
+		}
+		else {
+			if (!Objects.equals(
+					cpDefinitionSpecificationOptionValueModelImpl.
+						getColumnOriginalValue("externalReferenceCode"),
+					cpDefinitionSpecificationOptionValue.
+						getExternalReferenceCode())) {
+
+				long userId = GetterUtil.getLong(
+					PrincipalThreadLocal.getName());
+
+				if (userId > 0) {
+					long companyId =
+						cpDefinitionSpecificationOptionValue.getCompanyId();
+
+					long groupId =
+						cpDefinitionSpecificationOptionValue.getGroupId();
+
+					long classPK = 0;
+
+					if (!isNew) {
+						classPK =
+							cpDefinitionSpecificationOptionValue.
+								getPrimaryKey();
+					}
+
+					try {
+						cpDefinitionSpecificationOptionValue.
+							setExternalReferenceCode(
+								SanitizerUtil.sanitize(
+									companyId, groupId, userId,
+									CPDefinitionSpecificationOptionValue.class.
+										getName(),
+									classPK, ContentTypes.TEXT_HTML,
+									Sanitizer.MODE_ALL,
+									cpDefinitionSpecificationOptionValue.
+										getExternalReferenceCode(),
+									null));
+					}
+					catch (SanitizerException sanitizerException) {
+						throw new SystemException(sanitizerException);
+					}
+				}
+			}
+
+			CPDefinitionSpecificationOptionValue
+				ercCPDefinitionSpecificationOptionValue = fetchByERC_C(
+					cpDefinitionSpecificationOptionValue.
+						getExternalReferenceCode(),
+					cpDefinitionSpecificationOptionValue.getCompanyId());
+
+			if (isNew) {
+				if (ercCPDefinitionSpecificationOptionValue != null) {
+					throw new DuplicateCPDefinitionSpecificationOptionValueExternalReferenceCodeException(
+						"Duplicate cp definition specification option value with external reference code " +
+							cpDefinitionSpecificationOptionValue.
+								getExternalReferenceCode() + " and company " +
+									cpDefinitionSpecificationOptionValue.
+										getCompanyId());
+				}
+			}
+			else {
+				if ((ercCPDefinitionSpecificationOptionValue != null) &&
+					(cpDefinitionSpecificationOptionValue.
+						getCPDefinitionSpecificationOptionValueId() !=
+							ercCPDefinitionSpecificationOptionValue.
+								getCPDefinitionSpecificationOptionValueId())) {
+
+					throw new DuplicateCPDefinitionSpecificationOptionValueExternalReferenceCodeException(
+						"Duplicate cp definition specification option value with external reference code " +
+							cpDefinitionSpecificationOptionValue.
+								getExternalReferenceCode() + " and company " +
+									cpDefinitionSpecificationOptionValue.
+										getCompanyId());
+				}
+			}
+		}
+
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
@@ -5689,16 +6152,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		}
 		finally {
 			closeSession(session);
-		}
-
-		if (cpDefinitionSpecificationOptionValue.getCtCollectionId() != 0) {
-			if (isNew) {
-				cpDefinitionSpecificationOptionValue.setNew(false);
-			}
-
-			cpDefinitionSpecificationOptionValue.resetOriginalValues();
-
-			return cpDefinitionSpecificationOptionValue;
 		}
 
 		entityCache.putResult(
@@ -5773,11 +6226,22 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		if (ctPersistenceHelper.isProductionMode(
 				CPDefinitionSpecificationOptionValue.class, primaryKey)) {
 
-			return super.fetchByPrimaryKey(primaryKey);
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.
+						setProductionModeWithSafeCloseable()) {
+
+				return super.fetchByPrimaryKey(primaryKey);
+			}
 		}
 
 		CPDefinitionSpecificationOptionValue
-			cpDefinitionSpecificationOptionValue = null;
+			cpDefinitionSpecificationOptionValue =
+				(CPDefinitionSpecificationOptionValue)entityCache.getResult(
+					CPDefinitionSpecificationOptionValueImpl.class, primaryKey);
+
+		if (cpDefinitionSpecificationOptionValue != null) {
+			return cpDefinitionSpecificationOptionValue;
+		}
 
 		Session session = null;
 
@@ -5823,7 +6287,12 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		if (ctPersistenceHelper.isProductionMode(
 				CPDefinitionSpecificationOptionValue.class)) {
 
-			return super.fetchByPrimaryKeys(primaryKeys);
+			try (SafeCloseable safeCloseable =
+					CTCollectionThreadLocal.
+						setProductionModeWithSafeCloseable()) {
+
+				return super.fetchByPrimaryKeys(primaryKeys);
+			}
 		}
 
 		if (primaryKeys.isEmpty()) {
@@ -5846,6 +6315,38 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 				map.put(primaryKey, cpDefinitionSpecificationOptionValue);
 			}
 
+			return map;
+		}
+
+		Set<Serializable> uncachedPrimaryKeys = null;
+
+		for (Serializable primaryKey : primaryKeys) {
+			try (SafeCloseable safeCloseable =
+					ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+						CPDefinitionSpecificationOptionValue.class,
+						primaryKey)) {
+
+				CPDefinitionSpecificationOptionValue
+					cpDefinitionSpecificationOptionValue =
+						(CPDefinitionSpecificationOptionValue)
+							entityCache.getResult(
+								CPDefinitionSpecificationOptionValueImpl.class,
+								primaryKey);
+
+				if (cpDefinitionSpecificationOptionValue == null) {
+					if (uncachedPrimaryKeys == null) {
+						uncachedPrimaryKeys = new HashSet<>();
+					}
+
+					uncachedPrimaryKeys.add(primaryKey);
+				}
+				else {
+					map.put(primaryKey, cpDefinitionSpecificationOptionValue);
+				}
+			}
+		}
+
+		if (uncachedPrimaryKeys == null) {
 			return map;
 		}
 
@@ -5986,82 +6487,84 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			orderByComparator,
 		boolean useFinderCache) {
 
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		FinderPath finderPath = null;
-		Object[] finderArgs = null;
+			FinderPath finderPath = null;
+			Object[] finderArgs = null;
 
-		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
-			(orderByComparator == null)) {
+			if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
 
-			if (useFinderCache && productionMode) {
-				finderPath = _finderPathWithoutPaginationFindAll;
-				finderArgs = FINDER_ARGS_EMPTY;
-			}
-		}
-		else if (useFinderCache && productionMode) {
-			finderPath = _finderPathWithPaginationFindAll;
-			finderArgs = new Object[] {start, end, orderByComparator};
-		}
-
-		List<CPDefinitionSpecificationOptionValue> list = null;
-
-		if (useFinderCache && productionMode) {
-			list =
-				(List<CPDefinitionSpecificationOptionValue>)
-					finderCache.getResult(finderPath, finderArgs, this);
-		}
-
-		if (list == null) {
-			StringBundler sb = null;
-			String sql = null;
-
-			if (orderByComparator != null) {
-				sb = new StringBundler(
-					2 + (orderByComparator.getOrderByFields().length * 2));
-
-				sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE);
-
-				appendOrderByComparator(
-					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
-
-				sql = sb.toString();
-			}
-			else {
-				sql = _SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE;
-
-				sql = sql.concat(
-					CPDefinitionSpecificationOptionValueModelImpl.
-						ORDER_BY_JPQL);
-			}
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				list =
-					(List<CPDefinitionSpecificationOptionValue>)QueryUtil.list(
-						query, getDialect(), start, end);
-
-				cacheResult(list);
-
-				if (useFinderCache && productionMode) {
-					finderCache.putResult(finderPath, finderArgs, list);
+				if (useFinderCache) {
+					finderPath = _finderPathWithoutPaginationFindAll;
+					finderArgs = FINDER_ARGS_EMPTY;
 				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
+			else if (useFinderCache) {
+				finderPath = _finderPathWithPaginationFindAll;
+				finderArgs = new Object[] {start, end, orderByComparator};
 			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return list;
+			List<CPDefinitionSpecificationOptionValue> list = null;
+
+			if (useFinderCache) {
+				list =
+					(List<CPDefinitionSpecificationOptionValue>)
+						finderCache.getResult(finderPath, finderArgs, this);
+			}
+
+			if (list == null) {
+				StringBundler sb = null;
+				String sql = null;
+
+				if (orderByComparator != null) {
+					sb = new StringBundler(
+						2 + (orderByComparator.getOrderByFields().length * 2));
+
+					sb.append(_SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE);
+
+					appendOrderByComparator(
+						sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+
+					sql = sb.toString();
+				}
+				else {
+					sql = _SQL_SELECT_CPDEFINITIONSPECIFICATIONOPTIONVALUE;
+
+					sql = sql.concat(
+						CPDefinitionSpecificationOptionValueModelImpl.
+							ORDER_BY_JPQL);
+				}
+
+				Session session = null;
+
+				try {
+					session = openSession();
+
+					Query query = session.createQuery(sql);
+
+					list =
+						(List<CPDefinitionSpecificationOptionValue>)
+							QueryUtil.list(query, getDialect(), start, end);
+
+					cacheResult(list);
+
+					if (useFinderCache) {
+						finderCache.putResult(finderPath, finderArgs, list);
+					}
+				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
+			}
+
+			return list;
+		}
 	}
 
 	/**
@@ -6084,41 +6587,37 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	 */
 	@Override
 	public int countAll() {
-		boolean productionMode = ctPersistenceHelper.isProductionMode(
-			CPDefinitionSpecificationOptionValue.class);
+		try (SafeCloseable safeCloseable =
+				ctPersistenceHelper.setCTCollectionIdWithSafeCloseable(
+					CPDefinitionSpecificationOptionValue.class)) {
 
-		Long count = null;
-
-		if (productionMode) {
-			count = (Long)finderCache.getResult(
+			Long count = (Long)finderCache.getResult(
 				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
-		}
 
-		if (count == null) {
-			Session session = null;
+			if (count == null) {
+				Session session = null;
 
-			try {
-				session = openSession();
+				try {
+					session = openSession();
 
-				Query query = session.createQuery(
-					_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE);
+					Query query = session.createQuery(
+						_SQL_COUNT_CPDEFINITIONSPECIFICATIONOPTIONVALUE);
 
-				count = (Long)query.uniqueResult();
+					count = (Long)query.uniqueResult();
 
-				if (productionMode) {
 					finderCache.putResult(
 						_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 				}
+				catch (Exception exception) {
+					throw processException(exception);
+				}
+				finally {
+					closeSession(session);
+				}
 			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
-		}
 
-		return count.intValue();
+			return count.intValue();
+		}
 	}
 
 	@Override
@@ -6180,28 +6679,32 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
 		ctControlColumnNames.add("ctCollectionId");
 		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("externalReferenceCode");
 		ctStrictColumnNames.add("groupId");
 		ctStrictColumnNames.add("companyId");
 		ctStrictColumnNames.add("userId");
 		ctStrictColumnNames.add("userName");
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
-		ctStrictColumnNames.add("CPDefinitionId");
-		ctStrictColumnNames.add("CPSpecificationOptionId");
-		ctStrictColumnNames.add("CPOptionCategoryId");
-		ctStrictColumnNames.add("value");
-		ctStrictColumnNames.add("priority");
-		ctStrictColumnNames.add("lastPublishDate");
+		ctMergeColumnNames.add("CPDefinitionId");
+		ctMergeColumnNames.add("CPSpecificationOptionId");
+		ctMergeColumnNames.add("CPOptionCategoryId");
+		ctMergeColumnNames.add("key_");
+		ctMergeColumnNames.add("priority");
+		ctMergeColumnNames.add("value");
+		ctMergeColumnNames.add("lastPublishDate");
 
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("CPDSpecificationOptionValueId"));
@@ -6212,6 +6715,11 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 
 		_uniqueIndexColumnNames.add(
 			new String[] {"CPDSpecificationOptionValueId", "CPDefinitionId"});
+
+		_uniqueIndexColumnNames.add(new String[] {"CPDefinitionId", "key_"});
+
+		_uniqueIndexColumnNames.add(
+			new String[] {"externalReferenceCode", "companyId"});
 	}
 
 	/**
@@ -6256,11 +6764,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"uuid_", "groupId"}, true);
-
-		_finderPathCountByUUID_G = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
@@ -6363,12 +6866,6 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			new String[] {"CPDSpecificationOptionValueId", "CPDefinitionId"},
 			true);
 
-		_finderPathCountByC_CSOVI = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_CSOVI",
-			new String[] {Long.class.getName(), Long.class.getName()},
-			new String[] {"CPDSpecificationOptionValueId", "CPDefinitionId"},
-			false);
-
 		_finderPathWithPaginationFindByC_CSO = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_CSO",
 			new String[] {
@@ -6406,6 +6903,16 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_COC",
 			new String[] {Long.class.getName(), Long.class.getName()},
 			new String[] {"CPDefinitionId", "CPOptionCategoryId"}, false);
+
+		_finderPathFetchByC_K = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByC_K",
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"CPDefinitionId", "key_"}, true);
+
+		_finderPathFetchByERC_C = new FinderPath(
+			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"externalReferenceCode", "companyId"}, true);
 
 		CPDefinitionSpecificationOptionValueUtil.setPersistence(this);
 	}
@@ -6482,7 +6989,7 @@ public class CPDefinitionSpecificationOptionValuePersistenceImpl
 		CPDefinitionSpecificationOptionValuePersistenceImpl.class);
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
-		new String[] {"uuid", "CPDefinitionSpecificationOptionValueId"});
+		new String[] {"uuid", "CPDefinitionSpecificationOptionValueId", "key"});
 
 	@Override
 	protected FinderCache getFinderCache() {

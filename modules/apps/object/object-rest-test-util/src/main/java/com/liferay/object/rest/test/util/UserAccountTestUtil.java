@@ -62,6 +62,7 @@ public class UserAccountTestUtil {
 					RandomTestUtil.randomString());
 				givenName = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				hasLoginDate = RandomTestUtil.randomBoolean();
 				honorificPrefix = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				honorificSuffix = StringUtil.toLowerCase(
@@ -75,6 +76,7 @@ public class UserAccountTestUtil {
 					RandomTestUtil.randomString());
 				profileURL = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				status = Status.ACTIVE;
 			}
 		};
 	}
@@ -85,6 +87,8 @@ public class UserAccountTestUtil {
 		throws Exception {
 
 		UserAccount userAccount = randomUserAccount();
+
+		userAccount.setStatus(UserAccount.Status.ACTIVE);
 
 		JaxRsApplicationDescriptor jaxRsApplicationDescriptor =
 			systemObjectDefinitionManager.getJaxRsApplicationDescriptor();

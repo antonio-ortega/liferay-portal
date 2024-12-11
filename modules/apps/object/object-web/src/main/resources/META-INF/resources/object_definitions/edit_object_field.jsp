@@ -16,7 +16,7 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 <liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" var="baseResourceURL" />
 
 <react:component
-	module="js/components/ObjectField/EditObjectField"
+	module="{EditObjectField} from object-web"
 	props='<%=
 		HashMapBuilder.<String, Object>put(
 			"baseResourceURL", String.valueOf(baseResourceURL)
@@ -31,9 +31,9 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 		).put(
 			"forbiddenNames", PropsUtil.getArray(PropsKeys.DL_NAME_BLACKLIST)
 		).put(
-			"isApproved", objectDefinition.isApproved()
-		).put(
 			"isDefaultStorageType", objectDefinition.isDefaultStorageType()
+		).put(
+			"isRootDescendantNode", objectDefinition.isRootDescendantNode()
 		).put(
 			"learnResources", LearnMessageUtil.getReactDataJSONObject("object-web")
 		).put(
@@ -43,7 +43,7 @@ ObjectField objectField = (ObjectField)request.getAttribute(ObjectWebKeys.OBJECT
 		).put(
 			"readOnly", !objectDefinitionsFieldsDisplayContext.hasUpdateObjectDefinitionPermission()
 		).put(
-			"workflowStatusJSONArray", LocalizedJSONArrayUtil.getWorkflowStatusJSONArray(locale)
+			"workflowStatuses", LocalizedJSONArrayUtil.getWorkflowStatusJSONArray(locale)
 		).build()
 	%>'
 />

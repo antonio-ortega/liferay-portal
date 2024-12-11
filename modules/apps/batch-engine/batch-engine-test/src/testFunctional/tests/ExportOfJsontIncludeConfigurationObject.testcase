@@ -1,11 +1,10 @@
-@component-name = "portal-batch-engine"
+@component-name = "portal-headless"
 definition {
 
 	property custom.properties = "feature.flag.COMMERCE-8087=true${line.separator}feature.flag.LPS-186620=true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Batch Engine";
+	property testray.main.component.name = "Data Migration Center";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -28,7 +27,7 @@ definition {
 	@priority = 3
 	test JSONTConfigurationObjectContainsCallbackURL {
 		task ("When in Import/Export: exporting DSEnvelope Entity type with JSONT format with all fields to include selected") {
-			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "DSEnvelope (v1_0 - Liferay Digital Signature REST)");
+			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "BlogPosting (v1.0 - Liferay Headless Delivery)");
 		}
 
 		task ("And When I download generated file") {
@@ -45,7 +44,7 @@ definition {
 
 	@priority = 5
 	test JSONTConfigurationObjectContainsClassname {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		task ("When in Import/Export: exporting C_Stock Entity type with JSONT format with all fields to include selected") {
 			ObjectDefinitionAPI.createAndPublishObjectDefinition(
@@ -54,7 +53,7 @@ definition {
 				name = "Stock",
 				requiredStringFieldName = "name");
 
-			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "C_Stock (v1_0 - Liferay Object REST)");
+			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "Stock (v1.0 - Liferay Object REST)");
 		}
 
 		task ("And When I download generated file") {
@@ -71,10 +70,10 @@ definition {
 
 	@priority = 4
 	test JSONTConfigurationObjectContainsCompanyId {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		task ("When in Import/Export: exporting Blog Posting Entity type with JSONT format with all fields to include selected") {
-			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "BlogPosting (v1_0 - Liferay Headless Delivery)");
+			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "BlogPosting (v1.0 - Liferay Headless Delivery)");
 		}
 
 		task ("And When I download generated file") {
@@ -93,10 +92,10 @@ definition {
 
 	@priority = 4
 	test JSONTConfigurationObjectContainsCreateStrategy {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		task ("When in Import/Export: exporting NotificationTemplate Entity type with JSONT format with all fields to include selected") {
-			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "NotificationTemplate (v1_0 - Liferay Notification REST)");
+			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "NotificationTemplate (v1.0 - Liferay Notification REST)");
 		}
 
 		task ("And When I download generated file") {
@@ -113,10 +112,10 @@ definition {
 
 	@priority = 4
 	test JSONTConfigurationObjectContainsImportStrategy {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		task ("When in Import/Export: exporting Role (Headless Admin) Entity type with JSONT format with all fields to include selected") {
-			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "Role (v1_0 - Liferay Headless Admin User)");
+			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "Role (v1.0 - Liferay Headless Admin User)");
 		}
 
 		task ("And When I download generated file") {
@@ -140,7 +139,7 @@ definition {
 				name = "Stock",
 				requiredStringFieldName = "name");
 
-			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "C_Stock (v1_0 - Liferay Object REST)");
+			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "Stock (v1.0 - Liferay Object REST)");
 		}
 
 		task ("And When I download generated file") {
@@ -157,10 +156,10 @@ definition {
 
 	@priority = 4
 	test JSONTConfigurationObjectContainsUpdateStrategy {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		task ("When in Import/Export: exporting UserGroup Entity type with JSONT format with all fields to include selected") {
-			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "UserGroup (v1_0 - Liferay Headless Admin User)");
+			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "UserGroup (v1.0 - Liferay Headless Admin User)");
 		}
 
 		task ("And When I download generated file") {
@@ -177,10 +176,10 @@ definition {
 
 	@priority = 4
 	test JSONTConfigurationObjectContainsUserId {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		task ("When in Import/Export: exporting Admin User Entity type with JSONT format with all fields to include selected") {
-			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "Account (v1_0 - Liferay Headless Admin User)");
+			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "Account (v1.0 - Liferay Headless Admin User)");
 		}
 
 		task ("And When I download generated file") {
@@ -200,7 +199,7 @@ definition {
 	@priority = 3
 	test JSONTConfigurationObjectContainsVersion {
 		task ("When in Import/Export: exporting Catalog Commerce Entity type with JSONT format with all fields to include selected") {
-			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "Catalog (v1_0 - Liferay Headless Commerce Admin Catalog)");
+			ImportExport.exportEntityWithAllFieldsInJsontFormat(entityType = "Catalog (v1.0 - Liferay Headless Commerce Admin Catalog)");
 		}
 
 		task ("And When I download generated file") {

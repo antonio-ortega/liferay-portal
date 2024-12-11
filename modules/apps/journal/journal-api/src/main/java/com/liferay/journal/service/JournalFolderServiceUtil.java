@@ -7,6 +7,7 @@ package com.liferay.journal.service;
 
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -172,6 +173,16 @@ public class JournalFolderServiceUtil {
 			end, orderByComparator);
 	}
 
+	public static List<Object> getFoldersAndArticles(
+		long groupId, long userId, long folderId, long ddmStructureId,
+		int status, java.util.Locale locale, int[] excludedStatuses, int start,
+		int end, OrderByComparator<?> orderByComparator) {
+
+		return getService().getFoldersAndArticles(
+			groupId, userId, folderId, ddmStructureId, status, locale,
+			excludedStatuses, start, end, orderByComparator);
+	}
+
 	public static int getFoldersAndArticlesCount(
 		long groupId, List<Long> folderIds, int status) {
 
@@ -203,6 +214,15 @@ public class JournalFolderServiceUtil {
 
 		return getService().getFoldersAndArticlesCount(
 			groupId, userId, folderId, ddmStructureId, status);
+	}
+
+	public static int getFoldersAndArticlesCount(
+		long groupId, long userId, long folderId, long ddmStructureId,
+		int[] excludedStatuses, int status) {
+
+		return getService().getFoldersAndArticlesCount(
+			groupId, userId, folderId, ddmStructureId, excludedStatuses,
+			status);
 	}
 
 	public static int getFoldersCount(long groupId, long parentFolderId) {
@@ -326,13 +346,11 @@ public class JournalFolderServiceUtil {
 	}
 
 	public static JournalFolderService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(JournalFolderService service) {
-		_service = service;
-	}
-
-	private static volatile JournalFolderService _service;
+	private static final Snapshot<JournalFolderService> _serviceSnapshot =
+		new Snapshot<>(
+			JournalFolderServiceUtil.class, JournalFolderService.class);
 
 }

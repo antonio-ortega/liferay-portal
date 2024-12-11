@@ -3,22 +3,30 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ReactNode} from 'react';
+
 import RadioCard from './components/RadioCard';
 
-interface RadioCardListProps<T> {
+type RadioCardContent<T = any> = {
+	children?: ReactNode;
+	description?: ReactNode;
+	disabled?: boolean;
+	fullTitle?: boolean;
+	id: number | string;
+	imageURL?: string;
+	label?: string;
+	selected: boolean;
+	title: ReactNode;
+	value: T;
+};
+
+type RadioCardListProps<T> = {
 	contentList: RadioCardContent<T>[];
+	customization?: boolean;
 	leftRadio?: boolean;
 	onSelect: (value: RadioOption<T>) => void;
 	showImage?: boolean;
-}
-
-export interface RadioCardContent<T> {
-	description?: string;
-	imageURL?: string;
-	selected: boolean;
-	title: string;
-	value: T;
-}
+};
 
 const RadioCardList = <T extends unknown>({
 	contentList,
@@ -31,24 +39,25 @@ const RadioCardList = <T extends unknown>({
 	};
 
 	return (
-		<div className="d-flex flex-column w-100">
-			<div className="mb-0 pr-3 w-100">
-				{contentList.map((content, index) => (
-					<RadioCard
-						activeRadio={content.selected}
-						description={content.description}
-						imageURL={content.imageURL}
-						index={index}
-						key={index}
-						leftRadio={leftRadio}
-						selectRadio={() =>
-							handleSelectRadio({index, value: content.value})
-						}
-						showImage={showImage}
-						title={content.title}
-					/>
-				))}
-			</div>
+		<div className="mb-0 w-100">
+			{contentList.map((content, index) => (
+				<RadioCard
+					activeRadio={content.selected}
+					description={content.description}
+					disabled={content.disabled}
+					fullTitle={content.fullTitle}
+					imageURL={content.imageURL}
+					index={index}
+					key={index}
+					label={content.label}
+					leftRadio={leftRadio}
+					selectRadio={() =>
+						handleSelectRadio({index, value: content.value})
+					}
+					showImage={showImage}
+					title={content.title}
+				/>
+			))}
 		</div>
 	);
 };

@@ -9,7 +9,7 @@ import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
 import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import React, {ReactNode, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
 import {SidebarCategory} from './Sidebar';
 import CodeEditor from './index';
@@ -17,7 +17,7 @@ import CodeEditor from './index';
 import './CodeEditorLocalized.scss';
 
 interface CodeEditorLocalizedProps {
-	CustomSidebarContent?: ReactNode;
+	CustomSidebarContent?: React.ReactNode;
 	ariaLabels?: {
 		default: string;
 		openLocalizations: string;
@@ -28,8 +28,10 @@ interface CodeEditorLocalizedProps {
 	onSelectedLocaleChange: (val: IItem) => void;
 	onTranslationsChange: (val: LocalizedValue<string>) => void;
 	placeholder?: string;
+	readOnly?: boolean;
 	selectedLocale: Liferay.Language.Locale;
 	sidebarElements: SidebarCategory[];
+	sidebarElementsDisabled?: boolean;
 	translations: LocalizedValue<string>;
 }
 
@@ -59,8 +61,10 @@ export function CodeEditorLocalized({
 	onSelectedLocaleChange,
 	onTranslationsChange,
 	placeholder,
+	readOnly = false,
 	selectedLocale,
 	sidebarElements,
+	sidebarElementsDisabled,
 	translations,
 }: CodeEditorLocalizedProps) {
 	const [active, setActive] = useState(false);
@@ -87,7 +91,9 @@ export function CodeEditorLocalized({
 						});
 					}}
 					placeholder={placeholder}
+					readOnly={readOnly}
 					sidebarElements={sidebarElements}
+					sidebarElementsDisabled={sidebarElementsDisabled}
 					value={translations[selectedLocale] ?? ''}
 				/>
 			) : (
@@ -156,16 +162,16 @@ export function CodeEditorLocalized({
 													defaultLanguage.label
 														? 'info'
 														: value
-														? 'success'
-														: 'warning'
+															? 'success'
+															: 'warning'
 												}
 											>
 												{locale.label ===
 												defaultLanguage.label
 													? ariaLabels.default
 													: value
-													? ariaLabels.translated
-													: ariaLabels.untranslated}
+														? ariaLabels.translated
+														: ariaLabels.untranslated}
 											</ClayLabel>
 										</ClayLayout.ContentSection>
 									</ClayLayout.ContentCol>

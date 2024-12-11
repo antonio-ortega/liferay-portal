@@ -1,4 +1,4 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.acceptance = "true";
@@ -166,7 +166,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Notifications.viewBadgeCount(notificationCount = 1);
@@ -594,7 +594,7 @@ definition {
 		BlogsEntry.viewNoEntryAsGuestPG(entryTitle = "Blogs Entry Title");
 
 		User.loginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "test@liferay.com");
 
 		Navigator.gotoStagedSitePage(
@@ -662,7 +662,7 @@ definition {
 
 		// We need to wait for the system time to pass by 2 minutes in order for a scheduled blog entry to be published. There is currently no easy way to manipulate the system time in CI for automation. 2 minutes is the shortest value we can set while ensuring the stability of the test. See LPS-157957.
 
-		Pause(locator1 = 120000);
+		Pause(value1 = 120000);
 
 		Refresh();
 
@@ -1117,7 +1117,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-154410. It ensures that an external video with a custom friendlyURL added in the Blog content field can be rendered properly on a site after its friendlyURL is edited and republished. Skip the instance for performance improvement."
-	@priority = 5
+	@priority = 4
 	test CanViewExternalVideoInContentFieldAfterFriendlyURLIsUpdated {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -1127,6 +1127,8 @@ definition {
 		VideoShortcut.addCP(
 			videoShortcutTitle = "Test YouTube Video",
 			videoURL = "https://www.youtube.com/watch?v=HOdbzGCI5ME");
+
+		DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "site-name-staging");
 
 		DMNavigator.openToEditEntryInSite(
 			dmDocumentTitle = "Test YouTube Video",
@@ -1190,7 +1192,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-154409.It ensures that an image with a custom friendlyURL added in the Blog content field can be rendered properly on a site after its friendlyURL is edited and republished."
-	@priority = 5
+	@priority = 4
 	test CanViewImageInContentFieldAfterFriendlyURLIsUpdated {
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Image Description",

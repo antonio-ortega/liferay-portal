@@ -119,6 +119,7 @@
 	<bean class="com.liferay.portal.service.impl.CountryServiceImpl" id="com.liferay.portal.kernel.service.CountryService" />
 	<bean class="com.liferay.portal.service.persistence.impl.CountryModelArgumentsResolver" id="com.liferay.portal.service.persistence.impl.CountryModelArgumentsResolver" />
 	<bean class="com.liferay.portal.service.persistence.impl.CountryPersistenceImpl" id="com.liferay.portal.kernel.service.persistence.CountryPersistence" />
+	<bean class="com.liferay.portal.service.impl.CountryLocalizationCTServiceImpl" id="com.liferay.portal.kernel.service.CountryLocalizationCTService" />
 	<bean class="com.liferay.portal.service.persistence.impl.CountryLocalizationModelArgumentsResolver" id="com.liferay.portal.service.persistence.impl.CountryLocalizationModelArgumentsResolver" />
 	<bean class="com.liferay.portal.service.persistence.impl.CountryLocalizationPersistenceImpl" id="com.liferay.portal.kernel.service.persistence.CountryLocalizationPersistence" />
 	<bean class="com.liferay.portal.service.impl.EmailAddressLocalServiceImpl" id="com.liferay.portal.kernel.service.EmailAddressLocalService" />
@@ -240,11 +241,15 @@
 	<bean class="com.liferay.portal.service.impl.RegionServiceImpl" id="com.liferay.portal.kernel.service.RegionService" />
 	<bean class="com.liferay.portal.service.persistence.impl.RegionModelArgumentsResolver" id="com.liferay.portal.service.persistence.impl.RegionModelArgumentsResolver" />
 	<bean class="com.liferay.portal.service.persistence.impl.RegionPersistenceImpl" id="com.liferay.portal.kernel.service.persistence.RegionPersistence" />
+	<bean class="com.liferay.portal.service.impl.RegionLocalizationCTServiceImpl" id="com.liferay.portal.kernel.service.RegionLocalizationCTService" />
 	<bean class="com.liferay.portal.service.persistence.impl.RegionLocalizationModelArgumentsResolver" id="com.liferay.portal.service.persistence.impl.RegionLocalizationModelArgumentsResolver" />
 	<bean class="com.liferay.portal.service.persistence.impl.RegionLocalizationPersistenceImpl" id="com.liferay.portal.kernel.service.persistence.RegionLocalizationPersistence" />
 	<bean class="com.liferay.portal.service.impl.ReleaseLocalServiceImpl" id="com.liferay.portal.kernel.service.ReleaseLocalService" />
 	<bean class="com.liferay.portal.service.persistence.impl.ReleaseModelArgumentsResolver" id="com.liferay.portal.service.persistence.impl.ReleaseModelArgumentsResolver" />
 	<bean class="com.liferay.portal.service.persistence.impl.ReleasePersistenceImpl" id="com.liferay.portal.kernel.service.persistence.ReleasePersistence" />
+	<bean class="com.liferay.portal.service.impl.RememberMeTokenLocalServiceImpl" id="com.liferay.portal.kernel.service.RememberMeTokenLocalService" />
+	<bean class="com.liferay.portal.service.persistence.impl.RememberMeTokenModelArgumentsResolver" id="com.liferay.portal.service.persistence.impl.RememberMeTokenModelArgumentsResolver" />
+	<bean class="com.liferay.portal.service.persistence.impl.RememberMeTokenPersistenceImpl" id="com.liferay.portal.kernel.service.persistence.RememberMeTokenPersistence" />
 	<bean class="com.liferay.portal.service.impl.RepositoryLocalServiceImpl" id="com.liferay.portal.kernel.service.RepositoryLocalService" />
 	<bean class="com.liferay.portal.service.impl.RepositoryServiceImpl" id="com.liferay.portal.kernel.service.RepositoryService" />
 	<bean class="com.liferay.portal.service.persistence.impl.RepositoryModelArgumentsResolver" id="com.liferay.portal.service.persistence.impl.RepositoryModelArgumentsResolver" />
@@ -333,6 +338,7 @@
 	<bean class="com.liferay.portal.service.persistence.impl.WebsiteModelArgumentsResolver" id="com.liferay.portal.service.persistence.impl.WebsiteModelArgumentsResolver" />
 	<bean class="com.liferay.portal.service.persistence.impl.WebsitePersistenceImpl" id="com.liferay.portal.kernel.service.persistence.WebsitePersistence" />
 	<bean class="com.liferay.portal.service.impl.WorkflowDefinitionLinkLocalServiceImpl" id="com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService" />
+	<bean class="com.liferay.portal.service.impl.WorkflowDefinitionLinkServiceImpl" id="com.liferay.portal.kernel.service.WorkflowDefinitionLinkService" />
 	<bean class="com.liferay.portal.service.persistence.impl.WorkflowDefinitionLinkModelArgumentsResolver" id="com.liferay.portal.service.persistence.impl.WorkflowDefinitionLinkModelArgumentsResolver" />
 	<bean class="com.liferay.portal.service.persistence.impl.WorkflowDefinitionLinkPersistenceImpl" id="com.liferay.portal.kernel.service.persistence.WorkflowDefinitionLinkPersistence" />
 	<bean class="com.liferay.portal.service.impl.WorkflowInstanceLinkLocalServiceImpl" id="com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService" />

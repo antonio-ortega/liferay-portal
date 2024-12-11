@@ -168,7 +168,8 @@ public class CommerceSubscriptionContentDisplayContext {
 						_cpRequestHelper.getCommerceChannelGroupId(),
 						_cpRequestHelper.getUserId(),
 						_searchContainer.getStart(), _searchContainer.getEnd(),
-						new CommerceSubscriptionEntryCreateDateComparator()),
+						CommerceSubscriptionEntryCreateDateComparator.
+							getInstance(false)),
 			_commerceSubscriptionEntryService.
 				getCommerceSubscriptionEntriesCount(
 					_cpRequestHelper.getCompanyId(),
@@ -184,6 +185,10 @@ public class CommerceSubscriptionContentDisplayContext {
 		CommerceContext commerceContext =
 			(CommerceContext)httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
+
+		if (commerceContext == null) {
+			return false;
+		}
 
 		long commerceChannelId = commerceContext.getCommerceChannelId();
 

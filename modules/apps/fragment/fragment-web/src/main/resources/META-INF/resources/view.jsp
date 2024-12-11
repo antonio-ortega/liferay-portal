@@ -69,9 +69,10 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 									<c:if test="<%= FragmentPermission.contains(permissionChecker, scopeGroupId, FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES) %>">
 										<clay:link
 											borderless="<%= true %>"
-											cssClass="component-action"
+											cssClass="component-action lfr-portal-tooltip"
 											href="<%= editFragmentCollectionURL %>"
 											icon="plus"
+											title='<%= LanguageUtil.get(request, "add-fragment-set") %>'
 											type="button"
 										/>
 									</c:if>
@@ -100,7 +101,8 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 										%>'
 										aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 										dropdownItems="<%= fragmentEntriesDisplayContext.getCollectionsDropdownItems() %>"
-										propsTransformer="js/FragmentCollectionViewDefaultPropsTransformer"
+										propsTransformer="{FragmentCollectionViewDefaultPropsTransformer} from fragment-web"
+										title='<%= LanguageUtil.get(request, "fragment-sets-options") %>'
 									/>
 								</li>
 							</ul>
@@ -148,10 +150,10 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 						actionDropdownItems="<%= FragmentPermission.contains(permissionChecker, scopeGroupId, FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES) ? fragmentEntriesDisplayContext.getActionDropdownItems() : null %>"
 						additionalProps="<%= fragmentEntriesDisplayContext.getFragmentCollectionsViewContext() %>"
 						animationType="<%= EmptyResultMessageKeys.AnimationType.NONE %>"
-						buttonPropsTransformer="js/FragmentCollectionViewButtonPropsTransformer"
+						buttonPropsTransformer="{FragmentCollectionViewButtonPropsTransformer} from fragment-web"
 						description='<%= LanguageUtil.get(request, "fragment-sets-are-needed-to-create-fragments") %>'
 						elementType='<%= LanguageUtil.get(request, "fragment-sets") %>'
-						propsTransformer="js/FragmentCollectionViewDefaultPropsTransformer"
+						propsTransformer="{FragmentCollectionViewDefaultPropsTransformer} from fragment-web"
 						propsTransformerServletContext="<%= application %>"
 					/>
 				</c:otherwise>
@@ -161,7 +163,12 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 		<clay:col
 			lg="9"
 		>
-			<c:if test="<%= (fragmentEntriesDisplayContext.getFragmentCollection() != null) || (fragmentEntriesDisplayContext.getFragmentCollectionContributor() != null) %>">
+
+			<%
+			FragmentCollectionContributor fragmentCollectionContributor = fragmentEntriesDisplayContext.getFragmentCollectionContributor();
+			%>
+
+			<c:if test="<%= (fragmentEntriesDisplayContext.getFragmentCollection() != null) || (fragmentCollectionContributor != null) %>">
 				<clay:sheet
 					size="full"
 				>
@@ -172,6 +179,15 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 							<clay:content-col>
 								<%= fragmentEntriesDisplayContext.getFragmentCollectionName() %>
 							</clay:content-col>
+
+							<c:if test="<%= (fragmentCollectionContributor != null) && fragmentCollectionContributor.isDeprecated() %>">
+								<div class="c-ml-2">
+									<liferay-frontend:feature-indicator
+										interactive="<%= true %>"
+										type="deprecated"
+									/>
+								</div>
+							</c:if>
 
 							<c:if test="<%= fragmentEntriesDisplayContext.showFragmentCollectionActions() %>">
 								<clay:content-col
@@ -185,7 +201,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentEnt
 									<clay:dropdown-actions
 										aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 										dropdownItems="<%= fragmentCollectionActionDropdownItemsProvider.getActionDropdownItems() %>"
-										propsTransformer="js/FragmentCollectionDropdownPropsTransformer"
+										propsTransformer="{FragmentCollectionDropdownPropsTransformer} from fragment-web"
 									/>
 								</clay:content-col>
 							</c:if>

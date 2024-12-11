@@ -1,11 +1,10 @@
-@component-name = "portal-solutions"
+@component-name = "portal-site-management"
 definition {
 
 	property custom.properties = "feature.flag.LPS-165493=true";
 	property osgi.modules.includes = "site-initializer-raylife-ap";
 	property portal.release = "false";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Raylife AP";
 
 	var testSiteName = "Raylife AP";
@@ -18,10 +17,17 @@ definition {
 			User.firstLoginPG();
 		}
 
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
+
 		task ("Create a new Raylife AP Site") {
 			Site.openSitesAdmin();
 
-			Raylife.createRaylifeSite(siteName = "Raylife D2C");
+			HeadlessSite.addSite(
+				siteName = "Raylife D2C",
+				templateName = "Raylife D2C",
+				templateType = "Site Initializer");
 
 			Raylife.createRaylifeSite(siteName = "Raylife AP");
 		}
@@ -29,6 +35,10 @@ definition {
 
 	tearDown {
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
+
+		User.logoutAndLoginPG(
+			userLoginEmailAddress = "test@liferay.com",
+			userLoginFullName = "test test");
 
 		RaylifeAP.tearDownCP();
 
@@ -61,7 +71,9 @@ definition {
 
 			AssertElementPresent(locator1 = "RaylifeAP#LOGIN_PAGE");
 
-			RaylifeAP.signIn();
+			RaylifeAP.signIn(
+				emailAddress = "test@liferay.com",
+				password = PropsUtil.get("default.admin.password"));
 
 			AssertElementPresent(
 				key_title = "Hi, Test Test.",
@@ -90,7 +102,7 @@ definition {
 
 			RaylifeAP.signIn(
 				emailAddress = "test",
-				password = "test");
+				password = PropsUtil.get("default.admin.password"));
 
 			RaylifeAP.assertFieldRequiredMessage(field = "Please enter a valid email address.");
 
@@ -119,11 +131,9 @@ definition {
 
 			RaylifeAP.signIn(
 				emailAddress = "",
-				password = "test");
+				password = PropsUtil.get("default.admin.password"));
 
-			RaylifeAP.assertFieldRequiredMessage(field = "The Login field is required.");
-
-			User.firstLoginPG();
+			RaylifeAP.assertFieldRequiredMessage(field = "The Email Address field is required.");
 		}
 	}
 

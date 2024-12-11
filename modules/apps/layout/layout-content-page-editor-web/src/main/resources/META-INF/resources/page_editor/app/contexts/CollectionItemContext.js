@@ -7,14 +7,17 @@ import {usePrevious} from '@liferay/frontend-js-react-web';
 import {isNullOrUndefined} from '@liferay/layout-js-components-web';
 import React, {useCallback, useContext, useEffect} from 'react';
 
+import batchRenderFragmentEntryContentRequest from '../../common/batchRenderFragmentEntryContentRequest';
 import {updateFragmentEntryLinkContent} from '../actions/index';
-import FragmentService from '../services/FragmentService';
+import {FRAGMENT_ENTRY_TYPES} from '../config/constants/fragmentEntryTypes';
 import InfoItemService from '../services/InfoItemService';
 import LayoutService from '../services/LayoutService';
 import isMappedToInfoItem from '../utils/editable_value/isMappedToInfoItem';
 import isMappedToLayout from '../utils/editable_value/isMappedToLayout';
 import isMappedToStructure from '../utils/editable_value/isMappedToStructure';
+import getPortletId from '../utils/getPortletId';
 import {useDisplayPagePreviewItem} from './DisplayPagePreviewItemContext';
+import {useAddPendingItem} from './PortletContentContext';
 import {useDispatch} from './StoreContext';
 
 const defaultFromControlsId = (itemId) => itemId;
@@ -85,6 +88,8 @@ const useGetContent = (
 
 	const collectionContentId = toControlsId(fragmentEntryLinkId);
 
+	const addPendingItem = useAddPendingItem();
+
 	const {
 		className: collectionItemClassName,
 		classPK: collectionItemClassPK,
@@ -102,21 +107,18 @@ const useGetContent = (
 		collectionItemContext.collectionItem
 	);
 
-	const [
-		itemClassName,
-		itemClassPK,
-		itemExternalReferenceCode,
-	] = withinCollection
-		? [
-				collectionItemClassName,
-				collectionItemClassPK,
-				collectionItemExternalReferenceCode,
-		  ]
-		: [
-				displayPagePreviewItemClassName,
-				displayPagePreviewItemClassPK,
-				displayPagePreviewItemExternalReferenceCode,
-		  ];
+	const [itemClassName, itemClassPK, itemExternalReferenceCode] =
+		withinCollection
+			? [
+					collectionItemClassName,
+					collectionItemClassPK,
+					collectionItemExternalReferenceCode,
+				]
+			: [
+					displayPagePreviewItemClassName,
+					displayPagePreviewItemClassPK,
+					displayPagePreviewItemExternalReferenceCode,
+				];
 
 	const previousEditableValues = usePrevious(editableValues);
 	const previousLanguageId = usePrevious(languageId);
@@ -128,9 +130,10 @@ const useGetContent = (
 
 	useEffect(() => {
 		const hasLocalizable =
-			fieldSets?.some((fieldSet) =>
+			!!fieldSets?.some((fieldSet) =>
 				fieldSet.fields.some((field) => field.localizable)
-			) ?? false;
+			) ||
+			fragmentEntryLink.fragmentEntryType === FRAGMENT_ENTRY_TYPES.input;
 
 		if (
 			shouldRenderFragmentEntryLink({
@@ -148,22 +151,27 @@ const useGetContent = (
 				withinCollection,
 			})
 		) {
-			FragmentService.renderFragmentEntryLinkContent({
-				fragmentEntryLinkId,
-				itemClassName,
-				itemClassPK,
-				itemExternalReferenceCode,
+			batchRenderFragmentEntryContentRequest(
 				languageId,
 				segmentsExperienceId,
-			}).then(({content}) => {
-				dispatch(
-					updateFragmentEntryLinkContent({
-						collectionContentId,
-						content,
-						fragmentEntryLinkId,
-					})
-				);
-			});
+
+				{
+					fragmentEntryLinkId,
+					itemClassName,
+					itemClassPK,
+					itemExternalReferenceCode,
+				},
+
+				(content) => {
+					dispatch(
+						updateFragmentEntryLinkContent({
+							collectionContentId,
+							content,
+							fragmentEntryLinkId,
+						})
+					);
+				}
+			);
 		}
 	}, [
 		collectionContentId,
@@ -171,6 +179,7 @@ const useGetContent = (
 		editableValues,
 		fieldSets,
 		fragmentEntryLinkId,
+		fragmentEntryLink.fragmentEntryType,
 		itemClassName,
 		itemClassPK,
 		itemExternalReferenceCode,
@@ -183,6 +192,20 @@ const useGetContent = (
 		segmentsExperienceId,
 		withinCollection,
 	]);
+
+	useEffect(() => {
+		const onRefreshPortlet = ({portletId}) => {
+			if (getPortletId(editableValues) !== portletId) {
+				return;
+			}
+
+			addPendingItem(fragmentEntryLinkId);
+		};
+
+		Liferay.on('refreshPortlet', onRefreshPortlet);
+
+		return () => Liferay.detach('refreshPortlet', onRefreshPortlet);
+	}, [addPendingItem, editableValues, fragmentEntryLinkId]);
 
 	return (
 		(!isNullOrUndefined(collectionItemIndex)

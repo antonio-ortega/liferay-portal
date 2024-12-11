@@ -1,6 +1,7 @@
 definition {
 
-	macro _addBlogEntry {
+	@summary = "Default summary"
+	macro _addBlogEntry(groupId = null, title = null) {
 		Variables.assertDefined(parameterList = "${content},${groupId},${title}");
 
 		var portalURL = JSONCompany.getPortalURL();
@@ -10,7 +11,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		if (!(isSet(coverImageCaption))) {

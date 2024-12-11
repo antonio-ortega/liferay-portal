@@ -14,12 +14,12 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.security.membershippolicy.SiteMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.security.membershippolicy.SiteMembershipPolicyUtil;
 
 import java.util.List;
 
@@ -52,6 +52,28 @@ public class UserActionDropdownItemsProvider {
 				_themeDisplay.getSiteGroupIdOrLiveGroupId(),
 				ActionKeys.ASSIGN_USER_ROLES),
 			_getAssignRolesActionUnsafeConsumer()
+		).add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "unassignRoles");
+				dropdownItem.putData(
+					"unassignUserGroupRoleURL",
+					PortletURLBuilder.createActionURL(
+						_renderResponse
+					).setMVCPath(
+						"/users_roles.jsp"
+					).setParameter(
+						"assignRoles", Boolean.FALSE
+					).setParameter(
+						"groupId", _themeDisplay.getSiteGroupIdOrLiveGroupId()
+					).setParameter(
+						"p_u_i_d", _user.getUserId()
+					).setWindowState(
+						LiferayWindowState.POP_UP
+					).buildString());
+				dropdownItem.putData("userId", _user.getUserId());
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "unassign-roles"));
+			}
 		).add(
 			() ->
 				GroupPermissionUtil.contains(

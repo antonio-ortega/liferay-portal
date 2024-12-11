@@ -11,7 +11,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.jdbc.pool.metrics.HikariConnectionPoolMetrics;
 import com.liferay.portal.dao.jdbc.util.AntiTimeDriftDataSourceWrapper;
 import com.liferay.portal.dao.jdbc.util.DataSourceWrapper;
-import com.liferay.portal.dao.jdbc.util.RetryDataSourceWrapper;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
@@ -22,6 +21,7 @@ import com.liferay.portal.kernel.jndi.JNDIUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.JavaDetector;
 import com.liferay.portal.kernel.util.PropertiesUtil;
@@ -51,9 +51,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -76,14 +80,21 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 
 	@Override
 	public void destroyDataSource(DataSource dataSource) throws Exception {
-		if (_serviceRegistration != null) {
-			_serviceRegistration.unregister();
-		}
-
 		while (dataSource instanceof DataSourceWrapper) {
 			DataSourceWrapper dataSourceWrapper = (DataSourceWrapper)dataSource;
 
+			if (dataSourceWrapper instanceof JNDIDataSourceWrapper) {
+				return;
+			}
+
 			dataSource = dataSourceWrapper.getWrappedDataSource();
+		}
+
+		ServiceRegistration<?> serviceRegistration =
+			_serviceRegistrations.remove(dataSource);
+
+		if (serviceRegistration != null) {
+			serviceRegistration.unregister();
 		}
 
 		if (dataSource instanceof Closeable) {
@@ -126,10 +137,13 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 
 				Context context = new InitialContext(jndiEnvironmentProperties);
 
-				return (DataSource)JNDIUtil.lookup(context, jndiName);
+				return new JNDIDataSourceWrapper(
+					(DataSource)JNDIUtil.lookup(context, jndiName));
 			}
 			catch (Exception exception) {
 				_log.error("Unable to lookup " + jndiName, exception);
+
+				throw exception;
 			}
 		}
 		else {
@@ -159,15 +173,6 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 
 		if (_log.isDebugEnabled()) {
 			_log.debug("Created data source " + dataSource.getClass());
-		}
-
-		if (PropsValues.RETRY_DATA_SOURCE_MAX_RETRIES > 0) {
-			DBType dbType = DBManagerUtil.getDBType(
-				DialectDetector.getDialect(dataSource));
-
-			if (dbType == DBType.SYBASE) {
-				dataSource = new RetryDataSourceWrapper(dataSource);
-			}
 		}
 
 		if (Boolean.getBoolean("jdbc.data.source.anti.time.drift")) {
@@ -219,21 +224,24 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 		for (Map.Entry<Object, Object> entry : properties.entrySet()) {
 			String key = (String)entry.getKey();
 
-			if (StringUtil.equalsIgnoreCase(key, "url")) {
-				key = "jdbcUrl";
-			}
-
 			// Ignore Liferay property
 
 			if (isPropertyLiferay(key)) {
 				continue;
 			}
 
+			String value = (String)entry.getValue();
+
+			if (StringUtil.equalsIgnoreCase(key, "url")) {
+				key = "jdbcUrl";
+
+				value = _rewriteJDBCURL(value);
+			}
+
 			// Set HikariCP property
 
 			try {
-				BeanUtil.pojo.setProperty(
-					hikariDataSource, key, (String)entry.getValue());
+				BeanUtil.pojo.setProperty(hikariDataSource, key, value);
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
@@ -244,8 +252,13 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 			}
 		}
 
-		registerConnectionPoolMetrics(
-			new HikariConnectionPoolMetrics(hikariDataSource));
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		_serviceRegistrations.put(
+			hikariDataSource,
+			bundleContext.registerService(
+				ConnectionPoolMetrics.class,
+				new HikariConnectionPoolMetrics(hikariDataSource), null));
 
 		return hikariDataSource;
 	}
@@ -256,15 +269,6 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 		}
 
 		return false;
-	}
-
-	protected void registerConnectionPoolMetrics(
-		ConnectionPoolMetrics connectionPoolMetrics) {
-
-		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
-
-		_serviceRegistration = bundleContext.registerService(
-			ConnectionPoolMetrics.class, connectionPoolMetrics, null);
 	}
 
 	protected void testDatabaseClass(String driverClassName) throws Exception {
@@ -333,9 +337,7 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 			String[] ibmSupportedCipherSuites =
 				sslEngine.getSupportedCipherSuites();
 
-			if ((ibmSupportedCipherSuites == null) ||
-				(ibmSupportedCipherSuites.length == 0)) {
-
+			if (ArrayUtil.isEmpty(ibmSupportedCipherSuites)) {
 				return;
 			}
 
@@ -358,6 +360,88 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 						"SSL for the connection",
 				exception);
 		}
+	}
+
+	private String _rewriteJDBCURL(String url) {
+		if (!url.startsWith("jdbc:mariadb://") &&
+			!url.startsWith("jdbc:mysql://")) {
+
+			return url;
+		}
+
+		Map<String, String> existingParameterValues = new TreeMap<>();
+
+		int index = url.indexOf(CharPool.QUESTION);
+
+		if (index != -1) {
+			String queryString = url.substring(index + 1);
+
+			for (String parameterString :
+					StringUtil.split(queryString, CharPool.AMPERSAND)) {
+
+				String[] parameter = StringUtil.split(
+					parameterString, CharPool.EQUAL);
+
+				if (parameter.length == 2) {
+					existingParameterValues.put(parameter[0], parameter[1]);
+				}
+				else {
+					existingParameterValues.put(
+						parameterString, _MALFORMED_PARAMETER_PLACE_HOLDER);
+				}
+			}
+		}
+
+		for (String[] parameter : _MYSQL_DEFAULT_PARAMETERS) {
+			if (existingParameterValues.containsKey(parameter[0])) {
+				if (_log.isDebugEnabled()) {
+					_log.debug("Skipped " + Arrays.toString(parameter));
+				}
+			}
+			else {
+				existingParameterValues.put(parameter[0], parameter[1]);
+			}
+		}
+
+		StringBundler sb = new StringBundler(
+			(existingParameterValues.size() * 4) + 2);
+
+		if (index == -1) {
+			sb.append(url);
+			sb.append(CharPool.QUESTION);
+		}
+		else {
+			sb.append(url.substring(0, index + 1));
+		}
+
+		for (Map.Entry<String, String> entry :
+				existingParameterValues.entrySet()) {
+
+			sb.append(entry.getKey());
+
+			String value = entry.getValue();
+
+			if (!_MALFORMED_PARAMETER_PLACE_HOLDER.equals(value)) {
+				sb.append(CharPool.EQUAL);
+				sb.append(value);
+			}
+
+			sb.append(CharPool.AMPERSAND);
+		}
+
+		if (!existingParameterValues.isEmpty()) {
+			sb.setIndex(sb.index() - 1);
+		}
+
+		String newURL = sb.toString();
+
+		if (!Objects.equals(url, newURL) && _log.isInfoEnabled()) {
+			_log.info(
+				StringBundler.concat(
+					"Rewrite JDBC URL from ", url, " to ", newURL));
+		}
+
+		return newURL;
 	}
 
 	private void _waitForJDBCConnection(Properties properties) {
@@ -427,9 +511,31 @@ public class DataSourceFactoryImpl implements DataSourceFactory {
 		}
 	}
 
+	private static final String _MALFORMED_PARAMETER_PLACE_HOLDER =
+		"_MALFORMED_PARAMETER_PLACE_HOLDER";
+
+	private static final String[][] _MYSQL_DEFAULT_PARAMETERS = {
+		{"cachePrepStmts", "true"}, {"characterEncoding", "UTF-8"},
+		{"dontTrackOpenResources", "true"},
+		{"holdResultsOpenOverStatementClose", "true"},
+		{"prepStmtCacheSize", "1000"}, {"prepStmtCacheSqlLimit", "2048"},
+		{"rewriteBatchedStatements", "true"}, {"serverTimezone", "GMT"},
+		{"useFastDateParsing", "false"}, {"useLocalSessionState", "true"},
+		{"useLocalTransactionState", "true"}, {"useUnicode", "true"}
+	};
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		DataSourceFactoryImpl.class);
 
-	private ServiceRegistration<?> _serviceRegistration;
+	private final Map<DataSource, ServiceRegistration<?>>
+		_serviceRegistrations = new ConcurrentHashMap<>();
+
+	private static class JNDIDataSourceWrapper extends DataSourceWrapper {
+
+		private JNDIDataSourceWrapper(DataSource dataSource) {
+			super(dataSource);
+		}
+
+	}
 
 }

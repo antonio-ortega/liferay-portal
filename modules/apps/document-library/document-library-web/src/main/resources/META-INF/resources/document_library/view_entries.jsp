@@ -102,8 +102,6 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 
 													<%= rowChecker.getRowCheckBox(request, row) %>
 
-													<span class="custom-control-label"></span>
-
 													<c:choose>
 														<c:when test="<%= dlViewFileVersionDisplayContext.hasCustomThumbnail() %>">
 
@@ -113,7 +111,11 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 
 														</c:when>
 														<c:when test="<%= Validator.isNull(thumbnailSrc) %>">
-															<aui:icon cssClass="aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon" image="documents-and-media" markupView="lexicon" />
+															<span class="aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon">
+																<clay:icon
+																	symbol="documents-and-media"
+																/>
+															</span>
 														</c:when>
 														<c:otherwise>
 															<img alt="" class="aspect-ratio-item-center-middle aspect-ratio-item-fluid" src="<%= thumbnailSrc %>" />
@@ -131,34 +133,81 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 										<div class="card-body">
 											<div class="card-row">
 												<div class="autofit-col autofit-col-expand">
-													<aui:a cssClass="card-title text-truncate" href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>" title="<%= HtmlUtil.escapeAttribute(latestFileVersion.getTitle()) %>">
-														<%= latestFileVersion.getTitle() %>
-													</aui:a>
+													<div class="d-flex">
+														<clay:link
+															cssClass="card-title text-truncate"
+															href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>"
+															label="<%= latestFileVersion.getTitle() %>"
+															title="<%= HtmlUtil.escapeAttribute(latestFileVersion.getTitle()) %>"
+														/>
+
+														<c:if test="<%= !dlViewEntriesDisplayContext.hasGuestViewPermission(fileEntry) %>">
+															<clay:icon
+																aria-label='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
+																cssClass="c-ml-2 c-mt-1 flex-shrink-0 lfr-portal-tooltip text-4 text-secondary"
+																data-title='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
+																symbol="password-policies"
+															/>
+														</c:if>
+													</div>
 
 													<div class="card-subtitle text-truncate">
 														<%= LanguageUtil.format(request, "modified-x-ago-by-x", new String[] {LanguageUtil.getTimeDescription(locale, System.currentTimeMillis() - fileEntry.getModifiedDate().getTime(), true), HtmlUtil.escape(latestFileVersion.getUserName())}, false) %>
 													</div>
 
 													<div class="card-detail">
-														<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= latestFileVersion.getStatus() %>" />
+														<c:if test="<%= !latestFileVersion.isApproved() && dlViewEntriesDisplayContext.hasApprovedVersion(latestFileVersion.getFileEntryId()) %>">
+															<liferay-portal-workflow:status
+																showStatusLabel="<%= false %>"
+																status="<%= WorkflowConstants.STATUS_APPROVED %>"
+															/>
+														</c:if>
+
+														<liferay-portal-workflow:status
+															showStatusLabel="<%= false %>"
+															status="<%= latestFileVersion.getStatus() %>"
+														/>
+
+														<c:if test="<%= latestFileVersion.isScheduled() %>">
+
+															<%
+															String displayDateString = StringPool.BLANK;
+
+															if (latestFileVersion.getDisplayDate() != null) {
+																displayDateString = dateTimeFormat.format(latestFileVersion.getDisplayDate());
+															}
+															%>
+
+															<span aria-label="<%= displayDateString %>" class="lfr-portal-tooltip" tabindex="0" title="<%= displayDateString %>">
+																<clay:icon
+																	symbol="question-circle-full"
+																/>
+															</span>
+														</c:if>
 
 														<c:choose>
 															<c:when test="<%= fileShortcut != null %>">
-																<span class="inline-item inline-item-after state-icon">
-																	<aui:icon image="shortcut" markupView="lexicon" message="shortcut" />
-																</span>
+																<clay:icon
+																	cssClass="inline-item inline-item-after state-icon"
+																	symbol="shortcut"
+																/>
 															</c:when>
 															<c:when test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
-																<span class="inline-item inline-item-after state-icon">
-																	<aui:icon image="lock" markupView="lexicon" message="locked" />
+																<span class="lfr-portal-tooltip" title="<%= LanguageUtil.get(request, "locked-document") %>">
+																	<clay:icon
+																		aria-label='<%= LanguageUtil.get(request, "locked-document") %>'
+																		cssClass="inline-item inline-item-after state-icon"
+																		symbol="lock"
+																	/>
 																</span>
 															</c:when>
 														</c:choose>
 
 														<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
-															<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
-																<aui:icon image="users" markupView="lexicon" message="shared" />
-															</span>
+															<clay:icon
+																cssClass="inline-item inline-item-after lfr-portal-tooltip state-icon"
+																symbol="users"
+															/>
 														</c:if>
 													</div>
 												</div>
@@ -168,7 +217,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 														<clay:dropdown-actions
 															aria-label='<%= LanguageUtil.get(request, "actions") %>'
 															dropdownItems="<%= dlViewFileVersionDisplayContext.getActionDropdownItems() %>"
-															propsTransformer="document_library/js/DLFileEntryDropdownPropsTransformer"
+															propsTransformer="{DLFileEntryDropdownPropsTransformer} from document-library-web"
 														/>
 													</div>
 												</c:if>
@@ -200,37 +249,46 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 
 												<div class="autofit-col autofit-col-expand pl-1">
 													<div class="table-title">
-														<clay:link
-															href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>"
-															label="<%= HtmlUtil.unescape(latestFileVersion.getTitle()) %>"
-														/>
+														<div class="d-flex">
+															<clay:link
+																cssClass="text-truncate"
+																href="<%= dlViewEntriesDisplayContext.getViewFileEntryURL(fileEntry) %>"
+																label="<%= HtmlUtil.unescape(latestFileVersion.getTitle()) %>"
+																translated="<%= false %>"
+															/>
+
+															<c:if test="<%= !dlViewEntriesDisplayContext.hasGuestViewPermission(fileEntry) %>">
+																<clay:icon
+																	aria-label='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
+																	cssClass="c-ml-2 c-mt-1 flex-shrink-0 lfr-portal-tooltip text-4 text-secondary"
+																	data-title='<%= LanguageUtil.get(request, "not-visible-to-guest-users") %>'
+																	symbol="password-policies"
+																/>
+															</c:if>
+														</div>
 
 														<c:if test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
-															<span class="inline-item inline-item-after state-icon">
+															<span class="lfr-portal-tooltip" title="<%= LanguageUtil.get(request, "locked-document") %>">
 																<clay:icon
-																	aria-label='<%= LanguageUtil.get(request, "locked") %>'
+																	aria-label='<%= LanguageUtil.get(request, "locked-document") %>'
+																	cssClass="inline-item inline-item-after state-icon"
 																	symbol="lock"
 																/>
 															</span>
 														</c:if>
 
 														<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
-															<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
-																<clay:icon
-																	aria-label='<%= LanguageUtil.get(request, "shared") %>'
-																	symbol="users"
-																/>
-															</span>
+															<clay:icon
+																cssClass="inline-item inline-item-after lfr-portal-tooltip state-icon"
+																symbol="users"
+															/>
 														</c:if>
 
 														<c:if test="<%= fileShortcut != null %>">
-															<span class="inline-item inline-item-after state-icon">
-																<clay:icon
-																	aria-label='<%= LanguageUtil.get(request, "shortcut") %>'
-																	symbol="shortcut"
-																	title='<%= LanguageUtil.get(request, "shortcut") %>'
-																/>
-															</span>
+															<clay:icon
+																cssClass="inline-item inline-item-after state-icon"
+																symbol="shortcut"
+															/>
 														</c:if>
 													</div>
 												</div>
@@ -277,11 +335,39 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 										/>
 									</c:when>
 									<c:when test='<%= curEntryColumn.equals("status") %>'>
-										<liferay-ui:search-container-column-status
+										<liferay-ui:search-container-column-text
 											cssClass="table-cell-expand-smallest"
 											name="status"
-											status="<%= latestFileVersion.getStatus() %>"
-										/>
+										>
+											<c:if test="<%= !latestFileVersion.isApproved() && dlViewEntriesDisplayContext.hasApprovedVersion(latestFileVersion.getFileEntryId()) %>">
+												<liferay-portal-workflow:status
+													showStatusLabel="<%= false %>"
+													status="<%= WorkflowConstants.STATUS_APPROVED %>"
+												/>
+											</c:if>
+
+											<liferay-portal-workflow:status
+												showStatusLabel="<%= false %>"
+												status="<%= latestFileVersion.getStatus() %>"
+											/>
+
+											<c:if test="<%= latestFileVersion.isScheduled() %>">
+
+												<%
+												String displayDateString = StringPool.BLANK;
+
+												if (latestFileVersion.getDisplayDate() != null) {
+													displayDateString = dateTimeFormat.format(latestFileVersion.getDisplayDate());
+												}
+												%>
+
+												<span aria-label="<%= displayDateString %>" class="lfr-portal-tooltip" tabindex="0" title="<%= displayDateString %>">
+													<clay:icon
+														symbol="question-circle-full"
+													/>
+												</span>
+											</c:if>
+										</liferay-ui:search-container-column-text>
 									</c:when>
 									<c:when test='<%= curEntryColumn.equals("downloads") %>'>
 										<c:if test="<%= ViewCountManagerUtil.isViewCountEnabled(PortalUtil.getClassNameId(DLFileEntryConstants.getClassName())) %>">
@@ -382,7 +468,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 							>
 								<clay:horizontal-card
 									horizontalCard="<%= new FolderHorizontalCard(dlPortletInstanceSettingsHelper, dlTrashHelper, curFolder, request, renderResponse, searchContainer.getRowChecker(), viewFolderURL) %>"
-									propsTransformer="document_library/js/DLFolderDropdownPropsTransformer"
+									propsTransformer="{DLFolderDropdownPropsTransformer} from document-library-web"
 								/>
 							</liferay-ui:search-container-column-text>
 						</c:when>
@@ -422,6 +508,7 @@ DLViewEntriesDisplayContext dlViewEntriesDisplayContext = new DLViewEntriesDispl
 																).buildString()
 															%>'
 															label="<%= HtmlUtil.unescape(curFolder.getName()) %>"
+															translated="<%= false %>"
 														/>
 													</div>
 												</div>

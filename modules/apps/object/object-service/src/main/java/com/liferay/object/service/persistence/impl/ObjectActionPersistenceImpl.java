@@ -23,12 +23,18 @@ import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
+import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -1710,7 +1716,6 @@ public class ObjectActionPersistenceImpl
 			"objectAction.objectDefinitionId = ?";
 
 	private FinderPath _finderPathFetchByODI_N;
-	private FinderPath _finderPathCountByODI_N;
 
 	/**
 	 * Returns the object action where objectDefinitionId = &#63; and name = &#63; or throws a <code>NoSuchObjectActionException</code> if it could not be found.
@@ -1907,30 +1912,181 @@ public class ObjectActionPersistenceImpl
 	 */
 	@Override
 	public int countByODI_N(long objectDefinitionId, String name) {
-		name = Objects.toString(name, "");
+		ObjectAction objectAction = fetchByODI_N(objectDefinitionId, name);
 
-		FinderPath finderPath = _finderPathCountByODI_N;
+		if (objectAction == null) {
+			return 0;
+		}
 
-		Object[] finderArgs = new Object[] {objectDefinitionId, name};
+		return 1;
+	}
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+	private static final String _FINDER_COLUMN_ODI_N_OBJECTDEFINITIONID_2 =
+		"objectAction.objectDefinitionId = ? AND ";
 
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
+	private static final String _FINDER_COLUMN_ODI_N_NAME_2 =
+		"objectAction.name = ?";
 
-			sb.append(_SQL_COUNT_OBJECTACTION_WHERE);
+	private static final String _FINDER_COLUMN_ODI_N_NAME_3 =
+		"(objectAction.name IS NULL OR objectAction.name = '')";
 
-			sb.append(_FINDER_COLUMN_ODI_N_OBJECTDEFINITIONID_2);
+	private FinderPath _finderPathWithPaginationFindByA_OAEK;
+	private FinderPath _finderPathWithoutPaginationFindByA_OAEK;
+	private FinderPath _finderPathCountByA_OAEK;
 
-			boolean bindName = false;
+	/**
+	 * Returns all the object actions where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @return the matching object actions
+	 */
+	@Override
+	public List<ObjectAction> findByA_OAEK(
+		boolean active, String objectActionExecutorKey) {
 
-			if (name.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ODI_N_NAME_3);
+		return findByA_OAEK(
+			active, objectActionExecutorKey, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the object actions where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectActionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @param start the lower bound of the range of object actions
+	 * @param end the upper bound of the range of object actions (not inclusive)
+	 * @return the range of matching object actions
+	 */
+	@Override
+	public List<ObjectAction> findByA_OAEK(
+		boolean active, String objectActionExecutorKey, int start, int end) {
+
+		return findByA_OAEK(active, objectActionExecutorKey, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the object actions where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectActionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @param start the lower bound of the range of object actions
+	 * @param end the upper bound of the range of object actions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching object actions
+	 */
+	@Override
+	public List<ObjectAction> findByA_OAEK(
+		boolean active, String objectActionExecutorKey, int start, int end,
+		OrderByComparator<ObjectAction> orderByComparator) {
+
+		return findByA_OAEK(
+			active, objectActionExecutorKey, start, end, orderByComparator,
+			true);
+	}
+
+	/**
+	 * Returns an ordered range of all the object actions where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>ObjectActionModelImpl</code>.
+	 * </p>
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @param start the lower bound of the range of object actions
+	 * @param end the upper bound of the range of object actions (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching object actions
+	 */
+	@Override
+	public List<ObjectAction> findByA_OAEK(
+		boolean active, String objectActionExecutorKey, int start, int end,
+		OrderByComparator<ObjectAction> orderByComparator,
+		boolean useFinderCache) {
+
+		objectActionExecutorKey = Objects.toString(objectActionExecutorKey, "");
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache) {
+				finderPath = _finderPathWithoutPaginationFindByA_OAEK;
+				finderArgs = new Object[] {active, objectActionExecutorKey};
+			}
+		}
+		else if (useFinderCache) {
+			finderPath = _finderPathWithPaginationFindByA_OAEK;
+			finderArgs = new Object[] {
+				active, objectActionExecutorKey, start, end, orderByComparator
+			};
+		}
+
+		List<ObjectAction> list = null;
+
+		if (useFinderCache) {
+			list = (List<ObjectAction>)finderCache.getResult(
+				finderPath, finderArgs, this);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (ObjectAction objectAction : list) {
+					if ((active != objectAction.isActive()) ||
+						!objectActionExecutorKey.equals(
+							objectAction.getObjectActionExecutorKey())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
 			}
 			else {
-				bindName = true;
+				sb = new StringBundler(4);
+			}
 
-				sb.append(_FINDER_COLUMN_ODI_N_NAME_2);
+			sb.append(_SQL_SELECT_OBJECTACTION_WHERE);
+
+			sb.append(_FINDER_COLUMN_A_OAEK_ACTIVE_2);
+
+			boolean bindObjectActionExecutorKey = false;
+
+			if (objectActionExecutorKey.isEmpty()) {
+				sb.append(_FINDER_COLUMN_A_OAEK_OBJECTACTIONEXECUTORKEY_3);
+			}
+			else {
+				bindObjectActionExecutorKey = true;
+
+				sb.append(_FINDER_COLUMN_A_OAEK_OBJECTACTIONEXECUTORKEY_2);
+			}
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(ObjectActionModelImpl.ORDER_BY_JPQL);
 			}
 
 			String sql = sb.toString();
@@ -1944,10 +2100,397 @@ public class ObjectActionPersistenceImpl
 
 				QueryPos queryPos = QueryPos.getInstance(query);
 
-				queryPos.add(objectDefinitionId);
+				queryPos.add(active);
 
-				if (bindName) {
-					queryPos.add(name);
+				if (bindObjectActionExecutorKey) {
+					queryPos.add(objectActionExecutorKey);
+				}
+
+				list = (List<ObjectAction>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first object action in the ordered set where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object action
+	 * @throws NoSuchObjectActionException if a matching object action could not be found
+	 */
+	@Override
+	public ObjectAction findByA_OAEK_First(
+			boolean active, String objectActionExecutorKey,
+			OrderByComparator<ObjectAction> orderByComparator)
+		throws NoSuchObjectActionException {
+
+		ObjectAction objectAction = fetchByA_OAEK_First(
+			active, objectActionExecutorKey, orderByComparator);
+
+		if (objectAction != null) {
+			return objectAction;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("active=");
+		sb.append(active);
+
+		sb.append(", objectActionExecutorKey=");
+		sb.append(objectActionExecutorKey);
+
+		sb.append("}");
+
+		throw new NoSuchObjectActionException(sb.toString());
+	}
+
+	/**
+	 * Returns the first object action in the ordered set where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching object action, or <code>null</code> if a matching object action could not be found
+	 */
+	@Override
+	public ObjectAction fetchByA_OAEK_First(
+		boolean active, String objectActionExecutorKey,
+		OrderByComparator<ObjectAction> orderByComparator) {
+
+		List<ObjectAction> list = findByA_OAEK(
+			active, objectActionExecutorKey, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last object action in the ordered set where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object action
+	 * @throws NoSuchObjectActionException if a matching object action could not be found
+	 */
+	@Override
+	public ObjectAction findByA_OAEK_Last(
+			boolean active, String objectActionExecutorKey,
+			OrderByComparator<ObjectAction> orderByComparator)
+		throws NoSuchObjectActionException {
+
+		ObjectAction objectAction = fetchByA_OAEK_Last(
+			active, objectActionExecutorKey, orderByComparator);
+
+		if (objectAction != null) {
+			return objectAction;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("active=");
+		sb.append(active);
+
+		sb.append(", objectActionExecutorKey=");
+		sb.append(objectActionExecutorKey);
+
+		sb.append("}");
+
+		throw new NoSuchObjectActionException(sb.toString());
+	}
+
+	/**
+	 * Returns the last object action in the ordered set where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching object action, or <code>null</code> if a matching object action could not be found
+	 */
+	@Override
+	public ObjectAction fetchByA_OAEK_Last(
+		boolean active, String objectActionExecutorKey,
+		OrderByComparator<ObjectAction> orderByComparator) {
+
+		int count = countByA_OAEK(active, objectActionExecutorKey);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<ObjectAction> list = findByA_OAEK(
+			active, objectActionExecutorKey, count - 1, count,
+			orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the object actions before and after the current object action in the ordered set where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * @param objectActionId the primary key of the current object action
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next object action
+	 * @throws NoSuchObjectActionException if a object action with the primary key could not be found
+	 */
+	@Override
+	public ObjectAction[] findByA_OAEK_PrevAndNext(
+			long objectActionId, boolean active, String objectActionExecutorKey,
+			OrderByComparator<ObjectAction> orderByComparator)
+		throws NoSuchObjectActionException {
+
+		objectActionExecutorKey = Objects.toString(objectActionExecutorKey, "");
+
+		ObjectAction objectAction = findByPrimaryKey(objectActionId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			ObjectAction[] array = new ObjectActionImpl[3];
+
+			array[0] = getByA_OAEK_PrevAndNext(
+				session, objectAction, active, objectActionExecutorKey,
+				orderByComparator, true);
+
+			array[1] = objectAction;
+
+			array[2] = getByA_OAEK_PrevAndNext(
+				session, objectAction, active, objectActionExecutorKey,
+				orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected ObjectAction getByA_OAEK_PrevAndNext(
+		Session session, ObjectAction objectAction, boolean active,
+		String objectActionExecutorKey,
+		OrderByComparator<ObjectAction> orderByComparator, boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(4);
+		}
+
+		sb.append(_SQL_SELECT_OBJECTACTION_WHERE);
+
+		sb.append(_FINDER_COLUMN_A_OAEK_ACTIVE_2);
+
+		boolean bindObjectActionExecutorKey = false;
+
+		if (objectActionExecutorKey.isEmpty()) {
+			sb.append(_FINDER_COLUMN_A_OAEK_OBJECTACTIONEXECUTORKEY_3);
+		}
+		else {
+			bindObjectActionExecutorKey = true;
+
+			sb.append(_FINDER_COLUMN_A_OAEK_OBJECTACTIONEXECUTORKEY_2);
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(ObjectActionModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(active);
+
+		if (bindObjectActionExecutorKey) {
+			queryPos.add(objectActionExecutorKey);
+		}
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(objectAction)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<ObjectAction> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Removes all the object actions where active = &#63; and objectActionExecutorKey = &#63; from the database.
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 */
+	@Override
+	public void removeByA_OAEK(boolean active, String objectActionExecutorKey) {
+		for (ObjectAction objectAction :
+				findByA_OAEK(
+					active, objectActionExecutorKey, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
+			remove(objectAction);
+		}
+	}
+
+	/**
+	 * Returns the number of object actions where active = &#63; and objectActionExecutorKey = &#63;.
+	 *
+	 * @param active the active
+	 * @param objectActionExecutorKey the object action executor key
+	 * @return the number of matching object actions
+	 */
+	@Override
+	public int countByA_OAEK(boolean active, String objectActionExecutorKey) {
+		objectActionExecutorKey = Objects.toString(objectActionExecutorKey, "");
+
+		FinderPath finderPath = _finderPathCountByA_OAEK;
+
+		Object[] finderArgs = new Object[] {active, objectActionExecutorKey};
+
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_OBJECTACTION_WHERE);
+
+			sb.append(_FINDER_COLUMN_A_OAEK_ACTIVE_2);
+
+			boolean bindObjectActionExecutorKey = false;
+
+			if (objectActionExecutorKey.isEmpty()) {
+				sb.append(_FINDER_COLUMN_A_OAEK_OBJECTACTIONEXECUTORKEY_3);
+			}
+			else {
+				bindObjectActionExecutorKey = true;
+
+				sb.append(_FINDER_COLUMN_A_OAEK_OBJECTACTIONEXECUTORKEY_2);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(active);
+
+				if (bindObjectActionExecutorKey) {
+					queryPos.add(objectActionExecutorKey);
 				}
 
 				count = (Long)query.uniqueResult();
@@ -1965,17 +2508,18 @@ public class ObjectActionPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_ODI_N_OBJECTDEFINITIONID_2 =
-		"objectAction.objectDefinitionId = ? AND ";
+	private static final String _FINDER_COLUMN_A_OAEK_ACTIVE_2 =
+		"objectAction.active = ? AND ";
 
-	private static final String _FINDER_COLUMN_ODI_N_NAME_2 =
-		"objectAction.name = ?";
+	private static final String
+		_FINDER_COLUMN_A_OAEK_OBJECTACTIONEXECUTORKEY_2 =
+			"objectAction.objectActionExecutorKey = ?";
 
-	private static final String _FINDER_COLUMN_ODI_N_NAME_3 =
-		"(objectAction.name IS NULL OR objectAction.name = '')";
+	private static final String
+		_FINDER_COLUMN_A_OAEK_OBJECTACTIONEXECUTORKEY_3 =
+			"(objectAction.objectActionExecutorKey IS NULL OR objectAction.objectActionExecutorKey = '')";
 
 	private FinderPath _finderPathFetchByERC_C_ODI;
-	private FinderPath _finderPathCountByERC_C_ODI;
 
 	/**
 	 * Returns the object action where externalReferenceCode = &#63; and companyId = &#63; and objectDefinitionId = &#63; or throws a <code>NoSuchObjectActionException</code> if it could not be found.
@@ -2184,68 +2728,14 @@ public class ObjectActionPersistenceImpl
 	public int countByERC_C_ODI(
 		String externalReferenceCode, long companyId, long objectDefinitionId) {
 
-		externalReferenceCode = Objects.toString(externalReferenceCode, "");
+		ObjectAction objectAction = fetchByERC_C_ODI(
+			externalReferenceCode, companyId, objectDefinitionId);
 
-		FinderPath finderPath = _finderPathCountByERC_C_ODI;
-
-		Object[] finderArgs = new Object[] {
-			externalReferenceCode, companyId, objectDefinitionId
-		};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(_SQL_COUNT_OBJECTACTION_WHERE);
-
-			boolean bindExternalReferenceCode = false;
-
-			if (externalReferenceCode.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_3);
-			}
-			else {
-				bindExternalReferenceCode = true;
-
-				sb.append(_FINDER_COLUMN_ERC_C_ODI_EXTERNALREFERENCECODE_2);
-			}
-
-			sb.append(_FINDER_COLUMN_ERC_C_ODI_COMPANYID_2);
-
-			sb.append(_FINDER_COLUMN_ERC_C_ODI_OBJECTDEFINITIONID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindExternalReferenceCode) {
-					queryPos.add(externalReferenceCode);
-				}
-
-				queryPos.add(companyId);
-
-				queryPos.add(objectDefinitionId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (objectAction == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String
@@ -2908,7 +3398,6 @@ public class ObjectActionPersistenceImpl
 			"(objectAction.objectActionTriggerKey IS NULL OR objectAction.objectActionTriggerKey = '')";
 
 	private FinderPath _finderPathFetchByODI_A_N_OATK;
-	private FinderPath _finderPathCountByODI_A_N_OATK;
 
 	/**
 	 * Returns the object action where objectDefinitionId = &#63; and active = &#63; and name = &#63; and objectActionTriggerKey = &#63; or throws a <code>NoSuchObjectActionException</code> if it could not be found.
@@ -3162,84 +3651,14 @@ public class ObjectActionPersistenceImpl
 		long objectDefinitionId, boolean active, String name,
 		String objectActionTriggerKey) {
 
-		name = Objects.toString(name, "");
-		objectActionTriggerKey = Objects.toString(objectActionTriggerKey, "");
+		ObjectAction objectAction = fetchByODI_A_N_OATK(
+			objectDefinitionId, active, name, objectActionTriggerKey);
 
-		FinderPath finderPath = _finderPathCountByODI_A_N_OATK;
-
-		Object[] finderArgs = new Object[] {
-			objectDefinitionId, active, name, objectActionTriggerKey
-		};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(_SQL_COUNT_OBJECTACTION_WHERE);
-
-			sb.append(_FINDER_COLUMN_ODI_A_N_OATK_OBJECTDEFINITIONID_2);
-
-			sb.append(_FINDER_COLUMN_ODI_A_N_OATK_ACTIVE_2);
-
-			boolean bindName = false;
-
-			if (name.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ODI_A_N_OATK_NAME_3);
-			}
-			else {
-				bindName = true;
-
-				sb.append(_FINDER_COLUMN_ODI_A_N_OATK_NAME_2);
-			}
-
-			boolean bindObjectActionTriggerKey = false;
-
-			if (objectActionTriggerKey.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ODI_A_N_OATK_OBJECTACTIONTRIGGERKEY_3);
-			}
-			else {
-				bindObjectActionTriggerKey = true;
-
-				sb.append(_FINDER_COLUMN_ODI_A_N_OATK_OBJECTACTIONTRIGGERKEY_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(objectDefinitionId);
-
-				queryPos.add(active);
-
-				if (bindName) {
-					queryPos.add(name);
-				}
-
-				if (bindObjectActionTriggerKey) {
-					queryPos.add(objectActionTriggerKey);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (objectAction == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String
@@ -3391,7 +3810,6 @@ public class ObjectActionPersistenceImpl
 			objectActionModelImpl.getName()
 		};
 
-		finderCache.putResult(_finderPathCountByODI_N, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByODI_N, args, objectActionModelImpl);
 
@@ -3402,8 +3820,6 @@ public class ObjectActionPersistenceImpl
 		};
 
 		finderCache.putResult(
-			_finderPathCountByERC_C_ODI, args, Long.valueOf(1));
-		finderCache.putResult(
 			_finderPathFetchByERC_C_ODI, args, objectActionModelImpl);
 
 		args = new Object[] {
@@ -3412,8 +3828,6 @@ public class ObjectActionPersistenceImpl
 			objectActionModelImpl.getObjectActionTriggerKey()
 		};
 
-		finderCache.putResult(
-			_finderPathCountByODI_A_N_OATK, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByODI_A_N_OATK, args, objectActionModelImpl);
 	}
@@ -3557,6 +3971,40 @@ public class ObjectActionPersistenceImpl
 
 		if (Validator.isNull(objectAction.getExternalReferenceCode())) {
 			objectAction.setExternalReferenceCode(objectAction.getUuid());
+		}
+		else {
+			if (!Objects.equals(
+					objectActionModelImpl.getColumnOriginalValue(
+						"externalReferenceCode"),
+					objectAction.getExternalReferenceCode())) {
+
+				long userId = GetterUtil.getLong(
+					PrincipalThreadLocal.getName());
+
+				if (userId > 0) {
+					long companyId = objectAction.getCompanyId();
+
+					long groupId = 0;
+
+					long classPK = 0;
+
+					if (!isNew) {
+						classPK = objectAction.getPrimaryKey();
+					}
+
+					try {
+						objectAction.setExternalReferenceCode(
+							SanitizerUtil.sanitize(
+								companyId, groupId, userId,
+								ObjectAction.class.getName(), classPK,
+								ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+								objectAction.getExternalReferenceCode(), null));
+					}
+					catch (SanitizerException sanitizerException) {
+						throw new SystemException(sanitizerException);
+					}
+				}
+			}
 		}
 
 		ServiceContext serviceContext =
@@ -3950,10 +4398,24 @@ public class ObjectActionPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"objectDefinitionId", "name"}, true);
 
-		_finderPathCountByODI_N = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByODI_N",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"objectDefinitionId", "name"}, false);
+		_finderPathWithPaginationFindByA_OAEK = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByA_OAEK",
+			new String[] {
+				Boolean.class.getName(), String.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			},
+			new String[] {"active_", "objectActionExecutorKey"}, true);
+
+		_finderPathWithoutPaginationFindByA_OAEK = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByA_OAEK",
+			new String[] {Boolean.class.getName(), String.class.getName()},
+			new String[] {"active_", "objectActionExecutorKey"}, true);
+
+		_finderPathCountByA_OAEK = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByA_OAEK",
+			new String[] {Boolean.class.getName(), String.class.getName()},
+			new String[] {"active_", "objectActionExecutorKey"}, false);
 
 		_finderPathFetchByERC_C_ODI = new FinderPath(
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C_ODI",
@@ -3965,17 +4427,6 @@ public class ObjectActionPersistenceImpl
 				"externalReferenceCode", "companyId", "objectDefinitionId"
 			},
 			true);
-
-		_finderPathCountByERC_C_ODI = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_C_ODI",
-			new String[] {
-				String.class.getName(), Long.class.getName(),
-				Long.class.getName()
-			},
-			new String[] {
-				"externalReferenceCode", "companyId", "objectDefinitionId"
-			},
-			false);
 
 		_finderPathWithPaginationFindByO_A_OATK = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByO_A_OATK",
@@ -4022,18 +4473,6 @@ public class ObjectActionPersistenceImpl
 				"objectActionTriggerKey"
 			},
 			true);
-
-		_finderPathCountByODI_A_N_OATK = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByODI_A_N_OATK",
-			new String[] {
-				Long.class.getName(), Boolean.class.getName(),
-				String.class.getName(), String.class.getName()
-			},
-			new String[] {
-				"objectDefinitionId", "active_", "name",
-				"objectActionTriggerKey"
-			},
-			false);
 
 		ObjectActionUtil.setPersistence(this);
 	}

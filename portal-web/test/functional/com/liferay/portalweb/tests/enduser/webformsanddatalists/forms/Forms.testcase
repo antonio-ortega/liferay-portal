@@ -1,4 +1,4 @@
-@component-name = "portal-web-forms-and-data-lists"
+@component-name = "portal-bpm"
 definition {
 
 	property osgi.module.configuration.file.names = "com.liferay.frontend.js.loader.modules.extender.internal.configuration.Details.config";
@@ -40,10 +40,13 @@ definition {
 	test AddFormInGlobal {
 		property portal.acceptance = "true";
 		property portal.upstream = "true";
-		property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 		property testray.component.names = "Training";
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		Navigator.openURL();
 
@@ -130,12 +133,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		Navigator.openURL();
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.addCP(
 			userEmailAddress = "userea@liferay.com",
@@ -143,19 +141,13 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editPasswordCP(
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Sites",
-			panel = "Control Panel",
-			portlet = "Sites");
+		Site.openSitesAdmin();
 
 		Site.addBlankCP(siteName = "Form Site");
 
@@ -206,10 +198,7 @@ definition {
 			roleTitle = "Forms Site Role Name",
 			roleType = "site");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.assignSiteRoleCP(
 			siteRoleName = "Forms Site Role Name",
@@ -311,7 +300,7 @@ definition {
 
 		// Pausing 60 seconds to check no autosave due to changing the default autosave interval. See LPS-159468
 
-		Pause(locator1 = 60000);
+		Pause(value1 = 60000);
 
 		FormsAdminNavigator.gotoBack();
 
@@ -329,7 +318,7 @@ definition {
 
 		// Pausing 120 seconds due to autosave interval set to two minutes. LPS-159468
 
-		Pause(locator1 = 120000);
+		Pause(value1 = 120000);
 
 		FormsAdminNavigator.gotoBack();
 
@@ -416,9 +405,14 @@ definition {
 			key_checkboxOption = "Never Expire",
 			locator1 = "Form#CHECKBOX_SUBMISSIONS");
 
-		FormViewBuilder.editDate(
+		FormFields.editDateCalendar(
 			fieldName = "Date",
-			fieldValue = "01/01/2001");
+			fieldValue = "01/01/2024",
+			valueDay = 1,
+			valueMonth = "January",
+			valueYear = 2024);
+
+		Click(locator1 = "FormFields#DATE_CALENDAR");
 
 		AssertElementPresent(
 			key_feedbackMessage = "Please enter a valid expiration date. Only future dates are accepted.",
@@ -427,8 +421,6 @@ definition {
 		FormViewBuilder.editDate(
 			fieldName = "Date",
 			fieldValue = "01/01/2100");
-
-		Click(locator1 = "FormFields#DATE_CALENDAR");
 
 		Form.save();
 
@@ -759,6 +751,8 @@ definition {
 		ProductMenu.gotoPortlet(
 			category = "Contenido",
 			portlet = "Formularios");
+
+		Refresh();
 
 		FormsAdminNavigator.gotoEditFormByName(formName = "Created Form Name");
 
@@ -1217,7 +1211,7 @@ definition {
 			outputParameterName = "Country Names",
 			outputParameterPath = "nameCurrentValue",
 			outputParameterType = "List",
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			url = "${portalURL}/api/jsonws/country/get-countries",
 			username = "test@liferay.com");
 
@@ -1324,6 +1318,8 @@ definition {
 			optionName = "Select1",
 			optionValue = "Select 1");
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.editOptionsRow(
 			optionName = "Select2",
 			optionValue = "Select 2",
@@ -1344,6 +1340,8 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1");
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.editOptionsRow(
 			optionName = "Option2",
@@ -1414,17 +1412,7 @@ definition {
 			fieldHelpText = "If checked, the default language of data definitions will be changeable. The default language of data definitions is inherited from the site settings.",
 			fieldName = "changeableDefaultLanguage");
 
-		FormFields.viewSelectLabel(
-			fieldLabel = "Default Display View",
-			fieldName = "defaultDisplayView");
-
-		FormFields.viewSelectValue(fieldName = "defaultDisplayView");
-
 		FormFields.enableCheckbox(fieldName = "changeableDefaultLanguage");
-
-		FormFields.selectSelectOption(
-			fieldName = "defaultDisplayView",
-			selectOption = "List");
 
 		SystemSettings.saveConfiguration();
 
@@ -1436,10 +1424,6 @@ definition {
 			configurationScope = "System Scope");
 
 		FormFields.viewCheckboxChecked(fieldName = "changeableDefaultLanguage");
-
-		FormFields.viewSelectOption(
-			fieldName = "defaultDisplayView",
-			selectOption = "List");
 
 		SystemSettings.resetConfiguration(configurationName = "Dynamic Data Lists");
 
@@ -1577,71 +1561,6 @@ definition {
 		SystemSettings.resetConfiguration(configurationName = "JavaScript Loader");
 	}
 
-	@description = "This is a use case for LPS-59749"
-	@priority = 3
-	test EditFormsConfigurationViaSystemSettings {
-		property portal.acceptance = "true";
-		property portal.upstream = "true";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Forms");
-
-		LexiconEntry.viewActiveDisplayStyle(displayStyle = "table");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "System Settings");
-
-		SystemSettings.gotoConfiguration(
-			configurationCategory = "Forms",
-			configurationName = "Forms",
-			configurationScope = "Site Scope");
-
-		FormFields.viewSelectOption(
-			fieldName = "Default Display View",
-			selectOption = "Table");
-
-		FormFields.selectSelectOption(
-			fieldName = "Default Display View",
-			selectOption = "List");
-
-		SystemSettings.saveConfiguration();
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Forms");
-
-		LexiconEntry.viewActiveDisplayStyle(displayStyle = "list");
-
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "System Settings");
-
-		SystemSettings.gotoConfiguration(
-			configurationCategory = "Forms",
-			configurationName = "Forms",
-			configurationScope = "Site Scope");
-
-		SystemSettings.resetConfiguration(configurationName = "Forms");
-
-		Navigator.openURL();
-
-		ProductMenu.gotoPortlet(
-			category = "Content & Data",
-			portlet = "Forms");
-
-		LexiconEntry.viewActiveDisplayStyle(displayStyle = "table");
-	}
-
 	@description = "This is a use case for LPS-81578."
 	@priority = 4
 	test GuestUserCanNotSeeFormAfterPermissionRemoved {
@@ -1687,7 +1606,7 @@ definition {
 
 		Navigator.openSpecificURL(url = ${publishedFormPublicURL});
 
-		Alert.viewWarningSpecific(warningMessage = "This form is not available or it was not published.");
+		Alert.viewWarningSpecific(warningMessage = "You do not have the permission to view this form.");
 	}
 
 	@description = "Verify that multiple Forms can be deleted"
@@ -2080,6 +1999,8 @@ definition {
 			optionName = "Option1",
 			optionValue = "Option 1");
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
@@ -2098,6 +2019,8 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Select1",
 			optionValue = "Select 1");
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.editOptionsRow(
 			optionName = "Select2",
@@ -2332,6 +2255,10 @@ definition {
 				optionName = "<test${number}",
 				optionValue = "<test ${number}",
 				rowNumber = ${number});
+
+			if (${number} != 2) {
+				FormFields.clickAddOptionButton();
+			}
 		}
 
 		Form.gotoAdvancedTab();
@@ -2355,6 +2282,10 @@ definition {
 	@priority = 4
 	test ViewWidgetPageAtTheTop {
 		var portalURL = PropsUtil.get("portal.url");
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		task ("Given an created Web Content") {
 			WebContentNavigator.openWebContentAdmin(siteURLKey = "guest");
@@ -2447,7 +2378,7 @@ definition {
 
 		// Pausing 60 seconds due to autosave interval set to one minute. See LPS-159468
 
-		Pause(locator1 = 60000);
+		Pause(value1 = 60000);
 
 		FormsAdminNavigator.gotoBack();
 

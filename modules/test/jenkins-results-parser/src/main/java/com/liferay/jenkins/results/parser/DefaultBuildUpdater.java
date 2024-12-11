@@ -7,6 +7,10 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.json.JSONArray;
@@ -33,12 +37,7 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 			build.setJenkinsMaster(jenkinsMaster);
 		}
 
-		JSONObject jsonObject = JenkinsResultsParserUtil.invokeJenkinsBuild(
-			jenkinsMaster, build.getJobName(), build.getParameters());
-
-		build.addInvocation(
-			new Build.Invocation(
-				build, jenkinsMaster, jsonObject.getLong("queueId")));
+		build.addInvocation(_invoke(jenkinsMaster));
 	}
 
 	@Override
@@ -54,12 +53,19 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 
 		build.setJenkinsMaster(jenkinsMaster);
 
-		JSONObject jsonObject = JenkinsResultsParserUtil.invokeJenkinsBuild(
-			jenkinsMaster, build.getJobName(), build.getParameters());
+		build.addInvocation(_invoke(jenkinsMaster));
 
-		build.addInvocation(
-			new Build.Invocation(
-				build, jenkinsMaster, jsonObject.getLong("queueId")));
+		build.reset();
+
+		build.setStatus("queued");
+	}
+
+	@Override
+	public void reset() {
+		super.reset();
+
+		_buildCompleted = null;
+		_buildFailing = null;
 	}
 
 	protected DefaultBuildUpdater(Build build) {
@@ -68,9 +74,23 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 
 	@Override
 	protected boolean isBuildCompleted() {
+		if (_buildCompleted != null) {
+			return _buildCompleted;
+		}
+
 		Build build = getBuild();
 
-		if (!_isBuildCompleted(build)) {
+		JSONObject buildJSONObject = build.getBuildJSONObject(
+			"duration,result");
+
+		if (buildJSONObject == null) {
+			return false;
+		}
+
+		long duration = buildJSONObject.optLong("duration");
+		String result = buildJSONObject.optString("result");
+
+		if ((duration == 0) || JenkinsResultsParserUtil.isNullOrEmpty(result)) {
 			return false;
 		}
 
@@ -78,32 +98,44 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 			ParentBuild parentBuild = (ParentBuild)build;
 
 			for (Build downstreamBuild : parentBuild.getDownstreamBuilds()) {
-				if (!_isBuildCompleted(downstreamBuild)) {
+				if (!downstreamBuild.isCompleted()) {
 					return false;
 				}
 			}
 		}
 
-		return true;
+		_buildCompleted = true;
+
+		return _buildCompleted;
 	}
 
 	@Override
 	protected boolean isBuildFailing() {
+		if (_buildFailing != null) {
+			return _buildFailing;
+		}
+
 		Build build = getBuild();
 
-		JSONObject buildJSONObject = build.getBuildJSONObject("result");
+		String result = build.getResult();
 
-		if (buildJSONObject == null) {
-			return false;
+		if (result == null) {
+			JSONObject buildJSONObject = build.getBuildJSONObject("result");
+
+			if (buildJSONObject == null) {
+				return true;
+			}
+
+			result = buildJSONObject.optString("result");
 		}
-
-		String result = buildJSONObject.optString("result");
 
 		if (!Objects.equals(result, "SUCCESS")) {
-			return false;
+			return true;
 		}
 
-		return true;
+		_buildFailing = false;
+
+		return _buildFailing;
 	}
 
 	@Override
@@ -114,6 +146,12 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 			if (queueItemJSONObject == null) {
 				return false;
 			}
+
+			Build build = getBuild();
+
+			Build.Invocation buildInvocation = build.getCurrentInvocation();
+
+			buildInvocation.setQueueId(queueItemJSONObject.getLong("id"));
 
 			return true;
 		}
@@ -128,17 +166,24 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 		return false;
 	}
 
+	@Override
 	protected boolean isBuildRunning() {
 		try {
-			JSONObject runningBuildJSONObject = _getRunningBuildJSONObject();
+			JSONObject buildJSONObject = _getBuildJSONObject();
 
-			if (runningBuildJSONObject == null) {
+			if (buildJSONObject == null) {
 				return false;
 			}
 
 			Build build = getBuild();
 
-			build.setBuildURL(runningBuildJSONObject.getString("url"));
+			build.setBuildURL(buildJSONObject.getString("url"));
+
+			build.saveBuildURLInBuildDatabase();
+
+			Build.Invocation buildInvocation = build.getCurrentInvocation();
+
+			buildInvocation.setQueueId(buildJSONObject.getLong("queueId"));
 
 			return true;
 		}
@@ -155,6 +200,89 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 		return false;
 	}
 
+	private JSONObject _getBuildJSONObject() {
+		Build build = getBuild();
+
+		Build.Invocation currentInvocation = build.getCurrentInvocation();
+
+		long currentQueueId = currentInvocation.getQueueId();
+
+		JenkinsMaster jenkinsMaster = currentInvocation.getJenkinsMaster();
+
+		List<JSONObject> buildJSONObjects = jenkinsMaster.getBuildJSONObjects(
+			build.getJobName());
+
+		for (JSONObject buildJSONObject : buildJSONObjects) {
+			if (currentQueueId > 0) {
+				if (Objects.equals(
+						buildJSONObject.getLong("queueId"), currentQueueId)) {
+
+					return buildJSONObject;
+				}
+
+				continue;
+			}
+
+			if (_matchesBuildParameters(_getBuildParameters(buildJSONObject))) {
+				Build.Invocation previousInvocation =
+					build.getPreviousInvocation();
+
+				if ((previousInvocation != null) &&
+					Objects.equals(
+						previousInvocation.getBuildURL(),
+						buildJSONObject.optString("url"))) {
+
+					continue;
+				}
+
+				return buildJSONObject;
+			}
+		}
+
+		return null;
+	}
+
+	private Map<String, String> _getBuildParameters(JSONObject jsonObject) {
+		Map<String, String> buildParameters = new HashMap<>();
+
+		if (!jsonObject.has("actions")) {
+			return buildParameters;
+		}
+
+		JSONArray actionsJSONArray = jsonObject.getJSONArray("actions");
+
+		if (actionsJSONArray.length() <= 0) {
+			return buildParameters;
+		}
+
+		JSONArray parametersJSONArray = null;
+
+		for (int i = 0; i < actionsJSONArray.length(); i++) {
+			JSONObject actionJSONObject = actionsJSONArray.getJSONObject(i);
+
+			if (!actionJSONObject.has("parameters")) {
+				continue;
+			}
+
+			parametersJSONArray = actionJSONObject.getJSONArray("parameters");
+		}
+
+		if ((parametersJSONArray == null) || parametersJSONArray.isEmpty()) {
+			return buildParameters;
+		}
+
+		for (int i = 0; i < parametersJSONArray.length(); i++) {
+			JSONObject parameterJSONObject = parametersJSONArray.getJSONObject(
+				i);
+
+			buildParameters.put(
+				parameterJSONObject.getString("name"),
+				parameterJSONObject.getString("value"));
+		}
+
+		return buildParameters;
+	}
+
 	private JSONObject _getQueueItemJSONObject() {
 		try {
 			Build build = getBuild();
@@ -165,121 +293,128 @@ public class DefaultBuildUpdater extends BaseBuildUpdater {
 				return null;
 			}
 
-			JSONObject jsonObject = JenkinsResultsParserUtil.toJSONObject(
-				JenkinsResultsParserUtil.combine(
-					String.valueOf(jenkinsMaster.getURL()),
-					"/queue/api/json?tree=items[id]"),
-				false);
+			List<JSONObject> queueItemJSONObjects = new ArrayList<>(
+				jenkinsMaster.getQueueItemJSONObjects());
 
-			JSONArray queueItemsJSONArray = jsonObject.getJSONArray("items");
-
-			if (queueItemsJSONArray == null) {
-				return null;
-			}
+			String jenkinsJobName = build.getJobName();
 
 			Build.Invocation currentInvocation = build.getCurrentInvocation();
 
-			for (int i = 0; i < queueItemsJSONArray.length(); i++) {
-				JSONObject queueItemJSONObject =
-					queueItemsJSONArray.getJSONObject(i);
+			long currentQueueId = currentInvocation.getQueueId();
 
-				if (Objects.equals(
-						queueItemJSONObject.getLong("id"),
-						currentInvocation.getQueueId())) {
+			for (JSONObject queueItemJSONObject : queueItemJSONObjects) {
+				if (currentQueueId > 0) {
+					if (Objects.equals(
+							queueItemJSONObject.getLong("id"),
+							currentQueueId)) {
+
+						return queueItemJSONObject;
+					}
+
+					continue;
+				}
+
+				JSONObject taskJSONObject = queueItemJSONObject.getJSONObject(
+					"task");
+
+				String taskURL = taskJSONObject.getString("url");
+
+				if (!taskURL.contains("/job/" + jenkinsJobName)) {
+					continue;
+				}
+
+				if (_matchesBuildParameters(
+						_getBuildParameters(queueItemJSONObject))) {
 
 					return queueItemJSONObject;
 				}
 			}
 		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
 		}
 
 		return null;
 	}
 
-	private JSONObject _getRunningBuildJSONObject() {
+	private Build.Invocation _invoke(JenkinsMaster jenkinsMaster) {
 		Build build = getBuild();
 
-		Build.Invocation currentInvocation = build.getCurrentInvocation();
+		try {
+			StringBuilder sb = new StringBuilder();
 
-		int page = 0;
+			sb.append(jenkinsMaster.getURL());
+			sb.append("/job/");
+			sb.append(build.getJobName());
+			sb.append("/buildWithParameters?token=");
+			sb.append(
+				JenkinsResultsParserUtil.getBuildProperty(
+					"jenkins.authentication.token"));
 
-		while (true) {
-			JSONArray runningBuildsJSONArray = _getRunningBuildsJSONArray(page);
+			Map<String, String> buildParameters = new HashMap<>(
+				build.getParameters());
 
-			if (runningBuildsJSONArray.length() == 0) {
-				break;
-			}
+			for (Map.Entry<String, String> buildParameter :
+					buildParameters.entrySet()) {
 
-			for (int i = 0; i < runningBuildsJSONArray.length(); i++) {
-				JSONObject runningBuildJSONObject =
-					runningBuildsJSONArray.getJSONObject(i);
+				String buildParameterName = buildParameter.getKey();
 
-				if (Objects.equals(
-						runningBuildJSONObject.getLong("queueId"),
-						currentInvocation.getQueueId())) {
-
-					return runningBuildJSONObject;
+				if (!buildParameterName.matches("[A-Z0-9_]+")) {
+					continue;
 				}
+
+				sb.append("&");
+				sb.append(buildParameterName);
+				sb.append("=");
+				sb.append(buildParameter.getValue());
 			}
 
-			page++;
-		}
+			JenkinsResultsParserUtil.toString(sb.toString());
 
-		return null;
+			return new Build.Invocation(build, jenkinsMaster);
+		}
+		catch (IOException ioException) {
+			System.out.println("WARNING: Unable to invoke Jenkins using curl");
+
+			try {
+				JSONObject jsonObject =
+					JenkinsResultsParserUtil.invokeJenkinsBuild(
+						jenkinsMaster, build.getJobName(),
+						build.getParameters());
+
+				return new Build.Invocation(
+					build, jenkinsMaster, jsonObject.getLong("queueId"));
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		}
 	}
 
-	private JSONArray _getRunningBuildsJSONArray(final int page) {
-		Retryable<JSONArray> retryable = new Retryable<JSONArray>(
-			true, 2, 10, true) {
+	private boolean _matchesBuildParameters(
+		Map<String, String> buildParameters) {
 
-			@Override
-			public JSONArray execute() {
-				Build build = getBuild();
+		Build build = getBuild();
 
-				JenkinsMaster jenkinsMaster = build.getJenkinsMaster();
+		for (Map.Entry<String, String> buildParameter :
+				buildParameters.entrySet()) {
 
-				String url = JenkinsResultsParserUtil.getLocalURL(
-					JenkinsResultsParserUtil.combine(
-						String.valueOf(jenkinsMaster.getURL()), "/job/",
-						JenkinsResultsParserUtil.fixURL(build.getJobName()),
-						"/api/json?tree=allBuilds[queueId,url]{",
-						String.valueOf(page * 100), ",",
-						String.valueOf((page + 1) * 100), "}"));
+			String parameterValue = build.getParameterValue(
+				buildParameter.getKey());
 
-				try {
-					JSONObject jsonObject =
-						JenkinsResultsParserUtil.toJSONObject(url, false);
+			if (JenkinsResultsParserUtil.isNullOrEmpty(parameterValue) ||
+				Objects.equals(buildParameter.getValue(), parameterValue)) {
 
-					return jsonObject.getJSONArray("allBuilds");
-				}
-				catch (IOException ioException) {
-					throw new RuntimeException(ioException);
-				}
+				continue;
 			}
 
-		};
-
-		return retryable.executeWithRetries();
-	}
-
-	private boolean _isBuildCompleted(Build build) {
-		JSONObject buildJSONObject = build.getBuildJSONObject(
-			"duration,result");
-
-		if (buildJSONObject == null) {
-			return false;
-		}
-
-		long duration = buildJSONObject.optLong("duration");
-		String result = buildJSONObject.optString("result");
-
-		if ((duration == 0) || JenkinsResultsParserUtil.isNullOrEmpty(result)) {
 			return false;
 		}
 
 		return true;
 	}
+
+	private Boolean _buildCompleted;
+	private Boolean _buildFailing;
 
 }

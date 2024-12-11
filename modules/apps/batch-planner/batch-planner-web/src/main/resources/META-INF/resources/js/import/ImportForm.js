@@ -10,6 +10,9 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 import SaveTemplate from '../SaveTemplate';
 import {
+	CSV_FORMAT,
+	DISALLOWED_CSV_ENTITY_TYPES,
+	FILE_EXTENSION_EVENT,
 	FILE_SCHEMA_EVENT,
 	SCHEMA_SELECTED_EVENT,
 	TEMPLATE_SELECTED_EVENT,
@@ -37,6 +40,24 @@ const TableFieldsHeader = () => (
 		</ClayTable.Row>
 	</ClayTable.Head>
 );
+
+const anyOfGroupNotFilled = (fieldsSelections, relationshipGroups) => {
+	return Object.keys(relationshipGroups).some(
+		(group) =>
+			!relationshipGroups[group].some((value) =>
+				Object.keys(fieldsSelections).some((field) => field === value)
+			)
+	);
+};
+
+const isAnyOfValid = (dbField, fieldsSelections, relationshipGroups) => {
+	return Object.keys(fieldsSelections).some(
+		(selectedField) =>
+			relationshipGroups[dbField.anyOfGroup] &&
+			relationshipGroups[dbField.anyOfGroup].includes(selectedField)
+	);
+};
+
 function ImportForm({
 	formDataQuerySelector,
 	formImportURL,
@@ -52,9 +73,25 @@ function ImportForm({
 	const [fileFields, setFileFields] = useState();
 	const [fileContent, setFileContent] = useState();
 	const [fieldsSelections, setFieldsSelections] = useState({});
-	const [mappingsToBeEvaluated, setMappingsToBeEvaluated] = useState(
-		mappedFields
-	);
+	const [mappingsToBeEvaluated, setMappingsToBeEvaluated] =
+		useState(mappedFields);
+	const relationshipGroups = useMemo(() => {
+		const groups = {};
+
+		dbFields.required.forEach((dbField) => {
+			const {anyOfGroup, name} = dbField;
+
+			if (anyOfGroup) {
+				if (!groups[anyOfGroup]) {
+					groups[anyOfGroup] = [];
+				}
+
+				groups[anyOfGroup].push(name);
+			}
+		});
+
+		return groups;
+	}, [dbFields]);
 	const useTemplateMappingRef = useRef();
 
 	const formIsValid = useMemo(() => {
@@ -66,11 +103,14 @@ function ImportForm({
 		}
 
 		const requiredFieldNotFilled = dbFields.required.some(
-			(dbField) => !fieldsSelections[dbField.name]
+			(dbField) => !fieldsSelections[dbField.name] && !dbField.anyOfGroup
 		);
 
-		return !requiredFieldNotFilled;
-	}, [fieldsSelections, dbFields]);
+		return (
+			!requiredFieldNotFilled &&
+			!anyOfGroupNotFilled(fieldsSelections, relationshipGroups)
+		);
+	}, [dbFields, fieldsSelections, relationshipGroups]);
 
 	const updateFieldMapping = (fileField, dbFieldName) => {
 		setFieldsSelections((prevSelections) => {
@@ -118,16 +158,46 @@ function ImportForm({
 			toggleDownloadTemplateAlert(schema);
 		}
 
+		function handleFileExtensionUpdate({entityType, fileExtension}) {
+			if (
+				fileExtension === CSV_FORMAT &&
+				DISALLOWED_CSV_ENTITY_TYPES.includes(entityType)
+			) {
+				setDbFields({
+					optional: [],
+					required: [],
+				});
+
+				const downloadTemplateAlert = document.getElementById(
+					`${portletNamespace}downloadTemplateAlert`
+				);
+
+				if (downloadTemplateAlert) {
+					downloadTemplateAlert.classList.add('hide');
+				}
+			}
+		}
+
 		function handleFileSchemaUpdate({fileContent, schema}) {
 			setFileContent(fileContent);
 
-			setFileFields(schema);
+			setFileFields(getFirstLevelFieldNames(schema));
 		}
 
 		function handleTemplateSelect({template}) {
 			if (template) {
 				setMappingsToBeEvaluated(template.mappings);
 			}
+		}
+
+		function getFirstLevelFieldNames(schema) {
+			return [
+				...new Set(
+					schema.map((fileField) => {
+						return fileField.split('.')[0];
+					})
+				),
+			];
 		}
 
 		function toggleDownloadTemplateAlert(schema) {
@@ -143,11 +213,13 @@ function ImportForm({
 			}
 		}
 
+		Liferay.on(FILE_EXTENSION_EVENT, handleFileExtensionUpdate);
 		Liferay.on(FILE_SCHEMA_EVENT, handleFileSchemaUpdate);
 		Liferay.on(SCHEMA_SELECTED_EVENT, handleSchemaUpdated);
 		Liferay.on(TEMPLATE_SELECTED_EVENT, handleTemplateSelect);
 
 		return () => {
+			Liferay.detach(FILE_EXTENSION_EVENT, handleFileExtensionUpdate);
 			Liferay.detach(FILE_SCHEMA_EVENT, handleFileSchemaUpdate);
 			Liferay.detach(SCHEMA_SELECTED_EVENT, handleSchemaUpdated);
 			Liferay.detach(TEMPLATE_SELECTED_EVENT, handleTemplateSelect);
@@ -196,9 +268,9 @@ function ImportForm({
 		<>
 			{formIsVisible && (
 				<div className="card import-mapping-table">
-					<h4 className="card-header">
+					<div className="card-header h4">
 						{Liferay.Language.get('import-mappings')}
-					</h4>
+					</div>
 
 					<div className="card-body p-0">
 						<ClayTable borderless hover={false}>
@@ -223,6 +295,11 @@ function ImportForm({
 												dbField={dbField}
 												fileFields={fileFields}
 												formEvaluated={formEvaluated}
+												isAnyOfValid={isAnyOfValid(
+													dbField,
+													fieldsSelections,
+													relationshipGroups
+												)}
 												key={dbField.name}
 												portletNamespace={
 													portletNamespace
@@ -242,7 +319,12 @@ function ImportForm({
 												selectedFileField={
 													fieldsSelections[
 														dbField.name
-													] || ''
+													] ||
+													('' &&
+														!anyOfGroupNotFilled(
+															fieldsSelections,
+															relationshipGroups
+														))
 												}
 												updateFieldMapping={(
 													selectedFileField

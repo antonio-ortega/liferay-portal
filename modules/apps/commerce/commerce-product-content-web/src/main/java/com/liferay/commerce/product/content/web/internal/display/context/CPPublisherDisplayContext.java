@@ -160,6 +160,10 @@ public class CPPublisherDisplayContext extends BaseCPPublisherDisplayContext {
 		else if (isSelectionStyleManual()) {
 			List<CPCatalogEntry> catalogEntries = getCPCatalogEntries();
 
+			if (catalogEntries == null) {
+				return null;
+			}
+
 			int end = _searchContainer.getEnd();
 
 			if (end > catalogEntries.size()) {
@@ -196,7 +200,7 @@ public class CPPublisherDisplayContext extends BaseCPPublisherDisplayContext {
 			_amImageHTMLTagFactory,
 			_portal.getClassNameId(CPDefinition.class.getName()),
 			cpDefinition.getCPDefinitionId(), _commerceCatalogDefaultImage,
-			_commerceMediaResolver, _cpAttachmentFileEntryLocalService,
+			_commerceMediaResolver, _cpAttachmentFileEntryLocalService, false,
 			cpDefinition.getGroupId(), themeDisplay);
 	}
 
@@ -204,7 +208,7 @@ public class CPPublisherDisplayContext extends BaseCPPublisherDisplayContext {
 		LiferayPortletResponse liferayPortletResponse =
 			cpContentRequestHelper.getLiferayPortletResponse();
 
-		if (_hasCPContentPortlet()) {
+		if (_hasCPContentPortlet() || (_getCProductId() != 0)) {
 			PortletURL portletURL = new PortletURLWrapper(
 				liferayPortletResponse.createRenderURL()) {
 
@@ -310,6 +314,10 @@ public class CPPublisherDisplayContext extends BaseCPPublisherDisplayContext {
 					CommerceContext commerceContext =
 						(CommerceContext)httpServletRequest.getAttribute(
 							CommerceWebKeys.COMMERCE_CONTEXT);
+
+					if (commerceContext == null) {
+						return null;
+					}
 
 					AccountEntry accountEntry =
 						commerceContext.getAccountEntry();

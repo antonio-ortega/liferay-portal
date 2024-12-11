@@ -30,8 +30,8 @@
 			&[data-state='next'] {
 				&.is-sliding-forwards {
 					div {
-						transition: transform 700ms
-								cubic-bezier(0.165, 0.84, 0.44, 1),
+						transition:
+							transform 700ms cubic-bezier(0.165, 0.84, 0.44, 1),
 							opacity 400ms cubic-bezier(0.165, 0.84, 0.44, 1);
 					}
 				}
@@ -192,6 +192,6 @@
 	}
 
 	@media screen and (max-width: $bp-xsmall) {
-		height: calc(100vh - #{$liferay-topbar-height-small});
+		height: calc(100vh - var(--control-menu-container-height));
 	}
 }

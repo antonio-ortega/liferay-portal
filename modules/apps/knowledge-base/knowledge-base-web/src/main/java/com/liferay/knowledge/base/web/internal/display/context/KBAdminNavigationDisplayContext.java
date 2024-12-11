@@ -44,6 +44,7 @@ import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.LiferayPortletUtil;
+import com.liferay.trash.TrashHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,7 +64,7 @@ public class KBAdminNavigationDisplayContext {
 
 	public KBAdminNavigationDisplayContext(
 			HttpServletRequest httpServletRequest, RenderRequest renderRequest,
-			RenderResponse renderResponse)
+			RenderResponse renderResponse, TrashHelper trashHelper)
 		throws PortalException {
 
 		_httpServletRequest = httpServletRequest;
@@ -80,7 +81,7 @@ public class KBAdminNavigationDisplayContext {
 			PortalUtil.getLiferayPortletRequest(
 				(PortletRequest)httpServletRequest.getAttribute(
 					JavaConstants.JAVAX_PORTLET_REQUEST)),
-			_liferayPortletResponse);
+			_liferayPortletResponse, trashHelper);
 	}
 
 	public List<NavigationItem> getInfoPanelNavigationItems() {
@@ -110,8 +111,6 @@ public class KBAdminNavigationDisplayContext {
 				"href",
 				PortletURLBuilder.createRenderURL(
 					_liferayPortletResponse
-				).setMVCPath(
-					"/admin/view.jsp"
 				).buildString()
 			).put(
 				"id", KBFolderConstants.DEFAULT_PARENT_FOLDER_ID
@@ -291,7 +290,7 @@ public class KBAdminNavigationDisplayContext {
 		List<KBArticle> kbArticles = KBArticleServiceUtil.getKBArticles(
 			parentKBArticle.getGroupId(), parentKBArticle.getResourcePrimKey(),
 			QueryUtil.ALL_POS, QueryUtil.ALL_POS, WorkflowConstants.STATUS_ANY,
-			new KBArticleTitleComparator(true));
+			KBArticleTitleComparator.getInstance(true));
 
 		for (KBArticle kbArticle : kbArticles) {
 			if (moveKBObjectId == kbArticle.getResourcePrimKey()) {
@@ -343,7 +342,7 @@ public class KBAdminNavigationDisplayContext {
 		List<Object> kbObjects = KBFolderServiceUtil.getKBFoldersAndKBArticles(
 			_themeDisplay.getScopeGroupId(), parentFolderId,
 			WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			new KBObjectsPriorityComparator<>(true));
+			KBObjectsPriorityComparator.getInstance(true));
 
 		for (Object kbObject : kbObjects) {
 			if (kbObject instanceof KBFolder) {
@@ -426,7 +425,7 @@ public class KBAdminNavigationDisplayContext {
 			KBTemplateServiceUtil.getGroupKBTemplates(
 				_themeDisplay.getScopeGroupId(), QueryUtil.ALL_POS,
 				WorkflowConstants.STATUS_ANY,
-				new KBTemplateTitleComparator(true));
+				KBTemplateTitleComparator.getInstance(true));
 
 		for (KBTemplate kbTemplate : kbTemplates) {
 			navigationItemsJSONArray.put(

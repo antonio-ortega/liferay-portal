@@ -9,14 +9,22 @@ import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.layout.item.selector.LayoutItemSelectorReturnType;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutServiceUtil;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
+import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
@@ -76,7 +84,7 @@ public class LayoutUtil {
 		return PortalUtil.getLayoutRelativeURL(layout, themeDisplay, false);
 	}
 
-	public static JSONArray getLayoutsJSONArray(
+	public static JSONObject getLayoutsJSONObject(
 			boolean checkDisplayPage, boolean enableCurrentPage, long groupId,
 			HttpServletRequest httpServletRequest,
 			String itemSelectorReturnType, boolean privateLayout,
@@ -90,13 +98,16 @@ public class LayoutUtil {
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		List<Layout> layouts = LayoutServiceUtil.getLayouts(
-			groupId, privateLayout, parentLayoutId, false, start, end);
+		List<Layout> layouts = ListUtil.filter(
+			LayoutServiceUtil.getLayouts(
+				groupId, privateLayout, parentLayoutId),
+			layout -> !_isExcludedLayout(layout));
 
-		for (Layout layout : layouts) {
-			if (_isExcludedLayout(layout)) {
-				continue;
-			}
+		for (Layout layout : ListUtil.subList(layouts, start, end)) {
+			List<Layout> childLayouts = ListUtil.filter(
+				LayoutServiceUtil.getLayouts(
+					groupId, layout.isPrivateLayout(), layout.getLayoutId()),
+				curLayout -> !_isExcludedLayout(curLayout));
 
 			jsonArray.put(
 				JSONUtil.put(
@@ -115,7 +126,20 @@ public class LayoutUtil {
 				).put(
 					"groupId", layout.getGroupId()
 				).put(
-					"hasChildren", layout.hasChildren()
+					"hasChildren", ListUtil.isNotEmpty(childLayouts)
+				).put(
+					"hasGuestViewPermission",
+					() -> {
+						Role role = RoleLocalServiceUtil.getRole(
+							layout.getCompanyId(), RoleConstants.GUEST);
+
+						return ResourcePermissionLocalServiceUtil.
+							hasResourcePermission(
+								layout.getCompanyId(), Layout.class.getName(),
+								ResourceConstants.SCOPE_INDIVIDUAL,
+								String.valueOf(layout.getPlid()),
+								role.getRoleId(), ActionKeys.VIEW);
+					}
 				).put(
 					"icon", layout.getIcon()
 				).put(
@@ -127,11 +151,7 @@ public class LayoutUtil {
 				).put(
 					"paginated",
 					() -> {
-						int layoutsCount = LayoutServiceUtil.getLayoutsCount(
-							groupId, layout.isPrivateLayout(),
-							layout.getLayoutId());
-
-						if (layoutsCount >
+						if (childLayouts.size() >
 								PropsValues.
 									LAYOUT_MANAGE_PAGES_INITIAL_CHILDREN) {
 
@@ -168,7 +188,11 @@ public class LayoutUtil {
 				));
 		}
 
-		return jsonArray;
+		return JSONUtil.put(
+			"items", jsonArray
+		).put(
+			"total", layouts.size()
+		);
 	}
 
 	private static boolean _isExcludedLayout(Layout layout) {

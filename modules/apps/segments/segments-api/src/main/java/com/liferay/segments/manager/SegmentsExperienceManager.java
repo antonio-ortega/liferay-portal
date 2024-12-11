@@ -5,10 +5,13 @@
 
 package com.liferay.segments.manager;
 
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
@@ -27,6 +30,23 @@ public class SegmentsExperienceManager {
 	}
 
 	public long getSegmentsExperienceId(HttpServletRequest httpServletRequest) {
+		long segmentsExperienceId = ParamUtil.getLong(
+			PortalUtil.getOriginalServletRequest(httpServletRequest),
+			"segmentsExperienceId", -1);
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		if ((segmentsExperienceId != -1) &&
+			permissionChecker.isGroupAdmin(themeDisplay.getScopeGroupId())) {
+
+			return segmentsExperienceId;
+		}
+
 		long[] segmentsExperienceIds = GetterUtil.getLongValues(
 			httpServletRequest.getAttribute(
 				SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS));
@@ -34,10 +54,6 @@ public class SegmentsExperienceManager {
 		if (ArrayUtil.isNotEmpty(segmentsExperienceIds)) {
 			return segmentsExperienceIds[0];
 		}
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay != null) {
 			return _segmentsExperienceLocalService.

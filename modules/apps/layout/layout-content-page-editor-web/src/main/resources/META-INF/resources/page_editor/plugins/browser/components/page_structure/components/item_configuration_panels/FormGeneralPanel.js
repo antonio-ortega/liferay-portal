@@ -7,84 +7,133 @@ import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput, ClayToggle} from '@clayui/form';
 import ClayPanel from '@clayui/panel';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {useId} from 'frontend-js-components-web';
 import {openToast} from 'frontend-js-web';
 import React, {useCallback, useEffect, useState} from 'react';
 
-import {addMappingFields} from '../../../../../../app/actions/index';
-import updateItemLocalConfig from '../../../../../../app/actions/updateItemLocalConfig';
 import {CheckboxField} from '../../../../../../app/components/fragment_configuration_fields/CheckboxField';
 import {SelectField} from '../../../../../../app/components/fragment_configuration_fields/SelectField';
 import {TextField} from '../../../../../../app/components/fragment_configuration_fields/TextField';
 import {COMMON_STYLES_ROLES} from '../../../../../../app/config/constants/commonStylesRoles';
 import {
-	useDispatch,
+	useItemLocalConfig,
+	useUpdateItemLocalConfig,
+} from '../../../../../../app/contexts/LocalConfigContext';
+import {
 	useSelector,
+	useSelectorRef,
 } from '../../../../../../app/contexts/StoreContext';
 import selectLanguageId from '../../../../../../app/selectors/selectLanguageId';
-import InfoItemService from '../../../../../../app/services/InfoItemService';
-import updateFormItemConfig from '../../../../../../app/thunks/updateFormItemConfig';
 import {formIsMapped} from '../../../../../../app/utils/formIsMapped';
 import {formIsRestricted} from '../../../../../../app/utils/formIsRestricted';
 import {formIsUnavailable} from '../../../../../../app/utils/formIsUnavailable';
 import {getEditableLocalizedValue} from '../../../../../../app/utils/getEditableLocalizedValue';
-import getMappingFieldsKey from '../../../../../../app/utils/getMappingFieldsKey';
+import {hasLocalizableFields} from '../../../../../../app/utils/hasLocalizableFields';
 import {setIn} from '../../../../../../app/utils/setIn';
+import {useSaveFormConfig} from '../../../../../../app/utils/useSaveFormConfig';
 import CurrentLanguageFlag from '../../../../../../common/components/CurrentLanguageFlag';
+import DisplayPageSelector from '../../../../../../common/components/DisplayPageSelector';
 import {LayoutSelector} from '../../../../../../common/components/LayoutSelector';
-import MappingFieldSelector from '../../../../../../common/components/MappingFieldSelector';
 import {CommonStyles} from './CommonStyles';
 import ContainerDisplayOptions from './ContainerDisplayOptions';
 import FormMappingOptions from './FormMappingOptions';
+import FormMultistepOptions from './FormMultistepOptions';
 
 export function FormGeneralPanel({item}) {
-	const dispatch = useDispatch();
+	const isMounted = useIsMounted();
+	const updateItemLocalConfig = useUpdateItemLocalConfig();
 
-	const onValueSelect = useCallback(
-		(nextConfig, overridePreviousConfig = true) =>
-			dispatch(
-				updateFormItemConfig({
-					itemConfig: nextConfig,
-					itemId: item.itemId,
-					overridePreviousConfig,
-				})
-			),
-		[dispatch, item.itemId]
-	);
+	const saveFormConfig = useSaveFormConfig(item);
 
-	if (Liferay.FeatureFlags['LPS-169923']) {
-		if (formIsUnavailable(item)) {
-			return (
-				<ClayAlert
-					displayType="warning"
-					title={`${Liferay.Language.get('warning')}:`}
-				>
-					{Liferay.Language.get(
-						'this-content-is-currently-unavailable-or-has-been-deleted.-users-cannot-see-this-fragment'
-					)}
-				</ClayAlert>
-			);
-		}
-		else if (formIsRestricted(item)) {
-			return (
-				<ClayAlert displayType="secondary">
-					{Liferay.Language.get(
-						'this-content-cannot-be-displayed-due-to-permission-restrictions'
-					)}
-				</ClayAlert>
-			);
-		}
+	useEffect(() => {
+		return () => {
+			if (!isMounted()) {
+				updateItemLocalConfig(item.itemId, {
+					showMessagePreview: false,
+				});
+			}
+		};
+	}, [isMounted, item.itemId, updateItemLocalConfig]);
+
+	if (formIsUnavailable(item)) {
+		return (
+			<ClayAlert
+				displayType="warning"
+				title={`${Liferay.Language.get('warning')}:`}
+			>
+				{Liferay.Language.get(
+					'this-content-is-currently-unavailable-or-has-been-deleted.-users-cannot-see-this-fragment'
+				)}
+			</ClayAlert>
+		);
+	}
+	else if (formIsRestricted(item)) {
+		return (
+			<ClayAlert displayType="secondary">
+				{Liferay.Language.get(
+					'this-content-cannot-be-displayed-due-to-permission-restrictions'
+				)}
+			</ClayAlert>
+		);
 	}
 
 	return (
 		<>
-			<FormOptions item={item} onValueSelect={onValueSelect} />
+			<FormOptions item={item} onValueSelect={saveFormConfig} />
 
-			<CommonStyles
-				commonStylesValues={item.config.styles || {}}
-				item={item}
-				role={COMMON_STYLES_ROLES.general}
-			/>
+			{formIsMapped(item) && (
+				<>
+					<div className="mb-3 panel-group-sm">
+						<ClayPanel
+							collapsable
+							defaultExpanded
+							displayTitle={Liferay.Language.get(
+								'actions-after-submit'
+							)}
+							displayType="unstyled"
+							showCollapseIcon
+						>
+							<ClayPanel.Body>
+								<SuccessInteractionOptions
+									item={item}
+									onValueSelect={saveFormConfig}
+								/>
+							</ClayPanel.Body>
+						</ClayPanel>
+					</div>
+
+					{Liferay.FeatureFlags['LPD-37927'] ? (
+						<LocalizationOptions
+							item={item}
+							onValueSelect={saveFormConfig}
+						/>
+					) : null}
+				</>
+			)}
+
+			<div className="mb-3 panel-group-sm">
+				<ClayPanel
+					collapsable
+					defaultExpanded
+					displayTitle={Liferay.Language.get('frame')}
+					displayType="unstyled"
+					showCollapseIcon
+				>
+					<ClayPanel.Body>
+						{formIsMapped(item) ? (
+							<ContainerDisplayOptions item={item} />
+						) : null}
+
+						<CommonStyles
+							commonStylesValues={item.config.styles || {}}
+							embedInCollapsableSection={false}
+							item={item}
+							role={COMMON_STYLES_ROLES.general}
+						/>
+					</ClayPanel.Body>
+				</ClayPanel>
+			</div>
 		</>
 	);
 }
@@ -105,16 +154,12 @@ function FormOptions({item, onValueSelect}) {
 						onValueSelect={onValueSelect}
 					/>
 
-					{formIsMapped(item) && (
-						<>
-							<SuccessInteractionOptions
-								item={item}
-								onValueSelect={onValueSelect}
-							/>
-
-							<ContainerDisplayOptions item={item} />
-						</>
-					)}
+					{formIsMapped(item) && Liferay.FeatureFlags['LPD-10727'] ? (
+						<FormMultistepOptions
+							item={item}
+							onValueSelect={onValueSelect}
+						/>
+					) : null}
 				</ClayPanel.Body>
 			</ClayPanel>
 		</div>
@@ -151,6 +196,9 @@ const SUCCESS_MESSAGE_OPTIONS = [
 ];
 
 function SuccessInteractionOptions({item, onValueSelect}) {
+	const localConfig = useItemLocalConfig(item.itemId);
+	const updateItemLocalConfig = useUpdateItemLocalConfig();
+
 	const {successMessage: interactionConfig = {}} = item.config;
 
 	const {
@@ -163,8 +211,6 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 		url,
 	} = interactionConfig || {};
 
-	const dispatch = useDispatch();
-
 	const languageId = useSelector(selectLanguageId);
 
 	const helpTextId = useId();
@@ -176,20 +222,6 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 		Liferay.Language.get('your-information-was-successfully-received')
 	);
 
-	useEffect(() => {
-		return () => {
-			dispatch(
-				updateItemLocalConfig({
-					disableUndo: true,
-					itemConfig: {
-						showMessagePreview: false,
-					},
-					itemId: item.itemId,
-				})
-			);
-		};
-	}, [item.itemId, dispatch]);
-
 	const onConfigChange = useCallback(
 		(config, override = false) => {
 			const nextConfig = override
@@ -197,9 +229,9 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 				: {
 						...interactionConfig,
 						...config,
-				  };
+					};
 
-			onValueSelect({successMessage: nextConfig}, false);
+			onValueSelect({successMessage: nextConfig});
 		},
 		[interactionConfig, onValueSelect]
 	);
@@ -207,20 +239,6 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 	const [showNotificationPreview, setShowNotificationPreview] = useState(
 		item.config.showNotificationPreview
 	);
-
-	const onPreviewNotification = (checked) => {
-		setShowNotificationPreview(checked);
-
-		dispatch(
-			updateItemLocalConfig({
-				disableUndo: true,
-				itemConfig: {
-					showNotificationPreview: checked,
-				},
-				itemId: item.itemId,
-			})
-		);
-	};
 
 	const hidePreview = () => {
 		const previewElement = document.getElementById(previewId);
@@ -232,7 +250,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 		<>
 			<SelectField
 				field={{
-					label: Liferay.Language.get('success-interaction'),
+					label: Liferay.Language.get('success-action'),
 					name: 'source',
 					typeOptions: {
 						validValues: SUCCESS_MESSAGE_OPTIONS,
@@ -290,20 +308,14 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 					<ClayForm.Group small>
 						<ClayToggle
 							label={Liferay.Language.get(
-								'preview-embedded-message'
+								'preview-success-message'
 							)}
-							onToggle={(checked) => {
-								dispatch(
-									updateItemLocalConfig({
-										disableUndo: true,
-										itemConfig: {
-											showMessagePreview: checked,
-										},
-										itemId: item.itemId,
-									})
-								);
-							}}
-							toggled={Boolean(item.config.showMessagePreview)}
+							onToggle={(checked) =>
+								updateItemLocalConfig(item.itemId, {
+									showMessagePreview: checked,
+								})
+							}
+							toggled={localConfig.showMessagePreview}
 						/>
 					</ClayForm.Group>
 				</>
@@ -355,10 +367,9 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 
 			{type === DISPLAY_PAGE_OPTION && (
 				<DisplayPageSelector
-					item={item}
+					mappingIds={item.config}
 					onConfigChange={onConfigChange}
 					selectedValue={displayPage}
-					type={type}
 				/>
 			)}
 
@@ -368,7 +379,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 						<CheckboxField
 							field={{
 								label: Liferay.Language.get(
-									'show-notification-when-form-is-submitted'
+									'show-notification-after-submit'
 								),
 								name: 'showNotification',
 							}}
@@ -395,7 +406,7 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 											}}
 											onValueSelect={(_, value) => {
 												if (showNotificationPreview) {
-													onPreviewNotification(
+													setShowNotificationPreview(
 														false
 													);
 													hidePreview();
@@ -421,13 +432,17 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 									aria-label={Liferay.Language.get(
 										'preview-success-notification'
 									)}
+									disabled={showNotificationPreview}
 									displayType="secondary"
 									onClick={() => {
-										onPreviewNotification(true);
+										setShowNotificationPreview(true);
+
 										openToast({
 											message: localizedNotificationText,
 											onClose: () =>
-												onPreviewNotification(false),
+												setShowNotificationPreview(
+													false
+												),
 											toastProps: {
 												id: previewId,
 											},
@@ -445,72 +460,132 @@ function SuccessInteractionOptions({item, onValueSelect}) {
 	);
 }
 
-function DisplayPageSelector({item, onConfigChange, selectedValue, type}) {
-	const dispatch = useDispatch();
+const DISABLED_OPTION = 'disabled';
+const READ_ONLY_OPTION = 'read-only';
 
-	const mappingFields = useSelector((state) => state.mappingFields);
+const UNLOCALIZED_FIELDS_STATE_OPTIONS = [
+	{
+		label: Liferay.Language.get('disabled'),
+		value: DISABLED_OPTION,
+	},
+	{
+		label: Liferay.Language.get('read-only'),
+		value: READ_ONLY_OPTION,
+	},
+];
 
-	const [displayPageFields, setDisplayPageFields] = useState(null);
+function LocalizationOptions({item, onValueSelect}) {
+	const languageId = useSelector(selectLanguageId);
+
+	const stateRef = useSelectorRef((state) => state);
+
+	const {localizationConfig = {}} = item.config;
+
+	const {unlocalizedFieldsMessage, unlocalizedFieldsState} =
+		localizationConfig || {};
+
+	const unlocalizedMessage = getEditableLocalizedValue(
+		unlocalizedFieldsMessage,
+		languageId,
+		Liferay.Language.get('this-field-cannot-be-localized')
+	);
+
+	const helpTextId = useId();
+
+	const [showLocalizationOptions, setShowLocalizationOptions] =
+		useState(false);
 
 	useEffect(() => {
-		if (type !== DISPLAY_PAGE_OPTION) {
-			return;
-		}
-
-		const {classNameId, classTypeId} = item.config;
-
-		const key = getMappingFieldsKey({classNameId, classTypeId});
-
-		const fieldSets = mappingFields[key];
-
-		if (fieldSets) {
-			setDisplayPageFields(filterFields(fieldSets));
-		}
-		else {
-			InfoItemService.getAvailableStructureMappingFields({
-				classNameId,
-				classTypeId,
-			}).then((newFields) => {
-				dispatch(addMappingFields({fields: newFields, key}));
-			});
-		}
-	}, [dispatch, item, mappingFields, type]);
-
-	return (
-		<MappingFieldSelector
-			className="mb-3"
-			defaultLabel={`-- ${Liferay.Language.get('none')} --`}
-			fields={displayPageFields}
-			label={Liferay.Language.get('display-page')}
-			onValueSelect={(event) =>
-				onConfigChange({
-					displayPage:
-						event.target.value === 'unmapped'
-							? null
-							: event.target.value,
-				})
+		hasLocalizableFields(stateRef.current, item.itemId).then(
+			(hasLocalizableFields) => {
+				setShowLocalizationOptions(hasLocalizableFields);
 			}
-			value={selectedValue}
-		/>
-	);
-}
-
-function filterFields(fieldSets) {
-	return fieldSets.reduce((acc, fieldSet) => {
-		const newFields = fieldSet.fields.filter(
-			(field) => field.type === 'display-page'
 		);
+	}, [stateRef, item.itemId]);
 
-		if (newFields.length) {
-			return [
-				...acc,
-				{
-					...fieldSet,
-					fields: newFields,
-				},
-			];
-		}
+	return showLocalizationOptions ? (
+		<div className="mb-3 panel-group-sm">
+			<ClayPanel
+				collapsable
+				defaultExpanded
+				displayTitle={Liferay.Language.get('unlocalizable-fields')}
+				displayType="unstyled"
+				showCollapseIcon
+			>
+				<ClayPanel.Body>
+					<p className="text-secondary">
+						{Liferay.Language.get(
+							'configure-unlocalizable-fields-when-localization-action-is-taken'
+						)}
+					</p>
 
-		return acc;
-	}, []);
+					<ClayForm.Group small>
+						<SelectField
+							field={{
+								label: Liferay.Language.get(
+									'unlocalizable-fields-state'
+								),
+								name: 'unlocalizableFieldsState',
+								typeOptions: {
+									validValues:
+										UNLOCALIZED_FIELDS_STATE_OPTIONS,
+								},
+							}}
+							onValueSelect={(_name, value) =>
+								onValueSelect({
+									localizationConfig: {
+										...localizationConfig,
+										unlocalizedFieldsState: value,
+									},
+								})
+							}
+							value={unlocalizedFieldsState || DISABLED_OPTION}
+						/>
+					</ClayForm.Group>
+
+					<ClayForm.Group small>
+						<ClayInput.Group className="align-items-end" small>
+							<ClayInput.GroupItem>
+								<TextField
+									aria-describedby={helpTextId}
+									field={{
+										label: Liferay.Language.get(
+											'unlocalizable-fields-message'
+										),
+									}}
+									onValueSelect={(_, value) =>
+										onValueSelect({
+											localizationConfig: setIn(
+												localizationConfig || {},
+												[
+													'unlocalizedFieldsMessage',
+													languageId,
+												],
+
+												value
+											),
+										})
+									}
+									value={unlocalizedMessage}
+								/>
+							</ClayInput.GroupItem>
+
+							<ClayInput.GroupItem shrink>
+								<CurrentLanguageFlag />
+							</ClayInput.GroupItem>
+						</ClayInput.Group>
+
+						<p
+							className="m-0 mt-1 small text-secondary"
+							id={helpTextId}
+						>
+							{Liferay.Language.get(
+								'this-message-appears-over-the-help-icon-of-unlocalizable-fields'
+							)}
+						</p>
+					</ClayForm.Group>
+				</ClayPanel.Body>
+			</ClayPanel>
+		</div>
+	) : null;
 }

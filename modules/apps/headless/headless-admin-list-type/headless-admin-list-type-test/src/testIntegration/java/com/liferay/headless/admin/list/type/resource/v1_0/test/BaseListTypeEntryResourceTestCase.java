@@ -28,20 +28,22 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -62,8 +64,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -101,10 +101,16 @@ public abstract class BaseListTypeEntryResourceTestCase {
 
 		_listTypeEntryResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		ListTypeEntryResource.Builder builder = ListTypeEntryResource.builder();
 
 		listTypeEntryResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -118,7 +124,32 @@ public abstract class BaseListTypeEntryResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ListTypeEntry listTypeEntry1 = randomListTypeEntry();
+
+		String json = objectMapper.writeValueAsString(listTypeEntry1);
+
+		ListTypeEntry listTypeEntry2 = ListTypeEntrySerDes.toDTO(json);
+
+		Assert.assertTrue(equals(listTypeEntry1, listTypeEntry2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ListTypeEntry listTypeEntry = randomListTypeEntry();
+
+		String json1 = objectMapper.writeValueAsString(listTypeEntry);
+		String json2 = ListTypeEntrySerDes.toJSON(listTypeEntry);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -133,40 +164,6 @@ public abstract class BaseListTypeEntryResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ListTypeEntry listTypeEntry1 = randomListTypeEntry();
-
-		String json = objectMapper.writeValueAsString(listTypeEntry1);
-
-		ListTypeEntry listTypeEntry2 = ListTypeEntrySerDes.toDTO(json);
-
-		Assert.assertTrue(equals(listTypeEntry1, listTypeEntry2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ListTypeEntry listTypeEntry = randomListTypeEntry();
-
-		String json1 = objectMapper.writeValueAsString(listTypeEntry);
-		String json2 = ListTypeEntrySerDes.toJSON(listTypeEntry);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -207,7 +204,7 @@ public abstract class BaseListTypeEntryResourceTestCase {
 					externalReferenceCode, null, null, null,
 					Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			ListTypeEntry irrelevantListTypeEntry =
@@ -219,13 +216,12 @@ public abstract class BaseListTypeEntryResourceTestCase {
 				listTypeEntryResource.
 					getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
 						irrelevantExternalReferenceCode, null, null, null,
-						Pagination.of(1, 2), null);
+						Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantListTypeEntry),
-				(List<ListTypeEntry>)page.getItems());
+			assertContains(
+				irrelevantListTypeEntry, (List<ListTypeEntry>)page.getItems());
 			assertValid(
 				page,
 				testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage_getExpectedActions(
@@ -246,11 +242,10 @@ public abstract class BaseListTypeEntryResourceTestCase {
 					externalReferenceCode, null, null, null,
 					Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(listTypeEntry1, listTypeEntry2),
-			(List<ListTypeEntry>)page.getItems());
+		assertContains(listTypeEntry1, (List<ListTypeEntry>)page.getItems());
+		assertContains(listTypeEntry2, (List<ListTypeEntry>)page.getItems());
 		assertValid(
 			page,
 			testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage_getExpectedActions(
@@ -381,6 +376,14 @@ public abstract class BaseListTypeEntryResourceTestCase {
 		String externalReferenceCode =
 			testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage_getExternalReferenceCode();
 
+		Page<ListTypeEntry> listTypeEntryPage =
+			listTypeEntryResource.
+				getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
+					externalReferenceCode, null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			listTypeEntryPage.getTotalCount());
+
 		ListTypeEntry listTypeEntry1 =
 			testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage_addListTypeEntry(
 				externalReferenceCode, randomListTypeEntry());
@@ -393,41 +396,90 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage_addListTypeEntry(
 				externalReferenceCode, randomListTypeEntry());
 
-		Page<ListTypeEntry> page1 =
-			listTypeEntryResource.
-				getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
-					externalReferenceCode, null, null, null,
-					Pagination.of(1, 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ListTypeEntry> listTypeEntries1 =
-			(List<ListTypeEntry>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			listTypeEntries1.toString(), 2, listTypeEntries1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ListTypeEntry> page1 =
+				listTypeEntryResource.
+					getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
+						externalReferenceCode, null, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Page<ListTypeEntry> page2 =
-			listTypeEntryResource.
-				getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
-					externalReferenceCode, null, null, null,
-					Pagination.of(2, 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				listTypeEntry1, (List<ListTypeEntry>)page1.getItems());
 
-		List<ListTypeEntry> listTypeEntries2 =
-			(List<ListTypeEntry>)page2.getItems();
+			Page<ListTypeEntry> page2 =
+				listTypeEntryResource.
+					getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
+						externalReferenceCode, null, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		Assert.assertEquals(
-			listTypeEntries2.toString(), 1, listTypeEntries2.size());
+			assertContains(
+				listTypeEntry2, (List<ListTypeEntry>)page2.getItems());
 
-		Page<ListTypeEntry> page3 =
-			listTypeEntryResource.
-				getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
-					externalReferenceCode, null, null, null,
-					Pagination.of(1, 3), null);
+			Page<ListTypeEntry> page3 =
+				listTypeEntryResource.
+					getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
+						externalReferenceCode, null, null, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit),
+						null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(listTypeEntry1, listTypeEntry2, listTypeEntry3),
-			(List<ListTypeEntry>)page3.getItems());
+			assertContains(
+				listTypeEntry3, (List<ListTypeEntry>)page3.getItems());
+		}
+		else {
+			Page<ListTypeEntry> page1 =
+				listTypeEntryResource.
+					getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
+						externalReferenceCode, null, null, null,
+						Pagination.of(1, totalCount + 2), null);
+
+			List<ListTypeEntry> listTypeEntries1 =
+				(List<ListTypeEntry>)page1.getItems();
+
+			Assert.assertEquals(
+				listTypeEntries1.toString(), totalCount + 2,
+				listTypeEntries1.size());
+
+			Page<ListTypeEntry> page2 =
+				listTypeEntryResource.
+					getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
+						externalReferenceCode, null, null, null,
+						Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ListTypeEntry> listTypeEntries2 =
+				(List<ListTypeEntry>)page2.getItems();
+
+			Assert.assertEquals(
+				listTypeEntries2.toString(), 1, listTypeEntries2.size());
+
+			Page<ListTypeEntry> page3 =
+				listTypeEntryResource.
+					getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
+						externalReferenceCode, null, null, null,
+						Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				listTypeEntry1, (List<ListTypeEntry>)page3.getItems());
+			assertContains(
+				listTypeEntry2, (List<ListTypeEntry>)page3.getItems());
+			assertContains(
+				listTypeEntry3, (List<ListTypeEntry>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -439,7 +491,7 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			(entityField, listTypeEntry1, listTypeEntry2) -> {
 				BeanTestUtil.setProperty(
 					listTypeEntry1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -557,26 +609,35 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			testGetListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage_addListTypeEntry(
 				externalReferenceCode, listTypeEntry2);
 
+		Page<ListTypeEntry> page =
+			listTypeEntryResource.
+				getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
+					externalReferenceCode, null, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ListTypeEntry> ascPage =
 				listTypeEntryResource.
 					getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
 						externalReferenceCode, null, null, null,
-						Pagination.of(1, 2), entityField.getName() + ":asc");
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(listTypeEntry1, listTypeEntry2),
-				(List<ListTypeEntry>)ascPage.getItems());
+			assertContains(
+				listTypeEntry1, (List<ListTypeEntry>)ascPage.getItems());
+			assertContains(
+				listTypeEntry2, (List<ListTypeEntry>)ascPage.getItems());
 
 			Page<ListTypeEntry> descPage =
 				listTypeEntryResource.
 					getListTypeDefinitionByExternalReferenceCodeListTypeEntriesPage(
 						externalReferenceCode, null, null, null,
-						Pagination.of(1, 2), entityField.getName() + ":desc");
+						Pagination.of(1, (int)page.getTotalCount() + 1),
+						entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(listTypeEntry2, listTypeEntry1),
-				(List<ListTypeEntry>)descPage.getItems());
+			assertContains(
+				listTypeEntry2, (List<ListTypeEntry>)descPage.getItems());
+			assertContains(
+				listTypeEntry1, (List<ListTypeEntry>)descPage.getItems());
 		}
 	}
 
@@ -641,7 +702,7 @@ public abstract class BaseListTypeEntryResourceTestCase {
 				listTypeDefinitionId, null, null, null, Pagination.of(1, 10),
 				null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantListTypeDefinitionId != null) {
 			ListTypeEntry irrelevantListTypeEntry =
@@ -652,13 +713,12 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			page =
 				listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
 					irrelevantListTypeDefinitionId, null, null, null,
-					Pagination.of(1, 2), null);
+					Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantListTypeEntry),
-				(List<ListTypeEntry>)page.getItems());
+			assertContains(
+				irrelevantListTypeEntry, (List<ListTypeEntry>)page.getItems());
 			assertValid(
 				page,
 				testGetListTypeDefinitionListTypeEntriesPage_getExpectedActions(
@@ -676,11 +736,10 @@ public abstract class BaseListTypeEntryResourceTestCase {
 		page = listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
 			listTypeDefinitionId, null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(listTypeEntry1, listTypeEntry2),
-			(List<ListTypeEntry>)page.getItems());
+		assertContains(listTypeEntry1, (List<ListTypeEntry>)page.getItems());
+		assertContains(listTypeEntry2, (List<ListTypeEntry>)page.getItems());
 		assertValid(
 			page,
 			testGetListTypeDefinitionListTypeEntriesPage_getExpectedActions(
@@ -819,6 +878,13 @@ public abstract class BaseListTypeEntryResourceTestCase {
 		Long listTypeDefinitionId =
 			testGetListTypeDefinitionListTypeEntriesPage_getListTypeDefinitionId();
 
+		Page<ListTypeEntry> listTypeEntryPage =
+			listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
+				listTypeDefinitionId, null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			listTypeEntryPage.getTotalCount());
+
 		ListTypeEntry listTypeEntry1 =
 			testGetListTypeDefinitionListTypeEntriesPage_addListTypeEntry(
 				listTypeDefinitionId, randomListTypeEntry());
@@ -831,38 +897,84 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			testGetListTypeDefinitionListTypeEntriesPage_addListTypeEntry(
 				listTypeDefinitionId, randomListTypeEntry());
 
-		Page<ListTypeEntry> page1 =
-			listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
-				listTypeDefinitionId, null, null, null, Pagination.of(1, 2),
-				null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ListTypeEntry> listTypeEntries1 =
-			(List<ListTypeEntry>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			listTypeEntries1.toString(), 2, listTypeEntries1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ListTypeEntry> page1 =
+				listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
+					listTypeDefinitionId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<ListTypeEntry> page2 =
-			listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
-				listTypeDefinitionId, null, null, null, Pagination.of(2, 2),
-				null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				listTypeEntry1, (List<ListTypeEntry>)page1.getItems());
 
-		List<ListTypeEntry> listTypeEntries2 =
-			(List<ListTypeEntry>)page2.getItems();
+			Page<ListTypeEntry> page2 =
+				listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
+					listTypeDefinitionId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			listTypeEntries2.toString(), 1, listTypeEntries2.size());
+			assertContains(
+				listTypeEntry2, (List<ListTypeEntry>)page2.getItems());
 
-		Page<ListTypeEntry> page3 =
-			listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
-				listTypeDefinitionId, null, null, null, Pagination.of(1, 3),
-				null);
+			Page<ListTypeEntry> page3 =
+				listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
+					listTypeDefinitionId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(listTypeEntry1, listTypeEntry2, listTypeEntry3),
-			(List<ListTypeEntry>)page3.getItems());
+			assertContains(
+				listTypeEntry3, (List<ListTypeEntry>)page3.getItems());
+		}
+		else {
+			Page<ListTypeEntry> page1 =
+				listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
+					listTypeDefinitionId, null, null, null,
+					Pagination.of(1, totalCount + 2), null);
+
+			List<ListTypeEntry> listTypeEntries1 =
+				(List<ListTypeEntry>)page1.getItems();
+
+			Assert.assertEquals(
+				listTypeEntries1.toString(), totalCount + 2,
+				listTypeEntries1.size());
+
+			Page<ListTypeEntry> page2 =
+				listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
+					listTypeDefinitionId, null, null, null,
+					Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ListTypeEntry> listTypeEntries2 =
+				(List<ListTypeEntry>)page2.getItems();
+
+			Assert.assertEquals(
+				listTypeEntries2.toString(), 1, listTypeEntries2.size());
+
+			Page<ListTypeEntry> page3 =
+				listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
+					listTypeDefinitionId, null, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				listTypeEntry1, (List<ListTypeEntry>)page3.getItems());
+			assertContains(
+				listTypeEntry2, (List<ListTypeEntry>)page3.getItems());
+			assertContains(
+				listTypeEntry3, (List<ListTypeEntry>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -874,7 +986,7 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			(entityField, listTypeEntry1, listTypeEntry2) -> {
 				BeanTestUtil.setProperty(
 					listTypeEntry1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -991,24 +1103,32 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			testGetListTypeDefinitionListTypeEntriesPage_addListTypeEntry(
 				listTypeDefinitionId, listTypeEntry2);
 
+		Page<ListTypeEntry> page =
+			listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
+				listTypeDefinitionId, null, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ListTypeEntry> ascPage =
 				listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
-					listTypeDefinitionId, null, null, null, Pagination.of(1, 2),
+					listTypeDefinitionId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(listTypeEntry1, listTypeEntry2),
-				(List<ListTypeEntry>)ascPage.getItems());
+			assertContains(
+				listTypeEntry1, (List<ListTypeEntry>)ascPage.getItems());
+			assertContains(
+				listTypeEntry2, (List<ListTypeEntry>)ascPage.getItems());
 
 			Page<ListTypeEntry> descPage =
 				listTypeEntryResource.getListTypeDefinitionListTypeEntriesPage(
-					listTypeDefinitionId, null, null, null, Pagination.of(1, 2),
+					listTypeDefinitionId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(listTypeEntry2, listTypeEntry1),
-				(List<ListTypeEntry>)descPage.getItems());
+			assertContains(
+				listTypeEntry2, (List<ListTypeEntry>)descPage.getItems());
+			assertContains(
+				listTypeEntry1, (List<ListTypeEntry>)descPage.getItems());
 		}
 	}
 
@@ -1087,7 +1207,10 @@ public abstract class BaseListTypeEntryResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteListTypeEntry() throws Exception {
-		ListTypeEntry listTypeEntry =
+
+		// No namespace
+
+		ListTypeEntry listTypeEntry1 =
 			testGraphQLDeleteListTypeEntry_addListTypeEntry();
 
 		Assert.assertTrue(
@@ -1097,23 +1220,62 @@ public abstract class BaseListTypeEntryResourceTestCase {
 						"deleteListTypeEntry",
 						new HashMap<String, Object>() {
 							{
-								put("listTypeEntryId", listTypeEntry.getId());
+								put("listTypeEntryId", listTypeEntry1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteListTypeEntry"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"listTypeEntry",
 					new HashMap<String, Object>() {
 						{
-							put("listTypeEntryId", listTypeEntry.getId());
+							put("listTypeEntryId", listTypeEntry1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		ListTypeEntry listTypeEntry2 =
+			testGraphQLDeleteListTypeEntry_addListTypeEntry();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessAdminListType_v1_0",
+						new GraphQLField(
+							"deleteListTypeEntry",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"listTypeEntryId",
+										listTypeEntry2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessAdminListType_v1_0",
+				"Object/deleteListTypeEntry"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessAdminListType_v1_0",
+					new GraphQLField(
+						"listTypeEntry",
+						new HashMap<String, Object>() {
+							{
+								put("listTypeEntryId", listTypeEntry2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ListTypeEntry testGraphQLDeleteListTypeEntry_addListTypeEntry()
@@ -1146,6 +1308,8 @@ public abstract class BaseListTypeEntryResourceTestCase {
 		ListTypeEntry listTypeEntry =
 			testGraphQLGetListTypeEntry_addListTypeEntry();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				listTypeEntry,
@@ -1163,11 +1327,37 @@ public abstract class BaseListTypeEntryResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/listTypeEntry"))));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertTrue(
+			equals(
+				listTypeEntry,
+				ListTypeEntrySerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessAdminListType_v1_0",
+								new GraphQLField(
+									"listTypeEntry",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"listTypeEntryId",
+												listTypeEntry.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessAdminListType_v1_0",
+						"Object/listTypeEntry"))));
 	}
 
 	@Test
 	public void testGraphQLGetListTypeEntryNotFound() throws Exception {
 		Long irrelevantListTypeEntryId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -1183,6 +1373,27 @@ public abstract class BaseListTypeEntryResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessAdminListType_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessAdminListType_v1_0",
+						new GraphQLField(
+							"listTypeEntry",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"listTypeEntryId",
+										irrelevantListTypeEntryId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1621,6 +1832,10 @@ public abstract class BaseListTypeEntryResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1694,22 +1909,20 @@ public abstract class BaseListTypeEntryResourceTestCase {
 
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = listTypeEntry.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							listTypeEntry.getDateCreated(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							listTypeEntry.getDateCreated(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1727,22 +1940,20 @@ public abstract class BaseListTypeEntryResourceTestCase {
 
 		if (entityFieldName.equals("dateModified")) {
 			if (operator.equals("between")) {
+				Date date = listTypeEntry.getDateModified();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							listTypeEntry.getDateModified(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							listTypeEntry.getDateModified(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1966,7 +2177,8 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -2019,21 +2231,21 @@ public abstract class BaseListTypeEntryResourceTestCase {
 	}
 
 	protected ListTypeEntryResource listTypeEntryResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -2042,11 +2254,16 @@ public abstract class BaseListTypeEntryResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -2078,6 +2295,24 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -2099,16 +2334,6 @@ public abstract class BaseListTypeEntryResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

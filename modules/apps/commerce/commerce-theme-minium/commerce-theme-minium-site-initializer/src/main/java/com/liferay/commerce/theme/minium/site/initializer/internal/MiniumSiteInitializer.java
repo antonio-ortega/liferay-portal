@@ -195,7 +195,7 @@ public class MiniumSiteInitializer implements SiteInitializer {
 
 			_configureB2BSite(commerceChannel.getGroup(), serviceContext);
 
-			_miniumLayoutsInitializer.initialize(serviceContext);
+			_createLayouts(serviceContext);
 
 			_importAssetCategories(serviceContext);
 
@@ -362,6 +362,32 @@ public class MiniumSiteInitializer implements SiteInitializer {
 			commerceCatalog.getCommerceCurrencyCode(), serviceContext);
 	}
 
+	private void _createLayouts(ServiceContext serviceContext)
+		throws Exception {
+
+		SiteInitializerDependencyResolver siteInitializerDependencyResolver =
+			SiteInitializerDependencyResolverThreadLocal.
+				getSiteInitializerDependencyResolver();
+
+		if (siteInitializerDependencyResolver != null) {
+			_siteInitializerDependencyResolver =
+				siteInitializerDependencyResolver;
+		}
+		else {
+			_siteInitializerDependencyResolver =
+				_defaultSiteInitializerDependencyResolver;
+		}
+
+		_cpFileImporter.cleanLayouts(serviceContext);
+
+		_cpFileImporter.createLayouts(
+			_jsonFactory.createJSONArray(
+				_siteInitializerDependencyResolver.getJSON("layouts.json")),
+			_siteInitializerDependencyResolver.getImageClassLoader(),
+			_siteInitializerDependencyResolver.getImageDependencyPath(),
+			serviceContext);
+	}
+
 	private void _createRoles(
 			ServiceContext serviceContext, long commerceChannelId)
 		throws Exception {
@@ -418,18 +444,22 @@ public class MiniumSiteInitializer implements SiteInitializer {
 	private ServiceContext _getServiceContext(long groupId)
 		throws PortalException {
 
-		User user = _userLocalService.getUser(PrincipalThreadLocal.getUserId());
-		Group group = _groupLocalService.getGroup(groupId);
-
-		Locale locale = LocaleUtil.getSiteDefault();
-
 		ServiceContext serviceContext = new ServiceContext();
 
 		serviceContext.setAddGroupPermissions(true);
 		serviceContext.setAddGuestPermissions(true);
+
+		Group group = _groupLocalService.getGroup(groupId);
+
 		serviceContext.setCompanyId(group.getCompanyId());
-		serviceContext.setLanguageId(_language.getLanguageId(locale));
+
+		serviceContext.setLanguageId(
+			_language.getLanguageId(LocaleUtil.getSiteDefault()));
+
 		serviceContext.setScopeGroupId(groupId);
+
+		User user = _userLocalService.getUser(PrincipalThreadLocal.getUserId());
+
 		serviceContext.setTimeZone(user.getTimeZone());
 		serviceContext.setUserId(user.getUserId());
 
@@ -1155,9 +1185,6 @@ public class MiniumSiteInitializer implements SiteInitializer {
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private MiniumLayoutsInitializer _miniumLayoutsInitializer;
 
 	@Reference
 	private OrganizationImporter _organizationImporter;

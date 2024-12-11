@@ -27,7 +27,7 @@
 		</field>
 		<field name="logoId" type="long" />
 		<field name="name" type="String">
-			<hint name="max-length">100</hint>
+			<hint name="max-length">250</hint>
 			<validator name="required" />
 		</field>
 		<field name="restrictMembership" type="boolean" />
@@ -84,6 +84,7 @@
 	</model>
 	<model name="com.liferay.account.model.AccountRole">
 		<field name="mvccVersion" type="long" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="accountRoleId" type="long" />
 		<field name="companyId" type="long" />
 		<field name="accountEntryId" type="long" />

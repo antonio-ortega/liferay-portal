@@ -3,11 +3,14 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Order Management";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -57,6 +60,42 @@ definition {
 			AssertVisible(
 				key_fieldName = "Code",
 				locator1 = "CommerceEntry#INPUT_FIELD_READ_ONLY");
+		}
+	}
+
+	@description = "This is a test for COMMERCE-10421. As admin, I can search a currency."
+	@priority = 5
+	test CanSearchCurrency {
+		property portal.acceptance = "true";
+
+		task ("Given a admin goes to the currency admin page") {
+			CommerceNavigator.goToCurrenciesAdmin();
+		}
+
+		task ("And the user search for a currency") {
+			CommerceNavigator.searchEntry(entryName = "Euro");
+		}
+
+		task ("When can verify that only the correct currency is shown") {
+			AssertElementPresent(
+				key_entryName = "Euro",
+				locator1 = "CommerceNavigation#ENTRY_NAME");
+
+			AssertElementNotPresent(
+				key_entryName = "US Dollar",
+				locator1 = "CommerceNavigation#ENTRY_NAME");
+		}
+
+		task ("Then the user goes and clear the results") {
+			Click(locator1 = "//button[text()='Clear']");
+		}
+
+		task ("And all of the currencies are displayed") {
+			for (var currencies : list "US Dollar,Australian Dollar,British Pound,Canadian Dollar,Chinese Yuan Renminbi,Euro,Hong Kong Dollar,Japanese Yen,Indian Rupee,Brazilian Real") {
+				AssertElementPresent(
+					key_entryName = ${currencies},
+					locator1 = "CommerceNavigation#ENTRY_NAME");
+			}
 		}
 	}
 
@@ -121,7 +160,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -158,6 +197,8 @@ definition {
 			Click(locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE");
 
 			CommerceNavigator.gotoMiniCart();
+
+			WaitForElementPresent(locator1 = "//p[@class='item-sku' and contains(.,'Simple Product')]/../../../..//span[@class='price-value']");
 
 			var productPrice = selenium.getText("//p[@class='item-sku' and contains(.,'Simple Product')]/../../../..//span[@class='price-value']");
 

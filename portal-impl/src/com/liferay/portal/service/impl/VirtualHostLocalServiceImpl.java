@@ -5,6 +5,7 @@
 
 package com.liferay.portal.service.impl;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -16,18 +17,22 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.VirtualHost;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.CompanyPersistence;
 import com.liferay.portal.kernel.service.persistence.GroupPersistence;
 import com.liferay.portal.kernel.service.persistence.LayoutSetPersistence;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.LayoutSetImpl;
 import com.liferay.portal.service.base.VirtualHostLocalServiceBaseImpl;
+import com.liferay.portal.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.net.IDN;
@@ -36,6 +41,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -121,7 +127,34 @@ public class VirtualHostLocalServiceImpl
 
 	@Override
 	public List<VirtualHost> getVirtualHosts(long companyId, long layoutSetId) {
-		return virtualHostPersistence.findByC_L(companyId, layoutSetId);
+		if (_cacheableQueryLimitLPD27353 <= 0) {
+			return virtualHostPersistence.findByC_L(companyId, layoutSetId);
+		}
+
+		List<VirtualHost> virtualHosts = virtualHostPersistence.findByCompanyId(
+			companyId);
+
+		if (virtualHosts.size() > _cacheableQueryLimitLPD27353) {
+			_cacheableQueryLimitLPD27353 = 0;
+		}
+
+		List<VirtualHost> filteredVirtualHosts = null;
+
+		for (VirtualHost virtualHost : virtualHosts) {
+			if (virtualHost.getLayoutSetId() == layoutSetId) {
+				if (filteredVirtualHosts == null) {
+					filteredVirtualHosts = new ArrayList<>(virtualHosts.size());
+				}
+
+				filteredVirtualHosts.add(virtualHost);
+			}
+		}
+
+		if (filteredVirtualHosts == null) {
+			return Collections.emptyList();
+		}
+
+		return filteredVirtualHosts;
 	}
 
 	@Override
@@ -185,7 +218,14 @@ public class VirtualHostLocalServiceImpl
 			}
 
 			if (virtualHost == null) {
-				long virtualHostId = counterLocalService.increment();
+				long virtualHostId = 0;
+
+				try (SafeCloseable safeCloseable =
+						CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+							CompanyConstants.SYSTEM)) {
+
+					virtualHostId = counterLocalService.increment();
+				}
 
 				virtualHost = virtualHostPersistence.create(virtualHostId);
 
@@ -274,6 +314,9 @@ public class VirtualHostLocalServiceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		VirtualHostLocalServiceImpl.class);
+
+	private volatile int _cacheableQueryLimitLPD27353 = GetterUtil.getInteger(
+		PropsUtil.get("cacheable.query.limit.LPD-27353"));
 
 	@BeanReference(type = CompanyPersistence.class)
 	private CompanyPersistence _companyPersistence;

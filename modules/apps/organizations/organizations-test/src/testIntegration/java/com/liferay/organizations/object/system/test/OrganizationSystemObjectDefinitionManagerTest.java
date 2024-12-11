@@ -7,13 +7,14 @@ package com.liferay.organizations.object.system.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.field.builder.LongIntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.system.SystemObjectDefinitionManagerRegistry;
 import com.liferay.portal.kernel.exception.NoSuchOrganizationException;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.test.AssertUtils;
@@ -21,13 +22,13 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -57,7 +58,8 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 
 	@Test
 	public void testAddBaseModel() throws Exception {
-		_assertCount(0);
+		int organizationsCount =
+			_organizationLocalService.getOrganizationsCount();
 
 		String comments1 = RandomTestUtil.randomString();
 		String name1 = RandomTestUtil.randomString();
@@ -69,7 +71,7 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 				"name", name1
 			).build());
 
-		_assertCount(1);
+		_assertCount(organizationsCount + 1);
 
 		String comments2 = RandomTestUtil.randomString();
 		String name2 = RandomTestUtil.randomString();
@@ -81,7 +83,7 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 				"name", name2
 			).build());
 
-		_assertCount(2);
+		_assertCount(organizationsCount + 2);
 
 		Organization organization1 = _organizationLocalService.getOrganization(
 			organizationId1);
@@ -101,6 +103,9 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 
 	@Test
 	public void testDeleteBaseModel() throws Exception {
+		int organizationsCount =
+			_organizationLocalService.getOrganizationsCount();
+
 		long organizationId = _addBaseModel(
 			HashMapBuilder.<String, Object>put(
 				"comment", RandomTestUtil.randomString()
@@ -108,7 +113,7 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 				"name", RandomTestUtil.randomString()
 			).build());
 
-		_assertCount(1);
+		_assertCount(organizationsCount + 1);
 
 		_organizationSystemObjectDefinitionManager.deleteBaseModel(
 			_organizationLocalService.getOrganization(organizationId));
@@ -118,7 +123,7 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 			"No Organization exists with the primary key " + organizationId,
 			() -> _organizationLocalService.getOrganization(organizationId));
 
-		_assertCount(0);
+		_assertCount(organizationsCount);
 	}
 
 	@Test
@@ -127,17 +132,29 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 			_organizationSystemObjectDefinitionManager.getObjectFields();
 
 		Assert.assertNotNull(objectFields);
-		Assert.assertEquals(objectFields.toString(), 2, objectFields.size());
+		Assert.assertEquals(objectFields.toString(), 3, objectFields.size());
 
 		ListIterator<ObjectField> iterator = objectFields.listIterator();
 
 		Assert.assertTrue(iterator.hasNext());
 
 		_assertEquals(
+			new LongIntegerObjectFieldBuilder(
+			).labelMap(
+				_getLabelMap("parentOrganizationId")
+			).name(
+				"parentOrganizationId"
+			).system(
+				true
+			).build(),
+			iterator.next());
+
+		Assert.assertTrue(iterator.hasNext());
+
+		_assertEquals(
 			new TextObjectFieldBuilder(
 			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(
-					LanguageUtil.get(LocaleUtil.getDefault(), "comments"))
+				_getLabelMap("comments")
 			).name(
 				"comment"
 			).system(
@@ -150,8 +167,7 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 		_assertEquals(
 			new TextObjectFieldBuilder(
 			).labelMap(
-				LocalizedMapUtil.getLocalizedMap(
-					LanguageUtil.get(LocaleUtil.getDefault(), "name"))
+				_getLabelMap("name")
 			).name(
 				"name"
 			).required(
@@ -169,12 +185,10 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 			_organizationSystemObjectDefinitionManager.
 				getExternalReferenceCode());
 		Assert.assertEquals(
-			LocalizedMapUtil.getLocalizedMap(
-				LanguageUtil.get(LocaleUtil.getDefault(), "organization")),
+			_getLabelMap("organization"),
 			_organizationSystemObjectDefinitionManager.getLabelMap());
 		Assert.assertEquals(
-			LocalizedMapUtil.getLocalizedMap(
-				LanguageUtil.get(LocaleUtil.getDefault(), "organizations")),
+			_getLabelMap("organizations"),
 			_organizationSystemObjectDefinitionManager.getPluralLabelMap());
 		Assert.assertEquals(
 			ObjectDefinitionConstants.SCOPE_COMPANY,
@@ -184,7 +198,7 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 			_organizationSystemObjectDefinitionManager.
 				getTitleObjectFieldName());
 		Assert.assertEquals(
-			1, _organizationSystemObjectDefinitionManager.getVersion());
+			3, _organizationSystemObjectDefinitionManager.getVersion());
 	}
 
 	private long _addBaseModel(Map<String, Object> values) throws Exception {
@@ -225,6 +239,19 @@ public class OrganizationSystemObjectDefinitionManagerTest {
 		Assert.assertEquals(
 			expectedObjectField.isState(), actualObjectField.isState());
 	}
+
+	private Map<Locale, String> _getLabelMap(String labelKey) {
+		Map<Locale, String> labelMap = new HashMap<>();
+
+		for (Locale locale : _language.getAvailableLocales()) {
+			labelMap.put(locale, _language.get(locale, labelKey));
+		}
+
+		return labelMap;
+	}
+
+	@Inject
+	private Language _language;
 
 	@Inject
 	private ObjectDefinitionLocalService _objectDefinitionLocalService;

@@ -14,7 +14,7 @@ import com.liferay.dynamic.data.mapping.form.evaluator.DDMFormEvaluatorEvaluateR
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldOptionsFactory;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
 import com.liferay.dynamic.data.mapping.form.web.internal.constants.DDMFormWebKeys;
-import com.liferay.dynamic.data.mapping.form.web.internal.portlet.action.helper.AddFormInstanceRecordMVCCommandHelper;
+import com.liferay.dynamic.data.mapping.form.web.internal.portlet.action.util.AddFormInstanceRecordMVCCommandUtil;
 import com.liferay.dynamic.data.mapping.form.web.internal.util.DDMLayoutUtil;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
@@ -22,11 +22,14 @@ import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecord;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceSettings;
+import com.liferay.dynamic.data.mapping.model.DDMFormInstanceVersion;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.render.DDMFormFieldRenderingContext;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordService;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService;
-import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -97,11 +100,11 @@ public class AddFormInstanceRecordMVCActionCommand
 		}
 
 		DDMFormInstance ddmFormInstance =
-			_ddmFormInstanceService.getFormInstance(formInstanceId);
+			_ddmFormInstanceLocalService.getFormInstance(formInstanceId);
 
-		_addFormInstanceMVCCommandHelper.validateExpirationStatus(
+		AddFormInstanceRecordMVCCommandUtil.validateExpirationStatus(
 			ddmFormInstance, actionRequest);
-		_addFormInstanceMVCCommandHelper.validateSubmissionLimitStatus(
+		AddFormInstanceRecordMVCCommandUtil.validateSubmissionLimitStatus(
 			ddmFormInstance, _ddmFormInstanceRecordVersionLocalService,
 			actionRequest);
 
@@ -114,18 +117,25 @@ public class AddFormInstanceRecordMVCActionCommand
 		DDMFormValues ddmFormValues = _ddmFormValuesFactory.create(
 			actionRequest, ddmForm);
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		String languageId = ParamUtil.getString(
+			actionRequest, "defaultLanguageId");
+
+		if (Validator.isNull(languageId)) {
+			languageId = _language.getLanguageId(actionRequest);
+		}
+
+		Locale locale = LocaleUtil.fromLanguageId(languageId);
 
 		_createDDMFormFieldOptionsFromDataProvider(
-			actionRequest, ddmForm, themeDisplay.getLocale());
+			actionRequest, ddmForm, locale);
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		DDMFormEvaluatorEvaluateResponse ddmFormEvaluatorEvaluateResponse =
 			_ddmFormEvaluator.evaluate(
 				DDMFormEvaluatorEvaluateRequest.Builder.newBuilder(
-					ddmForm, ddmFormValues,
-					LocaleUtil.fromLanguageId(
-						_language.getLanguageId(actionRequest))
+					ddmForm, ddmFormValues, locale
 				).withCompanyId(
 					_portal.getCompanyId(actionRequest)
 				).withDDMFormInstanceId(
@@ -140,14 +150,14 @@ public class AddFormInstanceRecordMVCActionCommand
 
 		DDMStructure ddmStructure = ddmFormInstance.getStructure();
 
-		_addFormInstanceMVCCommandHelper.updateNonevaluableDDMFormFields(
+		AddFormInstanceRecordMVCCommandUtil.updateNonevaluableDDMFormFields(
 			ddmForm.getDDMFormFieldsMap(true),
 			ddmFormEvaluatorEvaluateResponse.getDDMFormFieldsPropertyChanges(),
 			ddmFormValues.getDDMFormFieldValuesMap(true),
 			ddmStructure.getDDMFormLayout(),
 			ddmFormEvaluatorEvaluateResponse.getDisabledPagesIndexes());
 
-		_addFormInstanceMVCCommandHelper.updateReadOnlyDDMFormFields(
+		AddFormInstanceRecordMVCCommandUtil.updateReadOnlyDDMFormFields(
 			ddmForm.getDDMFormFieldsMap(true),
 			ddmFormEvaluatorEvaluateResponse.getDDMFormFieldsPropertyChanges());
 
@@ -198,9 +208,15 @@ public class AddFormInstanceRecordMVCActionCommand
 	protected DDMForm getDDMForm(DDMFormInstance ddmFormInstance)
 		throws PortalException {
 
-		DDMStructure ddmStructure = ddmFormInstance.getStructure();
+		DDMFormInstanceVersion latestDDMFormInstanceVersion =
+			_ddmFormInstanceVersionLocalService.getLatestFormInstanceVersion(
+				ddmFormInstance.getFormInstanceId(),
+				WorkflowConstants.STATUS_APPROVED);
 
-		return ddmStructure.getDDMForm();
+		DDMStructureVersion ddmStructureVersion =
+			latestDDMFormInstanceVersion.getStructureVersion();
+
+		return ddmStructureVersion.getDDMForm();
 	}
 
 	private void _createDDMFormFieldOptionsFromDataProvider(
@@ -308,14 +324,13 @@ public class AddFormInstanceRecordMVCActionCommand
 	}
 
 	@Reference
-	private AddFormInstanceRecordMVCCommandHelper
-		_addFormInstanceMVCCommandHelper;
-
-	@Reference
 	private DDMFormEvaluator _ddmFormEvaluator;
 
 	@Reference
 	private DDMFormFieldOptionsFactory _ddmFormFieldOptionsFactory;
+
+	@Reference
+	private DDMFormInstanceLocalService _ddmFormInstanceLocalService;
 
 	@Reference
 	private DDMFormInstanceRecordService _ddmFormInstanceRecordService;
@@ -325,7 +340,8 @@ public class AddFormInstanceRecordMVCActionCommand
 		_ddmFormInstanceRecordVersionLocalService;
 
 	@Reference
-	private DDMFormInstanceService _ddmFormInstanceService;
+	private DDMFormInstanceVersionLocalService
+		_ddmFormInstanceVersionLocalService;
 
 	@Reference
 	private DDMFormValuesFactory _ddmFormValuesFactory;

@@ -5,6 +5,10 @@
 
 package com.liferay.layout.internal.struts;
 
+import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.asset.util.LinkedAssetEntryIdsUtil;
 import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
@@ -16,7 +20,9 @@ import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
@@ -41,7 +47,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsWebKeys;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -87,6 +92,7 @@ public class GetPagePreviewStrutsAction implements StrutsAction {
 
 			themeDisplay.setPlid(layout.getPlid());
 			themeDisplay.setScopeGroupId(layout.getGroupId());
+			themeDisplay.setSiteGroupId(layout.getGroupId());
 		}
 
 		if (!LayoutPermissionUtil.containsLayoutUpdatePermission(
@@ -168,13 +174,12 @@ public class GetPagePreviewStrutsAction implements StrutsAction {
 			layout.includeLayoutContent(
 				httpServletRequest, httpServletResponse);
 
-			ServletContext servletContext = ServletContextPool.get(
-				StringPool.BLANK);
 			LayoutSet layoutSet = themeDisplay.getLayoutSet();
 
 			Document document = Jsoup.parse(
 				ThemeUtil.include(
-					servletContext, httpServletRequest, httpServletResponse,
+					ServletContextPool.get(_portal.getServletContextName()),
+					httpServletRequest, httpServletResponse,
 					"portal_normal.ftl", layoutSet.getTheme(), false));
 
 			Element contentElement = document.getElementById("content");
@@ -184,7 +189,7 @@ public class GetPagePreviewStrutsAction implements StrutsAction {
 
 			contentElement.html(sb.toString());
 
-			ServletResponseUtil.write(httpServletResponse, document.toString());
+			ServletResponseUtil.write(httpServletResponse, document.html());
 		}
 		finally {
 			httpServletRequest.setAttribute(
@@ -200,6 +205,33 @@ public class GetPagePreviewStrutsAction implements StrutsAction {
 		}
 
 		return null;
+	}
+
+	private void _addLinkedAssetEntryId(
+		String className, long classPK, HttpServletRequest httpServletRequest) {
+
+		AssetRendererFactory<?> assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				className);
+
+		if (assetRendererFactory == null) {
+			return;
+		}
+
+		try {
+			AssetEntry assetEntry = assetRendererFactory.getAssetEntry(
+				className, classPK);
+
+			if (assetEntry != null) {
+				LinkedAssetEntryIdsUtil.addLinkedAssetEntryId(
+					httpServletRequest, assetEntry.getEntryId());
+			}
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
 	}
 
 	private void _includeInfoItemObjects(
@@ -251,7 +283,12 @@ public class GetPagePreviewStrutsAction implements StrutsAction {
 				LayoutDisplayPageWebKeys.LAYOUT_DISPLAY_PAGE_OBJECT_PROVIDER,
 				layoutDisplayPageObjectProvider);
 		}
+
+		_addLinkedAssetEntryId(className, classPK, httpServletRequest);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		GetPagePreviewStrutsAction.class);
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;

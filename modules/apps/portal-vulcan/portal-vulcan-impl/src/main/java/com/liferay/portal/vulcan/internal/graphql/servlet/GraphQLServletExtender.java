@@ -9,19 +9,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
+import com.liferay.depot.service.DepotEntryLocalService;
+import com.liferay.osgi.service.tracker.collections.EagerServiceTrackerCustomizer;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapListener;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.CamelCaseUtil;
+import com.liferay.portal.kernel.util.ClassUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -29,9 +43,15 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
+import com.liferay.portal.odata.filter.ExpressionConvert;
+import com.liferay.portal.odata.filter.FilterParserProvider;
+import com.liferay.portal.odata.sort.SortParserProvider;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResourceFactory;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLTypeExtension;
+import com.liferay.portal.vulcan.graphql.contributor.GraphQLContributor;
 import com.liferay.portal.vulcan.graphql.dto.GraphQLDTOContributor;
 import com.liferay.portal.vulcan.graphql.dto.GraphQLDTOProperty;
 import com.liferay.portal.vulcan.graphql.dto.v1_0.Creator;
@@ -53,6 +73,7 @@ import com.liferay.portal.vulcan.internal.graphql.validation.GraphQLDTOContribut
 import com.liferay.portal.vulcan.internal.graphql.validation.ServletDataRequestContext;
 import com.liferay.portal.vulcan.internal.multipart.MultipartUtil;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
+import com.liferay.portal.vulcan.pagination.provider.PaginationProvider;
 
 import graphql.ExceptionWhileDataFetching;
 import graphql.GraphQLError;
@@ -166,6 +187,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -173,7 +195,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -214,7 +239,7 @@ public class GraphQLServletExtender {
 	protected void activate(BundleContext bundleContext) {
 		_bundleContext = bundleContext;
 
-		_graphQLFieldRetriever = new LiferayGraphQLFieldRetriever();
+		_liferayGraphQLFieldRetriever = new LiferayGraphQLFieldRetriever();
 
 		GraphQLInterfaceRetriever graphQLInterfaceRetriever =
 			new GraphQLInterfaceRetriever();
@@ -255,7 +280,7 @@ public class GraphQLServletExtender {
 		GraphQLExtensionsHandler graphQLExtensionsHandler =
 			new GraphQLExtensionsHandler() {
 				{
-					setFieldRetriever(_graphQLFieldRetriever);
+					setFieldRetriever(_liferayGraphQLFieldRetriever);
 					setFieldSearchAlgorithm(parentalSearch);
 					setGraphQLObjectInfoRetriever(graphQLObjectInfoRetriever);
 					setMethodSearchAlgorithm(breadthFirstSearch);
@@ -266,7 +291,7 @@ public class GraphQLServletExtender {
 			{
 				setExtensionsHandler(graphQLExtensionsHandler);
 				setFieldSearchAlgorithm(parentalSearch);
-				setGraphQLFieldRetriever(_graphQLFieldRetriever);
+				setGraphQLFieldRetriever(_liferayGraphQLFieldRetriever);
 				setGraphQLInterfaceRetriever(graphQLInterfaceRetriever);
 				setGraphQLObjectInfoRetriever(graphQLObjectInfoRetriever);
 				setMethodSearchAlgorithm(breadthFirstSearch);
@@ -331,8 +356,8 @@ public class GraphQLServletExtender {
 				}
 				else if (clazz.isAnnotationPresent(GraphQLTypeResolver.class)) {
 					graphQLType = new InterfaceBuilder(
-						graphQLObjectInfoRetriever, _graphQLFieldRetriever,
-						graphQLExtensionsHandler
+						graphQLObjectInfoRetriever,
+						_liferayGraphQLFieldRetriever, graphQLExtensionsHandler
 					).getInterfaceBuilder(
 						clazz, processingElementsContainer
 					).build();
@@ -348,7 +373,7 @@ public class GraphQLServletExtender {
 					if (input) {
 						graphQLType = new InputObjectBuilder(
 							graphQLObjectInfoRetriever, parentalSearch,
-							breadthFirstSearch, _graphQLFieldRetriever
+							breadthFirstSearch, _liferayGraphQLFieldRetriever
 						).getInputObjectBuilder(
 							clazz, processingElementsContainer
 						).build();
@@ -357,7 +382,8 @@ public class GraphQLServletExtender {
 						GraphQLObjectType.Builder outputObjectBuilder =
 							new OutputObjectBuilder(
 								graphQLObjectInfoRetriever, parentalSearch,
-								breadthFirstSearch, _graphQLFieldRetriever,
+								breadthFirstSearch,
+								_liferayGraphQLFieldRetriever,
 								graphQLInterfaceRetriever,
 								graphQLExtensionsHandler
 							).getOutputObjectBuilder(
@@ -519,37 +545,58 @@ public class GraphQLServletExtender {
 		_defaultTypeFunction.register(new MapTypeFunction());
 		_defaultTypeFunction.register(new ObjectTypeFunction());
 
-		_graphQLDTOContributorServiceTrackerMap =
-			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, GraphQLDTOContributor.class, "dto.name",
-				new ServiceTrackerMapListener
-					<String, GraphQLDTOContributor, GraphQLDTOContributor>() {
+		_graphQLContributorServiceTrackerList = ServiceTrackerListFactory.open(
+			bundleContext, GraphQLContributor.class, null,
+			new GraphQLContributorServiceTrackerCustomizer());
 
-					@Override
-					public void keyEmitted(
-						ServiceTrackerMap<String, GraphQLDTOContributor>
-							serviceTrackerMap,
-						String key,
-						GraphQLDTOContributor serviceGraphQLDTOContributor,
-						GraphQLDTOContributor contentGraphQLDTOContributor) {
+		_graphQLDTOContributorDataFetchingProcessor =
+			new GraphQLDTOContributorDataFetchingProcessor(
+				_dtoConverterRegistry, _expressionConvert,
+				_filterParserProvider, _language, _paginationProvider, _portal,
+				_sortParserProvider);
 
-						_servlets.clear();
-					}
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, GraphQLDTOContributor.class, "dto.name",
+			new ServiceTrackerMapListener
+				<String, GraphQLDTOContributor, GraphQLDTOContributor>() {
 
-					@Override
-					public void keyRemoved(
-						ServiceTrackerMap<String, GraphQLDTOContributor>
-							serviceTrackerMap,
-						String key,
-						GraphQLDTOContributor serviceGraphQLDTOContributor,
-						GraphQLDTOContributor contentGraphQLDTOContributor) {
+				@Override
+				public void keyEmitted(
+					ServiceTrackerMap<String, GraphQLDTOContributor>
+						serviceTrackerMap,
+					String key,
+					GraphQLDTOContributor serviceGraphQLDTOContributor,
+					GraphQLDTOContributor contentGraphQLDTOContributor) {
 
-						_servlets.clear();
-					}
+					_servlets.clear();
+				}
 
-				});
+				@Override
+				public void keyRemoved(
+					ServiceTrackerMap<String, GraphQLDTOContributor>
+						serviceTrackerMap,
+					String key,
+					GraphQLDTOContributor serviceGraphQLDTOContributor,
+					GraphQLDTOContributor contentGraphQLDTOContributor) {
+
+					_servlets.clear();
+				}
+
+			});
+
 		_graphQLRequestContextValidators = ServiceTrackerListFactory.open(
 			bundleContext, GraphQLRequestContextValidator.class);
+
+		_liferayMethodDataFetchingProcessor =
+			new LiferayMethodDataFetchingProcessor(
+				_bundleContext, _companyLocalService, _depotEntryLocalService,
+				_expressionConvert, _filterParserProvider,
+				_graphQLContributorServiceTrackerList, _groupLocalService,
+				_language, _paginationProvider, _portal,
+				_resourceActionLocalService, _resourcePermissionLocalService,
+				_roleLocalService, _sortParserProvider,
+				_vulcanBatchEngineImportTaskResourceFactory);
+
 		_servletContextHelperServiceRegistration =
 			bundleContext.registerService(
 				ServletContextHelper.class,
@@ -679,6 +726,10 @@ public class GraphQLServletExtender {
 
 	@Deactivate
 	protected void deactivate() {
+		_graphQLContributorServiceTrackerList.close();
+
+		_serviceTrackerMap.close();
+
 		_graphQLRequestContextValidators.close();
 
 		_servletContextHelperServiceRegistration.unregister();
@@ -806,11 +857,12 @@ public class GraphQLServletExtender {
 
 	private void _collectObjectFields(
 		Function<ServletData, Object> function,
-		GraphQLObjectType.Builder graphQLObjectTypeBuilder,
+		GraphQLObjectType.Builder graphQLObjectTypeBuilder, boolean mutation,
 		ProcessingElementsContainer processingElementsContainer,
 		List<ServletData> servletDatas) {
 
-		Map<String, Method> methods = new HashMap<>();
+		Map<String, SortedMap<String, TreeSet<Method>>> methods =
+			new HashMap<>();
 
 		for (ServletData servletData : servletDatas) {
 			if (servletData.getGraphQLNamespace() != null) {
@@ -826,34 +878,77 @@ public class GraphQLServletExtender {
 			Class<?> clazz = object.getClass();
 
 			for (Method method : clazz.getMethods()) {
-				if (!_isMethodEnabled(method, servletData.getPath())) {
+				if (!_isMethodEnabled(method, servletData)) {
 					continue;
 				}
 
 				_servletDataMap.put(method, servletData);
 
-				methods.compute(
-					method.getName(),
-					(key, value) -> {
-						if ((value == null) ||
-							((value != null) &&
-							 (_getVersion(value) < _getVersion(method)))) {
+				SortedMap<String, TreeSet<Method>> methodsSortedMap =
+					methods.computeIfAbsent(
+						method.getName(),
+						key -> new TreeMap<>(Comparator.naturalOrder()));
 
-							return method;
-						}
+				TreeSet<Method> methodsTreeSet =
+					methodsSortedMap.computeIfAbsent(
+						_getPath(servletData),
+						key -> new TreeSet<>(
+							Comparator.comparing(
+								this::_getVersion
+							).reversed()));
 
-						return value;
-					});
+				methodsTreeSet.add(method);
 			}
 		}
 
-		for (Method method : methods.values()) {
-			Class<?> clazz = method.getDeclaringClass();
+		for (SortedMap<String, TreeSet<Method>> methodsSortedMap :
+				methods.values()) {
 
-			graphQLObjectTypeBuilder.field(
-				_graphQLFieldRetriever.getField(
-					clazz.getSimpleName(), method,
-					processingElementsContainer));
+			String firstPath = methodsSortedMap.firstKey();
+
+			for (Map.Entry<String, TreeSet<Method>> entry :
+					methodsSortedMap.entrySet()) {
+
+				String path = entry.getKey();
+				TreeSet<Method> methodsTreeSet = entry.getValue();
+
+				if (StringUtil.equals(firstPath, path)) {
+					Method firstMethod = methodsTreeSet.first();
+
+					for (Method method : methodsTreeSet) {
+						GraphQLFieldDefinition field =
+							_liferayGraphQLFieldRetriever.getField(
+								true, method, mutation,
+								processingElementsContainer);
+
+						if (firstMethod == method) {
+							graphQLObjectTypeBuilder.field(field);
+						}
+						else if (_log.isDebugEnabled()) {
+							_log.debug(
+								StringBundler.concat(
+									"There is already a field called \"",
+									field.getName(),
+									"\" in the same application with path \"",
+									path, "\". The field with version \"",
+									_getVersion(method),
+									"\" will be ignored."));
+						}
+					}
+				}
+				else if (_log.isDebugEnabled()) {
+					MethodNameBuilder methodNameBuilder = new MethodNameBuilder(
+						methodsTreeSet.first());
+
+					_log.debug(
+						StringBundler.concat(
+							"There is already a field called \"",
+							methodNameBuilder.build(),
+							"\" in the application with the path \"", firstPath,
+							"\". The field with the path \"", path,
+							"\" will be ignored."));
+				}
+			}
 		}
 	}
 
@@ -909,7 +1004,7 @@ public class GraphQLServletExtender {
 			List<ServletData> servletDatas = new ArrayList<>();
 
 			for (ServletData servletData : _servletDataServiceTrackerList) {
-				if (_isGraphQLEnabled(servletData.getPath())) {
+				if (_isGraphQLEnabled(servletData)) {
 					servletDatas.add(servletData);
 				}
 
@@ -944,7 +1039,7 @@ public class GraphQLServletExtender {
 
 			_collectObjectFields(
 				ServletData::getMutation, mutationGraphQLObjectTypeBuilder,
-				processingElementsContainer, servletDatas);
+				true, processingElementsContainer, servletDatas);
 
 			GraphQLObjectType.Builder queryGraphQLObjectTypeBuilder =
 				GraphQLObjectType.newObject();
@@ -953,7 +1048,7 @@ public class GraphQLServletExtender {
 				GraphQLConstants.NAMESPACE_QUERY);
 
 			_collectObjectFields(
-				ServletData::getQuery, queryGraphQLObjectTypeBuilder,
+				ServletData::getQuery, queryGraphQLObjectTypeBuilder, false,
 				processingElementsContainer, servletDatas);
 
 			GraphQLSchema.Builder graphQLSchemaBuilder =
@@ -969,14 +1064,18 @@ public class GraphQLServletExtender {
 				graphQLSchemaBuilder, processingElementsContainer,
 				queryGraphQLObjectTypeBuilder);
 
-			_registerNamespace(
-				ServletData::getMutation, mutationGraphQLObjectTypeBuilder,
-				graphQLSchemaBuilder, true, processingElementsContainer,
-				servletDatas);
-			_registerNamespace(
-				ServletData::getQuery, queryGraphQLObjectTypeBuilder,
-				graphQLSchemaBuilder, false, processingElementsContainer,
-				servletDatas);
+			Set<String> graphQLNamespaces = new HashSet<>();
+
+			graphQLNamespaces.addAll(
+				_registerNamespace(
+					ServletData::getMutation, mutationGraphQLObjectTypeBuilder,
+					graphQLSchemaBuilder, true, processingElementsContainer,
+					servletDatas));
+			graphQLNamespaces.addAll(
+				_registerNamespace(
+					ServletData::getQuery, queryGraphQLObjectTypeBuilder,
+					graphQLSchemaBuilder, false, processingElementsContainer,
+					servletDatas));
 
 			graphQLSchemaBuilder.mutation(
 				mutationGraphQLObjectTypeBuilder.build());
@@ -1008,7 +1107,7 @@ public class GraphQLServletExtender {
 				GraphQLObjectMapper.newBuilder();
 
 			objectMapperBuilder.withGraphQLErrorHandler(
-				new LiferayGraphQLErrorHandler());
+				new LiferayGraphQLErrorHandler(graphQLNamespaces));
 			objectMapperBuilder.withObjectMapperProvider(
 				() -> {
 					ObjectMapper objectMapper = new ObjectMapper();
@@ -1062,6 +1161,30 @@ public class GraphQLServletExtender {
 		}
 
 		return graphQLInputObjectTypeBuilder.build();
+	}
+
+	private String _getGraphQLNamespace(ServletData servletData) {
+		String path = servletData.getPath();
+
+		if (path == null) {
+			return null;
+		}
+
+		if (path.startsWith("/")) {
+			path = path.substring(1);
+		}
+
+		String[] pathParts = path.split("/");
+
+		String firstPathPart = StringUtil.removeLast(pathParts[0], "-graphql");
+
+		int index = firstPathPart.indexOf("-rest");
+
+		if (index != -1) {
+			firstPathPart = firstPathPart.substring(0, index);
+		}
+
+		return CamelCaseUtil.toCamelCase(firstPathPart + "_" + pathParts[1]);
 	}
 
 	private GraphQLObjectType _getGraphQLObjectType(
@@ -1146,6 +1269,12 @@ public class GraphQLServletExtender {
 		return graphQLObjectTypeBuilder.build();
 	}
 
+	private String _getPath(ServletData servletData) {
+		String path = servletData.getPath();
+
+		return path.substring(0, path.indexOf("-graphql"));
+	}
+
 	private QueryDepthLimitInstrumentation _getQueryDepthLimitInstrumentation(
 		long companyId) {
 
@@ -1171,16 +1300,16 @@ public class GraphQLServletExtender {
 
 		String version = packageNames[packageNames.length - 1];
 
-		return Integer.valueOf(version.replaceAll("\\D", ""));
+		return GetterUtil.getInteger(version.replaceAll("\\D", ""), 1);
 	}
 
-	private boolean _isGraphQLEnabled(String path) throws Exception {
-		path = path.substring(0, path.indexOf("-graphql"));
+	private boolean _isGraphQLEnabled(ServletData servletData)
+		throws Exception {
 
 		String filterString = String.format(
 			"(&(path=%s)(|(service.factoryPid=%s)" +
 				"(&(service.factoryPid=%s)(%s=%d))))",
-			path, VulcanConfiguration.class.getName(),
+			_getPath(servletData), VulcanConfiguration.class.getName(),
 			VulcanCompanyConfiguration.class.getName(),
 			ExtendedObjectClassDefinition.Scope.COMPANY.getPropertyKey(),
 			_companyId);
@@ -1188,7 +1317,7 @@ public class GraphQLServletExtender {
 		Configuration[] configurations = _configurationAdmin.listConfigurations(
 			filterString);
 
-		if (!ArrayUtil.isEmpty(configurations)) {
+		if (ArrayUtil.isNotEmpty(configurations)) {
 			Dictionary<String, Object> dictionary =
 				configurations[0].getProperties();
 
@@ -1198,12 +1327,10 @@ public class GraphQLServletExtender {
 		return true;
 	}
 
-	private boolean _isMethodEnabled(Method method, String path) {
-		path = path.substring(0, path.indexOf("-graphql"));
-
+	private boolean _isMethodEnabled(Method method, ServletData servletData) {
 		Set<String> excludedOperationIds =
 			ConfigurationUtil.getExcludedOperationIds(
-				_companyId, _configurationAdmin, path);
+				_companyId, _configurationAdmin, _getPath(servletData));
 
 		if (excludedOperationIds.contains(method.getName())) {
 			return false;
@@ -1468,7 +1595,7 @@ public class GraphQLServletExtender {
 		GraphQLObjectType.Builder rootQueryGraphQLObjectTypeBuilder) {
 
 		Collection<GraphQLDTOContributor> graphQLDTOContributors =
-			_graphQLDTOContributorServiceTrackerMap.values();
+			_serviceTrackerMap.values();
 
 		if (graphQLDTOContributors.isEmpty()) {
 			return;
@@ -1560,28 +1687,45 @@ public class GraphQLServletExtender {
 		}
 	}
 
-	private void _registerNamespace(
+	private Set<String> _registerNamespace(
 		Function<ServletData, Object> function,
 		GraphQLObjectType.Builder graphQLObjectTypeBuilder,
 		GraphQLSchema.Builder graphQLSchemaBuilder, boolean mutation,
 		ProcessingElementsContainer processingElementsContainer,
 		List<ServletData> servletDatas) {
 
-		for (ServletData servletData : servletDatas) {
-			String graphQLNamespace = servletData.getGraphQLNamespace();
+		Set<String> graphQLNamespaces = new HashSet<>();
 
-			if (graphQLNamespace == null) {
+		for (ServletData servletData : servletDatas) {
+			Set<String> servletDataGraphQLNamespaces = new HashSet<>();
+
+			String namespace = _getGraphQLNamespace(servletData);
+
+			if (namespace != null) {
+				servletDataGraphQLNamespaces.add(namespace);
+			}
+
+			if (servletData.getGraphQLNamespace() != null) {
+				servletDataGraphQLNamespaces.add(
+					servletData.getGraphQLNamespace());
+			}
+
+			if (servletDataGraphQLNamespaces.isEmpty()) {
 				continue;
 			}
 
 			Object query = function.apply(servletData);
+
+			if (query == null) {
+				continue;
+			}
 
 			Class<?> clazz = query.getClass();
 
 			List<Method> methods = TransformUtil.transformToList(
 				clazz.getMethods(),
 				method -> {
-					if (_isMethodEnabled(method, servletData.getPath())) {
+					if (_isMethodEnabled(method, servletData)) {
 						return method;
 					}
 
@@ -1592,55 +1736,79 @@ public class GraphQLServletExtender {
 				continue;
 			}
 
-			GraphQLObjectType.Builder builder = new GraphQLObjectType.Builder();
+			Map<Method, LiferayMethodDataFetcher> liferayMethodDataFetchers =
+				new HashMap<>();
 
-			String prefix = "";
+			for (String graphQLNamespace : servletDataGraphQLNamespaces) {
+				GraphQLObjectType.Builder builder =
+					new GraphQLObjectType.Builder();
 
-			if (mutation) {
-				prefix = "Mutation";
-			}
+				String prefix = "";
 
-			builder.name(
-				prefix + StringUtil.upperCaseFirstLetter(graphQLNamespace));
+				if (mutation) {
+					prefix = "Mutation";
+				}
 
-			GraphQLCodeRegistry.Builder graphQLCodeRegistryBuilder =
-				processingElementsContainer.getCodeRegistryBuilder();
+				builder.name(
+					prefix + StringUtil.upperCaseFirstLetter(graphQLNamespace));
 
-			for (Method method : methods) {
-				_servletDataMap.put(method, servletData);
+				boolean deprecated = false;
 
-				builder.field(
-					_graphQLFieldRetriever.getField(
-						clazz.getSimpleName(), method,
-						processingElementsContainer));
+				if (StringUtil.equals(
+						graphQLNamespace, servletData.getGraphQLNamespace())) {
+
+					deprecated = true;
+				}
+
+				GraphQLCodeRegistry.Builder graphQLCodeRegistryBuilder =
+					processingElementsContainer.getCodeRegistryBuilder();
+
+				for (Method method : methods) {
+					_servletDataMap.put(method, servletData);
+
+					builder.field(
+						_liferayGraphQLFieldRetriever.getField(
+							deprecated, method, mutation,
+							processingElementsContainer));
+
+					graphQLSchemaBuilder.codeRegistry(
+						graphQLCodeRegistryBuilder.dataFetcher(
+							FieldCoordinates.coordinates(
+								graphQLNamespace, method.getName()),
+							liferayMethodDataFetchers.computeIfAbsent(
+								method,
+								key -> new LiferayMethodDataFetcher(
+									new ServletDataRequestContext(
+										_companyId, method, mutation,
+										servletData),
+									_graphQLRequestContextValidators,
+									_liferayMethodDataFetchingProcessor,
+									method))
+						).build());
+				}
+
+				graphQLObjectTypeBuilder.field(
+					_addField(builder.build(), graphQLNamespace));
+
+				String parentField = GraphQLConstants.NAMESPACE_QUERY;
+
+				if (mutation) {
+					parentField = GraphQLConstants.NAMESPACE_MUTATION;
+				}
 
 				graphQLSchemaBuilder.codeRegistry(
 					graphQLCodeRegistryBuilder.dataFetcher(
 						FieldCoordinates.coordinates(
-							graphQLNamespace, method.getName()),
-						new LiferayMethodDataFetcher(
-							new ServletDataRequestContext(
-								_companyId, method, mutation, servletData),
-							_graphQLRequestContextValidators,
-							_liferayMethodDataFetchingProcessor, method)
+							parentField, graphQLNamespace),
+						(DataFetcher<Object>)
+							dataFetchingEnvironment -> new Object()
 					).build());
+
+				graphQLNamespaces.add(graphQLNamespace);
 			}
-
-			graphQLObjectTypeBuilder.field(
-				_addField(builder.build(), graphQLNamespace));
-
-			String parentField = GraphQLConstants.NAMESPACE_QUERY;
-
-			if (mutation) {
-				parentField = GraphQLConstants.NAMESPACE_MUTATION;
-			}
-
-			graphQLSchemaBuilder.codeRegistry(
-				graphQLCodeRegistryBuilder.dataFetcher(
-					FieldCoordinates.coordinates(parentField, graphQLNamespace),
-					(DataFetcher<Object>)dataFetchingEnvironment -> new Object()
-				).build());
 		}
+
+		return graphQLNamespaces;
 	}
 
 	private void _replaceFieldDefinition(
@@ -1885,6 +2053,9 @@ public class GraphQLServletExtender {
 	private long _companyId;
 
 	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference
 	private ConfigurationAdmin _configurationAdmin;
 
 	@Reference
@@ -1893,29 +2064,67 @@ public class GraphQLServletExtender {
 	private DefaultTypeFunction _defaultTypeFunction;
 
 	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
+
+	@Reference
+	private DTOConverterRegistry _dtoConverterRegistry;
+
+	@Reference(
+		target = "(result.class.name=com.liferay.portal.kernel.search.filter.Filter)"
+	)
+	private ExpressionConvert<Filter> _expressionConvert;
+
+	@Reference
+	private FilterParserProvider _filterParserProvider;
+
+	private ServiceTrackerList<GraphQLContributor>
+		_graphQLContributorServiceTrackerList;
 	private GraphQLDTOContributorDataFetchingProcessor
 		_graphQLDTOContributorDataFetchingProcessor;
-
-	private ServiceTrackerMap<String, GraphQLDTOContributor>
-		_graphQLDTOContributorServiceTrackerMap;
-	private GraphQLFieldRetriever _graphQLFieldRetriever;
 	private ServiceTrackerList<GraphQLRequestContextValidator>
 		_graphQLRequestContextValidators;
 
 	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Language _language;
+
+	private LiferayGraphQLFieldRetriever _liferayGraphQLFieldRetriever;
 	private LiferayMethodDataFetchingProcessor
 		_liferayMethodDataFetchingProcessor;
+
+	@Reference
+	private PaginationProvider _paginationProvider;
 
 	@Reference
 	private Portal _portal;
 
 	private final Map<String, String> _registeredClassNames = new HashMap<>();
+
+	@Reference
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
+
+	private ServiceTrackerMap<String, GraphQLDTOContributor> _serviceTrackerMap;
 	private ServiceRegistration<ServletContextHelper>
 		_servletContextHelperServiceRegistration;
 	private final Map<Method, ServletData> _servletDataMap = new HashMap<>();
 	private ServiceTrackerList<ServletData> _servletDataServiceTrackerList;
 	private final Map<Long, Servlet> _servlets = new ConcurrentHashMap<>();
 	private ServiceRegistration<Servlet> _servletServiceRegistration;
+
+	@Reference
+	private SortParserProvider _sortParserProvider;
+
+	@Reference
+	private VulcanBatchEngineImportTaskResourceFactory
+		_vulcanBatchEngineImportTaskResourceFactory;
 
 	private static class DateTypeFunction implements TypeFunction {
 
@@ -2144,6 +2353,10 @@ public class GraphQLServletExtender {
 	private static class LiferayGraphQLErrorHandler
 		implements GraphQLErrorHandler {
 
+		public LiferayGraphQLErrorHandler(Set<String> graphQLNamespaces) {
+			_graphQLNamespaces = graphQLNamespaces;
+		}
+
 		@Override
 		public List<GraphQLError> processErrors(
 			List<GraphQLError> graphQLErrors) {
@@ -2157,14 +2370,7 @@ public class GraphQLServletExtender {
 					continue;
 				}
 
-				String message = graphQLError.getMessage();
-
-				if (message.contains("SecurityException")) {
-					processedErrors.add(
-						_getExtendedGraphQLError(
-							graphQLError, Response.Status.UNAUTHORIZED));
-				}
-				else if (_isForbiddenException(graphQLError)) {
+				if (_isForbiddenException(graphQLError)) {
 					processedErrors.add(
 						_getExtendedGraphQLError(
 							graphQLError, Response.Status.FORBIDDEN));
@@ -2174,16 +2380,18 @@ public class GraphQLServletExtender {
 						_getExtendedGraphQLError(
 							graphQLError, Response.Status.NOT_FOUND));
 				}
-				else if (!_isClientErrorException(graphQLError)) {
+				else if (_isClientErrorException(graphQLError) ||
+						 _isStatusException(graphQLError)) {
+
 					processedErrors.add(
 						_getExtendedGraphQLError(
-							graphQLError,
-							Response.Status.INTERNAL_SERVER_ERROR));
+							graphQLError, Response.Status.BAD_REQUEST));
 				}
 				else {
 					processedErrors.add(
 						_getExtendedGraphQLError(
-							graphQLError, Response.Status.BAD_REQUEST));
+							graphQLError,
+							Response.Status.INTERNAL_SERVER_ERROR));
 				}
 			}
 
@@ -2208,6 +2416,18 @@ public class GraphQLServletExtender {
 					).build()
 				).build()
 			).build();
+		}
+
+		private Throwable _getThrowable(
+			ExceptionWhileDataFetching exceptionWhileDataFetching) {
+
+			Throwable throwable = exceptionWhileDataFetching.getException();
+
+			if (throwable instanceof InvocationTargetException) {
+				return throwable.getCause();
+			}
+
+			return throwable;
 		}
 
 		private boolean _isClientErrorException(GraphQLError graphQLError) {
@@ -2239,13 +2459,11 @@ public class GraphQLServletExtender {
 				return false;
 			}
 
-			ExceptionWhileDataFetching exceptionWhileDataFetching =
-				(ExceptionWhileDataFetching)graphQLError;
+			Throwable throwable = _getThrowable(
+				(ExceptionWhileDataFetching)graphQLError);
 
-			Throwable throwable = exceptionWhileDataFetching.getException();
-
-			if ((throwable != null) &&
-				(throwable.getCause() instanceof ForbiddenException)) {
+			if (throwable instanceof ForbiddenException ||
+				throwable instanceof SecurityException) {
 
 				return true;
 			}
@@ -2258,14 +2476,12 @@ public class GraphQLServletExtender {
 				return false;
 			}
 
-			ExceptionWhileDataFetching exceptionWhileDataFetching =
-				(ExceptionWhileDataFetching)graphQLError;
+			Throwable throwable = _getThrowable(
+				(ExceptionWhileDataFetching)graphQLError);
 
-			Throwable throwable = exceptionWhileDataFetching.getException();
-
-			if ((throwable != null) &&
-				(throwable.getCause() instanceof NotFoundException ||
-				 throwable.getCause() instanceof NoSuchModelException)) {
+			if (throwable instanceof NoSuchModelException ||
+				throwable instanceof NotFoundException ||
+				throwable instanceof PrincipalException.MustHavePermission) {
 
 				return true;
 			}
@@ -2280,6 +2496,10 @@ public class GraphQLServletExtender {
 				path = Collections.emptyList();
 			}
 
+			if (!path.isEmpty() && _graphQLNamespaces.contains(path.get(0))) {
+				path = ListUtil.subList(path, 1, path.size());
+			}
+
 			if (path.size() <= 1) {
 				return true;
 			}
@@ -2287,6 +2507,25 @@ public class GraphQLServletExtender {
 			return StringUtil.containsIgnoreCase(
 				(String)path.get(path.size() - 1), "parent");
 		}
+
+		private boolean _isStatusException(GraphQLError graphQLError) {
+			if (!(graphQLError instanceof ExceptionWhileDataFetching)) {
+				return false;
+			}
+
+			if (StringUtil.endsWith(
+					ClassUtil.getClassName(
+						_getThrowable(
+							(ExceptionWhileDataFetching)graphQLError)),
+					"StatusException")) {
+
+				return true;
+			}
+
+			return false;
+		}
+
+		private final Set<String> _graphQLNamespaces;
 
 	}
 
@@ -2412,7 +2651,81 @@ public class GraphQLServletExtender {
 
 	}
 
+	private class GraphQLContributorServiceTrackerCustomizer
+		implements EagerServiceTrackerCustomizer
+			<GraphQLContributor, GraphQLContributor> {
+
+		@Override
+		public GraphQLContributor addingService(
+			ServiceReference<GraphQLContributor> serviceReference) {
+
+			GraphQLContributor graphQLContributor = _bundleContext.getService(
+				serviceReference);
+
+			ServiceRegistration<ServletData> servletDataServiceRegistration =
+				_bundleContext.registerService(
+					ServletData.class,
+					ServletDataAdapter.of(graphQLContributor), null);
+
+			_servletDataServiceRegistrations.put(
+				graphQLContributor, servletDataServiceRegistration);
+
+			return graphQLContributor;
+		}
+
+		@Override
+		public void modifiedService(
+			ServiceReference<GraphQLContributor> serviceReference,
+			GraphQLContributor graphQLContributor) {
+		}
+
+		@Override
+		public void removedService(
+			ServiceReference<GraphQLContributor> serviceReference,
+			GraphQLContributor graphQLContributor) {
+
+			ServiceRegistration<ServletData> serviceRegistration =
+				_servletDataServiceRegistrations.remove(graphQLContributor);
+
+			if (serviceRegistration != null) {
+				serviceRegistration.unregister();
+			}
+
+			_bundleContext.ungetService(serviceReference);
+		}
+
+		private final Map<GraphQLContributor, ServiceRegistration<ServletData>>
+			_servletDataServiceRegistrations = new ConcurrentHashMap<>();
+
+	}
+
 	private class LiferayGraphQLFieldRetriever extends GraphQLFieldRetriever {
+
+		public GraphQLFieldDefinition getField(
+			boolean deprecated, Method method, boolean mutation,
+			ProcessingElementsContainer processingElementsContainer) {
+
+			GraphQLFieldDefinition.Builder graphQLFieldDefinitionBuilder =
+				_getGraphQLFieldDefinitionBuilder(
+					method, processingElementsContainer);
+
+			if (deprecated) {
+				String fieldType = "query";
+
+				if (mutation) {
+					fieldType = "mutation";
+				}
+
+				graphQLFieldDefinitionBuilder.deprecate(
+					StringBundler.concat(
+						"This field is deprecated. Access to ", fieldType,
+						" is available at ", fieldType, "/",
+						_getGraphQLNamespace(_servletDataMap.get(method)), "/",
+						method.getName()));
+			}
+
+			return graphQLFieldDefinitionBuilder.build();
+		}
 
 		@Override
 		public GraphQLFieldDefinition getField(
@@ -2451,6 +2764,18 @@ public class GraphQLServletExtender {
 		public GraphQLFieldDefinition getField(
 			String parentName, Method method,
 			ProcessingElementsContainer processingElementsContainer) {
+
+			GraphQLFieldDefinition.Builder graphQLFieldDefinitionBuilder =
+				_getGraphQLFieldDefinitionBuilder(
+					method, processingElementsContainer);
+
+			return graphQLFieldDefinitionBuilder.build();
+		}
+
+		private GraphQLFieldDefinition.Builder
+			_getGraphQLFieldDefinitionBuilder(
+				Method method,
+				ProcessingElementsContainer processingElementsContainer) {
 
 			GraphQLFieldDefinition.Builder graphQLFieldDefinitionBuilder =
 				GraphQLFieldDefinition.newFieldDefinition();
@@ -2500,7 +2825,7 @@ public class GraphQLServletExtender {
 
 			graphQLFieldDefinitionBuilder.type(graphQLOutputType);
 
-			return graphQLFieldDefinitionBuilder.build();
+			return graphQLFieldDefinitionBuilder;
 		}
 
 	}

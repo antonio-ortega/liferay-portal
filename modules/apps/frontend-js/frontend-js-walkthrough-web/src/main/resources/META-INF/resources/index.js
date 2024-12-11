@@ -37,6 +37,8 @@ function Root(props) {
 	return null;
 }
 
-export default function main(props = {}) {
+export {Walkthrough};
+
+export function main(props = {}) {
 	render(Root, props, getDefaultContainer());
 }

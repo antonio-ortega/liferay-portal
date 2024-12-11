@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CommerceChannelRel;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -39,6 +40,15 @@ public class CommerceChannelRelServiceUtil {
 			className, classPK, commerceChannelId, serviceContext);
 	}
 
+	public static List<CommerceChannelRel> addCommerceChannelRels(
+			String className, long[] classPKs, long commerceChannelId,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addCommerceChannelRels(
+			className, classPKs, commerceChannelId, serviceContext);
+	}
+
 	public static void deleteCommerceChannelRel(long commerceChannelRelId)
 		throws PortalException {
 
@@ -57,6 +67,22 @@ public class CommerceChannelRelServiceUtil {
 
 		return getService().fetchCommerceChannelRel(
 			className, classPK, commerceChannelId);
+	}
+
+	public static List<CommerceChannelRel> getCommerceChannelCountries(
+			long commerceChannelId, String name, int start, int end)
+		throws PortalException {
+
+		return getService().getCommerceChannelCountries(
+			commerceChannelId, name, start, end);
+	}
+
+	public static int getCommerceChannelCountriesCount(
+			long commerceChannelId, String name)
+		throws PortalException {
+
+		return getService().getCommerceChannelCountriesCount(
+			commerceChannelId, name);
 	}
 
 	public static CommerceChannelRel getCommerceChannelRel(
@@ -114,13 +140,12 @@ public class CommerceChannelRelServiceUtil {
 	}
 
 	public static CommerceChannelRelService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceChannelRelService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceChannelRelService _service;
+	private static final Snapshot<CommerceChannelRelService> _serviceSnapshot =
+		new Snapshot<>(
+			CommerceChannelRelServiceUtil.class,
+			CommerceChannelRelService.class);
 
 }

@@ -116,7 +116,8 @@ public class CommercePriceListDisplayContext
 
 		return _commerceCurrencyLocalService.getCommerceCurrencies(
 			themeDisplay.getCompanyId(), true, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, new CommerceCurrencyPriorityComparator(true));
+			QueryUtil.ALL_POS,
+			CommerceCurrencyPriorityComparator.getInstance(true));
 	}
 
 	public CommercePriceModifier getCommercePriceModifier()
@@ -299,8 +300,6 @@ public class CommercePriceListDisplayContext
 					commercePricingRequestHelper.getRenderResponse()
 				).setMVCRenderCommandName(
 					"/commerce_price_list/edit_commerce_price_list"
-				).setRedirect(
-					commercePricingRequestHelper.getCurrentURL()
 				).setParameter(
 					"commercePriceListId", "{id}"
 				).setParameter(

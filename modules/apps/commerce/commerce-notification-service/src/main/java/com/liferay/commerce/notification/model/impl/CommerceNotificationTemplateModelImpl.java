@@ -58,8 +58,10 @@ import java.util.function.Function;
  *
  * @author Alessio Antonio Rendina
  * @see CommerceNotificationTemplateImpl
+ * @deprecated
  * @generated
  */
+@Deprecated
 @JSON(strict = true)
 public class CommerceNotificationTemplateModelImpl
 	extends BaseModelImpl<CommerceNotificationTemplate>
@@ -122,6 +124,9 @@ public class CommerceNotificationTemplateModelImpl
 
 	public static final String ORDER_BY_SQL =
 		" ORDER BY CommerceNotificationTemplate.modifiedDate DESC, CommerceNotificationTemplate.name DESC";
+
+	public static final String ORDER_BY_SQL_INLINE_DISTINCT =
+		" ORDER BY commerceNotificationTemplate.modifiedDate DESC, commerceNotificationTemplate.name DESC";
 
 	public static final String DATA_SOURCE = "liferayDataSource";
 

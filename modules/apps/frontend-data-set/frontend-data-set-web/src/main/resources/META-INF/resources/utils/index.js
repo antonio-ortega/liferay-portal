@@ -5,6 +5,8 @@
 
 import {fetch} from 'frontend-js-web';
 
+import {DEFAULT_FETCH_HEADERS} from '../constants';
+import getValueFromItem from './getValueFromItem';
 import createOdataFilter from './odata';
 
 export function getData(apiURL, query) {
@@ -15,6 +17,7 @@ export function getData(apiURL, query) {
 	}
 
 	return fetch(url, {
+		headers: DEFAULT_FETCH_HEADERS,
 		method: 'GET',
 	}).then((data) => data.json());
 }
@@ -25,15 +28,6 @@ export function getSchemaString(object, path) {
 	}
 	else {
 		return path.reduce((acc, path) => acc[path], object);
-	}
-}
-
-export function liferayNavigate(url) {
-	if (Liferay.SPA) {
-		Liferay.SPA.app.navigate(url);
-	}
-	else {
-		window.location.href = url;
 	}
 }
 
@@ -60,29 +54,6 @@ export function isValuesArrayChanged(prevValue = [], newValue = []) {
 	return changed;
 }
 
-export function getValueFromItem(item, fieldName) {
-	if (!fieldName) {
-		return null;
-	}
-	if (Array.isArray(fieldName)) {
-		return fieldName.reduce((acc, key) => {
-			if (key === 'LANG') {
-				return (
-					acc[Liferay.ThemeDisplay.getLanguageId()] ||
-					acc[
-						Liferay.ThemeDisplay.getDefaultLanguageId() ||
-							acc[Liferay.ThemeDisplay.getBCP47LanguageId()]
-					]
-				);
-			}
-
-			return acc[key];
-		}, item);
-	}
-
-	return item[fieldName];
-}
-
 export function formatItemChanges(itemChanges) {
 	const formattedChanges = Object.values(itemChanges).reduce(
 		(changes, {value, valuePath}) => {
@@ -99,30 +70,6 @@ export function formatItemChanges(itemChanges) {
 	);
 
 	return formattedChanges;
-}
-
-export function formatActionURL(url, item) {
-	if (!url) {
-		return '';
-	}
-
-	const replacedURL = url.replace(new RegExp('{(.*?)}', 'mg'), (matched) =>
-		getValueFromItem(
-			item,
-			matched.substring(1, matched.length - 1).split('.')
-		)
-	);
-
-	return replacedURL.replace(new RegExp('(%7B.*?%7D)', 'mg'), (matched) =>
-		getValueFromItem(
-			item,
-			matched.substring(3, matched.length - 3).split('.')
-		)
-	);
-}
-
-export function getRandomId() {
-	return Math.random().toString(36).substr(2, 9);
 }
 
 export function createSortingString(values) {
@@ -166,7 +113,8 @@ export async function loadData(
 	searchParam,
 	delta,
 	page = 1,
-	sorts = []
+	sorts = [],
+	additionalAPIURLParameters
 ) {
 	const fullUrl = apiURL.startsWith('/')
 		? themeDisplay.getPortalURL() + themeDisplay.getPathContext() + apiURL
@@ -201,18 +149,98 @@ export async function loadData(
 	}
 
 	if (sorts.length) {
-		url.searchParams.append(
+		url.searchParams.set(
 			'sort',
 			sorts.map((item) => `${item.key}:${item.direction}`).join(',')
 		);
 	}
 
+	if (additionalAPIURLParameters) {
+		const additionalAPIURLParametersArray =
+			additionalAPIURLParameters.split('&');
+
+		additionalAPIURLParametersArray.forEach((parameter) => {
+			const [key, value] = parameter.split('=');
+
+			const existingFilter = url.searchParams.get('filter');
+
+			if (key === 'filter' && existingFilter) {
+				url.searchParams.set(
+					'filter',
+					`(${existingFilter}) and (${value})`
+				);
+			}
+			else if (key === 'sort' && url.searchParams.get('sort')) {
+				const newSortParams = [];
+
+				const existingSortArray = url.searchParams
+					.get('sort')
+					.split(',');
+
+				const existingSortParamFields = existingSortArray.map(
+					(sort) => sort.split(':')[0]
+				);
+
+				const additionalAPIURLParametersSortValueArray =
+					value.split(',');
+
+				additionalAPIURLParametersSortValueArray.forEach(
+					(additionalAPIURLParametersSortValueItem) => {
+						if (
+							!existingSortParamFields.includes(
+								additionalAPIURLParametersSortValueItem.split(
+									':'
+								)[0]
+							)
+						) {
+							newSortParams.push(
+								additionalAPIURLParametersSortValueItem
+							);
+						}
+					}
+				);
+
+				url.searchParams.set(
+					'sort',
+					existingSortArray.concat(newSortParams).join(',')
+				);
+			}
+			else if (
+				key === 'nestedFields' &&
+				url.searchParams.get('nestedFields')
+			) {
+				const existingNestedFieldsArray = url.searchParams
+					.get('nestedFields')
+					.split(',');
+				const additionalAPIURLParametersNestedFieldsValueArray =
+					value.split(',');
+
+				const newNestedFields = [...existingNestedFieldsArray];
+
+				additionalAPIURLParametersNestedFieldsValueArray.forEach(
+					(additionalAPIURLParametersNestedFieldsItem) => {
+						if (
+							!existingNestedFieldsArray.includes(
+								additionalAPIURLParametersNestedFieldsItem
+							)
+						) {
+							newNestedFields.push(
+								additionalAPIURLParametersNestedFieldsItem
+							);
+						}
+					}
+				);
+
+				url.searchParams.set('nestedFields', newNestedFields);
+			}
+			else {
+				url.searchParams.append(key, value);
+			}
+		});
+	}
+
 	const response = await fetch(url, {
-		headers: {
-			'Accept': 'application/json',
-			'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
-			'Content-Type': 'application/json',
-		},
+		headers: DEFAULT_FETCH_HEADERS,
 		method: 'GET',
 	});
 	const responseJSON = await response.json();

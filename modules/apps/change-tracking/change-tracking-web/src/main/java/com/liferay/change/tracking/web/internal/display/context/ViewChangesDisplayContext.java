@@ -13,20 +13,20 @@ import com.liferay.change.tracking.mapping.CTMappingTableInfo;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTEntryTable;
+import com.liferay.change.tracking.scheduler.PublishScheduler;
+import com.liferay.change.tracking.scheduler.ScheduledPublishInfo;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTSchemaVersionLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
-import com.liferay.change.tracking.web.internal.configuration.CTConfiguration;
 import com.liferay.change.tracking.web.internal.display.BasePersistenceRegistry;
+import com.liferay.change.tracking.web.internal.display.CTClosureUtil;
 import com.liferay.change.tracking.web.internal.display.CTModelDisplayRendererAdapter;
 import com.liferay.change.tracking.web.internal.frontend.data.set.filter.ChangeTypeSelectionFDSFilter;
 import com.liferay.change.tracking.web.internal.frontend.data.set.filter.SiteSelectionFDSFilter;
 import com.liferay.change.tracking.web.internal.frontend.data.set.filter.TypeNameSelectionFDSFilter;
 import com.liferay.change.tracking.web.internal.frontend.data.set.filter.UserSelectionFDSFilter;
-import com.liferay.change.tracking.web.internal.scheduler.PublishScheduler;
-import com.liferay.change.tracking.web.internal.scheduler.ScheduledPublishInfo;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTCollectionPermission;
 import com.liferay.change.tracking.web.internal.security.permission.resource.CTPermission;
 import com.liferay.change.tracking.web.internal.util.PublicationsPortletURLUtil;
@@ -37,16 +37,18 @@ import com.liferay.frontend.data.set.model.FDSSortItemList;
 import com.liferay.frontend.data.set.model.FDSSortItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
+import com.liferay.knowledge.base.model.KBArticleModel;
 import com.liferay.petra.lang.HashUtil;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.sql.CTSQLModeThreadLocal;
 import com.liferay.portal.kernel.dao.orm.ORMException;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -60,22 +62,46 @@ import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTable;
+import com.liferay.portal.kernel.model.WorkflowInstanceLink;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.search.BooleanClause;
+import com.liferay.portal.kernel.search.BooleanClauseFactoryUtil;
+import com.liferay.portal.kernel.search.BooleanClauseOccur;
+import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.filter.BooleanFilter;
+import com.liferay.portal.kernel.search.filter.ExistsFilter;
+import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.ObjectValuePair;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowException;
+import com.liferay.portal.kernel.workflow.WorkflowTask;
+import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
+import com.liferay.portal.search.document.Document;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
+import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.searcher.SearchResponse;
+import com.liferay.portal.search.searcher.Searcher;
+import com.liferay.portal.search.sort.SortOrder;
+import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.util.PropsValues;
 
 import java.io.Serializable;
@@ -88,6 +114,7 @@ import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -113,21 +140,21 @@ public class ViewChangesDisplayContext {
 		BasePersistenceRegistry basePersistenceRegistry,
 		CTClosureFactory ctClosureFactory, CTCollection ctCollection,
 		CTCollectionLocalService ctCollectionLocalService,
-		CTConfiguration ctConfiguration,
 		CTDisplayRendererRegistry ctDisplayRendererRegistry,
 		CTEntryLocalService ctEntryLocalService,
 		CTSchemaVersionLocalService ctSchemaVersionLocalService,
 		GroupLocalService groupLocalService, Language language, Portal portal,
 		PublicationsDisplayContext publicationsDisplayContext,
 		PublishScheduler publishScheduler, RenderRequest renderRequest,
-		RenderResponse renderResponse, UserLocalService userLocalService) {
+		RenderResponse renderResponse, UserLocalService userLocalService,
+		WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService,
+		WorkflowTaskManager workflowTaskManager) {
 
 		_activeCTCollectionId = activeCTCollectionId;
 		_basePersistenceRegistry = basePersistenceRegistry;
 		_ctClosureFactory = ctClosureFactory;
 		_ctCollection = ctCollection;
 		_ctCollectionLocalService = ctCollectionLocalService;
-		_ctConfiguration = ctConfiguration;
 		_ctDisplayRendererRegistry = ctDisplayRendererRegistry;
 		_ctEntryLocalService = ctEntryLocalService;
 		_ctSchemaVersionLocalService = ctSchemaVersionLocalService;
@@ -139,6 +166,8 @@ public class ViewChangesDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_userLocalService = userLocalService;
+		_workflowInstanceLinkLocalService = workflowInstanceLinkLocalService;
+		_workflowTaskManager = workflowTaskManager;
 
 		_httpServletRequest = portal.getHttpServletRequest(renderRequest);
 
@@ -146,6 +175,29 @@ public class ViewChangesDisplayContext {
 			WebKeys.THEME_DISPLAY);
 
 		_user = _themeDisplay.getUser();
+
+		long modelClassNameId = ParamUtil.getLong(
+			renderRequest, "modelClassNameId");
+		long modelClassPK = ParamUtil.getLong(renderRequest, "modelClassPK");
+
+		if ((modelClassNameId != 0) && (modelClassPK != 0)) {
+			_modelClassNameId = modelClassNameId;
+			_modelClassPK = modelClassPK;
+		}
+		else {
+			long ctEntryId = ParamUtil.getLong(renderRequest, "ctEntryId");
+
+			CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(ctEntryId);
+
+			if (ctEntry != null) {
+				_modelClassNameId = ctEntry.getModelClassNameId();
+				_modelClassPK = ctEntry.getModelClassPK();
+			}
+			else {
+				_modelClassNameId = 0;
+				_modelClassPK = 0;
+			}
+		}
 	}
 
 	public String getAPIURL() {
@@ -175,8 +227,12 @@ public class ViewChangesDisplayContext {
 		return portletURL.toString();
 	}
 
+	public long getCtCollectionId() {
+		return _ctCollection.getCtCollectionId();
+	}
+
 	public List<FDSActionDropdownItem> getFDSActionDropdownItems() {
-		return ListUtil.fromArray(
+		List<FDSActionDropdownItem> fdsActionDropdownItems = ListUtil.fromArray(
 			new FDSActionDropdownItem(
 				PortletURLBuilder.createRenderURL(
 					_renderResponse
@@ -188,55 +244,71 @@ public class ViewChangesDisplayContext {
 					"ctCollectionId", "{ctCollectionId}"
 				).setParameter(
 					"ctEntryId", "{id}"
-				).setParameter(
-					"showHideable",
-					ParamUtil.getBoolean(_renderRequest, "showHideable")
 				).buildString(),
 				"list-ul", "view-change",
 				_language.get(_httpServletRequest, "review-change"), "get",
-				"get", null),
-			new FDSActionDropdownItem(
-				PortletURLBuilder.createRenderURL(
-					_renderResponse
-				).setMVCRenderCommandName(
-					"/change_tracking/view_move_changes"
-				).setRedirect(
-					_themeDisplay.getURLCurrent()
-				).setParameter(
-					"ctCollectionId", "{ctCollectionId}"
-				).setParameter(
-					"modelClassNameId", "{modelClassNameId}"
-				).setParameter(
-					"modelClassPK", "{modelClassPK}"
-				).buildString(),
-				"move-folder", "move-changes",
-				_language.get(_httpServletRequest, "move-changes"), "post",
-				"move-changes", null),
-			new FDSActionDropdownItem(
-				PortletURLBuilder.createRenderURL(
-					_renderResponse
-				).setMVCRenderCommandName(
-					"/change_tracking/view_discard"
-				).setRedirect(
-					_themeDisplay.getURLCurrent()
-				).setParameter(
-					"ctCollectionId", "{ctCollectionId}"
-				).setParameter(
-					"modelClassNameId", "{modelClassNameId}"
-				).setParameter(
-					"modelClassPK", "{modelClassPK}"
-				).buildString(),
-				"times-circle", "view-discard",
-				_language.get(_httpServletRequest, "discard"), "get",
-				"view-discard", null));
+				"get", null));
+
+		if ((_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) ||
+			(_ctCollection.getStatus() == WorkflowConstants.STATUS_EXPIRED)) {
+
+			fdsActionDropdownItems.add(
+				new FDSActionDropdownItem(
+					PortletURLBuilder.createRenderURL(
+						_renderResponse
+					).setMVCRenderCommandName(
+						"/change_tracking/view_move_changes"
+					).setRedirect(
+						_themeDisplay.getURLCurrent()
+					).setParameter(
+						"ctCollectionId", "{ctCollectionId}"
+					).setParameter(
+						"modelClassNameId", "{modelClassNameId}"
+					).setParameter(
+						"modelClassPK", "{modelClassPK}"
+					).buildString(),
+					"move-folder", "move-changes",
+					_language.get(_httpServletRequest, "move-changes"), "post",
+					"move-changes", null));
+		}
+
+		if (_ctCollection.getStatus() == WorkflowConstants.STATUS_DRAFT) {
+			fdsActionDropdownItems.add(
+				new FDSActionDropdownItem(
+					PortletURLBuilder.createRenderURL(
+						_renderResponse
+					).setMVCRenderCommandName(
+						"/change_tracking/view_discard"
+					).setRedirect(
+						_themeDisplay.getURLCurrent()
+					).setParameter(
+						"ctCollectionId", "{ctCollectionId}"
+					).setParameter(
+						"modelClassNameId", "{modelClassNameId}"
+					).setParameter(
+						"modelClassPK", "{modelClassPK}"
+					).buildString(),
+					"times-circle", "view-discard",
+					_language.get(_httpServletRequest, "discard"), "get",
+					"view-discard", null));
+		}
+
+		return fdsActionDropdownItems;
 	}
 
-	public List<FDSFilter> getFDSFilters() {
+	public List<FDSFilter> getFDSFilters() throws PortalException {
+		long groupId = ParamUtil.getLong(_renderRequest, "groupId");
+		long modelClassNameId = ParamUtil.getLong(
+			_renderRequest, "modelClassNameId");
+
+		boolean showHideable = ParamUtil.getBoolean(
+			_renderRequest, "showHideable");
+
 		Map<Long, String> siteNames = DisplayContextUtil.getSiteNames(
-			_ctCollection.getCtCollectionId(), _themeDisplay);
+			_ctCollection.getCtCollectionId(), showHideable, _themeDisplay);
 		Map<Long, String> typeNames = DisplayContextUtil.getTypeNames(
-			_ctCollection.getCtCollectionId(), _ctDisplayRendererRegistry,
-			_themeDisplay);
+			_ctCollection.getCtCollectionId(), showHideable, _themeDisplay);
+
 		JSONObject usersJSONObject = DisplayContextUtil.getUserInfoJSONObject(
 			CTEntryTable.INSTANCE.userId.eq(UserTable.INSTANCE.userId),
 			CTEntryTable.INSTANCE, _themeDisplay, _userLocalService,
@@ -245,8 +317,8 @@ public class ViewChangesDisplayContext {
 
 		return ListUtil.fromArray(
 			new ChangeTypeSelectionFDSFilter(),
-			new SiteSelectionFDSFilter(siteNames),
-			new TypeNameSelectionFDSFilter(typeNames),
+			new SiteSelectionFDSFilter(groupId, siteNames),
+			new TypeNameSelectionFDSFilter(modelClassNameId, typeNames),
 			new UserSelectionFDSFilter(usersJSONObject.toMap()));
 	}
 
@@ -260,6 +332,84 @@ public class ViewChangesDisplayContext {
 		).build();
 	}
 
+	public Map<String, Object> getItemsOverview() {
+		boolean showHideable = ParamUtil.getBoolean(
+			_renderRequest, "showHideable");
+
+		Map<Long, String> siteNames = HashMapBuilder.put(
+			-1L, _language.get(_httpServletRequest, "system")
+		).putAll(
+			DisplayContextUtil.getSiteNames(
+				_ctCollection.getCtCollectionId(), showHideable, _themeDisplay)
+		).build();
+
+		JSONArray itemsOverviewJSONArray = JSONFactoryUtil.createJSONArray();
+
+		for (Map.Entry<Long, String> siteName : siteNames.entrySet()) {
+			Map<Long, ObjectValuePair<String, Integer>> objectValuePairs =
+				_getObjectValuePairs(
+					_ctCollection.getCtCollectionId(), siteName.getKey(),
+					showHideable, _themeDisplay);
+
+			if (objectValuePairs.isEmpty()) {
+				continue;
+			}
+
+			int siteCount = 0;
+			JSONArray typeNameAndCountJSONArray =
+				JSONFactoryUtil.createJSONArray();
+
+			for (Map.Entry<Long, ObjectValuePair<String, Integer>> entry :
+					objectValuePairs.entrySet()) {
+
+				ObjectValuePair<String, Integer> objectValuePair =
+					entry.getValue();
+
+				typeNameAndCountJSONArray.put(
+					JSONUtil.put(
+						"href",
+						PortletURLBuilder.createRenderURL(
+							_renderResponse
+						).setMVCRenderCommandName(
+							"/change_tracking/view_changes"
+						).setParameter(
+							"ctCollectionId", _ctCollection.getCtCollectionId()
+						).setParameter(
+							"groupId", siteName.getKey()
+						).setParameter(
+							"modelClassNameId", entry.getKey()
+						).setParameter(
+							"showHideable", showHideable
+						).buildString()
+					).put(
+						"label",
+						StringBundler.concat(
+							objectValuePair.getKey(), " (",
+							objectValuePair.getValue(), ") ")
+					));
+
+				siteCount = siteCount + objectValuePair.getValue();
+			}
+
+			itemsOverviewJSONArray.put(
+				JSONUtil.put(
+					"siteCount", siteCount
+				).put(
+					"siteName", siteName.getValue()
+				).put(
+					"typeNameAndCount", typeNameAndCountJSONArray
+				));
+		}
+
+		return HashMapBuilder.<String, Object>put(
+			"itemsOverview", itemsOverviewJSONArray
+		).build();
+	}
+
+	public String getMyWorkflowTaskPortletNamespace() {
+		return PortalUtil.getPortletNamespace(PortletKeys.MY_WORKFLOW_TASK);
+	}
+
 	public Map<String, Object> getReactData() throws Exception {
 		if (_reactData != null) {
 			return _reactData;
@@ -269,16 +419,9 @@ public class ViewChangesDisplayContext {
 
 		CTClosure ctClosure = null;
 
-		int ctEntriesCount = _ctEntryLocalService.getCTCollectionCTEntriesCount(
-			_ctCollection.getCtCollectionId());
-
-		if ((_ctCollection.getStatus() != WorkflowConstants.STATUS_APPROVED) &&
-			(ctEntriesCount <= _ctConfiguration.contextViewLimitCount())) {
-
+		if (_ctCollection.getStatus() != WorkflowConstants.STATUS_APPROVED) {
 			try {
-				if (_ctConfiguration.contextViewIncludeProduction() &&
-					!_user.isOnDemandUser()) {
-
+				if (!_user.isOnDemandUser()) {
 					ctClosure = _ctClosureFactory.create(
 						_ctCollection.getCtCollectionId());
 				}
@@ -331,14 +474,13 @@ public class ViewChangesDisplayContext {
 			}
 		}
 		else {
+			Map.Entry<Long, List<Long>> entry = null;
 			int[] modelKeyCounterHolder = {1};
 
-			Map<Long, List<Long>> rootPKsMap = ctClosure.getRootPKsMap();
+			Map<Long, List<Long>> rootPKsMap = _getRootPKsMap(ctClosure);
 
 			Queue<Map.Entry<Long, List<Long>>> queue = new LinkedList<>(
 				rootPKsMap.entrySet());
-
-			Map.Entry<Long, List<Long>> entry = null;
 
 			while ((entry = queue.poll()) != null) {
 				long classNameId = entry.getKey();
@@ -356,27 +498,22 @@ public class ViewChangesDisplayContext {
 						modelInfoMap.put(
 							modelInfoKey,
 							new ModelInfo(modelKeyCounterHolder[0]++));
-
-						Map<Long, List<Long>> childPKsMap =
-							ctClosure.getChildPKsMap(classNameId, classPK);
-
-						if (!childPKsMap.isEmpty()) {
-							queue.addAll(childPKsMap.entrySet());
-						}
 					}
 				}
 			}
 		}
 
-		boolean showHideable = ParamUtil.getBoolean(
-			_renderRequest, "showHideable");
 		Map<Long, String> typeNameCacheMap = new HashMap<>();
 
 		for (Map.Entry<Long, Set<Long>> entry :
 				classNameIdClassPKsMap.entrySet()) {
 
+			if (entry.getKey() == 0) {
+				continue;
+			}
+
 			_populateEntryValues(
-				modelInfoMap, entry.getKey(), entry.getValue(), showHideable,
+				modelInfoMap, entry.getKey(), entry.getValue(),
 				typeNameCacheMap);
 		}
 
@@ -406,99 +543,19 @@ public class ViewChangesDisplayContext {
 				return changesJSONArray;
 			}
 		).put(
-			"changeTypesFromURL",
-			ParamUtil.getString(_renderRequest, "changeTypes")
-		).put(
-			"collaboratorsData",
-			_publicationsDisplayContext.getCollaboratorsReactData(
-				_ctCollection.getCtCollectionId(), false)
-		).put(
-			"columnFromURL", ParamUtil.getString(_renderRequest, "column")
+			"changeURL",
+			PortletURLBuilder.createRenderURL(
+				_renderResponse
+			).setMVCRenderCommandName(
+				"/change_tracking/view_change"
+			).setParameter(
+				"ctCollectionId", _ctCollection.getCtCollectionId()
+			).buildString()
 		).put(
 			"contextView",
 			_getContextViewJSONObject(
 				ctClosure, modelInfoMap, contextViewJSONObject,
 				typeNameCacheMap)
-		).put(
-			"ctCollectionId", _ctCollection.getCtCollectionId()
-		).put(
-			"ctCollections",
-			JSONUtil.toJSONArray(
-				_ctCollectionLocalService.getCTCollections(
-					_themeDisplay.getCompanyId(),
-					WorkflowConstants.STATUS_DRAFT, QueryUtil.ALL_POS,
-					QueryUtil.ALL_POS, null),
-				ctCollection -> JSONUtil.put(
-					"ctCollectionId",
-					String.valueOf(ctCollection.getCtCollectionId())
-				).put(
-					"name", ctCollection.getName()
-				))
-		).put(
-			"ctMappingInfos",
-			() -> {
-				JSONArray ctMappingInfosJSONArray =
-					JSONFactoryUtil.createJSONArray();
-
-				List<CTMappingTableInfo> ctMappingTableInfos =
-					_ctCollectionLocalService.getCTMappingTableInfos(
-						_ctCollection.getCtCollectionId());
-
-				for (CTMappingTableInfo ctMappingTableInfo :
-						ctMappingTableInfos) {
-
-					String description = StringPool.BLANK;
-
-					List<Map.Entry<Long, Long>> addedMappings =
-						ctMappingTableInfo.getAddedMappings();
-
-					if (!addedMappings.isEmpty()) {
-						description = StringBundler.concat(
-							addedMappings.size(), StringPool.SPACE,
-							_language.get(_themeDisplay.getLocale(), "added"));
-					}
-
-					List<Map.Entry<Long, Long>> removedMappings =
-						ctMappingTableInfo.getRemovedMappings();
-
-					if (!removedMappings.isEmpty()) {
-						if (Validator.isNotNull(description)) {
-							description = description.concat(", ");
-						}
-
-						description = StringBundler.concat(
-							description, removedMappings.size(),
-							StringPool.SPACE,
-							_language.get(
-								_themeDisplay.getLocale(), "removed"));
-					}
-
-					ctMappingInfosJSONArray.put(
-						JSONUtil.put(
-							"description", description
-						).put(
-							"name",
-							StringBundler.concat(
-								_ctDisplayRendererRegistry.getTypeName(
-									_themeDisplay.getLocale(),
-									_portal.getClassNameId(
-										ctMappingTableInfo.
-											getLeftModelClass())),
-								" & ",
-								_ctDisplayRendererRegistry.getTypeName(
-									_themeDisplay.getLocale(),
-									_portal.getClassNameId(
-										ctMappingTableInfo.
-											getRightModelClass())))
-						).put(
-							"tableName", ctMappingTableInfo.getTableName()
-						));
-				}
-
-				return ctMappingInfosJSONArray;
-			}
-		).put(
-			"currentUserId", _user.getUserId()
 		).put(
 			"dataURL",
 			() -> {
@@ -523,133 +580,37 @@ public class ViewChangesDisplayContext {
 					CharPool.UNDERLINE, CharPool.DASH)
 			)
 		).put(
-			"deleteCTCommentURL",
-			() -> {
-				ResourceURL deleteCTCommentURL =
-					_renderResponse.createResourceURL();
-
-				deleteCTCommentURL.setParameter(
-					"ctCollectionId",
-					String.valueOf(_ctCollection.getCtCollectionId()));
-				deleteCTCommentURL.setResourceID(
-					"/change_tracking/delete_ct_comment");
-
-				return deleteCTCommentURL.toString();
-			}
-		).put(
-			"deltaFromURL", ParamUtil.getString(_renderRequest, "delta")
-		).put(
-			"description",
-			() -> {
-				if (_ctCollection.getStatus() ==
-						WorkflowConstants.STATUS_APPROVED) {
-
-					String description = _ctCollection.getDescription();
-
-					if (Validator.isNotNull(description)) {
-						description = description.concat(" | ");
-					}
-
-					Format format = FastDateFormatFactoryUtil.getDateTime(
-						_themeDisplay.getLocale(), _themeDisplay.getTimeZone());
-
-					return description.concat(
-						_language.format(
-							_httpServletRequest, "published-by-x-on-x",
-							new Object[] {
-								_ctCollection.getUserName(),
-								format.format(_ctCollection.getStatusDate())
-							},
-							false));
-				}
-				else if (_ctCollection.getStatus() ==
-							WorkflowConstants.STATUS_SCHEDULED) {
-
-					String description = _ctCollection.getDescription();
-
-					if (_publishScheduler == null) {
-						return description;
-					}
-
-					ScheduledPublishInfo scheduledPublishInfo =
-						_publishScheduler.getScheduledPublishInfo(
-							_ctCollection);
-
-					if (scheduledPublishInfo != null) {
-						Format format = FastDateFormatFactoryUtil.getDateTime(
-							_themeDisplay.getLocale(),
-							_themeDisplay.getTimeZone());
-
-						if (Validator.isNotNull(description)) {
-							description = description.concat(" | ");
-						}
-
-						description = description.concat(
-							_language.format(
-								_httpServletRequest, "publishing-x",
-								new Object[] {
-									format.format(
-										scheduledPublishInfo.getStartDate())
-								},
-								false));
-
-						User user = _userLocalService.fetchUser(
-							scheduledPublishInfo.getUserId());
-
-						if (user != null) {
-							return StringBundler.concat(
-								description, " | ",
-								_language.format(
-									_httpServletRequest, "scheduled-by-x",
-									new Object[] {user.getFullName()}, false));
-						}
-
-						return description;
-					}
-
-					return StringPool.BLANK;
-				}
-
-				return _ctCollection.getDescription();
-			}
-		).put(
 			"discardURL",
-			PortletURLBuilder.createRenderURL(
-				_renderResponse
-			).setMVCRenderCommandName(
-				"/change_tracking/view_discard"
-			).setRedirect(
-				_themeDisplay.getURLCurrent()
-			).setParameter(
-				"ctCollectionId", _ctCollection.getCtCollectionId()
-			).buildString()
-		).put(
-			"dropdownItems",
-			_getDropdownItemsJSONArray(_themeDisplay.getPermissionChecker())
+			() -> {
+				if ((_ctCollection.getStatus() !=
+						WorkflowConstants.STATUS_DRAFT) ||
+					!CTCollectionPermission.contains(
+						_themeDisplay.getPermissionChecker(), _ctCollection,
+						ActionKeys.DELETE)) {
+
+					return null;
+				}
+
+				return PortletURLBuilder.createRenderURL(
+					_renderResponse
+				).setMVCRenderCommandName(
+					"/change_tracking/view_discard"
+				).setRedirect(
+					PortletURLBuilder.createRenderURL(
+						_renderResponse
+					).setMVCRenderCommandName(
+						"/change_tracking/view_changes"
+					).setParameter(
+						"ctCollectionId", _ctCollection.getCtCollectionId()
+					).buildString()
+				).setBackURL(
+					_themeDisplay.getURLCurrent()
+				).setParameter(
+					"ctCollectionId", _ctCollection.getCtCollectionId()
+				).buildString();
+			}
 		).put(
 			"entryFromURL", ParamUtil.getString(_renderRequest, "entry")
-		).put(
-			"expired",
-			(_ctCollection.getStatus() == WorkflowConstants.STATUS_EXPIRED) ||
-			((_ctCollection.getStatus() == WorkflowConstants.STATUS_APPROVED) &&
-			 !_ctSchemaVersionLocalService.isLatestCTSchemaVersion(
-				 _ctCollection.getSchemaVersionId()))
-		).put(
-			"getCTCommentsURL",
-			() -> {
-				ResourceURL getCTCommentsURL =
-					_renderResponse.createResourceURL();
-
-				getCTCommentsURL.setParameter(
-					"ctCollectionId",
-					String.valueOf(_ctCollection.getCtCollectionId()));
-				getCTCommentsURL.setResourceID(
-					"/change_tracking/get_ct_comments");
-
-				return getCTCommentsURL.toString();
-			}
-		).put(
-			"keywordsFromURL", ParamUtil.getString(_renderRequest, "keywords")
 		).put(
 			"modelData",
 			() -> {
@@ -669,7 +630,12 @@ public class ViewChangesDisplayContext {
 		).put(
 			"moveChangesURL",
 			() -> {
-				if (!FeatureFlagManagerUtil.isEnabled("LPS-171364")) {
+				if ((_ctCollection.getStatus() !=
+						WorkflowConstants.STATUS_DRAFT) ||
+					!CTCollectionPermission.contains(
+						_themeDisplay.getPermissionChecker(), _ctCollection,
+						ActionKeys.UPDATE)) {
+
 					return null;
 				}
 
@@ -689,111 +655,6 @@ public class ViewChangesDisplayContext {
 					"ctCollectionId", _ctCollection.getCtCollectionId()
 				).buildString();
 			}
-		).put(
-			"name", _ctCollection.getName()
-		).put(
-			"namespace", _renderResponse.getNamespace()
-		).put(
-			"navigationFromURL",
-			ParamUtil.getString(_renderRequest, "navigation")
-		).put(
-			"orderByTypeFromURL",
-			ParamUtil.getString(_renderRequest, "orderByType")
-		).put(
-			"pageFromURL", ParamUtil.getString(_renderRequest, "page")
-		).put(
-			"publishURL",
-			() -> {
-				if ((_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_DRAFT) ||
-					!CTCollectionPermission.contains(
-						_themeDisplay.getPermissionChecker(), _ctCollection,
-						CTActionKeys.PUBLISH)) {
-
-					return null;
-				}
-
-				return PortletURLBuilder.createRenderURL(
-					_renderResponse
-				).setMVCRenderCommandName(
-					"/change_tracking/view_conflicts"
-				).setParameter(
-					"ctCollectionId", _ctCollection.getCtCollectionId()
-				).buildString();
-			}
-		).put(
-			"rescheduleURL",
-			() -> {
-				if ((_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_SCHEDULED) ||
-					!CTCollectionPermission.contains(
-						_themeDisplay.getPermissionChecker(), _ctCollection,
-						CTActionKeys.PUBLISH)) {
-
-					return null;
-				}
-
-				return PortletURLBuilder.createRenderURL(
-					_renderResponse
-				).setMVCRenderCommandName(
-					"/change_tracking/reschedule_publication"
-				).setParameter(
-					"ctCollectionId", _ctCollection.getCtCollectionId()
-				).buildString();
-			}
-		).put(
-			"revertURL",
-			() -> {
-				if ((_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_APPROVED) ||
-					!CTPermission.contains(
-						_themeDisplay.getPermissionChecker(),
-						CTActionKeys.ADD_PUBLICATION)) {
-
-					return null;
-				}
-
-				return PortletURLBuilder.createRenderURL(
-					_renderResponse
-				).setMVCRenderCommandName(
-					"/change_tracking/undo_ct_collection"
-				).setParameter(
-					"ctCollectionId", _ctCollection.getCtCollectionId()
-				).setParameter(
-					"revert", true
-				).buildString();
-			}
-		).put(
-			"scheduleURL",
-			() -> {
-				if ((_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_DRAFT) ||
-					!PropsValues.SCHEDULER_ENABLED ||
-					!CTCollectionPermission.contains(
-						_themeDisplay.getPermissionChecker(), _ctCollection,
-						CTActionKeys.PUBLISH)) {
-
-					return null;
-				}
-
-				return PortletURLBuilder.createRenderURL(
-					_renderResponse
-				).setMVCRenderCommandName(
-					"/change_tracking/view_conflicts"
-				).setParameter(
-					"ctCollectionId", _ctCollection.getCtCollectionId()
-				).setParameter(
-					"schedule", true
-				).buildString();
-			}
-		).put(
-			"showActionItems", !_user.isOnDemandUser()
-		).put(
-			"showAllItemsEnabled", _ctConfiguration.showAllItemsEnabled()
-		).put(
-			"showDropdown", !_user.isOnDemandUser()
-		).put(
-			"showHideableFromURL", showHideable
 		).put(
 			"siteNames",
 			() -> {
@@ -829,22 +690,6 @@ public class ViewChangesDisplayContext {
 				return siteNamesJSONObject;
 			}
 		).put(
-			"sitesFromURL", ParamUtil.getString(_renderRequest, "sites")
-		).put(
-			"spritemap", _themeDisplay.getPathThemeSpritemap()
-		).put(
-			"statusLabel",
-			_language.get(
-				_themeDisplay.getLocale(),
-				_publicationsDisplayContext.getStatusLabel(
-					_ctCollection.getStatus()))
-		).put(
-			"statusStyle",
-			_publicationsDisplayContext.getStatusStyle(
-				_ctCollection.getStatus())
-		).put(
-			"total", ctEntriesCount
-		).put(
 			"typeNames",
 			() -> {
 				JSONObject typeNamesJSONObject =
@@ -862,64 +707,28 @@ public class ViewChangesDisplayContext {
 				return typeNamesJSONObject;
 			}
 		).put(
-			"typesFromURL", ParamUtil.getString(_renderRequest, "types")
-		).put(
-			"unscheduleURL",
-			() -> {
-				if ((_ctCollection.getStatus() !=
-						WorkflowConstants.STATUS_SCHEDULED) ||
-					!CTCollectionPermission.contains(
-						_themeDisplay.getPermissionChecker(), _ctCollection,
-						CTActionKeys.PUBLISH)) {
-
-					return null;
-				}
-
-				return PortletURLBuilder.createActionURL(
-					_renderResponse
-				).setActionName(
-					"/change_tracking/unschedule_publication"
-				).setParameter(
-					"ctCollectionId", _ctCollection.getCtCollectionId()
-				).buildString();
-			}
-		).put(
-			"updateCTCommentURL",
-			() -> {
-				ResourceURL updateCTCommentURL =
-					_renderResponse.createResourceURL();
-
-				updateCTCommentURL.setParameter(
-					"ctCollectionId",
-					String.valueOf(_ctCollection.getCtCollectionId()));
-				updateCTCommentURL.setResourceID(
-					"/change_tracking/update_ct_comment");
-
-				return updateCTCommentURL.toString();
-			}
-		).put(
 			"userInfo",
 			DisplayContextUtil.getUserInfoJSONObject(
 				CTEntryTable.INSTANCE.userId.eq(UserTable.INSTANCE.userId),
 				CTEntryTable.INSTANCE, _themeDisplay, _userLocalService,
 				CTEntryTable.INSTANCE.ctCollectionId.eq(
 					_ctCollection.getCtCollectionId()))
-		).put(
-			"usersFromURL", ParamUtil.getString(_renderRequest, "users")
+		).putAll(
+			getToolbarReactData()
 		).build();
 
 		return _reactData;
 	}
 
 	public Map<String, Object> getToolbarReactData() throws Exception {
-		if (_reactData != null) {
-			return _reactData;
+		if (_toolbarReactData != null) {
+			return _toolbarReactData;
 		}
 
 		int ctEntriesCount = _ctEntryLocalService.getCTCollectionCTEntriesCount(
 			_ctCollection.getCtCollectionId());
 
-		_reactData = HashMapBuilder.<String, Object>put(
+		_toolbarReactData = HashMapBuilder.<String, Object>put(
 			"collaboratorsData",
 			_publicationsDisplayContext.getCollaboratorsReactData(
 				_ctCollection.getCtCollectionId(), false)
@@ -1104,6 +913,9 @@ public class ViewChangesDisplayContext {
 		).put(
 			"namespace", _renderResponse.getNamespace()
 		).put(
+			"orderByTypeFromURL",
+			ParamUtil.getString(_renderRequest, "orderByType")
+		).put(
 			"publishURL",
 			() -> {
 				if ((_ctCollection.getStatus() !=
@@ -1240,7 +1052,7 @@ public class ViewChangesDisplayContext {
 			}
 		).build();
 
-		return _reactData;
+		return _toolbarReactData;
 	}
 
 	public List<NavigationItem> getViewNavigationItems() {
@@ -1295,7 +1107,7 @@ public class ViewChangesDisplayContext {
 		Queue<ParentModel> queue = new LinkedList<>();
 
 		queue.add(
-			new ParentModel(everythingJSONObject, ctClosure.getRootPKsMap()));
+			new ParentModel(everythingJSONObject, _getRootPKsMap(ctClosure)));
 
 		ParentModel parentModel = null;
 
@@ -1314,6 +1126,10 @@ public class ViewChangesDisplayContext {
 				for (long modelClassPK : entry.getValue()) {
 					ModelInfo modelInfo = modelInfoMap.get(
 						new ModelInfoKey(modelClassNameId, modelClassPK));
+
+					if (modelInfo == null) {
+						continue;
+					}
 
 					int modelKey = modelInfo._modelKey;
 
@@ -1381,56 +1197,46 @@ public class ViewChangesDisplayContext {
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-179035") &&
-			StringUtil.equals(
+		if (StringUtil.equals(
 				ParamUtil.getString(_renderRequest, "mvcRenderCommandName"),
 				"/change_tracking/view_changes")) {
 
 			boolean showHideable = ParamUtil.getBoolean(
 				_renderRequest, "showHideable");
 
-			if (showHideable) {
-				jsonArray.put(
-					JSONUtil.put(
-						"href",
-						PortletURLBuilder.createRenderURL(
-							_renderResponse
-						).setMVCRenderCommandName(
-							"/change_tracking/view_changes"
-						).setParameter(
-							"ctCollectionId", _ctCollection.getCtCollectionId()
-						).setParameter(
-							"showHideable", false
-						).buildString()
-					).put(
-						"label",
-						_language.get(
-							_httpServletRequest, "hide-system-changes")
-					).put(
-						"symbolLeft", "hidden"
-					));
-			}
-			else {
-				jsonArray.put(
-					JSONUtil.put(
-						"href",
-						PortletURLBuilder.createRenderURL(
-							_renderResponse
-						).setMVCRenderCommandName(
-							"/change_tracking/view_changes"
-						).setParameter(
-							"ctCollectionId", _ctCollection.getCtCollectionId()
-						).setParameter(
-							"showHideable", true
-						).buildString()
-					).put(
-						"label",
-						_language.get(
-							_httpServletRequest, "show-system-changes")
-					).put(
-						"symbolLeft", "view"
-					));
-			}
+			jsonArray.put(
+				JSONUtil.put(
+					"href",
+					PortletURLBuilder.createRenderURL(
+						_renderResponse
+					).setMVCRenderCommandName(
+						"/change_tracking/view_changes"
+					).setParameter(
+						"ctCollectionId", _ctCollection.getCtCollectionId()
+					).setParameter(
+						"showHideable", !showHideable
+					).buildString()
+				).put(
+					"label",
+					() -> {
+						if (showHideable) {
+							return _language.get(
+								_httpServletRequest, "hide-system-changes");
+						}
+
+						return _language.get(
+							_httpServletRequest, "show-system-changes");
+					}
+				).put(
+					"symbolLeft",
+					() -> {
+						if (showHideable) {
+							return "hidden";
+						}
+
+						return "view";
+					}
+				));
 		}
 
 		if (CTCollectionPermission.contains(
@@ -1494,6 +1300,27 @@ public class ViewChangesDisplayContext {
 				));
 		}
 
+		if ((_ctCollection.getStatus() == WorkflowConstants.STATUS_EXPIRED) &&
+			CTCollectionPermission.contains(
+				_themeDisplay.getPermissionChecker(), _ctCollection,
+				CTActionKeys.PUBLISH)) {
+
+			jsonArray.put(
+				JSONUtil.put(
+					"href",
+					PublicationsPortletURLUtil.getHref(
+						_renderResponse.createActionURL(),
+						ActionRequest.ACTION_NAME,
+						"/change_tracking/reactivate_ct_collection", "redirect",
+						_themeDisplay.getURLCurrent(), "ctCollectionId",
+						String.valueOf(_ctCollection.getCtCollectionId()))
+				).put(
+					"label", _language.get(_httpServletRequest, "reactivate")
+				).put(
+					"symbolLeft", "reset"
+				));
+		}
+
 		if (CTCollectionPermission.contains(
 				permissionChecker, _ctCollection, ActionKeys.DELETE)) {
 
@@ -1523,6 +1350,96 @@ public class ViewChangesDisplayContext {
 			"Missing model from ", _ctCollection.getName(), ": {classPK=",
 			classPK, ", ctCollectionId=", _ctCollection.getCtCollectionId(),
 			", modelClassNameId=", modelClassNameId, "}");
+	}
+
+	private Map<Long, ObjectValuePair<String, Integer>> _getObjectValuePairs(
+		long ctCollectionId, long groupId, boolean showHideable,
+		ThemeDisplay themeDisplay) {
+
+		Map<Long, ObjectValuePair<String, Integer>> objectValuePairs =
+			new LinkedHashMap<>();
+
+		Searcher searcher = _searcherSnapshot.get();
+		Sorts sorts = _sortsSnapshot.get();
+
+		SearchRequestBuilderFactory searchRequestBuilderFactory =
+			_searchRequestBuilderFactorySnapshot.get();
+
+		SearchRequestBuilder searchRequestBuilder =
+			searchRequestBuilderFactory.builder(
+			).companyId(
+				themeDisplay.getCompanyId()
+			).entryClassNames(
+				CTEntry.class.getName()
+			).emptySearchEnabled(
+				true
+			).fields(
+				"modelClassNameId", "typeName"
+			).sorts(
+				sorts.field(
+					Field.getSortableFieldName(
+						"typeName_".concat(
+							LocaleUtil.toLanguageId(themeDisplay.getLocale()))),
+					SortOrder.ASC)
+			).withSearchContext(
+				searchContext -> {
+					searchContext.setAttribute(
+						"ctCollectionId", ctCollectionId);
+					searchContext.setAttribute("showHideable", showHideable);
+
+					if (groupId == -1) {
+						BooleanQueryImpl booleanQueryImpl =
+							new BooleanQueryImpl();
+
+						BooleanFilter booleanFilter = new BooleanFilter();
+
+						booleanFilter.add(
+							new ExistsFilter(Field.GROUP_ID),
+							BooleanClauseOccur.MUST_NOT);
+
+						booleanQueryImpl.setPreBooleanFilter(booleanFilter);
+
+						searchContext.setBooleanClauses(
+							new BooleanClause[] {
+								BooleanClauseFactoryUtil.create(
+									booleanQueryImpl,
+									BooleanClauseOccur.MUST.getName())
+							});
+					}
+					else {
+						searchContext.setAttribute(
+							Field.GROUP_ID, new long[] {groupId});
+					}
+				}
+			);
+
+		SearchResponse searchResponse = searcher.search(
+			searchRequestBuilder.build());
+
+		for (Document document : searchResponse.getDocuments()) {
+			ObjectValuePair<String, Integer> objectValuePair =
+				objectValuePairs.get(document.getLong("modelClassNameId"));
+
+			if (objectValuePair != null) {
+				objectValuePair.setValue(objectValuePair.getValue() + 1);
+			}
+			else {
+				objectValuePairs.put(
+					document.getLong("modelClassNameId"),
+					new ObjectValuePair(document.getString("typeName"), 1));
+			}
+		}
+
+		return objectValuePairs;
+	}
+
+	private Map<Long, List<Long>> _getRootPKsMap(CTClosure ctClosure) {
+		if ((_modelClassNameId > 0) && (_modelClassPK > 0)) {
+			return CTClosureUtil.getFamilyPKsMap(
+				ctClosure, _modelClassNameId, _modelClassPK);
+		}
+
+		return ctClosure.getRootPKsMap();
 	}
 
 	private <T extends BaseModel<T>> String _getTitle(
@@ -1560,6 +1477,24 @@ public class ViewChangesDisplayContext {
 		return ctDisplayRenderer.getTypeName(locale);
 	}
 
+	private List<WorkflowTask> _getWorkflowTasks(
+			CTEntry ctEntry, long classPK, long groupId)
+		throws WorkflowException {
+
+		WorkflowInstanceLink workflowInstanceLink =
+			_workflowInstanceLinkLocalService.fetchWorkflowInstanceLink(
+				ctEntry.getCompanyId(), groupId,
+				_portal.getClassName(ctEntry.getModelClassNameId()), classPK);
+
+		if (workflowInstanceLink == null) {
+			return null;
+		}
+
+		return _workflowTaskManager.getWorkflowTasksByWorkflowInstance(
+			workflowInstanceLink.getCompanyId(), null,
+			workflowInstanceLink.getWorkflowInstanceId(), null, 0, 1, null);
+	}
+
 	private <T extends BaseModel<T>> boolean _isSite(T model) {
 		if (model instanceof Group) {
 			Group group = (Group)model;
@@ -1574,10 +1509,53 @@ public class ViewChangesDisplayContext {
 		return false;
 	}
 
+	private <T extends BaseModel<T>> boolean _isWorkflowTasksEmpty(
+			CTEntry ctEntry, long groupId, T model)
+		throws Exception {
+
+		long classPK = ctEntry.getModelClassPK();
+
+		if (model instanceof KBArticleModel) {
+			Map<String, Object> modelAttributes = model.getModelAttributes();
+
+			classPK = GetterUtil.getLong(
+				modelAttributes.get("resourcePrimKey"));
+		}
+
+		CTCollection ctCollection = _ctCollectionLocalService.getCTCollection(
+			ctEntry.getCtCollectionId());
+
+		if (ctCollection.getStatus() == WorkflowConstants.STATUS_APPROVED) {
+			List<WorkflowTask> workflowTasks = _getWorkflowTasks(
+				ctEntry, classPK, groupId);
+
+			if (workflowTasks == null) {
+				return true;
+			}
+
+			WorkflowTask workflowTask = workflowTasks.get(0);
+
+			return !workflowTask.isCompleted();
+		}
+
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					ctEntry.getCtCollectionId())) {
+
+			List<WorkflowTask> workflowTasks = _getWorkflowTasks(
+				ctEntry, classPK, groupId);
+
+			if (workflowTasks == null) {
+				return true;
+			}
+
+			return false;
+		}
+	}
+
 	private <T extends BaseModel<T>> void _populateEntryValues(
 			Map<ModelInfoKey, ModelInfo> modelInfoMap, long modelClassNameId,
-			Set<Long> classPKs, boolean showHideable,
-			Map<Long, String> typeNameCacheMap)
+			Set<Long> classPKs, Map<Long, String> typeNameCacheMap)
 		throws Exception {
 
 		Map<Serializable, T> baseModelMap = null;
@@ -1624,16 +1602,7 @@ public class ViewChangesDisplayContext {
 					continue;
 				}
 
-				boolean hideable = _ctDisplayRendererRegistry.isHideable(
-					model, modelClassNameId);
-
-				if (hideable && !showHideable) {
-					continue;
-				}
-
 				modelInfo._jsonObject = JSONUtil.put(
-					"hideable", hideable
-				).put(
 					"modelClassNameId", modelClassNameId
 				).put(
 					"modelClassPK", classPK
@@ -1725,13 +1694,6 @@ public class ViewChangesDisplayContext {
 					continue;
 				}
 
-				boolean hideable = _ctDisplayRendererRegistry.isHideable(
-					model, modelClassNameId);
-
-				if (hideable && !showHideable) {
-					continue;
-				}
-
 				Map<String, Object> modelAttributes =
 					model.getModelAttributes();
 
@@ -1744,8 +1706,6 @@ public class ViewChangesDisplayContext {
 					_ctDisplayRendererRegistry.getChangeType(ctEntry, model)
 				).put(
 					"ctEntryId", ctEntry.getCtEntryId()
-				).put(
-					"hideable", hideable
 				).put(
 					"modelClassNameId", ctEntry.getModelClassNameId()
 				).put(
@@ -1775,11 +1735,28 @@ public class ViewChangesDisplayContext {
 					"workflowStatus", (Integer)modelAttributes.get("status")
 				);
 
+				long groupId = 0;
+
 				if (model instanceof GroupedModel) {
 					GroupedModel groupedModel = (GroupedModel)model;
 
+					groupId = groupedModel.getGroupId();
+
+					modelInfo._jsonObject.put("groupId", groupId);
+				}
+
+				int changeType = _ctDisplayRendererRegistry.getChangeType(
+					ctEntry, model);
+
+				if (_ctDisplayRendererRegistry.isWorkflowEnabled(
+						ctEntry, model) &&
+					(changeType != CTConstants.CT_CHANGE_TYPE_DELETION) &&
+					((Integer)modelAttributes.get("status") !=
+						WorkflowConstants.STATUS_DRAFT)) {
+
 					modelInfo._jsonObject.put(
-						"groupId", groupedModel.getGroupId());
+						"showWorkflow",
+						!_isWorkflowTasksEmpty(ctEntry, groupId, model));
 				}
 
 				modelInfo._site = _isSite(model);
@@ -1813,6 +1790,10 @@ public class ViewChangesDisplayContext {
 				ModelInfo modelInfo = modelInfoMap.get(
 					new ModelInfoKey(classNameId, classPK));
 
+				if (modelInfo == null) {
+					continue;
+				}
+
 				if (modelInfo._jsonObject != null) {
 					modelInfo._jsonObject.put("groupId", groupId);
 				}
@@ -1830,18 +1811,27 @@ public class ViewChangesDisplayContext {
 	private static final Log _log = LogFactoryUtil.getLog(
 		ViewChangesDisplayContext.class);
 
+	private static final Snapshot<Searcher> _searcherSnapshot = new Snapshot<>(
+		DisplayContextUtil.class, Searcher.class);
+	private static final Snapshot<SearchRequestBuilderFactory>
+		_searchRequestBuilderFactorySnapshot = new Snapshot<>(
+			DisplayContextUtil.class, SearchRequestBuilderFactory.class);
+	private static final Snapshot<Sorts> _sortsSnapshot = new Snapshot<>(
+		DisplayContextUtil.class, Sorts.class);
+
 	private final long _activeCTCollectionId;
 	private final BasePersistenceRegistry _basePersistenceRegistry;
 	private final CTClosureFactory _ctClosureFactory;
 	private final CTCollection _ctCollection;
 	private final CTCollectionLocalService _ctCollectionLocalService;
-	private final CTConfiguration _ctConfiguration;
 	private final CTDisplayRendererRegistry _ctDisplayRendererRegistry;
 	private final CTEntryLocalService _ctEntryLocalService;
 	private final CTSchemaVersionLocalService _ctSchemaVersionLocalService;
 	private final GroupLocalService _groupLocalService;
 	private final HttpServletRequest _httpServletRequest;
 	private final Language _language;
+	private final long _modelClassNameId;
+	private final long _modelClassPK;
 	private final Portal _portal;
 	private final PublicationsDisplayContext _publicationsDisplayContext;
 	private final PublishScheduler _publishScheduler;
@@ -1849,8 +1839,12 @@ public class ViewChangesDisplayContext {
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
 	private final ThemeDisplay _themeDisplay;
+	private Map<String, Object> _toolbarReactData;
 	private final User _user;
 	private final UserLocalService _userLocalService;
+	private final WorkflowInstanceLinkLocalService
+		_workflowInstanceLinkLocalService;
+	private final WorkflowTaskManager _workflowTaskManager;
 
 	private static class ModelInfo {
 

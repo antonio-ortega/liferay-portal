@@ -7,12 +7,16 @@ package com.liferay.blogs.web.internal.portlet.action;
 
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration;
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfigurationFactory;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.blogs.configuration.BlogsFileUploadsConfiguration;
 import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.exception.NoSuchEntryException;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.settings.BlogsGroupServiceSettings;
 import com.liferay.blogs.web.internal.display.context.BlogsEditEntryDisplayContext;
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
+import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -58,6 +62,8 @@ public class EditEntryMVCRenderCommand implements MVCRenderCommand {
 		throws PortletException {
 
 		try {
+			HttpServletRequest httpServletRequest =
+				_portal.getHttpServletRequest(renderRequest);
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
@@ -67,20 +73,31 @@ public class EditEntryMVCRenderCommand implements MVCRenderCommand {
 				_blogsEntryModelResourcePermission.check(
 					themeDisplay.getPermissionChecker(), entry,
 					ActionKeys.UPDATE);
+
+				CTTimelineUtil.setCTTimelineKeys(
+					renderRequest, BlogsEntry.class, entry.getPrimaryKey());
 			}
 
-			HttpServletRequest httpServletRequest =
-				_portal.getHttpServletRequest(renderRequest);
+			httpServletRequest.setAttribute(
+				AssetVocabularyLocalService.class.getName(),
+				_assetVocabularyLocalService);
+			httpServletRequest.setAttribute(
+				ItemSelector.class.getName(), _itemSelector);
+			httpServletRequest.setAttribute(
+				SiteConnectedGroupGroupProvider.class.getName(),
+				_siteConnectedGroupGroupProvider);
 
 			renderRequest.setAttribute(
 				BlogsEditEntryDisplayContext.class.getName(),
 				new BlogsEditEntryDisplayContext(
-					_getAssetAutoTaggerConfiguration(renderRequest), entry,
+					_getAssetAutoTaggerConfiguration(renderRequest),
+					_assetVocabularyLocalService, entry,
 					_blogsFileUploadsConfiguration,
 					BlogsGroupServiceSettings.getInstance(
 						themeDisplay.getScopeGroupId()),
-					httpServletRequest,
-					_portal.getLiferayPortletResponse(renderResponse)));
+					httpServletRequest, _itemSelector,
+					_portal.getLiferayPortletResponse(renderResponse),
+					_siteConnectedGroupGroupProvider));
 		}
 		catch (Exception exception) {
 			if (exception instanceof NoSuchEntryException ||
@@ -118,6 +135,9 @@ public class EditEntryMVCRenderCommand implements MVCRenderCommand {
 	private AssetAutoTaggerConfigurationFactory
 		_assetAutoTaggerConfigurationFactory;
 
+	@Reference
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
 	@Reference(target = "(model.class.name=com.liferay.blogs.model.BlogsEntry)")
 	private volatile ModelResourcePermission<BlogsEntry>
 		_blogsEntryModelResourcePermission;
@@ -126,6 +146,12 @@ public class EditEntryMVCRenderCommand implements MVCRenderCommand {
 		_blogsFileUploadsConfiguration;
 
 	@Reference
+	private ItemSelector _itemSelector;
+
+	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;
 
 }

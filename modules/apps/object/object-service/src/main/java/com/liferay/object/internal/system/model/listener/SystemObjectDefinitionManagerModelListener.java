@@ -7,6 +7,7 @@ package com.liferay.object.internal.system.model.listener;
 
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
 import com.liferay.object.action.engine.ObjectActionEngine;
+import com.liferay.object.action.util.ObjectActionThreadLocal;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.field.util.ObjectFieldUtil;
@@ -32,6 +33,7 @@ import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -82,13 +84,39 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 
 	@Override
 	public void onAfterCreate(T baseModel) throws ModelListenerException {
-		_executeObjectActions(
-			ObjectActionTriggerConstants.KEY_ON_AFTER_ADD, null,
-			(T)baseModel.clone());
+		ObjectActionThreadLocal.setSkipObjectActionExecution(true);
+
+		boolean clearObjectEntryIdsMap =
+			ObjectActionThreadLocal.isClearObjectEntryIdsMap();
+
+		try {
+			if (clearObjectEntryIdsMap) {
+				ObjectActionThreadLocal.clearObjectEntryIdsMap();
+			}
+
+			ObjectActionThreadLocal.setClearObjectEntryIdsMap(false);
+
+			_executeObjectActions(
+				ObjectActionTriggerConstants.KEY_ON_AFTER_ADD, null,
+				(T)baseModel.clone());
+		}
+		finally {
+			ObjectActionThreadLocal.setClearObjectEntryIdsMap(
+				clearObjectEntryIdsMap);
+		}
+
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				ObjectActionThreadLocal.setSkipObjectActionExecution(false);
+
+				return null;
+			});
 	}
 
 	@Override
 	public void onAfterRemove(T baseModel) throws ModelListenerException {
+		ObjectActionThreadLocal.clearObjectEntryIdsMap();
+
 		_executeObjectActions(
 			ObjectActionTriggerConstants.KEY_ON_AFTER_DELETE, baseModel,
 			baseModel);
@@ -97,6 +125,10 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 	@Override
 	public void onAfterUpdate(T originalBaseModel, T baseModel)
 		throws ModelListenerException {
+
+		if (ObjectActionThreadLocal.isSkipObjectActionExecution()) {
+			return;
+		}
 
 		_executeObjectActions(
 			ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE, originalBaseModel,
@@ -163,16 +195,12 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 				return;
 			}
 
-			long userId = PrincipalThreadLocal.getUserId();
-
-			if (userId == 0) {
-				userId = _getUserId(baseModel);
-			}
+			long userId = _getUserId(baseModel);
 
 			_objectActionEngine.executeObjectActions(
 				_modelClass.getName(), _getCompanyId(baseModel),
 				objectActionTriggerKey,
-				_getPayloadJSONObject(
+				() -> _getPayloadJSONObject(
 					objectActionTriggerKey, objectDefinition, originalBaseModel,
 					baseModel, userId),
 				userId);
@@ -223,10 +251,7 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 
 		String dtoConverterType = _getDTOConverterType();
 
-		return JSONUtil.put(
-			"classPK", baseModel.getPrimaryKeyObj()
-		).put(
-			"extendedProperties",
+		Map<String, Object> extendedProperties =
 			HashMapBuilder.<String, Object>putAll(
 				_objectEntryLocalService.
 					getExtensionDynamicObjectDefinitionTableValues(
@@ -234,12 +259,18 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 						GetterUtil.getLong(baseModel.getPrimaryKeyObj()))
 			).putAll(
 				EntityExtensionThreadLocal.getExtendedProperties()
-			).build()
+			).build();
+
+		return JSONUtil.put(
+			"classPK", baseModel.getPrimaryKeyObj()
+		).put(
+			"extendedProperties", extendedProperties
 		).put(
 			"model" + _modelClass.getSimpleName(),
 			baseModel.getModelAttributes()
 		).put(
-			"modelDTO" + dtoConverterType, _toDTO(baseModel, userId)
+			"modelDTO" + dtoConverterType,
+			_toDTO(baseModel, extendedProperties, userId)
 		).put(
 			"objectActionTriggerKey", objectActionTriggerKey
 		).put(
@@ -258,12 +289,19 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 					return null;
 				}
 
-				return _toDTO(originalBaseModel, userId);
+				return _toDTO(
+					originalBaseModel, Collections.emptyMap(), userId);
 			}
 		);
 	}
 
 	private long _getUserId(T baseModel) {
+		long userId = PrincipalThreadLocal.getUserId();
+
+		if (userId != 0) {
+			return userId;
+		}
+
 		Map<String, Function<Object, Object>> functions =
 			(Map<String, Function<Object, Object>>)
 				(Map<String, ?>)baseModel.getAttributeGetterFunctions();
@@ -278,7 +316,18 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 		return (Long)function.apply(baseModel);
 	}
 
-	private Map<String, Object> _toDTO(T baseModel, long userId) {
+	private Object _toDTO(
+			T baseModel, DefaultDTOConverterContext defaultDTOConverterContext)
+		throws Exception {
+
+		DTOConverter<T, ?> dtoConverter = _getDTOConverter();
+
+		return dtoConverter.toDTO(defaultDTOConverterContext, baseModel);
+	}
+
+	private Map<String, Object> _toDTO(
+		T baseModel, Map<String, Object> extendedProperties, long userId) {
+
 		DTOConverter<T, ?> dtoConverter = _getDTOConverter();
 
 		Map<String, Object> modelAttributes = baseModel.getModelAttributes();
@@ -308,7 +357,7 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 				baseModel.getPrimaryKeyObj(), user.getLocale(), null, user);
 
 		try {
-			Object object = dtoConverter.toDTO(defaultDTOConverterContext);
+			Object object = _toDTO(baseModel, defaultDTOConverterContext);
 
 			if (object == null) {
 				return modelAttributes;
@@ -317,7 +366,7 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 			JSONObject jsonObject = _jsonFactory.createJSONObject(
 				_jsonFactory.looseSerializeDeep(object));
 
-			return jsonObject.put(
+			jsonObject.put(
 				"createDate", modelAttributes.get("createDate")
 			).put(
 				"modifiedDate", modelAttributes.get("modifiedDate")
@@ -327,7 +376,15 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 				"userName", user.getFullName()
 			).put(
 				"uuid", modelAttributes.get("uuid")
-			).toMap();
+			);
+
+			for (Map.Entry<String, Object> entry :
+					extendedProperties.entrySet()) {
+
+				jsonObject.put(entry.getKey(), entry.getValue());
+			}
+
+			return jsonObject.toMap();
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
@@ -389,11 +446,7 @@ public class SystemObjectDefinitionManagerModelListener<T extends BaseModel<T>>
 				return;
 			}
 
-			long userId = PrincipalThreadLocal.getUserId();
-
-			if (userId == 0) {
-				userId = _getUserId(model);
-			}
+			long userId = _getUserId(model);
 
 			_validateReadOnlyObjectFields(
 				originalModel, model, objectDefinition);

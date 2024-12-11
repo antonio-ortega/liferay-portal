@@ -51,18 +51,13 @@
 	<td></td>
 </tr>
 <tr>
-	<td>FS_IMAGE_GALLERY_MAIN_IMAGE</td>
-	<td>//div[@class='product-gallery']/div/img[contains(@alt, '${key_fsProductImage}')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>FS_IMAGE_GALLERY_OVERLAY</td>
-	<td>//div[@class='gallery-overlay']//img[contains(@alt, '${key_fsProductImage}')]</td>
+	<td>//div[@class='gallery-overlay']//source[contains(@srcset,'${key_fsProductImage}')]/..//img</td>
 	<td></td>
 </tr>
 <tr>
 	<td>FS_IMAGE_GALLERY_THUMBNAIL</td>
-	<td>//div[@class= 'gallery-thumbnails']//img[contains(@alt,'${key_fsProductImage}')]</td>
+	<td>//div[@class= 'gallery-thumbnails']//source[contains(@srcset,'${key_fsProductImage}')]/..//img</td>
 	<td></td>
 </tr>
 <tr>
@@ -117,7 +112,7 @@
 </tr>
 <tr>
 	<td>FS_PRODUCT_OPTIONS_SELECT</td>
-	<td>//div/label[text()='${key_optionName}']/..//select</td>
+	<td>//div/label[text()='${key_optionName}']/..//select | //div/label[text()='${key_optionName}']/..//button</td>
 	<td></td>
 </tr>
 <tr>
@@ -157,7 +152,17 @@
 </tr>
 <tr>
 	<td>FS_PRODUCT_IMAGE</td>
-	<td>//div[@class='product-gallery']//img[contains(@src, '${key_fsProductImage}') or contains(@alt,'${key_fsProductImage}')]</td>
+	<td>//div[@class='product-gallery']//source[contains(@srcset,'${key_fsProductImage}')]/..//img</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FS_PRODUCT_MAIN_IMAGE</td>
+	<td>//div[@class='card main-image']//source[contains(@srcset,'${key_fsProductImage}')]/..//img</td>
+	<td></td>
+</tr>
+<tr>
+	<td>FS_PRODUCT_THUMBNAIL_IMAGE</td>
+	<td>//div[@class='gallery-thumbnails']//source[contains(@srcset,'${key_fsProductImage}')]/..//img</td>
 	<td></td>
 </tr>
 <tr>
@@ -177,17 +182,27 @@
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_ATTACHMENTS_BUTTON</td>
-	<td>//li[contains(@class,'list-group-item')]//h5[text()='${key_entryName}']/ancestor::li//a[contains(text(),'${key_button}')]</td>
+	<td>//li[contains(@class,'list-group-item')]//div[contains(@class,'h5') and text()='${key_entryName}']/ancestor::li//a[contains(text(),'${key_button}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRODUCT_IMAGE_MINI_CART_WITH_ALT_ATTRIBUTE</td>
+	<td>//div[@class= 'mini-cart-item-thumbnail']//img[contains(@alt,'thumbnail')]/../../../div[@class='mini-cart-item-info ml-3']//p[contains(text(),'${key_productSku}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRODUCT_IMAGE_CHECKOUT_WITH_ALT_ATTRIBUTE</td>
+	<td>//div[@class='table-responsive']//img[contains(@alt,'thumbnail')]/../../../../..//div[@class='list-group-title' and contains(text(),'${key_productName}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_ATTACHMENTS_ICON_DEFAULT</td>
-	<td>//h5[text()='${key_entryName}']/../..//*[name()='svg'][contains(@class,'icon-document-default')]</td>
+	<td>//div[contains(@class,'h5') and text()='${key_entryName}']/../..//*[name()='svg'][contains(@class,'icon-document-default')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_ATTACHMENTS_NAME</td>
-	<td>//li[contains(@class,'list-group-item')]//h5[text()='${key_entryName}']</td>
+	<td>//li[contains(@class,'list-group-item')]//div[contains(@class,'h5') and text()='${key_entryName}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -197,17 +212,17 @@
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_GROUPED_PRODUCT_NAME</td>
-	<td>//div[contains(@class,'grouped-products-container')]//h5[normalize-space(text())='${key_productName}']</td>
+	<td>//div[contains(@class,'grouped-products-container')]//div[contains(@class,'h5') and normalize-space(text())='${key_productName}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_GROUPED_PRODUCT_IMAGE</td>
-	<td>//div[contains(@class,'grouped-products-container')]//h5[normalize-space(text())='${key_productName}']/../..//img[contains(@src,'${key_productImage}')]</td>
+	<td>//div[contains(@class,'grouped-products-container')]//div[contains(@class,'h5') and normalize-space(text())='${key_productName}']/../..//img[contains(@src,'${key_productImage}')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_GROUPED_PRODUCT_SHORT_DESCRIPTION</td>
-	<td>//div[contains(@class,'grouped-products-container')]//h5[normalize-space(text())='${key_productName}']/following::p[normalize-space(text())='${key_productShortDescription}']</td>
+	<td>//div[contains(@class,'grouped-products-container')]//div[contains(@class,'h5') and normalize-space(text())='${key_productName}']/following::p[normalize-space(text())='${key_productShortDescription}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -218,6 +233,11 @@
 <tr>
 	<td>PRODUCT_DETAILS_OPTION_POSITION</td>
 	<td>//div[@class='product-detail-options']/form/div[${key_position}]//label[text()='${key_optionName}']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRODUCT_DETAILS_OPTION_VALUE</td>
+	<td>//div/label[text()='${key_optionName}']/..//select/option[@value][text()='${key_optionValue}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -242,7 +262,7 @@
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_QUANTITY_OPTION</td>
-	<td>//header//h2[text()='${key_productName}']//..//following-sibling::div[5]//option[@value='${key_optionValue}']</td>
+	<td>//header//h2[text()='${key_productName}']//..//following-sibling::div[6]//option[@value='${key_optionValue}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -257,12 +277,12 @@
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_REPLACEMENTS_SKU</td>
-	<td>//h4[contains(text(),'Replacements')]/..//div[contains(@class,'content-wrapper')]//a[text()='${key_productSku}']</td>
+	<td>//div[contains(@class,'h4') and contains(text(),'Replacements')]/..//div[contains(@class,'content-wrapper')]//a[text()='${key_productSku}']</td>
 	<td></td>
 </tr>
 <tr>
 	<td>PRODUCT_DETAILS_IN_STOCK_QUANTITY</td>
-	<td>//span[(@data-qa-id='in-stock-quantity') and (contains(text(),'${key_inStockQuantity}'))]</td>
+	<td>//span[(@data-qa-id='inStockQuantity') and (contains(text(),'${key_inStockQuantity}'))]</td>
 	<td></td>
 </tr>
 <tr>
@@ -316,6 +336,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>PRODUCT_CARD_IMAGE_SPECIFIC_IN_MINI_CART</td>
+	<td>//a[contains(@href,'${key_productName}')]//..//div//img[contains(@src,'${key_image}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>PRODUCT_CARD_BODY</td>
 	<td>//p[@class='card-title' and contains(@title,'${key_productName}')]/../../../div[contains(@class,'card-body')]</td>
 	<td></td>
@@ -338,6 +363,16 @@
 <tr>
 	<td>COLLECTION_DISPLAY_PRODUCT_SPECIFICATION_ENTRY</td>
 	<td>//li[contains(@class,'list-group-item')]//dt[contains(.,'${key_specification}')]/..//dd[contains(.,'${key_value}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>BOOLEAN_CHECKBOX</td>
+	<td>//label[contains(.,'${checkboxName}')]/..//input[@type='checkbox']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SF_ORDER_BODY_VERTICAL_ELLIPSIS</td>
+	<td>//div[contains(@class,'portlet') and contains(@class,'container')]//a[span/*[name()='svg'][contains(@class,'icon-ellipsis')]] | //*[contains(@class,'sheet-title')]//*[contains(@class,'dropdown-toggle')][.//*[name()='svg'][contains(@class,'icon-ellipsis')]]</td>
 	<td></td>
 </tr>
 

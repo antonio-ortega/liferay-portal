@@ -1,0 +1,55 @@
+{
+	"enableIndexSearch": false,
+	"label": {
+		"en_US": "Testray Task"
+	},
+	"name": "Task",
+	"objectFields": [
+		{
+			"DBType": "String",
+			"indexed": true,
+			"indexedAsKeyword": true,
+			"label": {
+				"en_US": "Name"
+			},
+			"name": "name",
+			"required": true,
+			"type": "String"
+		},
+		{
+			"DBType": "String",
+			"businessType": "Picklist",
+			"indexed": true,
+			"indexedAsKeyword": true,
+			"label": {
+				"en_US": "Due Status"
+			},
+			"listTypeDefinitionId": "[$LIST_TYPE_DEFINITION_ID:Task Statuses$]",
+			"name": "dueStatus",
+			"required": false,
+			"type": "String"
+		},
+		{
+			"DBType": "DateTime",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Status Update Date"
+			},
+			"name": "statusUpdateDate",
+			"objectFieldSettings": [
+				{
+					"name": "timeStorage",
+					"value": "convertToUTC"
+				}
+			],
+			"required": false,
+			"type": "DateTime"
+		}
+	],
+	"objectFolderExternalReferenceCode": "TESTRAY",
+	"pluralLabel": {
+		"en_US": "Testray Tasks"
+	},
+	"scope": "company"
+}

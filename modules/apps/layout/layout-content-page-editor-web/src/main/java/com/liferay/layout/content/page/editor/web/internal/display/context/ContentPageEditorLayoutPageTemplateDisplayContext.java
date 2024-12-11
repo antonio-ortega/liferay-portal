@@ -13,6 +13,7 @@ import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
 import com.liferay.info.collection.provider.item.selector.criterion.RelatedInfoItemCollectionProviderItemSelectorCriterion;
+import com.liferay.info.collection.provider.item.selector.criterion.RepeatableFieldInfoCollectionProviderItemSelectorCriterion;
 import com.liferay.info.item.InfoItemClassDetails;
 import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceRegistry;
@@ -27,9 +28,9 @@ import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.content.page.editor.web.internal.configuration.PageEditorConfiguration;
-import com.liferay.layout.content.page.editor.web.internal.util.ContentManager;
-import com.liferay.layout.content.page.editor.web.internal.util.FragmentCollectionManager;
-import com.liferay.layout.content.page.editor.web.internal.util.FragmentEntryLinkManager;
+import com.liferay.layout.content.page.editor.web.internal.manager.ContentManager;
+import com.liferay.layout.content.page.editor.web.internal.manager.FragmentCollectionManager;
+import com.liferay.layout.content.page.editor.web.internal.manager.FragmentEntryLinkManager;
 import com.liferay.layout.content.page.editor.web.internal.util.MappingContentUtil;
 import com.liferay.layout.manager.LayoutLockManager;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
@@ -53,12 +54,14 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.manager.SegmentsExperienceManager;
+import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperimentRelLocalService;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +103,8 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		SegmentsExperienceManager segmentsExperienceManager,
 		SegmentsExperienceLocalService segmentsExperienceLocalService,
 		SegmentsExperimentRelLocalService segmentsExperimentRelLocalService,
-		Staging staging, StagingGroupHelper stagingGroupHelper,
+		SegmentsEntryService segmentsEntryService, Staging staging,
+		StagingGroupHelper stagingGroupHelper,
 		StyleBookEntryLocalService styleBookEntryLocalService,
 		UserLocalService userLocalService,
 		WorkflowDefinitionLinkLocalService workflowDefinitionLinkLocalService) {
@@ -118,19 +122,17 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 			portletRequest, portletURLFactory, renderResponse,
 			segmentsConfigurationProvider, segmentsExperienceManager,
 			segmentsExperienceLocalService, segmentsExperimentRelLocalService,
-			staging, stagingGroupHelper, styleBookEntryLocalService,
-			userLocalService, workflowDefinitionLinkLocalService);
+			segmentsEntryService, staging, stagingGroupHelper,
+			styleBookEntryLocalService, userLocalService,
+			workflowDefinitionLinkLocalService);
 
 		_itemSelector = itemSelector;
 		_pageIsDisplayPage = pageIsDisplayPage;
 	}
 
 	@Override
-	public Map<String, Object> getEditorContext(String npmResolvedPackageName)
-		throws Exception {
-
-		Map<String, Object> editorContext = super.getEditorContext(
-			npmResolvedPackageName);
+	public Map<String, Object> getEditorContext() throws Exception {
+		Map<String, Object> editorContext = super.getEditorContext();
 
 		if (!_pageIsDisplayPage) {
 			return editorContext;
@@ -205,10 +207,24 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		relatedInfoItemCollectionProviderItemSelectorCriterion.
 			setSourceItemTypes(sourceItemTypes);
 
+		RepeatableFieldInfoCollectionProviderItemSelectorCriterion
+			repeatableFieldInfoCollectionProviderItemSelectorCriterion =
+				new RepeatableFieldInfoCollectionProviderItemSelectorCriterion();
+
+		repeatableFieldInfoCollectionProviderItemSelectorCriterion.
+			setDesiredItemSelectorReturnTypes(
+				new InfoListProviderItemSelectorReturnType());
+		repeatableFieldInfoCollectionProviderItemSelectorCriterion.setItemType(
+			layoutPageTemplateEntry.getClassName());
+		repeatableFieldInfoCollectionProviderItemSelectorCriterion.
+			setItemSubtype(
+				String.valueOf(layoutPageTemplateEntry.getClassTypeId()));
+
 		return ListUtil.concat(
 			collectionItemSelectorCriterions,
-			Collections.singletonList(
-				relatedInfoItemCollectionProviderItemSelectorCriterion));
+			Arrays.asList(
+				relatedInfoItemCollectionProviderItemSelectorCriterion,
+				repeatableFieldInfoCollectionProviderItemSelectorCriterion));
 	}
 
 	private JSONObject _addDisplayPageMappingFields(

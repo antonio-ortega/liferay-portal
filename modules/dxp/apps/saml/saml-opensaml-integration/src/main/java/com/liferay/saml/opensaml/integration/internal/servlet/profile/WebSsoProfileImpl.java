@@ -29,10 +29,8 @@ import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.saml.constants.SamlWebKeys;
-import com.liferay.saml.helper.RelayStateHelper;
 import com.liferay.saml.opensaml.integration.internal.binding.SamlBinding;
 import com.liferay.saml.opensaml.integration.internal.bootstrap.ParserPoolUtil;
-import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManager;
 import com.liferay.saml.opensaml.integration.internal.resolver.AttributePublisherImpl;
 import com.liferay.saml.opensaml.integration.internal.resolver.AttributeResolverSAMLContextImpl;
 import com.liferay.saml.opensaml.integration.internal.resolver.DecrypterContext;
@@ -53,11 +51,9 @@ import com.liferay.saml.persistence.model.SamlSpAuthRequest;
 import com.liferay.saml.persistence.model.SamlSpIdpConnection;
 import com.liferay.saml.persistence.model.SamlSpMessage;
 import com.liferay.saml.persistence.model.SamlSpSession;
-import com.liferay.saml.persistence.service.SamlIdpSpConnectionLocalService;
 import com.liferay.saml.persistence.service.SamlIdpSpSessionLocalService;
 import com.liferay.saml.persistence.service.SamlIdpSsoSessionLocalService;
 import com.liferay.saml.persistence.service.SamlSpAuthRequestLocalService;
-import com.liferay.saml.persistence.service.SamlSpIdpConnectionLocalService;
 import com.liferay.saml.persistence.service.SamlSpMessageLocalService;
 import com.liferay.saml.runtime.SamlException;
 import com.liferay.saml.runtime.configuration.SamlConfiguration;
@@ -306,6 +302,8 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	protected void activate(
 		BundleContext bundleContext, Map<String, Object> properties) {
 
+		super.activate(bundleContext);
+
 		_samlConfiguration = ConfigurableUtil.createConfigurable(
 			SamlConfiguration.class, properties);
 		_stringAttributeResolverServiceTrackerMap =
@@ -319,7 +317,10 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	}
 
 	@Deactivate
+	@Override
 	protected void deactivate() {
+		super.deactivate();
+
 		_stringAttributeResolverServiceTrackerMap.close();
 		_stringNameIdResolverServiceTrackerMap.close();
 	}
@@ -426,8 +427,8 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 				messageContext.getSubcontext(SAMLPeerEntityContext.class);
 
 			samlSsoRequestContext = new SamlSsoRequestContext(
-				samlPeerEntityContext.getEntityId(), relayState, messageContext,
-				_userLocalService);
+				samlPeerEntityContext.getEntityId(), relayState,
+				messageContext);
 		}
 		else {
 			SamlProviderConfiguration samlProviderConfiguration =
@@ -461,8 +462,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 			samlSsoRequestContext = new SamlSsoRequestContext(
 				authnRequestXml, samlPeerEntityContext.getEntityId(),
-				samlBindingContext.getRelayState(), messageContext,
-				_userLocalService);
+				samlBindingContext.getRelayState(), messageContext);
 		}
 
 		String samlSsoSessionId = getSamlSsoSessionId(httpServletRequest);
@@ -508,13 +508,6 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		MessageContext<AuthnRequest> outboundMessageContext =
 			inOutOperationContext.getOutboundMessageContext();
 
-		SAMLBindingContext samlBindingContext =
-			outboundMessageContext.getSubcontext(
-				SAMLBindingContext.class, true);
-
-		samlBindingContext.setRelayState(
-			_relayStateHelper.getRelayStateTokenFromRedirect(relayState));
-
 		SAMLSelfEntityContext samlSelfEntityContext =
 			messageContext.getSubcontext(SAMLSelfEntityContext.class);
 
@@ -542,7 +535,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		NameIDPolicy nameIDPolicy = OpenSamlUtil.buildNameIdPolicy();
 
 		nameIDPolicy.setAllowCreate(true);
-		nameIDPolicy.setFormat(metadataManager.getNameIdFormat(entityId));
+		nameIDPolicy.setFormat(_getNameIdFormat(entityId));
 
 		AuthnRequest authnRequest = OpenSamlUtil.buildAuthnRequest(
 			samlSelfEntityContext.getEntityId(),
@@ -569,18 +562,24 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		if (spSSODescriptor.isAuthnRequestsSigned() ||
 			idpSSODescriptor.getWantAuthnRequestsSigned()) {
 
-			Credential credential = metadataManager.getSigningCredential();
+			Credential credential = getSigningCredential();
 
 			SecurityParametersContext securityParametersContext =
 				outboundMessageContext.getSubcontext(
 					SecurityParametersContext.class, true);
 
 			OpenSamlUtil.prepareSecurityParametersContext(
-				metadataManager.getSigningCredential(),
-				securityParametersContext, idpSSODescriptor);
+				getSigningCredential(), securityParametersContext,
+				idpSSODescriptor);
 
 			OpenSamlUtil.signObject(authnRequest, credential, idpSSODescriptor);
 		}
+
+		SAMLBindingContext samlBindingContext =
+			outboundMessageContext.getSubcontext(
+				SAMLBindingContext.class, true);
+
+		samlBindingContext.setRelayState(authnRequest.getID());
 
 		SAMLEndpointContext samlPeerEndpointContext =
 			samlPeerEntityContext.getSubcontext(
@@ -592,8 +591,8 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			httpServletRequest);
 
 		_samlSpAuthRequestLocalService.addSamlSpAuthRequest(
-			samlPeerEntityContext.getEntityId(), authnRequest.getID(),
-			serviceContext);
+			samlPeerEntityContext.getEntityId(), relayState,
+			authnRequest.getID(), serviceContext);
 
 		sendSamlMessage(messageContext, httpServletResponse);
 	}
@@ -693,8 +692,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			messageContext.getSubcontext(SAMLPeerEntityContext.class);
 
 		DateTime notOnOrAfterDateTime = issueInstantDateTime.plusSeconds(
-			metadataManager.getAssertionLifetime(
-				samlPeerEntityContext.getEntityId()));
+			_getAssertionLifetime(samlPeerEntityContext.getEntityId()));
 
 		subjectConfirmationData.setNotOnOrAfter(notOnOrAfterDateTime);
 
@@ -761,15 +759,14 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		if (notBeforeDateTime != null) {
 			verifyNotBeforeDateTime(
-				nowDateTime, metadataManager.getClockSkew(), notBeforeDateTime);
+				nowDateTime, _getClockSkew(), notBeforeDateTime);
 		}
 
 		DateTime notOnOrAfterDateTime = conditions.getNotOnOrAfter();
 
 		if (notOnOrAfterDateTime != null) {
 			verifyNotOnOrAfterDateTime(
-				nowDateTime, metadataManager.getClockSkew(),
-				notOnOrAfterDateTime);
+				nowDateTime, _getClockSkew(), notOnOrAfterDateTime);
 		}
 	}
 
@@ -811,11 +808,11 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 				samlBindingContext.getBindingUri()));
 	}
 
-	protected void verifyInResponseTo(Response samlResponse)
+	protected String verifyInResponseTo(Response samlResponse)
 		throws PortalException {
 
 		if (Validator.isNull(samlResponse.getInResponseTo())) {
-			return;
+			return null;
 		}
 
 		Issuer issuer = samlResponse.getIssuer();
@@ -831,13 +828,14 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		if (samlSpAuthRequest != null) {
 			_samlSpAuthRequestLocalService.deleteSamlSpAuthRequest(
 				samlSpAuthRequest);
+
+			return samlSpAuthRequest.getSamlRelayState();
 		}
-		else {
-			throw new InResponseToException(
-				StringBundler.concat(
-					"Response in response to ", inResponseTo,
-					" does not match any authentication requests"));
-		}
+
+		throw new InResponseToException(
+			StringBundler.concat(
+				"Response in response to ", inResponseTo,
+				" does not match any authentication requests"));
 	}
 
 	protected void verifyIssuer(MessageContext<?> messageContext, Issuer issuer)
@@ -908,8 +906,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		DateTime notOnOrAfterDateTime = new DateTime(DateTimeZone.UTC);
 
 		notOnOrAfterDateTime = notOnOrAfterDateTime.plus(
-			_samlConfiguration.getReplayChacheDuration() +
-				metadataManager.getClockSkew());
+			_samlConfiguration.getReplayChacheDuration() + _getClockSkew());
 
 		try {
 			SamlSpMessage samlSpMessage =
@@ -962,7 +959,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			}
 
 			DateTime nowDateTime = new DateTime(DateTimeZone.UTC);
-			long clockSkew = metadataManager.getClockSkew();
+			long clockSkew = _getClockSkew();
 
 			DateTime notBeforeDateTime = subjectConfirmationData.getNotBefore();
 
@@ -1075,7 +1072,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		SAMLMetadataEncryptionParametersResolver
 			samlMetadataEncryptionParametersResolver =
 				new SAMLMetadataEncryptionParametersResolver(
-					metadataManager.getMetadataCredentialResolver());
+					getMetadataCredentialResolver());
 
 		samlMetadataEncryptionParametersResolver.
 			setAutoGenerateDataEncryptionCredential(true);
@@ -1206,8 +1203,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 				new DecrypterContext(decrypter));
 		}
 
-		SignatureTrustEngine signatureTrustEngine =
-			metadataManager.getSignatureTrustEngine();
+		SignatureTrustEngine signatureTrustEngine = getSignatureTrustEngine();
 
 		Assertion assertion = null;
 
@@ -1261,6 +1257,28 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		return messageContext;
 	}
 
+	private int _getAssertionLifetime(String entityId) {
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		try {
+			SamlIdpSpConnection samlIdpSpConnection =
+				samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
+					companyId, entityId);
+
+			return samlIdpSpConnection.getAssertionLifetime();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		SamlProviderConfiguration samlProviderConfiguration =
+			samlProviderConfigurationHelper.getSamlProviderConfiguration();
+
+		return samlProviderConfiguration.defaultAssertionLifetime();
+	}
+
 	private AttributeResolver _getAttributeResolver(String entityId) {
 		long companyId = CompanyThreadLocal.getCompanyId();
 
@@ -1283,8 +1301,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	}
 
 	private String _getAuthRedirectURL(
-			MessageContext<?> messageContext,
-			HttpServletRequest httpServletRequest)
+			HttpServletRequest httpServletRequest, String redirect)
 		throws Exception {
 
 		StringBundler sb = new StringBundler(3);
@@ -1297,20 +1314,73 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		sb.append("/portal/saml/auth_redirect?redirect=");
 
-		SAMLBindingContext samlBindingContext = messageContext.getSubcontext(
-			SAMLBindingContext.class);
-
-		String relayState = portal.escapeRedirect(
-			_relayStateHelper.getRedirectFromRelayStateToken(
-				samlBindingContext.getRelayState()));
-
-		if (Validator.isNull(relayState)) {
-			relayState = portal.getHomeURL(httpServletRequest);
+		if (Validator.isNull(redirect)) {
+			redirect = portal.getHomeURL(httpServletRequest);
 		}
 
-		sb.append(URLCodec.encodeURL(relayState));
+		sb.append(URLCodec.encodeURL(redirect));
 
 		return sb.toString();
+	}
+
+	private long _getClockSkew() {
+		SamlProviderConfiguration samlProviderConfiguration =
+			samlProviderConfigurationHelper.getSamlProviderConfiguration();
+
+		return samlProviderConfiguration.clockSkew();
+	}
+
+	private Credential _getEncryptionCredential() throws SamlException {
+		try {
+			String entityId = localEntityManager.getLocalEntityId();
+
+			if (Validator.isNull(entityId)) {
+				return null;
+			}
+
+			return credentialResolver.resolveSingle(
+				new CriteriaSet(
+					new EntityIdCriterion(entityId),
+					new UsageCriterion(UsageType.ENCRYPTION)));
+		}
+		catch (ResolverException resolverException) {
+			throw new SamlException(resolverException);
+		}
+	}
+
+	private String _getNameIdFormat(String entityId) {
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		if (samlProviderConfigurationHelper.isRoleIdp()) {
+			try {
+				SamlIdpSpConnection samlIdpSpConnection =
+					samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
+						companyId, entityId);
+
+				return samlIdpSpConnection.getNameIdFormat();
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+		}
+		else if (samlProviderConfigurationHelper.isRoleSp()) {
+			try {
+				SamlSpIdpConnection samlSpIdpConnection =
+					samlSpIdpConnectionLocalService.getSamlSpIdpConnection(
+						companyId, entityId);
+
+				return samlSpIdpConnection.getNameIdFormat();
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+		}
+
+		return null;
 	}
 
 	private NameIdResolver _getNameIdResolver(String entityId) {
@@ -1377,14 +1447,15 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		SAMLPeerEntityContext samlPeerEntityContext =
 			messageContext.getSubcontext(SAMLPeerEntityContext.class);
 
-		boolean attributesEnabled = metadataManager.isAttributesEnabled(
+		boolean attributesEnabled = _isAttributesEnabled(
 			samlPeerEntityContext.getEntityId());
 
 		if (!attributesEnabled) {
 			return assertion;
 		}
 
-		User user = samlSsoRequestContext.getUser();
+		User user = _userLocalService.fetchUser(
+			samlSsoRequestContext.getUserId());
 
 		AttributeResolver attributeResolver = _getAttributeResolver(
 			samlPeerEntityContext.getEntityId());
@@ -1478,14 +1549,14 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		}
 
 		if (nameIdFormat == null) {
-			nameIdFormat = metadataManager.getNameIdFormat(
+			nameIdFormat = _getNameIdFormat(
 				samlPeerEntityContext.getEntityId());
 		}
 
 		return OpenSamlUtil.buildNameId(
 			nameIdFormat, null, spNameQualifier,
 			nameIdResolver.resolve(
-				samlSsoRequestContext.getUser(),
+				_userLocalService.fetchUser(samlSsoRequestContext.getUserId()),
 				samlPeerEntityContext.getEntityId(), nameIdFormat,
 				spNameQualifier, allowCreate,
 				new NameIdResolverSAMLContextImpl(messageContext)));
@@ -1538,6 +1609,25 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		return response;
 	}
 
+	private boolean _isAttributesEnabled(String entityId) {
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		try {
+			SamlIdpSpConnection samlIdpSpConnection =
+				samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
+					companyId, entityId);
+
+			return samlIdpSpConnection.isAttributesEnabled();
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return false;
+	}
+
 	private void _processAuthnRequest(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
@@ -1553,7 +1643,8 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			messageContext.getSubcontext(InOutOperationContext.class, false);
 
 		AuthnRequest authnRequest = null;
-		User user = samlSsoRequestContext.getUser();
+		User user = _userLocalService.fetchUser(
+			samlSsoRequestContext.getUserId());
 
 		if (inOutOperationContext != null) {
 			MessageContext<AuthnRequest> inboundMessageContext =
@@ -1674,7 +1765,18 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			throw new StatusException(statusCodeURI);
 		}
 
-		verifyInResponseTo(samlResponse);
+		String redirect = verifyInResponseTo(samlResponse);
+
+		if (Validator.isNull(redirect)) {
+			SAMLBindingContext samlBindingContext =
+				messageContext.getSubcontext(SAMLBindingContext.class);
+
+			redirect = portal.escapeRedirect(
+				samlBindingContext.getRelayState());
+		}
+
+		httpServletRequest.setAttribute(WebKeys.REDIRECT, redirect);
+
 		verifyDestination(messageContext, samlResponse.getDestination());
 
 		Issuer issuer = samlResponse.getIssuer();
@@ -1700,7 +1802,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			messageContext.getSubcontext(SAMLPeerEntityContext.class);
 
 		SamlSpIdpConnection samlSpIdpConnection =
-			_samlSpIdpConnectionLocalService.getSamlSpIdpConnection(
+			samlSpIdpConnectionLocalService.getSamlSpIdpConnection(
 				CompanyThreadLocal.getCompanyId(),
 				samlPeerEntityContext.getEntityId());
 
@@ -1769,7 +1871,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			samlSpSession.getSamlSpSessionKey());
 
 		httpServletResponse.sendRedirect(
-			_getAuthRedirectURL(messageContext, httpServletRequest));
+			_getAuthRedirectURL(httpServletRequest, redirect));
 	}
 
 	private void _redirectToLogin(
@@ -1882,7 +1984,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 		samlPeerEndpointContext.setEndpoint(assertionConsumerService);
 
-		Credential credential = metadataManager.getSigningCredential();
+		Credential credential = getSigningCredential();
 
 		InOutOperationContext<?, Response> inOutOperationContext =
 			messageContext.getSubcontext(InOutOperationContext.class);
@@ -1954,7 +2056,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 		Assertion assertion = _getSuccessAssertion(
 			samlSsoRequestContext, assertionConsumerService, nameID);
 
-		Credential credential = metadataManager.getSigningCredential();
+		Credential credential = getSigningCredential();
 
 		SAMLPeerEntityContext samlPeerEntityContext =
 			messageContext.getSubcontext(SAMLPeerEntityContext.class);
@@ -1974,7 +2076,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			assertion.getIssueInstant());
 
 		SamlIdpSpConnection samlIdpSpConnection =
-			_samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
+			samlIdpSpConnectionLocalService.getSamlIdpSpConnection(
 				CompanyThreadLocal.getCompanyId(),
 				samlPeerEntityContext.getEntityId());
 
@@ -2179,16 +2281,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 	)
 	private NameIdResolver _defaultNameIdResolver;
 
-	@Reference
-	private MetadataManager _metadataManager;
-
-	@Reference
-	private RelayStateHelper _relayStateHelper;
-
 	private SamlConfiguration _samlConfiguration;
-
-	@Reference
-	private SamlIdpSpConnectionLocalService _samlIdpSpConnectionLocalService;
 
 	@Reference
 	private SamlIdpSpSessionLocalService _samlIdpSpSessionLocalService;
@@ -2202,9 +2295,6 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 
 	@Reference
 	private SamlSpAuthRequestLocalService _samlSpAuthRequestLocalService;
-
-	@Reference
-	private SamlSpIdpConnectionLocalService _samlSpIdpConnectionLocalService;
 
 	@Reference
 	private SamlSpMessageLocalService _samlSpMessageLocalService;
@@ -2250,7 +2340,7 @@ public class WebSsoProfileImpl extends BaseProfile implements WebSsoProfile {
 			throws ResolverException {
 
 			try {
-				return _metadataManager.getEncryptionCredential();
+				return _getEncryptionCredential();
 			}
 			catch (SamlException samlException) {
 				throw new ResolverException(samlException);

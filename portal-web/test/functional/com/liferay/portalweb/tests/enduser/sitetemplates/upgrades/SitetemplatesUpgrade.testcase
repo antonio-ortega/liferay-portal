@@ -2,7 +2,7 @@
 definition {
 
 	property ci.retries.disabled = "true";
-	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.liferay.virtual.instance = "false";
@@ -11,6 +11,10 @@ definition {
 
 	setUp {
 		SignIn.signIn();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		SearchAdministration.executeReindex();
 	}
@@ -111,7 +115,7 @@ definition {
 	@priority = 3
 	test TemplateNameAndStatusCanBeEditedAfterUpgrade71103 {
 		property data.archive.type = "data-archive-deactivated-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
+		property database.types = "db2,mysql,oracle,postgresql";
 		property portal.version = "7.1.10.3";
 
 		task ("Change the new site template's name then verify it") {
@@ -139,7 +143,7 @@ definition {
 	@priority = 3
 	test TemplateNameAndStatusCanBeEditedAfterUpgrade72101 {
 		property data.archive.type = "data-archive-deactivated-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
+		property database.types = "db2,mysql,oracle,postgresql";
 		property portal.version = "7.2.10.1";
 
 		task ("Change the new site template's name then verify it") {
@@ -167,7 +171,7 @@ definition {
 	@priority = 3
 	test TemplateNameAndStatusCanBeEditedAfterUpgrade73101 {
 		property data.archive.type = "data-archive-deactivated-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
+		property database.types = "db2,mysql,oracle,postgresql";
 		property portal.version = "7.3.10.1";
 
 		task ("Change the new site template's name then verify it") {
@@ -195,7 +199,7 @@ definition {
 	@priority = 3
 	test TemplateNameAndStatusCanBeEditedAfterUpgrade701016 {
 		property data.archive.type = "data-archive-deactivated-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
+		property database.types = "db2,mysql,oracle,postgresql";
 		property portal.version = "7.0.10.16";
 
 		task ("Change the new site template's name then verify it") {
@@ -223,7 +227,7 @@ definition {
 	@priority = 3
 	test TemplatePropagationShouldWorkAfterUpgrade71103 {
 		property data.archive.type = "data-archive-page-from-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
+		property database.types = "db2,mysql,oracle,postgresql";
 		property portal.version = "7.1.10.3";
 
 		task ("Verify that the AP Widget is still present on the Site Name page") {
@@ -265,7 +269,7 @@ definition {
 	@priority = 3
 	test TemplatePropagationShouldWorkAfterUpgrade72101 {
 		property data.archive.type = "data-archive-page-from-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
+		property database.types = "db2,mysql,oracle,postgresql";
 		property portal.version = "7.2.10.1";
 
 		task ("Verify that the AP Widget is still present on the Site Name page") {
@@ -307,7 +311,7 @@ definition {
 	@priority = 3
 	test TemplatePropagationShouldWorkAfterUpgrade73101 {
 		property data.archive.type = "data-archive-page-from-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
+		property database.types = "db2,mysql,oracle,postgresql";
 		property portal.version = "7.3.10.1";
 
 		task ("Verify that the AP Widget is still present on the Site Name page") {
@@ -316,6 +320,14 @@ definition {
 				siteName = "Site Name");
 
 			Refresh();
+
+			WaitForElementPresent(
+				key_infoMessage = "There are no results.",
+				locator1 = "Message#INFO_SPECIFIC");
+
+			// LPD-31942 checking if pause wpuld solve the problem
+
+			Pause(value1 = 3000);
 
 			Alert.viewInfoMessageSpecific(infoMessage = "There are no results.");
 		}
@@ -347,7 +359,7 @@ definition {
 	@priority = 3
 	test TemplatePropagationShouldWorkAfterUpgrade701016 {
 		property data.archive.type = "data-archive-page-from-template";
-		property database.types = "db2,mysql,oracle,postgresql,sybase";
+		property database.types = "db2,mysql,oracle,postgresql";
 		property portal.version = "7.0.10.16";
 
 		task ("Verify that the AP Widget is still present on the Site Name page") {
@@ -355,7 +367,7 @@ definition {
 				pageName = "home",
 				siteName = "Site Name");
 
-			Refresh();
+			Refresh.pauseRefresh();
 
 			Portlet.viewPG(portletName = "Asset Publisher");
 		}
@@ -379,7 +391,7 @@ definition {
 				pageName = "home",
 				siteName = "Site Name");
 
-			Refresh();
+			Refresh.pauseRefresh();
 
 			Portlet.viewPG(portletName = "Asset Publisher");
 		}

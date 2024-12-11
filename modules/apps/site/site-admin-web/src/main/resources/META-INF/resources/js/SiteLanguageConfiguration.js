@@ -57,7 +57,7 @@ export default function SiteLanguageConfiguration({
 	);
 
 	const handleItemsChange = (items) => {
-		const [nextAvailableLanguages, nextCurrentLanguages] = items;
+		const [nextCurrentLanguages, nextAvailableLanguages] = items;
 
 		const removingDefaultLanguage = nextAvailableLanguages.some(
 			(language) => language.value === defaultLanguageId
@@ -121,25 +121,27 @@ export default function SiteLanguageConfiguration({
 
 			{inheritLocales === 'true' ? (
 				<div>
-					<h5 className="h4">
+					<div className="h4">
 						{Liferay.Language.get('default-language')}
-					</h5>
+					</div>
 
 					<p>{defaultLanguageLabel}</p>
 
-					<h5 className="h4">
+					<div className="h4">
 						{Liferay.Language.get('available-languages')}
-					</h5>
+					</div>
 
-					{initialCurrentLanguages
-						.map((language) => language.label)
-						.join(', ')}
+					<p>
+						{initialCurrentLanguages
+							.map((language) => language.label)
+							.join(', ')}
+					</p>
 				</div>
 			) : (
 				<fieldset>
-					<h5 className="h4">
+					<div className="h4">
 						{Liferay.Language.get('default-language')}
-					</h5>
+					</div>
 
 					<ClaySelectWithOption
 						name={`${portletNamespace}TypeSettingsProperties--languageId--`}
@@ -166,9 +168,9 @@ export default function SiteLanguageConfiguration({
 						</ClayAlert>
 					)}
 
-					<h5 className="h4 mt-4 sheet-subtitle">
+					<div className="h4 mt-4 sheet-subtitle">
 						{Liferay.Language.get('available-languages')}
-					</h5>
+					</div>
 
 					{showRemoveDefaultLanguageWarning && (
 						<ClayAlert
@@ -195,14 +197,15 @@ export default function SiteLanguageConfiguration({
 					/>
 
 					<ClayDualListBox
-						items={[availableLanguages, currentLanguages]}
+						items={[currentLanguages, availableLanguages]}
 						left={{
-							label: Liferay.Language.get('available'),
+							label: Liferay.Language.get('current'),
 						}}
 						onItemsChange={handleItemsChange}
 						right={{
-							label: Liferay.Language.get('current'),
+							label: Liferay.Language.get('available'),
 						}}
+						size={10}
 					/>
 				</fieldset>
 			)}

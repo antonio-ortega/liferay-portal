@@ -7,14 +7,14 @@ import {ClayCheckbox} from '@clayui/form';
 import classNames from 'classnames';
 import {ManagementToolbar} from 'frontend-js-components-web';
 import {sub} from 'frontend-js-web';
-import React, {useContext, useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import {EVENT_MANAGEMENT_TOOLBAR_TOGGLE_ALL_ITEMS} from '../constants';
-import FeatureFlagContext from './FeatureFlagContext';
 import LinkOrButton from './LinkOrButton';
 
 function disableActionIfNeeded(item, event, bulkSelection) {
-	const selectedElementNodes = event.elements.allSelectedElements.getDOMNodes();
+	const selectedElementNodes =
+		event.elements.allSelectedElements.getDOMNodes();
 
 	const selectedElementModels = selectedElementNodes.map(
 		(node) => node.dataset.modelclassname
@@ -72,7 +72,6 @@ const SelectionControls = ({
 	showCheckBoxLabel,
 	supportsBulkActions,
 }) => {
-	const {showDesignImprovements} = useContext(FeatureFlagContext);
 	const [selectedItems, setSelectedItems] = useState(initialSelectedItems);
 	const [checkboxStatus, setCheckboxStatus] = useState(initialCheckboxStatus);
 	const [selectAllButtonVisible, setSelectAllButtonVisible] = useState(
@@ -81,7 +80,8 @@ const SelectionControls = ({
 	const searchContainerRef = useRef();
 
 	const updateControls = ({bulkSelection, elements}) => {
-		const currentPageSelectedElementsCount = elements.currentPageSelectedElements.size();
+		const currentPageSelectedElementsCount =
+			elements.currentPageSelectedElements.size();
 
 		const selectedElementsCount = bulkSelection
 			? itemsTotal
@@ -145,7 +145,8 @@ const SelectionControls = ({
 			const elements = {
 				allSelectedElements,
 				currentPageElements: select._getCurrentPageElements(),
-				currentPageSelectedElements: select.getCurrentPageSelectedElements(),
+				currentPageSelectedElements:
+					select.getCurrentPageSelectedElements(),
 			};
 
 			if (allSelectedElements.size()) {
@@ -168,6 +169,10 @@ const SelectionControls = ({
 		});
 
 		return () => {
+			Liferay.destroyComponent(searchContainerId);
+
+			searchContainerRef.current = null;
+
 			eventHandler?.detach();
 		};
 
@@ -192,7 +197,7 @@ const SelectionControls = ({
 										'select-all-x-on-the-page'
 									),
 									itemsType
-							  )
+								)
 							: sub(
 									Liferay.Language.get(
 										'clear-selection.-there-are-currently-x-of-x-x-selected'
@@ -200,7 +205,7 @@ const SelectionControls = ({
 									selectedItems,
 									itemsTotal,
 									itemsType
-							  )
+								)
 					}
 					checked={checkboxStatus !== 'unchecked'}
 					disabled={disabled}
@@ -243,7 +248,7 @@ const SelectionControls = ({
 						{selectedItems === itemsTotal
 							? `${Liferay.Language.get(
 									'all-selected'
-							  )} (${selectedItemsLabel})`
+								)} (${selectedItemsLabel})`
 							: selectedItemsLabel}
 					</span>
 				</ManagementToolbar.Item>
@@ -252,11 +257,7 @@ const SelectionControls = ({
 					<>
 						<ManagementToolbar.Item className="nav-item-shrink">
 							<LinkOrButton
-								aria-label={
-									showDesignImprovements
-										? Liferay.Language.get('clear')
-										: undefined
-								}
+								aria-label={Liferay.Language.get('clear')}
 								className="nav-link"
 								displayType="unstyled"
 								href={clearSelectionURL}
@@ -272,16 +273,8 @@ const SelectionControls = ({
 
 									onClearButtonClick(event);
 								}}
-								symbol={
-									showDesignImprovements
-										? 'times-circle'
-										: undefined
-								}
-								title={
-									showDesignImprovements
-										? Liferay.Language.get('clear')
-										: undefined
-								}
+								symbol="times-circle"
+								title={Liferay.Language.get('clear')}
 							>
 								<span className="text-truncate-inline">
 									<span className="text-truncate">

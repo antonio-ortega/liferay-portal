@@ -248,7 +248,11 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 
 	@Override
 	public DDMFormValues getDDMFormValues() {
-		return getDDMFormValues(true);
+		if (_ddmFormValues == null) {
+			_ddmFormValues = getDDMFormValues(true);
+		}
+
+		return _ddmFormValues;
 	}
 
 	@Override
@@ -281,6 +285,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 		return DDMStructureLocalServiceUtil.fetchStructure(getDDMStructureId());
 	}
 
+	@Override
 	public String getDDMStructureKey() {
 		DDMStructure ddmStructure = getDDMStructure();
 
@@ -499,14 +504,14 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 				locale, friendlyURLEntryLocalization.getUrlTitle());
 		}
 
-		Locale defaultSiteLocale = LocaleUtil.getSiteDefault();
+		Locale defaultLocale = LocaleUtil.fromLanguageId(
+			getDefaultLanguageId());
 
-		if (Validator.isNull(friendlyURLMap.get(defaultSiteLocale))) {
-			Locale defaultLocale = LocaleUtil.fromLanguageId(
-				getDefaultLanguageId());
+		if (Validator.isNull(friendlyURLMap.get(defaultLocale))) {
+			Locale defaultSiteLocale = LocaleUtil.getSiteDefault();
 
 			friendlyURLMap.put(
-				defaultSiteLocale, friendlyURLMap.get(defaultLocale));
+				defaultLocale, friendlyURLMap.get(defaultSiteLocale));
 		}
 
 		return friendlyURLMap;
@@ -829,6 +834,7 @@ public class JournalArticleImpl extends JournalArticleBaseImpl {
 		_ddmFormValuesToFieldsConverter;
 	private static volatile JournalConverter _journalConverter;
 
+	private DDMFormValues _ddmFormValues;
 	private Map<Locale, String> _descriptionMap;
 	private Document _document;
 	private Map<String, Document> _documentMap;

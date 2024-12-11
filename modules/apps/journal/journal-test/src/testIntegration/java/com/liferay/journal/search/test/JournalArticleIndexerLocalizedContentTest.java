@@ -13,8 +13,10 @@ import com.liferay.journal.test.util.search.JournalArticleBlueprint;
 import com.liferay.journal.test.util.search.JournalArticleContent;
 import com.liferay.journal.test.util.search.JournalArticleSearchFixture;
 import com.liferay.journal.test.util.search.JournalArticleTitle;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
@@ -30,9 +32,9 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.IndexerFixture;
-import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -42,7 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 import org.junit.After;
 import org.junit.Before;
@@ -94,7 +96,7 @@ public class JournalArticleIndexerLocalizedContentTest {
 		String originalContent = RandomTestUtil.randomString();
 		String translatedContent = RandomTestUtil.randomString();
 
-		_journalArticleSearchFixture.addArticle(
+		JournalArticle journalArticle = _journalArticleSearchFixture.addArticle(
 			new JournalArticleBlueprint() {
 				{
 					setGroupId(_group.getGroupId());
@@ -118,51 +120,45 @@ public class JournalArticleIndexerLocalizedContentTest {
 				}
 			});
 
-		Map<String, String> titleStrings = HashMapBuilder.put(
-			"title_en_US", originalTitle
-		).put(
-			"title_hu_HU", translatedTitle
-		).build();
-
-		Map<String, String> contentStrings = HashMapBuilder.put(
-			"content_en_US", originalContent
-		).put(
-			"content_hu_HU", translatedContent
-		).build();
-
-		Map<String, String> localizedTitleStrings = _withSortableValues(
-			new HashMap<String, String>() {
-				{
-					Set<Locale> locales = LanguageUtil.getAvailableLocales();
-
-					locales.forEach(
-						locale -> {
-							String mapKey = StringBundler.concat(
-								"localized_title_", locale.getLanguage(), "_",
-								locale.getCountry());
-
-							put(mapKey, originalTitle);
-						});
-
-					put("localized_title_hu_HU", translatedTitle);
-				}
-			});
-
-		localizedTitleStrings.put("localized_title", originalTitle);
-
-		String searchTerm = "nev";
-
 		SearchResponse searchResponse =
 			_indexerFixture.searchOnlyOneSearchResponse(
-				searchTerm, LocaleUtil.HUNGARY);
+				"nev", LocaleUtil.HUNGARY);
 
 		FieldValuesAssert.assertFieldValues(
-			titleStrings, name -> name.startsWith("title_"), searchResponse);
+			HashMapBuilder.put(
+				"title_en_US", originalTitle
+			).put(
+				"title_hu_HU", translatedTitle
+			).build(),
+			name -> name.startsWith("title_"), searchResponse);
 		FieldValuesAssert.assertFieldValues(
-			contentStrings, name -> name.startsWith("content_"),
+			HashMapBuilder.put(
+				"content_en_US", originalContent
+			).put(
+				"content_hu_HU", translatedContent
+			).build(),
+			name -> name.startsWith("content_"), searchResponse);
+		FieldValuesAssert.assertFieldValues(
+			_getLocalizedKeywordSorteableMap(
+				originalTitle, "localized_title", false,
+				locale -> {
+					if (Objects.equals(locale, LocaleUtil.HUNGARY)) {
+						return translatedTitle;
+					}
+
+					return originalTitle;
+				}),
+			name ->
+				!name.contains(StringPool.PERIOD) &&
+				name.startsWith("localized_title"),
 			searchResponse);
 		FieldValuesAssert.assertFieldValues(
-			localizedTitleStrings, name -> name.startsWith("localized_title"),
+			_getLocalizedKeywordSorteableMap(
+				null, "urlTitle", true,
+				locale -> journalArticle.getUrlTitle(locale)),
+			name ->
+				!name.contains(StringPool.PERIOD) &&
+				name.startsWith("urlTitle_"),
 			searchResponse);
 	}
 
@@ -217,53 +213,37 @@ public class JournalArticleIndexerLocalizedContentTest {
 				}
 			});
 
-		String articleId = journalArticle.getArticleId();
-
-		Map<String, String> titleStrings = HashMapBuilder.put(
-			"title_en_US", originalTitle
-		).put(
-			"title_pt_BR", translatedTitle
-		).build();
-
-		Map<String, String> contentStrings = Collections.emptyMap();
-
-		Map<String, String> localizedTitleStrings = _withSortableValues(
-			new HashMap<String, String>() {
-				{
-					Set<Locale> locales = LanguageUtil.getAvailableLocales();
-
-					locales.forEach(
-						locale -> {
-							String mapKey = StringBundler.concat(
-								"localized_title_", locale.getLanguage(), "_",
-								locale.getCountry());
-
-							put(mapKey, originalTitle);
-						});
-
-					put("localized_title_pt_BR", translatedTitle);
-				}
-			});
-
-		localizedTitleStrings.put("localized_title", originalTitle);
-
-		Map<String, String> ddmContentStrings = Collections.emptyMap();
-
-		String searchTerm = articleId;
-
 		SearchResponse searchResponse =
 			_indexerFixture.searchOnlyOneSearchResponse(
-				searchTerm, LocaleUtil.BRAZIL);
+				journalArticle.getArticleId(), LocaleUtil.BRAZIL);
 
 		FieldValuesAssert.assertFieldValues(
-			titleStrings, name -> name.startsWith("title"), searchResponse);
+			HashMapBuilder.put(
+				"title_en_US", originalTitle
+			).put(
+				"title_pt_BR", translatedTitle
+			).build(),
+			name -> name.startsWith("title"), searchResponse);
 		FieldValuesAssert.assertFieldValues(
-			contentStrings, name -> name.startsWith("content"), searchResponse);
+			Collections.emptyMap(), name -> name.startsWith("content"),
+			searchResponse);
+
 		FieldValuesAssert.assertFieldValues(
-			localizedTitleStrings, name -> name.startsWith("localized_title"),
+			_getLocalizedKeywordSorteableMap(
+				originalTitle, "localized_title", false,
+				locale -> {
+					if (Objects.equals(locale, LocaleUtil.BRAZIL)) {
+						return translatedTitle;
+					}
+
+					return originalTitle;
+				}),
+			name ->
+				!name.contains(StringPool.PERIOD) &&
+				name.startsWith("localized_title"),
 			searchResponse);
 		FieldValuesAssert.assertFieldValues(
-			ddmContentStrings, name -> name.startsWith("ddm__text"),
+			Collections.emptyMap(), name -> name.startsWith("ddm__text"),
 			searchResponse);
 	}
 
@@ -301,23 +281,9 @@ public class JournalArticleIndexerLocalizedContentTest {
 		Map<String, String> contentStrings = Collections.singletonMap(
 			"content_ja_JP", content);
 
-		Map<String, String> localizedTitleStrings = _withSortableValues(
-			new HashMap<String, String>() {
-				{
-					Set<Locale> locales = LanguageUtil.getAvailableLocales();
-
-					locales.forEach(
-						locale -> {
-							String mapKey = StringBundler.concat(
-								"localized_title_", locale.getLanguage(), "_",
-								locale.getCountry());
-
-							put(mapKey, title);
-						});
-				}
-			});
-
-		localizedTitleStrings.put("localized_title", title);
+		Map<String, String> localizedTitleStrings =
+			_getLocalizedKeywordSorteableMap(
+				title, "localized_title", false, locale -> title);
 
 		for (String searchTerm : Arrays.asList("新規", "作成", "新", "作")) {
 			SearchResponse searchResponse =
@@ -332,7 +298,10 @@ public class JournalArticleIndexerLocalizedContentTest {
 				searchResponse);
 			FieldValuesAssert.assertFieldValues(
 				localizedTitleStrings,
-				name -> name.startsWith("localized_title"), searchResponse);
+				name ->
+					!name.contains(StringPool.PERIOD) &&
+					name.startsWith("localized_title"),
+				searchResponse);
 		}
 	}
 
@@ -395,18 +364,39 @@ public class JournalArticleIndexerLocalizedContentTest {
 			document, document.toString());
 	}
 
-	private Map<String, String> _withSortableValues(Map<String, String> map) {
-		Map<String, String> values = new HashMap<>();
+	private Map<String, String> _getLocalizedKeywordSorteableMap(
+			String defaultValue, String fieldName, boolean typify,
+			UnsafeFunction<Locale, String, Exception> unsafeFunction)
+		throws Exception {
 
-		for (Map.Entry<String, String> entry : map.entrySet()) {
-			values.put(
-				entry.getKey() + "_sortable",
-				StringUtil.toLowerCase(entry.getValue()));
+		Map<String, String> localizedTitlesMap = new HashMap<>();
+
+		for (Locale locale :
+				_language.getAvailableLocales(_group.getGroupId())) {
+
+			String localizedKey = StringBundler.concat(
+				fieldName, StringPool.UNDERLINE, locale.getLanguage(),
+				StringPool.UNDERLINE, locale.getCountry());
+
+			String value = unsafeFunction.apply(locale);
+
+			localizedTitlesMap.put(localizedKey, value);
+
+			String localizedSortableKey = localizedKey + "_sortable";
+
+			if (typify) {
+				localizedSortableKey = localizedKey + "_String_sortable";
+			}
+
+			localizedTitlesMap.put(
+				localizedSortableKey, StringUtil.toLowerCase(value));
 		}
 
-		values.putAll(map);
+		if (defaultValue != null) {
+			localizedTitlesMap.put(fieldName, defaultValue);
+		}
 
-		return values;
+		return localizedTitlesMap;
 	}
 
 	@Inject
@@ -427,6 +417,9 @@ public class JournalArticleIndexerLocalizedContentTest {
 	private List<JournalArticle> _journalArticles;
 
 	private JournalArticleSearchFixture _journalArticleSearchFixture;
+
+	@Inject
+	private Language _language;
 
 	@Inject
 	private SearchRequestBuilderFactory _searchRequestBuilderFactory;

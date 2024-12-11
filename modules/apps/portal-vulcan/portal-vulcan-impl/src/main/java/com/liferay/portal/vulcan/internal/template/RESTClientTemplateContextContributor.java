@@ -8,6 +8,10 @@ package com.liferay.portal.vulcan.internal.template;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.access.control.AccessControlUtil;
+import com.liferay.portal.kernel.security.auth.AccessControlContext;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.template.TemplateContextContributor;
@@ -42,16 +46,32 @@ public class RESTClientTemplateContextContributor
 		Map<String, Object> contextObjects,
 		HttpServletRequest httpServletRequest) {
 
-		contextObjects.put("restClient", new RESTClient(httpServletRequest));
+		contextObjects.put(
+			"restClient", new RESTClient(contextObjects, httpServletRequest));
 	}
 
 	public class RESTClient {
 
-		public RESTClient(HttpServletRequest httpServletRequest) {
+		public RESTClient(
+			Map<String, Object> contextObjects,
+			HttpServletRequest httpServletRequest) {
+
+			_contextObjects = contextObjects;
 			_httpServletRequest = httpServletRequest;
 		}
 
 		public Object get(String path) throws Exception {
+			try {
+				return _get(path);
+			}
+			catch (Throwable throwable) {
+				_log.error(throwable, throwable);
+
+				throw throwable;
+			}
+		}
+
+		private Object _get(String path) throws Exception {
 			UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
 			ServletContext servletContext = _getServletContext();
@@ -62,9 +82,20 @@ public class RESTClientTemplateContextContributor
 			HttpServletResponse httpServletResponse = new PipingServletResponse(
 				new RESTClientHttpResponse(), unsyncStringWriter);
 
-			requestDispatcher.forward(
-				new RESTClientHttpRequest(_httpServletRequest),
-				httpServletResponse);
+			AccessControlContext accessControlContext =
+				AccessControlUtil.getAccessControlContext();
+
+			try {
+				AccessControlUtil.setAccessControlContext(null);
+
+				requestDispatcher.forward(
+					new RESTClientHttpRequest(
+						_contextObjects, _httpServletRequest, path),
+					httpServletResponse);
+			}
+			finally {
+				AccessControlUtil.setAccessControlContext(accessControlContext);
+			}
 
 			String responseString = unsyncStringWriter.toString();
 
@@ -78,6 +109,7 @@ public class RESTClientTemplateContextContributor
 			return responseString;
 		}
 
+		private final Map<String, Object> _contextObjects;
 		private final HttpServletRequest _httpServletRequest;
 
 	}
@@ -89,6 +121,9 @@ public class RESTClientTemplateContextContributor
 
 		return _servletContext;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		RESTClientTemplateContextContributor.class);
 
 	@Reference
 	private JSONFactory _jsonFactory;

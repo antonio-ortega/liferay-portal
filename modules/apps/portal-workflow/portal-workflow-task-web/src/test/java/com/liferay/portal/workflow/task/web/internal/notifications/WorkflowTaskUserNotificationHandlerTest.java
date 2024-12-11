@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserNotificationEvent;
 import com.liferay.portal.kernel.model.UserNotificationEventWrapper;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.notifications.UserNotificationFeedEntry;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
@@ -183,6 +184,14 @@ public class WorkflowTaskUserNotificationHandlerTest {
 	public void testValidWorkflowTaskIdNotAllowedUserShouldReturnBlankLink()
 		throws Exception {
 
+		Mockito.doReturn(
+			false
+		).when(
+			_workflowTaskManager
+		).isNotifiableUser(
+			Mockito.anyLong(), Mockito.anyLong()
+		);
+
 		Assert.assertEquals(
 			StringPool.BLANK,
 			_workflowTaskUserNotificationHandler.getLink(
@@ -239,8 +248,7 @@ public class WorkflowTaskUserNotificationHandlerTest {
 	}
 
 	private static void _setUpWorkflowTaskManagerUtil() throws Exception {
-		WorkflowTaskManager workflowTaskManager = Mockito.spy(
-			WorkflowTaskManager.class);
+		_workflowTaskManager = Mockito.spy(WorkflowTaskManager.class);
 
 		WorkflowTask workflowTask = new DefaultWorkflowTask() {
 
@@ -254,22 +262,32 @@ public class WorkflowTaskUserNotificationHandlerTest {
 		Mockito.doReturn(
 			workflowTask
 		).when(
-			workflowTaskManager
+			_workflowTaskManager
 		).fetchWorkflowTask(
 			_VALID_WORKFLOW_TASK_ID
 		);
 
 		Mockito.doReturn(
-			_allowedUsers
+			true
 		).when(
-			workflowTaskManager
-		).getNotifiableUsers(
-			Mockito.anyLong()
+			_workflowTaskManager
+		).isNotifiableUser(
+			Mockito.anyLong(), Mockito.anyLong()
 		);
 
+		Snapshot<WorkflowTaskManager> workflowTaskManagerSnapshot = Mockito.spy(
+			new Snapshot<>(
+				WorkflowTaskManagerUtil.class, WorkflowTaskManager.class));
+
+		Mockito.doReturn(
+			_workflowTaskManager
+		).when(
+			workflowTaskManagerSnapshot
+		).get();
+
 		ReflectionTestUtil.setFieldValue(
-			WorkflowTaskManagerUtil.class, "_workflowTaskManager",
-			workflowTaskManager);
+			WorkflowTaskManagerUtil.class, "_workflowTaskManagerSnapshot",
+			workflowTaskManagerSnapshot);
 	}
 
 	private static void _setUpWorkflowTaskPermission() throws Exception {
@@ -368,6 +386,7 @@ public class WorkflowTaskUserNotificationHandlerTest {
 
 	};
 
+	private static WorkflowTaskManager _workflowTaskManager;
 	private static final WorkflowTaskUserNotificationHandler
 		_workflowTaskUserNotificationHandler =
 			new WorkflowTaskUserNotificationHandler();

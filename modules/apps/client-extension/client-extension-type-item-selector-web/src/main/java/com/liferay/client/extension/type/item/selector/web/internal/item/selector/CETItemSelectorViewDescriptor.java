@@ -5,7 +5,10 @@
 
 package com.liferay.client.extension.type.item.selector.web.internal.item.selector;
 
+import com.liferay.client.extension.constants.ClientExtensionEntryConstants;
 import com.liferay.client.extension.type.CET;
+import com.liferay.client.extension.type.GlobalJSCET;
+import com.liferay.client.extension.type.ThemeCSSCET;
 import com.liferay.client.extension.type.item.selector.CETItemSelectorReturnType;
 import com.liferay.client.extension.type.item.selector.criterion.CETItemSelectorCriterion;
 import com.liferay.client.extension.type.manager.CETManager;
@@ -16,8 +19,14 @@ import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.vulcan.pagination.Pagination;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Predicate;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -67,11 +76,19 @@ public class CETItemSelectorViewDescriptor
 				JavaConstants.JAVAX_PORTLET_REQUEST),
 			_portletURL, null, "there-are-no-items-to-display");
 
-		searchContainer.setResultsAndTotal(
-			_cetManager.getCETs(
-				themeDisplay.getCompanyId(), null,
-				_cetItemSelectorCriterion.getType(),
-				Pagination.of(QueryUtil.ALL_POS, QueryUtil.ALL_POS), null));
+		List<CET> cets = _cetManager.getCETs(
+			themeDisplay.getCompanyId(), null,
+			_cetItemSelectorCriterion.getType(),
+			Pagination.of(QueryUtil.ALL_POS, QueryUtil.ALL_POS), null);
+
+		Predicate<CET> predicate = _getPredicate(
+			_cetItemSelectorCriterion.getType());
+
+		if (predicate != null) {
+			cets = ListUtil.filter(cets, predicate);
+		}
+
+		searchContainer.setResultsAndTotal(cets);
 
 		return searchContainer;
 	}
@@ -84,6 +101,31 @@ public class CETItemSelectorViewDescriptor
 	@Override
 	public boolean isShowBreadcrumb() {
 		return false;
+	}
+
+	private Predicate<CET> _getPredicate(String type) {
+		if (Objects.equals(
+				type, ClientExtensionEntryConstants.TYPE_GLOBAL_JS)) {
+
+			return cet -> {
+				GlobalJSCET globalJSCET = (GlobalJSCET)cet;
+
+				return !StringUtil.equalsIgnoreCase(
+					globalJSCET.getScope(), "company");
+			};
+		}
+		else if (Objects.equals(
+					type, ClientExtensionEntryConstants.TYPE_THEME_CSS)) {
+
+			return cet -> {
+				ThemeCSSCET themeCSSCET = (ThemeCSSCET)cet;
+
+				return !StringUtil.equalsIgnoreCase(
+					themeCSSCET.getScope(), "controlPanel");
+			};
+		}
+
+		return null;
 	}
 
 	private static final ItemSelectorReturnType

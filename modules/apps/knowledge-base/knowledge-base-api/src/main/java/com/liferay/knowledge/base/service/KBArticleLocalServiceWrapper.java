@@ -201,10 +201,29 @@ public class KBArticleLocalServiceWrapper
 	}
 
 	@Override
+	public KBArticle deleteKBArticle(
+			long userId, long resourcePrimKey, int version)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleLocalService.deleteKBArticle(
+			userId, resourcePrimKey, version);
+	}
+
+	@Override
 	public void deleteKBArticles(long groupId, long parentResourcePrimKey)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_kbArticleLocalService.deleteKBArticles(groupId, parentResourcePrimKey);
+	}
+
+	@Override
+	public void deleteKBArticles(
+			long groupId, long parentResourcePrimKey,
+			boolean includeTrashedEntries)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_kbArticleLocalService.deleteKBArticles(
+			groupId, parentResourcePrimKey, includeTrashedEntries);
 	}
 
 	@Override
@@ -423,6 +442,13 @@ public class KBArticleLocalServiceWrapper
 
 		return _kbArticleLocalService.fetchLatestKBArticleByUrlTitle(
 			groupId, kbFolderId, urlTitle, status);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.PersistedModel fetchPersistedModel(
+		java.io.Serializable primaryKeyObj) {
+
+		return _kbArticleLocalService.fetchPersistedModel(primaryKeyObj);
 	}
 
 	@Override
@@ -679,11 +705,26 @@ public class KBArticleLocalServiceWrapper
 	}
 
 	@Override
+	public KBArticle getLatestKBArticle(long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleLocalService.getLatestKBArticle(resourcePrimKey);
+	}
+
+	@Override
 	public KBArticle getLatestKBArticle(long resourcePrimKey, int status)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbArticleLocalService.getLatestKBArticle(
 			resourcePrimKey, status);
+	}
+
+	@Override
+	public KBArticle getLatestKBArticle(long resourcePrimKey, int[] statuses)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleLocalService.getLatestKBArticle(
+			resourcePrimKey, statuses);
 	}
 
 	@Override
@@ -769,12 +810,43 @@ public class KBArticleLocalServiceWrapper
 	}
 
 	@Override
+	public boolean hasKBArticleLock(long userId, long resourcePrimKey) {
+		return _kbArticleLocalService.hasKBArticleLock(userId, resourcePrimKey);
+	}
+
+	@Override
 	public void incrementViewCount(
 			long userId, long resourcePrimKey, int increment)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_kbArticleLocalService.incrementViewCount(
 			userId, resourcePrimKey, increment);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.lock.Lock lockKBArticle(
+			long userId, long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleLocalService.lockKBArticle(userId, resourcePrimKey);
+	}
+
+	@Override
+	public void moveDependentKBArticlesToTrash(
+			long parentResourcePrimKey, long trashEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_kbArticleLocalService.moveDependentKBArticlesToTrash(
+			parentResourcePrimKey, trashEntryId);
+	}
+
+	@Override
+	public void moveDependentKBArticleToTrash(
+			KBArticle kbArticle, long trashEntryId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_kbArticleLocalService.moveDependentKBArticleToTrash(
+			kbArticle, trashEntryId);
 	}
 
 	@Override
@@ -786,6 +858,48 @@ public class KBArticleLocalServiceWrapper
 		_kbArticleLocalService.moveKBArticle(
 			userId, resourcePrimKey, parentResourceClassNameId,
 			parentResourcePrimKey, priority);
+	}
+
+	@Override
+	public void moveKBArticleFromTrash(
+			long userId, long resourcePrimKey, long parentResourceClassNameId,
+			long parentResourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_kbArticleLocalService.moveKBArticleFromTrash(
+			userId, resourcePrimKey, parentResourceClassNameId,
+			parentResourcePrimKey);
+	}
+
+	@Override
+	public KBArticle moveKBArticleToTrash(long userId, long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleLocalService.moveKBArticleToTrash(
+			userId, resourcePrimKey);
+	}
+
+	@Override
+	public void restoreDependentKBArticleFromTrash(KBArticle kbArticle)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_kbArticleLocalService.restoreDependentKBArticleFromTrash(kbArticle);
+	}
+
+	@Override
+	public void restoreDependentKBArticlesFromTrash(long parentResourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_kbArticleLocalService.restoreDependentKBArticlesFromTrash(
+			parentResourcePrimKey);
+	}
+
+	@Override
+	public void restoreKBArticleFromTrash(long userId, long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_kbArticleLocalService.restoreKBArticleFromTrash(
+			userId, resourcePrimKey);
 	}
 
 	@Override
@@ -828,6 +942,18 @@ public class KBArticleLocalServiceWrapper
 	}
 
 	@Override
+	public void unlockKBArticle(long userId, long resourcePrimKey) {
+		_kbArticleLocalService.unlockKBArticle(userId, resourcePrimKey);
+	}
+
+	@Override
+	public void unlockKBArticle(
+		long userId, long resourcePrimKey, boolean force) {
+
+		_kbArticleLocalService.unlockKBArticle(userId, resourcePrimKey, force);
+	}
+
+	@Override
 	public void unsubscribeGroupKBArticles(long userId, long groupId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -839,6 +965,22 @@ public class KBArticleLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_kbArticleLocalService.unsubscribeKBArticle(userId, resourcePrimKey);
+	}
+
+	@Override
+	public KBArticle updateAndUnlockKBArticle(
+			long userId, long resourcePrimKey, String title, String content,
+			String description, String[] sections, String sourceURL,
+			java.util.Date displayDate, java.util.Date expirationDate,
+			java.util.Date reviewDate, String[] selectedFileNames,
+			long[] removeFileEntryIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleLocalService.updateAndUnlockKBArticle(
+			userId, resourcePrimKey, title, content, description, sections,
+			sourceURL, displayDate, expirationDate, reviewDate,
+			selectedFileNames, removeFileEntryIds, serviceContext);
 	}
 
 	/**

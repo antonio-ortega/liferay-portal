@@ -32,6 +32,9 @@
 
 		<!-- Finder methods -->
 
+		<finder name="CompanyId" return-type="Collection">
+			<finder-column name="companyId" />
+		</finder>
 		<finder name="NotificationTemplateId" return-type="Collection">
 			<finder-column name="notificationTemplateId" />
 		</finder>
@@ -142,7 +145,14 @@
 		<column localized="true" name="name" type="String" />
 		<column name="recipientType" type="String" />
 		<column localized="true" name="subject" type="String" />
+		<column name="system" type="boolean" />
 		<column name="type" type="String" />
+
+		<!-- Finder methods -->
+
+		<finder name="CompanyId" return-type="Collection">
+			<finder-column name="companyId" />
+		</finder>
 	</entity>
 	<entity local-service="true" name="NotificationTemplateAttachment" remote-service="false" table="NTemplateAttachment" uuid="false">
 
@@ -173,6 +183,7 @@
 		<exception>NotificationQueueEntryStatus</exception>
 		<exception>NotificationQueueEntrySubject</exception>
 		<exception>NotificationQueueEntryType</exception>
+		<exception>NotificationRecipientSettingName</exception>
 		<exception>NotificationRecipientSettingValue</exception>
 		<exception>NotificationTemplateAttachmentObjectFieldId</exception>
 		<exception>NotificationTemplateDescription</exception>
@@ -180,6 +191,7 @@
 		<exception>NotificationTemplateName</exception>
 		<exception>NotificationTemplateObjectDefinitionId</exception>
 		<exception>NotificationTemplateSubject</exception>
+		<exception>NotificationTemplateSystem</exception>
 		<exception>NotificationTemplateType</exception>
 	</exceptions>
 </service-builder>

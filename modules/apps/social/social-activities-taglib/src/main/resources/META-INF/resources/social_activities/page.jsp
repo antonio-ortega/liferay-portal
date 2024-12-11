@@ -8,7 +8,7 @@
 <%@ include file="/social_activities/init.jsp" %>
 
 <liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
+	<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>' rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <div class="taglib-social-activities">
@@ -95,9 +95,9 @@
 						</div>
 
 						<div class="autofit-col autofit-col-expand">
-							<h5 class="component-subtitle">
+							<div class="component-subtitle">
 								<%= timeFormat.format(activityDescriptor.getCreateDate()) %>
-							</h5>
+							</div>
 
 							<div>
 								<%= activityFeedEntry.getTitle() %>

@@ -110,6 +110,25 @@ public class SkuVirtualSettings implements Cloneable, Serializable {
 
 	protected Long duration;
 
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public void setId(UnsafeSupplier<Long, Exception> idUnsafeSupplier) {
+		try {
+			id = idUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long id;
+
 	public Integer getMaxUsages() {
 		return maxUsages;
 	}
@@ -214,6 +233,31 @@ public class SkuVirtualSettings implements Cloneable, Serializable {
 	}
 
 	protected String sampleURL;
+
+	public SkuVirtualSettingsFileEntry[] getSkuVirtualSettingsFileEntries() {
+		return skuVirtualSettingsFileEntries;
+	}
+
+	public void setSkuVirtualSettingsFileEntries(
+		SkuVirtualSettingsFileEntry[] skuVirtualSettingsFileEntries) {
+
+		this.skuVirtualSettingsFileEntries = skuVirtualSettingsFileEntries;
+	}
+
+	public void setSkuVirtualSettingsFileEntries(
+		UnsafeSupplier<SkuVirtualSettingsFileEntry[], Exception>
+			skuVirtualSettingsFileEntriesUnsafeSupplier) {
+
+		try {
+			skuVirtualSettingsFileEntries =
+				skuVirtualSettingsFileEntriesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected SkuVirtualSettingsFileEntry[] skuVirtualSettingsFileEntries;
 
 	public String getSrc() {
 		return src;

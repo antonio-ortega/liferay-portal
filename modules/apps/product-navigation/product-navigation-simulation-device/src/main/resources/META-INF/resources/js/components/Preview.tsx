@@ -51,7 +51,7 @@ export default function Preview({activeSize, open, previewRef}: IPreviewProps) {
 								.height - 6,
 						width: previewWrapperRef.current.getBoundingClientRect()
 							.width,
-				  }
+					}
 				: activeSize.screenSize
 		);
 	}, [activeSize.id, activeSize.screenSize, open]);
@@ -74,12 +74,10 @@ export default function Preview({activeSize, open, previewRef}: IPreviewProps) {
 
 	return (
 		<div
-			className={classNames('d-flex flex-column simulation-preview', {
-				'justify-content-center': !Liferay.FeatureFlags['LPS-186558'],
-			})}
+			className="d-flex flex-column simulation-preview"
 			ref={previewWrapperRef}
 		>
-			{Liferay.FeatureFlags['LPS-186558'] && segmentMessage && (
+			{segmentMessage && (
 				<ClayAlert
 					className="c-m-3"
 					displayType="info"
@@ -94,9 +92,7 @@ export default function Preview({activeSize, open, previewRef}: IPreviewProps) {
 					'device position-absolute align-self-center',
 					activeSize.cssClass,
 					{
-						'device--with-alert':
-							Liferay.FeatureFlags['LPS-186558'] &&
-							segmentMessage,
+						'device--with-alert': segmentMessage,
 						'resizable': activeSize.id === SIZES.custom.id,
 					}
 				)}
@@ -106,6 +102,7 @@ export default function Preview({activeSize, open, previewRef}: IPreviewProps) {
 				<iframe
 					className="border-0 h-100 w-100"
 					src={createIframeURL()}
+					title={Liferay.Language.get('simulation-preview')}
 				/>
 			</div>
 		</div>

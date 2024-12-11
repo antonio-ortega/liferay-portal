@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -10,7 +11,7 @@ import React from 'react';
 
 import '@testing-library/jest-dom/extend-expect';
 
-import SidebarHeader from '../../../../src/main/resources/META-INF/resources/js/components/SidebarHeader';
+import {SidebarHeader} from '../../../../src/main/resources/META-INF/resources/js/components/Sidebar';
 import BasicInformation from '../../../../src/main/resources/META-INF/resources/js/components/layout_reports/BasicInformation';
 import ErrorAlert from '../../../../src/main/resources/META-INF/resources/js/components/layout_reports/ErrorAlert';
 import {
@@ -204,18 +205,18 @@ describe('Error Alert', () => {
 			expect(
 				getByText('this-page-cannot-be-audited')
 			).toBeInTheDocument();
+
 			expect(
 				getByText(
 					'private-local-or-intranet-pages-cannot-be-audited-as-they-are-not-accessible-from-the-internet'
 				)
 			).toBeInTheDocument();
+
 			expect(getByText('show-details')).toBeInTheDocument();
 
 			expect(getParentAlert(getByRole('alert')).className).toContain(
 				'warning'
 			);
-
-			expect(getByTitle('relaunch')).toBeInTheDocument();
 		});
 
 		it('Renders warning alert component when a private page is audited, without show-details button', () => {

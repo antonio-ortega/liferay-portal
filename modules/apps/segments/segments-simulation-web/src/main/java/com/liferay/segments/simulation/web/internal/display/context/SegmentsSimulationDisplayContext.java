@@ -5,7 +5,6 @@
 
 package com.liferay.segments.simulation.web.internal.display.context;
 
-import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -14,11 +13,8 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
@@ -35,8 +31,6 @@ import com.liferay.staging.StagingGroupHelperUtil;
 import java.util.List;
 import java.util.Map;
 
-import javax.portlet.RenderResponse;
-
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -45,25 +39,16 @@ import javax.servlet.http.HttpServletRequest;
 public class SegmentsSimulationDisplayContext {
 
 	public SegmentsSimulationDisplayContext(
-		HttpServletRequest httpServletRequest, ItemSelector itemSelector,
-		Language language,
+		HttpServletRequest httpServletRequest, Language language,
 		SegmentsConfigurationProvider segmentsConfigurationProvider,
 		SegmentsEntryLocalService segmentsEntryLocalService,
 		SegmentsExperienceLocalService segmentsExperienceLocalService) {
 
 		_httpServletRequest = httpServletRequest;
-		_itemSelector = itemSelector;
 		_language = language;
 		_segmentsConfigurationProvider = segmentsConfigurationProvider;
 		_segmentsEntryLocalService = segmentsEntryLocalService;
 		_segmentsExperienceLocalService = segmentsExperienceLocalService;
-
-		RenderResponse renderResponse =
-			(RenderResponse)httpServletRequest.getAttribute(
-				JavaConstants.JAVAX_PORTLET_RESPONSE);
-
-		_liferayPortletResponse = PortalUtil.getLiferayPortletResponse(
-			renderResponse);
 
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -71,37 +56,25 @@ public class SegmentsSimulationDisplayContext {
 
 	public Map<String, Object> getData() throws Exception {
 		return HashMapBuilder.<String, Object>put(
-			"deactivateSimulationURL", getDeactivateSimulationURL()
+			"namespace", _getPortletNamespace()
 		).put(
-			"namespace", getPortletNamespace()
-		).put(
-			"segmentationEnabled", isSegmentationEnabled()
+			"segmentationEnabled", _isSegmentationEnabled()
 		).put(
 			"segmentsCompanyConfigurationURL",
-			getSegmentsCompanyConfigurationURL()
+			_getSegmentsCompanyConfigurationURL()
 		).put(
 			"segmentsEntries", _getSegmentsEntriesJSONArray()
 		).put(
 			"segmentsExperiences", _getSegmentsExperiencesJSONArray()
-		).put(
-			"simulateSegmentsEntriesURL", getSimulateSegmentsEntriesURL()
 		).build();
 	}
 
-	public String getDeactivateSimulationURL() {
-		return PortletURLBuilder.createActionURL(
-			_liferayPortletResponse, SegmentsPortletKeys.SEGMENTS_SIMULATION
-		).setActionName(
-			"/segments_simulation/deactivate_simulation"
-		).buildString();
-	}
-
-	public String getPortletNamespace() {
+	private String _getPortletNamespace() {
 		return PortalUtil.getPortletNamespace(
 			SegmentsPortletKeys.SEGMENTS_SIMULATION);
 	}
 
-	public String getSegmentsCompanyConfigurationURL() {
+	private String _getSegmentsCompanyConfigurationURL() {
 		try {
 			return _segmentsConfigurationProvider.getCompanyConfigurationURL(
 				_httpServletRequest);
@@ -113,50 +86,18 @@ public class SegmentsSimulationDisplayContext {
 		return StringPool.BLANK;
 	}
 
-	public List<SegmentsEntry> getSegmentsEntries() {
+	private List<SegmentsEntry> _getSegmentsEntries() {
 		if (_segmentsEntries != null) {
 			return _segmentsEntries;
 		}
 
 		_segmentsEntries = SegmentsEntryServiceUtil.getSegmentsEntries(
-			_getStagingAwareGroupId(), true);
+			_getStagingAwareGroupId());
 
 		return _segmentsEntries;
 	}
 
-	public String getSimulateSegmentsEntriesURL() {
-		return PortletURLBuilder.createActionURL(
-			_liferayPortletResponse, SegmentsPortletKeys.SEGMENTS_SIMULATION
-		).setActionName(
-			"/segments_simulation/simulate_segments_entries"
-		).buildString();
-	}
-
-	public boolean isSegmentationEnabled() {
-		try {
-			return _segmentsConfigurationProvider.isSegmentationEnabled(
-				_themeDisplay.getCompanyId());
-		}
-		catch (ConfigurationException configurationException) {
-			_log.error(configurationException);
-		}
-
-		return false;
-	}
-
-	public boolean isShowEmptyMessage() {
-		if (_showEmptyMessage != null) {
-			return _showEmptyMessage;
-		}
-
-		List<SegmentsEntry> segmentsEntries = getSegmentsEntries();
-
-		_showEmptyMessage = segmentsEntries.isEmpty();
-
-		return _showEmptyMessage;
-	}
-
-	private JSONArray _getSegmentsEntriesJSONArray() throws Exception {
+	private JSONArray _getSegmentsEntriesJSONArray() {
 		if (_segmentsEntriesJSONArray != null) {
 			return _segmentsEntriesJSONArray;
 		}
@@ -170,7 +111,7 @@ public class SegmentsSimulationDisplayContext {
 					_themeDisplay.getLocale())
 			));
 
-		for (SegmentsEntry segmentsEntry : getSegmentsEntries()) {
+		for (SegmentsEntry segmentsEntry : _getSegmentsEntries()) {
 			_segmentsEntriesJSONArray.put(
 				JSONUtil.put(
 					"id", segmentsEntry.getSegmentsEntryId()
@@ -268,14 +209,24 @@ public class SegmentsSimulationDisplayContext {
 		return false;
 	}
 
+	private boolean _isSegmentationEnabled() {
+		try {
+			return _segmentsConfigurationProvider.isSegmentationEnabled(
+				_themeDisplay.getCompanyId());
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(configurationException);
+		}
+
+		return false;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		SegmentsSimulationDisplayContext.class);
 
 	private Long _groupId;
 	private final HttpServletRequest _httpServletRequest;
-	private final ItemSelector _itemSelector;
 	private final Language _language;
-	private final LiferayPortletResponse _liferayPortletResponse;
 	private final SegmentsConfigurationProvider _segmentsConfigurationProvider;
 	private List<SegmentsEntry> _segmentsEntries;
 	private JSONArray _segmentsEntriesJSONArray;
@@ -283,7 +234,6 @@ public class SegmentsSimulationDisplayContext {
 	private final SegmentsExperienceLocalService
 		_segmentsExperienceLocalService;
 	private JSONArray _segmentsExperiencesJSONArray;
-	private Boolean _showEmptyMessage;
 	private final ThemeDisplay _themeDisplay;
 
 }

@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
 import com.liferay.commerce.currency.model.CommerceMoney;
@@ -84,6 +85,8 @@ public class MappedProductDTOConverter
 		CommerceContext commerceContext =
 			mappedProductDTOConverterContext.getCommerceContext();
 
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
+
 		CSDiagramEntry csDiagramEntry =
 			_csDiagramEntryLocalService.getCSDiagramEntry(
 				(Long)mappedProductDTOConverterContext.getId());
@@ -121,19 +124,12 @@ public class MappedProductDTOConverter
 
 		CPInstance firstAvailableReplacementCPInstance =
 			_cpInstanceHelper.fetchFirstAvailableReplacementCPInstance(
+				accountEntry.getAccountEntryId(),
 				commerceContext.getCommerceChannelGroupId(), cpInstanceId);
 
 		return new MappedProduct() {
 			{
-				actions = mappedProductDTOConverterContext.getActions();
-				id = csDiagramEntry.getCSDiagramEntryId();
-				price = _getPrice(
-					commerceContext, cpInstance,
-					mappedProductDTOConverterContext.getLocale(),
-					BigDecimal.ONE, StringPool.BLANK);
-				quantity = csDiagramEntry.getQuantity();
-				sequence = csDiagramEntry.getSequence();
-
+				setActions(mappedProductDTOConverterContext::getActions);
 				setAvailability(
 					() -> {
 						if (cpInstance == null) {
@@ -141,6 +137,7 @@ public class MappedProductDTOConverter
 						}
 
 						return _getAvailability(
+							accountEntry.getAccountEntryId(),
 							commerceContext.getCommerceChannelGroupId(),
 							mappedProductDTOConverterContext.getCompanyId(),
 							cpInstance,
@@ -182,6 +179,12 @@ public class MappedProductDTOConverter
 
 						return firstAvailableReplacementMappedProduct;
 					});
+				setId(csDiagramEntry::getCSDiagramEntryId);
+				setPrice(
+					() -> _getPrice(
+						commerceContext, cpInstance,
+						mappedProductDTOConverterContext.getLocale(),
+						BigDecimal.ONE, StringPool.BLANK));
 				setProductConfiguration(
 					() -> {
 						if (cpDefinition == null) {
@@ -254,6 +257,7 @@ public class MappedProductDTOConverter
 
 						return cpInstance.isPurchasable();
 					});
+				setQuantity(csDiagramEntry::getQuantity);
 				setReplacementMappedProduct(
 					() -> {
 						MappedProduct replacementMappedProduct = null;
@@ -308,6 +312,7 @@ public class MappedProductDTOConverter
 
 						return null;
 					});
+				setSequence(csDiagramEntry::getSequence);
 				setSku(
 					() -> {
 						if (cpInstance == null) {
@@ -347,7 +352,8 @@ public class MappedProductDTOConverter
 							_cpInstanceHelper.getCPDefinitionOptionValueRelsMap(
 								cpInstance.getCPDefinitionId(),
 								jsonArray.toString()),
-							_cpInstanceLocalService);
+							_cpInstanceLocalService,
+							mappedProductDTOConverterContext.getLocale());
 					});
 				setThumbnail(
 					() -> {
@@ -388,8 +394,9 @@ public class MappedProductDTOConverter
 	}
 
 	private Availability _getAvailability(
-			long commerceChannelGroupId, long companyId, CPInstance cpInstance,
-			Locale locale, String sku, String unitOfMeasureKey)
+			long accountEntryId, long commerceChannelGroupId, long companyId,
+			CPInstance cpInstance, Locale locale, String sku,
+			String unitOfMeasureKey)
 		throws Exception {
 
 		Availability availability = new Availability();
@@ -397,28 +404,29 @@ public class MappedProductDTOConverter
 		if (_cpDefinitionInventoryEngine.isDisplayAvailability(cpInstance)) {
 			if (Objects.equals(
 					_commerceInventoryEngine.getAvailabilityStatus(
-						cpInstance.getCompanyId(), cpInstance.getGroupId(),
-						commerceChannelGroupId,
+						cpInstance.getCompanyId(), accountEntryId,
+						cpInstance.getGroupId(), commerceChannelGroupId,
 						_cpDefinitionInventoryEngine.getMinStockQuantity(
 							cpInstance),
 						cpInstance.getSku(), unitOfMeasureKey),
 					CommerceInventoryAvailabilityConstants.AVAILABLE)) {
 
-				availability.setLabel_i18n(_language.get(locale, "available"));
-				availability.setLabel("available");
+				availability.setLabel_i18n(
+					() -> _language.get(locale, "available"));
+				availability.setLabel(() -> "available");
 			}
 			else {
 				availability.setLabel_i18n(
-					_language.get(locale, "unavailable"));
-				availability.setLabel("unavailable");
+					() -> _language.get(locale, "unavailable"));
+				availability.setLabel(() -> "unavailable");
 			}
 		}
 
 		if (_cpDefinitionInventoryEngine.isDisplayStockQuantity(cpInstance)) {
 			availability.setStockQuantity(
-				BigDecimalUtil.stripTrailingZeros(
+				() -> BigDecimalUtil.stripTrailingZeros(
 					_commerceInventoryEngine.getStockQuantity(
-						companyId, cpInstance.getGroupId(),
+						companyId, accountEntryId, cpInstance.getGroupId(),
 						commerceChannelGroupId, sku, unitOfMeasureKey)));
 		}
 
@@ -465,9 +473,7 @@ public class MappedProductDTOConverter
 
 		Price price = new Price() {
 			{
-				currency = commerceCurrency.getName(locale);
-				priceFormatted = unitPriceCommerceMoney.format(locale);
-
+				setCurrency(() -> commerceCurrency.getName(locale));
 				setPrice(
 					() -> {
 						BigDecimal unitPrice =
@@ -475,6 +481,7 @@ public class MappedProductDTOConverter
 
 						return unitPrice.doubleValue();
 					});
+				setPriceFormatted(() -> unitPriceCommerceMoney.format(locale));
 			}
 		};
 
@@ -487,9 +494,9 @@ public class MappedProductDTOConverter
 			(unitPromoPrice.compareTo(BigDecimal.ZERO) > 0) &&
 			(unitPromoPrice.compareTo(unitPriceCommerceMoney.getPrice()) < 0)) {
 
-			price.setPromoPrice(unitPromoPrice.doubleValue());
+			price.setPromoPrice(unitPromoPrice::doubleValue);
 			price.setPromoPriceFormatted(
-				unitPromoPriceCommerceMoney.format(locale));
+				() -> unitPromoPriceCommerceMoney.format(locale));
 		}
 
 		CommerceDiscountValue discountValue =
@@ -499,19 +506,19 @@ public class MappedProductDTOConverter
 			CommerceMoney discountAmountCommerceMoney =
 				discountValue.getDiscountAmount();
 
-			price.setDiscount(discountAmountCommerceMoney.format(locale));
+			price.setDiscount(() -> discountAmountCommerceMoney.format(locale));
 
 			price.setDiscountPercentage(
-				_commercePriceFormatter.format(
+				() -> _commercePriceFormatter.format(
 					discountValue.getDiscountPercentage(), locale));
 			price.setDiscountPercentages(
-				_getFormattedDiscountPercentages(
+				() -> _getFormattedDiscountPercentages(
 					discountValue.getPercentages(), locale));
 
 			CommerceMoney finalPriceCommerceMoney =
 				commerceProductPrice.getFinalPrice();
 
-			price.setFinalPrice(finalPriceCommerceMoney.format(locale));
+			price.setFinalPrice(() -> finalPriceCommerceMoney.format(locale));
 		}
 
 		return price;

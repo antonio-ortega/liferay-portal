@@ -40,6 +40,7 @@ import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
+import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.memory.DeleteFileFinalizeAction;
 import com.liferay.petra.memory.FinalizeManager;
@@ -86,10 +87,14 @@ import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.upload.test.util.UploadTestUtil;
+import com.liferay.portal.util.PortalImpl;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
@@ -147,9 +152,7 @@ public class EditInfoItemStrutsActionTest {
 		_objectDefinition = _addObjectDefinition();
 
 		_classNameId = String.valueOf(
-			_portal.getClassNameId(
-				ObjectDefinition.class.getName() + "#" +
-					_objectDefinition.getObjectDefinitionId()));
+			_portal.getClassNameId(_objectDefinition.getClassName()));
 
 		_layout = _addLayout();
 	}
@@ -247,14 +250,13 @@ public class EditInfoItemStrutsActionTest {
 			WorkflowConstants.STATUS_APPROVED, null, null);
 	}
 
-	@FeatureFlags({"LPS-183727", "LPS-195205"})
 	@Test
 	public void testAddInfoItemWithDisplayPageSuccessMessage()
 		throws Exception {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				_group.getCreatorUserId(), _group.getGroupId(), 0,
+				null, _group.getCreatorUserId(), _group.getGroupId(), 0,
 				_portal.getClassNameId(_objectDefinition.getClassName()), 0,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0, false, 0,
@@ -281,7 +283,7 @@ public class EditInfoItemStrutsActionTest {
 			null, null);
 	}
 
-	@FeatureFlags({"LPS-183727", "LPS-187754", "LPS-181663", "LPS-195205"})
+	@FeatureFlags("LPS-187754")
 	@Test
 	public void testAddInfoItemWithDraftStatus() throws Exception {
 		_testAddInfoItem(
@@ -298,6 +300,39 @@ public class EditInfoItemStrutsActionTest {
 	}
 
 	@Test
+	public void testAddInfoItemWithEmptyValues() throws Exception {
+		MockHttpServletResponse mockHttpServletResponse =
+			new MockHttpServletResponse();
+
+		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
+
+		PipingServletResponse pipingServletResponse = new PipingServletResponse(
+			mockHttpServletResponse, unsyncStringWriter);
+
+		UploadPortletRequest uploadPortletRequest = _getUploadPortletRequest(
+			null, null, StringPool.BLANK, StringPool.BLANK, 0, StringPool.BLANK,
+			StringPool.BLANK, null, StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, null, StringPool.BLANK, StringPool.BLANK, 0,
+			StringPool.BLANK, null);
+
+		_processEvents(uploadPortletRequest, mockHttpServletResponse, _user);
+
+		_editInfoItemStrutsAction.execute(
+			uploadPortletRequest, pipingServletResponse);
+
+		Assert.assertNull(SessionErrors.get(uploadPortletRequest, _formItemId));
+
+		List<ObjectEntry> objectEntries =
+			_objectEntryLocalService.getObjectEntries(
+				0, _objectDefinition.getObjectDefinitionId(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		ObjectEntry objectEntry = objectEntries.get(0);
+
+		_assertEmptyValues(objectEntry);
+	}
+
+	@Test
 	public void testAddInfoItemWithPageSuccessMessage() throws Exception {
 		_testAddInfoItem(
 			null, null, null, null, null, null, null, "123456", "123456", null,
@@ -305,7 +340,6 @@ public class EditInfoItemStrutsActionTest {
 			"http://localhost:8080/home");
 	}
 
-	@FeatureFlags("LPS-183727")
 	@Test
 	public void testUpdateInfoItem() throws Exception {
 		MockHttpServletResponse mockHttpServletResponse =
@@ -355,8 +389,6 @@ public class EditInfoItemStrutsActionTest {
 			"123456", "9007199254740991",
 			Arrays.asList(listTypeEntry2.getKey(), listTypeEntry3.getKey()),
 			listTypeEntry2.getKey(), "<p>SUBTITLE</p>", 0, null, null);
-
-		uploadPortletRequest.getParameterMap();
 
 		_processEvents(uploadPortletRequest, mockHttpServletResponse, _user);
 
@@ -417,14 +449,15 @@ public class EditInfoItemStrutsActionTest {
 			"<p>SUBTITLE</p>", String.valueOf(values.get("myRichText")));
 	}
 
-	@FeatureFlags("LPS-183727")
 	@Test
 	public void testUpdateInfoItemWithCheckboxNames() throws Exception {
 		MockMultipartHttpServletRequest mockMultipartHttpServletRequest =
 			new MockMultipartHttpServletRequest();
 
 		mockMultipartHttpServletRequest.addHeader(
-			HttpHeaders.REFERER, "https://example.com/error");
+			HttpHeaders.REFERER, "http://localhost:8080/error");
+		mockMultipartHttpServletRequest.setContentType(
+			"multipart/form-data;boundary=" + System.currentTimeMillis());
 
 		Map<String, List<String>> regularParameters =
 			HashMapBuilder.<String, List<String>>put(
@@ -506,7 +539,6 @@ public class EditInfoItemStrutsActionTest {
 			Boolean.FALSE.toString(), String.valueOf(values.get("myBoolean")));
 	}
 
-	@FeatureFlags("LPS-183727")
 	@Test
 	public void testUpdateInfoItemWithEmptyValues() throws Exception {
 		MockHttpServletResponse mockHttpServletResponse =
@@ -521,7 +553,7 @@ public class EditInfoItemStrutsActionTest {
 
 		UploadPortletRequest uploadPortletRequest = _getUploadPortletRequest(
 			null, null, "-99999999999999.9999999999999999",
-			Boolean.TRUE.toString(), 0, "2023-03-01", null, null,
+			Boolean.TRUE.toString(), 0, "2023-03-01", "2023-03-01T11:08", null,
 			"-999.9999999999999", "-123456", "-9007199254740991", null,
 			listTypeEntry.getKey(), "<p>TITLE</p>", 0, null, null);
 
@@ -546,39 +578,99 @@ public class EditInfoItemStrutsActionTest {
 
 		uploadPortletRequest = _getUploadPortletRequest(
 			null, null, StringPool.BLANK, StringPool.BLANK,
-			objectEntry.getObjectEntryId(), StringPool.BLANK, null, null,
-			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, null,
+			objectEntry.getObjectEntryId(), StringPool.BLANK, StringPool.BLANK,
+			null, StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, null,
 			StringPool.BLANK, StringPool.BLANK, 0, StringPool.BLANK, null);
-
-		uploadPortletRequest.getParameterMap();
 
 		_processEvents(uploadPortletRequest, mockHttpServletResponse, _user);
 
 		_editInfoItemStrutsAction.execute(
 			uploadPortletRequest, pipingServletResponse);
 
+		Assert.assertNull(SessionErrors.get(uploadPortletRequest, _formItemId));
+
 		objectEntry = _objectEntryLocalService.fetchObjectEntry(
 			objectEntry.getObjectEntryId());
 
-		Map<String, Serializable> values = objectEntry.getValues();
+		_assertEmptyValues(objectEntry);
+	}
 
-		Assert.assertEquals(
-			Boolean.FALSE.toString(), String.valueOf(values.get("myBoolean")));
-		Assert.assertNull(values.get("myDate"));
-		Assert.assertEquals("0.0", String.valueOf(values.get("myDecimal")));
-		Assert.assertEquals("0", String.valueOf(values.get("myInteger")));
-		Assert.assertEquals("0", String.valueOf(values.get("myLongInteger")));
-		Assert.assertTrue(
-			Validator.isNull(String.valueOf(values.get("myPicklist"))));
-		Assert.assertEquals(
-			0, GetterUtil.getLong(values.get("myPrecisionDecimal")));
-		Assert.assertEquals(
-			StringPool.BLANK, String.valueOf(values.get("myRichText")));
+	@Test
+	public void testUpdateInfoItemWithWrongRedirect() throws Exception {
+		MockMultipartHttpServletRequest mockMultipartHttpServletRequest =
+			new MockMultipartHttpServletRequest();
+
+		mockMultipartHttpServletRequest.addHeader(
+			HttpHeaders.REFERER, "https://example.com/error");
+		mockMultipartHttpServletRequest.setContentType(
+			"multipart/form-data;boundary=" + System.currentTimeMillis());
+
+		UploadPortletRequest uploadPortletRequest =
+			UploadTestUtil.createUploadPortletRequest(
+				UploadTestUtil.createUploadServletRequest(
+					mockMultipartHttpServletRequest, null,
+					HashMapBuilder.put(
+						"classNameId", Collections.singletonList(_classNameId)
+					).put(
+						"formItemId", Collections.singletonList(_formItemId)
+					).put(
+						"groupId",
+						Collections.singletonList(
+							String.valueOf(_group.getGroupId()))
+					).put(
+						"p_l_id",
+						Collections.singletonList(
+							String.valueOf(_layout.getPlid()))
+					).put(
+						"p_l_mode", Collections.singletonList(Constants.VIEW)
+					).put(
+						"plid",
+						Collections.singletonList(
+							String.valueOf(_layout.getPlid()))
+					).put(
+						"segmentsExperienceId",
+						Collections.singletonList(
+							String.valueOf(_defaultSegmentsExperienceId))
+					).build()),
+				null, RandomTestUtil.randomString());
+
+		MockHttpServletResponse mockHttpServletResponse =
+			new MockHttpServletResponse();
+
+		_processEvents(uploadPortletRequest, mockHttpServletResponse, _user);
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				PortalImpl.class.getName(), LoggerTestUtil.WARN)) {
+
+			try {
+				_editInfoItemStrutsAction.execute(
+					uploadPortletRequest,
+					new PipingServletResponse(
+						mockHttpServletResponse, new UnsyncStringWriter()));
+
+				Assert.fail();
+			}
+			catch (IllegalArgumentException illegalArgumentException) {
+				Assert.assertEquals(
+					"Redirect URL must not be null",
+					illegalArgumentException.getMessage());
+			}
+
+			List<LogEntry> logEntries = logCapture.getLogEntries();
+
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
+
+			LogEntry logEntry = logEntries.get(0);
+
+			Assert.assertEquals(
+				"Redirect URL https://example.com/error is not allowed",
+				logEntry.getMessage());
+		}
 	}
 
 	private Layout _addLayout() throws Exception {
 		Layout layout = _layoutLocalService.addLayout(
-			_user.getUserId(), _group.getGroupId(), false,
+			null, _user.getUserId(), _group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, 0, 0,
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), Collections.emptyMap(),
@@ -708,9 +800,9 @@ public class EditInfoItemStrutsActionTest {
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.addCustomObjectDefinition(
-				_user.getUserId(), 0, false, false, true,
+				_user.getUserId(), 0, null, false, true, false, true,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
-				"A" + RandomTestUtil.randomString(), null,
+				ObjectDefinitionTestUtil.getRandomName(), null,
 				"control_panel.sites",
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				true, ObjectDefinitionConstants.SCOPE_COMPANY,
@@ -739,6 +831,24 @@ public class EditInfoItemStrutsActionTest {
 
 		return _objectDefinitionLocalService.publishCustomObjectDefinition(
 			_user.getUserId(), objectDefinition.getObjectDefinitionId());
+	}
+
+	private void _assertEmptyValues(ObjectEntry objectEntry) {
+		Map<String, Serializable> values = objectEntry.getValues();
+
+		Assert.assertEquals(
+			Boolean.FALSE.toString(), String.valueOf(values.get("myBoolean")));
+		Assert.assertNull(values.get("myDate"));
+		Assert.assertNull(values.get("myDateTime"));
+		Assert.assertEquals("0.0", String.valueOf(values.get("myDecimal")));
+		Assert.assertEquals("0", String.valueOf(values.get("myInteger")));
+		Assert.assertEquals("0", String.valueOf(values.get("myLongInteger")));
+		Assert.assertTrue(
+			Validator.isNull(String.valueOf(values.get("myPicklist"))));
+		Assert.assertEquals(
+			0, GetterUtil.getLong(values.get("myPrecisionDecimal")));
+		Assert.assertEquals(
+			StringPool.BLANK, String.valueOf(values.get("myRichText")));
 	}
 
 	private FileItem _createFileItem(byte[] bytes) throws Exception {
@@ -864,7 +974,7 @@ public class EditInfoItemStrutsActionTest {
 		}
 
 		mockMultipartHttpServletRequest.addHeader(
-			HttpHeaders.REFERER, "https://example.com/error");
+			HttpHeaders.REFERER, "http://localhost:8080/error");
 
 		return UploadTestUtil.createUploadPortletRequest(
 			UploadTestUtil.createUploadServletRequest(
@@ -928,7 +1038,7 @@ public class EditInfoItemStrutsActionTest {
 				).put(
 					"myDateTime",
 					() -> {
-						if (Validator.isNotNull(dateTimeValueInput)) {
+						if (dateTimeValueInput != null) {
 							return Collections.singletonList(
 								dateTimeValueInput);
 						}

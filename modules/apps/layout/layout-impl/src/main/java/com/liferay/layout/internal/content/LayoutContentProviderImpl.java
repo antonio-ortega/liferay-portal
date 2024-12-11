@@ -5,7 +5,6 @@
 
 package com.liferay.layout.internal.content;
 
-import com.liferay.fragment.constants.FragmentEntryLinkConstants;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.layout.content.LayoutContentProvider;
 import com.liferay.layout.crawler.LayoutCrawler;
@@ -109,6 +108,7 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 			HttpServletRequest originalThemeDisplayHttpServletRequest =
 				themeDisplay.getRequest();
 
+			Locale originalLocale = themeDisplay.getLocale();
 			Layout originalThemeDisplayLayout = themeDisplay.getLayout();
 			long originalThemeDisplayPlid = themeDisplay.getPlid();
 
@@ -125,6 +125,7 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 					themeDisplay.setPlid(layout.getPlid());
 				}
 
+				themeDisplay.setLocale(locale);
 				themeDisplay.setRequest(httpServletRequest);
 
 				long segmentsExperienceId =
@@ -139,8 +140,7 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 							renderLayoutContent(
 								_fragmentRendererController, httpServletRequest,
 								httpServletResponse,
-								layoutPageTemplateStructure,
-								FragmentEntryLinkConstants.INDEX, locale,
+								layoutPageTemplateStructure, locale,
 								segmentsExperienceId);
 				}
 				catch (Exception exception) {
@@ -164,6 +164,7 @@ public class LayoutContentProviderImpl implements LayoutContentProvider {
 					themeDisplay.setPlid(originalThemeDisplayPlid);
 				}
 
+				themeDisplay.setLocale(originalLocale);
 				themeDisplay.setRequest(originalThemeDisplayHttpServletRequest);
 			}
 		}

@@ -12,6 +12,7 @@ import com.liferay.info.item.InfoItemReference;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
+import com.liferay.layout.display.page.BaseLayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.petra.string.CharPool;
@@ -30,11 +31,17 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = LayoutDisplayPageProvider.class)
 public class KBArticleLayoutDisplayPageProvider
-	implements LayoutDisplayPageProvider<KBArticle> {
+	extends BaseLayoutDisplayPageProvider<KBArticle> {
 
 	@Override
 	public String getClassName() {
 		return KBArticle.class.getName();
+	}
+
+	@Override
+	public String getDefaultURLSeparator() {
+		return FriendlyURLResolverConstants.
+			URL_SEPARATOR_KNOWLEDGE_BASE_ARTICLE;
 	}
 
 	@Override
@@ -77,10 +84,35 @@ public class KBArticleLayoutDisplayPageProvider
 
 	@Override
 	public LayoutDisplayPageObjectProvider<KBArticle>
+		getLayoutDisplayPageObjectProvider(KBArticle kbArticle) {
+
+		try {
+			KBArticle latestKBArticle =
+				_kbArticleLocalService.fetchLatestKBArticle(
+					kbArticle.getResourcePrimKey(), kbArticle.getGroupId());
+
+			if ((latestKBArticle == null) || latestKBArticle.isExpired()) {
+				return null;
+			}
+
+			return new KBArticleLayoutDisplayPageObjectProvider(
+				kbArticle, _assetHelper);
+		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
+		}
+	}
+
+	@Override
+	public LayoutDisplayPageObjectProvider<KBArticle>
 		getLayoutDisplayPageObjectProvider(long groupId, String urlTitle) {
 
 		try {
 			List<String> parts = StringUtil.split(urlTitle, CharPool.SLASH);
+
+			if (parts.size() <= 1) {
+				return null;
+			}
 
 			KBArticle kbArticle =
 				_kbArticleLocalService.fetchKBArticleByUrlTitle(
@@ -105,12 +137,6 @@ public class KBArticleLayoutDisplayPageProvider
 		catch (PortalException portalException) {
 			throw new RuntimeException(portalException);
 		}
-	}
-
-	@Override
-	public String getURLSeparator() {
-		return FriendlyURLResolverConstants.
-			URL_SEPARATOR_KNOWLEDGE_BASE_ARTICLE;
 	}
 
 	private long _getKBFolderId(long groupId, List<String> urlTitleParts) {

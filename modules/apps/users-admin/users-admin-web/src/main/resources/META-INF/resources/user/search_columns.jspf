@@ -16,13 +16,13 @@
 		<liferay-ui:search-container-column-text
 			colspan="<%= 2 %>"
 		>
-			<h5>
+			<div class="h5">
 				<aui:a href="<%= String.valueOf(rowURL) %>"><%= user2.getFullName() %></aui:a>
-			</h5>
+			</div>
 
-			<h6 class="text-default">
+			<div class="h6 text-default">
 				<%= user2.getScreenName() %>
-			</h6>
+			</div>
 		</liferay-ui:search-container-column-text>
 
 		<%
@@ -33,14 +33,14 @@
 			<clay:dropdown-actions
 				aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 				dropdownItems="<%= userActionDropdownItems.getActionDropdownItems() %>"
-				propsTransformer="js/OrganizationAndUserDropdownDefaultPropsTransformer"
+				propsTransformer="{OrganizationAndUserDropdownDefaultPropsTransformer} from users-admin-web"
 			/>
 		</liferay-ui:search-container-column-text>
 	</c:when>
 	<c:when test='<%= displayStyle.equals("icon") %>'>
 		<liferay-ui:search-container-column-text>
 			<clay:user-card
-				propsTransformer="js/OrganizationAndUserDropdownDefaultPropsTransformer"
+				propsTransformer="{OrganizationAndUserDropdownDefaultPropsTransformer} from users-admin-web"
 				userCard="<%= new UserVerticalCard(renderRequest, renderResponse, userSearchContainer.getRowChecker(), true, user2) %>"
 			/>
 		</liferay-ui:search-container-column-text>
@@ -60,6 +60,13 @@
 			name="screen-name"
 			orderable="<%= true %>"
 			property="screenName"
+		/>
+
+		<liferay-ui:search-container-column-date
+			cssClass="table-cell-expand-small table-cell-minw-150"
+			name="last-login-date"
+			orderable="<%= true %>"
+			value="<%= user2.getLastLoginDate() %>"
 		/>
 
 		<c:if test="<%= !portletName.equals(UsersAdminPortletKeys.SERVICE_ACCOUNTS) %>">
@@ -104,7 +111,7 @@
 			<clay:dropdown-actions
 				aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 				dropdownItems="<%= userActionDropdownItems.getActionDropdownItems() %>"
-				propsTransformer="js/OrganizationAndUserDropdownDefaultPropsTransformer"
+				propsTransformer="{OrganizationAndUserDropdownDefaultPropsTransformer} from users-admin-web"
 			/>
 		</liferay-ui:search-container-column-text>
 	</c:otherwise>

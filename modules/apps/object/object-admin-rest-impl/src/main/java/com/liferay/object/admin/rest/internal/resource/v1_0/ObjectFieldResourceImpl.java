@@ -14,12 +14,10 @@ import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectFieldSettingUt
 import com.liferay.object.admin.rest.internal.dto.v1_0.util.ObjectFieldUtil;
 import com.liferay.object.admin.rest.internal.odata.entity.v1_0.ObjectFieldEntityModel;
 import com.liferay.object.admin.rest.resource.v1_0.ObjectFieldResource;
-import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFilterLocalService;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
@@ -118,19 +116,11 @@ public class ObjectFieldResourceImpl extends BaseObjectFieldResourceImpl {
 			Long objectDefinitionId, ObjectField objectField)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-164948") &&
-			Objects.equals(
-				objectField.getBusinessTypeAsString(),
-				ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
-
-			throw new UnsupportedOperationException();
-		}
-
 		com.liferay.object.model.ObjectDefinition objectDefinition =
 			_objectDefinitionLocalService.getObjectDefinition(
 				objectDefinitionId);
 
-		return _toObjectField(
+		com.liferay.object.model.ObjectField serviceBuilderObjectField =
 			_objectFieldService.addCustomObjectField(
 				objectField.getExternalReferenceCode(),
 				ObjectFieldUtil.getListTypeDefinitionId(
@@ -158,7 +148,14 @@ public class ObjectFieldResourceImpl extends BaseObjectFieldResourceImpl {
 						_listTypeEntryLocalService, objectField,
 						contextUser.getUserId()),
 					objectField, _objectFieldSettingLocalService,
-					_objectFilterLocalService)));
+					_objectFilterLocalService));
+
+		if (objectDefinition.isApproved() && objectDefinition.isActive()) {
+			_objectDefinitionLocalService.deployObjectDefinition(
+				objectDefinition);
+		}
+
+		return _toObjectField(serviceBuilderObjectField);
 	}
 
 	@Override
@@ -166,34 +163,11 @@ public class ObjectFieldResourceImpl extends BaseObjectFieldResourceImpl {
 			Long objectFieldId, ObjectField objectField)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-164948") &&
-			Objects.equals(
-				objectField.getBusinessTypeAsString(),
-				ObjectFieldConstants.BUSINESS_TYPE_FORMULA)) {
+		Long listTypeDefinitionId = objectField.getListTypeDefinitionId();
 
-			throw new UnsupportedOperationException();
-		}
-
-		com.liferay.object.model.ObjectField serviceBuilderObjectField =
-			_objectFieldService.getObjectField(objectFieldId);
-
-		com.liferay.object.model.ObjectDefinition
-			serviceBuilderObjectDefinition =
-				_objectDefinitionLocalService.getObjectDefinition(
-					serviceBuilderObjectField.getObjectDefinitionId());
-
-		if (!serviceBuilderObjectDefinition.isApproved()) {
-			objectField.setListTypeDefinitionId(
-				ObjectFieldUtil.addListTypeDefinition(
-					contextUser.getCompanyId(), _listTypeDefinitionLocalService,
-					_listTypeEntryLocalService, objectField,
-					contextUser.getUserId()));
-		}
-
-		if (Validator.isNull(objectField.getListTypeDefinitionId())) {
-			objectField.setListTypeDefinitionId(
-				serviceBuilderObjectField.getListTypeDefinitionId());
-		}
+		objectField.setListTypeDefinitionId(
+			() -> _getListTypeDefinitionId(
+				objectField, objectFieldId, listTypeDefinitionId));
 
 		return _toObjectField(
 			_objectFieldService.updateObjectField(
@@ -224,8 +198,36 @@ public class ObjectFieldResourceImpl extends BaseObjectFieldResourceImpl {
 
 		if (objectField.getObjectFieldSettings() != null) {
 			existingObjectField.setObjectFieldSettings(
-				objectField.getObjectFieldSettings());
+				objectField::getObjectFieldSettings);
 		}
+	}
+
+	private Long _getListTypeDefinitionId(
+			ObjectField objectField, long objectFieldId,
+			Long listTypeDefinitionId)
+		throws Exception {
+
+		com.liferay.object.model.ObjectField serviceBuilderObjectField =
+			_objectFieldService.getObjectField(objectFieldId);
+
+		com.liferay.object.model.ObjectDefinition
+			serviceBuilderObjectDefinition =
+				_objectDefinitionLocalService.getObjectDefinition(
+					serviceBuilderObjectField.getObjectDefinitionId());
+
+		if (!serviceBuilderObjectDefinition.isApproved()) {
+			listTypeDefinitionId = ObjectFieldUtil.addListTypeDefinition(
+				contextUser.getCompanyId(), _listTypeDefinitionLocalService,
+				_listTypeEntryLocalService, objectField,
+				contextUser.getUserId());
+		}
+
+		if (Validator.isNull(listTypeDefinitionId)) {
+			listTypeDefinitionId =
+				serviceBuilderObjectField.getListTypeDefinitionId();
+		}
+
+		return listTypeDefinitionId;
 	}
 
 	private Page<ObjectField> _getObjectFieldsPage(

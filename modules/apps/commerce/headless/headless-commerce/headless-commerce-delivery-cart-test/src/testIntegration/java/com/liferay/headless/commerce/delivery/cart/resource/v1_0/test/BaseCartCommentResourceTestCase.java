@@ -27,19 +27,21 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -97,10 +99,16 @@ public abstract class BaseCartCommentResourceTestCase {
 
 		_cartCommentResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		CartCommentResource.Builder builder = CartCommentResource.builder();
 
 		cartCommentResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,7 +122,32 @@ public abstract class BaseCartCommentResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CartComment cartComment1 = randomCartComment();
+
+		String json = objectMapper.writeValueAsString(cartComment1);
+
+		CartComment cartComment2 = CartCommentSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(cartComment1, cartComment2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		CartComment cartComment = randomCartComment();
+
+		String json1 = objectMapper.writeValueAsString(cartComment);
+		String json2 = CartCommentSerDes.toJSON(cartComment);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -129,40 +162,6 @@ public abstract class BaseCartCommentResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		CartComment cartComment1 = randomCartComment();
-
-		String json = objectMapper.writeValueAsString(cartComment1);
-
-		CartComment cartComment2 = CartCommentSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(cartComment1, cartComment2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		CartComment cartComment = randomCartComment();
-
-		String json1 = objectMapper.writeValueAsString(cartComment);
-		String json2 = CartCommentSerDes.toJSON(cartComment);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -172,7 +171,9 @@ public abstract class BaseCartCommentResourceTestCase {
 		CartComment cartComment = randomCartComment();
 
 		cartComment.setAuthor(regex);
+		cartComment.setAuthorPortraitURL(regex);
 		cartComment.setContent(regex);
+		cartComment.setExternalReferenceCode(regex);
 
 		String json = CartCommentSerDes.toJSON(cartComment);
 
@@ -181,7 +182,270 @@ public abstract class BaseCartCommentResourceTestCase {
 		cartComment = CartCommentSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, cartComment.getAuthor());
+		Assert.assertEquals(regex, cartComment.getAuthorPortraitURL());
 		Assert.assertEquals(regex, cartComment.getContent());
+		Assert.assertEquals(regex, cartComment.getExternalReferenceCode());
+	}
+
+	@Test
+	public void testDeleteCartCommentByExternalReferenceCode()
+		throws Exception {
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CartComment cartComment =
+			testDeleteCartCommentByExternalReferenceCode_addCartComment();
+
+		assertHttpResponseStatusCode(
+			204,
+			cartCommentResource.
+				deleteCartCommentByExternalReferenceCodeHttpResponse(
+					cartComment.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			cartCommentResource.
+				getCartCommentByExternalReferenceCodeHttpResponse(
+					cartComment.getExternalReferenceCode()));
+
+		assertHttpResponseStatusCode(
+			404,
+			cartCommentResource.
+				getCartCommentByExternalReferenceCodeHttpResponse(
+					cartComment.getExternalReferenceCode()));
+	}
+
+	protected CartComment
+			testDeleteCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGetCartCommentByExternalReferenceCode() throws Exception {
+		CartComment postCartComment =
+			testGetCartCommentByExternalReferenceCode_addCartComment();
+
+		CartComment getCartComment =
+			cartCommentResource.getCartCommentByExternalReferenceCode(
+				postCartComment.getExternalReferenceCode());
+
+		assertEquals(postCartComment, getCartComment);
+		assertValid(getCartComment);
+	}
+
+	protected CartComment
+			testGetCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testGraphQLGetCartCommentByExternalReferenceCode()
+		throws Exception {
+
+		CartComment cartComment =
+			testGraphQLGetCartCommentByExternalReferenceCode_addCartComment();
+
+		// No namespace
+
+		Assert.assertTrue(
+			equals(
+				cartComment,
+				CartCommentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"cartCommentByExternalReferenceCode",
+								new HashMap<String, Object>() {
+									{
+										put(
+											"externalReferenceCode",
+											"\"" +
+												cartComment.
+													getExternalReferenceCode() +
+														"\"");
+									}
+								},
+								getGraphQLFields())),
+						"JSONObject/data",
+						"Object/cartCommentByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceDeliveryCart_v1_0
+
+		Assert.assertTrue(
+			equals(
+				cartComment,
+				CartCommentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceDeliveryCart_v1_0",
+								new GraphQLField(
+									"cartCommentByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													cartComment.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceDeliveryCart_v1_0",
+						"Object/cartCommentByExternalReferenceCode"))));
+	}
+
+	@Test
+	public void testGraphQLGetCartCommentByExternalReferenceCodeNotFound()
+		throws Exception {
+
+		String irrelevantExternalReferenceCode =
+			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"cartCommentByExternalReferenceCode",
+						new HashMap<String, Object>() {
+							{
+								put(
+									"externalReferenceCode",
+									irrelevantExternalReferenceCode);
+							}
+						},
+						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceDeliveryCart_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceDeliveryCart_v1_0",
+						new GraphQLField(
+							"cartCommentByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+	}
+
+	protected CartComment
+			testGraphQLGetCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
+		return testGraphQLCartComment_addCartComment();
+	}
+
+	@Test
+	public void testPatchCartCommentByExternalReferenceCode() throws Exception {
+		CartComment postCartComment =
+			testPatchCartCommentByExternalReferenceCode_addCartComment();
+
+		CartComment randomPatchCartComment = randomPatchCartComment();
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		CartComment patchCartComment =
+			cartCommentResource.patchCartCommentByExternalReferenceCode(
+				postCartComment.getExternalReferenceCode(),
+				randomPatchCartComment);
+
+		CartComment expectedPatchCartComment = postCartComment.clone();
+
+		BeanTestUtil.copyProperties(
+			randomPatchCartComment, expectedPatchCartComment);
+
+		CartComment getCartComment =
+			cartCommentResource.getCartCommentByExternalReferenceCode(
+				patchCartComment.getExternalReferenceCode());
+
+		assertEquals(expectedPatchCartComment, getCartComment);
+		assertValid(getCartComment);
+	}
+
+	protected CartComment
+			testPatchCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
+	public void testPutCartCommentByExternalReferenceCode() throws Exception {
+		CartComment postCartComment =
+			testPutCartCommentByExternalReferenceCode_addCartComment();
+
+		CartComment randomCartComment = randomCartComment();
+
+		CartComment putCartComment =
+			cartCommentResource.putCartCommentByExternalReferenceCode(
+				postCartComment.getExternalReferenceCode(), randomCartComment);
+
+		assertEquals(randomCartComment, putCartComment);
+		assertValid(putCartComment);
+
+		CartComment getCartComment =
+			cartCommentResource.getCartCommentByExternalReferenceCode(
+				putCartComment.getExternalReferenceCode());
+
+		assertEquals(randomCartComment, getCartComment);
+		assertValid(getCartComment);
+
+		CartComment newCartComment =
+			testPutCartCommentByExternalReferenceCode_createCartComment();
+
+		putCartComment =
+			cartCommentResource.putCartCommentByExternalReferenceCode(
+				newCartComment.getExternalReferenceCode(), newCartComment);
+
+		assertEquals(newCartComment, putCartComment);
+		assertValid(putCartComment);
+
+		getCartComment =
+			cartCommentResource.getCartCommentByExternalReferenceCode(
+				putCartComment.getExternalReferenceCode());
+
+		assertEquals(newCartComment, getCartComment);
+
+		Assert.assertEquals(
+			newCartComment.getExternalReferenceCode(),
+			putCartComment.getExternalReferenceCode());
+	}
+
+	protected CartComment
+			testPutCartCommentByExternalReferenceCode_createCartComment()
+		throws Exception {
+
+		return randomCartComment();
+	}
+
+	protected CartComment
+			testPutCartCommentByExternalReferenceCode_addCartComment()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -212,7 +476,11 @@ public abstract class BaseCartCommentResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteCartComment() throws Exception {
-		CartComment cartComment = testGraphQLDeleteCartComment_addCartComment();
+
+		// No namespace
+
+		CartComment cartComment1 =
+			testGraphQLDeleteCartComment_addCartComment();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -221,23 +489,61 @@ public abstract class BaseCartCommentResourceTestCase {
 						"deleteCartComment",
 						new HashMap<String, Object>() {
 							{
-								put("cartCommentId", cartComment.getId());
+								put("cartCommentId", cartComment1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteCartComment"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"cartComment",
 					new HashMap<String, Object>() {
 						{
-							put("cartCommentId", cartComment.getId());
+							put("cartCommentId", cartComment1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceDeliveryCart_v1_0
+
+		CartComment cartComment2 =
+			testGraphQLDeleteCartComment_addCartComment();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceDeliveryCart_v1_0",
+						new GraphQLField(
+							"deleteCartComment",
+							new HashMap<String, Object>() {
+								{
+									put("cartCommentId", cartComment2.getId());
+								}
+							}))),
+				"JSONObject/data",
+				"JSONObject/headlessCommerceDeliveryCart_v1_0",
+				"Object/deleteCartComment"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceDeliveryCart_v1_0",
+					new GraphQLField(
+						"cartComment",
+						new HashMap<String, Object>() {
+							{
+								put("cartCommentId", cartComment2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected CartComment testGraphQLDeleteCartComment_addCartComment()
@@ -266,6 +572,8 @@ public abstract class BaseCartCommentResourceTestCase {
 	public void testGraphQLGetCartComment() throws Exception {
 		CartComment cartComment = testGraphQLGetCartComment_addCartComment();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				cartComment,
@@ -283,11 +591,37 @@ public abstract class BaseCartCommentResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/cartComment"))));
+
+		// Using the namespace headlessCommerceDeliveryCart_v1_0
+
+		Assert.assertTrue(
+			equals(
+				cartComment,
+				CartCommentSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceDeliveryCart_v1_0",
+								new GraphQLField(
+									"cartComment",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"cartCommentId",
+												cartComment.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceDeliveryCart_v1_0",
+						"Object/cartComment"))));
 	}
 
 	@Test
 	public void testGraphQLGetCartCommentNotFound() throws Exception {
 		Long irrelevantCartCommentId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -301,6 +635,27 @@ public abstract class BaseCartCommentResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceDeliveryCart_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceDeliveryCart_v1_0",
+						new GraphQLField(
+							"cartComment",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"cartCommentId",
+										irrelevantCartCommentId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -365,6 +720,215 @@ public abstract class BaseCartCommentResourceTestCase {
 	}
 
 	@Test
+	public void testGetCartByExternalReferenceCodeCommentsPage()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetCartByExternalReferenceCodeCommentsPage_getExternalReferenceCode();
+		String irrelevantExternalReferenceCode =
+			testGetCartByExternalReferenceCodeCommentsPage_getIrrelevantExternalReferenceCode();
+
+		Page<CartComment> page =
+			cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+				externalReferenceCode, Pagination.of(1, 10));
+
+		long totalCount = page.getTotalCount();
+
+		if (irrelevantExternalReferenceCode != null) {
+			CartComment irrelevantCartComment =
+				testGetCartByExternalReferenceCodeCommentsPage_addCartComment(
+					irrelevantExternalReferenceCode,
+					randomIrrelevantCartComment());
+
+			page =
+				cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+					irrelevantExternalReferenceCode,
+					Pagination.of(1, (int)totalCount + 1));
+
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
+
+			assertContains(
+				irrelevantCartComment, (List<CartComment>)page.getItems());
+			assertValid(
+				page,
+				testGetCartByExternalReferenceCodeCommentsPage_getExpectedActions(
+					irrelevantExternalReferenceCode));
+		}
+
+		CartComment cartComment1 =
+			testGetCartByExternalReferenceCodeCommentsPage_addCartComment(
+				externalReferenceCode, randomCartComment());
+
+		CartComment cartComment2 =
+			testGetCartByExternalReferenceCodeCommentsPage_addCartComment(
+				externalReferenceCode, randomCartComment());
+
+		page = cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+			externalReferenceCode, Pagination.of(1, 10));
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(cartComment1, (List<CartComment>)page.getItems());
+		assertContains(cartComment2, (List<CartComment>)page.getItems());
+		assertValid(
+			page,
+			testGetCartByExternalReferenceCodeCommentsPage_getExpectedActions(
+				externalReferenceCode));
+
+		cartCommentResource.deleteCartComment(cartComment1.getId());
+
+		cartCommentResource.deleteCartComment(cartComment2.getId());
+	}
+
+	protected Map<String, Map<String, String>>
+			testGetCartByExternalReferenceCodeCommentsPage_getExpectedActions(
+				String externalReferenceCode)
+		throws Exception {
+
+		Map<String, Map<String, String>> expectedActions = new HashMap<>();
+
+		return expectedActions;
+	}
+
+	@Test
+	public void testGetCartByExternalReferenceCodeCommentsPageWithPagination()
+		throws Exception {
+
+		String externalReferenceCode =
+			testGetCartByExternalReferenceCodeCommentsPage_getExternalReferenceCode();
+
+		Page<CartComment> cartCommentPage =
+			cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+				externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(cartCommentPage.getTotalCount());
+
+		CartComment cartComment1 =
+			testGetCartByExternalReferenceCodeCommentsPage_addCartComment(
+				externalReferenceCode, randomCartComment());
+
+		CartComment cartComment2 =
+			testGetCartByExternalReferenceCodeCommentsPage_addCartComment(
+				externalReferenceCode, randomCartComment());
+
+		CartComment cartComment3 =
+			testGetCartByExternalReferenceCodeCommentsPage_addCartComment(
+				externalReferenceCode, randomCartComment());
+
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
+
+		int pageSizeLimit = 500;
+
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<CartComment> page1 =
+				cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
+
+			assertContains(cartComment1, (List<CartComment>)page1.getItems());
+
+			Page<CartComment> page2 =
+				cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(cartComment2, (List<CartComment>)page2.getItems());
+
+			Page<CartComment> page3 =
+				cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
+
+			assertContains(cartComment3, (List<CartComment>)page3.getItems());
+		}
+		else {
+			Page<CartComment> page1 =
+				cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
+
+			List<CartComment> cartComments1 =
+				(List<CartComment>)page1.getItems();
+
+			Assert.assertEquals(
+				cartComments1.toString(), totalCount + 2, cartComments1.size());
+
+			Page<CartComment> page2 =
+				cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<CartComment> cartComments2 =
+				(List<CartComment>)page2.getItems();
+
+			Assert.assertEquals(
+				cartComments2.toString(), 1, cartComments2.size());
+
+			Page<CartComment> page3 =
+				cartCommentResource.getCartByExternalReferenceCodeCommentsPage(
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(cartComment1, (List<CartComment>)page3.getItems());
+			assertContains(cartComment2, (List<CartComment>)page3.getItems());
+			assertContains(cartComment3, (List<CartComment>)page3.getItems());
+		}
+	}
+
+	protected CartComment
+			testGetCartByExternalReferenceCodeCommentsPage_addCartComment(
+				String externalReferenceCode, CartComment cartComment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetCartByExternalReferenceCodeCommentsPage_getExternalReferenceCode()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected String
+			testGetCartByExternalReferenceCodeCommentsPage_getIrrelevantExternalReferenceCode()
+		throws Exception {
+
+		return null;
+	}
+
+	@Test
+	public void testPostCartByExternalReferenceCodeComment() throws Exception {
+		CartComment randomCartComment = randomCartComment();
+
+		CartComment postCartComment =
+			testPostCartByExternalReferenceCodeComment_addCartComment(
+				randomCartComment);
+
+		assertEquals(randomCartComment, postCartComment);
+		assertValid(postCartComment);
+	}
+
+	protected CartComment
+			testPostCartByExternalReferenceCodeComment_addCartComment(
+				CartComment cartComment)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetCartCommentsPage() throws Exception {
 		Long cartId = testGetCartCommentsPage_getCartId();
 		Long irrelevantCartId = testGetCartCommentsPage_getIrrelevantCartId();
@@ -372,7 +936,7 @@ public abstract class BaseCartCommentResourceTestCase {
 		Page<CartComment> page = cartCommentResource.getCartCommentsPage(
 			cartId, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantCartId != null) {
 			CartComment irrelevantCartComment =
@@ -380,13 +944,12 @@ public abstract class BaseCartCommentResourceTestCase {
 					irrelevantCartId, randomIrrelevantCartComment());
 
 			page = cartCommentResource.getCartCommentsPage(
-				irrelevantCartId, Pagination.of(1, 2));
+				irrelevantCartId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantCartComment),
-				(List<CartComment>)page.getItems());
+			assertContains(
+				irrelevantCartComment, (List<CartComment>)page.getItems());
 			assertValid(
 				page,
 				testGetCartCommentsPage_getExpectedActions(irrelevantCartId));
@@ -401,11 +964,10 @@ public abstract class BaseCartCommentResourceTestCase {
 		page = cartCommentResource.getCartCommentsPage(
 			cartId, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(cartComment1, cartComment2),
-			(List<CartComment>)page.getItems());
+		assertContains(cartComment1, (List<CartComment>)page.getItems());
+		assertContains(cartComment2, (List<CartComment>)page.getItems());
 		assertValid(page, testGetCartCommentsPage_getExpectedActions(cartId));
 
 		cartCommentResource.deleteCartComment(cartComment1.getId());
@@ -426,6 +988,11 @@ public abstract class BaseCartCommentResourceTestCase {
 	public void testGetCartCommentsPageWithPagination() throws Exception {
 		Long cartId = testGetCartCommentsPage_getCartId();
 
+		Page<CartComment> cartCommentPage =
+			cartCommentResource.getCartCommentsPage(cartId, null);
+
+		int totalCount = GetterUtil.getInteger(cartCommentPage.getTotalCount());
+
 		CartComment cartComment1 = testGetCartCommentsPage_addCartComment(
 			cartId, randomCartComment());
 
@@ -435,28 +1002,65 @@ public abstract class BaseCartCommentResourceTestCase {
 		CartComment cartComment3 = testGetCartCommentsPage_addCartComment(
 			cartId, randomCartComment());
 
-		Page<CartComment> page1 = cartCommentResource.getCartCommentsPage(
-			cartId, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<CartComment> cartComments1 = (List<CartComment>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(cartComments1.toString(), 2, cartComments1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<CartComment> page1 = cartCommentResource.getCartCommentsPage(
+				cartId,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<CartComment> page2 = cartCommentResource.getCartCommentsPage(
-			cartId, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(cartComment1, (List<CartComment>)page1.getItems());
 
-		List<CartComment> cartComments2 = (List<CartComment>)page2.getItems();
+			Page<CartComment> page2 = cartCommentResource.getCartCommentsPage(
+				cartId,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(cartComments2.toString(), 1, cartComments2.size());
+			assertContains(cartComment2, (List<CartComment>)page2.getItems());
 
-		Page<CartComment> page3 = cartCommentResource.getCartCommentsPage(
-			cartId, Pagination.of(1, 3));
+			Page<CartComment> page3 = cartCommentResource.getCartCommentsPage(
+				cartId,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(cartComment1, cartComment2, cartComment3),
-			(List<CartComment>)page3.getItems());
+			assertContains(cartComment3, (List<CartComment>)page3.getItems());
+		}
+		else {
+			Page<CartComment> page1 = cartCommentResource.getCartCommentsPage(
+				cartId, Pagination.of(1, totalCount + 2));
+
+			List<CartComment> cartComments1 =
+				(List<CartComment>)page1.getItems();
+
+			Assert.assertEquals(
+				cartComments1.toString(), totalCount + 2, cartComments1.size());
+
+			Page<CartComment> page2 = cartCommentResource.getCartCommentsPage(
+				cartId, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<CartComment> cartComments2 =
+				(List<CartComment>)page2.getItems();
+
+			Assert.assertEquals(
+				cartComments2.toString(), 1, cartComments2.size());
+
+			Page<CartComment> page3 = cartCommentResource.getCartCommentsPage(
+				cartId, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(cartComment1, (List<CartComment>)page3.getItems());
+			assertContains(cartComment2, (List<CartComment>)page3.getItems());
+			assertContains(cartComment3, (List<CartComment>)page3.getItems());
+		}
 	}
 
 	protected CartComment testGetCartCommentsPage_addCartComment(
@@ -495,11 +1099,13 @@ public abstract class BaseCartCommentResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject cartCommentsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/cartComments");
 
-		Assert.assertEquals(0, cartCommentsJSONObject.get("totalCount"));
+		long totalCount = cartCommentsJSONObject.getLong("totalCount");
 
 		CartComment cartComment1 =
 			testGraphQLGetCartCommentsPage_addCartComment();
@@ -510,10 +1116,39 @@ public abstract class BaseCartCommentResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/cartComments");
 
-		Assert.assertEquals(2, cartCommentsJSONObject.getLong("totalCount"));
+		Assert.assertEquals(
+			totalCount + 2, cartCommentsJSONObject.getLong("totalCount"));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(cartComment1, cartComment2),
+		assertContains(
+			cartComment1,
+			Arrays.asList(
+				CartCommentSerDes.toDTOs(
+					cartCommentsJSONObject.getString("items"))));
+		assertContains(
+			cartComment2,
+			Arrays.asList(
+				CartCommentSerDes.toDTOs(
+					cartCommentsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceDeliveryCart_v1_0
+
+		cartCommentsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceDeliveryCart_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceDeliveryCart_v1_0",
+			"JSONObject/cartComments");
+
+		Assert.assertEquals(
+			totalCount + 2, cartCommentsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			cartComment1,
+			Arrays.asList(
+				CartCommentSerDes.toDTOs(
+					cartCommentsJSONObject.getString("items"))));
+		assertContains(
+			cartComment2,
 			Arrays.asList(
 				CartCommentSerDes.toDTOs(
 					cartCommentsJSONObject.getString("items"))));
@@ -636,8 +1271,44 @@ public abstract class BaseCartCommentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("authorId", additionalAssertFieldName)) {
+				if (cartComment.getAuthorId() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"authorPortraitURL", additionalAssertFieldName)) {
+
+				if (cartComment.getAuthorPortraitURL() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("content", additionalAssertFieldName)) {
 				if (cartComment.getContent() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (cartComment.getExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("modifiedDate", additionalAssertFieldName)) {
+				if (cartComment.getModifiedDate() == null) {
 					valid = false;
 				}
 
@@ -789,6 +1460,30 @@ public abstract class BaseCartCommentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("authorId", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						cartComment1.getAuthorId(),
+						cartComment2.getAuthorId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"authorPortraitURL", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						cartComment1.getAuthorPortraitURL(),
+						cartComment2.getAuthorPortraitURL())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("content", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						cartComment1.getContent(), cartComment2.getContent())) {
@@ -799,9 +1494,33 @@ public abstract class BaseCartCommentResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"externalReferenceCode", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						cartComment1.getExternalReferenceCode(),
+						cartComment2.getExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("id", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						cartComment1.getId(), cartComment2.getId())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("modifiedDate", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						cartComment1.getModifiedDate(),
+						cartComment2.getModifiedDate())) {
 
 					return false;
 				}
@@ -866,6 +1585,10 @@ public abstract class BaseCartCommentResourceTestCase {
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
+
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
 
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
@@ -979,8 +1702,105 @@ public abstract class BaseCartCommentResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("authorId")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("authorPortraitURL")) {
+			Object object = cartComment.getAuthorPortraitURL();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("content")) {
 			Object object = cartComment.getContent();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("externalReferenceCode")) {
+			Object object = cartComment.getExternalReferenceCode();
 
 			String value = String.valueOf(object);
 
@@ -1030,6 +1850,37 @@ public abstract class BaseCartCommentResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("modifiedDate")) {
+			if (operator.equals("between")) {
+				Date date = cartComment.getModifiedDate();
+
+				sb = new StringBundler();
+
+				sb.append("(");
+				sb.append(entityFieldName);
+				sb.append(" gt ");
+				sb.append(
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
+				sb.append(" and ");
+				sb.append(entityFieldName);
+				sb.append(" lt ");
+				sb.append(
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
+				sb.append(")");
+			}
+			else {
+				sb.append(entityFieldName);
+
+				sb.append(" ");
+				sb.append(operator);
+				sb.append(" ");
+
+				sb.append(_dateFormat.format(cartComment.getModifiedDate()));
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("orderId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -1054,7 +1905,8 @@ public abstract class BaseCartCommentResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1085,8 +1937,14 @@ public abstract class BaseCartCommentResourceTestCase {
 		return new CartComment() {
 			{
 				author = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				authorId = RandomTestUtil.randomLong();
+				authorPortraitURL = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				content = StringUtil.toLowerCase(RandomTestUtil.randomString());
+				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
+				modifiedDate = RandomTestUtil.nextDate();
 				orderId = RandomTestUtil.randomLong();
 				restricted = RandomTestUtil.randomBoolean();
 			}
@@ -1104,21 +1962,21 @@ public abstract class BaseCartCommentResourceTestCase {
 	}
 
 	protected CartCommentResource cartCommentResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1127,11 +1985,16 @@ public abstract class BaseCartCommentResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1163,6 +2026,24 @@ public abstract class BaseCartCommentResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1184,16 +2065,6 @@ public abstract class BaseCartCommentResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

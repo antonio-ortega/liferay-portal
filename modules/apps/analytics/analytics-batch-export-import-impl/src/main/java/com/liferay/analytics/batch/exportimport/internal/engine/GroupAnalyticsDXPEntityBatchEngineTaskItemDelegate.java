@@ -6,14 +6,15 @@
 package com.liferay.analytics.batch.exportimport.internal.engine;
 
 import com.liferay.analytics.batch.exportimport.internal.dto.v1_0.converter.constants.DTOConverterConstants;
+import com.liferay.analytics.batch.exportimport.internal.engine.util.DTOConverterUtil;
 import com.liferay.analytics.dxp.entity.rest.dto.v1_0.DXPEntity;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.pagination.Pagination;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -21,8 +22,7 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 
 import java.io.Serializable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -44,7 +44,14 @@ public class GroupAnalyticsDXPEntityBatchEngineTaskItemDelegate
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
-		List<DXPEntity> dxpEntities = new ArrayList<>();
+		if (!_analyticsSettingsManager.syncedContactSettingsEnabled(
+				contextCompany.getCompanyId())) {
+
+			return Page.of(
+				Collections.emptyList(),
+				Pagination.of(pagination.getPage(), pagination.getPageSize()),
+				0);
+		}
 
 		DynamicQuery dynamicQuery = _groupLocalService.dynamicQuery();
 
@@ -52,20 +59,19 @@ public class GroupAnalyticsDXPEntityBatchEngineTaskItemDelegate
 		dynamicQuery.add(RestrictionsFactoryUtil.eq("site", true));
 
 		dynamicQuery = buildDynamicQuery(
-			contextCompany.getCompanyId(), dynamicQuery, filter);
-
-		List<Group> groups = _groupLocalService.dynamicQuery(
-			dynamicQuery, pagination.getStartPosition(),
-			pagination.getEndPosition());
-
-		for (Group group : groups) {
-			dxpEntities.add(_dxpEntityDTOConverter.toDTO(group));
-		}
+			contextCompany.getCompanyId(), dynamicQuery, parameters);
 
 		return Page.of(
-			dxpEntities, pagination,
-			_groupLocalService.dynamicQueryCount(dynamicQuery));
+			DTOConverterUtil.toDTOs(
+				_groupLocalService.dynamicQuery(
+					dynamicQuery, pagination.getStartPosition(),
+					pagination.getEndPosition()),
+				_dxpEntityDTOConverter),
+			pagination, _groupLocalService.dynamicQueryCount(dynamicQuery));
 	}
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	@Reference(target = DTOConverterConstants.DXP_ENTITY_DTO_CONVERTER)
 	private DTOConverter<BaseModel<?>, DXPEntity> _dxpEntityDTOConverter;

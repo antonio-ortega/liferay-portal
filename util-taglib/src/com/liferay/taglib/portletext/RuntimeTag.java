@@ -34,6 +34,8 @@ import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ClassUtil;
+import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
@@ -261,13 +263,13 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 				_embeddedPortletIds.set(embeddedPortletIds);
 			}
 
-			String rootPortletId = portlet.getRootPortletId();
+			String embeddedPortletId = portlet.getPortletId();
 
-			if (embeddedPortletIds.search(rootPortletId) > -1) {
+			if (embeddedPortletIds.search(embeddedPortletId) > -1) {
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"The application cannot include itself: " +
-							rootPortletId);
+							embeddedPortletId);
 				}
 
 				String errorMessage = LanguageUtil.get(
@@ -301,61 +303,56 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 			httpServletRequest.setAttribute(
 				WebKeys.SETTINGS_SCOPE, settingsScope);
 
-			PortletRenderParts portletRenderParts = null;
+			String layoutMode = ParamUtil.getString(
+				httpServletRequest, "p_l_mode", Constants.VIEW);
 
-			boolean writeObject = false;
+			if (!layoutMode.equals(Constants.PREVIEW)) {
+				if (persistSettings &&
+					!layout.isPortletEmbedded(
+						portlet.getPortletId(), layout.getGroupId())) {
 
-			if (persistSettings &&
-				!layout.isPortletEmbedded(
-					portlet.getPortletId(), layout.getGroupId())) {
-
-				PortletPreferencesFactoryUtil.getLayoutPortletSetup(
-					themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
-					PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
-					PortletKeys.PREFS_PLID_SHARED, portletInstanceKey,
-					defaultPreferences);
-
-				writeObject = true;
-			}
-
-			if (persistSettings) {
-				long count =
-					PortletPreferencesLocalServiceUtil.
-						getPortletPreferencesCount(
-							PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
-							themeDisplay.getPlid(), portletInstanceKey);
-
-				if (count < 1) {
 					PortletPreferencesFactoryUtil.getLayoutPortletSetup(
-						layout, portletInstanceKey, defaultPreferences);
-
-					PortletPreferencesFactoryUtil.getPortletSetup(
-						httpServletRequest, portletInstanceKey,
+						themeDisplay.getCompanyId(),
+						themeDisplay.getScopeGroupId(),
+						PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
+						PortletKeys.PREFS_PLID_SHARED, portletInstanceKey,
 						defaultPreferences);
+				}
 
-					PortletLayoutListener portletLayoutListener =
-						portlet.getPortletLayoutListenerInstance();
+				if (persistSettings) {
+					long count =
+						PortletPreferencesLocalServiceUtil.
+							getPortletPreferencesCount(
+								PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
+								themeDisplay.getPlid(), portletInstanceKey);
 
-					if (portletLayoutListener != null) {
-						portletLayoutListener.onAddToLayout(
-							portletInstanceKey, themeDisplay.getPlid());
+					if (count < 1) {
+						PortletPreferencesFactoryUtil.getLayoutPortletSetup(
+							layout, portletInstanceKey, defaultPreferences);
+
+						PortletPreferencesFactoryUtil.getPortletSetup(
+							httpServletRequest, portletInstanceKey,
+							defaultPreferences);
+
+						PortletLayoutListener portletLayoutListener =
+							portlet.getPortletLayoutListenerInstance();
+
+						if (portletLayoutListener != null) {
+							portletLayoutListener.onAddToLayout(
+								portletInstanceKey, themeDisplay.getPlid());
+						}
 					}
-
-					writeObject = true;
 				}
 			}
 
-			if (writeObject) {
-				portletRenderParts = PortletRenderUtil.getPortletRenderParts(
+			PortletRenderParts portletRenderParts =
+				PortletRenderUtil.getPortletRenderParts(
 					httpServletRequest, StringPool.BLANK, portlet);
-			}
 
-			if (portletRenderParts != null) {
-				PortletRenderUtil.writeHeaderPaths(
-					httpServletResponse, portletRenderParts);
-			}
+			PortletRenderUtil.writeHeaderPaths(
+				httpServletResponse, portletRenderParts);
 
-			embeddedPortletIds.push(rootPortletId);
+			embeddedPortletIds.push(embeddedPortletId);
 
 			boolean lifecycleRender = themeDisplay.isLifecycleRender();
 
@@ -380,10 +377,8 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 
 			embeddedPortletIds.pop();
 
-			if (portletRenderParts != null) {
-				PortletRenderUtil.writeFooterPaths(
-					httpServletResponse, portletRenderParts);
-			}
+			PortletRenderUtil.writeFooterPaths(
+				httpServletResponse, portletRenderParts);
 		}
 		finally {
 			restrictPortletServletRequest.mergeSharedAttributes();

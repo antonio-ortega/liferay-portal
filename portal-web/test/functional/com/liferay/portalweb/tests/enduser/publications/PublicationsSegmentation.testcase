@@ -152,60 +152,71 @@ definition {
 			value1 = "This experience is for Administrators only.");
 	}
 
-	@description = "Assert we can resolve conflicting Segment changes by discarding."
-	@priority = 4
-	test CanResolveConflictingPublicationsByDiscarding {
-		HeadlessSite.addSite(siteName = "Site Name");
+	@description = "Segment should support locales in review changes."
+	@priority = 3
+	test CanReviewChangeForSegmentWithLocalization {
+		task ("Create new Publication and new site") {
+			JSONPublications.addPublication(publicationName = "Publication Name");
 
-		Segmentation.openSegmentsAdmin(siteURLKey = "site-name");
+			JSONPublications.selectPublication(publicationName = "Publication Name");
 
-		LexiconEntry.gotoAdd();
+			HeadlessSite.addSite(siteName = "Site Name");
+		}
 
-		Segmentation.addProperties(propertyOption = "Regular Role");
+		task ("Create new segment in the new site") {
+			Segmentation.openSegmentsAdmin(siteURLKey = "site-name");
 
-		Segmentation.fillTitle(titleField = "Segment Title");
+			LexiconEntry.gotoAdd();
 
-		Segmentation.changeCriterionInput(criterionInputOption = "Equals");
+			Segmentation.addProperties(propertyOption = "Email Address");
 
-		Segmentation.fillProperty(selectCheckbox = "Administrator");
+			Segmentation.fillTitle(titleField = "New Segment Title");
 
-		Button.clickSave();
+			Segmentation.changeCriterionInput(criterionInputOption = "Equals");
 
-		JSONPublications.addPublication(publicationName = "Publication Name 1");
+			Segmentation.fillProperty(propertyField = "liferay");
 
-		JSONPublications.selectPublication(publicationName = "Publication Name 1");
+			Segmentation.changeLocale(locale = "de-DE");
 
-		Segmentation.editSegment(entry = "Segment Title");
+			Segmentation.fillTitle(titleField = "Neue Segment Titel");
 
-		Segmentation.fillTitle(titleField = "Edited Segment Title");
+			Button.clickSave();
+		}
 
-		Button.clickSave();
+		task ("Go to review changes and assert the segment with default and localized name") {
+			PublicationsNavigator.gotoReviewChanges();
 
-		JSONPublications.addPublication(publicationName = "Publication Name 2");
+			PublicationsChanges.viewChanges(
+				changeCategory = "Segments Entry",
+				changeSite = "Site Name",
+				changeTitle = "New Segment Title",
+				changeType = "Added",
+				changeUser = "Test Test");
 
-		JSONPublications.selectPublication(publicationName = "Publication Name 2");
+			PublicationsNavigator.gotoViewChangeDetails(
+				changeCategory = "Segments Entry",
+				changeTitle = "New Segment Title");
 
-		Segmentation.deleteSegment(entry = "Segment Title");
+			PublicationsChangeDetails.viewChangeDetailsInData(
+				changeType = "Added",
+				columnName = "Name",
+				columnValueInPublication = "New Segment Title",
+				publicationName = "Publication Name");
 
-		Publications.publishPublication(
-			gotoPublicationsAdmin = "true",
-			publicationName = "Publication Name 2");
+			Click(
+				key_currentLocale = StringUtil.lowerCase("en-US"),
+				locator1 = "Button#TRANSLATIONS_LOCALIZATION");
 
-		Publications.selectPublication(publicationName = "Publication Name 1");
+			Click(
+				key_locale = "de_DE",
+				locator1 = "Translation#DROPDOWN_MENU_ITEM");
 
-		PublicationsNavigator.gotoPublish(publicationName = "Publication Name 1");
-
-		Publications.viewNeedsManualResolution(
-			entryTitle = "Segments Entry",
-			warningMessage = "Missing Entity");
-
-		PublicationsNavigator.gotoViewConflictingChangeDetails(entryTitle = "Edited Segment Title");
-
-		PublicationsChanges.discardChanges(
-			changeCategory = "Segments Entry",
-			changeTitle = "Edited Segment Title",
-			conflictingChanges = "true",
-			entryTitle = "Segments Entry");
+			PublicationsChangeDetails.viewChangeDetailsInData(
+				changeType = "Added",
+				columnName = "Name",
+				columnValueInPublication = "Neue Segment Titel",
+				publicationName = "Publication Name");
+		}
 	}
 
 }

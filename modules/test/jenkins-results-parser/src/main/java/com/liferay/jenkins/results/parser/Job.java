@@ -51,11 +51,19 @@ public interface Job {
 
 	public List<String> getDistNodes();
 
+	public List<String> getDistNodes(String networkName);
+
+	public Set<String> getDistRequiredBatchNames();
+
+	public Set<String> getDistRequiredSegmentNames();
+
 	public DistType getDistType();
 
 	public Set<String> getDistTypes();
 
 	public Set<String> getDistTypesExcludingTomcat();
+
+	public Set<JenkinsCohort> getJenkinsCohorts();
 
 	public JobHistory getJobHistory();
 
@@ -69,9 +77,15 @@ public interface Job {
 
 	public JSONObject getJSONObject();
 
+	public Set<String> getNetworkNames();
+
 	public Set<String> getSegmentNames();
 
 	public List<SegmentTestClassGroup> getSegmentTestClassGroups();
+
+	public Set<String> getStandaloneBatchNames();
+
+	public Set<String> getStandaloneSegmentNames();
 
 	public String getTestPropertiesContent();
 
@@ -83,7 +97,11 @@ public interface Job {
 
 	public boolean isSegmentEnabled();
 
+	public boolean isStandaloneBatchEnabled();
+
 	public boolean isValidationRequired();
+
+	public boolean testAnalyticsCloud();
 
 	public boolean testHotfixChanges();
 

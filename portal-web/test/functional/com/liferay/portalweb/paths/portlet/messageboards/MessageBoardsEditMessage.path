@@ -15,7 +15,7 @@
 
 <tr>
 	<td>ATTACHMENTS_REMOVE_LINK</td>
-	<td>//*[@data-qa-id='row'][contains(.,'${key_attachmentName}')]//span[contains(@class,'item-remove')]</td>
+	<td>//*[@data-qa-id='row'][contains(.,'${key_attachmentName}')]//a[contains(@class,'delete-attachment')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -25,7 +25,7 @@
 </tr>
 <tr>
 	<td>ATTACHMENTS_SAVED_STATUS</td>
-	<td>//h4[contains(.,'All files ready to be saved')]</td>
+	<td>//div[contains(.,'All files ready to be saved')]</td>
 	<td></td>
 </tr>
 <tr>

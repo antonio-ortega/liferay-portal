@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -324,6 +325,14 @@ public class CommerceChannelAccountEntryRelLocalServiceUtil {
 
 	public static List<CommerceChannelAccountEntryRel>
 		getCommerceChannelAccountEntryRels(
+			long commerceChannelId, String name, int type, int start, int end) {
+
+		return getService().getCommerceChannelAccountEntryRels(
+			commerceChannelId, name, type, start, end);
+	}
+
+	public static List<CommerceChannelAccountEntryRel>
+		getCommerceChannelAccountEntryRels(
 			String className, long classPK, long commerceChannelId, int type) {
 
 		return getService().getCommerceChannelAccountEntryRels(
@@ -344,6 +353,13 @@ public class CommerceChannelAccountEntryRelLocalServiceUtil {
 
 		return getService().getCommerceChannelAccountEntryRelsCount(
 			accountEntryId, type);
+	}
+
+	public static int getCommerceChannelAccountEntryRelsCount(
+		long commerceChannelId, String name, int type) {
+
+		return getService().getCommerceChannelAccountEntryRelsCount(
+			commerceChannelId, name, type);
 	}
 
 	public static
@@ -401,15 +417,12 @@ public class CommerceChannelAccountEntryRelLocalServiceUtil {
 	}
 
 	public static CommerceChannelAccountEntryRelLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CommerceChannelAccountEntryRelLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile CommerceChannelAccountEntryRelLocalService _service;
+	private static final Snapshot<CommerceChannelAccountEntryRelLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceChannelAccountEntryRelLocalServiceUtil.class,
+			CommerceChannelAccountEntryRelLocalService.class);
 
 }

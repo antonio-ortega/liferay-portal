@@ -11,7 +11,7 @@
 	<c:when test="<%= themeDisplay.isSignedIn() %>">
 		<c:if test="<%= layout != null %>">
 			<liferay-util:html-top>
-				<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/product-navigation-control-menu-web/css/App.css") %>" rel="stylesheet" />
+				<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/product-navigation-control-menu-web/css/App.css") %>' rel="stylesheet" />
 			</liferay-util:html-top>
 
 			<%
@@ -21,7 +21,7 @@
 			<c:if test="<%= addContentPanelDisplayContext.showAddPanel() %>">
 				<div class="add-content-menu" data-qa-id="addPanelBody" id="<portlet:namespace />addPanelContainer">
 					<react:component
-						module="js/AddPanel"
+						module="{AddPanel} from product-navigation-control-menu-web"
 						props="<%= addContentPanelDisplayContext.getAddContentPanelData() %>"
 					/>
 				</div>

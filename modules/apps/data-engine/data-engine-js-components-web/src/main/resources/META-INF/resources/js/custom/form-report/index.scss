@@ -175,10 +175,20 @@
 	}
 }
 
+.document-title-link {
+	color: #272833;
+	font-size: 0.875rem;
+	font-weight: 600;
+
+	&:hover {
+		color: #272833;
+	}
+}
+
 .lfr-de__form-report {
 	display: flex;
 	&-sidebar {
-		top: 56px;
+		top: var(--control-menu-container-height);
 		transform: translateX(100%);
 		transition: transform 0.3s ease-in-out;
 		width: 720px !important;
@@ -584,11 +594,25 @@
 
 	&--cards-shortcut {
 		align-self: flex-start;
-		margin-top: 24px;
-		padding-left: 24px;
+		margin-top: 1.5rem;
+		max-height: 70vh;
+		overflow-y: auto;
+		padding: 1.5rem;
 		position: sticky;
-		top: 112px;
+		top: 8rem;
 		width: 30%;
+
+		&::-webkit-scrollbar {
+			width: 5px;
+
+			&-track {
+				background: transparent;
+			}
+
+			&-thumb {
+				background: $gray-400;
+			}
+		}
 
 		ul {
 			float: right;

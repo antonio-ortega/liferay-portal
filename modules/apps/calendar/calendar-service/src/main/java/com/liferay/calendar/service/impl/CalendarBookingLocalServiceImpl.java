@@ -19,10 +19,9 @@ import com.liferay.calendar.exception.NoSuchCalendarException;
 import com.liferay.calendar.exporter.CalendarDataFormat;
 import com.liferay.calendar.exporter.CalendarDataHandler;
 import com.liferay.calendar.exporter.CalendarDataHandlerFactory;
-import com.liferay.calendar.internal.notification.NotificationSenderFactory;
 import com.liferay.calendar.internal.notification.NotificationTemplateContextFactory;
 import com.liferay.calendar.internal.recurrence.RecurrenceSplit;
-import com.liferay.calendar.internal.recurrence.RecurrenceSplitter;
+import com.liferay.calendar.internal.recurrence.RecurrenceSplitterUtil;
 import com.liferay.calendar.internal.util.CalendarUtil;
 import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarBooking;
@@ -42,6 +41,9 @@ import com.liferay.calendar.util.RecurrenceUtil;
 import com.liferay.calendar.workflow.constants.CalendarBookingWorkflowConstants;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.message.boards.service.MBMessageLocalService;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.Criterion;
@@ -53,6 +55,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -111,8 +114,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -147,13 +155,20 @@ public class CalendarBookingLocalServiceImpl
 		long calendarBookingId = counterLocalService.increment();
 
 		for (Map.Entry<Locale, String> entry : descriptionMap.entrySet()) {
-			String sanitizedDescription = SanitizerUtil.sanitize(
-				calendar.getCompanyId(), calendar.getGroupId(), userId,
-				CalendarBooking.class.getName(), calendarBookingId,
-				ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL, entry.getValue(),
-				null);
+			String description = null;
 
-			descriptionMap.put(entry.getKey(), sanitizedDescription);
+			if (!FeatureFlagManagerUtil.isEnabled("LPD-31212")) {
+				description = SanitizerUtil.sanitize(
+					calendar.getCompanyId(), calendar.getGroupId(), userId,
+					CalendarBooking.class.getName(), calendarBookingId,
+					ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+					entry.getValue(), null);
+			}
+			else {
+				description = _sanitize(entry.getValue());
+			}
+
+			descriptionMap.put(entry.getKey(), description);
 		}
 
 		TimeZone timeZone = _getTimeZone(calendar, allDay);
@@ -229,7 +244,6 @@ public class CalendarBookingLocalServiceImpl
 		calendarBooking.setFirstReminderType(firstReminderType);
 		calendarBooking.setSecondReminder(secondReminder);
 		calendarBooking.setSecondReminderType(secondReminderType);
-		calendarBooking.setExpandoBridgeAttributes(serviceContext);
 
 		int status = 0;
 
@@ -251,6 +265,7 @@ public class CalendarBookingLocalServiceImpl
 
 		calendarBooking.setStatus(status);
 		calendarBooking.setStatusDate(serviceContext.getModifiedDate(date));
+		calendarBooking.setExpandoBridgeAttributes(serviceContext);
 
 		calendarBooking = calendarBookingPersistence.update(calendarBooking);
 
@@ -787,22 +802,15 @@ public class CalendarBookingLocalServiceImpl
 	public List<CalendarBooking> getRecurringCalendarBookings(
 		CalendarBooking calendarBooking, long startTime) {
 
-		List<CalendarBooking> recurringCalendarBookings =
-			getRecurringCalendarBookings(calendarBooking);
+		return TransformUtil.transform(
+			getRecurringCalendarBookings(calendarBooking),
+			recurringCalendarBooking -> {
+				if (recurringCalendarBooking.getStartTime() > startTime) {
+					return recurringCalendarBooking;
+				}
 
-		List<CalendarBooking> followingRecurringCalendarBookings =
-			new ArrayList<>();
-
-		for (CalendarBooking recurringCalendarBooking :
-				recurringCalendarBookings) {
-
-			if (recurringCalendarBooking.getStartTime() > startTime) {
-				followingRecurringCalendarBookings.add(
-					recurringCalendarBooking);
-			}
-		}
-
-		return followingRecurringCalendarBookings;
+				return null;
+			});
 	}
 
 	@Override
@@ -1201,13 +1209,20 @@ public class CalendarBookingLocalServiceImpl
 		}
 
 		for (Map.Entry<Locale, String> entry : descriptionMap.entrySet()) {
-			String sanitizedDescription = SanitizerUtil.sanitize(
-				calendar.getCompanyId(), calendar.getGroupId(), userId,
-				CalendarBooking.class.getName(), calendarBookingId,
-				ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL, entry.getValue(),
-				null);
+			String description = null;
 
-			descriptionMap.put(entry.getKey(), sanitizedDescription);
+			if (!FeatureFlagManagerUtil.isEnabled("LPD-31212")) {
+				description = SanitizerUtil.sanitize(
+					calendar.getCompanyId(), calendar.getGroupId(), userId,
+					CalendarBooking.class.getName(), calendarBookingId,
+					ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+					entry.getValue(), null);
+			}
+			else {
+				description = _sanitize(entry.getValue());
+			}
+
+			descriptionMap.put(entry.getKey(), description);
 		}
 
 		TimeZone timeZone = _getTimeZone(calendar, allDay);
@@ -1681,11 +1696,22 @@ public class CalendarBookingLocalServiceImpl
 			userId, calendarBooking, status, serviceContext);
 	}
 
-	@Reference
-	protected MBMessageLocalService mbMessageLocalService;
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, NotificationSender.class, "notification.type");
+	}
+
+	@Deactivate
+	@Override
+	protected void deactivate() {
+		super.deactivate();
+
+		_serviceTrackerMap.close();
+	}
 
 	@Reference
-	protected RecurrenceSplitter recurrenceSplitter;
+	protected MBMessageLocalService mbMessageLocalService;
 
 	@Reference
 	protected SubscriptionLocalService subscriptionLocalService;
@@ -2187,9 +2213,8 @@ public class CalendarBookingLocalServiceImpl
 			ServiceContext serviceContext)
 		throws Exception {
 
-		NotificationSender notificationSender =
-			_notificationSenderFactory.getNotificationSender(
-				notificationType.toString());
+		NotificationSender notificationSender = _serviceTrackerMap.getService(
+			notificationType.toString());
 
 		if (notificationTemplateType == NotificationTemplateType.DECLINE) {
 			User recipientUser = senderUser;
@@ -2278,18 +2303,52 @@ public class CalendarBookingLocalServiceImpl
 			User user = notificationRecipient.getUser();
 
 			NotificationSender notificationSender =
-				_notificationSenderFactory.getNotificationSender(
-					notificationType.toString());
+				_serviceTrackerMap.getService(notificationType.toString());
 
 			NotificationTemplateContext notificationTemplateContext =
 				NotificationTemplateContextFactory.getInstance(
-					notificationType, NotificationTemplateType.REMINDER,
-					calendarBooking, user);
+					calendarBooking, NotificationTemplateType.REMINDER,
+					notificationType, null, null, user);
 
 			notificationSender.sendNotification(
 				user.getEmailAddress(), user.getFullName(),
 				notificationRecipient, notificationTemplateContext);
 		}
+	}
+
+	private String _sanitize(String htmlEntry) {
+		if ((htmlEntry == null) || htmlEntry.isEmpty()) {
+			return htmlEntry;
+		}
+
+		StringBuffer sb = new StringBuffer();
+
+		Matcher matcher = _htmlTagWithOnAttributePattern.matcher(htmlEntry);
+
+		while (matcher.find()) {
+			matcher.appendReplacement(
+				sb,
+				matcher.group(
+				).replaceAll(
+					_onAttributePattern.pattern(), ""
+				));
+		}
+
+		matcher.appendTail(sb);
+
+		String string = sb.toString();
+
+		return string.replaceAll(
+			_alertPattern.pattern(), ""
+		).replaceAll(
+			_innerHtmlPattern.pattern(), ""
+		).replaceAll(
+			_phpCodePattern.pattern(), ""
+		).replaceAll(
+			_aspCodePattern.pattern(), ""
+		).replaceAll(
+			_aspNetCodePattern.pattern(), ""
+		);
 	}
 
 	private void _sendChildrenNotifications(
@@ -2420,8 +2479,9 @@ public class CalendarBookingLocalServiceImpl
 							recurringCalendarBooking.getStartTime(),
 							recurringCalendarBooking.getTimeZone());
 
-					RecurrenceSplit recurrenceSplit = recurrenceSplitter.split(
-						recurrenceObj, startTimeJCalendar, splitJCalendar);
+					RecurrenceSplit recurrenceSplit =
+						RecurrenceSplitterUtil.split(
+							recurrenceObj, startTimeJCalendar, splitJCalendar);
 
 					if (recurrenceSplit.isSplit()) {
 						java.util.Calendar newStartTimeJCalendar =
@@ -2709,6 +2769,25 @@ public class CalendarBookingLocalServiceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		CalendarBookingLocalServiceImpl.class);
 
+	private static final Pattern _alertPattern = Pattern.compile(
+		"alert\\((.*?)\\)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _aspCodePattern = Pattern.compile(
+		"<%[\\s\\S]*?%>", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _aspNetCodePattern = Pattern.compile(
+		"<asp:[^>]+>.*?</asp:[^>]+>", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _htmlTagWithOnAttributePattern =
+		Pattern.compile(
+			"<[^>]+?(\\s+\\bon\\w+=" +
+				"(?:'[^']*'|\"[^\"]*\"|[^'\"\\s>]+))*\\s*/?>",
+			Pattern.CASE_INSENSITIVE);
+	private static final Pattern _innerHtmlPattern = Pattern.compile(
+		"innerHTML\\s*=\\s*.*?", Pattern.CASE_INSENSITIVE);
+	private static final Pattern _onAttributePattern = Pattern.compile(
+		"(\\s+\\bon\\w+=(?:'[^']*'|\"[^\"]*\"|[^'\"\\s>]+))",
+		Pattern.CASE_INSENSITIVE);
+	private static final Pattern _phpCodePattern = Pattern.compile(
+		"<\\?[\\s\\S]*?\\?>", Pattern.CASE_INSENSITIVE);
+
 	@Reference
 	private AssetEntryLocalService _assetEntryLocalService;
 
@@ -2731,13 +2810,12 @@ public class CalendarBookingLocalServiceImpl
 	private HtmlParser _htmlParser;
 
 	@Reference
-	private NotificationSenderFactory _notificationSenderFactory;
-
-	@Reference
 	private RatingsStatsLocalService _ratingsStatsLocalService;
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;
+
+	private ServiceTrackerMap<String, NotificationSender> _serviceTrackerMap;
 
 	@Reference
 	private SocialActivityCounterLocalService

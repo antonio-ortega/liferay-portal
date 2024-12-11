@@ -4,7 +4,7 @@
  */
 
 import ClayTabs from '@clayui/tabs';
-import {SidebarCategory} from '@liferay/object-js-components-web';
+import {API, SidebarCategory} from '@liferay/object-js-components-web';
 import classNames from 'classnames';
 import {createResourceURL, fetch} from 'frontend-js-web';
 import React, {ElementType, useEffect, useState} from 'react';
@@ -22,12 +22,15 @@ interface EditObjectFieldContentProps
 		| 'forbiddenChars'
 		| 'forbiddenLastChars'
 		| 'forbiddenNames'
+		| 'objectDefinitionExternalReferenceCode'
 		| 'objectFieldId'
 	> {
 	containerWrapper: ElementType;
 	errors: ObjectFieldErrors;
 	handleChange: React.ChangeEventHandler<HTMLInputElement>;
 	modelBuilder?: boolean;
+	objectDefinitionExternalReferenceCode: string;
+	objectFieldId: number;
 	onSubmit?: (editedObjectField?: Partial<ObjectField>) => void;
 	setValues: (values: Partial<ObjectField>) => void;
 	values: Partial<ObjectField>;
@@ -42,21 +45,27 @@ export function EditObjectFieldContent({
 	errors,
 	filterOperators,
 	handleChange,
-	isApproved,
 	isDefaultStorageType,
+	isRootDescendantNode,
 	learnResources,
 	modelBuilder = false,
 	objectDefinitionExternalReferenceCode,
+	objectFieldId,
 	onSubmit,
 	readOnly,
 	setValues,
 	values,
-	workflowStatusJSONArray,
+	workflowStatuses,
 }: EditObjectFieldContentProps) {
 	const [activeIndex, setActiveIndex] = useState(0);
-	const [objectFieldTypes, setObjectFieldTypes] = useState<ObjectFieldType[]>(
-		[]
-	);
+
+	const [dbObjectFieldRequired, setDbObjectFieldRequired] =
+		useState<boolean>();
+	const [objectDefinition, setObjectDefinition] =
+		useState<ObjectDefinition>();
+	const [objectFieldBusinessTypes, setObjectFieldBusinessTypes] = useState<
+		ObjectFieldBusinessType[]
+	>([]);
 	const [objectRelationshipId, setObjectRelationshipId] = useState(0);
 	const [readOnlySidebarElements, setReadOnlySidebarElements] = useState<
 		SidebarCategory[]
@@ -74,6 +83,28 @@ export function EditObjectFieldContent({
 
 	useEffect(() => {
 		const makeFetch = async () => {
+			const objectFieldResponse = await API.getObjectField(objectFieldId);
+
+			setDbObjectFieldRequired(objectFieldResponse.required);
+			setValues(objectFieldResponse);
+
+			if (objectDefinitionExternalReferenceCode) {
+				const objectDefinitionResponse =
+					await API.getObjectDefinitionByExternalReferenceCode(
+						objectDefinitionExternalReferenceCode
+					);
+
+				setObjectDefinition(objectDefinitionResponse);
+			}
+		};
+
+		makeFetch();
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	useEffect(() => {
+		const makeFetch = async () => {
 			if (values.id !== 0) {
 				const url = createResourceURL(baseResourceURL, {
 					objectFieldId: values?.id,
@@ -85,12 +116,13 @@ export function EditObjectFieldContent({
 					method: 'GET',
 				});
 
-				const objectFieldInfoJSON = (await objectFieldInfoResponse.json()) as {
-					objectFieldTypes: ObjectFieldType[];
-					objectRelationshipId: number;
-					readOnlySidebarElements: SidebarCategory[];
-					sidebarElements: SidebarCategory[];
-				};
+				const objectFieldInfoJSON =
+					(await objectFieldInfoResponse.json()) as {
+						objectFieldBusinessTypes: ObjectFieldBusinessType[];
+						objectRelationshipId: number;
+						readOnlySidebarElements: SidebarCategory[];
+						sidebarElements: SidebarCategory[];
+					};
 
 				if (values.businessType === 'Relationship') {
 					setObjectRelationshipId(
@@ -98,7 +130,9 @@ export function EditObjectFieldContent({
 					);
 				}
 
-				setObjectFieldTypes(objectFieldInfoJSON.objectFieldTypes);
+				setObjectFieldBusinessTypes(
+					objectFieldInfoJSON.objectFieldBusinessTypes
+				);
 				setReadOnlySidebarElements(
 					objectFieldInfoJSON.readOnlySidebarElements
 				);
@@ -107,6 +141,7 @@ export function EditObjectFieldContent({
 		};
 
 		makeFetch();
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [baseResourceURL, values.id]);
 
@@ -129,36 +164,40 @@ export function EditObjectFieldContent({
 					<ClayTabs.Content activeIndex={activeIndex} fade>
 						<ClayTabs.TabPane
 							className={classNames({
-								'lfr-objects__edit-object-field-content-panel': modelBuilder,
+								'lfr-objects__edit-object-field-content-panel':
+									modelBuilder,
 							})}
 						>
 							<BasicInfoTab
+								baseResourceURL={baseResourceURL}
 								containerWrapper={containerWrapper}
+								dbObjectFieldRequired={dbObjectFieldRequired}
 								errors={errors}
 								filterOperators={filterOperators}
 								handleChange={handleChange}
-								isApproved={isApproved}
 								isDefaultStorageType={isDefaultStorageType}
 								modelBuilder={modelBuilder}
-								objectDefinitionExternalReferenceCode={
-									objectDefinitionExternalReferenceCode
+								objectDefinition={objectDefinition}
+								objectFieldBusinessTypes={
+									objectFieldBusinessTypes
 								}
-								objectFieldTypes={objectFieldTypes}
 								objectRelationshipId={objectRelationshipId}
 								onSubmit={onSubmit}
 								readOnly={readOnly}
+								setDbObjectFieldRequired={
+									setDbObjectFieldRequired
+								}
 								setValues={setValues}
 								sidebarElements={sidebarElements}
 								values={values}
-								workflowStatusJSONArray={
-									workflowStatusJSONArray
-								}
+								workflowStatuses={workflowStatuses}
 							/>
 						</ClayTabs.TabPane>
 
 						<ClayTabs.TabPane
 							className={classNames({
-								'lfr-objects__edit-object-field-content-panel': modelBuilder,
+								'lfr-objects__edit-object-field-content-panel':
+									modelBuilder,
 							})}
 						>
 							<AdvancedTab
@@ -166,6 +205,7 @@ export function EditObjectFieldContent({
 								creationLanguageId={creationLanguageId}
 								errors={errors}
 								isDefaultStorageType={isDefaultStorageType}
+								isRootDescendantNode={isRootDescendantNode}
 								learnResources={learnResources}
 								modelBuilder={modelBuilder}
 								onSubmit={onSubmit}
@@ -181,24 +221,24 @@ export function EditObjectFieldContent({
 				</>
 			) : (
 				<BasicInfoTab
+					baseResourceURL={baseResourceURL}
 					containerWrapper={containerWrapper}
+					dbObjectFieldRequired={dbObjectFieldRequired}
 					errors={errors}
 					filterOperators={filterOperators}
 					handleChange={handleChange}
-					isApproved={isApproved}
 					isDefaultStorageType={isDefaultStorageType}
 					modelBuilder={modelBuilder}
-					objectDefinitionExternalReferenceCode={
-						objectDefinitionExternalReferenceCode
-					}
-					objectFieldTypes={objectFieldTypes}
+					objectDefinition={objectDefinition}
+					objectFieldBusinessTypes={objectFieldBusinessTypes}
 					objectRelationshipId={objectRelationshipId}
 					onSubmit={onSubmit}
 					readOnly={readOnly}
+					setDbObjectFieldRequired={setDbObjectFieldRequired}
 					setValues={setValues}
 					sidebarElements={sidebarElements}
 					values={values}
-					workflowStatusJSONArray={workflowStatusJSONArray}
+					workflowStatuses={workflowStatuses}
 				/>
 			)}
 		</>

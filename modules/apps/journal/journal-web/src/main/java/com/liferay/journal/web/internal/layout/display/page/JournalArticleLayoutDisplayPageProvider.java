@@ -12,6 +12,7 @@ import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
+import com.liferay.layout.display.page.BaseLayoutDisplayPageProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,11 +33,16 @@ import org.osgi.service.component.annotations.Reference;
 	service = LayoutDisplayPageProvider.class
 )
 public class JournalArticleLayoutDisplayPageProvider
-	implements LayoutDisplayPageProvider<JournalArticle> {
+	extends BaseLayoutDisplayPageProvider<JournalArticle> {
 
 	@Override
 	public String getClassName() {
 		return JournalArticle.class.getName();
+	}
+
+	@Override
+	public String getDefaultURLSeparator() {
+		return FriendlyURLResolverConstants.URL_SEPARATOR_JOURNAL_ARTICLE;
 	}
 
 	@Override
@@ -58,11 +64,34 @@ public class JournalArticleLayoutDisplayPageProvider
 		JournalArticle article = journalArticleLocalService.fetchLatestArticle(
 			classPKInfoItemIdentifier.getClassPK());
 
+		if (classPKInfoItemIdentifier.getVersion() != null) {
+			article = journalArticleLocalService.fetchArticle(
+				article.getGroupId(), article.getArticleId(),
+				Double.valueOf(classPKInfoItemIdentifier.getVersion()));
+		}
+
 		if (!_isShow(article)) {
 			return null;
 		}
 
 		try {
+			return new JournalArticleLayoutDisplayPageObjectProvider(
+				article, assetHelper);
+		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(portalException);
+		}
+	}
+
+	@Override
+	public LayoutDisplayPageObjectProvider<JournalArticle>
+		getLayoutDisplayPageObjectProvider(JournalArticle article) {
+
+		try {
+			if (!_isShow(article)) {
+				return null;
+			}
+
 			return new JournalArticleLayoutDisplayPageObjectProvider(
 				article, assetHelper);
 		}
@@ -110,11 +139,6 @@ public class JournalArticleLayoutDisplayPageProvider
 		}
 	}
 
-	@Override
-	public String getURLSeparator() {
-		return FriendlyURLResolverConstants.URL_SEPARATOR_JOURNAL_ARTICLE;
-	}
-
 	@Reference
 	protected AssetHelper assetHelper;
 
@@ -130,7 +154,7 @@ public class JournalArticleLayoutDisplayPageProvider
 
 		for (long connectedGroupId :
 				siteConnectedGroupGroupProvider.
-					getCurrentAndAncestorSiteAndDepotGroupIds(groupId)) {
+					getCurrentAndAncestorSiteAndDepotGroupIds(groupId, true)) {
 
 			JournalArticle article = null;
 
@@ -157,8 +181,7 @@ public class JournalArticleLayoutDisplayPageProvider
 
 		if ((article == null) || article.isExpired() || article.isInTrash() ||
 			(article.isPending() && (permissionChecker != null) &&
-			 !permissionChecker.isSignedIn()) ||
-			article.isScheduled()) {
+			 !permissionChecker.isSignedIn())) {
 
 			return false;
 		}

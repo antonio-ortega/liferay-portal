@@ -28,21 +28,22 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -63,8 +64,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -102,10 +101,16 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		_orderItemResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		OrderItemResource.Builder builder = OrderItemResource.builder();
 
 		orderItemResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -119,7 +124,32 @@ public abstract class BaseOrderItemResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		OrderItem orderItem1 = randomOrderItem();
+
+		String json = objectMapper.writeValueAsString(orderItem1);
+
+		OrderItem orderItem2 = OrderItemSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(orderItem1, orderItem2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		OrderItem orderItem = randomOrderItem();
+
+		String json1 = objectMapper.writeValueAsString(orderItem);
+		String json2 = OrderItemSerDes.toJSON(orderItem);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -134,40 +164,6 @@ public abstract class BaseOrderItemResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		OrderItem orderItem1 = randomOrderItem();
-
-		String json = objectMapper.writeValueAsString(orderItem1);
-
-		OrderItem orderItem2 = OrderItemSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(orderItem1, orderItem2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		OrderItem orderItem = randomOrderItem();
-
-		String json1 = objectMapper.writeValueAsString(orderItem);
-		String json2 = OrderItemSerDes.toJSON(orderItem);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -177,12 +173,15 @@ public abstract class BaseOrderItemResourceTestCase {
 		OrderItem orderItem = randomOrderItem();
 
 		orderItem.setDeliveryGroup(regex);
+		orderItem.setDeliveryGroupName(regex);
 		orderItem.setExternalReferenceCode(regex);
 		orderItem.setFormattedQuantity(regex);
 		orderItem.setOptions(regex);
 		orderItem.setOrderExternalReferenceCode(regex);
 		orderItem.setPrintedNote(regex);
 		orderItem.setReplacedSku(regex);
+		orderItem.setReplacedSkuExternalReferenceCode(regex);
+		orderItem.setShippingAddressExternalReferenceCode(regex);
 		orderItem.setSku(regex);
 		orderItem.setSkuExternalReferenceCode(regex);
 		orderItem.setUnitOfMeasure(regex);
@@ -195,12 +194,17 @@ public abstract class BaseOrderItemResourceTestCase {
 		orderItem = OrderItemSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, orderItem.getDeliveryGroup());
+		Assert.assertEquals(regex, orderItem.getDeliveryGroupName());
 		Assert.assertEquals(regex, orderItem.getExternalReferenceCode());
 		Assert.assertEquals(regex, orderItem.getFormattedQuantity());
 		Assert.assertEquals(regex, orderItem.getOptions());
 		Assert.assertEquals(regex, orderItem.getOrderExternalReferenceCode());
 		Assert.assertEquals(regex, orderItem.getPrintedNote());
 		Assert.assertEquals(regex, orderItem.getReplacedSku());
+		Assert.assertEquals(
+			regex, orderItem.getReplacedSkuExternalReferenceCode());
+		Assert.assertEquals(
+			regex, orderItem.getShippingAddressExternalReferenceCode());
 		Assert.assertEquals(regex, orderItem.getSku());
 		Assert.assertEquals(regex, orderItem.getSkuExternalReferenceCode());
 		Assert.assertEquals(regex, orderItem.getUnitOfMeasure());
@@ -323,10 +327,10 @@ public abstract class BaseOrderItemResourceTestCase {
 
 	@Test
 	public void testGetOrderItemsPageWithPagination() throws Exception {
-		Page<OrderItem> totalPage = orderItemResource.getOrderItemsPage(
+		Page<OrderItem> orderItemPage = orderItemResource.getOrderItemsPage(
 			null, null, null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(orderItemPage.getTotalCount());
 
 		OrderItem orderItem1 = testGetOrderItemsPage_addOrderItem(
 			randomOrderItem());
@@ -337,29 +341,65 @@ public abstract class BaseOrderItemResourceTestCase {
 		OrderItem orderItem3 = testGetOrderItemsPage_addOrderItem(
 			randomOrderItem());
 
-		Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
-			null, null, Pagination.of(1, totalCount + 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			orderItems1.toString(), totalCount + 2, orderItems1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
-			null, null, Pagination.of(2, totalCount + 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
 
-		List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+			Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
 
-		Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
-			null, null, Pagination.of(1, totalCount + 3), null);
+			Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
+				null, null,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit),
+				null);
 
-		assertContains(orderItem1, (List<OrderItem>)page3.getItems());
-		assertContains(orderItem2, (List<OrderItem>)page3.getItems());
-		assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+		else {
+			Page<OrderItem> page1 = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, totalCount + 2), null);
+
+			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+			Page<OrderItem> page2 = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+			Page<OrderItem> page3 = orderItemResource.getOrderItemsPage(
+				null, null, Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -369,7 +409,7 @@ public abstract class BaseOrderItemResourceTestCase {
 			(entityField, orderItem1, orderItem2) -> {
 				BeanTestUtil.setProperty(
 					orderItem1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -469,22 +509,23 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		orderItem2 = testGetOrderItemsPage_addOrderItem(orderItem2);
 
+		Page<OrderItem> page = orderItemResource.getOrderItemsPage(
+			null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<OrderItem> ascPage = orderItemResource.getOrderItemsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(orderItem1, orderItem2),
-				(List<OrderItem>)ascPage.getItems());
+			assertContains(orderItem1, (List<OrderItem>)ascPage.getItems());
+			assertContains(orderItem2, (List<OrderItem>)ascPage.getItems());
 
 			Page<OrderItem> descPage = orderItemResource.getOrderItemsPage(
-				null, null, Pagination.of(1, 2),
+				null, null, Pagination.of(1, (int)page.getTotalCount() + 1),
 				entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(orderItem2, orderItem1),
-				(List<OrderItem>)descPage.getItems());
+			assertContains(orderItem2, (List<OrderItem>)descPage.getItems());
+			assertContains(orderItem1, (List<OrderItem>)descPage.getItems());
 		}
 	}
 
@@ -508,6 +549,8 @@ public abstract class BaseOrderItemResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/orderItems");
@@ -519,6 +562,29 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/orderItems");
+
+		Assert.assertEquals(
+			totalCount + 2, orderItemsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			orderItem1,
+			Arrays.asList(
+				OrderItemSerDes.toDTOs(
+					orderItemsJSONObject.getString("items"))));
+		assertContains(
+			orderItem2,
+			Arrays.asList(
+				OrderItemSerDes.toDTOs(
+					orderItemsJSONObject.getString("items"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		orderItemsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminOrder_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
 			"JSONObject/orderItems");
 
 		Assert.assertEquals(
@@ -600,6 +666,8 @@ public abstract class BaseOrderItemResourceTestCase {
 		OrderItem orderItem =
 			testGraphQLGetOrderItemByExternalReferenceCode_addOrderItem();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				orderItem,
@@ -621,6 +689,33 @@ public abstract class BaseOrderItemResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/orderItemByExternalReferenceCode"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderItem,
+				OrderItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"orderItemByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													orderItem.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/orderItemByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -629,6 +724,8 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -644,6 +741,27 @@ public abstract class BaseOrderItemResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"orderItemByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -737,7 +855,10 @@ public abstract class BaseOrderItemResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteOrderItem() throws Exception {
-		OrderItem orderItem = testGraphQLDeleteOrderItem_addOrderItem();
+
+		// No namespace
+
+		OrderItem orderItem1 = testGraphQLDeleteOrderItem_addOrderItem();
 
 		Assert.assertTrue(
 			JSONUtil.getValueAsBoolean(
@@ -746,23 +867,59 @@ public abstract class BaseOrderItemResourceTestCase {
 						"deleteOrderItem",
 						new HashMap<String, Object>() {
 							{
-								put("id", orderItem.getId());
+								put("id", orderItem1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteOrderItem"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"orderItem",
 					new HashMap<String, Object>() {
 						{
-							put("id", orderItem.getId());
+							put("id", orderItem1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		OrderItem orderItem2 = testGraphQLDeleteOrderItem_addOrderItem();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"deleteOrderItem",
+							new HashMap<String, Object>() {
+								{
+									put("id", orderItem2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/headlessCommerceAdminOrder_v1_0",
+				"Object/deleteOrderItem"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"headlessCommerceAdminOrder_v1_0",
+					new GraphQLField(
+						"orderItem",
+						new HashMap<String, Object>() {
+							{
+								put("id", orderItem2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected OrderItem testGraphQLDeleteOrderItem_addOrderItem()
@@ -791,6 +948,8 @@ public abstract class BaseOrderItemResourceTestCase {
 	public void testGraphQLGetOrderItem() throws Exception {
 		OrderItem orderItem = testGraphQLGetOrderItem_addOrderItem();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				orderItem,
@@ -806,11 +965,35 @@ public abstract class BaseOrderItemResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/orderItem"))));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertTrue(
+			equals(
+				orderItem,
+				OrderItemSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"headlessCommerceAdminOrder_v1_0",
+								new GraphQLField(
+									"orderItem",
+									new HashMap<String, Object>() {
+										{
+											put("id", orderItem.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data",
+						"JSONObject/headlessCommerceAdminOrder_v1_0",
+						"Object/orderItem"))));
 	}
 
 	@Test
 	public void testGraphQLGetOrderItemNotFound() throws Exception {
 		Long irrelevantId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -824,6 +1007,25 @@ public abstract class BaseOrderItemResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace headlessCommerceAdminOrder_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"headlessCommerceAdminOrder_v1_0",
+						new GraphQLField(
+							"orderItem",
+							new HashMap<String, Object>() {
+								{
+									put("id", irrelevantId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -876,7 +1078,7 @@ public abstract class BaseOrderItemResourceTestCase {
 			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
 				externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			OrderItem irrelevantOrderItem =
@@ -886,13 +1088,13 @@ public abstract class BaseOrderItemResourceTestCase {
 
 			page =
 				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-					irrelevantExternalReferenceCode, Pagination.of(1, 2));
+					irrelevantExternalReferenceCode,
+					Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantOrderItem),
-				(List<OrderItem>)page.getItems());
+			assertContains(
+				irrelevantOrderItem, (List<OrderItem>)page.getItems());
 			assertValid(
 				page,
 				testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
@@ -910,11 +1112,10 @@ public abstract class BaseOrderItemResourceTestCase {
 		page = orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
 			externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(orderItem1, orderItem2),
-			(List<OrderItem>)page.getItems());
+		assertContains(orderItem1, (List<OrderItem>)page.getItems());
+		assertContains(orderItem2, (List<OrderItem>)page.getItems());
 		assertValid(
 			page,
 			testGetOrderByExternalReferenceCodeOrderItemsPage_getExpectedActions(
@@ -942,6 +1143,12 @@ public abstract class BaseOrderItemResourceTestCase {
 		String externalReferenceCode =
 			testGetOrderByExternalReferenceCodeOrderItemsPage_getExternalReferenceCode();
 
+		Page<OrderItem> orderItemPage =
+			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+				externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(orderItemPage.getTotalCount());
+
 		OrderItem orderItem1 =
 			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
 				externalReferenceCode, randomOrderItem());
@@ -954,31 +1161,69 @@ public abstract class BaseOrderItemResourceTestCase {
 			testGetOrderByExternalReferenceCodeOrderItemsPage_addOrderItem(
 				externalReferenceCode, randomOrderItem());
 
-		Page<OrderItem> page1 =
-			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-				externalReferenceCode, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(orderItems1.toString(), 2, orderItems1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderItem> page1 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<OrderItem> page2 =
-			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-				externalReferenceCode, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
 
-		List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+			Page<OrderItem> page2 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
 
-		Page<OrderItem> page3 =
-			orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
-				externalReferenceCode, Pagination.of(1, 3));
+			Page<OrderItem> page3 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(orderItem1, orderItem2, orderItem3),
-			(List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+		else {
+			Page<OrderItem> page1 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode, Pagination.of(1, totalCount + 2));
+
+			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+			Page<OrderItem> page2 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+			Page<OrderItem> page3 =
+				orderItemResource.getOrderByExternalReferenceCodeOrderItemsPage(
+					externalReferenceCode,
+					Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
 	}
 
 	protected OrderItem
@@ -1036,7 +1281,7 @@ public abstract class BaseOrderItemResourceTestCase {
 		Page<OrderItem> page = orderItemResource.getOrderIdOrderItemsPage(
 			id, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			OrderItem irrelevantOrderItem =
@@ -1044,13 +1289,12 @@ public abstract class BaseOrderItemResourceTestCase {
 					irrelevantId, randomIrrelevantOrderItem());
 
 			page = orderItemResource.getOrderIdOrderItemsPage(
-				irrelevantId, Pagination.of(1, 2));
+				irrelevantId, Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantOrderItem),
-				(List<OrderItem>)page.getItems());
+			assertContains(
+				irrelevantOrderItem, (List<OrderItem>)page.getItems());
 			assertValid(
 				page,
 				testGetOrderIdOrderItemsPage_getExpectedActions(irrelevantId));
@@ -1065,11 +1309,10 @@ public abstract class BaseOrderItemResourceTestCase {
 		page = orderItemResource.getOrderIdOrderItemsPage(
 			id, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(orderItem1, orderItem2),
-			(List<OrderItem>)page.getItems());
+		assertContains(orderItem1, (List<OrderItem>)page.getItems());
+		assertContains(orderItem2, (List<OrderItem>)page.getItems());
 		assertValid(page, testGetOrderIdOrderItemsPage_getExpectedActions(id));
 
 		orderItemResource.deleteOrderItem(orderItem1.getId());
@@ -1090,6 +1333,11 @@ public abstract class BaseOrderItemResourceTestCase {
 	public void testGetOrderIdOrderItemsPageWithPagination() throws Exception {
 		Long id = testGetOrderIdOrderItemsPage_getId();
 
+		Page<OrderItem> orderItemPage =
+			orderItemResource.getOrderIdOrderItemsPage(id, null);
+
+		int totalCount = GetterUtil.getInteger(orderItemPage.getTotalCount());
+
 		OrderItem orderItem1 = testGetOrderIdOrderItemsPage_addOrderItem(
 			id, randomOrderItem());
 
@@ -1099,28 +1347,62 @@ public abstract class BaseOrderItemResourceTestCase {
 		OrderItem orderItem3 = testGetOrderIdOrderItemsPage_addOrderItem(
 			id, randomOrderItem());
 
-		Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
-			id, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(orderItems1.toString(), 2, orderItems1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
-			id, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(orderItem1, (List<OrderItem>)page1.getItems());
 
-		List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+			Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+			assertContains(orderItem2, (List<OrderItem>)page2.getItems());
 
-		Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
-			id, Pagination.of(1, 3));
+			Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
+				id,
+				Pagination.of(
+					(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+					pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(orderItem1, orderItem2, orderItem3),
-			(List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
+		else {
+			Page<OrderItem> page1 = orderItemResource.getOrderIdOrderItemsPage(
+				id, Pagination.of(1, totalCount + 2));
+
+			List<OrderItem> orderItems1 = (List<OrderItem>)page1.getItems();
+
+			Assert.assertEquals(
+				orderItems1.toString(), totalCount + 2, orderItems1.size());
+
+			Page<OrderItem> page2 = orderItemResource.getOrderIdOrderItemsPage(
+				id, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<OrderItem> orderItems2 = (List<OrderItem>)page2.getItems();
+
+			Assert.assertEquals(orderItems2.toString(), 1, orderItems2.size());
+
+			Page<OrderItem> page3 = orderItemResource.getOrderIdOrderItemsPage(
+				id, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(orderItem1, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem2, (List<OrderItem>)page3.getItems());
+			assertContains(orderItem3, (List<OrderItem>)page3.getItems());
+		}
 	}
 
 	protected OrderItem testGetOrderIdOrderItemsPage_addOrderItem(
@@ -1270,6 +1552,16 @@ public abstract class BaseOrderItemResourceTestCase {
 
 			if (Objects.equals("deliveryGroup", additionalAssertFieldName)) {
 				if (orderItem.getDeliveryGroup() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"deliveryGroupName", additionalAssertFieldName)) {
+
+				if (orderItem.getDeliveryGroupName() == null) {
 					valid = false;
 				}
 
@@ -1520,6 +1812,17 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"replacedSkuExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (orderItem.getReplacedSkuExternalReferenceCode() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("replacedSkuId", additionalAssertFieldName)) {
 				if (orderItem.getReplacedSkuId() == null) {
 					valid = false;
@@ -1538,6 +1841,14 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("shippable", additionalAssertFieldName)) {
+				if (orderItem.getShippable() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("shippedQuantity", additionalAssertFieldName)) {
 				if (orderItem.getShippedQuantity() == null) {
 					valid = false;
@@ -1548,6 +1859,19 @@ public abstract class BaseOrderItemResourceTestCase {
 
 			if (Objects.equals("shippingAddress", additionalAssertFieldName)) {
 				if (orderItem.getShippingAddress() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"shippingAddressExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (orderItem.getShippingAddressExternalReferenceCode() ==
+						null) {
+
 					valid = false;
 				}
 
@@ -1634,6 +1958,14 @@ public abstract class BaseOrderItemResourceTestCase {
 
 			if (Objects.equals("virtualItemURLs", additionalAssertFieldName)) {
 				if (orderItem.getVirtualItemURLs() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("virtualItems", additionalAssertFieldName)) {
+				if (orderItem.getVirtualItems() == null) {
 					valid = false;
 				}
 
@@ -1794,6 +2126,19 @@ public abstract class BaseOrderItemResourceTestCase {
 				if (!Objects.deepEquals(
 						orderItem1.getDeliveryGroup(),
 						orderItem2.getDeliveryGroup())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"deliveryGroupName", additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						orderItem1.getDeliveryGroupName(),
+						orderItem2.getDeliveryGroupName())) {
 
 					return false;
 				}
@@ -2122,6 +2467,20 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals(
+					"replacedSkuExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						orderItem1.getReplacedSkuExternalReferenceCode(),
+						orderItem2.getReplacedSkuExternalReferenceCode())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("replacedSkuId", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						orderItem1.getReplacedSkuId(),
@@ -2146,6 +2505,16 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("shippable", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						orderItem1.getShippable(), orderItem2.getShippable())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("shippedQuantity", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						orderItem1.getShippedQuantity(),
@@ -2161,6 +2530,20 @@ public abstract class BaseOrderItemResourceTestCase {
 				if (!Objects.deepEquals(
 						orderItem1.getShippingAddress(),
 						orderItem2.getShippingAddress())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals(
+					"shippingAddressExternalReferenceCode",
+					additionalAssertFieldName)) {
+
+				if (!Objects.deepEquals(
+						orderItem1.getShippingAddressExternalReferenceCode(),
+						orderItem2.getShippingAddressExternalReferenceCode())) {
 
 					return false;
 				}
@@ -2281,6 +2664,17 @@ public abstract class BaseOrderItemResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("virtualItems", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						orderItem1.getVirtualItems(),
+						orderItem2.getVirtualItems())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			throw new IllegalArgumentException(
 				"Invalid additional assert field name " +
 					additionalAssertFieldName);
@@ -2317,6 +2711,10 @@ public abstract class BaseOrderItemResourceTestCase {
 
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
+
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
 
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
@@ -2401,6 +2799,52 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		if (entityFieldName.equals("deliveryGroup")) {
 			Object object = orderItem.getDeliveryGroup();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("deliveryGroupName")) {
+			Object object = orderItem.getDeliveryGroupName();
 
 			String value = String.valueOf(object);
 
@@ -2821,6 +3265,52 @@ public abstract class BaseOrderItemResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("replacedSkuExternalReferenceCode")) {
+			Object object = orderItem.getReplacedSkuExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
+		}
+
 		if (entityFieldName.equals("replacedSkuId")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2828,22 +3318,20 @@ public abstract class BaseOrderItemResourceTestCase {
 
 		if (entityFieldName.equals("requestedDeliveryDate")) {
 			if (operator.equals("between")) {
+				Date date = orderItem.getRequestedDeliveryDate();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							orderItem.getRequestedDeliveryDate(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							orderItem.getRequestedDeliveryDate(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -2860,6 +3348,11 @@ public abstract class BaseOrderItemResourceTestCase {
 			return sb.toString();
 		}
 
+		if (entityFieldName.equals("shippable")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("shippedQuantity")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2868,6 +3361,52 @@ public abstract class BaseOrderItemResourceTestCase {
 		if (entityFieldName.equals("shippingAddress")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
+		}
+
+		if (entityFieldName.equals("shippingAddressExternalReferenceCode")) {
+			Object object = orderItem.getShippingAddressExternalReferenceCode();
+
+			String value = String.valueOf(object);
+
+			if (operator.equals("contains")) {
+				sb = new StringBundler();
+
+				sb.append("contains(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 2)) {
+					sb.append(value.substring(1, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else if (operator.equals("startswith")) {
+				sb = new StringBundler();
+
+				sb.append("startswith(");
+				sb.append(entityFieldName);
+				sb.append(",'");
+
+				if ((object != null) && (value.length() > 1)) {
+					sb.append(value.substring(0, value.length() - 1));
+				}
+				else {
+					sb.append(value);
+				}
+
+				sb.append("')");
+			}
+			else {
+				sb.append("'");
+				sb.append(value);
+				sb.append("'");
+			}
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("shippingAddressId")) {
@@ -3084,6 +3623,11 @@ public abstract class BaseOrderItemResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("virtualItems")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		throw new IllegalArgumentException(
 			"Invalid entity field " + entityFieldName);
 	}
@@ -3098,7 +3642,8 @@ public abstract class BaseOrderItemResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -3131,6 +3676,8 @@ public abstract class BaseOrderItemResourceTestCase {
 				bookedQuantityId = RandomTestUtil.randomLong();
 				deliveryGroup = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				deliveryGroupName = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				discountManuallyAdjusted = RandomTestUtil.randomBoolean();
 				externalReferenceCode = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -3146,8 +3693,13 @@ public abstract class BaseOrderItemResourceTestCase {
 					RandomTestUtil.randomString());
 				replacedSku = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				replacedSkuExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				replacedSkuId = RandomTestUtil.randomLong();
 				requestedDeliveryDate = RandomTestUtil.nextDate();
+				shippable = RandomTestUtil.randomBoolean();
+				shippingAddressExternalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				shippingAddressId = RandomTestUtil.randomLong();
 				sku = StringUtil.toLowerCase(RandomTestUtil.randomString());
 				skuExternalReferenceCode = StringUtil.toLowerCase(
@@ -3173,21 +3725,21 @@ public abstract class BaseOrderItemResourceTestCase {
 	}
 
 	protected OrderItemResource orderItemResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -3196,11 +3748,16 @@ public abstract class BaseOrderItemResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -3232,6 +3789,24 @@ public abstract class BaseOrderItemResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -3253,16 +3828,6 @@ public abstract class BaseOrderItemResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

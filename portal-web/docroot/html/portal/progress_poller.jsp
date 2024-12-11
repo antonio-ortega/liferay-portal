@@ -28,8 +28,8 @@ if (progressTracker != null) {
 
 <html>
 	<body>
-		<script type="text/javascript">
-			;(function() {
+		<aui:script type="text/javascript">
+			;(function () {
 				var progressId = parent['<%= HtmlUtil.escapeJS(progressId) %>'];
 
 				if (progressId && (typeof progressId.set == 'function')) {
@@ -37,6 +37,6 @@ if (progressTracker != null) {
 					progressId.set('value', <%= percent %>);
 				}
 			}());
-		</script>
+		</aui:script>
 	</body>
 </html>

@@ -23,6 +23,7 @@ public abstract class BaseTestClassReport implements TestClassReport {
 		return _downstreamBuildReport;
 	}
 
+	@Override
 	public long getDuration() {
 		long duration = 0L;
 
@@ -86,6 +87,21 @@ public abstract class BaseTestClassReport implements TestClassReport {
 	@Override
 	public List<TestReport> getTestReports() {
 		return _testReports;
+	}
+
+	@Override
+	public String getTestTaskName() {
+		if (_testReports.isEmpty()) {
+			return null;
+		}
+
+		TestReport testReport = _testReports.get(0);
+
+		if (testReport == null) {
+			return null;
+		}
+
+		return testReport.getTestTaskName();
 	}
 
 	protected BaseTestClassReport(

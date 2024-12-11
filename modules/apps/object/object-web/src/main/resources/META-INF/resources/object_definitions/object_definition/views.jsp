@@ -8,24 +8,31 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String backURL = ParamUtil.getString(request, "backURL", String.valueOf(renderResponse.createRenderURL()));
-
 ObjectDefinition objectDefinition = (ObjectDefinition)request.getAttribute(ObjectWebKeys.OBJECT_DEFINITION);
 
 ObjectDefinitionsViewsDisplayContext objectDefinitionsViewsDisplayContext = (ObjectDefinitionsViewsDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 portletDisplay.setShowBackIcon(true);
-portletDisplay.setURLBack(backURL);
+portletDisplay.setURLBack(
+	ParamUtil.getString(
+		request, "backURL",
+		URLBuilder.create(
+			String.valueOf(renderResponse.createRenderURL())
+		).setParameter(
+			"objectFolderName", objectDefinitionsViewsDisplayContext.getObjectFolderName()
+		).build()));
 
 renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 %>
 
 <div>
 	<react:component
-		module="js/components/ObjectView/Views"
+		module="{Views} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"apiURL", objectDefinitionsViewsDisplayContext.getAPIURL()
+			).put(
+				"backURL", portletDisplay.getURLBack()
 			).put(
 				"creationMenu", objectDefinitionsViewsDisplayContext.getCreationMenu()
 			).put(
@@ -47,7 +54,7 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 
 <div id="<portlet:namespace />AddObjectView">
 	<react:component
-		module="js/components/ModalAddObjectCustomView"
+		module="{ModalAddObjectCustomView} from object-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"apiURL", objectDefinitionsViewsDisplayContext.getAPIURL()
@@ -58,6 +65,6 @@ renderResponse.setTitle(objectDefinition.getLabel(locale, true));
 
 <div>
 	<react:component
-		module="js/components/ModalAddColumns"
+		module="{ModalSelectObjectFields} from object-web"
 	/>
 </div>

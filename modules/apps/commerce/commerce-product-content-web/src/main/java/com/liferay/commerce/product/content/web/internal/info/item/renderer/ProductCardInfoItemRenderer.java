@@ -32,9 +32,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Alessio Antonio Rendina
  */
-@Component(
-	service = {InfoItemRenderer.class, ProductCardInfoItemRenderer.class}
-)
+@Component(service = InfoItemRenderer.class)
 public class ProductCardInfoItemRenderer
 	implements InfoItemRenderer<CPDefinition> {
 
@@ -112,13 +110,13 @@ public class ProductCardInfoItemRenderer
 			long groupId, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
+		long accountEntryId = 0;
+
 		AccountEntry accountEntry =
 			_commerceAccountHelper.getCurrentAccountEntry(
 				_commerceChannelLocalService.
 					getCommerceChannelGroupIdBySiteGroupId(groupId),
 				httpServletRequest);
-
-		long accountEntryId = 0;
 
 		if (accountEntry != null) {
 			accountEntryId = accountEntry.getAccountEntryId();

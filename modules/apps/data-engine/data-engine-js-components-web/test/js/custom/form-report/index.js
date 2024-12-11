@@ -9,8 +9,7 @@ import React from 'react';
 import FormReport from '../../../../src/main/resources/META-INF/resources/js/custom/form-report';
 
 const props = {
-	data:
-		'{"field1":{"type":"radio","values":{"option1":2,"option2":1}},"field2":{"type":"radio","values":{"option1":2,"option2":1}}}',
+	data: '{"field1":{"type":"radio","values":{"option1":2,"option2":1}},"field2":{"type":"radio","values":{"option1":2,"option2":1}}}',
 	fields: [
 		{
 			label: 'Field 1',
@@ -29,7 +28,21 @@ const props = {
 };
 
 describe('FormReport', () => {
-	afterEach(cleanup);
+	const {ResizeObserver} = window;
+
+	beforeAll(() => {
+		delete window.ResizeObserver;
+		window.ResizeObserver = jest.fn().mockImplementation(() => ({
+			disconnect: jest.fn(),
+			observe: jest.fn(),
+			unobserve: jest.fn(),
+		}));
+	});
+
+	afterAll(() => {
+		cleanup();
+		window.ResizeObserver = ResizeObserver;
+	});
 
 	it('renders a card for each field', () => {
 		const {container} = render(<FormReport {...props} />);

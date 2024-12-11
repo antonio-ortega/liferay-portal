@@ -115,9 +115,9 @@
 											<liferay-ui:message key="this-database-is-useful-for-development-and-demo'ing-purposes" />
 										</c:when>
 										<c:otherwise>
-											<h4>
+											<div class="h4">
 												<liferay-ui:message key="configured-database" />
-											</h4>
+											</div>
 
 											<dl class="database-values dl-horizontal">
 												<c:choose>
@@ -293,21 +293,21 @@
 
 						databaseSelector.on(
 							'focus',
-							function() {
+							function () {
 								addSampleData.removeAttribute('disabled');
 							}
 						);
 
 						jdbcDefaultURL.on(
 							'focus',
-							function() {
+							function () {
 								addSampleData.removeAttribute('disabled');
 							}
 						);
 
 						jdbcDefaultUserName.on(
 							'focus',
-							function() {
+							function () {
 								addSampleData.removeAttribute('disabled');
 							}
 						);
@@ -320,7 +320,7 @@
 							defaultDatabaseOptionsLink.on('click', A.bind(toggleDatabaseOptions, null, true));
 						}
 
-						var onChangeDatabaseSelector = function() {
+						var onChangeDatabaseSelector = function () {
 							var index = databaseSelector.get('selectedIndex');
 
 							var selectedOption = databaseSelector.get('options').item(index);
@@ -354,7 +354,7 @@
 							connectionMessages.html('<div class="alert alert-danger"><span class="alert-indicator"><svg aria-hidden="true" class="lexicon-icon lexicon-icon-exclamation-full"><use xlink:href="<%= themeDisplay.getPathThemeSpritemap() %>#exclamation-full"></use></svg></span><strong class="lead"><liferay-ui:message key="error-colon" /></strong>' + message + '</div>');
 						};
 
-						var startInstall = function() {
+						var startInstall = function () {
 							connectionMessages.empty();
 
 							loadingMask.show();
@@ -399,7 +399,7 @@
 										}
 									}
 								).catch(
-									function() {
+									function () {
 										loadingMask.hide();
 
 										updateMessage('<%= UnicodeLanguageUtil.get(request, "an-unexpected-error-occurred-while-connecting-to-the-database") %>');
@@ -476,7 +476,7 @@
 		</div>
 	</div>
 
-	<footer id="footer" role="contentinfo">
+	<footer id="footer">
 		<div class="container">
 			<div class="row">
 				<div class="col-md-12 text-center text-md-left">

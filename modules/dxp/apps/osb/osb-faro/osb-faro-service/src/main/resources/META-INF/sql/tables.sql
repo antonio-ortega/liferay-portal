@@ -55,6 +55,7 @@ create table OSBFaro_FaroProject (
 	accountName VARCHAR(75) null,
 	corpProjectName VARCHAR(75) null,
 	corpProjectUuid VARCHAR(75) null,
+	dataSourceConnected BOOLEAN,
 	ipAddresses STRING null,
 	incidentReportEmailAddresses STRING null,
 	lastAccessTime LONG,
@@ -63,6 +64,7 @@ create table OSBFaro_FaroProject (
 	services STRING null,
 	state_ VARCHAR(75) null,
 	subscription STRING null,
+	subscriptionModifiedTime LONG,
 	timeZoneId VARCHAR(75) null,
 	weDeployKey VARCHAR(75) null
 );

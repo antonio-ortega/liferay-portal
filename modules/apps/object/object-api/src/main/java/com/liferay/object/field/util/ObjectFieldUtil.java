@@ -20,6 +20,8 @@ import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.service.ObjectFieldLocalServiceUtil;
 import com.liferay.object.service.ObjectFieldSettingLocalServiceUtil;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -128,11 +130,11 @@ public class ObjectFieldUtil {
 		objectField.setIndexedLanguageId(indexedLanguageId);
 		objectField.setLabelMap(LocalizedMapUtil.getLocalizedMap(label));
 		objectField.setName(name);
-		objectField.setObjectFieldSettings(objectFieldSettings);
 		objectField.setReadOnly(readOnly);
 		objectField.setReadOnlyConditionExpression(readOnlyConditionExpression);
 		objectField.setRequired(required);
 		objectField.setSystem(system);
+		objectField.setObjectFieldSettings(objectFieldSettings);
 
 		return objectField;
 	}
@@ -172,6 +174,12 @@ public class ObjectFieldUtil {
 			false, false);
 	}
 
+	public static String getCounterName(ObjectField objectField) {
+		return StringBundler.concat(
+			"object.field.auto.increment#", objectField.getCompanyId(),
+			StringPool.POUND, objectField.getObjectFieldId());
+	}
+
 	public static String getDateTimePattern(String value) {
 		if (value.length() == 10) {
 			return "yyyy-MM-dd";
@@ -185,14 +193,24 @@ public class ObjectFieldUtil {
 		else if (value.length() == 21) {
 			return "yyyy-MM-dd HH:mm:ss.S";
 		}
-		else if ((value.length() == 23) && (value.charAt(10) == 'T')) {
-			return "yyyy-MM-dd'T'HH:mm:ss.SSS";
+		else if (value.length() == 23) {
+			if (value.charAt(10) == 'T') {
+				return "yyyy-MM-dd'T'HH:mm:ss.SSS";
+			}
+
+			return "yyyy-MM-dd HH:mm:ss.SSS";
 		}
 		else if ((value.length() == 24) && (value.charAt(10) == 'T')) {
 			return "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 		}
+		else if ((value.length() == 27) && (value.charAt(26) == 'M')) {
+			return "dd-MMM-yyyy hh:mm:ss.SSS a";
+		}
 		else if ((value.length() == 28) && (value.charAt(23) == '+')) {
 			return "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+		}
+		else if (value.length() == 28) {
+			return "EEE MMM dd HH:mm:ss zzz yyyy";
 		}
 
 		return DateUtil.ISO_8601_PATTERN;
@@ -234,7 +252,7 @@ public class ObjectFieldUtil {
 				existingValues.put(
 					objectField.getName(),
 					ObjectFieldSettingUtil.getDefaultValueAsString(
-						null, objectField.getObjectFieldId(),
+						null, objectField,
 						ObjectFieldSettingLocalServiceUtil.getService(), null));
 			}
 

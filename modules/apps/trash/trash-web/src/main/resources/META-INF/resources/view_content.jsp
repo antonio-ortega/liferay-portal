@@ -76,22 +76,22 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 								<liferay-ui:search-container-column-text
 									colspan="<%= 2 %>"
 								>
-									<h5>
+									<div class="h5">
 										<aui:a href="<%= rowURL %>">
 											<%= HtmlUtil.escape(curTrashRenderer.getTitle(locale)) %>
 										</aui:a>
-									</h5>
+									</div>
 
-									<h6 class="text-default">
+									<div class="h6 text-default">
 										<liferay-ui:message key="type" /> <%= ResourceActionsUtil.getModelResource(locale, curTrashRenderer.getClassName()) %>
-									</h6>
+									</div>
 								</liferay-ui:search-container-column-text>
 
 								<liferay-ui:search-container-column-text>
 									<clay:dropdown-actions
 										aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 										dropdownItems="<%= trashDisplayContext.getTrashViewContentActionDropdownItems(modelClassName, curTrashedModel.getTrashEntryClassPK()) %>"
-										propsTransformer="js/EntriesPropsTransformer"
+										propsTransformer="{EntriesPropsTransformer} from trash-web"
 									/>
 								</liferay-ui:search-container-column-text>
 							</c:when>
@@ -100,7 +100,7 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 									<c:when test="<%= !curTrashHandler.isContainerModel() %>">
 										<liferay-ui:search-container-column-text>
 											<clay:vertical-card
-												propsTransformer="js/EntriesPropsTransformer"
+												propsTransformer="{EntriesPropsTransformer} from trash-web"
 												verticalCard="<%= new TrashContentVerticalCard(curTrashedModel, curTrashRenderer, liferayPortletResponse, renderRequest, rowURL) %>"
 											/>
 										</liferay-ui:search-container-column-text>
@@ -114,7 +114,7 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 
 											<clay:horizontal-card
 												horizontalCard="<%= new TrashContentHorizontalCard(curTrashedModel, curTrashRenderer, liferayPortletResponse, renderRequest, rowURL) %>"
-												propsTransformer="js/EntriesPropsTransformer"
+												propsTransformer="{EntriesPropsTransformer} from trash-web"
 											/>
 										</liferay-ui:search-container-column-text>
 									</c:otherwise>
@@ -134,7 +134,7 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 									<clay:dropdown-actions
 										aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 										dropdownItems="<%= trashDisplayContext.getTrashViewContentActionDropdownItems(modelClassName, curTrashedModel.getTrashEntryClassPK()) %>"
-										propsTransformer="js/EntriesPropsTransformer"
+										propsTransformer="{EntriesPropsTransformer} from trash-web"
 									/>
 								</liferay-ui:search-container-column-text>
 							</c:when>

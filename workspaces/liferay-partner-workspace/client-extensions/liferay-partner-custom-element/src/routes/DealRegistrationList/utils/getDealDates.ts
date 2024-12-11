@@ -7,7 +7,7 @@ import {DealRegistrationColumnKey} from '../../../common/enums/dealRegistrationC
 import {customFormatDateOptions} from '../../../common/utils/constants/customFormatDateOptions';
 import getDateCustomFormat from '../../../common/utils/getDateCustomFormat';
 
-export default function getDealDates(startDate?: string) {
+export default function getDealDates(startDate?: string, dateCreated?: string) {
 	if (startDate) {
 		const startDateCustomFormat = getDateCustomFormat(
 			startDate,
@@ -15,7 +15,9 @@ export default function getDealDates(startDate?: string) {
 		);
 
 		return {
-			[DealRegistrationColumnKey.DATE_SUBMITTED]: startDateCustomFormat,
+			[DealRegistrationColumnKey.DEAL_DATE_SUBMITTED]:
+				startDateCustomFormat,
+			[DealRegistrationColumnKey.DATE_CREATED]: dateCreated,
 		};
 	}
 }

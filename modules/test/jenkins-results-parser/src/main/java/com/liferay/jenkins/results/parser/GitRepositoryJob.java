@@ -59,7 +59,9 @@ public abstract class GitRepositoryJob extends BaseJob {
 		jsonObject = super.getJSONObject();
 
 		jsonObject.put("branch", _getBranchJSONObject());
-		jsonObject.put("git_repository_dir", gitRepositoryDir);
+		jsonObject.put(
+			"git_repository_dir",
+			JenkinsResultsParserUtil.getCanonicalPath(gitRepositoryDir));
 		jsonObject.put("upstream_branch_name", _upstreamBranchName);
 
 		return jsonObject;
@@ -97,6 +99,17 @@ public abstract class GitRepositoryJob extends BaseJob {
 
 			if (matcher.find()) {
 				upstreamBranchName = matcher.group("upstreamBranchName");
+			}
+		}
+
+		if (upstreamBranchName.equals("release")) {
+			String githubUpstreamBranchName = System.getenv(
+				"GITHUB_UPSTREAM_BRANCH_NAME");
+
+			if (!JenkinsResultsParserUtil.isNullOrEmpty(
+					githubUpstreamBranchName)) {
+
+				upstreamBranchName = githubUpstreamBranchName;
 			}
 		}
 

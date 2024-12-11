@@ -64,6 +64,10 @@ public abstract class BaseTemplateUpgradeProcess extends UpgradeProcess {
 	private String _replaceDeprecatedClass(
 		Pattern emptyAssignPattern, String template) {
 
+		if (template == null) {
+			return StringPool.BLANK;
+		}
+
 		Pattern deprecatedClassPattern = _getDeprecatedClassPattern();
 
 		if (deprecatedClassPattern != null) {
@@ -96,21 +100,29 @@ public abstract class BaseTemplateUpgradeProcess extends UpgradeProcess {
 	private void _upgradeDDMTemplates() throws Exception {
 		try (PreparedStatement selectPreparedStatement =
 				connection.prepareStatement(
-					"select templateId, script from DDMTemplate");
+					"select ctCollectionId, templateId, script from " +
+						"DDMTemplate");
 			PreparedStatement updatePreparedStatement =
 				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
 					connection,
-					"update DDMTemplate set script = ? where templateId = ?")) {
+					"update DDMTemplate set script = ? where ctCollectionId " +
+						"= ? and templateId = ?")) {
 
 			try (ResultSet resultSet = selectPreparedStatement.executeQuery()) {
 				while (resultSet.next()) {
+					if (resultSet.getString("script") == null) {
+						continue;
+					}
+
 					updatePreparedStatement.setString(
 						1,
 						_replaceDeprecatedClass(
 							Pattern.compile("\\<\\#assign\\s*\\/?\\>"),
 							resultSet.getString("script")));
 					updatePreparedStatement.setLong(
-						2, resultSet.getLong("templateId"));
+						2, resultSet.getLong("ctCollectionId"));
+					updatePreparedStatement.setLong(
+						3, resultSet.getLong("templateId"));
 
 					updatePreparedStatement.addBatch();
 				}

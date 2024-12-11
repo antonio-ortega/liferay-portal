@@ -12,10 +12,13 @@ import {fetch} from 'frontend-js-web';
 import React, {useContext, useRef, useState} from 'react';
 
 import {CHANNEL_RESOURCE_ENDPOINT} from '../../utilities/constants';
+import {CURRENT_ORDER_UPDATED} from '../../utilities/eventsDefinitions';
 import {addToCart} from '../add_to_cart/data';
 import InfiniteScroller from '../infinite_scroller/InfiniteScroller';
 import MiniCartContext from './MiniCartContext';
 import {getCorrectedQuantity} from './util/index';
+
+const CART_QUICK_ADD_NAMESPACE = 'cartQuickAdd_';
 
 const getSearchSKUsURL = (page, search, accountId, channelId) => {
 	const url = new URL(
@@ -196,8 +199,17 @@ export default function CartQuickAdd() {
 		);
 
 		if (!unavailableSKU) {
-			addToCart(readySKUs, cartId, channel, accountId)
-				.then(() => {})
+			addToCart(
+				readySKUs,
+				cartId,
+				channel,
+				accountId,
+				null,
+				CART_QUICK_ADD_NAMESPACE
+			)
+				.then((cart) => {
+					Liferay.fire(CURRENT_ORDER_UPDATED, {order: cart});
+				})
 				.catch((error) => {
 					Liferay.Util.openToast({
 						message:
@@ -325,9 +337,8 @@ export default function CartQuickAdd() {
 							setSelectedSKUs(newSKUs);
 						}}
 						onPaste={(event) => {
-							const pastedText = event.clipboardData.getData(
-								'Text'
-							);
+							const pastedText =
+								event.clipboardData.getData('Text');
 
 							event.preventDefault();
 
@@ -351,7 +362,7 @@ export default function CartQuickAdd() {
 								{quantityError
 									? Liferay.Language.get(
 											'please-enter-a-valid-quantity'
-									  )
+										)
 									: Liferay.Language.get('select-from-list')}
 							</ClayForm.FeedbackItem>
 						</ClayForm.FeedbackGroup>
@@ -360,6 +371,7 @@ export default function CartQuickAdd() {
 
 				<ClayInput.GroupItem shrink>
 					<ClayButtonWithIcon
+						data-qa-id="quickAddToCartButton"
 						disabled={!selectedSKUs.length || quickAddToCartError}
 						onClick={handleAddToCartClick}
 						symbol="shopping-cart"

@@ -67,9 +67,9 @@ public class CPOptionCategoryLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPOptionCategory addCPOptionCategory(
-			long userId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, double priority, String key,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			double priority, String key, ServiceContext serviceContext)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
@@ -83,6 +83,7 @@ public class CPOptionCategoryLocalServiceImpl
 		CPOptionCategory cpOptionCategory = cpOptionCategoryPersistence.create(
 			cpOptionCategoryId);
 
+		cpOptionCategory.setExternalReferenceCode(externalReferenceCode);
 		cpOptionCategory.setCompanyId(user.getCompanyId());
 		cpOptionCategory.setUserId(user.getUserId());
 		cpOptionCategory.setUserName(user.getFullName());
@@ -99,6 +100,37 @@ public class CPOptionCategoryLocalServiceImpl
 			cpOptionCategory, serviceContext);
 
 		return cpOptionCategory;
+	}
+
+	@Override
+	public CPOptionCategory addOrUpdateCPOptionCategory(
+			String externalReferenceCode, long userId, long cpOptionCategoryId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			double priority, String key, ServiceContext serviceContext)
+		throws PortalException {
+
+		if (Validator.isNotNull(externalReferenceCode)) {
+			CPOptionCategory cpOptionCategory =
+				cpOptionCategoryPersistence.fetchByERC_C(
+					externalReferenceCode, serviceContext.getCompanyId());
+
+			if ((cpOptionCategory == null) && (cpOptionCategoryId > 0)) {
+				cpOptionCategory =
+					cpOptionCategoryPersistence.fetchByPrimaryKey(
+						cpOptionCategoryId);
+			}
+
+			if (cpOptionCategory != null) {
+				return cpOptionCategoryLocalService.updateCPOptionCategory(
+					externalReferenceCode,
+					cpOptionCategory.getCPOptionCategoryId(), titleMap,
+					descriptionMap, priority, key);
+			}
+		}
+
+		return cpOptionCategoryLocalService.addCPOptionCategory(
+			externalReferenceCode, userId, titleMap, descriptionMap, priority,
+			key, serviceContext);
 	}
 
 	@Override
@@ -211,8 +243,9 @@ public class CPOptionCategoryLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPOptionCategory updateCPOptionCategory(
-			long cpOptionCategoryId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, double priority, String key)
+			String externalReferenceCode, long cpOptionCategoryId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			double priority, String key)
 		throws PortalException {
 
 		CPOptionCategory cpOptionCategory =
@@ -224,6 +257,7 @@ public class CPOptionCategoryLocalServiceImpl
 			cpOptionCategory.getCPOptionCategoryId(),
 			cpOptionCategory.getCompanyId(), key);
 
+		cpOptionCategory.setExternalReferenceCode(externalReferenceCode);
 		cpOptionCategory.setTitleMap(titleMap);
 		cpOptionCategory.setDescriptionMap(descriptionMap);
 		cpOptionCategory.setPriority(priority);

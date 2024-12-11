@@ -1,5 +1,7 @@
 /* eslint-disable @liferay/portal/no-global-fetch */
+
 /* eslint-disable radix */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -26,15 +28,15 @@ function setRequestStatusHandler() {
 	const requestStatusHandler = document.querySelector(
 		'.requestStatusHandler div div div div div input'
 	);
-	requestStatusHandler.setAttribute('value', 'Awaiting Approval On Evp');
+	requestStatusHandler.setAttribute('value', 'Awaiting Approval On EVP');
 
 	const requestStatus = document.querySelector('[name="requestStatus"]');
-	requestStatus.setAttribute('value', 'awaitingApprovalOnEvp');
+	requestStatus.setAttribute('value', 'awaitingApprovalOnEVP');
 
 	const requestStatusLabel = document.querySelector(
 		'[name="requestStatus-label"]'
 	);
-	requestStatusLabel.setAttribute('value', 'Awaiting Approval On Evp');
+	requestStatusLabel.setAttribute('value', 'Awaiting Approval On EVP');
 }
 setRequestStatusHandler();
 
@@ -540,7 +542,7 @@ function getRequestEditFormValues() {
 	];
 
 	if (!evpRequestEditForm) {
-		return console.error('Evp Form not found');
+		return console.error('EVP Form not found');
 	}
 
 	const requestEditForm = {};
@@ -577,9 +579,8 @@ if (editPage) {
 				if (formInputLabel) {
 					if (formInput.name === FIELD.ORGANIZATIONID) {
 						getEVPRequestOrganization(keyValue).then((response) => {
-							const organizationInput = document.querySelector(
-								'#selected-org'
-							);
+							const organizationInput =
+								document.querySelector('#selected-org');
 
 							organizationInput.value = `${response['id']} - ${response['organizationName']} - ${response['taxId']} `;
 							organizationInput.setAttribute(
@@ -637,7 +638,7 @@ if (editPage) {
 
 		const requestEditForm = getRequestEditFormValues();
 		requestEditForm.requestStatus = {
-			key: 'awaitingApprovalOnEvp',
+			key: 'awaitingApprovalOnEVP',
 			name: 'Awaiting Approval On EVP',
 		};
 

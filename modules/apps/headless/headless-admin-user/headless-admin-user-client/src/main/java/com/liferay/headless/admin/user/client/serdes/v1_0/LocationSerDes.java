@@ -58,6 +58,20 @@ public class LocationSerDes {
 			sb.append("\"");
 		}
 
+		if (location.getAddressCountryCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"addressCountryCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(location.getAddressCountryCode()));
+
+			sb.append("\"");
+		}
+
 		if (location.getAddressCountry_i18n() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -78,6 +92,20 @@ public class LocationSerDes {
 			sb.append("\"");
 
 			sb.append(_escape(location.getAddressRegion()));
+
+			sb.append("\"");
+		}
+
+		if (location.getAddressRegionCode() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"addressRegionCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(location.getAddressRegionCode()));
 
 			sb.append("\"");
 		}
@@ -118,6 +146,15 @@ public class LocationSerDes {
 				"addressCountry", String.valueOf(location.getAddressCountry()));
 		}
 
+		if (location.getAddressCountryCode() == null) {
+			map.put("addressCountryCode", null);
+		}
+		else {
+			map.put(
+				"addressCountryCode",
+				String.valueOf(location.getAddressCountryCode()));
+		}
+
 		if (location.getAddressCountry_i18n() == null) {
 			map.put("addressCountry_i18n", null);
 		}
@@ -133,6 +170,15 @@ public class LocationSerDes {
 		else {
 			map.put(
 				"addressRegion", String.valueOf(location.getAddressRegion()));
+		}
+
+		if (location.getAddressRegionCode() == null) {
+			map.put("addressRegionCode", null);
+		}
+		else {
+			map.put(
+				"addressRegionCode",
+				String.valueOf(location.getAddressRegionCode()));
 		}
 
 		if (location.getId() == null) {
@@ -158,6 +204,34 @@ public class LocationSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "addressCountry")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "addressCountryCode")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "addressCountry_i18n")) {
+
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "addressRegion")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "addressRegionCode")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			Location location, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -168,17 +242,29 @@ public class LocationSerDes {
 				}
 			}
 			else if (Objects.equals(
+						jsonParserFieldName, "addressCountryCode")) {
+
+				if (jsonParserFieldValue != null) {
+					location.setAddressCountryCode(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
 						jsonParserFieldName, "addressCountry_i18n")) {
 
 				if (jsonParserFieldValue != null) {
 					location.setAddressCountry_i18n(
-						(Map)LocationSerDes.toMap(
-							(String)jsonParserFieldValue));
+						(Map<String, String>)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "addressRegion")) {
 				if (jsonParserFieldValue != null) {
 					location.setAddressRegion((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "addressRegionCode")) {
+				if (jsonParserFieldValue != null) {
+					location.setAddressRegionCode((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "id")) {
@@ -218,36 +304,7 @@ public class LocationSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -257,6 +314,38 @@ public class LocationSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

@@ -4,12 +4,13 @@
  */
 
 import RelativeTime from '@yaireo/relative-time';
+import React from 'react';
 
 import {Ticket} from '../types';
 
 const relativeTime = new RelativeTime();
 
-const defaultTickets = [
+const DEFAULT_TICKETS = [
 	`Ticket #1234 closed with status "Resolved" by administrator`,
 	`Ticket #4566 closed with status "Won't fix" by administrator`,
 ];
@@ -18,11 +19,11 @@ type Props = {
 	tickets: Ticket[];
 };
 
-const DisplayTickets: React.FC<Props> = ({tickets}) => {
+const DisplayTickets = ({tickets}: Props) => {
 	if (!tickets.length) {
 		return (
 			<>
-				{defaultTickets.map((defaultTicket, index) => (
+				{DEFAULT_TICKETS.map((defaultTicket, index) => (
 					<li key={index}>{defaultTicket}</li>
 				))}
 			</>
@@ -70,10 +71,10 @@ const DisplayTickets: React.FC<Props> = ({tickets}) => {
 	);
 };
 
-const RecentActivity: React.FC<Props> = ({tickets}) => {
+const RecentActivity = ({tickets}: Props) => {
 	return (
-		<div className="col pr-0">
-			<div className="bg-light my-3 p-3 w-100">
+		<div className="col px-0">
+			<div className="bg-neutral-1 my-3 p-3 w-100">
 				<h2>Recent Activity</h2>
 
 				<ul>

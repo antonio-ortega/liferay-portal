@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.util.LRUMap;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.sql.Connection;
@@ -65,6 +66,11 @@ import org.osgi.service.component.annotations.Reference;
 public class CTClosureFactoryImpl implements CTClosureFactory {
 
 	@Override
+	public void clearCache(long ctCollectionId) {
+		_ctClosuresMap.remove(ctCollectionId);
+	}
+
+	@Override
 	public CTClosure create(long ctCollectionId) {
 		return create(ctCollectionId, Collections.emptySet());
 	}
@@ -76,34 +82,44 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 
 	@Override
 	public CTClosure create(long ctCollectionId, Set<Long> classNameIds) {
-		Map<Long, TableReferenceInfo<?>> combinedTableReferenceInfos;
+		Map<Set<Long>, CTClosure> ctClosures = _ctClosuresMap.computeIfAbsent(
+			ctCollectionId, key -> new LRUMap<>(5));
+
+		CTClosure ctClosure = ctClosures.get(classNameIds);
+
+		if (ctClosure != null) {
+			return ctClosure;
+		}
+
+		Map<Long, TableReferenceInfo<?>> combinedTableReferenceInfos = null;
 
 		if (classNameIds.isEmpty()) {
 			combinedTableReferenceInfos =
 				_tableReferenceDefinitionManager.
 					getCombinedTableReferenceInfos();
-
-			return new CTClosureImpl(
-				ctCollectionId,
-				_buildClosureMap(
-					ctCollectionId, Collections.emptySet(),
-					combinedTableReferenceInfos));
+		}
+		else {
+			combinedTableReferenceInfos =
+				_tableReferenceDefinitionManager.getCombinedTableReferenceInfos(
+					classNameIds);
 		}
 
-		combinedTableReferenceInfos =
-			_tableReferenceDefinitionManager.getCombinedTableReferenceInfos(
-				classNameIds);
-
-		return new CTClosureImpl(
+		ctClosure = new CTClosureImpl(
 			ctCollectionId,
 			_buildClosureMap(
 				ctCollectionId, classNameIds, combinedTableReferenceInfos));
+
+		ctClosures.put(classNameIds, ctClosure);
+
+		return ctClosure;
 	}
 
 	private Map<Node, Collection<Node>> _buildClosureMap(
 		long ctCollectionId, Set<Long> classNameIds,
 		Map<Long, TableReferenceInfo<?>> combinedTableReferenceInfos) {
 
+		CTCollection ctCollection = _ctCollectionPersistence.fetchByPrimaryKey(
+			ctCollectionId);
 		Map<Long, List<Long>> map = new LinkedHashMap<>();
 		List<Node> nodes = new ArrayList<>();
 
@@ -146,9 +162,6 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 				combinedTableReferenceInfos.get(childClassNameId);
 
 			if (childTableReferenceInfo == null) {
-				CTCollection ctCollection =
-					_ctCollectionPersistence.fetchByPrimaryKey(ctCollectionId);
-
 				if ((ctCollection != null) &&
 					(ctCollection.getStatus() !=
 						WorkflowConstants.STATUS_DRAFT) &&
@@ -411,17 +424,17 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 						Column<?, Long> ctCollectionIdColumn =
 							parentTable.getColumn("ctCollectionId", Long.class);
 
-						if ((ctCollectionIdColumn != null) &&
-							ctCollectionIdColumn.isPrimaryKey()) {
+						if ((ctCollectionIdColumn == null) ||
+							!ctCollectionIdColumn.isPrimaryKey()) {
 
-							return ctCollectionIdColumn.eq(
-								CTConstants.CT_COLLECTION_ID_PRODUCTION
-							).or(
-								ctCollectionIdColumn.eq(ctCollectionId)
-							).withParentheses();
+							return null;
 						}
 
-						return null;
+						return ctCollectionIdColumn.eq(
+							CTConstants.CT_COLLECTION_ID_PRODUCTION
+						).or(
+							ctCollectionIdColumn.eq(ctCollectionId)
+						).withParentheses();
 					}
 				));
 
@@ -439,6 +452,8 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 	private Map<Node, Collection<Node>> _getNodeMap(
 		List<Node> nodes, Map<Node, Collection<Edge>> edgeMap) {
 
+		Map<Node, Collection<Node>> nodeMap = new HashMap<>();
+
 		Deque<Edge> backtraceEdges = new LinkedList<>();
 		Set<Edge> cyclingEdges = new HashSet<>();
 		Set<Edge> resolvedEdges = new HashSet<>();
@@ -449,8 +464,6 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 					edge, edgeMap, backtraceEdges, cyclingEdges, resolvedEdges);
 			}
 		}
-
-		Map<Node, Collection<Node>> nodeMap = new HashMap<>();
 
 		for (Edge edge : resolvedEdges) {
 			Collection<Node> children = nodeMap.computeIfAbsent(
@@ -495,6 +508,9 @@ public class CTClosureFactoryImpl implements CTClosureFactory {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CTClosureFactoryImpl.class);
+
+	private final Map<Long, Map<Set<Long>, CTClosure>> _ctClosuresMap =
+		new LRUMap<>(10);
 
 	@Reference
 	private CTCollectionPersistence _ctCollectionPersistence;

@@ -50,10 +50,12 @@ const Wrapper = ({
 	);
 };
 
-const DefaultRenderer: React.FC<{
-	options: DefaultRendererOptions;
-	value: DefaultRendererValue;
-}> = ({options, value}) => {
+const DefaultRenderer: React.FC<
+	{children?: React.ReactNode | undefined} & {
+		options: DefaultRendererOptions;
+		value: DefaultRendererValue;
+	}
+> = ({options, value}) => {
 	if (
 		typeof value === 'number' ||
 		typeof value === 'string' ||
@@ -90,6 +92,18 @@ const DefaultRenderer: React.FC<{
 
 	if (value.label) {
 		return <Wrapper options={options}>{value.label}</Wrapper>;
+	}
+
+	if (
+		typeof value === 'object' &&
+		Array.isArray(value) &&
+		typeof value[0] !== 'object'
+	) {
+		return <Wrapper options={options}>{value.join(', ')}</Wrapper>;
+	}
+
+	if (typeof value === 'object') {
+		return <Wrapper options={options}>{JSON.stringify(value)}</Wrapper>;
 	}
 
 	return null;

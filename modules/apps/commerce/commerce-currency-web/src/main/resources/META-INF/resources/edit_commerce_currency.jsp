@@ -8,10 +8,6 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String redirect = ParamUtil.getString(request, "redirect");
-
-String backURL = ParamUtil.getString(request, "backURL", redirect);
-
 CommerceCurrenciesDisplayContext commerceCurrenciesDisplayContext = (CommerceCurrenciesDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 CommerceCurrency commerceCurrency = commerceCurrenciesDisplayContext.getCommerceCurrency();
@@ -20,31 +16,28 @@ CommerceCurrency primaryCommerceCurrency = commerceCurrenciesDisplayContext.getP
 String roundingMode = BeanParamUtil.getString(commerceCurrency, request, "roundingMode", commerceCurrenciesDisplayContext.getDefaultRoundingMode());
 
 boolean primary = BeanParamUtil.getBoolean(commerceCurrency, request, "primary");
-
-if (Validator.isNotNull(backURL)) {
-	portletDisplay.setShowBackIcon(true);
-	portletDisplay.setURLBack(backURL);
-}
 %>
 
 <portlet:actionURL name="/commerce_currency/edit_commerce_currency" var="editCommerceCurrencyActionURL" />
 
 <aui:form action="<%= editCommerceCurrencyActionURL %>" cssClass="container mt-4" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveCommerceCurrency();" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (commerceCurrency == null) ? Constants.ADD : Constants.UPDATE %>" />
-	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="commerceCurrencyId" type="hidden" value="<%= (commerceCurrency == null) ? 0 : commerceCurrency.getCommerceCurrencyId() %>" />
 
 	<div class="lfr-form-content">
 		<liferay-ui:error exception="<%= CommerceCurrencyCodeException.class %>" message="please-enter-a-valid-code" />
 		<liferay-ui:error exception="<%= CommerceCurrencyFractionDigitsException.class %>" message="the-decimal-place-bounds-are-invalid" />
 		<liferay-ui:error exception="<%= CommerceCurrencyNameException.class %>" message="please-enter-a-valid-name" />
+		<liferay-ui:error exception="<%= DuplicateCommerceCurrencyException.class %>" message="please-enter-a-unique-code" />
 
 		<div class="mb-4 sheet">
 			<div class="panel-group panel-group-flush">
 				<aui:fieldset>
 					<aui:input bean="<%= commerceCurrency %>" model="<%= CommerceCurrency.class %>" name="name" />
 
-					<aui:input bean="<%= commerceCurrency %>" model="<%= CommerceCurrency.class %>" name="code" readonly="<%= (commerceCurrency != null) ? true : false %>" type="text" />
+					<aui:input bean="<%= commerceCurrency %>" model="<%= CommerceCurrency.class %>" name="code" readonly="<%= (commerceCurrency != null) ? true : false %>" type="text">
+						<aui:validator name="required" />
+					</aui:input>
 
 					<aui:input bean="<%= commerceCurrency %>" model="<%= CommerceCurrency.class %>" name="symbol" />
 
@@ -97,7 +90,8 @@ if (Validator.isNotNull(backURL)) {
 
 				<aui:button-row>
 					<aui:button cssClass="btn-lg" type="submit" />
-					<aui:button cssClass="btn-lg" href="<%= redirect %>" type="cancel" />
+
+					<aui:button cssClass="btn-lg" href="<%= portletDisplay.getURLBack() %>" type="cancel" />
 				</aui:button-row>
 			</div>
 		</div>

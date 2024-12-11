@@ -5,9 +5,7 @@
 
 import React from 'react';
 
-import '../css/main.scss';
-
-export default function App() {
+export function App() {
 	return (
 		<div>
 			<h2>A11y Test Portlet</h2>
@@ -21,6 +19,7 @@ export default function App() {
 			<hr />
 
 			<div>
+
 				{/* This is where your code goes... */}
 
 				<h3>Minor Violation: ID Attribute Values Must Be Unique</h3>

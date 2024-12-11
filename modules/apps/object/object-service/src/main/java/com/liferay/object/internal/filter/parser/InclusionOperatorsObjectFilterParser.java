@@ -17,18 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.osgi.service.component.annotations.Component;
-
 /**
  * @author Feliphe Marinho
  */
-@Component(
-	property = {
-		"filter.type=" + ObjectFilterConstants.TYPE_EXCLUDES,
-		"filter.type=" + ObjectFilterConstants.TYPE_INCLUDES
-	},
-	service = ObjectFilterParser.class
-)
 public class InclusionOperatorsObjectFilterParser
 	implements ObjectFilterParser {
 
@@ -50,12 +41,12 @@ public class InclusionOperatorsObjectFilterParser
 			for (Object value : (Object[])map.get("in")) {
 				values.add(
 					StringBundler.concat(
-						"(x ", excludes ? "ne " : "eq ", value, ")"));
+						"(status ", excludes ? "ne " : "eq ", value, ")"));
 			}
 
 			return StringBundler.concat(
-				"(", objectFilter.getFilterBy(), "/any(x:",
-				StringUtil.merge(values, excludes ? " and " : " or "), "))");
+				"(", StringUtil.merge(values, excludes ? " and " : " or "),
+				")");
 		}
 
 		for (Object value : (Object[])map.get("in")) {

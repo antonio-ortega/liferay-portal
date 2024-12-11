@@ -11,25 +11,26 @@ import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.document.library.kernel.exception.NoSuchFolderException;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.processor.AudioProcessorUtil;
+import com.liferay.document.library.kernel.processor.ImageProcessorUtil;
+import com.liferay.document.library.kernel.processor.PDFProcessor;
+import com.liferay.document.library.kernel.processor.PDFProcessorUtil;
+import com.liferay.document.library.kernel.processor.VideoProcessor;
+import com.liferay.document.library.kernel.processor.VideoProcessorUtil;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
-import com.liferay.document.library.kernel.util.AudioProcessorUtil;
 import com.liferay.document.library.kernel.util.DLUtil;
-import com.liferay.document.library.kernel.util.ImageProcessorUtil;
-import com.liferay.document.library.kernel.util.PDFProcessor;
-import com.liferay.document.library.kernel.util.PDFProcessorUtil;
-import com.liferay.document.library.kernel.util.VideoProcessor;
-import com.liferay.document.library.kernel.util.VideoProcessorUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.image.ImageToolUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.image.ImageBag;
-import com.liferay.portal.kernel.image.ImageToolUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.login.AuthLoginGroupSettingsUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageBus;
@@ -43,6 +44,7 @@ import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationTable;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
@@ -89,6 +91,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.trash.helper.TrashHelper;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.DigesterUtil;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -100,7 +103,6 @@ import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ReleaseInfo;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLCodec;
@@ -262,13 +264,16 @@ public class WebServerServlet extends HttpServlet {
 		}
 
 		try {
+			MessageBus messageBus = _messageBusSnapshot.get();
+
+			Message message = new Message();
+
 			if (user == null) {
 				user = _getUser(httpServletRequest);
 			}
 
-			Message message = new Message();
-
 			message.put("companyId", user.getCompanyId());
+
 			message.put(
 				"objectDefinitionExternalReferenceCode",
 				objectDefinitionExternalReferenceCode);
@@ -278,7 +283,7 @@ public class WebServerServlet extends HttpServlet {
 					httpServletRequest, "objectEntryExternalReferenceCode"));
 			message.put("userId", user.getUserId());
 
-			_messageBus.sendMessage(
+			messageBus.sendMessage(
 				DestinationNames.OBJECT_ENTRY_ATTACHMENT_DOWNLOAD, message);
 		}
 		catch (Exception exception) {
@@ -329,8 +334,7 @@ public class WebServerServlet extends HttpServlet {
 			PrincipalThreadLocal.setPassword(
 				PortalUtil.getUserPassword(httpServletRequest));
 
-			PermissionThreadLocal.setPermissionChecker(
-				PermissionCheckerFactoryUtil.create(user));
+			PermissionThreadLocal.getPermissionChecker(user, true);
 
 			_checkResourcePermission(httpServletRequest, httpServletResponse);
 
@@ -551,7 +555,7 @@ public class WebServerServlet extends HttpServlet {
 
 				try {
 					FileEntry fileEntry =
-						DLAppServiceUtil.getFileEntryByUuidAndGroupId(
+						DLAppLocalServiceUtil.getFileEntryByUuidAndGroupId(
 							uuid, groupId);
 
 					image = convertFileEntry(igSmallImage, fileEntry);
@@ -581,7 +585,7 @@ public class WebServerServlet extends HttpServlet {
 
 		byte[] textObj = image.getTextObj();
 
-		if ((textObj == null) || (textObj.length == 0)) {
+		if (ArrayUtil.isEmpty(textObj)) {
 			throw new NoSuchFileException();
 		}
 
@@ -660,7 +664,10 @@ public class WebServerServlet extends HttpServlet {
 			}
 		}
 
-		if (_userFileUploadsSettings.isImageCheckToken() && (imageId > 0)) {
+		UserFileUploadsSettings userFileUploadsSettings =
+			_userFileUploadsSettingsSnapshot.get();
+
+		if (userFileUploadsSettings.isImageCheckToken() && (imageId > 0)) {
 			String imageIdToken = ParamUtil.getString(
 				httpServletRequest, "img_id_token");
 
@@ -778,8 +785,11 @@ public class WebServerServlet extends HttpServlet {
 			return null;
 		}
 
-		int usersImageMaxHeight = _userFileUploadsSettings.getImageMaxHeight();
-		int usersImageMaxWidth = _userFileUploadsSettings.getImageMaxWidth();
+		UserFileUploadsSettings userFileUploadsSettings =
+			_userFileUploadsSettingsSnapshot.get();
+
+		int usersImageMaxHeight = userFileUploadsSettings.getImageMaxHeight();
+		int usersImageMaxWidth = userFileUploadsSettings.getImageMaxWidth();
 
 		if (((usersImageMaxHeight > 0) &&
 			 (image.getHeight() > usersImageMaxHeight)) ||
@@ -916,7 +926,7 @@ public class WebServerServlet extends HttpServlet {
 			String name = pathArray[i];
 
 			try {
-				Folder folder = DLAppServiceUtil.getFolder(
+				Folder folder = DLAppLocalServiceUtil.getFolder(
 					groupId, folderId, URLCodec.decodeURL(name));
 
 				folderId = folder.getFolderId();
@@ -1234,7 +1244,7 @@ public class WebServerServlet extends HttpServlet {
 			long folderId, String title)
 		throws Exception {
 
-		FileEntry fileEntry = DLAppServiceUtil.getFileEntry(
+		FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(
 			groupId, folderId, title);
 
 		httpServletResponse.addHeader(
@@ -1325,7 +1335,9 @@ public class WebServerServlet extends HttpServlet {
 		}
 
 		if (fileEntry.isInTrash()) {
-			fileName = _trashTitleResolver.getOriginalTitle(fileName);
+			TrashHelper trashTitleResolver = _trashTitleResolverSnapshot.get();
+
+			fileName = trashTitleResolver.getOriginalTitle(fileName);
 		}
 
 		httpServletResponse.addHeader(
@@ -1535,7 +1547,10 @@ public class WebServerServlet extends HttpServlet {
 			HttpServletRequest httpServletRequest, String[] pathArray)
 		throws Exception {
 
-		if (_fileEntryFriendlyURLResolver == null) {
+		FileEntryFriendlyURLResolver fileEntryFriendlyURLResolver =
+			_fileEntryFriendlyURLResolverSnapshot.get();
+
+		if (fileEntryFriendlyURLResolver == null) {
 			return null;
 		}
 
@@ -1543,7 +1558,7 @@ public class WebServerServlet extends HttpServlet {
 
 		Group group = _getGroup(user.getCompanyId(), pathArray[1]);
 
-		return _fileEntryFriendlyURLResolver.resolveFriendlyURL(
+		return fileEntryFriendlyURLResolver.resolveFriendlyURL(
 			group.getGroupId(), pathArray[2]);
 	}
 
@@ -1592,9 +1607,23 @@ public class WebServerServlet extends HttpServlet {
 			ModelResourcePermissionRegistryUtil.getModelResourcePermission(
 				FileEntry.class.getName());
 
-		fileEntryModelResourcePermission.check(
-			permissionChecker, fileEntry.getFileEntryId(),
-			_getActionId(httpServletRequest));
+		try {
+			fileEntryModelResourcePermission.check(
+				permissionChecker, fileEntry.getFileEntryId(),
+				_getActionId(httpServletRequest));
+		}
+		catch (PortalException portalException) {
+			User user = permissionChecker.getUser();
+
+			if (user.isGuestUser() &&
+				!AuthLoginGroupSettingsUtil.isPromptEnabled(
+					fileEntry.getGroupId())) {
+
+				throw new NoSuchFileEntryException(portalException);
+			}
+
+			throw portalException;
+		}
 
 		FileVersion fileVersion = fileEntry.getFileVersion();
 
@@ -1795,10 +1824,10 @@ public class WebServerServlet extends HttpServlet {
 		if (pathArray.length == 1) {
 			long fileShortcutId = GetterUtil.getLong(pathArray[0]);
 
-			FileShortcut dlFileShortcut = DLAppServiceUtil.getFileShortcut(
+			FileShortcut dlFileShortcut = DLAppLocalServiceUtil.getFileShortcut(
 				fileShortcutId);
 
-			FileEntry fileEntry = DLAppServiceUtil.getFileEntry(
+			FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(
 				dlFileShortcut.getToFileEntryId());
 
 			_checkFileEntry(fileEntry, httpServletRequest);
@@ -1808,8 +1837,9 @@ public class WebServerServlet extends HttpServlet {
 		else if (pathArray.length == 2) {
 			long groupId = GetterUtil.getLong(pathArray[0]);
 
-			FileEntry fileEntry = DLAppServiceUtil.getFileEntryByUuidAndGroupId(
-				pathArray[1], groupId);
+			FileEntry fileEntry =
+				DLAppLocalServiceUtil.getFileEntryByUuidAndGroupId(
+					pathArray[1], groupId);
 
 			_checkFileEntry(fileEntry, httpServletRequest);
 
@@ -1841,8 +1871,9 @@ public class WebServerServlet extends HttpServlet {
 			}
 
 			try {
-				FileEntry fileEntry = DLAppServiceUtil.getFileEntryByFileName(
-					groupId, folderId, fileName);
+				FileEntry fileEntry =
+					DLAppLocalServiceUtil.getFileEntryByFileName(
+						groupId, folderId, fileName);
 
 				_checkFileEntry(fileEntry, httpServletRequest);
 
@@ -1853,7 +1884,7 @@ public class WebServerServlet extends HttpServlet {
 					_log.debug(noSuchFileEntryException);
 				}
 
-				FileEntry fileEntry = DLAppServiceUtil.getFileEntry(
+				FileEntry fileEntry = DLAppLocalServiceUtil.getFileEntry(
 					groupId, folderId, fileName);
 
 				_checkFileEntry(fileEntry, httpServletRequest);
@@ -1866,8 +1897,9 @@ public class WebServerServlet extends HttpServlet {
 
 			String uuid = pathArray[3];
 
-			FileEntry fileEntry = DLAppServiceUtil.getFileEntryByUuidAndGroupId(
-				uuid, groupId);
+			FileEntry fileEntry =
+				DLAppLocalServiceUtil.getFileEntryByUuidAndGroupId(
+					uuid, groupId);
 
 			_checkFileEntry(fileEntry, httpServletRequest);
 
@@ -1886,7 +1918,8 @@ public class WebServerServlet extends HttpServlet {
 				PortalUtil.getCompanyId(httpServletRequest));
 		}
 
-		return PermissionCheckerFactoryUtil.create(user);
+		return PermissionThreadLocal.getPermissionChecker(
+			user, !user.isGuestUser());
 	}
 
 	private String _getPortletId(
@@ -1928,7 +1961,10 @@ public class WebServerServlet extends HttpServlet {
 			return false;
 		}
 
-		_inactiveRequestHandler.processInactiveRequest(
+		InactiveRequestHandler inactiveRequestHandler =
+			_inactiveRequestHandlerSnapshot.get();
+
+		inactiveRequestHandler.processInactiveRequest(
 			httpServletRequest, httpServletResponse,
 			"this-instance-is-inactive-please-contact-the-administrator");
 
@@ -1956,26 +1992,19 @@ public class WebServerServlet extends HttpServlet {
 
 	private static final Set<String> _acceptRangesMimeTypes = SetUtil.fromArray(
 		PropsValues.WEB_SERVER_SERVLET_ACCEPT_RANGES_MIME_TYPES);
-	private static volatile FileEntryFriendlyURLResolver
-		_fileEntryFriendlyURLResolver =
-			ServiceProxyFactory.newServiceTrackedInstance(
-				FileEntryFriendlyURLResolver.class, WebServerServlet.class,
-				"_fileEntryFriendlyURLResolver", false, true);
-	private static volatile InactiveRequestHandler _inactiveRequestHandler =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			InactiveRequestHandler.class, WebServerServlet.class,
-			"_inactiveRequestHandler", false);
-	private static volatile MessageBus _messageBus =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			MessageBus.class, WebServerServlet.class, "_messageBus", false);
-	private static volatile TrashHelper _trashTitleResolver =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			TrashHelper.class, WebServerServlet.class, "_trashTitleResolver",
-			false);
-	private static volatile UserFileUploadsSettings _userFileUploadsSettings =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			UserFileUploadsSettings.class, WebServerServlet.class,
-			"_userFileUploadsSettings", false);
+	private static final Snapshot<FileEntryFriendlyURLResolver>
+		_fileEntryFriendlyURLResolverSnapshot = new Snapshot<>(
+			WebServerServlet.class, FileEntryFriendlyURLResolver.class);
+	private static final Snapshot<InactiveRequestHandler>
+		_inactiveRequestHandlerSnapshot = new Snapshot<>(
+			WebServerServlet.class, InactiveRequestHandler.class);
+	private static final Snapshot<MessageBus> _messageBusSnapshot =
+		new Snapshot<>(WebServerServlet.class, MessageBus.class);
+	private static final Snapshot<TrashHelper> _trashTitleResolverSnapshot =
+		new Snapshot<>(WebServerServlet.class, TrashHelper.class);
+	private static final Snapshot<UserFileUploadsSettings>
+		_userFileUploadsSettingsSnapshot = new Snapshot<>(
+			WebServerServlet.class, UserFileUploadsSettings.class);
 
 	private boolean _lastModified = true;
 	private TemplateResource _templateResource;

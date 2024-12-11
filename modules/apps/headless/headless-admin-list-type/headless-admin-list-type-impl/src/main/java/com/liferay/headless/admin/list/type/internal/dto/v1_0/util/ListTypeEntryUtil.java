@@ -7,6 +7,7 @@ package com.liferay.headless.admin.list.type.internal.dto.v1_0.util;
 
 import com.liferay.headless.admin.list.type.dto.v1_0.ListTypeEntry;
 import com.liferay.list.type.service.ListTypeEntryLocalService;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.util.Locale;
@@ -27,8 +28,14 @@ public class ListTypeEntryUtil {
 		serviceBuilderListTypeEntry.setExternalReferenceCode(
 			listTypeEntry.getExternalReferenceCode());
 		serviceBuilderListTypeEntry.setKey(listTypeEntry.getKey());
-		serviceBuilderListTypeEntry.setNameMap(
-			LocalizedMapUtil.getLocalizedMap(listTypeEntry.getName_i18n()));
+
+		Map<Locale, String> nameMap = LocalizedMapUtil.getLocalizedMap(
+			listTypeEntry.getName_i18n());
+
+		nameMap.computeIfAbsent(
+			LocaleUtil.getSiteDefault(), key -> listTypeEntry.getName());
+
+		serviceBuilderListTypeEntry.setNameMap(nameMap);
 
 		return serviceBuilderListTypeEntry;
 	}
@@ -39,20 +46,21 @@ public class ListTypeEntryUtil {
 
 		ListTypeEntry listTypeEntry = new ListTypeEntry() {
 			{
-				dateCreated = serviceBuilderListTypeEntry.getCreateDate();
-				dateModified = serviceBuilderListTypeEntry.getModifiedDate();
-				externalReferenceCode =
-					serviceBuilderListTypeEntry.getExternalReferenceCode();
-				id = serviceBuilderListTypeEntry.getListTypeEntryId();
-				key = serviceBuilderListTypeEntry.getKey();
-				name = serviceBuilderListTypeEntry.getName(locale);
-				name_i18n = LocalizedMapUtil.getI18nMap(
-					serviceBuilderListTypeEntry.getNameMap());
-				type = serviceBuilderListTypeEntry.getType();
+				setDateCreated(serviceBuilderListTypeEntry::getCreateDate);
+				setDateModified(serviceBuilderListTypeEntry::getModifiedDate);
+				setExternalReferenceCode(
+					serviceBuilderListTypeEntry::getExternalReferenceCode);
+				setId(serviceBuilderListTypeEntry::getListTypeEntryId);
+				setKey(serviceBuilderListTypeEntry::getKey);
+				setName(() -> serviceBuilderListTypeEntry.getName(locale));
+				setName_i18n(
+					() -> LocalizedMapUtil.getI18nMap(
+						serviceBuilderListTypeEntry.getNameMap()));
+				setType(serviceBuilderListTypeEntry::getType);
 			}
 		};
 
-		listTypeEntry.setActions(actions);
+		listTypeEntry.setActions(() -> actions);
 
 		return listTypeEntry;
 	}

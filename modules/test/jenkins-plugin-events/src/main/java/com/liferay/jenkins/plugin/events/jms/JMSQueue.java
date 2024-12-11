@@ -5,6 +5,8 @@
 
 package com.liferay.jenkins.plugin.events.jms;
 
+import com.liferay.jenkins.plugin.events.JenkinsEventsUtil;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -34,7 +36,8 @@ public class JMSQueue {
 				_jmsBrokerURL);
 
 			try {
-				_connection = connectionFactory.createConnection();
+				_connection = connectionFactory.createConnection(
+					_userName, _userPassword);
 
 				_connection.start();
 
@@ -95,6 +98,13 @@ public class JMSQueue {
 
 			TextMessage textMessage = _session.createTextMessage();
 
+			String masterHostname = JenkinsEventsUtil.getMasterHostname();
+
+			if (masterHostname != null) {
+				textMessage.setStringProperty(
+					"jenkinsMasterName", masterHostname);
+			}
+
 			textMessage.setText(message);
 
 			messageProducer.send(textMessage);
@@ -112,6 +122,14 @@ public class JMSQueue {
 		_queueName = queueName;
 	}
 
+	public void setUserName(String userName) {
+		_userName = userName;
+	}
+
+	public void setUserPassword(String userPassword) {
+		_userPassword = userPassword;
+	}
+
 	public void subscribe(MessageListener messageListener) {
 		connect();
 
@@ -121,13 +139,23 @@ public class JMSQueue {
 					_messageConsumer.close();
 				}
 
-				_messageConsumer = _session.createConsumer(_queue);
+				String masterHostname = JenkinsEventsUtil.getMasterHostname();
+
+				if (masterHostname != null) {
+					_messageConsumer = _session.createConsumer(
+						_queue,
+						"(jenkinsMasterName = '" + masterHostname + "')");
+				}
+				else {
+					_messageConsumer = _session.createConsumer(_queue);
+				}
 
 				_messageConsumer.setMessageListener(messageListener);
 
 				if (_log.isInfoEnabled()) {
 					_log.info(
-						"Subscribed to " + _jmsBrokerURL + " at " + _queueName);
+						"Subscribed to " + _jmsBrokerURL + " at " + _queueName +
+							" for " + masterHostname);
 				}
 			}
 			catch (JMSException jmsException) {
@@ -172,5 +200,7 @@ public class JMSQueue {
 	private Queue _queue;
 	private String _queueName;
 	private Session _session;
+	private String _userName;
+	private String _userPassword;
 
 }

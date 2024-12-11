@@ -3,28 +3,30 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayLabel from '@clayui/label';
+import ClayLink from '@clayui/link';
 import {
 	FrontendDataSet,
 
 	// @ts-ignore
 
 } from '@liferay/frontend-data-set-web';
-import {API, getLocalizableLabel} from '@liferay/object-js-components-web';
 import classNames from 'classnames';
-import React, {useEffect, useState} from 'react';
+import {openToast, sessionStorage} from 'frontend-js-web';
+import React, {useEffect, useMemo, useState} from 'react';
 
-import {
-	IFDSTableProps,
-	defaultDataSetProps,
-	fdsItem,
-	formatActionURL,
-} from '../../utils/fds';
-import {ModalDeletionNotAllowed} from '../ModalDeletionNotAllowed';
+import {defaultFDSDataSetProps, formatActionURL} from '../../utils/fds';
+import {getEditObjectRelationshipURL} from '../../utils/url';
+import LabelRenderer from '../LabelRenderer';
+import ModalDeletionNotAllowed from '../ModalDeletionNotAllowed';
 import {deleteRelationship} from '../ViewObjectDefinitions/objectDefinitionUtil';
 import {ModalAddObjectRelationship} from './ModalAddObjectRelationship';
 import {ModalDeleteObjectRelationship} from './ModalDeleteObjectRelationship';
 
+import type {FDSItem, IFDSTableProps} from '../../utils/fds';
+
 interface ItemData {
+	edge?: boolean;
 	id: number;
 	reverse: boolean;
 	system?: boolean;
@@ -34,9 +36,51 @@ interface RelationshipsProps extends IFDSTableProps {
 	baseResourceURL: string;
 	isApproved: boolean;
 	objectDefinitionExternalReferenceCode: string;
+	objectDefinitionId: string;
 	objectRelationshipTypes: string[];
 	parameterRequired: boolean;
 }
+
+const tableFields = [
+	{
+		contentRenderer: 'ObjectFieldLabelDataRenderer',
+		expand: false,
+		fieldName: 'label',
+		label: Liferay.Language.get('label'),
+		localizeLabel: true,
+		sortable: true,
+	},
+	{
+		expand: false,
+		fieldName: 'type',
+		label: Liferay.Language.get('type'),
+		localizeLabel: true,
+		sortable: false,
+	},
+	{
+		contentRenderer: 'ObjectFieldHierarchyDataRenderer',
+		expand: false,
+		fieldName: 'hierarchy',
+		label: Liferay.Language.get('hierarchy'),
+		localizeLabel: true,
+		sortable: false,
+	},
+	{
+		expand: false,
+		fieldName: 'objectDefinitionName2',
+		label: Liferay.Language.get('related-object'),
+		localizeLabel: true,
+		sortable: false,
+	},
+	{
+		contentRenderer: 'ObjectRelationshipSourceDataRenderer',
+		expand: false,
+		fieldName: 'source',
+		label: Liferay.Language.get('source'),
+		localizeLabel: true,
+		sortable: false,
+	},
+];
 
 function ObjectFieldHierarchyDataRenderer({itemData}: {itemData: ItemData}) {
 	return (
@@ -50,6 +94,24 @@ function ObjectFieldHierarchyDataRenderer({itemData}: {itemData: ItemData}) {
 				? Liferay.Language.get('child')
 				: Liferay.Language.get('parent')}
 		</strong>
+	);
+}
+
+function ObjectRelationshipInheritanceDataRenderer({
+	itemData,
+}: {
+	itemData: ItemData;
+}) {
+	return (
+		<ClayLabel
+			className={classNames('label-inverse-secondary', {
+				'label-inverse-info': itemData.edge,
+			})}
+		>
+			{itemData.edge
+				? Liferay.Language.get('inherited')
+				: Liferay.Language.get('standard')}
+		</ClayLabel>
 	);
 }
 
@@ -81,70 +143,62 @@ export default function Relationships({
 	isApproved,
 	items,
 	objectDefinitionExternalReferenceCode,
+	objectDefinitionId,
 	parameterRequired,
 	style,
 	url,
 }: RelationshipsProps) {
-	const [creationLanguageId, setCreationLanguageId] = useState<
-		Liferay.Language.Locale
-	>();
-
-	const [
-		objectRelationship,
-		setObjectRelationship,
-	] = useState<ObjectRelationship | null>();
+	const [objectRelationship, setObjectRelationship] =
+		useState<ObjectRelationship | null>();
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [showDeletionNotAllowedModal, setShowDeletionNotAllowedModal] =
+		useState(false);
 
-	const [
-		selectedObjectRelationship,
-		setSelectedObjectRelationship,
-	] = useState<ObjectRelationship>();
+	const fields = useMemo(() => {
+		const updatedTableFields = [...tableFields];
 
-	const [
-		showDelitionNotAllowedModal,
-		setShowDelitionNotAllowedModal,
-	] = useState(false);
+		if (Liferay.FeatureFlags['LPS-187142']) {
+			const inheritanceField = {
+				contentRenderer: 'ObjectRelationshipInheritanceDataRenderer',
+				expand: false,
+				fieldName: 'relationshipInheritance',
+				label: Liferay.Language.get('permission-inheritance'),
+				localizeLabel: true,
+				sortable: false,
+			};
 
-	useEffect(() => {
-		const makeFetch = async () => {
-			const objectDefinition = await API.getObjectDefinitionByExternalReferenceCode(
-				objectDefinitionExternalReferenceCode
-			);
+			updatedTableFields.splice(4, 0, inheritanceField);
+		}
 
-			setCreationLanguageId(objectDefinition.defaultLanguageId);
-		};
-
-		makeFetch();
-	}, [objectDefinitionExternalReferenceCode]);
+		return updatedTableFields;
+	}, []);
 
 	function ObjectFieldLabelDataRenderer({
 		itemData,
 		openSidePanel,
 		value,
-	}: fdsItem<ItemData>) {
-		const handleEditField = () => {
-			openSidePanel({
-				url: formatActionURL(url, itemData.id),
-			});
-		};
-
+	}: FDSItem<ItemData>) {
 		return (
-			<div className="table-list-title">
-				<a href="#" onClick={handleEditField}>
-					{value}
-				</a>
-			</div>
+			<LabelRenderer
+				onClick={() => {
+					openSidePanel({
+						url: formatActionURL(url, itemData.id),
+					});
+				}}
+				value={value}
+			/>
 		);
 	}
 
-	const dataSetProps = {
-		...defaultDataSetProps,
+	const frontendDataSetProps = {
+		...defaultFDSDataSetProps,
 		apiURL,
 		creationMenu,
 		customDataRenderers: {
 			ObjectFieldHierarchyDataRenderer,
 			ObjectFieldLabelDataRenderer,
+			ObjectRelationshipInheritanceDataRenderer,
 			ObjectRelationshipSourceDataRenderer,
 		},
 		formName,
@@ -161,8 +215,7 @@ export default function Relationships({
 		}) {
 			if (action.data.id === 'deleteObjectRelationship') {
 				if (itemData.edge && Liferay.FeatureFlags['LPS-187142']) {
-					setSelectedObjectRelationship(itemData);
-					setShowDelitionNotAllowedModal(true);
+					setShowDeletionNotAllowedModal(true);
 
 					return;
 				}
@@ -172,8 +225,7 @@ export default function Relationships({
 					setShowDeleteModal(true);
 				}
 				else {
-					deleteRelationship(itemData.id);
-					setTimeout(() => window.location.reload(), 1500);
+					deleteRelationship(itemData.id, true);
 				}
 			}
 		},
@@ -186,55 +238,72 @@ export default function Relationships({
 				label: 'Table',
 				name: 'table',
 				schema: {
-					fields: [
-						{
-							contentRenderer: 'ObjectFieldLabelDataRenderer',
-							expand: false,
-							fieldName: 'label',
-							label: Liferay.Language.get('label'),
-							localizeLabel: true,
-							sortable: true,
-						},
-						{
-							expand: false,
-							fieldName: 'objectDefinitionName2',
-							label: Liferay.Language.get('related-object'),
-							localizeLabel: true,
-							sortable: false,
-						},
-						{
-							expand: false,
-							fieldName: 'type',
-							label: Liferay.Language.get('type'),
-							localizeLabel: true,
-							sortable: false,
-						},
-						{
-							contentRenderer: 'ObjectFieldHierarchyDataRenderer',
-							expand: false,
-							fieldName: 'hierarchy',
-							label: Liferay.Language.get('hierarchy'),
-							localizeLabel: true,
-							sortable: false,
-						},
-						{
-							contentRenderer:
-								'ObjectRelationshipSourceDataRenderer',
-							expand: false,
-							fieldName: 'source',
-							label: Liferay.Language.get('source'),
-							localizeLabel: true,
-							sortable: false,
-						},
-					],
+					fields,
 				},
 				thumbnail: 'table',
 			},
 		],
 	};
 
+	const onAfterAddObjectRelationship = async ({
+		objectDefinitionId1,
+	}: ObjectRelationship) => {
+		const toastMessage = Liferay.Language.get(
+			'relationship-was-created-successfully'
+		);
+
+		let toastAction;
+
+		if (objectDefinitionId !== objectDefinitionId1.toString()) {
+			toastAction = {
+				linkHref: await getEditObjectRelationshipURL(
+					baseResourceURL,
+					objectDefinitionId1
+				),
+				linkLabel: Liferay.Language.get('view-relationship'),
+			};
+		}
+
+		sessionStorage.setItem(
+			'addObjectRelationshipSuccessToast',
+			JSON.stringify({
+				toastAction,
+				toastMessage,
+			}),
+			sessionStorage.TYPES.NECESSARY
+		);
+	};
+
 	useEffect(() => {
 		Liferay.on('addObjectRelationship', () => setShowAddModal(true));
+
+		const addObjectRelationshipSuccessToast = sessionStorage.getItem(
+			'addObjectRelationshipSuccessToast',
+			sessionStorage.TYPES.NECESSARY
+		);
+
+		if (addObjectRelationshipSuccessToast) {
+			const {toastAction, toastMessage} = JSON.parse(
+				addObjectRelationshipSuccessToast
+			);
+
+			openToast({
+				message: toastMessage,
+				toastProps: toastAction && {
+					actions: (
+						<ClayLink
+							decoration="underline"
+							href={toastAction.linkHref}
+							style={{color: 'inherit'}}
+						>
+							{toastAction.linkLabel}
+						</ClayLink>
+					),
+				},
+			});
+
+			sessionStorage.removeItem('addObjectRelationshipSuccessToast');
+		}
 
 		return () => {
 			Liferay.detach('addObjectRelationship');
@@ -243,7 +312,7 @@ export default function Relationships({
 
 	return (
 		<>
-			<FrontendDataSet {...dataSetProps} />
+			<FrontendDataSet {...frontendDataSetProps} />
 
 			{showAddModal && (
 				<ModalAddObjectRelationship
@@ -253,6 +322,7 @@ export default function Relationships({
 						objectDefinitionExternalReferenceCode
 					}
 					objectRelationshipParameterRequired={parameterRequired}
+					onAfterAddObjectRelationship={onAfterAddObjectRelationship}
 				/>
 			)}
 
@@ -266,17 +336,21 @@ export default function Relationships({
 				/>
 			)}
 
-			{showDelitionNotAllowedModal &&
+			{showDeletionNotAllowedModal &&
 				Liferay.FeatureFlags['LPS-187142'] && (
 					<ModalDeletionNotAllowed
-						onVisibilityChange={() =>
-							setShowDelitionNotAllowedModal(false)
+						content={
+							<span
+								dangerouslySetInnerHTML={{
+									__html: Liferay.Language.get(
+										'you-cannot-delete-a-relationship-with-inheritance-enabled.-disable-inheritance-before-deleting-the-relationship'
+									),
+								}}
+							/>
 						}
-						selectedItemLabel={getLocalizableLabel(
-							creationLanguageId as Liferay.Language.Locale,
-							selectedObjectRelationship?.label,
-							selectedObjectRelationship?.name
-						)}
+						onModalClose={() =>
+							setShowDeletionNotAllowedModal(false)
+						}
 					/>
 				)}
 		</>

@@ -1,6 +1,7 @@
 definition {
 
-	macro activateAccessibilityMenu {
+	@summary = "It activates the Accessibility Menu by Instance Settings or System Settings"
+	macro activateAccessibilityMenu(portlet) {
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
@@ -19,7 +20,8 @@ definition {
 		}
 	}
 
-	macro activateAccessibilityMenuBySiteSettings {
+	@summary = "It activates the Accessibility Menu By Site Settings"
+	macro activateAccessibilityMenuBySiteSettings(siteURLKey = null) {
 		Site.openSiteSettingsAdmin(siteURLKey = ${siteURLKey});
 
 		Click(
@@ -35,7 +37,8 @@ definition {
 		SystemSettings.saveConfiguration();
 	}
 
-	macro assertCanAccessAccessibilityMenuModal {
+	@summary = "It asserts that the user can access the Accessibility Menu modal"
+	macro assertCanAccessAccessibilityMenuModal() {
 		KeyPress(
 			locator1 = "//body",
 			value1 = "\TAB");
@@ -55,7 +58,23 @@ definition {
 			locator1 = "AccessibilityMenu#MODAL_TITLE");
 	}
 
-	macro assertCannotAccessAccessibilityMenuModal {
+	@summary = "It asserts that the user can access the Accessibility Menu modal by the user's profile menu"
+	macro assertCanAccessAccessibilityMenuModalByTheUserProfileMenu() {
+		Navigator.openURL();
+
+		UserBar.gotoDropdown();
+
+		ClickNoError(
+			key_dropdownItem = "Accessibility Menu",
+			locator1 = "UserBar#USER_AVATAR_DROPDOWN_ITEM");
+
+		AssertElementPresent(
+			key_modal_title = "Accessibility Menu",
+			locator1 = "AccessibilityMenu#MODAL_TITLE");
+	}
+
+	@summary = "It asserts that the user cannot access the Accessibility Menu"
+	macro assertCannotAccessAccessibilityMenuModal() {
 		KeyPress(
 			locator1 = "//body",
 			value1 = "\TAB");
@@ -70,7 +89,19 @@ definition {
 			locator1 = "AccessibilityMenu#QUICK_LINK");
 	}
 
-	macro deactivateAccessibilityMenu {
+	@summary = "It asserts that the user cannot access the Accessibility Menu by the user's profile menu"
+	macro assertCannotAccessAccessibilityMenuModalByTheUserProfileMenu() {
+		Navigator.openURL();
+
+		UserBar.gotoDropdown();
+
+		AssertElementNotPresent(
+			key_modal_title = "Accessibility Menu",
+			locator1 = "AccessibilityMenu#MODAL_TITLE");
+	}
+
+	@summary = "It deactivates the Accessibility Menu"
+	macro deactivateAccessibilityMenu(portlet = null) {
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
@@ -89,7 +120,8 @@ definition {
 		}
 	}
 
-	macro deactivateAccessibilityMenuBySiteSettings {
+	@summary = "It deactivates the Accessibility Menu by site settings"
+	macro deactivateAccessibilityMenuBySiteSettings() {
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
 			portlet = "Site Settings");
@@ -105,7 +137,8 @@ definition {
 		SystemSettings.saveConfiguration();
 	}
 
-	macro disableSpecificOption {
+	@summary = "It disables a specific option in the Accessibility menu"
+	macro disableSpecificOption(key_toggleSwitchLabel = null) {
 		AccessibilityMenu.openAccessibilityMenu();
 
 		Uncheck.uncheckToggleSwitch(
@@ -113,7 +146,8 @@ definition {
 			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 	}
 
-	macro enableSpecificOption {
+	@summary = "Default summary"
+	macro enableSpecificOption(key_toggleSwitchLabel = null) {
 		AccessibilityMenu.openAccessibilityMenu();
 
 		Check.checkToggleSwitch(
@@ -121,7 +155,8 @@ definition {
 			locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
 	}
 
-	macro goToAccessibilityMenuQuickLink {
+	@summary = "Keyboard focus on the 2nd quick link item, Accessibility Menu"
+	macro goToAccessibilityMenuQuickLink() {
 		KeyPress(
 			locator1 = "//body",
 			value1 = "\TAB");
@@ -132,15 +167,9 @@ definition {
 			value1 = "\TAB");
 	}
 
-	macro openAccessibilityMenu {
-		KeyPress(
-			locator1 = "//body",
-			value1 = "\TAB");
-
-		KeyPress(
-			key_link = "Skip to Main Content",
-			locator1 = "AccessibilityMenu#QUICK_LINK",
-			value1 = "\TAB");
+	@summary = "It opens the Accessibility Menu"
+	macro openAccessibilityMenu() {
+		AccessibilityMenu.goToAccessibilityMenuQuickLink();
 
 		KeyPress(
 			key_link = "Open Accessibility Menu",
@@ -148,7 +177,8 @@ definition {
 			value1 = "\ENTER");
 	}
 
-	macro resetDefaultValues {
+	@summary = "It resets the Accessibility Menu option to its default options"
+	macro resetDefaultValues(portlet = null) {
 		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",

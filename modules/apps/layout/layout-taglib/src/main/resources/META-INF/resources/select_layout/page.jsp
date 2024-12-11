@@ -8,12 +8,12 @@
 <%@ include file="/select_layout/init.jsp" %>
 
 <liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/select_layout/css/tree.css") %>" rel="stylesheet" type="text/css" />
+	<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/select_layout/css/tree.css") %>' rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <div>
 	<react:component
-		module="select_layout/js/SelectLayout"
+		module="{SelectLayout} from layout-taglib"
 		props='<%= (Map<String, Object>)request.getAttribute("liferay-layout:select-layout:data") %>'
 	/>
 </div>

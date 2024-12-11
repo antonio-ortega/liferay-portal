@@ -120,7 +120,7 @@ public interface CPContentHelper {
 		throws PortalException;
 
 	public List<CPMedia> getImages(
-			long cpDefinitionId, ThemeDisplay themeDisplay)
+			long cpDefinitionId, boolean gallery, ThemeDisplay themeDisplay)
 		throws PortalException;
 
 	public String getImageURL(FileEntry fileEntry, ThemeDisplay themeDisplay)
@@ -159,14 +159,14 @@ public interface CPContentHelper {
 	public boolean hasCPDefinitionSpecificationOptionValues(long cpDefinitionId)
 		throws PortalException;
 
-	public boolean hasDirectReplacement(CPSku cpSku) throws Exception;
-
 	public boolean hasMultipleCPSkus(CPCatalogEntry cpCatalogEntry)
 		throws Exception;
 
 	public boolean hasReplacement(
 			CPSku cpSku, HttpServletRequest httpServletRequest)
 		throws Exception;
+
+	public boolean isDirectReplacement(CPSku cpSku) throws Exception;
 
 	public boolean isInWishList(
 			CPSku cpSku, CPCatalogEntry cpCatalogEntry,

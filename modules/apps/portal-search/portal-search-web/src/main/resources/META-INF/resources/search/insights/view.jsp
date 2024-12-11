@@ -9,7 +9,8 @@
 
 <%@ taglib uri="http://java.sun.com/portlet_2_0" prefix="portlet" %>
 
-<%@ taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %><%@
+taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
@@ -28,13 +29,11 @@ String insightsRequestId = liferayPortletResponse.getNamespace() + "insightsRequ
 String insightsResponseId = liferayPortletResponse.getNamespace() + "insightsResponse";
 %>
 
-<style>
-	<!--
-	.full-query {
+<aui:style>
+	/* .full-query {
 		font-size: x-small;
-	}
-	-->
-</style>
+	} */
+</aui:style>
 
 <c:choose>
 	<c:when test="<%= !Validator.isBlank(searchInsightsDisplayContext.getHelpMessage()) %>">
@@ -50,7 +49,7 @@ String insightsResponseId = liferayPortletResponse.getNamespace() + "insightsRes
 						"selector", ".search-insights-copy-to-clipboard"
 					).build()
 				%>'
-				module="js/utils/initialize_clipboard"
+				module="{InitializeClipboard} from portal-search-web"
 			/>
 
 			<liferay-ui:panel-container
@@ -85,7 +84,7 @@ String insightsResponseId = liferayPortletResponse.getNamespace() + "insightsRes
 								"id", insightsRequestId
 							).build()
 						%>'
-						module="js/components/CodeMirrorTextArea"
+						module="{CodeMirrorTextArea} from portal-search-web"
 					/>
 				</liferay-ui:panel>
 
@@ -115,7 +114,7 @@ String insightsResponseId = liferayPortletResponse.getNamespace() + "insightsRes
 								"id", insightsResponseId
 							).build()
 						%>'
-						module="js/components/CodeMirrorTextArea"
+						module="{CodeMirrorTextArea} from portal-search-web"
 					/>
 				</liferay-ui:panel>
 			</liferay-ui:panel-container>

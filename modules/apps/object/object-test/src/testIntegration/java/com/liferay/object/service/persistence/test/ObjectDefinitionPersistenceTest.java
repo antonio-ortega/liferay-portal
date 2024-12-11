@@ -151,16 +151,17 @@ public class ObjectDefinitionPersistenceTest {
 
 		newObjectDefinition.setActive(RandomTestUtil.randomBoolean());
 
-		newObjectDefinition.setDBTableName(RandomTestUtil.randomString());
-
-		newObjectDefinition.setLabel(RandomTestUtil.randomString());
-
 		newObjectDefinition.setClassName(RandomTestUtil.randomString());
+
+		newObjectDefinition.setDBTableName(RandomTestUtil.randomString());
 
 		newObjectDefinition.setEnableCategorization(
 			RandomTestUtil.randomBoolean());
 
 		newObjectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
+
+		newObjectDefinition.setEnableIndexSearch(
+			RandomTestUtil.randomBoolean());
 
 		newObjectDefinition.setEnableLocalization(
 			RandomTestUtil.randomBoolean());
@@ -170,6 +171,8 @@ public class ObjectDefinitionPersistenceTest {
 
 		newObjectDefinition.setEnableObjectEntryHistory(
 			RandomTestUtil.randomBoolean());
+
+		newObjectDefinition.setLabel(RandomTestUtil.randomString());
 
 		newObjectDefinition.setModifiable(RandomTestUtil.randomBoolean());
 
@@ -251,20 +254,20 @@ public class ObjectDefinitionPersistenceTest {
 			existingObjectDefinition.isActive(),
 			newObjectDefinition.isActive());
 		Assert.assertEquals(
-			existingObjectDefinition.getDBTableName(),
-			newObjectDefinition.getDBTableName());
-		Assert.assertEquals(
-			existingObjectDefinition.getLabel(),
-			newObjectDefinition.getLabel());
-		Assert.assertEquals(
 			existingObjectDefinition.getClassName(),
 			newObjectDefinition.getClassName());
+		Assert.assertEquals(
+			existingObjectDefinition.getDBTableName(),
+			newObjectDefinition.getDBTableName());
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableCategorization(),
 			newObjectDefinition.isEnableCategorization());
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableComments(),
 			newObjectDefinition.isEnableComments());
+		Assert.assertEquals(
+			existingObjectDefinition.isEnableIndexSearch(),
+			newObjectDefinition.isEnableIndexSearch());
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableLocalization(),
 			newObjectDefinition.isEnableLocalization());
@@ -274,6 +277,9 @@ public class ObjectDefinitionPersistenceTest {
 		Assert.assertEquals(
 			existingObjectDefinition.isEnableObjectEntryHistory(),
 			newObjectDefinition.isEnableObjectEntryHistory());
+		Assert.assertEquals(
+			existingObjectDefinition.getLabel(),
+			newObjectDefinition.getLabel());
 		Assert.assertEquals(
 			existingObjectDefinition.isModifiable(),
 			newObjectDefinition.isModifiable());
@@ -369,10 +375,35 @@ public class ObjectDefinitionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByAccountEntryRestricted() throws Exception {
+		_persistence.countByAccountEntryRestricted(
+			RandomTestUtil.randomBoolean());
+
+		_persistence.countByAccountEntryRestricted(
+			RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountBySystem() throws Exception {
 		_persistence.countBySystem(RandomTestUtil.randomBoolean());
 
 		_persistence.countBySystem(RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByC_U() throws Exception {
+		_persistence.countByC_U(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByC_U(0L, 0L);
+	}
+
+	@Test
+	public void testCountByC_RODI() throws Exception {
+		_persistence.countByC_RODI(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong());
+
+		_persistence.countByC_RODI(0L, 0L);
 	}
 
 	@Test
@@ -479,12 +510,12 @@ public class ObjectDefinitionPersistenceTest {
 			true, "modifiedDate", true, "accountEntryRestrictedObjectFieldId",
 			true, "descriptionObjectFieldId", true, "objectFolderId", true,
 			"rootObjectDefinitionId", true, "titleObjectFieldId", true,
-			"accountEntryRestricted", true, "active", true, "dbTableName", true,
-			"label", true, "className", true, "enableCategorization", true,
-			"enableComments", true, "enableLocalization", true,
+			"accountEntryRestricted", true, "active", true, "className", true,
+			"dbTableName", true, "enableCategorization", true, "enableComments",
+			true, "enableIndexSearch", true, "enableLocalization", true,
 			"enableObjectEntryDraft", true, "enableObjectEntryHistory", true,
-			"modifiable", true, "name", true, "panelAppOrder", true,
-			"panelCategoryKey", true, "pkObjectFieldDBColumnName", true,
+			"label", true, "modifiable", true, "name", true, "panelAppOrder",
+			true, "panelCategoryKey", true, "pkObjectFieldDBColumnName", true,
 			"pkObjectFieldName", true, "pluralLabel", true, "portlet", true,
 			"scope", true, "storageType", true, "system", true, "version", true,
 			"status", true);
@@ -831,16 +862,16 @@ public class ObjectDefinitionPersistenceTest {
 
 		objectDefinition.setActive(RandomTestUtil.randomBoolean());
 
-		objectDefinition.setDBTableName(RandomTestUtil.randomString());
-
-		objectDefinition.setLabel(RandomTestUtil.randomString());
-
 		objectDefinition.setClassName(RandomTestUtil.randomString());
+
+		objectDefinition.setDBTableName(RandomTestUtil.randomString());
 
 		objectDefinition.setEnableCategorization(
 			RandomTestUtil.randomBoolean());
 
 		objectDefinition.setEnableComments(RandomTestUtil.randomBoolean());
+
+		objectDefinition.setEnableIndexSearch(RandomTestUtil.randomBoolean());
 
 		objectDefinition.setEnableLocalization(RandomTestUtil.randomBoolean());
 
@@ -849,6 +880,8 @@ public class ObjectDefinitionPersistenceTest {
 
 		objectDefinition.setEnableObjectEntryHistory(
 			RandomTestUtil.randomBoolean());
+
+		objectDefinition.setLabel(RandomTestUtil.randomString());
 
 		objectDefinition.setModifiable(RandomTestUtil.randomBoolean());
 

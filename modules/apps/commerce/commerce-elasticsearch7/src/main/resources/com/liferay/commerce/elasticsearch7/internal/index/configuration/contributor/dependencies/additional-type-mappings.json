@@ -1,0 +1,166 @@
+{
+	"dynamic_templates": [
+		{
+			"template_commerce_attribute": {
+				"mapping": {
+					"type": "keyword"
+				},
+				"match": "*_VALUES_NAMES",
+				"match_mapping_type": "string"
+			}
+		},
+		{
+			"template_commerce_attribute_ids": {
+				"mapping": {
+					"type": "keyword"
+				},
+				"match": "*_VALUES_IDS",
+				"match_mapping_type": "string"
+			}
+		},
+		{
+			"template_commerce_attribute_id": {
+				"mapping": {
+					"type": "keyword"
+				},
+				"match": "*_VALUE_ID",
+				"match_mapping_type": "string"
+			}
+		},
+		{
+			"template_commerce_specification": {
+				"mapping": {
+					"type": "keyword"
+				},
+				"match": "*_VALUE_NAME",
+				"match_mapping_type": "string"
+			}
+		},
+		{
+			"template_terms_set_required_matches": {
+				"mapping": {
+					"type": "integer"
+				},
+				"match": "*_required_matches",
+				"match_mapping_type": "string"
+			}
+		}
+	],
+	"properties": {
+		"CPConfigurationListId": {
+			"type": "keyword"
+		},
+		"CPConfigurationListIds": {
+			"type": "keyword"
+		},
+		"advanceStatus": {
+			"type": "keyword"
+		},
+		"assetCategoryNames": {
+			"type": "keyword"
+		},
+		"basePrice": {
+			"type": "double"
+		},
+		"commerceAccountGroupIds_required_matches": {
+			"type": "integer"
+		},
+		"commerceAccountId": {
+			"type": "keyword"
+		},
+		"couponCode": {
+			"type": "keyword"
+		},
+		"criterionType_organization_required_matches": {
+			"type": "integer"
+		},
+		"criterionType_role_required_matches": {
+			"type": "integer"
+		},
+		"criterionType_user_group_required_matches": {
+			"type": "integer"
+		},
+		"criterionType_user_required_matches": {
+			"type": "integer"
+		},
+		"entryModelClassName": {
+			"type": "keyword"
+		},
+		"gtin": {
+			"type": "keyword"
+		},
+		"gtins": {
+			"type": "keyword"
+		},
+		"optionsNames": {
+			"type": "keyword"
+		},
+		"orderCreatorEmailAddress": {
+			"type": "keyword"
+		},
+		"orderOrganizationId": {
+			"type": "keyword"
+		},
+		"orderStatus": {
+			"type": "keyword"
+		},
+		"orderTypeId": {
+			"type": "keyword"
+		},
+		"productTypeName": {
+			"type": "keyword"
+		},
+		"replacementCPInstanceUuid": {
+			"type": "keyword"
+		},
+		"replacementCProductId": {
+			"type": "keyword"
+		},
+		"shippable": {
+			"type": "keyword"
+		},
+		"sku": {
+			"analyzer": "keyword_lowercase",
+			"fields": {
+				"1_10_ngram": {
+					"analyzer": "1_10_ngram",
+					"type": "text"
+				},
+				"raw": {
+					"type": "keyword"
+				},
+				"reverse": {
+					"analyzer": "reverse_keyword_lowercase",
+					"type": "text"
+				}
+			},
+			"type": "text"
+		},
+		"skuExternalReferenceCode": {
+			"type": "keyword"
+		},
+		"skus": {
+			"analyzer": "text_whitespace_lowercase",
+			"fields": {
+				"1_10_ngram": {
+					"analyzer": "1_10_ngram",
+					"type": "text"
+				},
+				"reverse": {
+					"analyzer": "reverse_keyword_lowercase",
+					"type": "text"
+				}
+			},
+			"type": "text"
+		},
+		"specificationOptionsIds": {
+			"type": "keyword"
+		},
+		"specificationOptionsNames": {
+			"type": "keyword"
+		},
+		"targetType": {
+			"type": "keyword"
+		}
+	}
+}

@@ -24,6 +24,12 @@ if (group != null) {
 		).buildString());
 	portletDisplay.setURLBackTitle(portletDisplay.getPortletDisplayName());
 
+	Group parentGroup = group.getParentGroup();
+
+	if (parentGroup != null) {
+		portletDisplay.setURLBackTitle(parentGroup.getDescriptiveName(locale));
+	}
+
 	renderResponse.setTitle(group.getDescriptiveName(locale));
 }
 
@@ -32,7 +38,7 @@ SiteAdminManagementToolbarDisplayContext siteAdminManagementToolbarDisplayContex
 
 <clay:management-toolbar
 	managementToolbarDisplayContext="<%= siteAdminManagementToolbarDisplayContext %>"
-	propsTransformer="js/SiteManagementToolbarPropsTransformer"
+	propsTransformer="{SiteManagementToolbarPropsTransformer} from site-admin-web"
 />
 
 <div class="closed sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">

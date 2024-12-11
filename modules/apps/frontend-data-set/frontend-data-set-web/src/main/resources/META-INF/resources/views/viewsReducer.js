@@ -44,6 +44,7 @@ export function viewsReducer(state, {type, value}) {
 		};
 	}
 	else if (type === VIEWS_ACTION_TYPES.DELETE_CUSTOM_VIEW) {
+
 		/* eslint-disable-next-line no-unused-vars */
 		const {[value.id]: unusedVar, ...remainingCustomViews} = customViews;
 
@@ -89,8 +90,8 @@ export function viewsReducer(state, {type, value}) {
 		}
 
 		activeCustomView.activeView.component =
-			getViewComponent(activeCustomView.activeView.contentRenderer) ??
-			getViewComponent(defaultView.activeView.contentRenderer);
+			getViewComponent(activeCustomView.activeView) ??
+			getViewComponent(defaultView.activeView);
 
 		return {
 			...state,
@@ -104,7 +105,7 @@ export function viewsReducer(state, {type, value}) {
 		const activeView = views.find(({name}) => name === value);
 
 		if (activeView) {
-			activeView.component = getViewComponent(activeView.contentRenderer);
+			activeView.component = getViewComponent(activeView);
 		}
 
 		return {
@@ -157,14 +158,14 @@ export function viewsReducer(state, {type, value}) {
 					? {
 							...activeView,
 							component,
-					  }
+						}
 					: activeView,
 			views: views.map((view) =>
 				view.name === name
 					? {
 							...view,
 							component,
-					  }
+						}
 					: view
 			),
 		};

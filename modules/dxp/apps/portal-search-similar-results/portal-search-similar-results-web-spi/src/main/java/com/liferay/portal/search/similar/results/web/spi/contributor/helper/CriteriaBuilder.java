@@ -5,16 +5,25 @@
 
 package com.liferay.portal.search.similar.results.web.spi.contributor.helper;
 
-import org.osgi.annotation.versioning.ProviderType;
-
 /**
  * @author André de Oliveira
  */
-@ProviderType
 public interface CriteriaBuilder {
 
+	/**
+	 * Specifies the className of the similar result.
+	 *
+	 * @param  className The fully qualified class name of the content type.
+	 * @return This {@link CriteriaBuilder} instance.
+	 */
 	public CriteriaBuilder type(String className);
 
+	/**
+	 * Specifies the unique identifier (UID) of the similar result.
+	 *
+	 * @param  uid The unique identifier of the similar result.
+	 * @return This {@link CriteriaBuilder} instance.
+	 */
 	public CriteriaBuilder uid(String uid);
 
 }

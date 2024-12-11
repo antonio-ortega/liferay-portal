@@ -66,7 +66,7 @@ public class DefaultDDMStructureHelperImpl
 
 		Locale locale = _portal.getSiteDefaultLocale(groupId);
 
-		List<Element> structureElements = _getDDMStructures(
+		List<Element> structureElements = _getStructureElements(
 			classLoader, fileName, locale);
 
 		for (Element structureElement : structureElements) {
@@ -101,7 +101,7 @@ public class DefaultDDMStructureHelperImpl
 
 		Locale locale = _portal.getSiteDefaultLocale(groupId);
 
-		List<Element> structureElements = _getDDMStructures(
+		List<Element> structureElements = _getStructureElements(
 			classLoader, fileName, locale);
 
 		for (Element structureElement : structureElements) {
@@ -156,7 +156,7 @@ public class DefaultDDMStructureHelperImpl
 			String dynamicDDMStructureName, Locale locale)
 		throws Exception {
 
-		List<Element> structureElements = _getDDMStructures(
+		List<Element> structureElements = _getStructureElements(
 			classLoader, fileName, locale);
 
 		for (Element structureElement : structureElements) {
@@ -245,8 +245,9 @@ public class DefaultDDMStructureHelperImpl
 			"status", WorkflowConstants.STATUS_APPROVED);
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
-			userId, groupId, DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
-			classNameId, name, nameMap, descriptionMap, ddmForm, ddmFormLayout,
+			null, userId, groupId,
+			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID, classNameId,
+			name, nameMap, descriptionMap, ddmForm, ddmFormLayout,
 			StorageType.DEFAULT.toString(), DDMStructureConstants.TYPE_DEFAULT,
 			serviceContext);
 
@@ -264,7 +265,8 @@ public class DefaultDDMStructureHelperImpl
 				templateElement.elementText("cacheable"));
 
 			_ddmTemplateLocalService.addTemplate(
-				userId, groupId, _portal.getClassNameId(DDMStructure.class),
+				null, userId, groupId,
+				_portal.getClassNameId(DDMStructure.class),
 				ddmStructure.getStructureId(), ddmStructure.getClassNameId(),
 				name, nameMap, null, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY,
 				DDMTemplateConstants.TEMPLATE_MODE_CREATE,
@@ -293,21 +295,6 @@ public class DefaultDDMStructureHelperImpl
 		}
 
 		return _ddm.getDefaultDDMFormLayout(ddmForm);
-	}
-
-	private List<Element> _getDDMStructures(
-			ClassLoader classLoader, String fileName, Locale locale)
-		throws Exception {
-
-		String xml = StringUtil.read(classLoader, fileName);
-
-		xml = StringUtil.replace(xml, "[$LOCALE_DEFAULT$]", locale.toString());
-
-		Document document = UnsecureSAXReaderUtil.read(xml);
-
-		Element rootElement = document.getRootElement();
-
-		return rootElement.elements("structure");
 	}
 
 	private DDMForm _getPopulateDDMForm(
@@ -374,6 +361,21 @@ public class DefaultDDMStructureHelperImpl
 		}
 
 		return localizedValue;
+	}
+
+	private List<Element> _getStructureElements(
+			ClassLoader classLoader, String fileName, Locale locale)
+		throws Exception {
+
+		String xml = StringUtil.read(classLoader, fileName);
+
+		xml = StringUtil.replace(xml, "[$LOCALE_DEFAULT$]", locale.toString());
+
+		Document document = UnsecureSAXReaderUtil.read(xml);
+
+		Element rootElement = document.getRootElement();
+
+		return rootElement.elements("structure");
 	}
 
 	@Reference

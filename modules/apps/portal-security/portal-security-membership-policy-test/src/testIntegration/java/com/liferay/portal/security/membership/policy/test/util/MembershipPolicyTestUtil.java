@@ -100,7 +100,8 @@ public class MembershipPolicyTestUtil {
 		String name = RandomTestUtil.randomString();
 
 		return RoleServiceUtil.addRole(
-			null, 0, name, RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomString(), null, 0, name,
+			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(), type,
 			RandomTestUtil.randomString(),
 			populateServiceContext(Role.class, false));
@@ -241,7 +242,7 @@ public class MembershipPolicyTestUtil {
 
 		if (includeCategorization) {
 			AssetTag tag = AssetTagLocalServiceUtil.addTag(
-				TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
+				null, TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
 				RandomTestUtil.randomString(), new ServiceContext());
 
 			serviceContext.setAssetTagNames(new String[] {tag.getName()});

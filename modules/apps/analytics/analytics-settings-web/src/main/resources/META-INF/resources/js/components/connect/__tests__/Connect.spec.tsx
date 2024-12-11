@@ -11,7 +11,7 @@ import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 
-import {AppContextData, EPageView} from '../../../App';
+import {AppContextData, EPageView} from '../../../index';
 import Connect from '../Connect';
 
 // NOTE: to render properly in the tests, this Component is sligthly different from connect/Connect.tsx
@@ -95,6 +95,7 @@ describe('Connect', () => {
 					liferayAnalyticsURL: '',
 					pageView: EPageView.Default,
 					token: '',
+					wizardMode: false,
 				}}
 			>
 				<Connect title="testConnect" />
@@ -134,6 +135,7 @@ describe('Connect', () => {
 					liferayAnalyticsURL: '',
 					pageView: EPageView.Default,
 					token: '',
+					wizardMode: false,
 				}}
 			>
 				<Connect title="testConnect" />

@@ -10,22 +10,21 @@ import {naNToZero} from '../../../../../common/components/dashboard/utils';
 import formatCurrency from '../../../../../common/components/dashboard/utils/formatCurrency';
 
 interface IProps {
+	currency: string;
 	currentValue: number;
 	total: number;
 	type: ChartTypes;
 }
 
-const Legend = ({currentValue, total, type}: IProps) => {
+const Legend = ({currency, currentValue, total, type}: IProps) => {
 	const leftToTotal =
 		currentValue >= total ? 0 : Math.floor(total - currentValue);
 
 	const formatLeftToTotal = () => {
 		if (leftToTotal) {
-			if (type === ChartTypes.ARR) {
-				return `${formatCurrency(leftToTotal)} more`;
+			if (type !== ChartTypes.ARR) {
+				return `${leftToTotal} more project`;
 			}
-
-			return `${leftToTotal} more project`;
 		}
 
 		return '';
@@ -54,7 +53,11 @@ const Legend = ({currentValue, total, type}: IProps) => {
 			<div>
 				<span className="font-weight-bold mr-1 text-paragraph">
 					{type === ChartTypes.ARR
-						? formatCurrency(currentValue, 'USD', 'lessPrecision')
+						? formatCurrency(
+								currentValue,
+								currency,
+								'lessPrecision'
+							)
 						: currentValue}
 				</span>
 
@@ -63,7 +66,7 @@ const Legend = ({currentValue, total, type}: IProps) => {
 
 					<span>
 						{type === ChartTypes.ARR
-							? formatCurrency(total, 'USD', 'lessPrecision')
+							? formatCurrency(total, currency, 'lessPrecision')
 							: total}
 					</span>
 				</span>
@@ -74,14 +77,19 @@ const Legend = ({currentValue, total, type}: IProps) => {
 
 const MAX_PERCENTAGE = 100;
 
-const LevelProgressBar = ({currentValue, total, type}: IProps) => {
+const LevelProgressBar = ({currency, currentValue, total, type}: IProps) => {
 	const percentage = naNToZero(currentValue / total) * 100;
 	const barPercentage =
 		percentage <= MAX_PERCENTAGE ? percentage : MAX_PERCENTAGE;
 
 	return (
 		<div className="mb-3">
-			<Legend currentValue={currentValue} total={total} type={type} />
+			<Legend
+				currency={currency}
+				currentValue={currentValue}
+				total={total}
+				type={type}
+			/>
 
 			<div className="bg-neutral-2 w-100">
 				<div

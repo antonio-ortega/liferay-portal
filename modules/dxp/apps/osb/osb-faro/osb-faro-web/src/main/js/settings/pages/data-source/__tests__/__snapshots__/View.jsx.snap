@@ -67,7 +67,7 @@ exports[`View should render a CSV data-source page 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#pencil"
+                        href="#pencil"
                       />
                     </svg>
                   </button>
@@ -161,7 +161,7 @@ exports[`View should render a CSV data-source page 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#caret-bottom"
+                        href="#caret-bottom"
                       />
                     </svg>
                   </button>
@@ -181,7 +181,7 @@ exports[`View should render a CSV data-source page 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#faro-connection-success-ovals"
+                  href="#faro-connection-success-ovals"
                 />
               </svg>
             </div>
@@ -207,7 +207,7 @@ exports[`View should render a CSV data-source page 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#caret-bottom"
+                        href="#caret-bottom"
                       />
                     </svg>
                   </button>
@@ -442,7 +442,7 @@ exports[`View should render a Liferay data-source page 1`] = `
                                 role="presentation"
                               >
                                 <use
-                                  xlink:href="#pencil"
+                                  href="#pencil"
                                 />
                               </svg>
                             </button>
@@ -509,11 +509,11 @@ exports[`View should render a Liferay data-source page 1`] = `
                 <div
                   class="mb-1 d-flex align-items-center"
                 >
-                  <h4
-                    class="mb-0 mr-2"
+                  <div
+                    class="h4 mb-0 mr-2"
                   >
                     Synced Sites
-                  </h4>
+                  </div>
                   <div
                     class="label label-root label-secondary label-lg label-uppercase"
                   >
@@ -536,11 +536,11 @@ exports[`View should render a Liferay data-source page 1`] = `
                 <div
                   class="mb-1 d-flex align-items-center"
                 >
-                  <h4
-                    class="mb-0 mr-2"
+                  <div
+                    class="h4 mb-0 mr-2"
                   >
                     Synced Contacts
-                  </h4>
+                  </div>
                   <div
                     class="label label-root label-secondary label-lg label-uppercase"
                   >
@@ -693,9 +693,11 @@ exports[`View should render a Salesforce data-source page 1`] = `
                     href="/workspace/23/settings/data-source/24"
                     role="tab"
                   >
-                    <h4>
+                    <div
+                      class="h4"
+                    >
                       Authorization
-                    </h4>
+                    </div>
                   </a>
                 </li>
                 <li
@@ -707,9 +709,11 @@ exports[`View should render a Salesforce data-source page 1`] = `
                     href="/workspace/23/settings/data-source/24/salesforce/configuration-status"
                     role="tab"
                   >
-                    <h4>
+                    <div
+                      class="h4"
+                    >
                       Configure Data Source
-                    </h4>
+                    </div>
                     <span
                       class="badge badge-primary ml-2"
                     >
@@ -739,6 +743,7 @@ exports[`View should render a Salesforce data-source page 1`] = `
                     Salesforce
                      Data Source. You will need to enter the credentials of the data source's administrator. If you need help setting this up, please refer to the 
                     <a
+                      class=""
                       href="https://developer.salesforce.com/page/Connected_Apps"
                     >
                       documentation
@@ -882,7 +887,7 @@ exports[`View should render a Salesforce data-source page 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#view"
+                                href="#view"
                               />
                             </svg>
                           </button>

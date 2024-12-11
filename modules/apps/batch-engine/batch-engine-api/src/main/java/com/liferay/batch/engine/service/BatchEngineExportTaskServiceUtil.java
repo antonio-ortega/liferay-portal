@@ -7,9 +7,14 @@ package com.liferay.batch.engine.service;
 
 import com.liferay.batch.engine.model.BatchEngineExportTask;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
+import java.io.InputStream;
+import java.io.Serializable;
+
 import java.util.List;
+import java.util.Map;
 
 /**
  * Provides the remote service utility for BatchEngineExportTask. This utility wraps
@@ -30,6 +35,35 @@ public class BatchEngineExportTaskServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.batch.engine.service.impl.BatchEngineExportTaskServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
+	public static BatchEngineExportTask addBatchEngineExportTask(
+			String externalReferenceCode, long companyId, long userId,
+			String callbackURL, String className, String contentType,
+			String executeStatus, List<String> fieldNamesList,
+			Map<String, Serializable> parameters, String taskItemDelegateName)
+		throws PortalException {
+
+		return getService().addBatchEngineExportTask(
+			externalReferenceCode, companyId, userId, callbackURL, className,
+			contentType, executeStatus, fieldNamesList, parameters,
+			taskItemDelegateName);
+	}
+
+	public static BatchEngineExportTask getBatchEngineExportTask(
+			long batchEngineExportTaskId)
+		throws PortalException {
+
+		return getService().getBatchEngineExportTask(batchEngineExportTaskId);
+	}
+
+	public static BatchEngineExportTask
+			getBatchEngineExportTaskByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().getBatchEngineExportTaskByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
 	public static List<BatchEngineExportTask> getBatchEngineExportTasks(
 			long companyId, int start, int end)
 		throws PortalException {
@@ -61,14 +95,20 @@ public class BatchEngineExportTaskServiceUtil {
 		return getService().getOSGiServiceIdentifier();
 	}
 
+	public static InputStream openContentInputStream(
+			long batchEngineExportTaskId)
+		throws PortalException {
+
+		return getService().openContentInputStream(batchEngineExportTaskId);
+	}
+
 	public static BatchEngineExportTaskService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(BatchEngineExportTaskService service) {
-		_service = service;
-	}
-
-	private static volatile BatchEngineExportTaskService _service;
+	private static final Snapshot<BatchEngineExportTaskService>
+		_serviceSnapshot = new Snapshot<>(
+			BatchEngineExportTaskServiceUtil.class,
+			BatchEngineExportTaskService.class);
 
 }

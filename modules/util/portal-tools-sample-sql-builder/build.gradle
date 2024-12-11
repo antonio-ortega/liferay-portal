@@ -5,6 +5,9 @@ import org.gradle.util.VersionNumber
 
 task writeReleases
 
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
 baseline {
 	onlyIf {
 		Properties properties = new Properties()
@@ -29,6 +32,7 @@ dependencies {
 
 	compileInclude project(":apps:account:account-api")
 	compileInclude project(":apps:account:account-service")
+	compileInclude project(":apps:application-list:application-list-api")
 	compileInclude project(":apps:asset:asset-entry-rel-service")
 	compileInclude project(":apps:blogs:blogs-api")
 	compileInclude project(":apps:blogs:blogs-service")
@@ -63,10 +67,16 @@ dependencies {
 	compileInclude project(":apps:layout:layout-page-template-api")
 	compileInclude project(":apps:layout:layout-page-template-service")
 	compileInclude project(":apps:layout:layout-service")
+	compileInclude project(":apps:list-type:list-type-api")
+	compileInclude project(":apps:list-type:list-type-service")
 	compileInclude project(":apps:login:login-web-api")
 	compileInclude project(":apps:message-boards:message-boards-api")
 	compileInclude project(":apps:message-boards:message-boards-service")
 	compileInclude project(":apps:normalizer:normalizer-api")
+	compileInclude project(":apps:notification:notification-api")
+	compileInclude project(":apps:notification:notification-service")
+	compileInclude project(":apps:object:object-api")
+	compileInclude project(":apps:object:object-service")
 	compileInclude project(":apps:portal-search:portal-search-web")
 	compileInclude project(":apps:portal-search:portal-search-web-api")
 	compileInclude project(":apps:portlet-display-template:portlet-display-template-api")
@@ -79,13 +89,15 @@ dependencies {
 	compileInclude project(":apps:wiki:wiki-api")
 	compileInclude project(":apps:wiki:wiki-service")
 
-	compileOnly group: "com.liferay", name: "org.freemarker", version: "2.3.29.LIFERAY-PATCHED-5"
+	compileOnly group: "com.liferay", name: "org.freemarker", version: "2.3.33.LIFERAY-PATCHED-2"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
 	compileOnly project(":core:petra:petra-function")
 	compileOnly project(":core:petra:petra-io")
+	compileOnly project(":core:petra:petra-lang")
 	compileOnly project(":core:petra:petra-process")
 	compileOnly project(":core:petra:petra-reflect")
+	compileOnly project(":core:petra:petra-sql-dsl-api")
 	compileOnly project(":core:petra:petra-string")
 }
 

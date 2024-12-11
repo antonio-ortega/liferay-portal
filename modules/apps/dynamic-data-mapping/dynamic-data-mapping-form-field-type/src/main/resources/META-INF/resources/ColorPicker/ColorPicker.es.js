@@ -6,7 +6,7 @@
 import ClayColorPicker from '@clayui/color-picker';
 import React, {useEffect, useState} from 'react';
 
-import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import FieldBase from '../FieldBase/ReactFieldBase.es';
 
 const DEFAULT_COLORS = [
 	'000000',
@@ -40,10 +40,8 @@ const ClayColorPickerWithState = ({
 	);
 
 	useEffect(() => {
-		if (inputValue) {
-			setColor(inputValue);
-		}
-	}, [inputValue]);
+		setColor(inputValue || customColors[0]);
+	}, [inputValue, customColors]);
 
 	return (
 		<>

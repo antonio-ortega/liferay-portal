@@ -27,20 +27,21 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -61,8 +62,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -100,10 +99,16 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 		_objectFolderResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		ObjectFolderResource.Builder builder = ObjectFolderResource.builder();
 
 		objectFolderResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -117,7 +122,32 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ObjectFolder objectFolder1 = randomObjectFolder();
+
+		String json = objectMapper.writeValueAsString(objectFolder1);
+
+		ObjectFolder objectFolder2 = ObjectFolderSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(objectFolder1, objectFolder2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ObjectFolder objectFolder = randomObjectFolder();
+
+		String json1 = objectMapper.writeValueAsString(objectFolder);
+		String json2 = ObjectFolderSerDes.toJSON(objectFolder);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -132,40 +162,6 @@ public abstract class BaseObjectFolderResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ObjectFolder objectFolder1 = randomObjectFolder();
-
-		String json = objectMapper.writeValueAsString(objectFolder1);
-
-		ObjectFolder objectFolder2 = ObjectFolderSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(objectFolder1, objectFolder2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ObjectFolder objectFolder = randomObjectFolder();
-
-		String json1 = objectMapper.writeValueAsString(objectFolder);
-		String json2 = ObjectFolderSerDes.toJSON(objectFolder);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -225,10 +221,11 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 	@Test
 	public void testGetObjectFoldersPageWithPagination() throws Exception {
-		Page<ObjectFolder> totalPage =
+		Page<ObjectFolder> objectFolderPage =
 			objectFolderResource.getObjectFoldersPage(null, null);
 
-		int totalCount = GetterUtil.getInteger(totalPage.getTotalCount());
+		int totalCount = GetterUtil.getInteger(
+			objectFolderPage.getTotalCount());
 
 		ObjectFolder objectFolder1 = testGetObjectFoldersPage_addObjectFolder(
 			randomObjectFolder());
@@ -239,32 +236,72 @@ public abstract class BaseObjectFolderResourceTestCase {
 		ObjectFolder objectFolder3 = testGetObjectFoldersPage_addObjectFolder(
 			randomObjectFolder());
 
-		Page<ObjectFolder> page1 = objectFolderResource.getObjectFoldersPage(
-			null, Pagination.of(1, totalCount + 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ObjectFolder> objectFolders1 =
-			(List<ObjectFolder>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			objectFolders1.toString(), totalCount + 2, objectFolders1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ObjectFolder> page1 =
+				objectFolderResource.getObjectFoldersPage(
+					null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Page<ObjectFolder> page2 = objectFolderResource.getObjectFoldersPage(
-			null, Pagination.of(2, totalCount + 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+			assertContains(objectFolder1, (List<ObjectFolder>)page1.getItems());
 
-		List<ObjectFolder> objectFolders2 =
-			(List<ObjectFolder>)page2.getItems();
+			Page<ObjectFolder> page2 =
+				objectFolderResource.getObjectFoldersPage(
+					null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		Assert.assertEquals(
-			objectFolders2.toString(), 1, objectFolders2.size());
+			assertContains(objectFolder2, (List<ObjectFolder>)page2.getItems());
 
-		Page<ObjectFolder> page3 = objectFolderResource.getObjectFoldersPage(
-			null, Pagination.of(1, totalCount + 3));
+			Page<ObjectFolder> page3 =
+				objectFolderResource.getObjectFoldersPage(
+					null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit));
 
-		assertContains(objectFolder1, (List<ObjectFolder>)page3.getItems());
-		assertContains(objectFolder2, (List<ObjectFolder>)page3.getItems());
-		assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
+			assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
+		}
+		else {
+			Page<ObjectFolder> page1 =
+				objectFolderResource.getObjectFoldersPage(
+					null, Pagination.of(1, totalCount + 2));
+
+			List<ObjectFolder> objectFolders1 =
+				(List<ObjectFolder>)page1.getItems();
+
+			Assert.assertEquals(
+				objectFolders1.toString(), totalCount + 2,
+				objectFolders1.size());
+
+			Page<ObjectFolder> page2 =
+				objectFolderResource.getObjectFoldersPage(
+					null, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ObjectFolder> objectFolders2 =
+				(List<ObjectFolder>)page2.getItems();
+
+			Assert.assertEquals(
+				objectFolders2.toString(), 1, objectFolders2.size());
+
+			Page<ObjectFolder> page3 =
+				objectFolderResource.getObjectFoldersPage(
+					null, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(objectFolder1, (List<ObjectFolder>)page3.getItems());
+			assertContains(objectFolder2, (List<ObjectFolder>)page3.getItems());
+			assertContains(objectFolder3, (List<ObjectFolder>)page3.getItems());
+		}
 	}
 
 	protected ObjectFolder testGetObjectFoldersPage_addObjectFolder(
@@ -288,6 +325,8 @@ public abstract class BaseObjectFolderResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/objectFolders");
@@ -301,6 +340,28 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 		objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
+			"JSONObject/objectFolders");
+
+		Assert.assertEquals(
+			totalCount + 2, objectFoldersJSONObject.getLong("totalCount"));
+
+		assertContains(
+			objectFolder1,
+			Arrays.asList(
+				ObjectFolderSerDes.toDTOs(
+					objectFoldersJSONObject.getString("items"))));
+		assertContains(
+			objectFolder2,
+			Arrays.asList(
+				ObjectFolderSerDes.toDTOs(
+					objectFoldersJSONObject.getString("items"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		objectFoldersJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("objectAdmin_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/objectAdmin_v1_0",
 			"JSONObject/objectFolders");
 
 		Assert.assertEquals(
@@ -371,6 +432,8 @@ public abstract class BaseObjectFolderResourceTestCase {
 		ObjectFolder objectFolder =
 			testGraphQLGetObjectFolderByExternalReferenceCode_addObjectFolder();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectFolder,
@@ -392,6 +455,32 @@ public abstract class BaseObjectFolderResourceTestCase {
 								getGraphQLFields())),
 						"JSONObject/data",
 						"Object/objectFolderByExternalReferenceCode"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectFolder,
+				ObjectFolderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectFolderByExternalReferenceCode",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"externalReferenceCode",
+												"\"" +
+													objectFolder.
+														getExternalReferenceCode() +
+															"\"");
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectFolderByExternalReferenceCode"))));
 	}
 
 	@Test
@@ -400,6 +489,8 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 		String irrelevantExternalReferenceCode =
 			"\"" + RandomTestUtil.randomString() + "\"";
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -415,6 +506,27 @@ public abstract class BaseObjectFolderResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectFolderByExternalReferenceCode",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"externalReferenceCode",
+										irrelevantExternalReferenceCode);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -512,7 +624,10 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 	@Test
 	public void testGraphQLDeleteObjectFolder() throws Exception {
-		ObjectFolder objectFolder =
+
+		// No namespace
+
+		ObjectFolder objectFolder1 =
 			testGraphQLDeleteObjectFolder_addObjectFolder();
 
 		Assert.assertTrue(
@@ -522,23 +637,62 @@ public abstract class BaseObjectFolderResourceTestCase {
 						"deleteObjectFolder",
 						new HashMap<String, Object>() {
 							{
-								put("objectFolderId", objectFolder.getId());
+								put("objectFolderId", objectFolder1.getId());
 							}
 						})),
 				"JSONObject/data", "Object/deleteObjectFolder"));
-		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+
+		JSONArray errorsJSONArray1 = JSONUtil.getValueAsJSONArray(
 			invokeGraphQLQuery(
 				new GraphQLField(
 					"objectFolder",
 					new HashMap<String, Object>() {
 						{
-							put("objectFolderId", objectFolder.getId());
+							put("objectFolderId", objectFolder1.getId());
 						}
 					},
 					new GraphQLField("id"))),
 			"JSONArray/errors");
 
-		Assert.assertTrue(errorsJSONArray.length() > 0);
+		Assert.assertTrue(errorsJSONArray1.length() > 0);
+
+		// Using the namespace objectAdmin_v1_0
+
+		ObjectFolder objectFolder2 =
+			testGraphQLDeleteObjectFolder_addObjectFolder();
+
+		Assert.assertTrue(
+			JSONUtil.getValueAsBoolean(
+				invokeGraphQLMutation(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"deleteObjectFolder",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectFolderId",
+										objectFolder2.getId());
+								}
+							}))),
+				"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+				"Object/deleteObjectFolder"));
+
+		JSONArray errorsJSONArray2 = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"objectAdmin_v1_0",
+					new GraphQLField(
+						"objectFolder",
+						new HashMap<String, Object>() {
+							{
+								put("objectFolderId", objectFolder2.getId());
+							}
+						},
+						new GraphQLField("id")))),
+			"JSONArray/errors");
+
+		Assert.assertTrue(errorsJSONArray2.length() > 0);
 	}
 
 	protected ObjectFolder testGraphQLDeleteObjectFolder_addObjectFolder()
@@ -570,6 +724,8 @@ public abstract class BaseObjectFolderResourceTestCase {
 		ObjectFolder objectFolder =
 			testGraphQLGetObjectFolder_addObjectFolder();
 
+		// No namespace
+
 		Assert.assertTrue(
 			equals(
 				objectFolder,
@@ -587,11 +743,36 @@ public abstract class BaseObjectFolderResourceTestCase {
 								},
 								getGraphQLFields())),
 						"JSONObject/data", "Object/objectFolder"))));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertTrue(
+			equals(
+				objectFolder,
+				ObjectFolderSerDes.toDTO(
+					JSONUtil.getValueAsString(
+						invokeGraphQLQuery(
+							new GraphQLField(
+								"objectAdmin_v1_0",
+								new GraphQLField(
+									"objectFolder",
+									new HashMap<String, Object>() {
+										{
+											put(
+												"objectFolderId",
+												objectFolder.getId());
+										}
+									},
+									getGraphQLFields()))),
+						"JSONObject/data", "JSONObject/objectAdmin_v1_0",
+						"Object/objectFolder"))));
 	}
 
 	@Test
 	public void testGraphQLGetObjectFolderNotFound() throws Exception {
 		Long irrelevantObjectFolderId = RandomTestUtil.randomLong();
+
+		// No namespace
 
 		Assert.assertEquals(
 			"Not Found",
@@ -605,6 +786,27 @@ public abstract class BaseObjectFolderResourceTestCase {
 							}
 						},
 						getGraphQLFields())),
+				"JSONArray/errors", "Object/0", "JSONObject/extensions",
+				"Object/code"));
+
+		// Using the namespace objectAdmin_v1_0
+
+		Assert.assertEquals(
+			"Not Found",
+			JSONUtil.getValueAsString(
+				invokeGraphQLQuery(
+					new GraphQLField(
+						"objectAdmin_v1_0",
+						new GraphQLField(
+							"objectFolder",
+							new HashMap<String, Object>() {
+								{
+									put(
+										"objectFolderId",
+										irrelevantObjectFolderId);
+								}
+							},
+							getGraphQLFields()))),
 				"JSONArray/errors", "Object/0", "JSONObject/extensions",
 				"Object/code"));
 	}
@@ -1053,6 +1255,10 @@ public abstract class BaseObjectFolderResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1126,22 +1332,20 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 		if (entityFieldName.equals("dateCreated")) {
 			if (operator.equals("between")) {
+				Date date = objectFolder.getDateCreated();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							objectFolder.getDateCreated(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							objectFolder.getDateCreated(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1159,22 +1363,20 @@ public abstract class BaseObjectFolderResourceTestCase {
 
 		if (entityFieldName.equals("dateModified")) {
 			if (operator.equals("between")) {
+				Date date = objectFolder.getDateModified();
+
 				sb = new StringBundler();
 
 				sb.append("(");
 				sb.append(entityFieldName);
 				sb.append(" gt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							objectFolder.getDateModified(), -2)));
+					_dateFormat.format(date.getTime() - (2 * Time.SECOND)));
 				sb.append(" and ");
 				sb.append(entityFieldName);
 				sb.append(" lt ");
 				sb.append(
-					_dateFormat.format(
-						DateUtils.addSeconds(
-							objectFolder.getDateModified(), 2)));
+					_dateFormat.format(date.getTime() + (2 * Time.SECOND)));
 				sb.append(")");
 			}
 			else {
@@ -1311,7 +1513,8 @@ public abstract class BaseObjectFolderResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1362,21 +1565,21 @@ public abstract class BaseObjectFolderResourceTestCase {
 	}
 
 	protected ObjectFolderResource objectFolderResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1385,11 +1588,16 @@ public abstract class BaseObjectFolderResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1421,6 +1629,24 @@ public abstract class BaseObjectFolderResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1442,16 +1668,6 @@ public abstract class BaseObjectFolderResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

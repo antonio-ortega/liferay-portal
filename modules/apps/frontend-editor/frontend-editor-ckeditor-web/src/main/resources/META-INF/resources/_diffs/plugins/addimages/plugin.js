@@ -154,6 +154,7 @@
 
 			const filter = new CKEDITOR.htmlParser.filter({
 				elements: {
+
 					// eslint-disable-next-line @liferay/no-abbreviations
 					img(element) {
 						if (image.src === instance._tempImage.src) {
@@ -224,9 +225,10 @@
 									type: blob.type,
 								});
 
-								const element = CKEDITOR.dom.element.createFromHtml(
-									`<img src="${src}">`
-								);
+								const element =
+									CKEDITOR.dom.element.createFromHtml(
+										`<img src="${src}">`
+									);
 
 								editor.fire('imageAdd', {
 									element,
@@ -360,8 +362,16 @@
 
 				const TPL_PROGRESS_BAR = '<div class="progressbar"></div>';
 
+				const ckeditorImage = document.querySelector(
+					'img[data-cke-saved-src^="data:image"]:not([data-fileentryid])'
+				);
+
 				const _onUploadError = () => {
 					const image = this._tempImage;
+
+					if (ckeditorImage) {
+						ckeditorImage.remove();
+					}
 
 					if (image) {
 						image.parentElement.remove();
@@ -389,6 +399,10 @@
 					if (data.success) {
 						const image = this._tempImage;
 
+						if (ckeditorImage) {
+							ckeditorImage.remove();
+						}
+
 						if (image) {
 							image.removeAttribute(ATTR_DATA_RANDOM_ID);
 							image.classList.remove(CSS_UPLOADING_IMAGE);
@@ -400,7 +414,7 @@
 
 							image.src = editor.config.attachmentURLPrefix
 								? editor.config.attachmentURLPrefix +
-								  data.file.title
+									data.file.title
 								: data.file.url;
 
 							const imageContainer = image.parentElement;
@@ -411,23 +425,17 @@
 
 							editor.fire('imageUploaded', {
 								editor,
+
 								// eslint-disable-next-line @liferay/no-abbreviations
 								el: image,
 								fileEntryId: data.file.fileEntryId,
 								uploadImageReturnType: '',
 							});
 
-							const ckeditorImage = document.querySelector(
-								'[data-cke-saved-src]'
-							);
-
-							if (ckeditorImage) {
-								ckeditorImage.remove();
-							}
-
-							const fragment = CKEDITOR.htmlParser.fragment.fromHtml(
-								editor.getData()
-							);
+							const fragment =
+								CKEDITOR.htmlParser.fragment.fromHtml(
+									editor.getData()
+								);
 
 							let imageFound = false;
 
@@ -466,9 +474,8 @@
 				};
 
 				const _createProgressBar = (image) => {
-					const imageContainerNode = A.Node.create(
-						TPL_IMAGE_CONTAINER
-					);
+					const imageContainerNode =
+						A.Node.create(TPL_IMAGE_CONTAINER);
 					const progressBarNode = A.Node.create(TPL_PROGRESS_BAR);
 
 					A.one(image).wrap(imageContainerNode);

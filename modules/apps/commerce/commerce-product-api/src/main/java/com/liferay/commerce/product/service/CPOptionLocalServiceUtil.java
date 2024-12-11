@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -234,13 +235,6 @@ public class CPOptionLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static CPOption fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CPOption fetchCPOption(long CPOptionId) {
 		return getService().fetchCPOption(CPOptionId);
 	}
@@ -430,13 +424,11 @@ public class CPOptionLocalServiceUtil {
 	}
 
 	public static CPOptionLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPOptionLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CPOptionLocalService _service;
+	private static final Snapshot<CPOptionLocalService> _serviceSnapshot =
+		new Snapshot<>(
+			CPOptionLocalServiceUtil.class, CPOptionLocalService.class);
 
 }

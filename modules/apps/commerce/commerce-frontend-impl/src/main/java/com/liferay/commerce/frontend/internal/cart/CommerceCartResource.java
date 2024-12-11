@@ -18,6 +18,7 @@ import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.currency.util.CommercePriceFormatter;
 import com.liferay.commerce.discount.CommerceDiscountValue;
 import com.liferay.commerce.exception.CommerceOrderValidatorException;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.internal.cart.model.Cart;
 import com.liferay.commerce.frontend.internal.cart.model.Coupon;
 import com.liferay.commerce.frontend.internal.cart.model.OrderStatusInfo;
@@ -25,7 +26,6 @@ import com.liferay.commerce.frontend.internal.cart.model.Product;
 import com.liferay.commerce.frontend.internal.cart.model.Summary;
 import com.liferay.commerce.frontend.model.PriceModel;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
-import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
@@ -40,6 +40,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.commerce.service.CommerceOrderService;
+import com.liferay.commerce.util.CommerceOrderItemQuantityFormatter;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -52,6 +53,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.math.BigDecimal;
@@ -61,8 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -219,8 +219,10 @@ public class CommerceCartResource {
 			CommerceOrderItem commerceOrderItem =
 				_commerceOrderItemService.addOrUpdateCommerceOrderItem(
 					commerceOrder.getCommerceOrderId(), cpInstanceId, options,
-					new BigDecimal(quantity), 0, BigDecimal.ZERO,
-					unitOfMeasureKey, commerceContext, serviceContext);
+					_commerceOrderItemQuantityFormatter.parse(
+						quantity, LocaleUtil.fromLanguageId(languageId)),
+					0, BigDecimal.ZERO, unitOfMeasureKey, commerceContext,
+					serviceContext);
 
 			cart = _getCart(
 				commerceOrderItem.getCommerceOrderId(),
@@ -317,15 +319,15 @@ public class CommerceCartResource {
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
-		PortletURL portletURL =
+		String commerceCartPortletURL =
 			_commerceOrderHttpHelper.getCommerceCartPortletURL(
 				siteGroupId, httpServletRequest, commerceOrder);
 
-		if (portletURL != null) {
-			return portletURL.toString();
+		if (Validator.isNull(commerceCartPortletURL)) {
+			return _portal.getHomeURL(httpServletRequest);
 		}
 
-		return _portal.getHomeURL(httpServletRequest);
+		return commerceCartPortletURL;
 	}
 
 	private String[] _getErrorMessages(
@@ -608,6 +610,10 @@ public class CommerceCartResource {
 
 	@Reference
 	private CommerceOrderHttpHelper _commerceOrderHttpHelper;
+
+	@Reference
+	private CommerceOrderItemQuantityFormatter
+		_commerceOrderItemQuantityFormatter;
 
 	@Reference
 	private CommerceOrderItemService _commerceOrderItemService;

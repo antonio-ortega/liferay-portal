@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import MapGoogleMaps from '@liferay/map-google-maps/js/MapGoogleMaps';
-import MapOpenStreetMap from '@liferay/map-openstreetmap/js/MapOpenStreetMap';
+import {MapGoogleMaps} from '@liferay/map-google-maps';
+import {MapOpenStreetMap} from '@liferay/map-openstreetmap';
 import {parseName} from 'data-engine-js-components-web';
 import Leaflet from 'leaflet';
 import {useEffect, useRef} from 'react';
@@ -29,9 +29,8 @@ const MAP_CONFIG = {
 };
 
 const getMapName = (name) => {
-	const {fieldName, instanceId, portletNamespace, repeatedIndex} = parseName(
-		name
-	);
+	const {fieldName, instanceId, portletNamespace, repeatedIndex} =
+		parseName(name);
 
 	return `${portletNamespace}map$$${fieldName}$${instanceId}$${repeatedIndex}`;
 };
@@ -155,6 +154,7 @@ export function useGeolocation({
 				mapRef.current.dispose();
 			}
 		};
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 

@@ -8,15 +8,22 @@ package com.liferay.object.storage.salesforce.internal.rest.manager.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.list.type.entry.util.ListTypeEntryUtil;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectFieldSettingConstants;
+import com.liferay.object.field.builder.BooleanObjectFieldBuilder;
 import com.liferay.object.field.builder.DateObjectFieldBuilder;
+import com.liferay.object.field.builder.DateTimeObjectFieldBuilder;
+import com.liferay.object.field.builder.LongIntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.PicklistObjectFieldBuilder;
+import com.liferay.object.field.builder.RichTextObjectFieldBuilder;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectField;
+import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.rest.dto.v1_0.ObjectEntry;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManager;
 import com.liferay.object.rest.test.util.BaseObjectEntryManagerImplTestCase;
+import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.storage.salesforce.configuration.SalesforceConfiguration;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -29,6 +36,8 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.HtmlParserUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Time;
@@ -41,6 +50,9 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
 import java.text.DateFormat;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -121,6 +133,7 @@ public class SalesforceObjectEntryManagerImplTest
 	}
 
 	@Before
+	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
@@ -147,42 +160,80 @@ public class SalesforceObjectEntryManagerImplTest
 
 		_objectDefinition =
 			objectDefinitionLocalService.addCustomObjectDefinition(
-				adminUser.getUserId(), 0, false, false, false,
+				adminUser.getUserId(), 0, null, false, true, false, false,
 				LocalizedMapUtil.getLocalizedMap("Ticket"), "Ticket", null,
 				null, LocalizedMapUtil.getLocalizedMap("Tickets"), true,
 				ObjectDefinitionConstants.SCOPE_COMPANY,
 				ObjectDefinitionConstants.STORAGE_TYPE_SALESFORCE,
-				Collections.emptyList());
-
-		ObjectFieldUtil.addCustomObjectField(
-			new DateObjectFieldBuilder(
-			).externalReferenceCode(
-				"Due_date__c"
-			).userId(
-				adminUser.getUserId()
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap("Due Date")
-			).name(
-				"dueDate"
-			).objectDefinitionId(
-				_objectDefinition.getObjectDefinitionId()
-			).build());
-
-		ObjectFieldUtil.addCustomObjectField(
-			new PicklistObjectFieldBuilder(
-			).externalReferenceCode(
-				"Status__c"
-			).userId(
-				adminUser.getUserId()
-			).labelMap(
-				LocalizedMapUtil.getLocalizedMap("Status")
-			).listTypeDefinitionId(
-				listTypeDefinition.getListTypeDefinitionId()
-			).name(
-				"customStatus"
-			).objectDefinitionId(
-				_objectDefinition.getObjectDefinitionId()
-			).build());
+				ListUtil.fromArray(
+					new RichTextObjectFieldBuilder(
+					).externalReferenceCode(
+						"Description__c"
+					).userId(
+						adminUser.getUserId()
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap("Description")
+					).name(
+						"description"
+					).build(),
+					new DateObjectFieldBuilder(
+					).externalReferenceCode(
+						"Due_date__c"
+					).userId(
+						adminUser.getUserId()
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap("Due Date")
+					).name(
+						"dueDate"
+					).build(),
+					new BooleanObjectFieldBuilder(
+					).externalReferenceCode(
+						"Flagged__c"
+					).userId(
+						adminUser.getUserId()
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap("Flagged")
+					).name(
+						"flagged"
+					).build(),
+					new LongIntegerObjectFieldBuilder(
+					).externalReferenceCode(
+						"Object_Definition_id__c"
+					).userId(
+						adminUser.getUserId()
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap("Object Definition ID")
+					).name(
+						"objectDefinitionId"
+					).build(),
+					new DateTimeObjectFieldBuilder(
+					).externalReferenceCode(
+						"Start_date__c"
+					).userId(
+						adminUser.getUserId()
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap("Start Date")
+					).name(
+						"startDate"
+					).objectFieldSettings(
+						Collections.singletonList(
+							_createObjectFieldSetting(
+								ObjectFieldSettingConstants.NAME_TIME_STORAGE,
+								ObjectFieldSettingConstants.
+									VALUE_USE_INPUT_AS_ENTERED))
+					).build(),
+					new PicklistObjectFieldBuilder(
+					).externalReferenceCode(
+						"Status__c"
+					).userId(
+						adminUser.getUserId()
+					).labelMap(
+						LocalizedMapUtil.getLocalizedMap("Status")
+					).listTypeDefinitionId(
+						listTypeDefinition.getListTypeDefinitionId()
+					).name(
+						"customStatus"
+					).build()));
 
 		ObjectField objectField = ObjectFieldUtil.addCustomObjectField(
 			new TextObjectFieldBuilder(
@@ -234,7 +285,7 @@ public class SalesforceObjectEntryManagerImplTest
 	@Test
 	public void testAddObjectEntry() throws Exception {
 		ObjectEntry objectEntry = _addObjectEntry(
-			null, null, RandomTestUtil.randomString());
+			null, null, false, null, RandomTestUtil.randomString());
 
 		Assert.assertNotNull(objectEntry.getExternalReferenceCode());
 	}
@@ -242,7 +293,7 @@ public class SalesforceObjectEntryManagerImplTest
 	@Test
 	public void testAddOrUpdateObjectEntry() throws Exception {
 		ObjectEntry objectEntry = _addObjectEntry(
-			null, null, RandomTestUtil.randomString());
+			null, null, false, null, RandomTestUtil.randomString());
 
 		String title = RandomTestUtil.randomString();
 
@@ -264,35 +315,55 @@ public class SalesforceObjectEntryManagerImplTest
 
 	@Test
 	public void testGetObjectEntries() throws Exception {
-		String title1 = "a" + RandomTestUtil.randomString();
-		String title2 = "b" + RandomTestUtil.randomString();
-		String title3 = "c" + RandomTestUtil.randomString();
-		String title4 = "d" + RandomTestUtil.randomString();
+		String title1 = null;
+		String title2 = "a" + RandomTestUtil.randomString();
+		String title3 = "b" + RandomTestUtil.randomString();
+		String title4 = "c" + RandomTestUtil.randomString();
+		String title5 = "d" + RandomTestUtil.randomString();
 
 		Date date = RandomTestUtil.nextDate();
 
-		ObjectEntry objectEntry1 = _addObjectEntry("queued", date, title1);
+		ObjectEntry objectEntry1 = _addObjectEntry(
+			"queued", date, false, null, title1);
+
+		LocalDateTime localDateTime1 = LocalDateTime.now();
+
 		ObjectEntry objectEntry2 = _addObjectEntry(
-			"started", new Date(date.getTime() - Time.DAY), title2);
+			"started", new Date(date.getTime() - Time.DAY), true,
+			localDateTime1, title2);
+
+		LocalDateTime localDateTime2 = localDateTime1.plusHours(1);
+
 		ObjectEntry objectEntry3 = _addObjectEntry(
-			"completed", new Date(date.getTime() + Time.DAY), title3);
-		ObjectEntry objectEntry4 = _addObjectEntry("queued", date, title4);
+			"completed", new Date(date.getTime() + Time.DAY), false,
+			localDateTime2, title3);
+
+		ObjectEntry objectEntry4 = _addObjectEntry(
+			"queued", date, true, null, title4);
+		ObjectEntry objectEntry5 = _addObjectEntry(
+			"queued", date, false, null, title5);
 
 		// And/or with equals/not equals expression
 
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter", buildEqualsExpressionFilterString("title", null)
+			).build(),
+			objectEntry1);
+
 		String filterString = StringBundler.concat(
-			"(title eq ", getValue(title1), " or title eq ", getValue(title2),
-			" or title eq ", getValue(title3), " or title eq ",
-			getValue(title4), ") and ");
+			"(objectDefinitionId eq ",
+			_objectDefinition.getObjectDefinitionId(), ") and ");
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"filter",
 				StringBundler.concat(
-					filterString,
+					filterString, "(",
 					buildEqualsExpressionFilterString("customStatus", "queued"),
 					" and ", buildEqualsExpressionFilterString("dueDate", date),
-					" and ", buildEqualsExpressionFilterString("title", title1))
+					" and ", buildEqualsExpressionFilterString("title", title1),
+					")")
 			).build(),
 			objectEntry1);
 
@@ -300,13 +371,13 @@ public class SalesforceObjectEntryManagerImplTest
 			HashMapBuilder.put(
 				"filter",
 				StringBundler.concat(
-					filterString,
+					filterString, "(",
 					_buildNotEqualsExpressionFilterString(
 						"customStatus", "queued"),
 					" and ",
 					_buildNotEqualsExpressionFilterString("dueDate", date),
 					" and ",
-					_buildNotEqualsExpressionFilterString("title", title1))
+					_buildNotEqualsExpressionFilterString("title", title1), ")")
 			).build(),
 			objectEntry2, objectEntry3);
 
@@ -314,26 +385,45 @@ public class SalesforceObjectEntryManagerImplTest
 			HashMapBuilder.put(
 				"filter",
 				StringBundler.concat(
-					filterString,
+					filterString, "(",
 					buildEqualsExpressionFilterString("customStatus", "queued"),
 					" or ", buildEqualsExpressionFilterString("dueDate", date),
-					" or ", buildEqualsExpressionFilterString("title", title1))
+					" or ", buildEqualsExpressionFilterString("title", title1),
+					")")
 			).build(),
-			objectEntry1, objectEntry4);
+			objectEntry1, objectEntry4, objectEntry5);
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"filter",
 				StringBundler.concat(
-					filterString,
+					filterString, "(",
 					_buildNotEqualsExpressionFilterString(
 						"customStatus", "queued"),
 					" or ",
 					_buildNotEqualsExpressionFilterString("dueDate", date),
 					" or ",
-					_buildNotEqualsExpressionFilterString("title", title1))
+					_buildNotEqualsExpressionFilterString("title", title1), ")")
 			).build(),
 			objectEntry2, objectEntry3, objectEntry4);
+
+		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(
+			"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+		String dateTimeString1 = dateTimeFormatter.format(
+			localDateTime1.withNano(0));
+		String dateTimeString2 = dateTimeFormatter.format(
+			localDateTime2.withNano(0));
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				filterString.concat(
+					StringBundler.concat(
+						"startDate ne ", dateTimeString1, " or startDate eq ",
+						dateTimeString2))
+			).build(),
+			objectEntry1, objectEntry3, objectEntry4);
 
 		// Equals/not equals expression
 
@@ -343,7 +433,7 @@ public class SalesforceObjectEntryManagerImplTest
 				filterString.concat(
 					buildEqualsExpressionFilterString("customStatus", "queued"))
 			).build(),
-			objectEntry1, objectEntry4);
+			objectEntry1, objectEntry4, objectEntry5);
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
@@ -360,7 +450,7 @@ public class SalesforceObjectEntryManagerImplTest
 				filterString.concat(
 					buildEqualsExpressionFilterString("dueDate", date))
 			).build(),
-			objectEntry1, objectEntry4);
+			objectEntry1, objectEntry4, objectEntry5);
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
@@ -369,6 +459,30 @@ public class SalesforceObjectEntryManagerImplTest
 					_buildNotEqualsExpressionFilterString("dueDate", date))
 			).build(),
 			objectEntry2, objectEntry3);
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				filterString.concat(
+					buildEqualsExpressionFilterString("flagged", true))
+			).build(),
+			objectEntry2, objectEntry4);
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				buildEqualsExpressionFilterString("startDate", localDateTime1)
+			).build(),
+			objectEntry2);
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter",
+				filterString.concat(
+					_buildNotEqualsExpressionFilterString(
+						"startDate", localDateTime2))
+			).build(),
+			objectEntry1, objectEntry2, objectEntry4);
 
 		testGetObjectEntries(
 			HashMapBuilder.put(
@@ -397,22 +511,50 @@ public class SalesforceObjectEntryManagerImplTest
 							objectEntry1.getProperties(), "dueDate")),
 					new Date(), "dueDate", "yyyy-MM-dd")
 			).build(),
-			objectEntry1, objectEntry4);
+			objectEntry1, objectEntry4, objectEntry5);
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter", filterString.concat("startDate ge " + dateTimeString1)
+			).build(),
+			objectEntry2, objectEntry3);
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter", filterString.concat("startDate gt " + dateTimeString1)
+			).build(),
+			objectEntry3);
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter", filterString.concat("startDate le " + dateTimeString2)
+			).build(),
+			objectEntry2, objectEntry3);
+
+		testGetObjectEntries(
+			HashMapBuilder.put(
+				"filter", filterString.concat("startDate lt " + dateTimeString2)
+			).build(),
+			objectEntry2);
 	}
 
 	@Test
 	public void testGetObjectEntry() throws Exception {
 		String title = RandomTestUtil.randomString();
 
-		ObjectEntry objectEntry = _addObjectEntry(null, null, title);
+		ObjectEntry objectEntry = _addObjectEntry(
+			null, "<p>Description</p>", null, false, null, title);
 
-		_assertObjectEntry(objectEntry.getExternalReferenceCode(), title);
+		_assertObjectEntry(
+			"<p>Description</p>", objectEntry.getExternalReferenceCode(),
+			title);
 	}
 
 	@Test
 	public void testPartialUpdateObjectEntry() throws Exception {
 		ObjectEntry objectEntry = _addObjectEntry(
-			null, null, RandomTestUtil.randomString());
+			null, RandomTestUtil.randomString(), null, false, null,
+			RandomTestUtil.randomString());
 
 		_objectEntryManager.partialUpdateObjectEntry(
 			TestPropsValues.getCompanyId(), dtoConverterContext,
@@ -420,13 +562,17 @@ public class SalesforceObjectEntryManagerImplTest
 			new ObjectEntry() {
 				{
 					properties = HashMapBuilder.<String, Object>put(
+						"description", "<p>Description</p>"
+					).put(
 						"title", "Able"
 					).build();
 				}
 			},
 			null);
 
-		_assertObjectEntry(objectEntry.getExternalReferenceCode(), "Able");
+		_assertObjectEntry(
+			"<p>Description</p>", objectEntry.getExternalReferenceCode(),
+			"Able");
 	}
 
 	@Override
@@ -434,7 +580,7 @@ public class SalesforceObjectEntryManagerImplTest
 			Map<String, String> context, Sort[] sorts)
 		throws Exception {
 
-		if (sorts == null) {
+		if ((sorts == null) || !context.containsKey("sort")) {
 			sorts = new Sort[] {SortFactoryUtil.create("title", false)};
 		}
 
@@ -445,7 +591,18 @@ public class SalesforceObjectEntryManagerImplTest
 	}
 
 	private ObjectEntry _addObjectEntry(
-			String customStatus, Date date, String title)
+			String customStatus, Date dueDate, boolean flagged,
+			LocalDateTime startDate, String title)
+		throws Exception {
+
+		return _addObjectEntry(
+			customStatus, RandomTestUtil.randomString(), dueDate, flagged,
+			startDate, title);
+	}
+
+	private ObjectEntry _addObjectEntry(
+			String customStatus, String description, Date dueDate,
+			boolean flagged, LocalDateTime startDate, String title)
 		throws Exception {
 
 		ObjectEntry objectEntry = _objectEntryManager.addObjectEntry(
@@ -455,8 +612,18 @@ public class SalesforceObjectEntryManagerImplTest
 					properties = HashMapBuilder.<String, Object>put(
 						"customStatus", customStatus
 					).put(
+						"description", description
+					).put(
 						"dueDate",
-						(date != null) ? _simpleDateFormat.format(date) : null
+						(dueDate != null) ? _simpleDateFormat.format(dueDate) :
+							null
+					).put(
+						"flagged", flagged
+					).put(
+						"objectDefinitionId",
+						_objectDefinition.getObjectDefinitionId()
+					).put(
+						"startDate", startDate
 					).put(
 						"title", title
 					).build();
@@ -469,13 +636,21 @@ public class SalesforceObjectEntryManagerImplTest
 		return objectEntry;
 	}
 
-	private void _assertObjectEntry(String externalReferenceCode, String title)
+	private void _assertObjectEntry(
+			String description, String externalReferenceCode, String title)
 		throws Exception {
 
 		ObjectEntry objectEntry = _objectEntryManager.getObjectEntry(
 			companyId, dtoConverterContext, externalReferenceCode,
 			_objectDefinition, ObjectDefinitionConstants.SCOPE_COMPANY);
 
+		Assert.assertEquals(
+			description,
+			MapUtil.getString(objectEntry.getProperties(), "description"));
+		Assert.assertEquals(
+			HtmlParserUtil.extractText(description),
+			MapUtil.getString(
+				objectEntry.getProperties(), "descriptionRawText"));
 		Assert.assertEquals(
 			title, MapUtil.getString(objectEntry.getProperties(), "title"));
 	}
@@ -484,6 +659,18 @@ public class SalesforceObjectEntryManagerImplTest
 		String fieldName, Object value) {
 
 		return StringBundler.concat(fieldName, " ne ", getValue(value));
+	}
+
+	private ObjectFieldSetting _createObjectFieldSetting(
+		String name, String value) {
+
+		ObjectFieldSetting objectFieldSetting =
+			_objectFieldSettingLocalService.createObjectFieldSetting(0L);
+
+		objectFieldSetting.setName(name);
+		objectFieldSetting.setValue(value);
+
+		return objectFieldSetting;
 	}
 
 	@Inject
@@ -498,5 +685,8 @@ public class SalesforceObjectEntryManagerImplTest
 		filter = "object.entry.manager.storage.type=" + ObjectDefinitionConstants.STORAGE_TYPE_SALESFORCE
 	)
 	private ObjectEntryManager _objectEntryManager;
+
+	@Inject
+	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
 
 }

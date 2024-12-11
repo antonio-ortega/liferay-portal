@@ -24,7 +24,7 @@ Team team = usersDisplayContext.getTeam();
 
 <clay:management-toolbar
 	managementToolbarDisplayContext="<%= usersManagementToolbarDisplayContext %>"
-	propsTransformer="js/UserManagementToolbarPropsTransformer"
+	propsTransformer="{UserManagementToolbarPropsTransformer} from site-memberships-web"
 />
 
 <liferay-ui:error embed="<%= false %>" exception="<%= RequiredUserException.class %>" message="one-or-more-users-were-not-removed-since-they-belong-to-a-user-group" />
@@ -85,7 +85,7 @@ Team team = usersDisplayContext.getTeam();
 							<c:when test='<%= displayStyle.equals("icon") %>'>
 								<liferay-ui:search-container-column-text>
 									<clay:user-card
-										propsTransformer="js/UserCardPropsTransformer"
+										propsTransformer="{UserCardPropsTransformer} from site-memberships-web"
 										userCard="<%= new UsersUserCard(user2, renderRequest, renderResponse, searchContainer.getRowChecker()) %>"
 									/>
 								</liferay-ui:search-container-column-text>
@@ -143,19 +143,19 @@ Team team = usersDisplayContext.getTeam();
 										<liferay-ui:search-container-column-text
 											colspan="<%= 2 %>"
 										>
-											<h5><%= user2.getFullName() %></h5>
+											<div class="h5"><%= user2.getFullName() %></div>
 
-											<h6 class="text-default">
+											<div class="h6 text-default">
 												<span><%= user2.getScreenName() %></span>
-											</h6>
+											</div>
 
 											<%
 											roles.addAll(teams);
 											%>
 
-											<h6>
+											<div class="h6">
 												<%= HtmlUtil.escape(StringUtil.merge(roles, StringPool.COMMA_AND_SPACE)) %>
-											</h6>
+											</div>
 										</liferay-ui:search-container-column-text>
 
 										<%
@@ -166,7 +166,7 @@ Team team = usersDisplayContext.getTeam();
 											<clay:dropdown-actions
 												aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 												dropdownItems="<%= userActionDropdownItemsProvider.getActionDropdownItems() %>"
-												propsTransformer="js/UserDropdownDefaultPropsTransformer"
+												propsTransformer="{UserDropdownDefaultPropsTransformer} from site-memberships-web"
 											/>
 										</liferay-ui:search-container-column-text>
 									</c:when>
@@ -204,7 +204,7 @@ Team team = usersDisplayContext.getTeam();
 											<clay:dropdown-actions
 												aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 												dropdownItems="<%= userActionDropdownItemsProvider.getActionDropdownItems() %>"
-												propsTransformer="js/UserDropdownDefaultPropsTransformer"
+												propsTransformer="{UserDropdownDefaultPropsTransformer} from site-memberships-web"
 											/>
 										</liferay-ui:search-container-column-text>
 									</c:otherwise>
@@ -233,4 +233,11 @@ Team team = usersDisplayContext.getTeam();
 
 <aui:form cssClass="hide" method="post" name="editUserGroupRoleFm">
 	<aui:input name="tabs1" type="hidden" value="users" />
+</aui:form>
+
+<portlet:actionURL name="unassignUserGroupRole" var="unassignUserGroupRoleURL" />
+
+<aui:form action="<%= unassignUserGroupRoleURL %>" cssClass="hide" name="unassignUserGroupRoleFm">
+	<aui:input name="tabs1" type="hidden" value="users" />
+	<aui:input name="userId" type="hidden" />
 </aui:form>

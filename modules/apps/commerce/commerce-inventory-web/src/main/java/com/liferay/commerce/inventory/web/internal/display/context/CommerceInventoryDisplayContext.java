@@ -14,6 +14,7 @@ import com.liferay.commerce.inventory.service.CommerceInventoryReplenishmentItem
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseItemService;
 import com.liferay.commerce.inventory.service.CommerceInventoryWarehouseService;
 import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
+import com.liferay.commerce.util.CommerceQuantityFormatter;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -29,6 +30,8 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,20 +51,22 @@ public class CommerceInventoryDisplayContext {
 	public CommerceInventoryDisplayContext(
 		CommerceInventoryReplenishmentItemService
 			commerceInventoryReplenishmentItemService,
-		CommerceInventoryWarehouseService commerceInventoryWarehouseService,
 		CommerceInventoryWarehouseItemService
 			commerceInventoryWarehouseItemService,
 		ModelResourcePermission<CommerceInventoryWarehouse>
 			commerceInventoryWarehouseModelResourcePermission,
+		CommerceInventoryWarehouseService commerceInventoryWarehouseService,
+		CommerceQuantityFormatter commerceQuantityFormatter,
 		HttpServletRequest httpServletRequest) {
 
 		_commerceInventoryReplenishmentItemService =
 			commerceInventoryReplenishmentItemService;
-		_commerceInventoryWarehouseService = commerceInventoryWarehouseService;
 		_commerceInventoryWarehouseItemService =
 			commerceInventoryWarehouseItemService;
 		_commerceInventoryWarehouseModelResourcePermission =
 			commerceInventoryWarehouseModelResourcePermission;
+		_commerceInventoryWarehouseService = commerceInventoryWarehouseService;
+		_commerceQuantityFormatter = commerceQuantityFormatter;
 
 		_cpRequestHelper = new CPRequestHelper(httpServletRequest);
 
@@ -92,13 +97,13 @@ public class CommerceInventoryDisplayContext {
 			_cpRequestHelper.getRequest(),
 			"commerceInventoryReplenishmentItemId");
 
-		if (commerceInventoryReplenishmentItemId > 0) {
-			return _commerceInventoryReplenishmentItemService.
-				getCommerceInventoryReplenishmentItem(
-					commerceInventoryReplenishmentItemId);
+		if (commerceInventoryReplenishmentItemId <= 0) {
+			return null;
 		}
 
-		return null;
+		return _commerceInventoryReplenishmentItemService.
+			getCommerceInventoryReplenishmentItem(
+				commerceInventoryReplenishmentItemId);
 	}
 
 	public long getCommerceInventoryReplenishmentItemId()
@@ -121,13 +126,12 @@ public class CommerceInventoryDisplayContext {
 		long commerceInventoryWarehouseItemId = ParamUtil.getLong(
 			_cpRequestHelper.getRequest(), "commerceInventoryWarehouseItemId");
 
-		if (commerceInventoryWarehouseItemId > 0) {
-			return _commerceInventoryWarehouseItemService.
-				getCommerceInventoryWarehouseItem(
-					commerceInventoryWarehouseItemId);
+		if (commerceInventoryWarehouseItemId <= 0) {
+			return null;
 		}
 
-		return null;
+		return _commerceInventoryWarehouseItemService.
+			getCommerceInventoryWarehouseItem(commerceInventoryWarehouseItemId);
 	}
 
 	public long getCommerceInventoryWarehouseItemId() throws PortalException {
@@ -175,25 +179,37 @@ public class CommerceInventoryDisplayContext {
 		).buildString();
 	}
 
-	public List<HeaderActionModel> getHeaderActionModels()
-		throws PrincipalException {
+	public String getFormattedQuantity(BigDecimal quantity)
+		throws PortalException {
 
+		CommerceInventoryWarehouseItem commerceInventoryWarehouseItem =
+			getCommerceInventoryWarehouseItem();
+
+		if (commerceInventoryWarehouseItem == null) {
+			return StringPool.BLANK;
+		}
+
+		BigDecimal formattedQuantity = _commerceQuantityFormatter.format(
+			_cpRequestHelper.getCompanyId(), quantity,
+			commerceInventoryWarehouseItem.getSku(),
+			commerceInventoryWarehouseItem.getUnitOfMeasureKey());
+
+		return formattedQuantity.toString();
+	}
+
+	public List<HeaderActionModel> getHeaderActionModels() {
 		List<HeaderActionModel> headerActionModels = new ArrayList<>();
 
 		if (_sku == null) {
 			return headerActionModels;
 		}
 
-		if (_hasPermission()) {
-			RenderResponse renderResponse =
-				_cpRequestHelper.getRenderResponse();
+		RenderResponse renderResponse = _cpRequestHelper.getRenderResponse();
 
-			RenderURL cancelURL = renderResponse.createRenderURL();
+		RenderURL cancelURL = renderResponse.createRenderURL();
 
-			headerActionModels.add(
-				new HeaderActionModel(
-					null, cancelURL.toString(), null, "cancel"));
-		}
+		headerActionModels.add(
+			new HeaderActionModel(null, cancelURL.toString(), null, "cancel"));
 
 		return headerActionModels;
 	}
@@ -214,6 +230,11 @@ public class CommerceInventoryDisplayContext {
 		}
 
 		return creationMenu;
+	}
+
+	public String getParsedQuantity(BigDecimal quantity) throws Exception {
+		return _commerceQuantityFormatter.parse(
+			quantity, _cpRequestHelper.getLocale());
 	}
 
 	public PortletURL getPortletURL() {
@@ -330,14 +351,21 @@ public class CommerceInventoryDisplayContext {
 		return creationMenu;
 	}
 
-	private boolean _hasPermission() throws PrincipalException {
+	private boolean _hasPermission() {
 		PortletResourcePermission portletResourcePermission =
 			_commerceInventoryWarehouseModelResourcePermission.
 				getPortletResourcePermission();
 
+		if (portletResourcePermission.contains(
+				PermissionThreadLocal.getPermissionChecker(), null,
+				CommerceInventoryActionKeys.MANAGE_INVENTORY)) {
+
+			return true;
+		}
+
 		return portletResourcePermission.contains(
 			PermissionThreadLocal.getPermissionChecker(), null,
-			CommerceInventoryActionKeys.MANAGE_INVENTORY);
+			CommerceInventoryActionKeys.ADD_WAREHOUSE);
 	}
 
 	private final CommerceInventoryReplenishmentItemService
@@ -348,6 +376,7 @@ public class CommerceInventoryDisplayContext {
 		_commerceInventoryWarehouseModelResourcePermission;
 	private final CommerceInventoryWarehouseService
 		_commerceInventoryWarehouseService;
+	private final CommerceQuantityFormatter _commerceQuantityFormatter;
 	private final CPRequestHelper _cpRequestHelper;
 	private String _sku;
 	private final String _unitOfMeasureKey;

@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -310,13 +311,6 @@ public class CommercePriceModifierLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static CommercePriceModifier fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CommercePriceModifier fetchCommercePriceModifier(
 		long commercePriceModifierId) {
 
@@ -564,13 +558,12 @@ public class CommercePriceModifierLocalServiceUtil {
 	}
 
 	public static CommercePriceModifierLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommercePriceModifierLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CommercePriceModifierLocalService _service;
+	private static final Snapshot<CommercePriceModifierLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommercePriceModifierLocalServiceUtil.class,
+			CommercePriceModifierLocalService.class);
 
 }

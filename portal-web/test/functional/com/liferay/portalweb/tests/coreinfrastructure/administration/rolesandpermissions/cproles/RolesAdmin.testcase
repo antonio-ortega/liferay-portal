@@ -1,4 +1,4 @@
-@component-name = "portal-user-management"
+@component-name = "portal-commerce"
 definition {
 
 	property portal.release = "true";
@@ -209,7 +209,7 @@ definition {
 		task ("Then only one result is displayed and the result is the newly created role") {
 			AssertTextEquals(
 				locator1 = "Search#SEARCH_INFO",
-				value1 = "1 Result for \"Role1 Name\"");
+				value1 = "1 Result Found for \"Role1 Name\"");
 
 			LexiconEntry.viewEntryName(rowEntry = "Role1 Name");
 		}
@@ -223,7 +223,7 @@ definition {
 		task ("Then only one result is displayed and the result is the newly created role") {
 			AssertTextEquals(
 				locator1 = "Search#SEARCH_INFO",
-				value1 = "1 Result for \"Role2 Key\"");
+				value1 = "1 Result Found for \"Role2 Key\"");
 
 			LexiconEntry.viewEntryName(rowEntry = "Role1 Name");
 		}
@@ -380,6 +380,8 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
+		LexiconEntry.gotoAdd();
+
 		Segmentation.addProperties(propertyOption = "Email Address");
 
 		Segmentation.fillTitle(titleField = "New RoleSegment Test");
@@ -458,7 +460,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserGroup.openUserGroupsAdmin();
@@ -481,7 +483,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserGroup.openUserGroupsAdmin();
@@ -523,8 +525,8 @@ definition {
 
 	@priority = 4
 	test RegularRoleCanBeDeleted {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
@@ -548,6 +550,28 @@ definition {
 		Role.viewDefaultCP(roleTitle = "Roles Regrole Name");
 	}
 
+	@description = "This is a test for LPS-202614."
+	@priority = 3
+	test RemoveSegmentsOptionInAdministratorRole {
+		task ("When navigates to administrator role -> Assignees tab") {
+			Role.openRolesAdmin();
+
+			LexiconEntry.gotoEntryMenuItem(
+				menuItem = "Edit",
+				rowEntry = "Administrator");
+
+			Click(
+				key_tabName = "Assignees",
+				locator1 = "ObjectAdmin#ENTRY_RELATIONSHIP_TAB");
+		}
+
+		task ("Then the Segments tab is removed") {
+			AssertElementNotPresent(
+				key_tabName = "Segments",
+				locator1 = "ObjectAdmin#ENTRY_RELATIONSHIP_TAB");
+		}
+	}
+
 	@priority = 4
 	test RolesCanBeOrderedByTitle {
 		Role.openRolesAdmin();
@@ -564,9 +588,7 @@ definition {
 			locator1 = "ListGroupItem#ITEM_NAME_LINK",
 			value1 = "User");
 
-		ManagementBar.setFilterAndOrder(orderBy = "Title");
-
-		Click(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
+		Click.clickNoMouseOver(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
 
 		AssertElementPresent(
 			key_itemName = "User",
@@ -701,7 +723,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserGroup.openUserGroupsAdmin();
@@ -724,7 +746,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserGroup.openUserGroupsAdmin();
@@ -782,8 +804,8 @@ definition {
 	@description = "This is a use case for LPS-109572."
 	@priority = 4
 	test UserCanBeAssignedToARegularRole {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 
@@ -856,7 +878,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserGroup.openUserGroupsAdmin();
@@ -879,7 +901,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserGroup.openUserGroupsAdmin();
@@ -990,7 +1012,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserGroup.openUserGroupsAdmin();
@@ -1013,7 +1035,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		UserGroup.openUserGroupsAdmin();

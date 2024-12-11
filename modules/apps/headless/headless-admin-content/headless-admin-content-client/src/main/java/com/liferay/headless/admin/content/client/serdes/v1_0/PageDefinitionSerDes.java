@@ -6,6 +6,7 @@
 package com.liferay.headless.admin.content.client.serdes.v1_0;
 
 import com.liferay.headless.admin.content.client.dto.v1_0.PageDefinition;
+import com.liferay.headless.admin.content.client.dto.v1_0.PageRule;
 import com.liferay.headless.admin.content.client.json.BaseJSONParser;
 
 import java.util.Iterator;
@@ -56,6 +57,26 @@ public class PageDefinitionSerDes {
 			sb.append(pageDefinition.getPageElement());
 		}
 
+		if (pageDefinition.getPageRules() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"pageRules\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < pageDefinition.getPageRules().length; i++) {
+				sb.append(pageDefinition.getPageRules()[i]);
+
+				if ((i + 1) < pageDefinition.getPageRules().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (pageDefinition.getSettings() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -103,6 +124,13 @@ public class PageDefinitionSerDes {
 				"pageElement", String.valueOf(pageDefinition.getPageElement()));
 		}
 
+		if (pageDefinition.getPageRules() == null) {
+			map.put("pageRules", null);
+		}
+		else {
+			map.put("pageRules", String.valueOf(pageDefinition.getPageRules()));
+		}
+
 		if (pageDefinition.getSettings() == null) {
 			map.put("settings", null);
 		}
@@ -134,6 +162,24 @@ public class PageDefinitionSerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "pageElement")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "pageRules")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "settings")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "version")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			PageDefinition pageDefinition, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -142,6 +188,22 @@ public class PageDefinitionSerDes {
 				if (jsonParserFieldValue != null) {
 					pageDefinition.setPageElement(
 						PageElementSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "pageRules")) {
+				if (jsonParserFieldValue != null) {
+					Object[] jsonParserFieldValues =
+						(Object[])jsonParserFieldValue;
+
+					PageRule[] pageRulesArray =
+						new PageRule[jsonParserFieldValues.length];
+
+					for (int i = 0; i < pageRulesArray.length; i++) {
+						pageRulesArray[i] = PageRuleSerDes.toDTO(
+							(String)jsonParserFieldValues[i]);
+					}
+
+					pageDefinition.setPageRules(pageRulesArray);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "settings")) {
@@ -188,36 +250,7 @@ public class PageDefinitionSerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -227,6 +260,38 @@ public class PageDefinitionSerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

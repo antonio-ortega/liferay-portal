@@ -295,7 +295,7 @@ for (AssetEntry assetEntry : assetEntryResult.getAssetEntries()) {
 								borderless="<%= true %>"
 								displayType="secondary"
 								icon="print"
-								propsTransformer="js/printPageButtonPropsTransformer"
+								propsTransformer="{printPageButtonPropsTransformer} from asset-publisher-web"
 								small="<%= true %>"
 								title="<%= label %>"
 								type="button"
@@ -341,7 +341,7 @@ for (AssetEntry assetEntry : assetEntryResult.getAssetEntries()) {
 							<clay:content-col
 								cssClass="locale-actions mr-3"
 							>
-								<liferay-ui:language
+								<liferay-site-navigation:language
 									formAction="<%= currentURL %>"
 									languageId="<%= languageId %>"
 									languageIds="<%= availableLanguageIds %>"

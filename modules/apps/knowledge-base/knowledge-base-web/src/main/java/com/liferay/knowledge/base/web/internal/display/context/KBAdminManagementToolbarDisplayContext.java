@@ -30,7 +30,6 @@ import com.liferay.knowledge.base.web.internal.util.comparator.KBOrderByComparat
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -48,6 +47,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.trash.TrashHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,7 +73,7 @@ public class KBAdminManagementToolbarDisplayContext {
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
 			RenderRequest renderRequest, RenderResponse renderResponse,
-			PortletConfig portletConfig)
+			PortletConfig portletConfig, TrashHelper trashHelper)
 		throws PortalException, PortletException {
 
 		_httpServletRequest = httpServletRequest;
@@ -82,6 +82,7 @@ public class KBAdminManagementToolbarDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_portletConfig = portletConfig;
+		_trashHelper = trashHelper;
 
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
@@ -128,23 +129,13 @@ public class KBAdminManagementToolbarDisplayContext {
 	}
 
 	public CreationMenu getCreationMenu() throws PortalException {
-		long kbFolderClassNameId = PortalUtil.getClassNameId(
-			KBFolderConstants.getClassName());
-
-		long parentResourceClassNameId = ParamUtil.getLong(
-			_httpServletRequest, "parentResourceClassNameId",
-			kbFolderClassNameId);
+		CreationMenu creationMenu = new CreationMenu();
 
 		long parentResourcePrimKey = ParamUtil.getLong(
 			_httpServletRequest, "parentResourcePrimKey",
 			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
-		boolean hasAddKBArticlePermission = _hasAddKBArticlePermission();
-		boolean hasAddKBFolderPermission = _hasAddKBFolderPermission();
-
-		CreationMenu creationMenu = new CreationMenu();
-
-		if (hasAddKBFolderPermission) {
+		if (_hasAddKBFolderPermission()) {
 			creationMenu.addDropdownItem(
 				dropdownItem -> {
 					dropdownItem.setHref(
@@ -167,7 +158,14 @@ public class KBAdminManagementToolbarDisplayContext {
 				});
 		}
 
-		if (hasAddKBArticlePermission) {
+		long kbFolderClassNameId = PortalUtil.getClassNameId(
+			KBFolderConstants.getClassName());
+
+		long parentResourceClassNameId = ParamUtil.getLong(
+			_httpServletRequest, "parentResourceClassNameId",
+			kbFolderClassNameId);
+
+		if (_hasAddKBArticlePermission()) {
 			creationMenu.addDropdownItem(
 				dropdownItem -> {
 					dropdownItem.setHref(
@@ -345,17 +343,6 @@ public class KBAdminManagementToolbarDisplayContext {
 		).build();
 	}
 
-	public List<DropdownItem> getFilterDropDownItems() {
-		return DropdownItemListBuilder.addGroup(
-			() -> !FeatureFlagManagerUtil.isEnabled("LPS-144527"),
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
-				dropdownGroupItem.setLabel(
-					LanguageUtil.get(_httpServletRequest, "order-by"));
-			}
-		).build();
-	}
-
 	public List<DropdownItem> getOrderByDropdownItems() {
 		return new DropdownItemList() {
 			{
@@ -456,6 +443,14 @@ public class KBAdminManagementToolbarDisplayContext {
 
 	public boolean isShowInfoButton() {
 		return !isSearch();
+	}
+
+	public boolean isTrashEnabled() throws PortalException {
+		if (_trashHelper.isTrashEnabled(_themeDisplay.getScopeGroupId())) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private SearchContainer<Object> _createSearchContainer()
@@ -638,5 +633,6 @@ public class KBAdminManagementToolbarDisplayContext {
 	private final RenderResponse _renderResponse;
 	private SearchContainer<Object> _searchContainer;
 	private final ThemeDisplay _themeDisplay;
+	private final TrashHelper _trashHelper;
 
 }

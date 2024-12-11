@@ -9,7 +9,10 @@ import com.liferay.headless.delivery.dto.v1_0.BlogPosting;
 import com.liferay.headless.delivery.dto.v1_0.BlogPostingImage;
 import com.liferay.headless.delivery.dto.v1_0.Comment;
 import com.liferay.headless.delivery.dto.v1_0.Document;
+import com.liferay.headless.delivery.dto.v1_0.DocumentDataDefinitionType;
 import com.liferay.headless.delivery.dto.v1_0.DocumentFolder;
+import com.liferay.headless.delivery.dto.v1_0.DocumentMetadataSet;
+import com.liferay.headless.delivery.dto.v1_0.DocumentShortcut;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseArticle;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseAttachment;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseFolder;
@@ -31,8 +34,11 @@ import com.liferay.headless.delivery.resource.v1_0.CommentResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentStructureResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentTemplateResource;
+import com.liferay.headless.delivery.resource.v1_0.DocumentDataDefinitionTypeResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
+import com.liferay.headless.delivery.resource.v1_0.DocumentMetadataSetResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentResource;
+import com.liferay.headless.delivery.resource.v1_0.DocumentShortcutResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseArticleResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseAttachmentResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseFolderResource;
@@ -139,12 +145,37 @@ public class Mutation {
 			documentResourceComponentServiceObjects;
 	}
 
+	public static void
+		setDocumentDataDefinitionTypeResourceComponentServiceObjects(
+			ComponentServiceObjects<DocumentDataDefinitionTypeResource>
+				documentDataDefinitionTypeResourceComponentServiceObjects) {
+
+		_documentDataDefinitionTypeResourceComponentServiceObjects =
+			documentDataDefinitionTypeResourceComponentServiceObjects;
+	}
+
 	public static void setDocumentFolderResourceComponentServiceObjects(
 		ComponentServiceObjects<DocumentFolderResource>
 			documentFolderResourceComponentServiceObjects) {
 
 		_documentFolderResourceComponentServiceObjects =
 			documentFolderResourceComponentServiceObjects;
+	}
+
+	public static void setDocumentMetadataSetResourceComponentServiceObjects(
+		ComponentServiceObjects<DocumentMetadataSetResource>
+			documentMetadataSetResourceComponentServiceObjects) {
+
+		_documentMetadataSetResourceComponentServiceObjects =
+			documentMetadataSetResourceComponentServiceObjects;
+	}
+
+	public static void setDocumentShortcutResourceComponentServiceObjects(
+		ComponentServiceObjects<DocumentShortcutResource>
+			documentShortcutResourceComponentServiceObjects) {
+
+		_documentShortcutResourceComponentServiceObjects =
+			documentShortcutResourceComponentServiceObjects;
 	}
 
 	public static void setKnowledgeBaseArticleResourceComponentServiceObjects(
@@ -632,6 +663,25 @@ public class Mutation {
 			blogPostingImageResource ->
 				blogPostingImageResource.postSiteBlogPostingImageBatch(
 					Long.valueOf(siteKey), multipartBody, callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Deletes the site's blog post image by external reference code."
+	)
+	public boolean deleteSiteBlogPostingImageByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_blogPostingImageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			blogPostingImageResource ->
+				blogPostingImageResource.
+					deleteSiteBlogPostingImageByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode));
+
+		return true;
 	}
 
 	@GraphQLField
@@ -1695,6 +1745,154 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public Response
+			createAssetLibraryDocumentDataDefinitionTypesPageExportBatch(
+				@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+				@GraphQLName("search") String search,
+				@GraphQLName("filter") String filterString,
+				@GraphQLName("sort") String sortsString,
+				@GraphQLName("callbackURL") String callbackURL,
+				@GraphQLName("contentType") String contentType,
+				@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				documentDataDefinitionTypeResource.
+					postAssetLibraryDocumentDataDefinitionTypesPageExportBatch(
+						Long.valueOf(assetLibraryId), search,
+						_filterBiFunction.apply(
+							documentDataDefinitionTypeResource, filterString),
+						_sortsBiFunction.apply(
+							documentDataDefinitionTypeResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField(description = "Creates a new document data definition type.")
+	public DocumentDataDefinitionType
+			createAssetLibraryDocumentDataDefinitionType(
+				@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+				@GraphQLName("documentDataDefinitionType")
+					DocumentDataDefinitionType documentDataDefinitionType)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				documentDataDefinitionTypeResource.
+					postAssetLibraryDocumentDataDefinitionType(
+						Long.valueOf(assetLibraryId),
+						documentDataDefinitionType));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryDocumentDataDefinitionTypeBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				documentDataDefinitionTypeResource.
+					postAssetLibraryDocumentDataDefinitionTypeBatch(
+						Long.valueOf(assetLibraryId), callbackURL, object));
+	}
+
+	@GraphQLField
+	public boolean deleteDocumentDataDefinitionType(
+			@GraphQLName("documentDataDefinitionTypeId") Long
+				documentDataDefinitionTypeId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				documentDataDefinitionTypeResource.
+					deleteDocumentDataDefinitionType(
+						documentDataDefinitionTypeId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteDocumentDataDefinitionTypeBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				documentDataDefinitionTypeResource.
+					deleteDocumentDataDefinitionTypeBatch(callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createSiteDocumentDataDefinitionTypesPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("sort") String sortsString,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				documentDataDefinitionTypeResource.
+					postSiteDocumentDataDefinitionTypesPageExportBatch(
+						Long.valueOf(siteKey), search,
+						_filterBiFunction.apply(
+							documentDataDefinitionTypeResource, filterString),
+						_sortsBiFunction.apply(
+							documentDataDefinitionTypeResource, sortsString),
+						callbackURL, contentType, fieldNames));
+	}
+
+	@GraphQLField(description = "Creates a new document data definition type.")
+	public DocumentDataDefinitionType createSiteDocumentDataDefinitionType(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("documentDataDefinitionType")
+				DocumentDataDefinitionType documentDataDefinitionType)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				documentDataDefinitionTypeResource.
+					postSiteDocumentDataDefinitionType(
+						Long.valueOf(siteKey), documentDataDefinitionType));
+	}
+
+	@GraphQLField
+	public Response createSiteDocumentDataDefinitionTypeBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentDataDefinitionTypeResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentDataDefinitionTypeResource ->
+				documentDataDefinitionTypeResource.
+					postSiteDocumentDataDefinitionTypeBatch(
+						Long.valueOf(siteKey), callbackURL, object));
+	}
+
+	@GraphQLField
 	public Response createAssetLibraryDocumentFoldersPageExportBatch(
 			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
 			@GraphQLName("search") String search,
@@ -2070,6 +2268,423 @@ public class Mutation {
 					putSiteDocumentsFolderByExternalReferenceCode(
 						Long.valueOf(siteKey), externalReferenceCode,
 						documentFolder));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryDocumentMetadataSetsPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					postAssetLibraryDocumentMetadataSetsPageExportBatch(
+						Long.valueOf(assetLibraryId), callbackURL, contentType,
+						fieldNames));
+	}
+
+	@GraphQLField
+	public DocumentMetadataSet createAssetLibraryDocumentMetadataSet(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("documentMetadataSet") DocumentMetadataSet
+				documentMetadataSet)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.postAssetLibraryDocumentMetadataSet(
+					Long.valueOf(assetLibraryId), documentMetadataSet));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryDocumentMetadataSetBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					postAssetLibraryDocumentMetadataSetBatch(
+						Long.valueOf(assetLibraryId), callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Deletes the asset library's Document Metadata Set by external reference code."
+	)
+	public boolean deleteAssetLibraryDocumentMetadataSetByExternalReferenceCode(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					deleteAssetLibraryDocumentMetadataSetByExternalReferenceCode(
+						Long.valueOf(assetLibraryId), externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField(
+		description = "Updates the asset Library's Document Metadata Set with the given external reference code, or creates it if it does not exists."
+	)
+	public DocumentMetadataSet
+			updateAssetLibraryDocumentMetadataSetByExternalReferenceCode(
+				@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("documentMetadataSet") DocumentMetadataSet
+					documentMetadataSet)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					putAssetLibraryDocumentMetadataSetByExternalReferenceCode(
+						Long.valueOf(assetLibraryId), externalReferenceCode,
+						documentMetadataSet));
+	}
+
+	@GraphQLField(
+		description = "Deletes the document metadata set and returns a 204 if the operation succeeds."
+	)
+	public boolean deleteDocumentMetadataSet(
+			@GraphQLName("documentMetadataSetId") Long documentMetadataSetId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.deleteDocumentMetadataSet(
+					documentMetadataSetId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteDocumentMetadataSetBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.deleteDocumentMetadataSetBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createSiteDocumentMetadataSetsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					postSiteDocumentMetadataSetsPageExportBatch(
+						Long.valueOf(siteKey), callbackURL, contentType,
+						fieldNames));
+	}
+
+	@GraphQLField
+	public DocumentMetadataSet createSiteDocumentMetadataSet(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("documentMetadataSet") DocumentMetadataSet
+				documentMetadataSet)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.postSiteDocumentMetadataSet(
+					Long.valueOf(siteKey), documentMetadataSet));
+	}
+
+	@GraphQLField
+	public Response createSiteDocumentMetadataSetBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.postSiteDocumentMetadataSetBatch(
+					Long.valueOf(siteKey), callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Deletes the site's Document Metadata Set by external reference code."
+	)
+	public boolean deleteSiteDocumentMetadataSetByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					deleteSiteDocumentMetadataSetByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField(
+		description = "Updates the site's Document Metadata Set with the given external reference code, or creates it if it does not exist."
+	)
+	public DocumentMetadataSet
+			updateSiteDocumentMetadataSetByExternalReferenceCode(
+				@GraphQLName("siteKey") @NotEmpty String siteKey,
+				@GraphQLName("externalReferenceCode") String
+					externalReferenceCode,
+				@GraphQLName("documentMetadataSet") DocumentMetadataSet
+					documentMetadataSet)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentMetadataSetResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentMetadataSetResource ->
+				documentMetadataSetResource.
+					putSiteDocumentMetadataSetByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode,
+						documentMetadataSet));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryDocumentShortcutsPageExportBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.
+					postAssetLibraryDocumentShortcutsPageExportBatch(
+						Long.valueOf(assetLibraryId), callbackURL, contentType,
+						fieldNames));
+	}
+
+	@GraphQLField
+	public DocumentShortcut createAssetLibraryDocumentShortcut(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("documentShortcut") DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.postAssetLibraryDocumentShortcut(
+					Long.valueOf(assetLibraryId), documentShortcut));
+	}
+
+	@GraphQLField
+	public Response createAssetLibraryDocumentShortcutBatch(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.postAssetLibraryDocumentShortcutBatch(
+					Long.valueOf(assetLibraryId), callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Deletes the document shortcut and returns a 204 if the operation succeeds."
+	)
+	public boolean deleteDocumentShortcut(
+			@GraphQLName("documentShortcutId") Long documentShortcutId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.deleteDocumentShortcut(
+					documentShortcutId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public Response deleteDocumentShortcutBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.deleteDocumentShortcutBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Updates only the fields received in the request body, leaving any other fields untouched."
+	)
+	public DocumentShortcut patchDocumentShortcut(
+			@GraphQLName("documentShortcutId") Long documentShortcutId,
+			@GraphQLName("documentShortcut") DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.patchDocumentShortcut(
+					documentShortcutId, documentShortcut));
+	}
+
+	@GraphQLField(
+		description = "Replaces the document shortcut with the information sent in the request body. Any missing fields are deleted, unless they are required."
+	)
+	public DocumentShortcut updateDocumentShortcut(
+			@GraphQLName("documentShortcutId") Long documentShortcutId,
+			@GraphQLName("documentShortcut") DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.putDocumentShortcut(
+					documentShortcutId, documentShortcut));
+	}
+
+	@GraphQLField
+	public Response updateDocumentShortcutBatch(
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.putDocumentShortcutBatch(
+					callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createSiteDocumentShortcutsPageExportBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("contentType") String contentType,
+			@GraphQLName("fieldNames") String fieldNames)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.
+					postSiteDocumentShortcutsPageExportBatch(
+						Long.valueOf(siteKey), callbackURL, contentType,
+						fieldNames));
+	}
+
+	@GraphQLField
+	public DocumentShortcut createSiteDocumentShortcut(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("documentShortcut") DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.postSiteDocumentShortcut(
+					Long.valueOf(siteKey), documentShortcut));
+	}
+
+	@GraphQLField
+	public Response createSiteDocumentShortcutBatch(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("callbackURL") String callbackURL,
+			@GraphQLName("object") Object object)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.postSiteDocumentShortcutBatch(
+					Long.valueOf(siteKey), callbackURL, object));
+	}
+
+	@GraphQLField(
+		description = "Deletes the site's document shortcut by external reference code returns a 204 if the operation succeeds."
+	)
+	public boolean deleteSiteDocumentShortcutByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.
+					deleteSiteDocumentShortcutByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode));
+
+		return true;
+	}
+
+	@GraphQLField
+	public DocumentShortcut updateSiteDocumentShortcutByExternalReferenceCode(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("externalReferenceCode") String externalReferenceCode,
+			@GraphQLName("documentShortcut") DocumentShortcut documentShortcut)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentShortcutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentShortcutResource ->
+				documentShortcutResource.
+					putSiteDocumentShortcutByExternalReferenceCode(
+						Long.valueOf(siteKey), externalReferenceCode,
+						documentShortcut));
 	}
 
 	@GraphQLField(
@@ -3123,6 +3738,21 @@ public class Mutation {
 					callbackURL, object));
 	}
 
+	@GraphQLField
+	public boolean updateMessageBoardMessageMarkAsAnswer(
+			@GraphQLName("messageBoardMessageId") Long messageBoardMessageId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_messageBoardMessageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardMessageResource ->
+				messageBoardMessageResource.putMessageBoardMessageMarkAsAnswer(
+					messageBoardMessageId));
+
+		return true;
+	}
+
 	@GraphQLField(
 		description = "Deletes the message board message's rating and returns a 204 if the operation succeeds."
 	)
@@ -3206,6 +3836,22 @@ public class Mutation {
 			messageBoardMessageResource ->
 				messageBoardMessageResource.putMessageBoardMessageSubscribe(
 					messageBoardMessageId));
+
+		return true;
+	}
+
+	@GraphQLField
+	public boolean updateMessageBoardMessageUnmarkAsAnswer(
+			@GraphQLName("messageBoardMessageId") Long messageBoardMessageId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_messageBoardMessageResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			messageBoardMessageResource ->
+				messageBoardMessageResource.
+					putMessageBoardMessageUnmarkAsAnswer(
+						messageBoardMessageId));
 
 		return true;
 	}
@@ -5732,6 +6378,34 @@ public class Mutation {
 	}
 
 	private void _populateResourceContext(
+			DocumentDataDefinitionTypeResource
+				documentDataDefinitionTypeResource)
+		throws Exception {
+
+		documentDataDefinitionTypeResource.setContextAcceptLanguage(
+			_acceptLanguage);
+		documentDataDefinitionTypeResource.setContextCompany(_company);
+		documentDataDefinitionTypeResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		documentDataDefinitionTypeResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		documentDataDefinitionTypeResource.setContextUriInfo(_uriInfo);
+		documentDataDefinitionTypeResource.setContextUser(_user);
+		documentDataDefinitionTypeResource.setGroupLocalService(
+			_groupLocalService);
+		documentDataDefinitionTypeResource.setRoleLocalService(
+			_roleLocalService);
+
+		documentDataDefinitionTypeResource.
+			setVulcanBatchEngineExportTaskResource(
+				_vulcanBatchEngineExportTaskResource);
+
+		documentDataDefinitionTypeResource.
+			setVulcanBatchEngineImportTaskResource(
+				_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
 			DocumentFolderResource documentFolderResource)
 		throws Exception {
 
@@ -5750,6 +6424,50 @@ public class Mutation {
 			_vulcanBatchEngineExportTaskResource);
 
 		documentFolderResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			DocumentMetadataSetResource documentMetadataSetResource)
+		throws Exception {
+
+		documentMetadataSetResource.setContextAcceptLanguage(_acceptLanguage);
+		documentMetadataSetResource.setContextCompany(_company);
+		documentMetadataSetResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		documentMetadataSetResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		documentMetadataSetResource.setContextUriInfo(_uriInfo);
+		documentMetadataSetResource.setContextUser(_user);
+		documentMetadataSetResource.setGroupLocalService(_groupLocalService);
+		documentMetadataSetResource.setRoleLocalService(_roleLocalService);
+
+		documentMetadataSetResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		documentMetadataSetResource.setVulcanBatchEngineImportTaskResource(
+			_vulcanBatchEngineImportTaskResource);
+	}
+
+	private void _populateResourceContext(
+			DocumentShortcutResource documentShortcutResource)
+		throws Exception {
+
+		documentShortcutResource.setContextAcceptLanguage(_acceptLanguage);
+		documentShortcutResource.setContextCompany(_company);
+		documentShortcutResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		documentShortcutResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		documentShortcutResource.setContextUriInfo(_uriInfo);
+		documentShortcutResource.setContextUser(_user);
+		documentShortcutResource.setGroupLocalService(_groupLocalService);
+		documentShortcutResource.setRoleLocalService(_roleLocalService);
+
+		documentShortcutResource.setVulcanBatchEngineExportTaskResource(
+			_vulcanBatchEngineExportTaskResource);
+
+		documentShortcutResource.setVulcanBatchEngineImportTaskResource(
 			_vulcanBatchEngineImportTaskResource);
 	}
 
@@ -6090,8 +6808,14 @@ public class Mutation {
 		_contentTemplateResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentResource>
 		_documentResourceComponentServiceObjects;
+	private static ComponentServiceObjects<DocumentDataDefinitionTypeResource>
+		_documentDataDefinitionTypeResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentFolderResource>
 		_documentFolderResourceComponentServiceObjects;
+	private static ComponentServiceObjects<DocumentMetadataSetResource>
+		_documentMetadataSetResourceComponentServiceObjects;
+	private static ComponentServiceObjects<DocumentShortcutResource>
+		_documentShortcutResourceComponentServiceObjects;
 	private static ComponentServiceObjects<KnowledgeBaseArticleResource>
 		_knowledgeBaseArticleResourceComponentServiceObjects;
 	private static ComponentServiceObjects<KnowledgeBaseAttachmentResource>

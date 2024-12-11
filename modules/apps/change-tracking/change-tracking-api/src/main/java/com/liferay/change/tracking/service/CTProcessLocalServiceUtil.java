@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -56,15 +57,6 @@ public class CTProcessLocalServiceUtil {
 		return getService().addCTProcess(userId, ctCollectionId);
 	}
 
-	public static CTProcess addCTProcess(
-			long userId, long fromCTCollectionId, long toCTCollectionId,
-			long[] ctEntryIds)
-		throws PortalException {
-
-		return getService().addCTProcess(
-			userId, fromCTCollectionId, toCTCollectionId, ctEntryIds);
-	}
-
 	/**
 	 * Creates a new ct process with the primary key. Does not add the ct process to the database.
 	 *
@@ -94,8 +86,11 @@ public class CTProcessLocalServiceUtil {
 	 *
 	 * @param ctProcess the ct process
 	 * @return the ct process that was removed
+	 * @throws PortalException
 	 */
-	public static CTProcess deleteCTProcess(CTProcess ctProcess) {
+	public static CTProcess deleteCTProcess(CTProcess ctProcess)
+		throws PortalException {
+
 		return getService().deleteCTProcess(ctProcess);
 	}
 
@@ -306,13 +301,11 @@ public class CTProcessLocalServiceUtil {
 	}
 
 	public static CTProcessLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CTProcessLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CTProcessLocalService _service;
+	private static final Snapshot<CTProcessLocalService> _serviceSnapshot =
+		new Snapshot<>(
+			CTProcessLocalServiceUtil.class, CTProcessLocalService.class);
 
 }

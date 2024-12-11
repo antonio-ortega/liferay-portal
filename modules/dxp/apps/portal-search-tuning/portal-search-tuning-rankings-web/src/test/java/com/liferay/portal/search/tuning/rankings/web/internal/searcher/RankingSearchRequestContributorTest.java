@@ -9,10 +9,13 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchEngine;
 import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.search.constants.SearchContextAttributes;
 import com.liferay.portal.search.searcher.SearchRequest;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
+import com.liferay.portal.search.tuning.rankings.index.Ranking;
+import com.liferay.portal.search.tuning.rankings.index.RankingIndexReader;
 import com.liferay.portal.search.tuning.rankings.web.internal.BaseRankingsWebTestCase;
-import com.liferay.portal.search.tuning.rankings.web.internal.index.RankingIndexReader;
 import com.liferay.portal.search.tuning.rankings.web.internal.searcher.helper.RankingSearchRequestHelper;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
@@ -83,9 +86,40 @@ public class RankingSearchRequestContributorTest
 
 	@Test
 	public void testContributeRankingIndexReaderIsExistsFalse() {
-		_setUpContributorMocks(false);
+		SearchRequestBuilder searchRequestBuilder = _setUpContributorMocks(
+			false);
+
+		Mockito.doReturn(
+			Mockito.mock(List.class)
+		).when(
+			_rankingIndexReader
+		).fetch(
+			Mockito.anyString(), Mockito.anyString(), Mockito.any(),
+			Mockito.anyString()
+		);
+
+		Mockito.doNothing(
+		).when(
+			_rankingSearchRequestHelper
+		).contribute(
+			Mockito.any(), Mockito.any()
+		);
 
 		SearchRequest searchRequest = Mockito.mock(SearchRequest.class);
+
+		Mockito.doReturn(
+			searchRequest
+		).when(
+			searchRequestBuilder
+		).build();
+
+		Mockito.doReturn(
+			Mockito.mock(SearchContext.class)
+		).when(
+			searchRequestBuilder
+		).withSearchContextGet(
+			Function.identity()
+		);
 
 		Assert.assertEquals(
 			searchRequest,
@@ -134,6 +168,58 @@ public class RankingSearchRequestContributorTest
 			_rankingSearchRequestContributor.contribute(searchRequest));
 	}
 
+	@Test
+	public void testContributeRankingsFalse() {
+		_setUpSearchContext(false);
+
+		Mockito.doReturn(
+			ListUtil.fromArray(Mockito.mock(Ranking.class))
+		).when(
+			_rankingIndexReader
+		).fetch(
+			Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()
+		);
+
+		SearchRequest searchRequest = Mockito.mock(SearchRequest.class);
+
+		_rankingSearchRequestContributor.contribute(searchRequest);
+
+		Mockito.verify(
+			_rankingIndexReader, Mockito.times(0)
+		).fetch(
+			Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()
+		);
+
+		Mockito.verify(
+			_rankingSearchRequestHelper, Mockito.times(0)
+		).contribute(
+			Mockito.any(), Mockito.any()
+		);
+	}
+
+	@Test
+	public void testContributeRankingsTrue() {
+		_setUpSearchContext(true);
+
+		Mockito.doReturn(
+			ListUtil.fromArray(Mockito.mock(Ranking.class))
+		).when(
+			_rankingIndexReader
+		).fetch(
+			Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()
+		);
+
+		SearchRequest searchRequest = Mockito.mock(SearchRequest.class);
+
+		_rankingSearchRequestContributor.contribute(searchRequest);
+
+		Mockito.verify(
+			_rankingSearchRequestHelper, Mockito.times(1)
+		).contribute(
+			Mockito.any(), Mockito.any()
+		);
+	}
+
 	@SuppressWarnings("unchecked")
 	private SearchRequestBuilder _setUpContributorMocks(
 		boolean rankingIndexNameExist) {
@@ -162,6 +248,29 @@ public class RankingSearchRequestContributorTest
 		);
 
 		return searchRequestBuilder;
+	}
+
+	private void _setUpSearchContext(Boolean contributeRankings) {
+		SearchContext searchContext = Mockito.mock(SearchContext.class);
+
+		SearchRequestBuilder searchRequestBuilder = _setUpContributorMocks(
+			true);
+
+		Mockito.doReturn(
+			searchContext
+		).when(
+			searchRequestBuilder
+		).withSearchContextGet(
+			Function.identity()
+		);
+
+		Mockito.doReturn(
+			contributeRankings
+		).when(
+			searchContext
+		).getAttribute(
+			SearchContextAttributes.ATTRIBUTE_KEY_CONTRIBUTE_TUNING_RANKINGS
+		);
 	}
 
 	private void _setUpSearchEngineHelper() {

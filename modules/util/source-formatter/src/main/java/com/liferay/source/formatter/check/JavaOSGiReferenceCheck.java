@@ -16,6 +16,7 @@ import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaClassParser;
 import com.liferay.source.formatter.parser.JavaTerm;
 import com.liferay.source.formatter.util.FileUtil;
+import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import java.io.File;
 
@@ -192,9 +193,9 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 					addMessage(
 						fileName,
-						"Use super class variable '" +
+						"Use super class variable \"" +
 							serviceBaseJavaTerm.getName() +
-								"' instead of injection",
+								"\" instead of injection",
 						javaTerm.getLineNumber());
 				}
 			}
@@ -234,8 +235,8 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 					addMessage(
 						fileName,
-						"Use portal service reference instead of '" +
-							serviceReferenceUtilClassName + "' in modules");
+						"Use portal service reference instead of \"" +
+							serviceReferenceUtilClassName + "\" in modules");
 
 					return;
 				}
@@ -334,7 +335,7 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 				addMessage(
 					fileName,
-					"Add '-dsannotations-options: inherit' to '" +
+					"Add \"-dsannotations-options: inherit\" to " +
 						bndSettings.getFileName());
 			}
 		}
@@ -419,13 +420,12 @@ public class JavaOSGiReferenceCheck extends BaseFileCheck {
 
 		String moduleRootDirLocation = "modules/";
 
-		for (int i = 0; i < 6; i++) {
+		for (int i = 0; i < getMaxDirLevel(); i++) {
 			File file = new File(getBaseDirName() + moduleRootDirLocation);
 
 			if (file.exists()) {
-				fileNames = getFileNames(
-					getBaseDirName() + moduleRootDirLocation, new String[0],
-					new String[] {"**/*.java"});
+				fileNames = SourceFormatterUtil.scanForFileNames(
+					file.getCanonicalPath(), new String[] {"**/*.java"});
 
 				break;
 			}

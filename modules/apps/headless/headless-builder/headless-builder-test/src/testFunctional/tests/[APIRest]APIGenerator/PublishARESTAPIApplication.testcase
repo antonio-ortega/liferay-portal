@@ -2,10 +2,10 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -31,12 +31,10 @@ definition {
 	}
 
 	@priority = 4
-	test CanSeeNewApiEndpointAndApiSchemaInPublishedApiApplicationPage {
-		property portal.acceptance = "true";
-
+	test CanSeeNewAPIEndpointAndAPISchemaInPublishedAPIApplicationPage {
 		task ("And Given an API Schema 'AppTest' related to an Application by post request postAPISchema") {
 			var response = SchemaAPI.createAPISchema(
-				externalReferenceCode = "App-test",
+				apiApplicationERC = "App-test",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "AppTest");
 		}
@@ -45,7 +43,7 @@ definition {
 			var schemaId = JSONPathUtil.getIdValue(response = ${response});
 
 			EndpointAPI.createAPIEndpoint(
-				externalReferenceCode = "App-test",
+				apiApplicationERC = "App-test",
 				name = "apptest",
 				path = "/apptest",
 				responseSchemaId = ${schemaId});
@@ -72,12 +70,10 @@ definition {
 	}
 
 	@priority = 4
-	test CanSeeNewApiEndpointInPublishedApiApplcationPage {
-		property portal.acceptance = "true";
-
+	test CanSeeNewAPIEndpointInPublishedAPIApplicationPage {
 		task ("And Given an API endpoint 'AppTest' related to an Application by post request postAPIEndpoint") {
 			EndpointAPI.createAPIEndpoint(
-				externalReferenceCode = "App-test",
+				apiApplicationERC = "App-test",
 				name = "apptest",
 				path = "/apptest");
 		}
@@ -97,12 +93,10 @@ definition {
 	}
 
 	@priority = 4
-	test CanSeeNewSchemaInPublishedApiApplcationPage {
-		property portal.acceptance = "true";
-
+	test CanSeeNewSchemaInPublishedAPIApplicationPage {
 		task ("And Given an API Schema 'AppTest' related to an Application by post request postAPISchema") {
 			SchemaAPI.createAPISchema(
-				externalReferenceCode = "App-test",
+				apiApplicationERC = "App-test",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "AppTest");
 		}

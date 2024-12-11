@@ -1,10 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Fragments";
+	property testray.main.component.name = "Fragment Administration";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -19,103 +19,6 @@ definition {
 
 		task ("Navigate to fragments admin") {
 			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
-		}
-	}
-
-	@description = "This is a test for LPS-188478. Assert new import page of composition works."
-	@priority = 3
-	test CannotImportInvalidFragmentComposition {
-		task ("Given a user accesses to the Fragments import page") {
-			FragmentsAdminNavigator.gotoImportCollection();
-
-			WaitForPageLoad();
-		}
-
-		task ("When the user uploads an invalid fragment composition") {
-			UploadDependencyFile.uploadArchiveFile(fileName = "collections-invalid-composition.zip");
-		}
-
-		task ("Then the user cannot import the invalid fragment composition") {
-			Button.clickImport();
-
-			Alert.viewInfoMessageSpecific(infoMessage = "No new items were imported.");
-
-			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
-
-			AssertTextEquals(
-				locator1 = "Message#EMPTY_INFO",
-				value1 = "There are no fragments.");
-		}
-	}
-
-	@description = "This is a test case for LPS-80625. The fragment importer should not allow non-zip files to be imported."
-	@priority = 5
-	@uitest
-	test CannotImportNonZip {
-		property portal.acceptance = "true";
-
-		task ("Navigate to the fragment import screen") {
-			FragmentsAdminNavigator.gotoImportCollection();
-		}
-
-		task ("Attempt to import a non-zip file") {
-			WaitForPageLoad();
-
-			UploadCommonFile.uploadCommonFileHiddenNoMouseOver(
-				locator1 = "TextInput#FILE",
-				value1 = "Document_1.doc");
-		}
-
-		task ("Assert the form validator displays an error that the file is not a zip file") {
-			AssertTextEquals(
-				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
-				value1 = "Only zip files are allowed.");
-		}
-	}
-
-	@description = "This is a test case for LPS-101256. Can edit inline content of fragment in composition."
-	@priority = 4
-	test EditInlineContentOfImportedFragmentComposition {
-		task ("Import a fragment collection") {
-			FragmentsAdmin.importCollectionFromDependenciesFolder(collectionZipFile = "collections-InlineContent-edited.zip");
-		}
-
-		task ("Add an imported fragment composition to content page") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Page Name",
-				type = "content");
-
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name");
-
-			PageEditor.addFragment(
-				collectionName = "Collection Name",
-				composition = "true",
-				fragmentName = "New Fragment Name");
-		}
-
-		task ("View the inline content of imported fragment composition") {
-			AssertTextEquals(
-				key_elementHeader = "//div[@aria-label='Heading']//*[contains(@data-lfr-editable-id,'element-text')]",
-				key_position = 1,
-				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT",
-				value1 = "Modify Text");
-		}
-
-		task ("Edit the inline text of Heading") {
-			PageEditor.editFragmentText(
-				fragmentName = "Heading",
-				id = "element-text",
-				text = "New editable fragment text");
-		}
-
-		task ("View the edited inline content of Heading") {
-			PageEditor.viewFragmentEditableText(
-				editableText = "New editable fragment text",
-				fragmentName = "Heading",
-				id = "element-text");
 		}
 	}
 
@@ -243,7 +146,7 @@ definition {
 
 		task ("View the fragment composition is rendered well") {
 			AssertElementPresent(
-				key_elementHeader = "//div[@aria-label='Fragment Name']",
+				key_elementHeader = "//div[@data-name='Fragment Name']",
 				key_position = 1,
 				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 		}
@@ -424,126 +327,6 @@ definition {
 				fragmentName = "Heading",
 				headingLevel = "H2",
 				textColor = "danger");
-		}
-	}
-
-	@description = "This is a test case for LPS-101256. Can duplicate fragment in layout elements in composition."
-	@priority = 4
-	test ExportImportFragmentCompositionWithDuplicatedFragment {
-		task ("Add a Container to a content page") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Page Name",
-				type = "content");
-
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name");
-
-			PageEditor.addFragment(
-				collectionName = "Layout Elements",
-				fragmentName = "Container");
-		}
-
-		task ("Add a Grid element into Container") {
-			PageEditor.addElementToContainer(
-				collectionName = "Layout Elements",
-				fragmentName = "Grid",
-				navTab = "Fragments");
-		}
-
-		task ("Add a Heading to first module of Grid") {
-			PageEditor.addElementToColumn(
-				collectionName = "Basic Components",
-				columnNumber = 1,
-				fragmentName = "Heading",
-				navTab = "Fragments");
-		}
-
-		task ("Duplicate the Heading fragment") {
-			PageEditor.gotoDuplicate(fragmentName = "Heading");
-		}
-
-		task ("Add a Heading to the bottom of Grid inside Container") {
-			PageEditor.addElementToContainer(
-				collectionName = "Basic Components",
-				fragmentName = "Heading",
-				navTab = "Fragments",
-				targetElementName = "Grid");
-
-			AssertElementPresent(
-				key_columnNumber = 1,
-				key_elementHeader = "//div[@aria-label='Heading']",
-				key_position = 1,
-				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
-
-			AssertElementPresent(
-				key_columnNumber = 1,
-				key_elementHeader = "//div[@aria-label='Heading'][2]",
-				key_position = 1,
-				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
-
-			AssertElementPresent(
-				key_elementHeader = "//div[@aria-label='Grid']/following-sibling::div[@aria-label='Heading']",
-				key_position = 1,
-				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
-		}
-
-		task ("Save the fragment composition as fragment") {
-			PageEditor.gotoSaveAsFragment(fragmentName = "Container");
-
-			PageEditorComposition.saveAsFragment(fragmentName = "New Composition");
-		}
-
-		task ("Export the fragment collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
-
-			FragmentsAdminNavigator.gotoCollection(collectionName = "Saved Fragments");
-
-			FragmentsAdmin.exportCollection(collectionName = "Saved Fragments");
-		}
-
-		task ("Import the fragment collection into a new site") {
-			HeadlessSite.addSite(siteName = "New Site Name");
-
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "new-site-name");
-
-			FragmentsAdmin.importCollectionFromTempFolder();
-		}
-
-		task ("Add an imported fragment composition to content page") {
-			JSONLayout.addPublicLayout(
-				groupName = "New Site Name",
-				layoutName = "Test Page Name",
-				type = "content");
-
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = "New Site Name");
-
-			PageEditor.addFragment(
-				collectionName = "Saved Fragments",
-				composition = "true",
-				fragmentName = "New Composition");
-		}
-
-		task ("View the fragment composition is rendered well") {
-			AssertElementPresent(
-				key_columnNumber = 1,
-				key_elementHeader = "//div[@aria-label='Heading']",
-				key_position = 1,
-				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
-
-			AssertElementPresent(
-				key_columnNumber = 1,
-				key_elementHeader = "//div[@aria-label='Heading'][2]",
-				key_position = 1,
-				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
-
-			AssertElementPresent(
-				key_elementHeader = "//div[@aria-label='Grid']/following-sibling::div[@aria-label='Heading']",
-				key_position = 1,
-				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 		}
 	}
 
@@ -1465,7 +1248,7 @@ definition {
 			PageEditor.gotoConfiguration(fragmentName = "Fragment Name");
 
 			AssertElementPresent(
-				key_elementHeader = "//div[@aria-label='Fragment Name']",
+				key_elementHeader = "//div[@data-name='Fragment Name']",
 				key_position = 1,
 				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 
@@ -1477,6 +1260,8 @@ definition {
 			AssertElementPresent(locator1 = "//div[contains(@class,'page-editor__fragment-content')][contains(.,'border: solid violet')]");
 
 			PageEditor.clickConfigurableField(fragmentName = "Fragment Name");
+
+			PageEditor.gotoTab(tabName = "Browser");
 
 			AssertTextEquals(
 				key_fieldLabel = "Button Text",
@@ -1491,56 +1276,11 @@ definition {
 		}
 	}
 
-	@description = "This is a test case for LPS-151013. Old Fragment resources are removed during import."
-	@priority = 4
-	test ReImportFragmentCollectionWithDifferentFragmentResource {
-		task ("Given an imported fragment on content page") {
-			task ("Import a fragment collection") {
-				FragmentsAdmin.importCollectionFromDependenciesFolder(collectionZipFile = "fragments-objects.zip");
-			}
-
-			task ("Add the imported fragment to content page and publish") {
-				JSONLayout.addPublicLayout(
-					groupName = "Test Site Name",
-					layoutName = "Test Page Name",
-					type = "content");
-
-				ContentPagesNavigator.openEditContentPage(
-					pageName = "Test Page Name",
-					siteName = "Test Site Name");
-
-				PageEditor.addFragment(
-					collectionName = "Sample",
-					fragmentName = "Sample");
-
-				PageEditor.publish();
-			}
-
-			task ("View the image displayed on content page") {
-				AssertVisible(locator1 = "//img[contains(@src,'image-jpg')]");
-			}
-		}
-
-		task ("When import fragment collection again with different Fragment resource") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
-
-			FragmentsAdmin.importCollectionFromDependenciesFolder(
-				collectionZipFile = "fragments-plant.zip",
-				importOption = "Overwrite Existing Items");
-		}
-
-		task ("Then the old frgment resource in content does not change") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name");
-
-			AssertVisible(locator1 = "//img[contains(@src,'image-jpg')]");
-		}
-	}
-
 	@description = "This is a test for LPS-188478. Assert new import page of fragment works."
 	@priority = 5
 	test UploadAnotherFile {
+		property portal.acceptance = "true";
+
 		task ("Given a user accesses to the Fragments import page") {
 			FragmentsAdminNavigator.gotoImportCollection();
 
@@ -1594,157 +1334,73 @@ definition {
 		}
 	}
 
-	@description = "This is a testcase for LPS-96113. All fragments in dependencies should validate successfully."
-	@priority = 5
-	@uitest
-	test ValidateDependenciesFragments {
-		property portal.acceptance = "true";
+	@description = "This is a test for LPS-151157 and LPS-175242. The fragment admin could see the supported field types in read-only mode."
+	@priority = 4
+	test ViewSupportedFieldTypesInReadOnlyMode {
+		task ("Given a fragment admin has a read-only fragment with field type") {
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
 
-		task ("Import a fragment collection") {
+			FragmentsAdminNavigator.gotoCollection(collectionName = "Form Components");
+		}
+
+		task ("When the fragment admin accesses to fragment in read-only mode") {
+			FragmentsAdminNavigator.gotoEntry(entry = "Checkbox");
+		}
+
+		task ("Then the fragment admin could see the field type of Checkbox") {
+			FragmentsEditor.gotoConfigurationTab();
+
+			AssertVisible(locator1 = "FragmentEditor#READ_ONLY_VIEW");
+
+			AssertTextEquals(
+				locator1 = "FragmentEditor#SUPPORTED_FIELD_TYPE",
+				value1 = "Boolean");
+		}
+
+		task ("Given a fragment admin has a read-only fragment without field type") {
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+
 			FragmentsAdminNavigator.gotoImportCollection();
 
 			WaitForPageLoad();
 
-			UploadDependencyFile.uploadArchiveFile(fileName = "fragment-collection.zip");
+			UploadDependencyFile.uploadArchiveFile(fileName = "form-fragments.zip");
 
 			Button.clickImport();
+
+			AssertTextEquals(
+				locator1 = "Message#WARNING_IMPORT",
+				value1 = "1 item was imported with warnings.");
+
+			AssertTextEquals.assertPartialText(
+				itemName = "Fragment Example",
+				locator1 = "Message#WARNING_IMPORT_SUBTEXT",
+				value1 = "Fragment type input must have at least one field type");
+
+			Button.clickDone();
 		}
 
-		task ("Assert the zip imported properly") {
-			AssertVisible(locator1 = "Message#SUCCESS_IMPORT");
+		task ("When the fragment admin accesses to the fragment set") {
+			FragmentsAdminNavigator.gotoCollection(collectionName = "Form Fragments");
 		}
 
-		task ("Assert that all fragments validated") {
-			AssertElementNotPresent(locator1 = "Message#WARNING_IMPORT");
+		task ("Then the fragment admin sees the warning label on fragment card") {
+			LexiconCard.viewCardLabel(
+				card = "Fragment Example",
+				cardLabel = "Warnings",
+				index = 2);
 
-			AssertElementNotPresent(locator1 = "Message#ERROR_IMPORT");
-		}
-	}
-
-	@description = "This is a test case for LPS-128652. View the changes of fragment on content page still persist after overwrite the fragment."
-	@priority = 4
-	test ViewChangesOfFragmentOnContentPagePersistAfterOverwriteTheFragment {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Enable Propagate Fragment Changes Automatically in System Settings") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "System Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "Page Fragments",
-				configurationName = "Page Fragments",
-				configurationScope = "System Scope");
-
-			FormFields.enableCheckbox(fieldName = "Propagate Fragment Changes Automatically");
-
-			SystemSettings.saveConfiguration();
+			AssertElementAccessible(locator1 = "//div[contains(@class,'card')][contains(.,'Fragment Example')]//span[contains(@class,'label-warning')]");
 		}
 
-		task ("Add a fragment collection") {
-			JSONFragment.addFragmentCollection(
-				groupName = "Test Site Name",
-				name = "Collection Name");
+		task ("When the fragment admin accesses to fragment in read-only mode") {
+			FragmentsAdminNavigator.gotoEntry(entry = "Fragment Example");
 		}
 
-		task ("Copy the Tabs fragment to new collection") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+		task ("Then the fragment admin sees No field type is defined for this fragment") {
+			FragmentsEditor.gotoConfigurationTab();
 
-			FragmentsAdminNavigator.gotoCollection(collectionName = "Basic Components");
-
-			FragmentsAdminNavigator.gotoEntryEllipsisItem(
-				entry = "Tabs",
-				item = "Copy To");
-
-			FragmentsAdmin.selectCollection(collectionName = "Collection Name");
-		}
-
-		task ("Export the new collection") {
-			FragmentsAdmin.exportCollection(collectionName = "Collection Name");
-		}
-
-		task ("Add a content page") {
-			JSONLayout.addPublicLayout(
-				groupName = "Test Site Name",
-				layoutName = "Test Page Name",
-				type = "content");
-		}
-
-		task ("Navigate to the content page at edit mode") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name");
-		}
-
-		task ("Add a Container to page") {
-			PageEditor.addFragment(
-				collectionName = "Layout Elements",
-				fragmentName = "Container");
-		}
-
-		task ("Add a Grid element into Container") {
-			PageEditor.addElementToContainer(
-				collectionName = "Layout Elements",
-				fragmentName = "Grid",
-				navTab = "Fragments");
-		}
-
-		task ("Add two copied Tabs fragments into the second module of Grid") {
-			for (var fragmentName : list "Tabs (Copy),Tabs (Copy)") {
-				PageEditor.addElementToColumn(
-					collectionName = "Collection Name",
-					columnNumber = 2,
-					fragmentName = ${fragmentName},
-					navTab = "Fragments");
-			}
-		}
-
-		task ("Increase number of tabs to 5 in the first copied Tabs") {
-			PageEditor.gotoConfiguration(fragmentName = "Tabs (Copy)");
-
-			PageEditor.configureFragment(numberOfTabs = 5);
-		}
-
-		task ("Edit inline text of the fifth tabs") {
-			PageEditor.editFragmentText(
-				className = "tabs",
-				fragmentName = "Tabs (Copy)",
-				id = "title5",
-				text = "Test");
-		}
-
-		task ("View the inline text of the fifth tabs") {
-			PageEditor.viewFragmentEditableText(
-				className = "tabs",
-				editableText = "Test",
-				fragmentName = "Tabs (Copy)",
-				id = "title5");
-
-			PageEditor.publish();
-		}
-
-		task ("Navigate to Fragments admin") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
-		}
-
-		task ("Import the fragment collection") {
-			FragmentsAdmin.importCollectionFromTempFolder(importOption = "Overwrite Existing Items");
-		}
-
-		task ("Navigate to the content page in edit mode") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Page Name",
-				siteName = "Test Site Name");
-		}
-
-		task ("View the inline text of the fifth tabs") {
-			PageEditor.viewFragmentEditableText(
-				className = "tabs",
-				editableText = "Test",
-				fragmentName = "Tabs (Copy)",
-				id = "title5");
+			Alert.viewInfoMessageSpecific(infoMessage = "No field type is defined for this fragment.");
 		}
 	}
 

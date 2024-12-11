@@ -5,6 +5,7 @@
 		<field name="mvccVersion" type="long" />
 		<field name="ctCollectionId" type="long" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="headId" type="long" />
 		<field name="styleBookEntryId" type="long" />
 		<field name="groupId" type="long" />
@@ -20,6 +21,9 @@
 		<field name="name" type="String" />
 		<field name="previewFileEntryId" type="long" />
 		<field name="styleBookEntryKey" type="String" />
+		<field name="themeId" type="String">
+			<hint name="max-length">255</hint>
+		</field>
 	</model>
 	<model name="com.liferay.style.book.model.StyleBookEntryVersion">
 		<field name="mvccVersion" type="long" />
@@ -27,6 +31,7 @@
 		<field name="styleBookEntryVersionId" type="long" />
 		<field name="version" type="int" />
 		<field name="uuid" type="String" />
+		<field name="externalReferenceCode" type="String" />
 		<field name="styleBookEntryId" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />
@@ -41,5 +46,8 @@
 		<field name="name" type="String" />
 		<field name="previewFileEntryId" type="long" />
 		<field name="styleBookEntryKey" type="String" />
+		<field name="themeId" type="String">
+			<hint name="max-length">255</hint>
+		</field>
 	</model>
 </model-hints>

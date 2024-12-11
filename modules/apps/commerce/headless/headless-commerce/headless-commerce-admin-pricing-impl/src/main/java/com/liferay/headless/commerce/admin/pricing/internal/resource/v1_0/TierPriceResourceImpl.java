@@ -57,8 +57,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommerceTierPriceEntry commerceTierPriceEntry =
-			_commerceTierPriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceTierPriceEntryService.
+				fetchCommerceTierPriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceTierPriceEntry == null) {
 			throw new NoSuchTierPriceEntryException(
@@ -80,8 +81,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommercePriceEntry commercePriceEntry =
-			_commercePriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceEntryService.
+				fetchCommercePriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceEntry == null) {
 			throw new NoSuchPriceEntryException(
@@ -94,12 +96,12 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 				commercePriceEntry.getCommercePriceEntryId(),
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceTierPriceEntryService.getCommerceTierPriceEntriesCount(
 				commercePriceEntry.getCommercePriceEntryId());
 
 		return Page.of(
-			_toTierPrices(commerceTierPriceEntries), pagination, totalItems);
+			_toTierPrices(commerceTierPriceEntries), pagination, totalCount);
 	}
 
 	@Override
@@ -119,11 +121,11 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 			_commerceTierPriceEntryService.getCommerceTierPriceEntries(
 				id, pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems =
+		int totalCount =
 			_commerceTierPriceEntryService.getCommerceTierPriceEntriesCount(id);
 
 		return Page.of(
-			_toTierPrices(commerceTierPriceEntries), pagination, totalItems);
+			_toTierPrices(commerceTierPriceEntries), pagination, totalCount);
 	}
 
 	@Override
@@ -137,8 +139,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommerceTierPriceEntry commerceTierPriceEntry =
-			_commerceTierPriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceTierPriceEntryService.
+				fetchCommerceTierPriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceTierPriceEntry == null) {
 			throw new NoSuchTierPriceEntryException(
@@ -169,8 +172,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommerceTierPriceEntry commerceTierPriceEntry =
-			_commerceTierPriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceTierPriceEntryService.
+				fetchCommerceTierPriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceTierPriceEntry == null) {
 			throw new NoSuchTierPriceEntryException(
@@ -191,8 +195,9 @@ public class TierPriceResourceImpl extends BaseTierPriceResourceImpl {
 		throws Exception {
 
 		CommercePriceEntry commercePriceEntry =
-			_commercePriceEntryService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePriceEntryService.
+				fetchCommercePriceEntryByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePriceEntry == null) {
 			throw new NoSuchPriceEntryException(

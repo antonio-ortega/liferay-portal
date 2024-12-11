@@ -6,8 +6,10 @@
 package com.liferay.headless.commerce.admin.catalog.internal.util.v1_0;
 
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
+import com.liferay.commerce.product.model.CPOptionCategory;
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueService;
+import com.liferay.commerce.product.service.CPOptionCategoryService;
 import com.liferay.commerce.product.service.CPSpecificationOptionService;
 import com.liferay.headless.commerce.admin.catalog.dto.v1_0.ProductSpecification;
 import com.liferay.headless.commerce.core.util.LanguageUtils;
@@ -25,6 +27,7 @@ public class ProductSpecificationUtil {
 			addCPDefinitionSpecificationOptionValue(
 				CPDefinitionSpecificationOptionValueService
 					cpDefinitionSpecificationOptionValueService,
+				CPOptionCategoryService cpOptionCategoryService,
 				CPSpecificationOptionService cpSpecificationOptionService,
 				long cpDefinitionId, ProductSpecification productSpecification,
 				ServiceContext serviceContext)
@@ -36,16 +39,30 @@ public class ProductSpecificationUtil {
 				FriendlyURLNormalizerUtil.normalize(
 					productSpecification.getSpecificationKey()));
 
+		if (cpSpecificationOption == null) {
+			cpSpecificationOption =
+				cpSpecificationOptionService.
+					fetchCPSpecificationOptionByExternalReferenceCode(
+						GetterUtil.getString(
+							productSpecification.
+								getSpecificationExternalReferenceCode()),
+						serviceContext.getCompanyId());
+		}
+
 		return cpDefinitionSpecificationOptionValueService.
 			addCPDefinitionSpecificationOptionValue(
+				GetterUtil.getString(
+					productSpecification.getExternalReferenceCode()),
 				cpDefinitionId,
 				_getCPSpecificationOptionId(
-					cpSpecificationOption, cpSpecificationOptionService,
-					productSpecification, serviceContext),
+					cpOptionCategoryService, cpSpecificationOption,
+					cpSpecificationOptionService, productSpecification,
+					serviceContext),
 				_getCPOptionCategoryId(
-					cpSpecificationOption, productSpecification),
-				LanguageUtils.getLocalizedMap(productSpecification.getValue()),
+					cpOptionCategoryService, cpSpecificationOption,
+					productSpecification, serviceContext),
 				GetterUtil.get(productSpecification.getPriority(), 0D),
+				LanguageUtils.getLocalizedMap(productSpecification.getValue()),
 				serviceContext);
 	}
 
@@ -55,6 +72,7 @@ public class ProductSpecificationUtil {
 					cpDefinitionSpecificationOptionValueService,
 				CPDefinitionSpecificationOptionValue
 					cpDefinitionSpecificationOptionValue,
+				CPOptionCategoryService cpOptionCategoryService,
 				CPSpecificationOptionService cpSpecificationOptionService,
 				ProductSpecification productSpecification,
 				ServiceContext serviceContext)
@@ -68,33 +86,60 @@ public class ProductSpecificationUtil {
 
 		return cpDefinitionSpecificationOptionValueService.
 			updateCPDefinitionSpecificationOptionValue(
+				GetterUtil.getString(
+					productSpecification.getExternalReferenceCode(),
+					cpDefinitionSpecificationOptionValue.
+						getExternalReferenceCode()),
 				cpDefinitionSpecificationOptionValue.
 					getCPDefinitionSpecificationOptionValueId(),
 				_getCPOptionCategoryId(
-					cpSpecificationOption, productSpecification),
-				LanguageUtils.getLocalizedMap(productSpecification.getValue()),
+					cpOptionCategoryService, cpSpecificationOption,
+					productSpecification, serviceContext),
+				GetterUtil.getString(
+					productSpecification.getKey(),
+					cpDefinitionSpecificationOptionValue.getKey()),
 				GetterUtil.get(
 					productSpecification.getPriority(),
 					cpDefinitionSpecificationOptionValue.getPriority()),
+				LanguageUtils.getLocalizedMap(productSpecification.getValue()),
 				serviceContext);
 	}
 
 	private static long _getCPOptionCategoryId(
-		CPSpecificationOption cpSpecificationOption,
-		ProductSpecification productSpecification) {
+			CPOptionCategoryService cpOptionCategoryService,
+			CPSpecificationOption cpSpecificationOption,
+			ProductSpecification productSpecification,
+			ServiceContext serviceContext)
+		throws PortalException {
 
-		if (productSpecification.getOptionCategoryId() == null) {
-			if (cpSpecificationOption != null) {
-				return cpSpecificationOption.getCPOptionCategoryId();
-			}
+		CPOptionCategory cpOptionCategory =
+			cpOptionCategoryService.
+				fetchCPOptionCategoryByExternalReferenceCode(
+					GetterUtil.getString(
+						productSpecification.
+							getOptionCategoryExternalReferenceCode()),
+					serviceContext.getCompanyId());
 
-			return 0;
+		if (cpOptionCategory != null) {
+			return cpOptionCategory.getCPOptionCategoryId();
 		}
 
-		return productSpecification.getOptionCategoryId();
+		cpOptionCategory = cpOptionCategoryService.fetchCPOptionCategory(
+			GetterUtil.getLong(productSpecification.getOptionCategoryId()));
+
+		if (cpOptionCategory != null) {
+			return cpOptionCategory.getCPOptionCategoryId();
+		}
+
+		if (cpSpecificationOption != null) {
+			return cpSpecificationOption.getCPOptionCategoryId();
+		}
+
+		return 0;
 	}
 
 	private static long _getCPSpecificationOptionId(
+			CPOptionCategoryService cpOptionCategoryService,
 			CPSpecificationOption cpSpecificationOption,
 			CPSpecificationOptionService cpSpecificationOptionService,
 			ProductSpecification productSpecification,
@@ -104,13 +149,20 @@ public class ProductSpecificationUtil {
 		if (cpSpecificationOption == null) {
 			cpSpecificationOption =
 				cpSpecificationOptionService.addCPSpecificationOption(
-					GetterUtil.get(
-						productSpecification.getOptionCategoryId(), 0),
+					GetterUtil.getString(
+						productSpecification.
+							getSpecificationExternalReferenceCode()),
+					_getCPOptionCategoryId(
+						cpOptionCategoryService, cpSpecificationOption,
+						productSpecification, serviceContext),
+					null,
 					LanguageUtils.getLocalizedMap(
 						productSpecification.getLabel()),
 					LanguageUtils.getLocalizedMap(
 						productSpecification.getLabel()),
 					false, productSpecification.getSpecificationKey(),
+					GetterUtil.getDouble(
+						productSpecification.getSpecificationPriority()),
 					serviceContext);
 		}
 

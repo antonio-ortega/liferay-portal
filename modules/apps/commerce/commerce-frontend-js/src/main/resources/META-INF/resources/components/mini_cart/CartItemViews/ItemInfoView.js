@@ -11,23 +11,17 @@ import {sub} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
-function ItemInfoViewOptions({options}) {
-	return (
-		<div className="item-info-extra mt-3">
-			<h6 className="options">{options}</h6>
-		</div>
-	);
-}
+import {parseValue} from '../util/index';
 
-function ItemInfoViewBundle({childItems}) {
+function ItemInfoViewBundle({childItems, options}) {
 	const [expanded, setExpanded] = useState(false);
 
-	return Liferay.FeatureFlags['COMMERCE-9599'] ? (
+	return options.length >= 1 ? (
 		<ClayPanel
 			className="item-info-collapse mb-0"
 			collapsable
 			displayTitle={sub(
-				Liferay.Language.get('x-product-options'),
+				Liferay.Language.get('x-options'),
 				expanded
 					? Liferay.Language.get('hide')
 					: Liferay.Language.get('show')
@@ -41,17 +35,53 @@ function ItemInfoViewBundle({childItems}) {
 		>
 			<ClayPanel.Body>
 				<div className="child-items">
-					{childItems.map((item, index) => {
-						const {name, quantity, skuUnitOfMeasure} = item;
+					{options.map((option, index) => {
+						const {
+							skuId,
+							skuOptionName,
+							skuOptionValueNames,
+							value,
+						} = option;
 
-						return (
-							<div className="child-item" key={index}>
-								<span>
-									<>
-										{quantity} &times; {name}
-									</>
-									<> {skuUnitOfMeasure?.key || ''}</>
-								</span>
+						const childItem = (childItems || []).find(
+							(childItem) =>
+								childItem.skuId === parseInt(skuId, 10)
+						);
+
+						const {name, quantity, skuUnitOfMeasure} =
+							childItem || {};
+
+						return name ? (
+							<div className="item-info-extra pt-2" key={index}>
+								<div className="h6 item-name">
+									{skuOptionName}
+								</div>
+
+								<p className="item-sku">
+									<span>
+										<span>
+											{parseValue(skuOptionValueNames) ||
+												parseValue(value)}
+										</span>
+
+										<span className="pl-2">
+											{`(${quantity} \u00D7 ${name} ${
+												skuUnitOfMeasure?.key || ''
+											})`}
+										</span>
+									</span>
+								</p>
+							</div>
+						) : (
+							<div className="item-info-extra pt-2" key={index}>
+								<div className="h6 item-name">
+									{skuOptionName}
+								</div>
+
+								<p className="item-sku">
+									{parseValue(skuOptionValueNames) ||
+										parseValue(value)}
+								</p>
 							</div>
 						);
 					})}
@@ -103,17 +133,15 @@ function ItemInfoViewReplacement({replacedSku}) {
 function ItemInfoViewBase({name, sku}) {
 	return (
 		<div className="item-info-base">
-			<h5 className="item-name">{name}</h5>
+			<div className="h5 item-name">{name}</div>
 
 			<p className="item-sku">{sku}</p>
 		</div>
 	);
 }
 
-function ItemInfoView({childItems = [], name, options = '', replacedSku, sku}) {
+function ItemInfoView({childItems = [], name, options = [], replacedSku, sku}) {
 	const hasReplacement = !!replacedSku;
-	const isBundle = !!childItems.length;
-	const hasOptions = !!options;
 
 	return (
 		<>
@@ -123,9 +151,7 @@ function ItemInfoView({childItems = [], name, options = '', replacedSku, sku}) {
 				<ItemInfoViewReplacement replacedSku={replacedSku} />
 			)}
 
-			{isBundle && <ItemInfoViewBundle childItems={childItems} />}
-
-			{hasOptions && <ItemInfoViewOptions options={options} />}
+			<ItemInfoViewBundle childItems={childItems} options={options} />
 		</>
 	);
 }
@@ -133,7 +159,7 @@ function ItemInfoView({childItems = [], name, options = '', replacedSku, sku}) {
 ItemInfoView.propTypes = {
 	childItems: PropTypes.array,
 	name: PropTypes.string.isRequired,
-	options: PropTypes.string,
+	options: PropTypes.array,
 	sku: PropTypes.string.isRequired,
 };
 

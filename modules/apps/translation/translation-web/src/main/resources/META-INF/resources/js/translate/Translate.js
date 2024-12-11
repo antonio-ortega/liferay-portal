@@ -80,6 +80,7 @@ const reducer = (state, action) => {
 const Translate = ({
 	additionalFields,
 	autoTranslateEnabled = false,
+	concurrentUserError: initialConcurrentUserError,
 	currentUrl,
 	experiencesSelectorData,
 	getAutoTranslateURL,
@@ -101,6 +102,9 @@ const Translate = ({
 }) => {
 	const isMounted = useIsMounted();
 
+	const [concurrentUserError, setConcurrentUserError] = useState(
+		initialConcurrentUserError
+	);
 	const [workflowAction, setWorkflowAction] = useState(
 		workflowActions.PUBLISH
 	);
@@ -266,9 +270,8 @@ const Translate = ({
 						payload: {
 							field: {
 								content: contentData,
-								message: Liferay.Language.get(
-									'field-translated'
-								),
+								message:
+									Liferay.Language.get('field-translated'),
 								status: FETCH_STATUS.SUCCESS,
 							},
 							id: fieldId,
@@ -338,6 +341,17 @@ const Translate = ({
 			/>
 
 			<ClayLayout.ContainerFluid view>
+				{concurrentUserError && (
+					<ClayAlert
+						displayType="danger"
+						onClose={() => setConcurrentUserError(false)}
+					>
+						{Liferay.Language.get(
+							'another-user-has-made-changes-since-you-started-editing'
+						)}
+					</ClayAlert>
+				)}
+
 				<div className="sheet translation-edit-body-form">
 					{!translationPermission ? (
 						<ClayAlert>
@@ -373,6 +387,7 @@ const Translate = ({
 
 Translate.propTypes = {
 	autoTranslateEnabled: PropTypes.bool,
+	concurrentUserError: PropTypes.bool.isRequired,
 	currentUrl: PropTypes.string.isRequired,
 	experiencesSelectorData: PropTypes.shape({
 		label: PropTypes.string.isRequired,

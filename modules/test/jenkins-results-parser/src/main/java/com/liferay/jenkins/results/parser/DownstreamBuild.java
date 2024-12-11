@@ -15,11 +15,13 @@ import com.liferay.jenkins.results.parser.failure.message.generator.JSUnitTestFa
 import com.liferay.jenkins.results.parser.failure.message.generator.LocalGitMirrorFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.ModulesCompilationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PMDFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.PlaywrightCompilationFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.PluginGitIDFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.SemanticVersioningFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.ServiceBuilderFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.SourceFormatFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.failure.message.generator.StartupFailureMessageGenerator;
+import com.liferay.jenkins.results.parser.failure.message.generator.UpgradeFailureMessageGenerator;
 import com.liferay.jenkins.results.parser.test.clazz.FunctionalTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.JUnitTestClass;
 import com.liferay.jenkins.results.parser.test.clazz.TestClass;
@@ -172,15 +174,29 @@ public class DownstreamBuild extends BaseBuild {
 
 	@Override
 	public Element getGitHubMessageElement() {
+		if (_gitHubMessageElement != null) {
+			return _gitHubMessageElement;
+		}
+
 		String status = getStatus();
 
 		if (!status.equals("completed") && (getParentBuild() != null)) {
+			System.out.println(
+				JenkinsResultsParserUtil.combine(
+					"[", getBuildName(), "] Skipped creating a failure GitHub ",
+					"message because status is ", status));
+
 			return null;
 		}
 
 		String result = getResult();
 
 		if (result.equals("SUCCESS")) {
+			System.out.println(
+				JenkinsResultsParserUtil.combine(
+					"[", getBuildName(), "] Skipped creating a failure GitHub ",
+					"message because result is ", result));
+
 			return null;
 		}
 
@@ -202,10 +218,29 @@ public class DownstreamBuild extends BaseBuild {
 			}
 		}
 
+		String batchName = getBatchName();
+
+		if (batchName.contains("playwright-js")) {
+			for (URL url : getTestrayS3AttachmentURLs()) {
+				String urlString = url.toString();
+
+				if (urlString.contains("playwright-report/index.html")) {
+					Dom4JUtil.addToElement(
+						messageElement, " - ",
+						Dom4JUtil.getNewAnchorElement(
+							urlString, null, "Playwright Report"));
+
+					break;
+				}
+			}
+		}
+
 		if (result.equals("FAILURE")) {
 			Element failureMessageElement = getFailureMessageElement();
 
-			if (failureMessageElement != null) {
+			if ((failureMessageElement != null) &&
+				!batchName.contains("playwright-js")) {
+
 				messageElement.add(failureMessageElement);
 			}
 
@@ -237,16 +272,34 @@ public class DownstreamBuild extends BaseBuild {
 				Dom4JUtil.getOrderedListElement(
 					upstreamJobFailureElements,
 					upstreamJobFailureMessageElement, 3);
+
+				System.out.println(
+					JenkinsResultsParserUtil.combine(
+						"[", getBuildName(), "] Saved an upstream failure ",
+						"GitHub message"));
 			}
 
 			Dom4JUtil.getOrderedListElement(failureElements, messageElement, 3);
 
 			if (failureElements.isEmpty()) {
+				System.out.println(
+					JenkinsResultsParserUtil.combine(
+						"[", getBuildName(),
+						"] Skipped creating a failure GitHub message because ",
+						"no failure elements were created"));
+
 				return null;
 			}
 		}
 
-		return messageElement;
+		System.out.println(
+			JenkinsResultsParserUtil.combine(
+				"[", getBuildName(), "] Created a failure GitHub message: ",
+				String.valueOf(hashCode())));
+
+		_gitHubMessageElement = messageElement;
+
+		return _gitHubMessageElement;
 	}
 
 	public Map<String, List<String>> getTestClassMethodsMap() {
@@ -417,8 +470,21 @@ public class DownstreamBuild extends BaseBuild {
 					"testName", methodName
 				);
 
-				untestedTestResults.add(
-					TestResultFactory.newTestResult(this, caseJSONObject));
+				TestResult testResult = TestResultFactory.newTestResult(
+					this, caseJSONObject);
+
+				TestClassResult testClassResult =
+					testResult.getTestClassResult();
+
+				if (testClassResult != null) {
+					String status = testClassResult.getStatus();
+
+					if (status.equals("SKIPPED")) {
+						continue;
+					}
+				}
+
+				untestedTestResults.add(testResult);
 			}
 		}
 
@@ -515,6 +581,14 @@ public class DownstreamBuild extends BaseBuild {
 		return warningMessages;
 	}
 
+	@Override
+	public void saveBuildURLInBuildDatabase() {
+		BuildDatabase buildDatabase = getBuildDatabase();
+
+		buildDatabase.putProperty(
+			BUILD_URLS_PROPERTIES_KEY, getAxisName(), getBuildURL(), false);
+	}
+
 	protected DownstreamBuild(String url, TopLevelBuild topLevelBuild) {
 		super(url, topLevelBuild);
 	}
@@ -529,6 +603,7 @@ public class DownstreamBuild extends BaseBuild {
 		return null;
 	}
 
+	@Override
 	protected List<Element> getJenkinsReportBuildDurationsElements() {
 		String urlSuffix = "buildDurationsElements";
 
@@ -704,6 +779,7 @@ public class DownstreamBuild extends BaseBuild {
 		return jenkinsReportTableRowElements;
 	}
 
+	@Override
 	protected List<Element> getJenkinsReportTestDurationsElements() {
 		String batchName = getBatchName();
 
@@ -934,18 +1010,22 @@ public class DownstreamBuild extends BaseBuild {
 		new CompileFailureMessageGenerator(),
 		new IntegrationTestTimeoutFailureMessageGenerator(),
 		new JSUnitTestFailureMessageGenerator(),
-		new LocalGitMirrorFailureMessageGenerator(),
 		new PMDFailureMessageGenerator(),
+		new PlaywrightCompilationFailureMessageGenerator(),
 		new PluginGitIDFailureMessageGenerator(),
 		new SemanticVersioningFailureMessageGenerator(),
 		new ServiceBuilderFailureMessageGenerator(),
 		new SourceFormatFailureMessageGenerator(),
 		new StartupFailureMessageGenerator(),
+		new UpgradeFailureMessageGenerator(),
 		//
 		new GradleTaskFailureMessageGenerator(),
+		new LocalGitMirrorFailureMessageGenerator(),
 		//
 		new CIFailureMessageGenerator(),
 		new GenericFailureMessageGenerator()
 	};
+
+	private Element _gitHubMessageElement;
 
 }

@@ -9,13 +9,8 @@ import MiniCartContext from './MiniCartContext';
 import {hasPriceOnApplication} from './util/index';
 
 function Wrapper() {
-	const {
-		CartViews,
-		cartState,
-		editedItem,
-		isOpen,
-		requestQuoteEnabled,
-	} = useContext(MiniCartContext);
+	const {CartViews, cartState, editedItem, isOpen, requestQuoteEnabled} =
+		useContext(MiniCartContext);
 	const {cartItems = []} = cartState;
 	const cartHasPriceOnApplicationItems = hasPriceOnApplication(cartItems);
 
@@ -23,8 +18,10 @@ function Wrapper() {
 		<div className="mini-cart-wrapper">
 			<CartViews.Header />
 
-			{Liferay.FeatureFlags['COMMERCE-9599'] && editedItem ? (
-				<CartViews.EditItem />
+			{editedItem ? (
+				<>
+					<CartViews.EditItem />
+				</>
 			) : (
 				<>
 					<div className="mini-cart-wrapper-items">

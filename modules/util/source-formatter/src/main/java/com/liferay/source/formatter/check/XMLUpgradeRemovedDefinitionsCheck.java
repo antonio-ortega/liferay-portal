@@ -77,7 +77,7 @@ public class XMLUpgradeRemovedDefinitionsCheck extends BaseFileCheck {
 		}
 
 		String upgradeToVersion = getAttributeValue(
-			SourceFormatterUtil.UPGRADE_TO_VERSION, absolutePath);
+			SourceFormatterUtil.UPGRADE_TO_LIFERAY_VERSION, absolutePath);
 
 		String upgradeToVersionDTDFileName = _getUpgradeToVersionDTDFileName(
 			dtdFileName, upgradeFromVersion, upgradeToVersion);
@@ -137,9 +137,10 @@ public class XMLUpgradeRemovedDefinitionsCheck extends BaseFileCheck {
 				addMessage(
 					fileName,
 					StringBundler.concat(
-						"Attribute '", childElementName,
-						"' is no longer a valid attribute for element '",
-						elementName, "' in version '", upgradeToVersion, "'"));
+						"Attribute \"", childElementName,
+						"\" is no longer a valid attribute for element \"",
+						elementName, "\" in version \"", upgradeToVersion,
+						"\""));
 			}
 
 			_checkElement(

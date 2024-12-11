@@ -15,10 +15,15 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -55,6 +60,10 @@ public interface SystemObjectDefinitionManager {
 
 	public JaxRsApplicationDescriptor getJaxRsApplicationDescriptor();
 
+	public default Map<String, String> getLabelKeys() {
+		return Collections.emptyMap();
+	}
+
 	public Map<Locale, String> getLabelMap();
 
 	public Class<?> getModelClass();
@@ -68,6 +77,14 @@ public interface SystemObjectDefinitionManager {
 	}
 
 	public List<ObjectField> getObjectFields();
+
+	public default Page<?> getPage(
+			User user, String search, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception {
+
+		return null;
+	}
 
 	public Map<Locale, String> getPluralLabelMap();
 
@@ -137,6 +154,8 @@ public interface SystemObjectDefinitionManager {
 		if (extendedProperties != null) {
 			variables.putAll(extendedProperties);
 		}
+
+		variables.computeIfAbsent("id", id -> payloadJSONObject.get("classPK"));
 
 		return variables;
 	}

@@ -240,7 +240,7 @@ describe('getDefaultValue', () => {
 	it('gets default value for field mapping list', () => {
 		expect(
 			getDefaultValue({
-				defaultValue: [
+				fieldMappings: [
 					{
 						boost: 2,
 						field: 'localized_title',
@@ -447,8 +447,7 @@ describe('getUIConfigurationValues', () => {
 											occur: 'must',
 											query: {
 												multi_match: {
-													boost:
-														'${configuration.boost}',
+													boost: '${configuration.boost}',
 													language:
 														'${configuration.language}',
 												},

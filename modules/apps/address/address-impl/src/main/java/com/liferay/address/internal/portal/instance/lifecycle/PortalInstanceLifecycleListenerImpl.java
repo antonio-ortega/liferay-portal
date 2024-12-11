@@ -6,11 +6,14 @@
 package com.liferay.address.internal.portal.instance.lifecycle;
 
 import com.liferay.address.internal.util.CompanyCountriesUtil;
+import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CountryLocalService;
-import com.liferay.portal.kernel.service.RegionLocalService;
+import com.liferay.portal.kernel.util.InfrastructureUtil;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -26,24 +29,28 @@ public class PortalInstanceLifecycleListenerImpl
 	public void portalInstancePreunregistered(Company company)
 		throws Exception {
 
+		if (DBPartition.isPartitionEnabled()) {
+			return;
+		}
+
 		_countryLocalService.deleteCompanyCountries(company.getCompanyId());
 	}
 
 	@Override
 	public void portalInstanceRegistered(Company company) throws Exception {
 		CompanyCountriesUtil.populateCompanyCountries(
-			company, _countryLocalService, _regionLocalService);
+			company, _counterLocalService, _countryLocalService,
+			_currentConnection.getConnection(
+				InfrastructureUtil.getDataSource()));
 	}
 
-	@Override
-	public void portalInstanceUnregistered(Company company) throws Exception {
-		super.portalInstanceUnregistered(company);
-	}
+	@Reference
+	private CounterLocalService _counterLocalService;
 
 	@Reference
 	private CountryLocalService _countryLocalService;
 
 	@Reference
-	private RegionLocalService _regionLocalService;
+	private CurrentConnection _currentConnection;
 
 }

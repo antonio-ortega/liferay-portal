@@ -98,7 +98,7 @@ public class JournalViewMoreMenuItemsDisplayContext {
 		long[] currentAndAncestorSiteAndDepotGroupIds =
 			SiteConnectedGroupGroupProviderUtil.
 				getCurrentAndAncestorSiteAndDepotGroupIds(
-					_themeDisplay.getScopeGroupId(), true);
+					_themeDisplay.getScopeGroupId(), false, true);
 
 		searchContainer.setResultsAndTotal(
 			() -> {
@@ -214,17 +214,15 @@ public class JournalViewMoreMenuItemsDisplayContext {
 			orderByAsc = true;
 		}
 
-		OrderByComparator<DDMStructure> orderByComparator = null;
-
 		if (_orderByCol.equals("modified-date")) {
-			orderByComparator = new StructureModifiedDateComparator(orderByAsc);
+			return new StructureModifiedDateComparator(orderByAsc);
 		}
 		else if (_orderByCol.equals("name")) {
-			orderByComparator = new StructureNameComparator(
+			return new StructureNameComparator(
 				orderByAsc, _themeDisplay.getLocale());
 		}
 
-		return orderByComparator;
+		return null;
 	}
 
 	private SearchContainer<DDMStructure> _ddmStructuresSearchContainer;

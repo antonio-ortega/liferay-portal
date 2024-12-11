@@ -5,6 +5,7 @@
 
 package com.liferay.portal.search.internal.buffer;
 
+import com.liferay.object.search.StrictObjectReindexThreadLocal;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -12,10 +13,10 @@ import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.search.Bufferable;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.search.configuration.IndexerRegistryConfiguration;
 import com.liferay.portal.search.index.IndexStatusManager;
+import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.util.PortalInstances;
 
 import java.lang.annotation.Annotation;
@@ -33,14 +34,11 @@ public class BufferedIndexerInvocationHandler implements InvocationHandler {
 
 	public BufferedIndexerInvocationHandler(
 		Indexer<?> indexer, IndexStatusManager indexStatusManager,
-		IndexerRegistryConfiguration indexerRegistryConfiguration,
-		PersistedModelLocalServiceRegistry persistedModelLocalServiceRegistry) {
+		IndexerRegistryConfiguration indexerRegistryConfiguration) {
 
 		_indexer = indexer;
 		_indexStatusManager = indexStatusManager;
 		_indexerRegistryConfiguration = indexerRegistryConfiguration;
-		_persistedModelLocalServiceRegistry =
-			persistedModelLocalServiceRegistry;
 	}
 
 	@Override
@@ -89,48 +87,53 @@ public class BufferedIndexerInvocationHandler implements InvocationHandler {
 			return method.invoke(_indexer, args);
 		}
 
-		if ((args[0] instanceof ClassedModel) &&
-			Objects.equals(method.getName(), "reindex")) {
+		if (args[0] instanceof ClassedModel) {
+			if (StrictObjectReindexThreadLocal.isStrictObjectReindex()) {
+				MethodKey methodKey = new MethodKey(
+					Indexer.class, method.getName(), Object.class);
 
-			MethodKey methodKey = new MethodKey(
-				Indexer.class, method.getName(), String.class, Long.TYPE);
+				IndexerRequest indexerRequest = new IndexerRequest(
+					methodKey.getMethod(), (ClassedModel)args[0], _indexer);
 
-			ClassedModel classedModel = (ClassedModel)args[0];
+				_bufferRequest(indexerRequest, indexerRequestBuffer);
+			}
+			else if (Objects.equals(method.getName(), "reindex")) {
+				MethodKey methodKey = new MethodKey(
+					Indexer.class, method.getName(), String.class, Long.TYPE);
 
-			Long classPK = (Long)classedModel.getPrimaryKeyObj();
+				ClassedModel classedModel = (ClassedModel)args[0];
 
-			bufferRequest(
-				methodKey, classedModel.getModelClassName(), classPK,
-				indexerRequestBuffer);
-		}
-		else if (args[0] instanceof ClassedModel) {
-			MethodKey methodKey = new MethodKey(
-				Indexer.class, method.getName(), Object.class);
+				Long classPK = (Long)classedModel.getPrimaryKeyObj();
 
-			bufferRequest(methodKey, args[0], indexerRequestBuffer);
+				bufferRequest(
+					methodKey, classedModel.getModelClassName(), classPK,
+					indexerRequestBuffer);
+			}
+			else {
+				MethodKey methodKey = new MethodKey(
+					Indexer.class, method.getName(), Object.class);
+
+				bufferRequest(methodKey, args[0], indexerRequestBuffer);
+			}
 		}
 		else if (args.length == 2) {
-			MethodKey methodKey = new MethodKey(
-				Indexer.class, method.getName(), String.class, Long.TYPE);
-
 			String className = (String)args[0];
 
 			PersistedModelLocalService persistedModelLocalService =
-				_persistedModelLocalServiceRegistry.
+				PersistedModelLocalServiceRegistryUtil.
 					getPersistedModelLocalService(className);
 
 			Long classPK = (Long)args[1];
 
-			try {
-				persistedModelLocalService.getPersistedModel(classPK);
+			if ((persistedModelLocalService != null) &&
+				(persistedModelLocalService.fetchPersistedModel(classPK) !=
+					null)) {
 
 				bufferRequest(
-					methodKey, className, classPK, indexerRequestBuffer);
-			}
-			catch (Exception exception) {
-				if (_log.isTraceEnabled()) {
-					_log.trace(exception);
-				}
+					new MethodKey(
+						Indexer.class, method.getName(), String.class,
+						Long.TYPE),
+					className, classPK, indexerRequestBuffer);
 			}
 		}
 		else {
@@ -230,7 +233,5 @@ public class BufferedIndexerInvocationHandler implements InvocationHandler {
 	private volatile IndexerRequestBufferOverflowHandler
 		_indexerRequestBufferOverflowHandler;
 	private final IndexStatusManager _indexStatusManager;
-	private final PersistedModelLocalServiceRegistry
-		_persistedModelLocalServiceRegistry;
 
 }

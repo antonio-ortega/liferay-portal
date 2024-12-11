@@ -78,7 +78,7 @@ public class DateRangeFacetSearchContributorImpl
 
 			dateRangeFacetImpl.setAggregationName(_aggregationName);
 			dateRangeFacetImpl.setFacetConfiguration(
-				_buildFacetConfiguration(dateRangeFacetImpl));
+				_buildFacetConfiguration(dateRangeFacetImpl.getFieldName()));
 			dateRangeFacetImpl.setFieldName(_field);
 			dateRangeFacetImpl.select(_getSelectedRanges());
 
@@ -138,10 +138,10 @@ public class DateRangeFacetSearchContributorImpl
 			return this;
 		}
 
-		private FacetConfiguration _buildFacetConfiguration(Facet facet) {
+		private FacetConfiguration _buildFacetConfiguration(String fieldName) {
 			FacetConfiguration facetConfiguration = new FacetConfiguration();
 
-			facetConfiguration.setFieldName(facet.getFieldName());
+			facetConfiguration.setFieldName(fieldName);
 			facetConfiguration.setLabel("any-time");
 			facetConfiguration.setOrder(_order);
 			facetConfiguration.setStatic(false);
@@ -187,7 +187,7 @@ public class DateRangeFacetSearchContributorImpl
 		private String[] _getSelectedRanges() {
 			List<String> ranges = new ArrayList<>();
 
-			if (!ArrayUtil.isEmpty(_selectedRanges)) {
+			if (ArrayUtil.isNotEmpty(_selectedRanges)) {
 				Map<String, String> rangesMap = _getRangesMap(_rangesJSONArray);
 
 				for (String selectedRange : _selectedRanges) {

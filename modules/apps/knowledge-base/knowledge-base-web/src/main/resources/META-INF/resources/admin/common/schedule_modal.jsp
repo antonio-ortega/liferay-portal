@@ -9,12 +9,14 @@
 
 <div>
 	<react:component
-		module="admin/js/components/ScheduleModal"
+		module="{ScheduleModal} from knowledge-base-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"displayDate", ParamUtil.getString(request, "displayDate")
 			).put(
 				"isScheduled", ParamUtil.getBoolean(request, "scheduled")
+			).put(
+				"timeZone", timeZone.getID()
 			).build()
 		%>'
 	/>

@@ -1,5 +1,6 @@
 [
 	{
+		"externalReferenceCode": "SITENAVIGATIONMENU1",
 		"menuItems": [
 			{
 				"menuItems": [
@@ -16,7 +17,10 @@
 						"type": "display-page"
 					}
 				],
-				"name": "Courses",
+				"name_i18n": {
+					"en_US": "Courses"
+				},
+				"title": "Courses",
 				"type": "node"
 			},
 			{
@@ -33,6 +37,7 @@
 		"name": "Main Navigation"
 	},
 	{
+		"externalReferenceCode": "SITENAVIGATIONMENU2",
 		"menuItems": [
 			{
 				"friendlyURL": "/my-learning",

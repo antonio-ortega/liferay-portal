@@ -16,6 +16,8 @@ List<CPOptionCategory> cpOptionCategories = cpDefinitionSpecificationOptionValue
 CPSpecificationOption cpSpecificationOption = cpDefinitionSpecificationOptionValue.getCPSpecificationOption();
 
 long cpOptionCategoryId = BeanParamUtil.getLong(cpDefinitionSpecificationOptionValue, request, "CPOptionCategoryId");
+
+Map<String, List<SelectOption>> selectOptionsMap = cpDefinitionSpecificationOptionValueDisplayContext.getSelectOptionsMap();
 %>
 
 <portlet:actionURL name="/cp_definitions/edit_cp_definition_specification_option_value" var="editProductDefinitionSpecificationOptionValueActionURL" />
@@ -31,12 +33,30 @@ long cpOptionCategoryId = BeanParamUtil.getLong(cpDefinitionSpecificationOptionV
 			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 			<aui:input name="cpDefinitionSpecificationOptionValueId" type="hidden" value="<%= String.valueOf(cpDefinitionSpecificationOptionValue.getCPDefinitionSpecificationOptionValueId()) %>" />
 
-			<aui:field-wrapper label='<%= LanguageUtil.get(resourceBundle, "value") %>' name="valueFieldWrapper">
-				<liferay-ui:input-localized
-					name="value"
-					xml="<%= (cpDefinitionSpecificationOptionValue == null) ? StringPool.BLANK : cpDefinitionSpecificationOptionValue.getValue() %>"
-				/>
-			</aui:field-wrapper>
+			<liferay-ui:error exception="<%= CPDefinitionSpecificationOptionValueKeyException.class %>" message="please-enter-a-valid-key" />
+
+			<c:choose>
+				<c:when test="<%= selectOptionsMap.isEmpty() %>">
+					<aui:field-wrapper label='<%= LanguageUtil.get(resourceBundle, "value") %>' name="valueFieldWrapper">
+						<liferay-ui:input-localized
+							name="value"
+							xml="<%= (cpDefinitionSpecificationOptionValue == null) ? StringPool.BLANK : cpDefinitionSpecificationOptionValue.getValue() %>"
+						/>
+					</aui:field-wrapper>
+				</c:when>
+				<c:otherwise>
+					<div>
+						<react:component
+							module="{CPDefinitionSpecificationOptionValueGroupOption} from commerce-product-definitions-web"
+							props='<%=
+								HashMapBuilder.<String, Object>put(
+									"selectOptionsMap", selectOptionsMap
+								).build()
+							%>'
+						/>
+					</div>
+				</c:otherwise>
+			</c:choose>
 
 			<aui:select label="group" name="CPOptionCategoryId" showEmptyOption="<%= true %>">
 
@@ -51,6 +71,8 @@ long cpOptionCategoryId = BeanParamUtil.getLong(cpDefinitionSpecificationOptionV
 				%>
 
 			</aui:select>
+
+			<aui:input label="key" name="key" required="<%= true %>" value="<%= cpDefinitionSpecificationOptionValue.getKey() %>" />
 
 			<%
 			NumberFormat numberFormat = NumberFormat.getNumberInstance(locale);

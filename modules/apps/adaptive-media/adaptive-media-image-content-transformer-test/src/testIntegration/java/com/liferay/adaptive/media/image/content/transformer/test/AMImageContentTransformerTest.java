@@ -6,7 +6,6 @@
 package com.liferay.adaptive.media.image.content.transformer.test;
 
 import com.liferay.adaptive.media.content.transformer.ContentTransformerHandler;
-import com.liferay.adaptive.media.content.transformer.constants.ContentTransformerContentTypes;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
@@ -30,6 +29,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -48,7 +48,9 @@ public class AMImageContentTransformerTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -91,10 +93,9 @@ public class AMImageContentTransformerTest {
 			"srcset=\".+\" \\/><img data-fileentryid=\".+\" src=\".+\" \\/>",
 			"<\\/picture>");
 
-		String transformedHTML = _contentTransformerHandler.transform(
-			ContentTransformerContentTypes.HTML, rawHTML);
+		String transformedHTML = _contentTransformerHandler.transform(rawHTML);
 
-		Assert.assertTrue(transformedHTML.matches(regex));
+		Assert.assertTrue(transformedHTML, transformedHTML.matches(regex));
 	}
 
 	private FileEntry _addImageFileEntry(ServiceContext serviceContext)
@@ -106,7 +107,7 @@ public class AMImageContentTransformerTest {
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(
 				AMImageContentTransformerTest.class, "dependencies/image.jpg"),
-			null, null, serviceContext);
+			null, null, null, serviceContext);
 	}
 
 	private AMImageConfigurationEntry _amImageConfigurationEntry;

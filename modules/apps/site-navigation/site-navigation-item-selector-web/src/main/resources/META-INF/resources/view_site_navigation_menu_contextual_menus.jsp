@@ -12,7 +12,7 @@ SiteNavigationMenuContextualMenusItemSelectorViewDisplayContext siteNavigationMe
 %>
 
 <liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/site-navigation-item-selector-web/css/ContextualMenus.css") %>" rel="stylesheet" />
+	<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/site-navigation-item-selector-web/css/ContextualMenus.css") %>' rel="stylesheet" />
 </liferay-util:html-top>
 
 <clay:container-fluid
@@ -64,5 +64,5 @@ SiteNavigationMenuContextualMenusItemSelectorViewDisplayContext siteNavigationMe
 <liferay-frontend:component
 	componentId="SelectEntityHandler"
 	context="<%= siteNavigationMenuContextualMenusItemSelectorViewDisplayContext.getContext(liferayPortletResponse) %>"
-	module="js/SelectEntityHandler"
+	module="{SelectEntityHandler} from site-navigation-item-selector-web"
 />

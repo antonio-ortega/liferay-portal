@@ -14,7 +14,7 @@ RedirectEntriesDisplayContext redirectEntriesDisplayContext = (RedirectEntriesDi
 <c:if test="<%= !redirectEntriesDisplayContext.isStagingGroup() %>">
 	<clay:management-toolbar
 		managementToolbarDisplayContext="<%= redirectEntriesDisplayContext.getRedirectManagementToolbarDisplayContext() %>"
-		propsTransformer="js/RedirectManagementToolbarPropsTransformer"
+		propsTransformer="{RedirectManagementToolbarPropsTransformer} from redirect-web"
 	/>
 </c:if>
 
@@ -34,6 +34,15 @@ RedirectEntriesDisplayContext redirectEntriesDisplayContext = (RedirectEntriesDi
 				<clay:alert
 					displayType="info"
 					message="redirections-are-unavailable-in-staged-sites"
+				/>
+			</div>
+		</c:if>
+
+		<c:if test="<%= redirectEntriesDisplayContext.isLiveGroup() %>">
+			<div class="lfr-search-container">
+				<clay:alert
+					displayType="warning"
+					message="redirect-functionality-may-not-work-as-expected-in-the-staging-environment"
 				/>
 			</div>
 		</c:if>
@@ -126,10 +135,8 @@ RedirectEntriesDisplayContext redirectEntriesDisplayContext = (RedirectEntriesDi
 	</clay:container-fluid>
 </div>
 
-<aui:script require="frontend-js-web/index as frontendJsWeb">
-	var {delegate} = frontendJsWeb;
-
-	delegate(
+<aui:script sandbox="<%= true %>">
+	Liferay.Util.delegate(
 		document.querySelector('#<portlet:namespace />fm'),
 		'click',
 		'.icon-shortcut',

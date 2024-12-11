@@ -12,7 +12,6 @@ import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
-import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
@@ -20,10 +19,11 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
+import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +31,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Víctor Galán
@@ -55,14 +54,24 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 			(HttpServletRequest)requestContext.get("request");
 
 		httpServletRequest.setAttribute(
-			LayoutDisplayPageWebKeys.DEFAULT_LAYOUT_DISPLAY, Boolean.FALSE);
+			WebKeys.PAGE_ROBOTS, "noindex, nofollow");
 
 		return actualURL;
 	}
 
 	@Override
-	public String getURLSeparator() {
-		return "/e/";
+	public String getDefaultURLSeparator() {
+		return FriendlyURLResolverConstants.URL_SEPARATOR_CUSTOM_ASSET;
+	}
+
+	@Override
+	public String getKey() {
+		return "custom-asset-display-page";
+	}
+
+	@Override
+	public boolean isURLSeparatorConfigurable() {
+		return FeatureFlagManagerUtil.isEnabled("LPD-11147");
 	}
 
 	@Override
@@ -70,10 +79,6 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 		getLayoutDisplayPageObjectProvider(
 			LayoutDisplayPageProvider<?> layoutDisplayPageProvider,
 			long groupId, String friendlyURL, Map<String, String[]> params) {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-195205")) {
-			return null;
-		}
 
 		String[] parts = _getPathParts(friendlyURL);
 
@@ -93,7 +98,7 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 
 		return layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
 			new InfoItemReference(
-				_portal.getClassName(GetterUtil.getLong(parts[1])),
+				portal.getClassName(GetterUtil.getLong(parts[1])),
 				infoItemIdentifier));
 	}
 
@@ -102,10 +107,6 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 		long groupId, String friendlyURL,
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider,
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider) {
-
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-195205")) {
-			return null;
-		}
 
 		String[] parts = _getPathParts(friendlyURL);
 
@@ -121,10 +122,6 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 	protected LayoutDisplayPageProvider<?> getLayoutDisplayPageProvider(
 		String friendlyURL) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-195205")) {
-			return null;
-		}
-
 		String[] parts = _getPathParts(friendlyURL);
 
 		if (parts.length < 3) {
@@ -133,7 +130,7 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 
 		return layoutDisplayPageProviderRegistry.
 			getLayoutDisplayPageProviderByClassName(
-				_portal.getClassName(GetterUtil.getLong(parts[1])));
+				portal.getClassName(GetterUtil.getLong(parts[1])));
 	}
 
 	@Override
@@ -157,8 +154,5 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 
 		return new String[] {friendlyURL, classNameId, identifier};
 	}
-
-	@Reference
-	private Portal _portal;
 
 }

@@ -19,6 +19,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.UserGroupGroupRole;
@@ -70,6 +71,7 @@ public class UserSXPParameterContributorTest {
 
 	@Before
 	public void setUp() throws Exception {
+		_mockGroups();
 		_mockLanguage();
 		_mockPortal();
 		_mockUser();
@@ -98,7 +100,7 @@ public class UserSXPParameterContributorTest {
 			_mockUserLocalService());
 
 		_userSXPParameterContributor.contribute(
-			_exceptionListener, _searchContext, null, _sxpParameters);
+			_exceptionListener, _searchContext, _sxpParameters);
 
 		Assert.assertTrue(
 			_exists(
@@ -148,7 +150,7 @@ public class UserSXPParameterContributorTest {
 			_mockUserLocalService());
 
 		_userSXPParameterContributor.contribute(
-			_exceptionListener, _searchContext, null, _sxpParameters);
+			_exceptionListener, _searchContext, _sxpParameters);
 
 		Assert.assertTrue(
 			_exists(
@@ -192,7 +194,7 @@ public class UserSXPParameterContributorTest {
 			_mockUserLocalService());
 
 		_userSXPParameterContributor.contribute(
-			_exceptionListener, _searchContext, null, _sxpParameters);
+			_exceptionListener, _searchContext, _sxpParameters);
 
 		Assert.assertTrue(
 			_exists(
@@ -279,7 +281,7 @@ public class UserSXPParameterContributorTest {
 			_mockUserLocalService());
 
 		_userSXPParameterContributor.contribute(
-			_exceptionListener, _searchContext, null, _sxpParameters);
+			_exceptionListener, _searchContext, _sxpParameters);
 
 		Assert.assertTrue(
 			_exists(
@@ -345,6 +347,13 @@ public class UserSXPParameterContributorTest {
 				return value.equals(parts[1]);
 			},
 			"user.email_domain");
+	}
+
+	@Test
+	public void testExternalReferenceCode() throws Exception {
+		_testSXPParameter(
+			value -> value.equals(_user.getExternalReferenceCode()),
+			"user.external_reference_code");
 	}
 
 	@Test
@@ -419,6 +428,18 @@ public class UserSXPParameterContributorTest {
 			value -> (double)value == jsonObject.getDouble("longitude"),
 			"user.custom.field.expandotest.longitude",
 			ExpandoColumnConstants.GEOLOCATION);
+	}
+
+	@Test
+	public void testGroupExternalReferenceCodes() throws Exception {
+		_testSXPParameter(
+			value -> Arrays.equals(
+				(String[])value,
+				new String[] {
+					_group1.getExternalReferenceCode(),
+					_group2.getExternalReferenceCode()
+				}),
+			"user.group_external_reference_codes");
 	}
 
 	@Test
@@ -660,7 +681,7 @@ public class UserSXPParameterContributorTest {
 			_mockUserLocalService());
 
 		_userSXPParameterContributor.contribute(
-			_exceptionListener, _searchContext, null, _sxpParameters);
+			_exceptionListener, _searchContext, _sxpParameters);
 
 		Assert.assertTrue(
 			_exists(
@@ -791,6 +812,50 @@ public class UserSXPParameterContributorTest {
 	}
 
 	@Test
+	public void testUserGroupExternalReferenceCodes() throws Exception {
+		String[] groupExternalReferenceCodes = {
+			RandomTestUtil.randomString(), RandomTestUtil.randomString()
+		};
+
+		UserGroup userGroup1 = Mockito.mock(UserGroup.class);
+
+		Mockito.doReturn(
+			groupExternalReferenceCodes[0]
+		).when(
+			userGroup1
+		).getExternalReferenceCode();
+
+		UserGroup userGroup2 = Mockito.mock(UserGroup.class);
+
+		Mockito.doReturn(
+			groupExternalReferenceCodes[1]
+		).when(
+			userGroup2
+		).getExternalReferenceCode();
+
+		_userSXPParameterContributor = new UserSXPParameterContributor(
+			_mockAssetCategoryLocalService(Collections.emptyList()),
+			_mockAssetTagLocalService(Collections.emptyList()),
+			_mockExpandoColumnLocalService(Collections.emptyList()),
+			_mockExpandoValueLocalService(Collections.emptyList()),
+			_mockGroupLocalService(new long[0]), _language, _portal,
+			_mockSegmentsEntryRetriever(new long[0]),
+			_mockUserGroupGroupRoleLocalService(Collections.emptyList()),
+			_mockUserGroupLocalService(Arrays.asList(userGroup1, userGroup2)),
+			_mockUserGroupRoleLocalService(Collections.emptyList()),
+			_mockUserLocalService());
+
+		_userSXPParameterContributor.contribute(
+			_exceptionListener, _searchContext, _sxpParameters);
+
+		Assert.assertTrue(
+			_exists(
+				"user.user_group_external_reference_codes",
+				value -> Arrays.equals(
+					(String[])value, groupExternalReferenceCodes)));
+	}
+
+	@Test
 	public void testUserGroupIds() throws Exception {
 		long[] groupIds = {
 			RandomTestUtil.randomLong(), RandomTestUtil.randomLong()
@@ -825,7 +890,7 @@ public class UserSXPParameterContributorTest {
 			_mockUserLocalService());
 
 		_userSXPParameterContributor.contribute(
-			_exceptionListener, _searchContext, null, _sxpParameters);
+			_exceptionListener, _searchContext, _sxpParameters);
 
 		Assert.assertTrue(
 			_exists(
@@ -944,9 +1009,24 @@ public class UserSXPParameterContributorTest {
 		return expandoValueLocalService;
 	}
 
-	private GroupLocalService _mockGroupLocalService(long[] roleIds) {
+	private GroupLocalService _mockGroupLocalService(long[] roleIds)
+		throws Exception {
+
 		GroupLocalService groupLocalService = Mockito.mock(
 			GroupLocalService.class);
+
+		List<Group> groups = new ArrayList<>();
+
+		groups.add(_group1);
+		groups.add(_group2);
+
+		Mockito.doReturn(
+			groups
+		).when(
+			groupLocalService
+		).getGroups(
+			Mockito.any(long[].class)
+		);
 
 		Mockito.doReturn(
 			roleIds
@@ -957,6 +1037,23 @@ public class UserSXPParameterContributorTest {
 		);
 
 		return groupLocalService;
+	}
+
+	private void _mockGroups() {
+		_group1 = Mockito.mock(Group.class);
+		_group2 = Mockito.mock(Group.class);
+
+		Mockito.doReturn(
+			RandomTestUtil.randomString()
+		).when(
+			_group1
+		).getExternalReferenceCode();
+
+		Mockito.doReturn(
+			RandomTestUtil.randomString()
+		).when(
+			_group2
+		).getExternalReferenceCode();
 	}
 
 	private void _mockLanguage() {
@@ -990,7 +1087,7 @@ public class UserSXPParameterContributorTest {
 		).when(
 			segmentsEntryRetriever
 		).getSegmentsEntryIds(
-			Mockito.anyLong(), Mockito.anyLong(), Mockito.any()
+			Mockito.anyLong(), Mockito.anyLong(), Mockito.any(), Mockito.any()
 		);
 
 		return segmentsEntryRetriever;
@@ -1017,6 +1114,12 @@ public class UserSXPParameterContributorTest {
 		).when(
 			_user
 		).getEmailAddress();
+
+		Mockito.doReturn(
+			"external-reference-code"
+		).when(
+			_user
+		).getExternalReferenceCode();
 
 		Mockito.doReturn(
 			"John"
@@ -1212,7 +1315,7 @@ public class UserSXPParameterContributorTest {
 			_mockUserLocalService());
 
 		_userSXPParameterContributor.contribute(
-			_exceptionListener, _searchContext, null, _sxpParameters);
+			_exceptionListener, _searchContext, _sxpParameters);
 
 		Assert.assertTrue(_exists(sxpParameterName, unsafePredicate));
 	}
@@ -1245,13 +1348,15 @@ public class UserSXPParameterContributorTest {
 			_mockUserLocalService());
 
 		_userSXPParameterContributor.contribute(
-			_exceptionListener, _searchContext, null, _sxpParameters);
+			_exceptionListener, _searchContext, _sxpParameters);
 
 		Assert.assertTrue(_exists(sxpParameterName, unsafePredicate));
 	}
 
 	private final ExceptionListener _exceptionListener = Mockito.mock(
 		ExceptionListener.class);
+	private Group _group1;
+	private Group _group2;
 	private final Language _language = Mockito.mock(Language.class);
 	private final Locale _locale = LocaleUtil.US;
 	private final Portal _portal = Mockito.mock(Portal.class);

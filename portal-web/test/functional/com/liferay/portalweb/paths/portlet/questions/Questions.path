@@ -87,7 +87,7 @@
 </tr>
 <tr>
 	<td>DROPDOWN_ITEM_BUTTON</td>
-	<td>//*[contains(@class,'dropdown')]//*[contains(@class,'dropdown') and contains(.,'${key_text}')]</td>
+	<td>//*[contains(@class,'dropdown')]//*[contains(@class,'dropdown') and not(@icon) and contains(.,'${key_text}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -113,6 +113,11 @@
 <tr>
 	<td>QUESTIONS_CATEGORY_LABEL_ITEM</td>
 	<td>//span[contains(@class,'label-item') and contains(.,'${key_categoryItem}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>QUESTIONS_CATEGORY_LABEL_BADGE</td>
+	<td>//span[contains(@class,'label-badge') and contains(.,'${key_categoryItem}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -162,7 +167,7 @@
 </tr>
 <tr>
 	<td>QUESTIONS_DEFAULT_SUBSCRIPTION_TOPICS</td>
-	<td>//div[contains(@class,'questions-container')]/div[contains(.,'Topics')]/div[contains(@class,'c-empty-state')]//span/span[contains(.,'There are no results.')]</td>
+	<td>//div[contains(@class,'questions-container')]/div[contains(.,'Topics')]/div[contains(@class,'c-empty-state')]//div/span[contains(.,'There are no results.')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -242,7 +247,7 @@
 </tr>
 <tr>
 	<td>QUESTIONS_TITLE</td>
-	<td>//a[contains(@class,'questions-title')]/h2[contains(.,'${key_questionTitle}')]</td>
+	<td>//a[contains(@class,'questions-title')][contains(.,'${key_questionTitle}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -257,7 +262,7 @@
 </tr>
 <tr>
 	<td>QUESTIONS_SELECT_FILTER</td>
-	<td>//select[contains(@id,'questionsFilter')]</td>
+	<td>//div[contains(@class,'dropdown-menu')]//span[@class='custom-control-label'][normalize-space()='${key_option}']</td>
 	<td></td>
 </tr>
 <tr>
@@ -287,7 +292,7 @@
 </tr>
 <tr>
 	<td>QUESTIONS_STATISTICS_HEADER</td>
-	<td>//h4[contains(@class,'text-secondary') and contains(.,'${key_headerName}')]</td>
+	<td>//div[contains(@class,'text-secondary') and contains(.,'${key_headerName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -368,11 +373,6 @@
 <tr>
 	<td>TAGS_LIST_TAB_NAMES</td>
 	<td>//a[contains(@href, '${key_tagName}')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>TAGS_LIST_TAB_NO_RESULTS</td>
-	<td>//div[contains(@class,'container')]//div[contains(@class,'questions')]//span[@class='text-truncate']</td>
 	<td></td>
 </tr>
 <tr>

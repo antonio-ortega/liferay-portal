@@ -246,7 +246,7 @@ else {
 		</div>
 	</c:if>
 
-	<aui:button onClick='<%= liferayPortletResponse.getNamespace() + "generateWebDavPassword()" %>' value="generate-webdav-password" />
+	<aui:button data-qa-id="generateWebDAVPasswordButton" onClick='<%= liferayPortletResponse.getNamespace() + "generateWebDavPassword()" %>' value="generate-webdav-password" />
 </clay:sheet-section>
 
 <aui:script>
@@ -258,7 +258,7 @@ else {
 		};
 
 		baseUrl =
-			'<portlet:actionURL copyCurrentRenderParameters="<%= false %>" name="/users_admin/generate_webdav_password" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcRenderCommandName" value="/users_admin/generate_webdav_password" /></portlet:actionURL>';
+			'<portlet:actionURL copyCurrentRenderParameters="<%= false %>" name="/users_admin/generate_webdav_password" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcRenderCommandName" value="/users_admin/generate_webdav_password" /><portlet:param name="p_u_i_d" value="<%= String.valueOf(selUser.getUserId()) %>" /></portlet:actionURL>';
 
 		Liferay.Util.fetch(new URL(baseUrl), {
 			body: Liferay.Util.objectToURLSearchParams(data),
@@ -279,8 +279,7 @@ else {
 							webdavPasswordInput.focus();
 						}
 					},
-					title:
-						'<%= UnicodeLanguageUtil.get(request, "webdav-password-generated") %>',
+					title: '<%= UnicodeLanguageUtil.get(request, "webdav-password-generated") %>',
 				});
 			})
 			.catch((error) => {

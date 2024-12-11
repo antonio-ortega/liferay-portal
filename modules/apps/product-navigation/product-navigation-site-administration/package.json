@@ -1,0 +1,14 @@
+{
+	"dependencies": {
+		"frontend-js-web": "*"
+	},
+	"main": "js/index.ts",
+	"name": "@liferay/product-navigation-site-administration",
+	"private": true,
+	"scripts": {
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
+	},
+	"version": "6.0.53"
+}

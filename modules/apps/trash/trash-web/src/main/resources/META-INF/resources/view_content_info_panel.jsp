@@ -23,7 +23,7 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 			<clay:content-col
 				expand="<%= true %>"
 			>
-				<h4 class="component-title"><%= HtmlUtil.escape(trashRenderer.getTitle(locale)) %></h4>
+				<div class="component-title"><%= HtmlUtil.escape(trashRenderer.getTitle(locale)) %></div>
 			</clay:content-col>
 
 			<clay:content-col>
@@ -42,7 +42,7 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 							%>'
 							aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 							dropdownItems="<%= trashContainerActionDropdownItemsProvider.getActionDropdownItems() %>"
-							propsTransformer="js/EntriesPropsTransformer"
+							propsTransformer="{EntriesPropsTransformer} from trash-web"
 						/>
 					</li>
 				</ul>

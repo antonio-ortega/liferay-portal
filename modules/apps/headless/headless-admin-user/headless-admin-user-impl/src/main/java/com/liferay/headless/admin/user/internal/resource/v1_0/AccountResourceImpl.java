@@ -8,23 +8,40 @@ package com.liferay.headless.admin.user.internal.resource.v1_0;
 import com.liferay.account.constants.AccountActionKeys;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.constants.AccountListTypeConstants;
+import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.account.model.AccountEntry;
+import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
+import com.liferay.account.service.AccountGroupService;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.admin.user.dto.v1_0.Account;
+import com.liferay.headless.admin.user.dto.v1_0.AccountContactInformation;
 import com.liferay.headless.admin.user.dto.v1_0.Organization;
 import com.liferay.headless.admin.user.dto.v1_0.PostalAddress;
 import com.liferay.headless.admin.user.dto.v1_0.UserAccount;
 import com.liferay.headless.admin.user.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.headless.admin.user.internal.dto.v1_0.util.PostalAddressUtil;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderAddressUtil;
+import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderEmailAddressUtil;
+import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderPhoneUtil;
+import com.liferay.headless.admin.user.internal.dto.v1_0.util.ServiceBuilderWebsiteUtil;
 import com.liferay.headless.admin.user.internal.odata.entity.v1_0.AccountEntityModel;
 import com.liferay.headless.admin.user.resource.v1_0.AccountResource;
+import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.model.Address;
+import com.liferay.portal.kernel.model.Contact;
+import com.liferay.portal.kernel.model.EmailAddress;
+import com.liferay.portal.kernel.model.Phone;
+import com.liferay.portal.kernel.model.Website;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
@@ -35,25 +52,36 @@ import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.AddressLocalService;
+import com.liferay.portal.kernel.service.ContactService;
+import com.liferay.portal.kernel.service.ListTypeLocalService;
+import com.liferay.portal.kernel.service.OrganizationService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.File;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterContext;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.dto.converter.util.DTOConverterUtil;
 import com.liferay.portal.vulcan.fields.NestedField;
+import com.liferay.portal.vulcan.fields.NestedFieldId;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
+import com.liferay.portlet.usersadmin.util.UsersAdminUtil;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,6 +145,35 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	}
 
 	@Override
+	public void deleteOrganizationByExternalReferenceCodeAccounts(
+			String externalReferenceCode, Long[] accountIds)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		deleteOrganizationAccounts(
+			organization.getOrganizationId(), accountIds);
+	}
+
+	@Override
+	public void
+			deleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode(
+				String organizationExternalReferenceCode,
+				String[] externalReferenceCodes)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				organizationExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		deleteOrganizationAccountsByExternalReferenceCode(
+			organization.getOrganizationId(), externalReferenceCodes);
+	}
+
+	@Override
 	public Account getAccount(Long accountId) throws Exception {
 		return _toAccount(_accountEntryService.getAccountEntry(accountId));
 	}
@@ -129,6 +186,60 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		return getAccount(
 			DTOConverterUtil.getModelPrimaryKey(
 				_accountResourceDTOConverter, externalReferenceCode));
+	}
+
+	@Override
+	public Page<Account> getAccountGroupAccountsPage(
+			Long accountGroupId, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		AccountGroup accountGroup = _accountGroupService.getAccountGroup(
+			accountGroupId);
+
+		return SearchUtil.search(
+			Collections.emptyMap(),
+			booleanQuery -> {
+				BooleanFilter booleanFilter =
+					booleanQuery.getPreBooleanFilter();
+
+				booleanFilter.add(
+					new TermFilter(
+						"accountGroupIds",
+						String.valueOf(accountGroup.getAccountGroupId())),
+					BooleanClauseOccur.MUST);
+			},
+			filter, AccountEntry.class.getName(), search, pagination,
+			queryConfig -> queryConfig.setSelectedFieldNames(
+				Field.ENTRY_CLASS_PK),
+			searchContext -> searchContext.setCompanyId(
+				contextCompany.getCompanyId()),
+			sorts,
+			document -> _toAccount(
+				Collections.emptyMap(),
+				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK))));
+	}
+
+	@Override
+	public Page<Account> getAccountGroupByExternalReferenceCodeAccountsPage(
+			String accountGroupExternalReferenceCode, String search,
+			Filter filter, Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		AccountGroup accountGroup =
+			_accountGroupService.fetchAccountGroupByExternalReferenceCode(
+				accountGroupExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		if (accountGroup == null) {
+			throw new NoSuchGroupException(
+				"Unable to find account group with external reference code " +
+					accountGroupExternalReferenceCode);
+		}
+
+		return getAccountGroupAccountsPage(
+			accountGroup.getAccountGroupId(), search, filter, pagination,
+			sorts);
 	}
 
 	@Override
@@ -179,7 +290,11 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap)
 		throws Exception {
 
-		return _entityModel;
+		return new AccountEntityModel(
+			EntityFieldsUtil.getEntityFields(
+				_portal.getClassNameId(AccountEntry.class.getName()),
+				contextCompany.getCompanyId(), _expandoBridgeIndexer,
+				_expandoColumnLocalService, _expandoTableLocalService));
 	}
 
 	@NestedField(
@@ -187,8 +302,8 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	)
 	@Override
 	public Page<Account> getOrganizationAccountsPage(
-			String organizationId, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			@NestedFieldId(value = "id") String organizationId, String search,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return _getOrganizationAccountsPage(
@@ -207,6 +322,92 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 					BooleanClauseOccur.MUST);
 			},
 			search, filter, pagination, sorts);
+	}
+
+	@Override
+	public Page<Account> getOrganizationByExternalReferenceCodeAccountsPage(
+			String externalReferenceCode, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return getOrganizationAccountsPage(
+			String.valueOf(organization.getOrganizationId()), search, filter,
+			pagination, sorts);
+	}
+
+	@Override
+	public Page<Account>
+			getOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountsByExternalReferenceCodePage(
+				String organizationExternalReferenceCode, String search,
+				Filter filter, Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				organizationExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		return getOrganizationAccountsPage(
+			String.valueOf(organization.getOrganizationId()), search, filter,
+			pagination, sorts);
+	}
+
+	@Override
+	public Account patchAccount(Long accountId, Account account)
+		throws Exception {
+
+		AccountEntry accountEntry = _accountEntryService.getAccountEntry(
+			accountId);
+
+		accountEntry = _accountEntryService.updateAccountEntry(
+			accountId,
+			_getParentAccountId(
+				account,
+				GetterUtil.getLong(
+					accountEntry.getParentAccountEntryId(),
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT)),
+			GetterUtil.getString(account.getName(), accountEntry.getName()),
+			GetterUtil.getString(
+				account.getDescription(), accountEntry.getDescription()),
+			_isDeleteLogo(account, accountEntry),
+			GetterUtil.getStringValues(
+				account.getDomains(), accountEntry.getDomainsArray()),
+			accountEntry.getEmailAddress(),
+			_getLogoBytes(account, accountEntry, true),
+			GetterUtil.getString(
+				account.getTaxId(), accountEntry.getTaxIdNumber()),
+			GetterUtil.getInteger(
+				account.getStatus(),
+				GetterUtil.getInteger(
+					accountEntry.getStatus(),
+					WorkflowConstants.STATUS_APPROVED)),
+			_createServiceContext(account));
+
+		accountEntry = _accountEntryService.updateExternalReferenceCode(
+			accountId,
+			GetterUtil.getString(
+				account.getExternalReferenceCode(),
+				accountEntry.getExternalReferenceCode()));
+
+		accountEntry = _updateNestedResources(account, accountEntry, accountId);
+
+		return _toAccount(accountEntry);
+	}
+
+	@Override
+	public Account patchAccountByExternalReferenceCode(
+			String externalReferenceCode, Account account)
+		throws Exception {
+
+		AccountEntry accountEntry =
+			_accountEntryService.getAccountEntryByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		return patchAccount(accountEntry.getAccountEntryId(), account);
 	}
 
 	@Override
@@ -234,46 +435,74 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	@Override
 	public Account postAccount(Account account) throws Exception {
 		AccountEntry accountEntry = _accountEntryService.addAccountEntry(
-			contextUser.getUserId(), _getParentAccountId(account),
+			contextUser.getUserId(),
+			_getParentAccountId(
+				account, AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
 			account.getName(), account.getDescription(), _getDomains(account),
-			null, null, account.getTaxId(), _getType(account),
-			_getStatus(account), _createServiceContext(account));
+			null, _getLogoBytes(account, null, false), account.getTaxId(),
+			_getType(account), _getStatus(account),
+			_createServiceContext(account));
 
-		if (_isValidId(account.getDefaultBillingAddressId())) {
+		long defaultBillingAddressId = _getDefaultBillingAddressId(account, 0);
+
+		if (defaultBillingAddressId > 0) {
 			_accountEntryLocalService.updateDefaultBillingAddressId(
-				accountEntry.getAccountEntryId(),
-				account.getDefaultBillingAddressId());
+				accountEntry.getAccountEntryId(), defaultBillingAddressId);
 		}
 
-		if (_isValidId(account.getDefaultShippingAddressId())) {
+		long defaultShippingAddressId = _getDefaultShippingAddressId(
+			account, 0);
+
+		if (defaultShippingAddressId > 0) {
 			_accountEntryLocalService.updateDefaultShippingAddressId(
-				accountEntry.getAccountEntryId(),
-				account.getDefaultShippingAddressId());
+				accountEntry.getAccountEntryId(), defaultShippingAddressId);
 		}
 
 		accountEntry = _accountEntryService.updateExternalReferenceCode(
 			accountEntry.getAccountEntryId(),
 			account.getExternalReferenceCode());
 
-		_accountEntryOrganizationRelLocalService.
-			setAccountEntryOrganizationRels(
-				accountEntry.getAccountEntryId(), _getOrganizationIds(account));
+		long[] organizationIds = _getOrganizationIds(account);
+
+		if (organizationIds != null) {
+			_accountEntryOrganizationRelLocalService.
+				setAccountEntryOrganizationRels(
+					accountEntry.getAccountEntryId(), organizationIds);
+		}
 
 		_accountEntryUserRelLocalService.setAccountEntryUserRels(
 			accountEntry.getAccountEntryId(),
 			_getAccountUserAccountIds(account));
 
-		for (Address address : _getAddresses(account)) {
-			_addressLocalService.addAddress(
-				address.getExternalReferenceCode(), contextUser.getUserId(),
+		_addAddresses(accountEntry.getAccountEntryId(), account);
+
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
+
+		if (accountContactInformation != null) {
+			UsersAdminUtil.updateAddresses(
 				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
-				address.getName(), address.getDescription(),
-				address.getStreet1(), address.getStreet2(),
-				address.getStreet3(), address.getCity(), address.getZip(),
-				address.getRegionId(), address.getCountryId(),
-				address.getListTypeId(), address.isMailing(),
-				address.isPrimary(), address.getPhoneNumber(),
-				_createServiceContext(account));
+				_getContactAddresses(account, null));
+			UsersAdminUtil.updateEmailAddresses(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getEmailAddresses(account, null));
+			UsersAdminUtil.updatePhones(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getPhones(account, null));
+			UsersAdminUtil.updateWebsites(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getWebsites(account, null));
+
+			_addOrUpdateContact(
+				0, contextUser.getUserId(), AccountEntry.class.getName(),
+				accountEntry.getAccountEntryId(), null, null, null, null, 0, 0,
+				true, 0, 1, 1970,
+				GetterUtil.getString(accountContactInformation.getSms()),
+				GetterUtil.getString(accountContactInformation.getFacebook()),
+				GetterUtil.getString(accountContactInformation.getJabber()),
+				GetterUtil.getString(accountContactInformation.getSkype()),
+				GetterUtil.getString(accountContactInformation.getTwitter()),
+				null);
 		}
 
 		return _toAccount(accountEntry);
@@ -304,37 +533,63 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	}
 
 	@Override
+	public void postOrganizationByExternalReferenceCodeAccounts(
+			String externalReferenceCode, Long[] accountIds)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		postOrganizationAccounts(organization.getOrganizationId(), accountIds);
+	}
+
+	@Override
+	public void
+			postOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode(
+				String organizationExternalReferenceCode,
+				String[] externalReferenceCodes)
+		throws Exception {
+
+		com.liferay.portal.kernel.model.Organization organization =
+			_organizationService.getOrganizationByExternalReferenceCode(
+				organizationExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		postOrganizationAccountsByExternalReferenceCode(
+			organization.getOrganizationId(), externalReferenceCodes);
+	}
+
+	@Override
 	public Account putAccount(Long accountId, Account account)
 		throws Exception {
+
+		AccountEntry accountEntry = _accountEntryService.fetchAccountEntry(
+			accountId);
+
+		if (accountEntry == null) {
+			return postAccount(account);
+		}
+
+		accountEntry = _accountEntryService.updateAccountEntry(
+			accountId,
+			_getParentAccountId(
+				account,
+				GetterUtil.getLong(
+					accountEntry.getParentAccountEntryId(),
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT)),
+			account.getName(), account.getDescription(),
+			_isDeleteLogo(account, null), _getDomains(account),
+			accountEntry.getEmailAddress(),
+			_getLogoBytes(account, accountEntry, false), account.getTaxId(),
+			_getStatus(account), _createServiceContext(account));
 
 		_accountEntryService.updateExternalReferenceCode(
 			accountId, account.getExternalReferenceCode());
 
-		_accountEntryOrganizationRelLocalService.
-			setAccountEntryOrganizationRels(
-				accountId, _getOrganizationIds(account));
+		accountEntry = _updateNestedResources(account, accountEntry, accountId);
 
-		_accountEntryUserRelLocalService.setAccountEntryUserRels(
-			accountId, _getAccountUserAccountIds(account));
-
-		for (Address address : _getAddresses(account)) {
-			_addressLocalService.addAddress(
-				address.getExternalReferenceCode(), contextUser.getUserId(),
-				AccountEntry.class.getName(), accountId, address.getName(),
-				address.getDescription(), address.getStreet1(),
-				address.getStreet2(), address.getStreet3(), address.getCity(),
-				address.getZip(), address.getRegionId(), address.getCountryId(),
-				address.getListTypeId(), address.isMailing(),
-				address.isPrimary(), address.getPhoneNumber(),
-				_createServiceContext(account));
-		}
-
-		return _toAccount(
-			_accountEntryService.updateAccountEntry(
-				accountId, _getParentAccountId(account), account.getName(),
-				account.getDescription(), false, _getDomains(account), null,
-				null, null, _getStatus(account),
-				_createServiceContext(account)));
+		return _toAccount(accountEntry);
 	}
 
 	@Override
@@ -342,13 +597,69 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			String externalReferenceCode, Account account)
 		throws Exception {
 
-		return _toAccount(
-			_accountEntryService.addOrUpdateAccountEntry(
-				externalReferenceCode, contextUser.getUserId(),
-				_getParentAccountId(account), account.getName(),
-				account.getDescription(), _getDomains(account), null, null,
-				null, _getType(account), _getStatus(account),
-				_createServiceContext(account)));
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
+				contextCompany.getCompanyId(), externalReferenceCode);
+
+		if (accountEntry == null) {
+			return putAccount(0L, account);
+		}
+
+		return putAccount(accountEntry.getAccountEntryId(), account);
+	}
+
+	private void _addAddresses(Long accountId, Account account)
+		throws Exception {
+
+		PostalAddress[] postalAddresses = account.getPostalAddresses();
+
+		if (ArrayUtil.isEmpty(postalAddresses)) {
+			return;
+		}
+
+		for (PostalAddress postalAddress :
+				ListUtil.filter(
+					Arrays.asList(postalAddresses), Objects::nonNull)) {
+
+			Address address = ServiceBuilderAddressUtil.toServiceBuilderAddress(
+				contextCompany.getCompanyId(), postalAddress,
+				AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS);
+
+			_addressLocalService.addAddress(
+				address.getExternalReferenceCode(), contextUser.getUserId(),
+				AccountEntry.class.getName(), accountId, address.getName(),
+				address.getDescription(), address.getStreet1(),
+				address.getStreet2(), address.getStreet3(), address.getCity(),
+				address.getZip(), address.getRegionId(), address.getCountryId(),
+				address.getListTypeId(), address.isMailing(),
+				address.isPrimary(), postalAddress.getPhoneNumber(),
+				_createServiceContext(account));
+		}
+	}
+
+	private void _addOrUpdateContact(
+			long contactId, long userId, String className, long classPK,
+			String emailAddress, String firstName, String middleName,
+			String lastName, long prefixListTypeId, long suffixListTypeId,
+			boolean male, int birthdayMonth, int birthdayDay, int birthdayYear,
+			String smsSn, String facebookSn, String jabberSn, String skypeSn,
+			String twitterSn, String jobTitle)
+		throws Exception {
+
+		if (contactId == 0) {
+			_contactService.addContact(
+				userId, className, classPK, emailAddress, firstName, middleName,
+				lastName, prefixListTypeId, suffixListTypeId, male,
+				birthdayMonth, birthdayDay, birthdayYear, smsSn, facebookSn,
+				jabberSn, skypeSn, twitterSn, jobTitle);
+		}
+		else {
+			_contactService.updateContact(
+				contactId, emailAddress, firstName, middleName, lastName,
+				prefixListTypeId, suffixListTypeId, male, birthdayMonth,
+				birthdayDay, birthdayYear, smsSn, facebookSn, jabberSn, skypeSn,
+				twitterSn, jobTitle);
+		}
 	}
 
 	private ServiceContext _createServiceContext(Account account)
@@ -382,21 +693,78 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		return ArrayUtil.toArray(userAccountIds);
 	}
 
-	private List<Address> _getAddresses(Account account) {
-		PostalAddress[] postalAddresses = account.getPostalAddresses();
+	private List<Address> _getContactAddresses(
+			Account account, AccountEntry accountEntry)
+		throws Exception {
 
-		if (postalAddresses == null) {
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
+
+		if ((accountContactInformation == null) ||
+			(accountContactInformation.getPostalAddresses() == null)) {
+
+			if (accountEntry != null) {
+				return accountEntry.getListTypeAddresses(
+					PostalAddressUtil.getAccountEntryContactAddressListTypeIds(
+						accountEntry.getCompanyId(), _listTypeLocalService));
+			}
+
 			return Collections.emptyList();
 		}
 
 		return ListUtil.filter(
 			transformToList(
-				postalAddresses,
+				accountContactInformation.getPostalAddresses(),
 				_postalAddress ->
 					ServiceBuilderAddressUtil.toServiceBuilderAddress(
 						contextCompany.getCompanyId(), _postalAddress,
-						AccountListTypeConstants.ACCOUNT_ENTRY_ADDRESS)),
+						AccountListTypeConstants.
+							ACCOUNT_ENTRY_CONTACT_ADDRESS)),
 			Objects::nonNull);
+	}
+
+	private long _getDefaultBillingAddressId(
+		Account account, long defaultBillingAddressId) {
+
+		long billingAddressId = GetterUtil.getLong(
+			account.getDefaultBillingAddressId());
+
+		if (billingAddressId != 0) {
+			return billingAddressId;
+		}
+
+		Address address =
+			_addressLocalService.fetchAddressByExternalReferenceCode(
+				account.getDefaultBillingAddressExternalReferenceCode(),
+				contextCompany.getCompanyId());
+
+		if (address != null) {
+			return address.getAddressId();
+		}
+
+		return defaultBillingAddressId;
+	}
+
+	private long _getDefaultShippingAddressId(
+		Account account, long defaultShippingAddressId) {
+
+		long shippingAddressId = GetterUtil.getLong(
+			account.getDefaultShippingAddressId());
+
+		if (shippingAddressId != 0) {
+			return shippingAddressId;
+		}
+
+		Address address =
+			_addressLocalService.fetchAddressByExternalReferenceCode(
+				account.getDefaultShippingAddressExternalReferenceCode(),
+				contextCompany.getCompanyId());
+
+		if (address != null) {
+			return address.getAddressId();
+		}
+
+		return defaultShippingAddressId;
 	}
 
 	private String[] _getDomains(Account account) {
@@ -498,6 +866,67 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 			contextUser);
 	}
 
+	private List<EmailAddress> _getEmailAddresses(
+			Account account, AccountEntry accountEntry)
+		throws Exception {
+
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
+
+		if ((accountContactInformation == null) ||
+			(accountContactInformation.getEmailAddresses() == null)) {
+
+			if (accountEntry != null) {
+				return accountEntry.getEmailAddresses();
+			}
+
+			return Collections.emptyList();
+		}
+
+		return ListUtil.filter(
+			transformToList(
+				accountContactInformation.getEmailAddresses(),
+				emailAddress ->
+					ServiceBuilderEmailAddressUtil.toServiceBuilderEmailAddress(
+						contextCompany.getCompanyId(), emailAddress,
+						AccountListTypeConstants.ACCOUNT_ENTRY_EMAIL_ADDRESS)),
+			Objects::nonNull);
+	}
+
+	private byte[] _getLogoBytes(
+			Account account, AccountEntry accountEntry,
+			boolean useAccountEntryDefault)
+		throws Exception {
+
+		Long logoId = GetterUtil.getLong(account.getLogoId());
+
+		if (logoId == 0) {
+			FileEntry fileEntry =
+				_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+					contextCompany.getGroupId(),
+					account.getLogoExternalReferenceCode());
+
+			if (fileEntry != null) {
+				logoId = fileEntry.getFileEntryId();
+			}
+			else if ((fileEntry == null) && (accountEntry != null) &&
+					 useAccountEntryDefault) {
+
+				logoId = accountEntry.getLogoId();
+			}
+		}
+
+		if ((logoId > 0) &&
+			((accountEntry == null) || (accountEntry.getLogoId() != logoId))) {
+
+			FileEntry fileEntry = _dlAppLocalService.getFileEntry(logoId);
+
+			return _file.getBytes(fileEntry.getContentStream());
+		}
+
+		return null;
+	}
+
 	private Page<Account> _getOrganizationAccountsPage(
 			Map<String, Map<String, String>> actions,
 			UnsafeConsumer<BooleanQuery, Exception> booleanQueryUnsafeConsumer,
@@ -518,23 +947,89 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	}
 
 	private long[] _getOrganizationIds(Account account) {
+		String[] organizationExternalReferenceCodes =
+			account.getOrganizationExternalReferenceCodes();
 		Long[] organizationIds = account.getOrganizationIds();
 
-		if (organizationIds == null) {
-			return new long[0];
+		if ((organizationExternalReferenceCodes == null) &&
+			(organizationIds == null)) {
+
+			return null;
 		}
 
-		return ArrayUtil.toArray(organizationIds);
+		if (ArrayUtil.isNotEmpty(organizationIds)) {
+			return ArrayUtil.toArray(organizationIds);
+		}
+
+		if (ArrayUtil.isNotEmpty(organizationExternalReferenceCodes)) {
+			organizationIds = transformToArray(
+				Arrays.asList(organizationExternalReferenceCodes),
+				externalReferenceCode -> {
+					com.liferay.portal.kernel.model.Organization organization =
+						_organizationService.
+							fetchOrganizationByExternalReferenceCode(
+								externalReferenceCode,
+								contextCompany.getCompanyId());
+
+					if (organization == null) {
+						return null;
+					}
+
+					return organization.getOrganizationId();
+				},
+				Long.class);
+
+			return ArrayUtil.toArray(organizationIds);
+		}
+
+		return new long[0];
 	}
 
-	private long _getParentAccountId(Account account) {
-		Long parentAccountId = account.getParentAccountId();
+	private long _getParentAccountId(
+			Account account, long defaultParentAccountId)
+		throws Exception {
 
-		if (parentAccountId == null) {
-			return AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT;
+		Long parentAccountId = GetterUtil.getLong(account.getParentAccountId());
+
+		if (parentAccountId != 0) {
+			return parentAccountId;
 		}
 
-		return parentAccountId;
+		AccountEntry accountEntry =
+			_accountEntryService.fetchAccountEntryByExternalReferenceCode(
+				contextCompany.getCompanyId(),
+				account.getParentAccountExternalReferenceCode());
+
+		if (accountEntry != null) {
+			return accountEntry.getAccountEntryId();
+		}
+
+		return defaultParentAccountId;
+	}
+
+	private List<Phone> _getPhones(Account account, AccountEntry accountEntry)
+		throws Exception {
+
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
+
+		if ((accountContactInformation == null) ||
+			(accountContactInformation.getTelephones() == null)) {
+
+			if (accountEntry != null) {
+				return accountEntry.getPhones();
+			}
+
+			return Collections.emptyList();
+		}
+
+		return ListUtil.filter(
+			transformToList(
+				accountContactInformation.getTelephones(),
+				telephone -> ServiceBuilderPhoneUtil.toServiceBuilderPhone(
+					contextCompany.getCompanyId(), telephone,
+					AccountListTypeConstants.ACCOUNT_ENTRY_PHONE)),
+			Objects::nonNull);
 	}
 
 	private int _getStatus(Account account) {
@@ -557,17 +1052,178 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 		return type;
 	}
 
-	private boolean _isValidId(Long value) {
-		if ((value == null) || (value <= 0)) {
-			return false;
+	private List<Website> _getWebsites(
+			Account account, AccountEntry accountEntry)
+		throws Exception {
+
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
+
+		if ((accountContactInformation == null) ||
+			(accountContactInformation.getWebUrls() == null)) {
+
+			if (accountEntry != null) {
+				return accountEntry.getWebsites();
+			}
+
+			return Collections.emptyList();
 		}
 
-		return true;
+		return ListUtil.filter(
+			transformToList(
+				accountContactInformation.getWebUrls(),
+				webUrl -> ServiceBuilderWebsiteUtil.toServiceBuilderWebsite(
+					contextCompany.getCompanyId(),
+					AccountListTypeConstants.ACCOUNT_ENTRY_WEBSITE, webUrl)),
+			Objects::nonNull);
+	}
+
+	private boolean _isDeleteLogo(Account account, AccountEntry accountEntry)
+		throws Exception {
+
+		Long logoId = GetterUtil.getLong(account.getLogoId());
+
+		if (logoId == 0) {
+			FileEntry fileEntry =
+				_dlAppLocalService.fetchFileEntryByExternalReferenceCode(
+					contextCompany.getGroupId(),
+					account.getLogoExternalReferenceCode());
+
+			if (fileEntry != null) {
+				logoId = fileEntry.getFileEntryId();
+			}
+			else if ((fileEntry == null) && (accountEntry != null)) {
+				logoId = accountEntry.getLogoId();
+			}
+		}
+
+		if ((logoId == null) || (logoId == 0)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private Account _toAccount(AccountEntry accountEntry) throws Exception {
 		return _accountResourceDTOConverter.toDTO(
 			_getDTOConverterContext(accountEntry.getAccountEntryId()));
+	}
+
+	private Account _toAccount(
+			Map<String, Map<String, String>> actions, long accountId)
+		throws Exception {
+
+		DTOConverterContext dtoConverterContext = _getDTOConverterContext(
+			accountId);
+
+		Map<String, Map<String, String>> actionsMap = new HashMap<>();
+
+		if (!actions.isEmpty()) {
+			actionsMap.putAll(actions);
+		}
+
+		actionsMap.putAll(dtoConverterContext.getActions());
+
+		return _accountResourceDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				contextAcceptLanguage.isAcceptAllLanguages(), actionsMap,
+				_dtoConverterRegistry, accountId,
+				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
+				contextUser));
+	}
+
+	private AccountEntry _updateNestedResources(
+			Account account, AccountEntry accountEntry, Long accountId)
+		throws Exception {
+
+		_addAddresses(accountId, account);
+
+		accountEntry = _accountEntryLocalService.updateDefaultBillingAddressId(
+			accountId,
+			_getDefaultBillingAddressId(
+				account, accountEntry.getDefaultBillingAddressId()));
+
+		accountEntry = _accountEntryLocalService.updateDefaultShippingAddressId(
+			accountId,
+			_getDefaultShippingAddressId(
+				account, accountEntry.getDefaultShippingAddressId()));
+
+		long[] organizationIds = _getOrganizationIds(account);
+
+		if (organizationIds != null) {
+			_accountEntryOrganizationRelLocalService.
+				setAccountEntryOrganizationRels(accountId, organizationIds);
+		}
+
+		UserAccount[] userAccounts = account.getAccountUserAccounts();
+
+		if (userAccounts != null) {
+			_accountEntryUserRelLocalService.setAccountEntryUserRels(
+				accountId,
+				transformToLongArray(
+					Arrays.asList(userAccounts), UserAccount::getId));
+		}
+
+		AccountContactInformation accountContactInformation =
+			account.getAccountContactInformation();
+
+		if (accountContactInformation != null) {
+			UsersAdminUtil.updateAddresses(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getContactAddresses(account, accountEntry));
+			UsersAdminUtil.updateEmailAddresses(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getEmailAddresses(account, accountEntry));
+			UsersAdminUtil.updatePhones(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getPhones(account, accountEntry));
+			UsersAdminUtil.updateWebsites(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId(),
+				_getWebsites(account, accountEntry));
+
+			Contact contact = accountEntry.fetchContact();
+
+			if (contact == null) {
+				_addOrUpdateContact(
+					0, contextUser.getUserId(), AccountEntry.class.getName(),
+					accountEntry.getAccountEntryId(), null, null, null, null, 0,
+					0, true, 0, 1, 1970,
+					GetterUtil.getString(accountContactInformation.getSms()),
+					GetterUtil.getString(
+						accountContactInformation.getFacebook()),
+					GetterUtil.getString(accountContactInformation.getJabber()),
+					GetterUtil.getString(accountContactInformation.getSkype()),
+					GetterUtil.getString(
+						accountContactInformation.getTwitter()),
+					null);
+			}
+			else {
+				_addOrUpdateContact(
+					contact.getContactId(), contact.getUserId(),
+					contact.getClassName(), contact.getClassPK(),
+					contact.getEmailAddress(), contact.getFirstName(),
+					contact.getMiddleName(), contact.getLastName(),
+					contact.getPrefixListTypeId(),
+					contact.getSuffixListTypeId(), contact.isMale(), 0, 1, 1970,
+					GetterUtil.getString(
+						accountContactInformation.getSms(), contact.getSmsSn()),
+					GetterUtil.getString(
+						accountContactInformation.getFacebook(),
+						contact.getFacebookSn()),
+					GetterUtil.getString(
+						accountContactInformation.getJabber(),
+						contact.getJabberSn()),
+					GetterUtil.getString(
+						accountContactInformation.getSkype(),
+						contact.getSkypeSn()),
+					GetterUtil.getString(
+						accountContactInformation.getTwitter(),
+						contact.getTwitterSn()),
+					contact.getJobTitle());
+			}
+		}
+
+		return accountEntry;
 	}
 
 	@Reference
@@ -591,13 +1247,38 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	@Reference
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
 
+	@Reference
+	private AccountGroupService _accountGroupService;
+
 	@Reference(target = DTOConverterConstants.ACCOUNT_RESOURCE_DTO_CONVERTER)
 	private DTOConverter<AccountEntry, Account> _accountResourceDTOConverter;
 
 	@Reference
 	private AddressLocalService _addressLocalService;
 
-	private final EntityModel _entityModel = new AccountEntityModel();
+	@Reference
+	private ContactService _contactService;
+
+	@Reference
+	private DLAppLocalService _dlAppLocalService;
+
+	@Reference
+	private DTOConverterRegistry _dtoConverterRegistry;
+
+	@Reference
+	private ExpandoBridgeIndexer _expandoBridgeIndexer;
+
+	@Reference
+	private ExpandoColumnLocalService _expandoColumnLocalService;
+
+	@Reference
+	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Reference
+	private File _file;
+
+	@Reference
+	private ListTypeLocalService _listTypeLocalService;
 
 	@Reference(
 		target = DTOConverterConstants.ORGANIZATION_RESOURCE_DTO_CONVERTER
@@ -605,5 +1286,11 @@ public class AccountResourceImpl extends BaseAccountResourceImpl {
 	private DTOConverter
 		<com.liferay.portal.kernel.model.Organization, Organization>
 			_organizationResourceDTOConverter;
+
+	@Reference
+	private OrganizationService _organizationService;
+
+	@Reference
+	private Portal _portal;
 
 }

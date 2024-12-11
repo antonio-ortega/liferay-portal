@@ -6,6 +6,7 @@
 package com.liferay.portal.template.freemarker.internal;
 
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
@@ -183,22 +184,15 @@ public class RestrictedLiferayObjectWrapperTest
 
 	@Test
 	public void testIsRestrictedWithNoContextClassloader() {
-		Thread thread = Thread.currentThread();
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				null)) {
 
-		ClassLoader contextClassLoader = thread.getContextClassLoader();
-
-		thread.setContextClassLoader(null);
-
-		try {
 			Assert.assertFalse(
 				_isRestricted(
 					new RestrictedLiferayObjectWrapper(
 						new String[] {TestLiferayObject.class.getName()},
 						new String[] {TestLiferayObject.class.getName()}, null),
 					TestLiferayObject.class));
-		}
-		finally {
-			thread.setContextClassLoader(contextClassLoader);
 		}
 	}
 
@@ -284,6 +278,42 @@ public class RestrictedLiferayObjectWrapperTest
 					"\"className#methodName\""),
 				logEntry.getMessage());
 		}
+	}
+
+	@NewEnv(type = NewEnv.Type.CLASSLOADER)
+	@Test
+	public void testWrapWithCompanyRestrictForFalse() throws Exception {
+		PropsUtil.setProps(ProxyFactory.newDummyInstance(Props.class));
+
+		TransactionInvokerUtil transactionInvokerUtil =
+			new TransactionInvokerUtil();
+
+		transactionInvokerUtil.setTransactionInvoker(
+			new TestTransactionInvoker());
+
+		ReflectionTestUtil.setFieldValue(
+			PropsValues.class, "TEMPLATE_ENGINE_FREEMARKER_COMPANY_RESTRICT",
+			false);
+
+		_testWrap();
+	}
+
+	@NewEnv(type = NewEnv.Type.CLASSLOADER)
+	@Test
+	public void testWrapWithCompanyRestrictForTrue() throws Exception {
+		PropsUtil.setProps(ProxyFactory.newDummyInstance(Props.class));
+
+		TransactionInvokerUtil transactionInvokerUtil =
+			new TransactionInvokerUtil();
+
+		transactionInvokerUtil.setTransactionInvoker(
+			new TestTransactionInvoker());
+
+		ReflectionTestUtil.setFieldValue(
+			PropsValues.class, "TEMPLATE_ENGINE_FREEMARKER_COMPANY_RESTRICT",
+			true);
+
+		_testWrap();
 	}
 
 	@NewEnv(type = NewEnv.Type.CLASSLOADER)
@@ -428,25 +458,41 @@ public class RestrictedLiferayObjectWrapperTest
 
 				// Base model with wrong company ID
 
-				try {
-					objectWrapper.wrap(new TestBaseModel(123L));
+				boolean companyRestrict = ReflectionTestUtil.getFieldValue(
+					PropsValues.class,
+					"TEMPLATE_ENGINE_FREEMARKER_COMPANY_RESTRICT");
 
-					Assert.fail();
+				if (companyRestrict) {
+					try {
+						objectWrapper.wrap(new TestBaseModel(123L));
+
+						Assert.fail();
+					}
+					catch (TemplateModelException templateModelException) {
+						Assert.assertEquals(
+							"Denied access to model object as it does not " +
+								"belong to current company 1",
+							templateModelException.getMessage());
+					}
 				}
-				catch (TemplateModelException templateModelException) {
-					Assert.assertEquals(
-						"Denied access to model object as it does not belong " +
-							"to current company 1",
-						templateModelException.getMessage());
+				else {
+					assertTemplateModel(
+						"123", stringModel -> stringModel.getAsString(),
+						StringModel.class.cast(
+							objectWrapper.wrap(new TestBaseModel(123L))));
 				}
 
 				// Base model with wrong company ID and disabled checking
 
 				try (SafeCloseable safeCloseable =
-						CompanyThreadLocal.setInitializingPortalInstance(
-							true)) {
+						CompanyThreadLocal.
+							setInitializingPortalInstanceWithSafeCloseable(
+								true)) {
 
-					objectWrapper.wrap(new TestBaseModel(123L));
+					assertTemplateModel(
+						"123", stringModel -> stringModel.getAsString(),
+						StringModel.class.cast(
+							objectWrapper.wrap(new TestBaseModel(123L))));
 				}
 			}
 			finally {

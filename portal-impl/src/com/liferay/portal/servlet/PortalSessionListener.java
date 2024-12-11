@@ -6,10 +6,21 @@
 package com.liferay.portal.servlet;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.events.EventsProcessorUtil;
+import com.liferay.portal.kernel.cluster.ClusterExecutorUtil;
+import com.liferay.portal.kernel.cluster.ClusterNode;
+import com.liferay.portal.kernel.events.ActionException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.messaging.DestinationNames;
+import com.liferay.portal.kernel.messaging.MessageBusUtil;
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.servlet.PortalSessionContext;
 import com.liferay.portal.kernel.servlet.filters.compoundsessionid.CompoundSessionIdHttpSession;
 import com.liferay.portal.kernel.servlet.filters.compoundsessionid.CompoundSessionIdSplitterUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
 
@@ -37,7 +48,25 @@ public class PortalSessionListener implements HttpSessionListener {
 				httpSessionEvent.getSession());
 		}
 
-		new PortalSessionCreator(httpSession);
+		try {
+			PortalSessionContext.put(httpSession.getId(), httpSession);
+		}
+		catch (IllegalStateException illegalStateException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(illegalStateException);
+			}
+		}
+
+		// Process session created events
+
+		try {
+			EventsProcessorUtil.process(
+				PropsKeys.SERVLET_SESSION_CREATE_EVENTS,
+				PropsValues.SERVLET_SESSION_CREATE_EVENTS, httpSession);
+		}
+		catch (ActionException actionException) {
+			_log.error(actionException);
+		}
 
 		if ((PropsValues.SESSION_MAX_ALLOWED > 0) &&
 			(_counter.incrementAndGet() > PropsValues.SESSION_MAX_ALLOWED)) {
@@ -66,7 +95,65 @@ public class PortalSessionListener implements HttpSessionListener {
 				httpSessionEvent.getSession());
 		}
 
-		new PortalSessionDestroyer(httpSession);
+		PortalSessionContext.remove(httpSession.getId());
+
+		Long userIdObj = (Long)httpSession.getAttribute(WebKeys.USER_ID);
+
+		if (userIdObj == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("User id is not in the session");
+			}
+		}
+		else {
+			try {
+
+				// Live users
+
+				if (PropsValues.LIVE_USERS_ENABLED) {
+					JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
+					ClusterNode clusterNode =
+						ClusterExecutorUtil.getLocalClusterNode();
+
+					if (clusterNode != null) {
+						jsonObject.put(
+							"clusterNodeId", clusterNode.getClusterNodeId());
+					}
+
+					jsonObject.put("command", "signOut");
+
+					long userId = userIdObj.longValue();
+
+					long companyId =
+						CompanyLocalServiceUtil.getCompanyIdByUserId(userId);
+
+					jsonObject.put(
+						"companyId", companyId
+					).put(
+						"sessionId", httpSession.getId()
+					).put(
+						"userId", userId
+					);
+
+					MessageBusUtil.sendMessage(
+						DestinationNames.LIVE_USERS, jsonObject.toString());
+				}
+			}
+			catch (Exception exception) {
+				_log.error(exception);
+			}
+
+			// Process session destroyed events
+
+			try {
+				EventsProcessorUtil.process(
+					PropsKeys.SERVLET_SESSION_DESTROY_EVENTS,
+					PropsValues.SERVLET_SESSION_DESTROY_EVENTS, httpSession);
+			}
+			catch (ActionException actionException) {
+				_log.error(actionException);
+			}
+		}
 
 		if (PropsValues.SESSION_MAX_ALLOWED > 0) {
 			_counter.decrementAndGet();

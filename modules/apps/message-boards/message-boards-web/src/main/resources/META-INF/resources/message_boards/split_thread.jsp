@@ -99,7 +99,7 @@ if (portletTitleBasedNavigation) {
 
 						<aui:input model="<%= MBMessage.class %>" name="subject" value='<%= LanguageUtil.get(request, "thread-split") %>' />
 
-						<aui:field-wrapper label="body">
+						<div>
 							<c:choose>
 								<c:when test="<%= message.isFormatBBCode() %>">
 									<%@ include file="/message_boards/bbcode_editor.jspf" %>
@@ -110,7 +110,7 @@ if (portletTitleBasedNavigation) {
 							</c:choose>
 
 							<aui:input name="body" type="hidden" />
-						</aui:field-wrapper>
+						</div>
 					</div>
 				</aui:fieldset>
 			</div>
@@ -126,13 +126,15 @@ if (portletTitleBasedNavigation) {
 
 <aui:script>
 	function <portlet:namespace />splitThread() {
-		document.<portlet:namespace />fm.<portlet:namespace />body.value = <portlet:namespace />getHTML();
+		document.<portlet:namespace />fm.<portlet:namespace />body.value =
+			<portlet:namespace />getHTML();
 
 		submitForm(document.<portlet:namespace />fm);
 	}
 
 	function <portlet:namespace />selectCategory(categoryId, categoryName) {
-		document.<portlet:namespace />fm.<portlet:namespace />mbCategoryId.value = categoryId;
+		document.<portlet:namespace />fm.<portlet:namespace />mbCategoryId.value =
+			categoryId;
 
 		var nameEl = document.getElementById('<portlet:namespace />categoryName');
 

@@ -6,12 +6,12 @@
 package com.liferay.journal.internal.model.listener;
 
 import com.liferay.journal.model.JournalArticle;
+import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.servlet.filters.cache.CacheUtil;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -29,9 +29,15 @@ public class JournalArticleModelListener
 	public void onAfterRemove(JournalArticle journalArticle) {
 		clearCache(journalArticle);
 
-		_layoutClassedModelUsageLocalService.deleteLayoutClassedModelUsages(
-			_portal.getClassNameId(JournalArticle.class),
-			journalArticle.getResourcePrimKey());
+		int count =
+			_journalArticleLocalService.getArticlesCountByResourcePrimKey(
+				journalArticle.getResourcePrimKey());
+
+		if (count <= 0) {
+			_layoutClassedModelUsageLocalService.deleteLayoutClassedModelUsages(
+				_portal.getClassNameId(JournalArticle.class),
+				journalArticle.getResourcePrimKey());
+		}
 	}
 
 	@Override
@@ -51,11 +57,10 @@ public class JournalArticleModelListener
 		_journalContent.clearCache(
 			journalArticle.getGroupId(), journalArticle.getArticleId(),
 			journalArticle.getDDMTemplateKey());
-
-		// Layout cache
-
-		CacheUtil.clearCache(journalArticle.getCompanyId());
 	}
+
+	@Reference
+	private JournalArticleLocalService _journalArticleLocalService;
 
 	@Reference
 	private JournalContent _journalContent;

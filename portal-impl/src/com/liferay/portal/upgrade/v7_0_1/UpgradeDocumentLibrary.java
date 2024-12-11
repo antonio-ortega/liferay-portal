@@ -6,7 +6,7 @@
 package com.liferay.portal.upgrade.v7_0_1;
 
 import com.liferay.document.library.kernel.model.DLFileEntry;
-import com.liferay.document.library.kernel.util.RawMetadataProcessor;
+import com.liferay.document.library.kernel.processor.RawMetadataProcessor;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
@@ -48,6 +48,8 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
+		updateRawMetadataProcessorClassName();
+
 		updateTikaRawMetadataDDMStructure();
 
 		updateTikaRawMetadataFileEntryMetadata();
@@ -71,6 +73,32 @@ public class UpgradeDocumentLibrary extends UpgradeProcess {
 			}
 
 			return 0;
+		}
+	}
+
+	protected void updateRawMetadataProcessorClassName() throws Exception {
+		long classNameId = PortalUtil.getClassNameId(
+			RawMetadataProcessor.class);
+
+		if (classNameId != 0) {
+			return;
+		}
+
+		classNameId = PortalUtil.getClassNameId(
+			"com.liferay.document.library.kernel.util.RawMetadataProcessor");
+
+		if (classNameId == 0) {
+			return;
+		}
+
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				"update ClassName_ set value = ? where classNameId = ? ")) {
+
+			preparedStatement.setString(
+				1, RawMetadataProcessor.class.getName());
+			preparedStatement.setLong(2, classNameId);
+
+			preparedStatement.executeUpdate();
 		}
 	}
 

@@ -1,0 +1,4 @@
+Bundle-Name: Liferay Portal Default Permissions API
+Bundle-SymbolicName: com.liferay.portal.defaultpermissions.api
+Bundle-Version: 2.0.1
+Export-Package: com.liferay.portal.defaultpermissions.configuration

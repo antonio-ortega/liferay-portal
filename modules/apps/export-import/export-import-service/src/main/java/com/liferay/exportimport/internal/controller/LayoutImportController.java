@@ -34,6 +34,7 @@ import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.exportimport.lar.PermissionImporter;
 import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
+import com.liferay.layout.admin.kernel.visibility.LayoutVisibilityManager;
 import com.liferay.layout.set.model.adapter.StagedLayoutSet;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
@@ -375,6 +376,7 @@ public class LayoutImportController implements ImportController {
 		portletDataContext.setExportImportProcessId(
 			String.valueOf(
 				exportImportConfiguration.getExportImportConfigurationId()));
+		portletDataContext.setOriginalPrivateLayout(privateLayout);
 		portletDataContext.setPrivateLayout(privateLayout);
 
 		return portletDataContext;
@@ -882,6 +884,50 @@ public class LayoutImportController implements ImportController {
 
 			layoutSetPrototypeUuid = GetterUtil.getString(
 				headerElement.attributeValue("type-uuid"));
+
+			if (!_layoutVisibilityManager.isPrivateLayoutsEnabled(
+					group.getCompanyId())) {
+
+				LayoutSet publicLayoutSet =
+					_layoutSetLocalService.fetchLayoutSet(
+						group.getGroupId(), false);
+
+				if (publicLayoutSet != null) {
+					publicLayoutSet.setThemeId(
+						GetterUtil.getString(
+							headerElement.attributeValue("theme-id")));
+
+					_layoutSetLocalService.updateLayoutSet(publicLayoutSet);
+				}
+
+				LayoutSet privateLayoutSet =
+					_layoutSetLocalService.fetchLayoutSet(
+						group.getGroupId(), true);
+
+				if (privateLayoutSet != null) {
+					privateLayoutSet.setThemeId(
+						GetterUtil.getString(
+							headerElement.attributeValue("theme-id")));
+
+					_layoutSetLocalService.updateLayoutSet(privateLayoutSet);
+				}
+			}
+			else {
+				boolean privateLayout = MapUtil.getBoolean(
+					portletDataContext.getParameterMap(),
+					PortletDataHandlerKeys.LAYOUT_SET_PRIVATE_LAYOUT);
+
+				LayoutSet layoutSet = _layoutSetLocalService.fetchLayoutSet(
+					group.getGroupId(), privateLayout);
+
+				if (layoutSet != null) {
+					layoutSet.setThemeId(
+						GetterUtil.getString(
+							headerElement.attributeValue("theme-id")));
+
+					_layoutSetLocalService.updateLayoutSet(layoutSet);
+				}
+			}
 		}
 
 		if (Validator.isNotNull(layoutSetPrototypeUuid)) {
@@ -1345,6 +1391,9 @@ public class LayoutImportController implements ImportController {
 
 	@Reference
 	private LayoutSetPrototypeLocalService _layoutSetPrototypeLocalService;
+
+	@Reference
+	private LayoutVisibilityManager _layoutVisibilityManager;
 
 	@Reference
 	private PermissionImporter _permissionImporter;

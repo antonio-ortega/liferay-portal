@@ -26,6 +26,7 @@ import com.liferay.portal.search.web.internal.util.comparator.BucketDisplayConte
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import javax.portlet.RenderRequest;
 
@@ -49,15 +50,14 @@ public class FolderSearchFacetDisplayContextBuilder {
 		FolderSearchFacetDisplayContext folderSearchFacetDisplayContext =
 			new FolderSearchFacetDisplayContext();
 
-		folderSearchFacetDisplayContext.setDisplayStyleGroupId(
-			getDisplayStyleGroupId());
-
 		List<BucketDisplayContext> bucketDisplayContexts =
 			_buildBucketDisplayContexts();
 
 		folderSearchFacetDisplayContext.setBucketDisplayContexts(
 			bucketDisplayContexts);
 
+		folderSearchFacetDisplayContext.setDisplayStyleGroupId(
+			getDisplayStyleGroupId());
 		folderSearchFacetDisplayContext.
 			setFolderFacetPortletInstanceConfiguration(
 				_folderFacetPortletInstanceConfiguration);
@@ -89,6 +89,10 @@ public class FolderSearchFacetDisplayContextBuilder {
 
 	public void setFrequencyThreshold(int frequencyThreshold) {
 		_frequencyThreshold = frequencyThreshold;
+	}
+
+	public void setLocale(Locale locale) {
+		_locale = locale;
 	}
 
 	public void setMaxTerms(int maxTerms) {
@@ -202,6 +206,7 @@ public class FolderSearchFacetDisplayContextBuilder {
 		bucketDisplayContext.setFilterValue(String.valueOf(folderId));
 		bucketDisplayContext.setFrequency(frequency);
 		bucketDisplayContext.setFrequencyVisible(_frequenciesVisible);
+		bucketDisplayContext.setLocale(_locale);
 		bucketDisplayContext.setSelected(selected);
 
 		return bucketDisplayContext;
@@ -289,6 +294,7 @@ public class FolderSearchFacetDisplayContextBuilder {
 	private FolderTitleLookup _folderTitleLookup;
 	private boolean _frequenciesVisible;
 	private int _frequencyThreshold;
+	private Locale _locale;
 	private int _maxTerms;
 	private String _order;
 	private String _paginationStartParameterName;

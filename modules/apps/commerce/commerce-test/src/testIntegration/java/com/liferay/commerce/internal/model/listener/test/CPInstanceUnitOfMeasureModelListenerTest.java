@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
-import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -46,7 +45,6 @@ import org.junit.runner.RunWith;
 /**
  * @author Stefano Motta
  */
-@FeatureFlags("COMMERCE-11287")
 @RunWith(Arquillian.class)
 public class CPInstanceUnitOfMeasureModelListenerTest {
 
@@ -165,16 +163,18 @@ public class CPInstanceUnitOfMeasureModelListenerTest {
 			_cpInstance.getUserId(), _commerceChannel.getGroupId(),
 			_commerceCurrency);
 
-		commerceOrder2.setOrderStatus(
-			CommerceOrderConstants.ORDER_STATUS_COMPLETED);
-
-		commerceOrder2 = _commerceOrderLocalService.updateCommerceOrder(
-			commerceOrder2);
-
 		CommerceOrderItem commerceOrderItem2 =
 			CommerceTestUtil.addCommerceOrderItem(
 				commerceOrder2.getCommerceOrderId(),
 				_cpInstance.getCPInstanceId(), quantity);
+
+		commerceOrder2 = _commerceOrderLocalService.getCommerceOrder(
+			commerceOrder2.getCommerceOrderId());
+
+		commerceOrder2.setOrderStatus(
+			CommerceOrderConstants.ORDER_STATUS_COMPLETED);
+
+		_commerceOrderLocalService.updateCommerceOrder(commerceOrder2);
 
 		CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
 			CPTestUtil.addCPInstanceUnitOfMeasure(

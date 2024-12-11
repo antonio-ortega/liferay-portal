@@ -3,11 +3,15 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {fetch, openToast} from 'frontend-js-web';
-import React, {useEffect, useRef, useState} from 'react';
+import {fetch, navigate, openToast} from 'frontend-js-web';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 
 import Breadcrumbs from '../breadcrumbs/Breadcrumbs';
 import MillerColumns from '../miller_columns/MillerColumns';
+import {
+	LayoutColumnsContext,
+	LayoutColumnsProvider,
+} from '../miller_columns/contexts/LayoutColumnsContext';
 
 const Layout = ({
 	createPageTemplateURL,
@@ -15,8 +19,6 @@ const Layout = ({
 	getItemChildrenURL,
 	getPageTemplateCollectionsURL,
 	initialBreadcrumbEntries,
-	initialLayoutColumns,
-	isPrivateLayoutsEnabled,
 	isSiteTemplate,
 	languageId,
 	moveItemURL,
@@ -29,8 +31,9 @@ const Layout = ({
 	const [breadcrumbEntries, setBreadcrumbEntries] = useState(
 		initialBreadcrumbEntries
 	);
-	const [layoutColumns, setLayoutColumns] = useState(initialLayoutColumns);
 	const [searchContainerElement, setSearchContainerElement] = useState();
+
+	const {layoutColumns, setLayoutColumns} = useContext(LayoutColumnsContext);
 
 	useEffect(() => {
 		const A = new AUI();
@@ -68,7 +71,7 @@ const Layout = ({
 
 		formData.append(`${namespace}plid`, parentId);
 
-		fetch(getItemChildrenURL, {
+		return fetch(getItemChildrenURL, {
 			body: formData,
 			method: 'POST',
 		})
@@ -110,22 +113,11 @@ const Layout = ({
 			.catch();
 	};
 
-	const saveData = (movedItems, parentItemId) => {
+	const saveData = (movedItems, parentItemId, redirectURL) => {
 		const formData = new FormData();
-
-		const activeItems = layoutColumns.reduce(
-			(acc, column) => [...acc, ...column.filter((item) => item.active)],
-			[]
-		);
-
-		const activeItem = activeItems[activeItems.length - 1];
 
 		formData.append(`${namespace}plids`, JSON.stringify(movedItems));
 		formData.append(`${namespace}parentPlid`, parentItemId);
-
-		if (activeItem) {
-			formData.append(`${namespace}selPlid`, activeItem.id);
-		}
 
 		fetch(moveItemURL, {
 			body: formData,
@@ -139,8 +131,23 @@ const Layout = ({
 						type: 'danger',
 					});
 				}
-				if (updatedLayoutColumns) {
-					setLayoutColumns(updatedLayoutColumns);
+				else {
+					openToast({
+						message: Liferay.Language.get(
+							'your-request-processed-successfully'
+						),
+						toastProps: {
+							autoClose: 5000,
+						},
+						type: 'success',
+					});
+
+					if (Liferay.FeatureFlags['LPD-35220']) {
+						navigate(redirectURL);
+					}
+					else {
+						setLayoutColumns(updatedLayoutColumns);
+					}
 				}
 			});
 	};
@@ -169,15 +176,13 @@ const Layout = ({
 			<MillerColumns
 				createPageTemplateURL={createPageTemplateURL}
 				getItemActionsURL={getItemActionsURL}
+				getItemChildren={getItemChildren}
 				getPageTemplateCollectionsURL={getPageTemplateCollectionsURL}
-				initialColumns={layoutColumns}
-				isPrivateLayoutsEnabled={isPrivateLayoutsEnabled}
 				isSiteTemplate={isSiteTemplate}
 				namespace={namespace}
 				onColumnsChange={updateBreadcrumbs}
-				onItemMove={saveData}
-				onItemStayHover={getItemChildren}
 				rtl={Liferay.Language.direction[languageId] === 'rtl'}
+				saveData={saveData}
 				searchContainer={searchContainerElement}
 			/>
 		</div>
@@ -193,7 +198,6 @@ export default function ({
 		getItemChildrenURL,
 		getLayoutPageTemplateCollectionsURL,
 		isLayoutSetPrototype = false,
-		isPrivateLayoutsEnabled,
 		languageId,
 		layoutColumns,
 		moveItemURL,
@@ -201,19 +205,21 @@ export default function ({
 	},
 }) {
 	return (
-		<Layout
-			createPageTemplateURL={createLayoutPageTemplateEntryURL}
-			getItemActionsURL={getItemActionsURL}
-			getItemChildrenURL={getItemChildrenURL}
-			getPageTemplateCollectionsURL={getLayoutPageTemplateCollectionsURL}
-			initialBreadcrumbEntries={breadcrumbEntries}
-			initialLayoutColumns={layoutColumns}
-			isLayoutSetPrototype={isLayoutSetPrototype}
-			isPrivateLayoutsEnabled={isPrivateLayoutsEnabled}
-			languageId={languageId}
-			moveItemURL={moveItemURL}
-			namespace={namespace}
-			searchContainerId={searchContainerId}
-		/>
+		<LayoutColumnsProvider initialColumns={layoutColumns}>
+			<Layout
+				createPageTemplateURL={createLayoutPageTemplateEntryURL}
+				getItemActionsURL={getItemActionsURL}
+				getItemChildrenURL={getItemChildrenURL}
+				getPageTemplateCollectionsURL={
+					getLayoutPageTemplateCollectionsURL
+				}
+				initialBreadcrumbEntries={breadcrumbEntries}
+				isLayoutSetPrototype={isLayoutSetPrototype}
+				languageId={languageId}
+				moveItemURL={moveItemURL}
+				namespace={namespace}
+				searchContainerId={searchContainerId}
+			/>
+		</LayoutColumnsProvider>
 	);
 }

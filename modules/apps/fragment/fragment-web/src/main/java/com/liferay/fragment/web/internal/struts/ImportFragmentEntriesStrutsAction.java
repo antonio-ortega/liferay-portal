@@ -108,7 +108,7 @@ public class ImportFragmentEntriesStrutsAction implements StrutsAction {
 			List<LayoutsImporterResultEntry> layoutsImporterResultEntries =
 				_layoutsImporter.importFile(
 					themeDisplay.getUserId(), groupId, 0L, file,
-					LayoutsImportStrategy.OVERWRITE);
+					LayoutsImportStrategy.OVERWRITE, true);
 
 			for (LayoutsImporterResultEntry layoutsImporterResultEntry :
 					layoutsImporterResultEntries) {
@@ -116,7 +116,8 @@ public class ImportFragmentEntriesStrutsAction implements StrutsAction {
 				pageTemplatesImportResultJSONArray.put(
 					JSONUtil.put(
 						"errorMessage",
-						layoutsImporterResultEntry.getErrorMessage()
+						layoutsImporterResultEntry.getErrorMessage(
+							themeDisplay.getLocale())
 					).put(
 						"name", layoutsImporterResultEntry.getName()
 					).put(

@@ -22,43 +22,35 @@ import org.osgi.framework.Bundle;
 public class DBResourceUtil {
 
 	public static String getModuleIndexesSQL(Bundle bundle) {
-		return _getSQLTemplateString(bundle, "indexes.sql");
+		return _read(bundle, "/META-INF/sql/indexes.sql");
 	}
 
 	public static String getModuleSequencesSQL(Bundle bundle) {
-		return _getSQLTemplateString(bundle, "sequences.sql");
+		return _read(bundle, "/META-INF/sql/sequences.sql");
 	}
 
 	public static String getModuleTablesSQL(Bundle bundle) {
-		return _getSQLTemplateString(bundle, "tables.sql");
+		return _read(bundle, "/META-INF/sql/tables.sql");
 	}
 
-	public static String getPortalIndexesSQL() throws IOException {
-		return _getPortalResource(
+	public static String getPortalIndexesSQL() {
+		return StringUtil.read(
+			DBResourceUtil.class,
 			"/com/liferay/portal/tools/sql/dependencies/indexes.sql");
 	}
 
-	public static String getPortalTablesSQL() throws IOException {
-		return _getPortalResource(
+	public static String getPortalTablesSQL() {
+		return StringUtil.read(
+			DBResourceUtil.class,
 			"/com/liferay/portal/tools/sql/dependencies/portal-tables.sql");
 	}
 
-	private static String _getPortalResource(String name) throws IOException {
-		try (InputStream inputStream = DBResourceUtil.class.getResourceAsStream(
-				name)) {
-
-			return StringUtil.read(inputStream);
-		}
-	}
-
-	private static String _getSQLTemplateString(
-		Bundle bundle, String templateName) {
-
-		URL resource = bundle.getResource("/META-INF/sql/" + templateName);
+	private static String _read(Bundle bundle, String path) {
+		URL resource = bundle.getResource(path);
 
 		if (resource == null) {
 			if (_log.isDebugEnabled()) {
-				_log.debug("Unable to locate SQL template " + templateName);
+				_log.debug("Unable to locate SQL file " + path);
 			}
 
 			return null;
@@ -68,8 +60,7 @@ public class DBResourceUtil {
 			return StringUtil.read(inputStream);
 		}
 		catch (IOException ioException) {
-			_log.error(
-				"Unable to read SQL template " + templateName, ioException);
+			_log.error("Unable to read SQL file " + path, ioException);
 
 			return null;
 		}

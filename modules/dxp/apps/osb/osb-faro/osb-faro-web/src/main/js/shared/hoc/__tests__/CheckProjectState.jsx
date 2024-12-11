@@ -5,9 +5,8 @@ jest.mock('shared/components/workspaces/SuccessDisplay', () => () =>
 import * as API from 'shared/api';
 import checkProjectState from '../CheckProjectState';
 import mockStore from 'test/mock-store';
-import Promise from 'metal-promise';
 import React from 'react';
-import {cleanup, render} from '@testing-library/react';
+import {cleanup, render, waitFor} from '@testing-library/react';
 import {Provider} from 'react-redux';
 import {StaticRouter} from 'react-router';
 
@@ -110,7 +109,7 @@ describe('SuccessDisplayIf', () => {
 		expect(container).toMatchSnapshot();
 	});
 
-	it('should render an error page if there was an error fetching the project', () => {
+	it('should render an error page if there was an error fetching the project', async () => {
 		API.projects.fetch.mockReturnValue(
 			Promise.reject({message: 'foo rejection from server'})
 		);
@@ -126,6 +125,8 @@ describe('SuccessDisplayIf', () => {
 		);
 
 		jest.runAllTimers();
+
+		await waitFor(() => {});
 
 		expect(container).toMatchSnapshot();
 	});

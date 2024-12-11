@@ -70,7 +70,10 @@ public abstract class BaseLayoutScreenNavigationEntry
 	public boolean isVisible(User user, Layout layout) {
 		Group group = layout.getGroup();
 
-		if (group.isLayoutPrototype() || group.isLayoutSetPrototype()) {
+		if (group.isLayoutPrototype() || group.isLayoutSetPrototype() ||
+			((layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
+			 (layout.fetchDraftLayout() == null))) {
+
 			return false;
 		}
 
@@ -78,13 +81,7 @@ public abstract class BaseLayoutScreenNavigationEntry
 			layoutPageTemplateEntryLocalService.
 				fetchLayoutPageTemplateEntryByPlid(layout.getPlid());
 
-		if (layoutPageTemplateEntry != null) {
-			return false;
-		}
-
-		if ((layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
-			(layout.fetchDraftLayout() == null)) {
-
+		if ((layoutPageTemplateEntry != null) || layout.isTypeUtility()) {
 			return false;
 		}
 

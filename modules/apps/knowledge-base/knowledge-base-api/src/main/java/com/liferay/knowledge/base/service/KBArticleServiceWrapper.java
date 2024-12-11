@@ -162,6 +162,14 @@ public class KBArticleServiceWrapper
 	}
 
 	@Override
+	public com.liferay.portal.kernel.lock.Lock forceLockKBArticle(
+			long groupId, long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleService.forceLockKBArticle(groupId, resourcePrimKey);
+	}
+
+	@Override
 	public java.util.List<KBArticle> getAllDescendantKBArticles(
 			long groupId, long resourcePrimKey, int status,
 			com.liferay.portal.kernel.util.OrderByComparator<KBArticle>
@@ -318,6 +326,13 @@ public class KBArticleServiceWrapper
 	}
 
 	@Override
+	public KBArticle getLatestKBArticle(long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleService.getLatestKBArticle(resourcePrimKey);
+	}
+
+	@Override
 	public KBArticle getLatestKBArticle(long resourcePrimKey, int status)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -377,6 +392,14 @@ public class KBArticleServiceWrapper
 	}
 
 	@Override
+	public com.liferay.portal.kernel.lock.Lock lockKBArticle(
+			long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleService.lockKBArticle(resourcePrimKey);
+	}
+
+	@Override
 	public void moveKBArticle(
 			long resourcePrimKey, long parentResourceClassNameId,
 			long parentResourcePrimKey, double priority)
@@ -385,6 +408,13 @@ public class KBArticleServiceWrapper
 		_kbArticleService.moveKBArticle(
 			resourcePrimKey, parentResourceClassNameId, parentResourcePrimKey,
 			priority);
+	}
+
+	@Override
+	public KBArticle moveKBArticleToTrash(long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleService.moveKBArticleToTrash(resourcePrimKey);
 	}
 
 	@Override
@@ -412,6 +442,13 @@ public class KBArticleServiceWrapper
 	}
 
 	@Override
+	public void unlockKBArticle(long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_kbArticleService.unlockKBArticle(resourcePrimKey);
+	}
+
+	@Override
 	public void unsubscribeGroupKBArticles(long groupId, String portletId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -423,6 +460,22 @@ public class KBArticleServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_kbArticleService.unsubscribeKBArticle(resourcePrimKey);
+	}
+
+	@Override
+	public KBArticle updateAndUnlockKBArticle(
+			long resourcePrimKey, String title, String content,
+			String description, String[] sections, String sourceURL,
+			java.util.Date displayDate, java.util.Date expirationDate,
+			java.util.Date reviewDate, String[] selectedFileNames,
+			long[] removeFileEntryIds,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleService.updateAndUnlockKBArticle(
+			resourcePrimKey, title, content, description, sections, sourceURL,
+			displayDate, expirationDate, reviewDate, selectedFileNames,
+			removeFileEntryIds, serviceContext);
 	}
 
 	@Override

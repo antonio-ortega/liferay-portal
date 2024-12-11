@@ -11,9 +11,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.action.JSONServiceAction;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceAction;
-import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceActionsManagerUtil;
-import com.liferay.portal.kernel.jsonwebservice.NoSuchJSONWebServiceException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
@@ -23,6 +20,9 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.remote.json.web.service.JSONWebServiceAction;
+import com.liferay.portal.remote.json.web.service.JSONWebServiceActionsManager;
+import com.liferay.portal.remote.json.web.service.exception.NoSuchJSONWebServiceException;
 import com.liferay.portal.remote.json.web.service.web.internal.action.JSONWebServiceDiscoverAction;
 import com.liferay.portal.remote.json.web.service.web.internal.action.JSONWebServiceInvokerAction;
 import com.liferay.portal.util.PropsValues;
@@ -37,6 +37,12 @@ import javax.servlet.http.HttpServletResponse;
  * @author Raymond Augé
  */
 public class JSONWebServiceServiceAction extends JSONServiceAction {
+
+	public JSONWebServiceServiceAction(
+		JSONWebServiceActionsManager jsonWebServiceActionsManager) {
+
+		_jsonWebServiceActionsManager = jsonWebServiceActionsManager;
+	}
 
 	@Override
 	public String getJSON(
@@ -175,16 +181,18 @@ public class JSONWebServiceServiceAction extends JSONServiceAction {
 			httpServletRequest.getAttribute(WebKeys.ORIGINAL_PATH_INFO));
 
 		if (path.equals("/invoke")) {
-			return new JSONWebServiceInvokerAction(httpServletRequest);
+			return new JSONWebServiceInvokerAction(
+				_jsonWebServiceActionsManager, httpServletRequest);
 		}
 
 		if (PropsValues.JSONWS_WEB_SERVICE_API_DISCOVERABLE &&
 			(httpServletRequest.getParameter("discover") != null)) {
 
-			return new JSONWebServiceDiscoverAction(httpServletRequest);
+			return new JSONWebServiceDiscoverAction(
+				_jsonWebServiceActionsManager, httpServletRequest);
 		}
 
-		return JSONWebServiceActionsManagerUtil.getJSONWebServiceAction(
+		return _jsonWebServiceActionsManager.getJSONWebServiceAction(
 			httpServletRequest);
 	}
 
@@ -207,5 +215,7 @@ public class JSONWebServiceServiceAction extends JSONServiceAction {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		JSONWebServiceServiceAction.class);
+
+	private final JSONWebServiceActionsManager _jsonWebServiceActionsManager;
 
 }

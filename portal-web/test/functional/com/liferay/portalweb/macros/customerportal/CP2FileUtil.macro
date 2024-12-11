@@ -1,0 +1,35 @@
+definition {
+
+	@summary = "Default summary"
+	macro assertDownloadedFileIsNotPresent(downloadedFileName = null) {
+		var tempDir = PropsUtil.get("output.dir.name");
+
+		var downloadedFilePath = "${tempDir}/${downloadedFileName}";
+
+		var fileExists = FileUtil.exists(${downloadedFilePath});
+
+		if (${fileExists} == "false") {
+			echo("File named ${downloadedFileName} was not downloaded.");
+		}
+		else {
+			fail("Files named ${downloadedFileName} FOUND in folder ${tempDir}!");
+		}
+	}
+
+	@summary = "Default summary"
+	macro assertDownloadedFileIsPresent(downloadedFileName = null) {
+		var tempDir = PropsUtil.get("output.dir.name");
+
+		var downloadedFilePath = "${tempDir}/${downloadedFileName}";
+
+		var fileExists = FileUtil.exists(${downloadedFilePath});
+
+		if (${fileExists} == "true") {
+			echo("File named ${downloadedFileName} was downloaded.");
+		}
+		else {
+			fail("Files named ${downloadedFileName}  NOT FOUND in folder ${tempDir}!");
+		}
+	}
+
+}

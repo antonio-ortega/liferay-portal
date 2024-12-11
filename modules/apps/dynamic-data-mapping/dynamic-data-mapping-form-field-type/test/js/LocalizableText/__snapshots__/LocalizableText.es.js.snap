@@ -47,7 +47,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                 role="presentation"
               >
                 <use
-                  xlink:href="#ja-jp"
+                  href="#ja-jp"
                 />
               </svg>
             </span>
@@ -95,7 +95,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -144,7 +144,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -193,7 +193,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -242,7 +242,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -291,7 +291,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -340,7 +340,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -389,7 +389,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -438,7 +438,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -487,7 +487,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -536,7 +536,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -585,7 +585,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -634,7 +634,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -683,7 +683,7 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -717,6 +717,16 @@ exports[`Field LocalizableText adds a new translation for an untranslated item 1
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -737,6 +747,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -767,7 +778,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#en-us"
+                  href="#en-us"
                 />
               </svg>
             </span>
@@ -814,7 +825,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -863,7 +874,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -912,7 +923,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -961,7 +972,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -1010,7 +1021,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -1059,7 +1070,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -1108,7 +1119,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -1157,7 +1168,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -1206,7 +1217,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -1255,7 +1266,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -1304,7 +1315,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -1353,7 +1364,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -1402,7 +1413,7 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -1436,6 +1447,16 @@ exports[`Field LocalizableText emits field edit event on field change 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -1487,7 +1508,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                 role="presentation"
               >
                 <use
-                  xlink:href="#ja-jp"
+                  href="#ja-jp"
                 />
               </svg>
             </span>
@@ -1535,7 +1556,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -1584,7 +1605,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -1633,7 +1654,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -1682,7 +1703,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -1731,7 +1752,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -1780,7 +1801,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -1829,7 +1850,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -1878,7 +1899,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -1927,7 +1948,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -1976,7 +1997,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -2025,7 +2046,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -2074,7 +2095,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -2123,7 +2144,7 @@ exports[`Field LocalizableText fills with the default language value when the se
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -2157,6 +2178,16 @@ exports[`Field LocalizableText fills with the default language value when the se
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -2208,7 +2239,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                 role="presentation"
               >
                 <use
-                  xlink:href="#ca-es"
+                  href="#ca-es"
                 />
               </svg>
             </span>
@@ -2256,7 +2287,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -2305,7 +2336,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -2354,7 +2385,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -2403,7 +2434,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -2452,7 +2483,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -2501,7 +2532,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -2550,7 +2581,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -2599,7 +2630,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -2648,7 +2679,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -2697,7 +2728,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -2746,7 +2777,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -2795,7 +2826,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -2844,7 +2875,7 @@ exports[`Field LocalizableText fills with the selected language value when the s
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -2878,6 +2909,16 @@ exports[`Field LocalizableText fills with the selected language value when the s
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -2891,7 +2932,6 @@ exports[`Field LocalizableText has a label 1`] = `
     <label
       aria-labelledby="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldDetails"
       class="ddm-label"
-      tabindex="0"
     >
       label
     </label>
@@ -2904,6 +2944,7 @@ exports[`Field LocalizableText has a label 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -2934,7 +2975,7 @@ exports[`Field LocalizableText has a label 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#en-us"
+                  href="#en-us"
                 />
               </svg>
             </span>
@@ -2981,7 +3022,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -3030,7 +3071,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -3079,7 +3120,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -3128,7 +3169,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -3177,7 +3218,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -3226,7 +3267,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -3275,7 +3316,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -3324,7 +3365,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -3373,7 +3414,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -3422,7 +3463,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -3471,7 +3512,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -3520,7 +3561,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -3569,7 +3610,7 @@ exports[`Field LocalizableText has a label 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -3603,6 +3644,16 @@ exports[`Field LocalizableText has a label 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
     <span
       class="sr-only"
       id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldDetails"
@@ -3629,6 +3680,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder="Placeholder"
           type="text"
@@ -3659,7 +3711,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#en-us"
+                  href="#en-us"
                 />
               </svg>
             </span>
@@ -3706,7 +3758,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -3755,7 +3807,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -3804,7 +3856,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -3853,7 +3905,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -3902,7 +3954,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -3951,7 +4003,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -4000,7 +4052,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -4049,7 +4101,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -4098,7 +4150,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -4147,7 +4199,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -4196,7 +4248,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -4245,7 +4297,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -4294,7 +4346,7 @@ exports[`Field LocalizableText has a placeholder 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -4328,6 +4380,16 @@ exports[`Field LocalizableText has a placeholder 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -4348,6 +4410,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -4378,7 +4441,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#en-us"
+                  href="#en-us"
                 />
               </svg>
             </span>
@@ -4425,7 +4488,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -4474,7 +4537,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -4523,7 +4586,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -4572,7 +4635,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -4621,7 +4684,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -4670,7 +4733,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -4719,7 +4782,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -4768,7 +4831,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -4817,7 +4880,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -4866,7 +4929,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -4915,7 +4978,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -4964,7 +5027,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -5013,7 +5076,7 @@ exports[`Field LocalizableText is not readOnly 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -5047,6 +5110,16 @@ exports[`Field LocalizableText is not readOnly 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -5067,6 +5140,7 @@ exports[`Field LocalizableText is not required 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -5097,7 +5171,7 @@ exports[`Field LocalizableText is not required 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#en-us"
+                  href="#en-us"
                 />
               </svg>
             </span>
@@ -5144,7 +5218,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -5193,7 +5267,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -5242,7 +5316,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -5291,7 +5365,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -5340,7 +5414,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -5389,7 +5463,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -5438,7 +5512,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -5487,7 +5561,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -5536,7 +5610,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -5585,7 +5659,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -5634,7 +5708,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -5683,7 +5757,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -5732,7 +5806,7 @@ exports[`Field LocalizableText is not required 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -5766,6 +5840,16 @@ exports[`Field LocalizableText is not required 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -5817,7 +5901,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                 role="presentation"
               >
                 <use
-                  xlink:href="#pt-br"
+                  href="#pt-br"
                 />
               </svg>
             </span>
@@ -5865,7 +5949,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -5914,7 +5998,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -5963,7 +6047,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -6012,7 +6096,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -6061,7 +6145,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -6110,7 +6194,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -6159,7 +6243,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -6208,7 +6292,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -6257,7 +6341,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -6306,7 +6390,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -6355,7 +6439,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -6404,7 +6488,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -6453,7 +6537,7 @@ exports[`Field LocalizableText removes the translation of an item already transl
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -6487,6 +6571,16 @@ exports[`Field LocalizableText removes the translation of an item already transl
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -6507,6 +6601,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -6537,7 +6632,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#en-us"
+                  href="#en-us"
                 />
               </svg>
             </span>
@@ -6584,7 +6679,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -6633,7 +6728,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -6682,7 +6777,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -6731,7 +6826,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -6780,7 +6875,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -6829,7 +6924,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -6878,7 +6973,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -6927,7 +7022,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -6976,7 +7071,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -7025,7 +7120,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -7074,7 +7169,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -7123,7 +7218,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -7172,7 +7267,7 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -7206,6 +7301,16 @@ exports[`Field LocalizableText renders no values when values come empty 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -7226,6 +7331,7 @@ exports[`Field LocalizableText renders values 1`] = `
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -7256,7 +7362,7 @@ exports[`Field LocalizableText renders values 1`] = `
                 role="presentation"
               >
                 <use
-                  xlink:href="#en-us"
+                  href="#en-us"
                 />
               </svg>
             </span>
@@ -7303,7 +7409,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -7352,7 +7458,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -7401,7 +7507,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -7450,7 +7556,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -7499,7 +7605,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -7548,7 +7654,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -7597,7 +7703,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -7646,7 +7752,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -7695,7 +7801,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -7744,7 +7850,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -7793,7 +7899,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -7842,7 +7948,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -7891,7 +7997,7 @@ exports[`Field LocalizableText renders values 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -7925,6 +8031,16 @@ exports[`Field LocalizableText renders values 1`] = `
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;
@@ -7945,6 +8061,7 @@ exports[`Field LocalizableText shows default language value when no other langua
         <input
           class="ddm-field-text form-control"
           data-testid="visibleChangeInput"
+          dir="ltr"
           id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_USinputValue"
           placeholder=""
           type="text"
@@ -7975,7 +8092,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                 role="presentation"
               >
                 <use
-                  xlink:href="#en-us"
+                  href="#en-us"
                 />
               </svg>
             </span>
@@ -8022,7 +8139,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#en-us"
+                                href="#en-us"
                               />
                             </svg>
                           </span>
@@ -8071,7 +8188,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ar-sa"
+                                href="#ar-sa"
                               />
                             </svg>
                           </span>
@@ -8120,7 +8237,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ca-es"
+                                href="#ca-es"
                               />
                             </svg>
                           </span>
@@ -8169,7 +8286,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#zh-cn"
+                                href="#zh-cn"
                               />
                             </svg>
                           </span>
@@ -8218,7 +8335,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#nl-nl"
+                                href="#nl-nl"
                               />
                             </svg>
                           </span>
@@ -8267,7 +8384,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fi-fi"
+                                href="#fi-fi"
                               />
                             </svg>
                           </span>
@@ -8316,7 +8433,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#fr-fr"
+                                href="#fr-fr"
                               />
                             </svg>
                           </span>
@@ -8365,7 +8482,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#de-de"
+                                href="#de-de"
                               />
                             </svg>
                           </span>
@@ -8414,7 +8531,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#hu-hu"
+                                href="#hu-hu"
                               />
                             </svg>
                           </span>
@@ -8463,7 +8580,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#ja-jp"
+                                href="#ja-jp"
                               />
                             </svg>
                           </span>
@@ -8512,7 +8629,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#pt-br"
+                                href="#pt-br"
                               />
                             </svg>
                           </span>
@@ -8561,7 +8678,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#es-es"
+                                href="#es-es"
                               />
                             </svg>
                           </span>
@@ -8610,7 +8727,7 @@ exports[`Field LocalizableText shows default language value when no other langua
                               role="presentation"
                             >
                               <use
-                                xlink:href="#sv-se"
+                                href="#sv-se"
                               />
                             </svg>
                           </span>
@@ -8644,6 +8761,16 @@ exports[`Field LocalizableText shows default language value when no other langua
       type="hidden"
       value="false"
     />
+    <div
+      aria-hidden="true"
+      class="form-feedback-group lfr-de__field-feedback"
+    >
+      <div
+        aria-live="assertive"
+        class="form-feedback-item"
+        id="_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_ddm$$emailArticleAddedSubject$uoeJR4Me$0$$en_US_fieldError"
+      />
+    </div>
   </div>
 </div>
 `;

@@ -43,6 +43,14 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface AddressResource {
 
+	public Address getCartByExternalReferenceCodeBillingAddress(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Address getCartByExternalReferenceCodeShippingAddress(
+			String externalReferenceCode)
+		throws Exception;
+
 	public Address getCartBillingAddres(Long cartId) throws Exception;
 
 	public Address getCartShippingAddres(Long cartId) throws Exception;

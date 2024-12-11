@@ -4,10 +4,6 @@
 	.modal-dialog {
 		position: relative;
 
-		@media (max-width: 768px) {
-			width: 100%;
-		}
-
 		&.modal-full-screen {
 			position: absolute;
 
@@ -37,15 +33,6 @@
 			}
 		}
 
-		.modal-content {
-			--modal-bottom-spacing: 120px;
-
-			.modal-body {
-				max-height: calc(100vh - var(--modal-bottom-spacing));
-				overflow-y: auto;
-			}
-		}
-
 		.modal-body .loading-animation {
 			left: 0;
 			margin-bottom: 0;
@@ -58,8 +45,6 @@
 	}
 }
 
-html#{$cadmin-selector} {
-	.cadmin {
-		@extend .liferay-modal;
-	}
+html#{$cadmin-selector} .cadmin .liferay-modal {
+	@extend .liferay-modal;
 }

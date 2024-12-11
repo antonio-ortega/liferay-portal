@@ -76,7 +76,7 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 		_depotGroup = _groupLocalService.getGroup(_depotEntry.getGroupId());
 
 		DDMStructure depotDDMStructure = _ddmStructureLocalService.addStructure(
-			_depotGroup.getCreatorUserId(), _depotGroup.getGroupId(),
+			null, _depotGroup.getCreatorUserId(), _depotGroup.getGroupId(),
 			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 			PortalUtil.getClassNameId(DLFileEntryMetadata.class),
 			StringPool.BLANK,
@@ -88,7 +88,7 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 			ServiceContextTestUtil.getServiceContext(_depotGroup.getGroupId()));
 
 		_depotDLFileEntryType = _dlFileEntryTypeLocalService.addFileEntryType(
-			_depotGroup.getCreatorUserId(), _depotGroup.getGroupId(),
+			null, _depotGroup.getCreatorUserId(), _depotGroup.getGroupId(),
 			depotDDMStructure.getStructureId(), null,
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()
@@ -100,7 +100,7 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 		_group = GroupTestUtil.addGroup();
 
 		DDMStructure ddmStructure = _ddmStructureLocalService.addStructure(
-			_group.getCreatorUserId(), _group.getGroupId(),
+			null, _group.getCreatorUserId(), _group.getGroupId(),
 			DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 			PortalUtil.getClassNameId(DLFileEntryMetadata.class),
 			StringPool.BLANK,
@@ -112,7 +112,7 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_dlFileEntryType = _dlFileEntryTypeLocalService.addFileEntryType(
-			_group.getCreatorUserId(), _group.getGroupId(),
+			null, _group.getCreatorUserId(), _group.getGroupId(),
 			ddmStructure.getStructureId(), null,
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()
@@ -294,7 +294,7 @@ public class DepotEntryDLAppServiceWhenCopyingWithDLFileEntryTypeTest {
 			RandomTestUtil.randomString(), groupId,
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, _FILE_NAME,
 			ContentTypes.TEXT_PLAIN, _FILE_NAME, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null,
+			StringPool.BLANK, StringPool.BLANK, new byte[0], null, null, null,
 			serviceContext);
 	}
 

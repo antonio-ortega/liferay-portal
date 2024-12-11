@@ -36,7 +36,6 @@ Export-Package:\
 	!com.liferay.portal.scripting.ruby,\
 	!com.liferay.portal.search,\
 	!com.liferay.portal.security.jaas.ext.*,\
-	!com.liferay.portal.service,\
 	!com.liferay.portal.sharepoint.*,\
 	!com.liferay.portal.spring.bean,\
 	!com.liferay.portal.spring.context,\
@@ -74,7 +73,6 @@ Export-Package:\
 	!license.html,\
 	\
 	!org.apache.html.*,\
-	!org.apache.log4j.lf5.*,\
 	!org.apache.wml.*,\
 	\
 	!org.jcp.xml.*,\
@@ -99,6 +97,8 @@ Export-Package:\
 	\
 	java_cup.runtime.*;version='2.7.1',\
 	\
+	javax.el;version='3.0.0',\
+	\
 	javax.jws;version='1.1',\
 	javax.jws.soap;version='1.1',\
 	\
@@ -108,6 +108,8 @@ Export-Package:\
 	\
 	javax.portlet.*;version='2.0',\
 	\
+	javax.servlet.jsp.jstl.*;version='1.2.2',\
+	javax.servlet.jsp.*;version='2.3.3',\
 	javax.servlet.*;version='3.1.0',\
 	\
 	javax.transaction;version='1.3',\
@@ -170,8 +172,11 @@ Export-Package:\
 	org.apache.commons.lang.time;version='2.6',\
 	org.apache.commons.logging;version="1.2",\
 	org.apache.commons.logging.impl;version="1.2",\
-	org.apache.log4j;version='2.17.1',\
-	org.apache.log4j.spi;version='2.17.1',\
+	org.apache.jasper;version="9.0",\
+	org.apache.jasper.compiler;version="9.0",\
+	org.apache.jasper.compiler.tagplugin;version="9.0",\
+	org.apache.jasper.runtime;version="9.0",\
+	org.apache.jasper.servlet;version="9.0",\
 	org.apache.logging.log4j;version='2.17.1',\
 	org.apache.logging.log4j.core;version='2.17.1',\
 	org.apache.logging.log4j.core.appender;version='2.17.1',\
@@ -185,6 +190,11 @@ Export-Package:\
 	org.apache.logging.log4j.message;version='2.17.1',\
 	org.apache.logging.log4j.spi;version='2.17.1',\
 	org.apache.naming.java,\
+	org.apache.taglibs.standard.*;version='1.2.3',\
+	org.apache.tomcat;version="9.0",\
+	org.apache.tomcat.util.descriptor;version="9.0",\
+	org.apache.tomcat.util.descriptor.tld;version="9.0",\
+	org.apache.tomcat.util.digester;version="9.0",\
 	org.apache.xerces.*;version='2.11.0',\
 	org.apache.xml.dtm.*;version='2.7.1',\
 	org.apache.xml.res.*;version='2.7.1',\
@@ -200,7 +210,7 @@ Export-Package:\
 	\
 	org.jaxen.*;version='1.1.6',\
 	\
-	org.json.*;version='20230618',\
+	org.json.*;version='20231013',\
 	\
 	org.slf4j;version='1.7.2',\
 	org.slf4j.helpers;version='1.7.2',\
@@ -222,6 +232,34 @@ Export-Package:\
 Import-Package: !*
 Liferay-Service: true
 Provide-Capability:\
+	osgi.contract;\
+		osgi.contract="JavaEL";\
+		uses:="javax.el";\
+		version:Version=2.1.0,\
+	osgi.contract;\
+		osgi.contract="JavaEL";\
+		uses:="javax.el";\
+		version:Version=2.2.0,\
+	osgi.contract;\
+		osgi.contract="JavaEL";\
+		uses:="javax.el";\
+		version:Version=3.0.0,\
+	osgi.contract;\
+		osgi.contract="JavaJSP";\
+		uses:="javax.servlet.jsp,javax.servlet.jsp.el,javax.servlet.jsp.tagext";\
+		version:Version=2.0.0,\
+	osgi.contract;\
+		osgi.contract="JavaJSP";\
+		uses:="javax.servlet.jsp,javax.servlet.jsp.el,javax.servlet.jsp.tagext";\
+		version:Version=2.1.0,\
+	osgi.contract;\
+		osgi.contract="JavaJSP";\
+		uses:="javax.servlet.jsp,javax.servlet.jsp.el,javax.servlet.jsp.tagext";\
+		version:Version=2.2.0,\
+	osgi.contract;\
+		osgi.contract="JavaJSP";\
+		uses:="javax.servlet.jsp,javax.servlet.jsp.el,javax.servlet.jsp.tagext";\
+		version:Version=2.3.0,\
 	osgi.contract;\
 		osgi.contract=JavaPortlet;\
 		uses:="javax.portlet";\
@@ -245,12 +283,25 @@ Provide-Capability:\
 	osgi.contract;\
 		osgi.contract=JavaServlet;\
 		uses:="javax.servlet,javax.servlet.annotation,javax.servlet.descriptor,javax.servlet.http";\
-		version:Version=3.1
+		version:Version=3.1,\
+	osgi.extender;\
+		osgi.extender="jsp.taglib";\
+		uri="http://java.sun.com/JSP/Page";\
+		version:Version="${Bundle-Version}"
 -includeresource:\
 	-@lib/com.liferay.portal.app.license.api.jar,\
 	@../../../lib/development/activation.jar,\
+	@../../../lib/development/jstl-api.jar,\
+	@../../../lib/development/jstl-impl.jar,\
 	@../../../lib/development/mail.jar,\
-	@../../../lib/development/servlet-api.jar,\
+	@../../../lib/development/tomcat-api.jar,\
+	@../../../lib/development/tomcat-el-api.jar,\
+	@../../../lib/development/tomcat-jasper.jar,\
+	@../../../lib/development/tomcat-jsp-api.jar,\
+	@../../../lib/development/tomcat-juli.jar,\
+	@../../../lib/development/tomcat-servlet-api.jar,\
+	@../../../lib/development/tomcat-util-scan.jar,\
+	@../../../lib/development/tomcat-util.jar,\
 	@../../../lib/portal/commons-lang.jar,\
 	@../../../lib/portal/commons-logging.jar,\
 	@../../../lib/portal/dom4j.jar,\
@@ -259,7 +310,6 @@ Provide-Capability:\
 	@../../../lib/portal/jodd-json.jar,\
 	@../../../lib/portal/jodd-util.jar,\
 	@../../../lib/portal/json-java.jar,\
-	@../../../lib/portal/log4j-1.2-api.jar,\
 	@../../../lib/portal/log4j-api.jar,\
 	@../../../lib/portal/log4j-core.jar,\
 	@../../../lib/portal/persistence.jar,\

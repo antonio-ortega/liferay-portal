@@ -7,6 +7,7 @@ package com.liferay.portal.kernel.test.util;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Address;
+import com.liferay.portal.kernel.model.Country;
 import com.liferay.portal.kernel.model.EmailAddress;
 import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.ListTypeConstants;
@@ -17,6 +18,7 @@ import com.liferay.portal.kernel.model.PasswordPolicy;
 import com.liferay.portal.kernel.model.Phone;
 import com.liferay.portal.kernel.model.Website;
 import com.liferay.portal.kernel.service.AddressLocalServiceUtil;
+import com.liferay.portal.kernel.service.CountryLocalServiceUtil;
 import com.liferay.portal.kernel.service.EmailAddressLocalServiceUtil;
 import com.liferay.portal.kernel.service.ListTypeServiceUtil;
 import com.liferay.portal.kernel.service.OrgLaborLocalServiceUtil;
@@ -50,11 +52,36 @@ public class OrganizationTestUtil {
 			false, false, null, new ServiceContext());
 	}
 
+	public static Country addCountry(
+			Organization organization, ServiceContext serviceContext)
+		throws Exception {
+
+		Country country = CountryLocalServiceUtil.fetchCountryByA2(
+			organization.getCompanyId(), "ZZ");
+
+		if (country == null) {
+			country = CountryLocalServiceUtil.addCountry(
+				"ZZ", "ZZZ", true, true, null, RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), RandomTestUtil.randomDouble(),
+				true, false, false, serviceContext);
+		}
+
+		OrganizationLocalServiceUtil.updateOrganization(
+			organization.getExternalReferenceCode(),
+			organization.getCompanyId(), organization.getOrganizationId(),
+			organization.getParentOrganizationId(), organization.getName(),
+			organization.getType(), organization.getRegionId(),
+			country.getCountryId(), organization.getStatusListTypeId(),
+			organization.getComments(), false, null, false, null);
+
+		return country;
+	}
+
 	public static EmailAddress addEmailAddress(Organization organization)
 		throws Exception {
 
 		return EmailAddressLocalServiceUtil.addEmailAddress(
-			organization.getUserId(), organization.getModelClassName(),
+			null, organization.getUserId(), organization.getModelClassName(),
 			organization.getOrganizationId(), "test@liferay.com",
 			_getListTypeId(
 				organization.getCompanyId(),
@@ -128,7 +155,7 @@ public class OrganizationTestUtil {
 
 	public static Phone addPhone(Organization organization) throws Exception {
 		return PhoneLocalServiceUtil.addPhone(
-			organization.getUserId(), organization.getModelClassName(),
+			null, organization.getUserId(), organization.getModelClassName(),
 			organization.getOrganizationId(), "0000000000", "000",
 			_getListTypeId(
 				organization.getCompanyId(),
@@ -152,7 +179,7 @@ public class OrganizationTestUtil {
 		throws Exception {
 
 		return WebsiteLocalServiceUtil.addWebsite(
-			organization.getUserId(), organization.getModelClassName(),
+			null, organization.getUserId(), organization.getModelClassName(),
 			organization.getOrganizationId(), "http://www.test.com",
 			_getListTypeId(
 				organization.getCompanyId(),

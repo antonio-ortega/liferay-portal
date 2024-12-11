@@ -9,10 +9,10 @@
 
 	<meta content="initial-scale=1.0, width=device-width" name="viewport" />
 
-	<link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700|Source+Serif+Pro" rel="stylesheet">
+	<link href="/o/osb-faro-theme/css/fonts.css" ${nonceAttribute} rel="stylesheet" type = "text/css" />
 
 	<#if is_signed_in>
-		<link href="${htmlUtil.escape(portalUtil.getStaticResourceURL(request, "/o/osb-faro-web/dist/main.css"))}" rel="stylesheet" type = "text/css" />
+		<link href="${htmlUtil.escape(portalUtil.getStaticResourceURL(request, "/o/osb-faro-web/dist/main.css"))}" ${nonceAttribute} rel="stylesheet" type = "text/css" />
 	</#if>
 </head>
 
@@ -20,7 +20,7 @@
 	<#if is_signed_in>
 		<@liferay_portlet["runtime"] portletName="faro_portlet" />
 
-		<script defer src="${htmlUtil.escape(portalUtil.getStaticResourceURL(request, "/o/osb-faro-web/dist/main.js"))}"></script>
+		<script defer ${nonceAttribute} src="${htmlUtil.escape(portalUtil.getStaticResourceURL(request, "/o/osb-faro-web/dist/main.js"))}"></script>
 	<#else>
 		<@liferay_util["include"] page=top_head_include />
 
@@ -34,7 +34,7 @@
 	</#if>
 
 	<#if !is_signed_in>
-		<script>
+		<script ${nonceAttribute}}>
 			const parsedUrl = new URL(window.location.href);
 			const params = new URLSearchParams(parsedUrl.search);
 			const paramName = params.get('_com_liferay_login_web_portlet_LoginPortlet_mvcRenderCommandName')?.replace('/login/', '') ?? null;

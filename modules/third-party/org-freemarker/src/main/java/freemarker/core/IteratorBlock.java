@@ -288,7 +288,7 @@ final class IteratorBlock extends TemplateElement {
                 if (listNotEmpty) {
                     if (loopVar1Name != null) {
                         listLoop: do {
-                        	_checkIndex(loopCountThreshold);
+                            _checkIndex(loopCountThreshold);
 
                             loopVar1Value = iterModel.next();
                             hasNext = iterModel.hasNext();
@@ -320,7 +320,7 @@ final class IteratorBlock extends TemplateElement {
                 if (listNotEmpty) {
                     if (loopVar1Name != null) {
                             listLoop: for (index = 0; index < size; index++) {
-                            	_checkIndex(loopCountThreshold);
+                                _checkIndex(loopCountThreshold);
 
                                 loopVar1Value = seqModel.get(index);
                                 hasNext = (size > index + 1);
@@ -385,7 +385,7 @@ final class IteratorBlock extends TemplateElement {
                     if (hashNotEmpty) {
                         if (loopVar1Name != null) {
                             listLoop: do {
-                            	_checkIndex(loopCountThreshold);
+                                _checkIndex(loopCountThreshold);
 
                                 KeyValuePair kvp = kvpIter.next();
                                 loopVar1Value = kvp.getKey();
@@ -417,7 +417,7 @@ final class IteratorBlock extends TemplateElement {
                     if (hashNotEmpty) {
                         if (loopVar1Name != null) {
                             listLoop: do {
-                            	_checkIndex(loopCountThreshold);
+                                _checkIndex(loopCountThreshold);
 
                                 loopVar1Value = keysIter.next();
                                 if (!(loopVar1Value instanceof TemplateScalarModel)) {
@@ -489,6 +489,7 @@ final class IteratorBlock extends TemplateElement {
             return visibleLoopVarName.equals(visibleLoopVar1Name) || visibleLoopVarName.equals(loopVar2Name);
         }
 
+        @Override
         public TemplateModel getLocalVariable(String name) {
             String visibleLoopVar1Name = this.visibleLoopVar1Name; // Not this.loopVar1Name!
             if (visibleLoopVar1Name == null) {
@@ -501,7 +502,7 @@ final class IteratorBlock extends TemplateElement {
                     case 0:
                         return loopVar1Value != null ? loopVar1Value
                                 : getTemplate().getConfiguration().getFallbackOnNullLoopVariable()
-                                        ? null : NullTemplateModel.INSTANCE;
+                                        ? null : TemplateNullModel.INSTANCE;
                     case 6: 
                         if (name.endsWith(LOOP_STATE_INDEX)) {
                             return new SimpleNumber(index);
@@ -518,12 +519,13 @@ final class IteratorBlock extends TemplateElement {
             if (name.equals(loopVar2Name)) {
                 return loopVar2Value != null ? loopVar2Value
                         : getTemplate().getConfiguration().getFallbackOnNullLoopVariable()
-                                ? null : NullTemplateModel.INSTANCE;
+                                ? null : TemplateNullModel.INSTANCE;
             }
             
             return null;
         }
         
+        @Override
         public Collection<String> getLocalVariableNames() {
             String visibleLoopVar1Name = this.visibleLoopVar1Name; // Not this.loopVar1Name!
             if (visibleLoopVar1Name != null) {

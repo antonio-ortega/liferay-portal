@@ -17,6 +17,7 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -30,7 +31,6 @@ import java.util.List;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -45,26 +45,23 @@ public class DepotAdminGroupSearchProvider {
 			PortletRequest portletRequest, PortletURL portletURL)
 		throws PortalException {
 
-		if (!groupItemSelectorCriterion.isIncludeAllVisibleGroups()) {
+		if (Validator.isNull(ParamUtil.getString(portletRequest, "keywords")) &&
+			!groupItemSelectorCriterion.isIncludeAllVisibleGroups()) {
+
 			return _getGroupConnectedDepotGroupsGroupSearch(
 				portletRequest, portletURL);
 		}
 
-		return _getGroupSearch(portletRequest, portletURL);
+		return _getGroupSearch(
+			groupItemSelectorCriterion.getExcludedGroupIds(), portletRequest,
+			portletURL);
 	}
 
 	public GroupSearch getGroupSearch(
 			PortletRequest portletRequest, PortletURL portletURL)
 		throws PortalException {
 
-		return _getGroupSearch(portletRequest, portletURL);
-	}
-
-	@Activate
-	protected void activate() {
-		_classNameIds = new long[] {
-			_portal.getClassNameId(DepotEntry.class.getName())
-		};
+		return _getGroupSearch(null, portletRequest, portletURL);
 	}
 
 	private GroupSearch _getGroupConnectedDepotGroupsGroupSearch(
@@ -101,7 +98,8 @@ public class DepotAdminGroupSearchProvider {
 	}
 
 	private GroupSearch _getGroupSearch(
-			PortletRequest portletRequest, PortletURL portletURL)
+			long[] excludedGroupIds, PortletRequest portletRequest,
+			PortletURL portletURL)
 		throws PortalException {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
@@ -112,6 +110,8 @@ public class DepotAdminGroupSearchProvider {
 		LinkedHashMap<String, Object> groupParams =
 			LinkedHashMapBuilder.<String, Object>put(
 				"actionId", ActionKeys.VIEW
+			).put(
+				"excludedGroupIds", ListUtil.fromArray(excludedGroupIds)
 			).put(
 				"site", Boolean.FALSE
 			).build();
@@ -126,29 +126,64 @@ public class DepotAdminGroupSearchProvider {
 
 		if (Validator.isNotNull(keywords)) {
 			groupSearch.setResultsAndTotal(
-				() -> _groupService.search(
-					company.getCompanyId(), _classNameIds, keywords,
-					groupParams, groupSearch.getStart(), groupSearch.getEnd(),
-					groupSearch.getOrderByComparator()),
+				() -> _processGroups(
+					themeDisplay.getScopeGroup(),
+					_groupService.search(
+						company.getCompanyId(),
+						new long[] {
+							_portal.getClassNameId(DepotEntry.class.getName())
+						},
+						keywords, groupParams, groupSearch.getStart(),
+						groupSearch.getEnd(),
+						groupSearch.getOrderByComparator())),
 				_groupService.searchCount(
-					company.getCompanyId(), _classNameIds, keywords,
-					groupParams));
+					company.getCompanyId(),
+					new long[] {
+						_portal.getClassNameId(DepotEntry.class.getName())
+					},
+					keywords, groupParams));
 		}
 		else {
 			groupSearch.setResultsAndTotal(
-				() -> _groupService.search(
-					company.getCompanyId(), _classNameIds, keywords,
-					groupParams, groupSearch.getStart(), groupSearch.getEnd(),
-					groupSearch.getOrderByComparator()),
+				() -> _processGroups(
+					themeDisplay.getScopeGroup(),
+					_groupService.search(
+						company.getCompanyId(),
+						new long[] {
+							_portal.getClassNameId(DepotEntry.class.getName())
+						},
+						keywords, groupParams, groupSearch.getStart(),
+						groupSearch.getEnd(),
+						groupSearch.getOrderByComparator())),
 				_groupService.searchCount(
-					company.getCompanyId(), _classNameIds, keywords,
-					groupParams));
+					company.getCompanyId(),
+					new long[] {
+						_portal.getClassNameId(DepotEntry.class.getName())
+					},
+					keywords, groupParams));
 		}
 
 		return groupSearch;
 	}
 
-	private long[] _classNameIds;
+	private List<Group> _processGroups(Group group, List<Group> groups) {
+		if (!group.isStagingGroup()) {
+			return groups;
+		}
+
+		List<Group> processedGroups = new ArrayList<>();
+
+		for (Group curGroup : groups) {
+			if (curGroup.hasStagingGroup()) {
+				processedGroups.add(curGroup.getStagingGroup());
+			}
+			else {
+				processedGroups.add(curGroup);
+			}
+		}
+
+		return processedGroups;
+	}
 
 	@Reference
 	private DepotEntryService _depotEntryService;

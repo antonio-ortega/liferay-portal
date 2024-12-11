@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -133,13 +134,13 @@ public class SelectAssetCategoryTreeNodeDisplayContext {
 	public List<BreadcrumbEntry> getBreadcrumbEntries()
 		throws PortalException, PortletException {
 
-		List<BreadcrumbEntry> breadcrumbEntries = new ArrayList<>();
-
-		breadcrumbEntries.add(_getAssetVocabulariesBreadcrumbEntry());
-		breadcrumbEntries.add(_getAssetVocabularyBreadcrumbEntry());
-		breadcrumbEntries.addAll(_getAssetCategoryBreadcrumbEntries());
-
-		return breadcrumbEntries;
+		return BreadcrumbEntryListBuilder.add(
+			_getAssetVocabulariesBreadcrumbEntry()
+		).add(
+			_getAssetVocabularyBreadcrumbEntry()
+		).addAll(
+			_getAssetCategoryBreadcrumbEntries()
+		).build();
 	}
 
 	public Map<String, Object> getContext(
@@ -302,15 +303,15 @@ public class SelectAssetCategoryTreeNodeDisplayContext {
 		AssetVocabulary assetVocabulary =
 			AssetVocabularyServiceUtil.fetchVocabulary(assetVocabularyId);
 
-		if (assetVocabulary != null) {
-			return _createBreadcrumbEntry(
-				assetVocabulary.getTitle(_themeDisplay.getLocale()),
-				_getAssetCategoryTreeNodeURL(
-					assetVocabularyId,
-					AssetCategoryTreeNodeConstants.TYPE_ASSET_VOCABULARY));
+		if (assetVocabulary == null) {
+			return null;
 		}
 
-		return null;
+		return _createBreadcrumbEntry(
+			assetVocabulary.getTitle(_themeDisplay.getLocale()),
+			_getAssetCategoryTreeNodeURL(
+				assetVocabularyId,
+				AssetCategoryTreeNodeConstants.TYPE_ASSET_VOCABULARY));
 	}
 
 	private PortletRequest _getPortletRequest() {

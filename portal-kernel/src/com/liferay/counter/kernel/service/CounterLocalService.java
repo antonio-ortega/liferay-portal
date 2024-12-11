@@ -39,6 +39,9 @@ public interface CounterLocalService extends BaseLocalService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.counter.service.impl.CounterLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the counter local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CounterLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public long getCurrentId(String name);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<String> getNames();
 
 	/**
@@ -48,34 +51,16 @@ public interface CounterLocalService extends BaseLocalService {
 	 */
 	public String getOSGiServiceIdentifier();
 
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public long increment();
 
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public long increment(String name);
 
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public long increment(String name, int size);
 
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public void rename(String oldName, String newName);
 
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public void reset(String name);
 
-	@Transactional(
-		isolation = Isolation.COUNTER, propagation = Propagation.REQUIRES_NEW
-	)
 	public void reset(String name, long size);
 
 }

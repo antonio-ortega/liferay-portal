@@ -41,6 +41,7 @@ public class CPSpecificationOptionWrapper
 		attributes.put("mvccVersion", getMvccVersion());
 		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("CPSpecificationOptionId", getCPSpecificationOptionId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("userId", getUserId());
@@ -52,6 +53,7 @@ public class CPSpecificationOptionWrapper
 		attributes.put("description", getDescription());
 		attributes.put("facetable", isFacetable());
 		attributes.put("key", getKey());
+		attributes.put("priority", getPriority());
 		attributes.put("lastPublishDate", getLastPublishDate());
 
 		return attributes;
@@ -75,6 +77,13 @@ public class CPSpecificationOptionWrapper
 
 		if (uuid != null) {
 			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long CPSpecificationOptionId = (Long)attributes.get(
@@ -142,6 +151,12 @@ public class CPSpecificationOptionWrapper
 
 		if (key != null) {
 			setKey(key);
+		}
+
+		Double priority = (Double)attributes.get("priority");
+
+		if (priority != null) {
+			setPriority(priority);
 		}
 
 		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
@@ -300,6 +315,16 @@ public class CPSpecificationOptionWrapper
 	}
 
 	/**
+	 * Returns the external reference code of this cp specification option.
+	 *
+	 * @return the external reference code of this cp specification option
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
+	}
+
+	/**
 	 * Returns the facetable of this cp specification option.
 	 *
 	 * @return the facetable of this cp specification option
@@ -327,6 +352,28 @@ public class CPSpecificationOptionWrapper
 	@Override
 	public Date getLastPublishDate() {
 		return model.getLastPublishDate();
+	}
+
+	@Override
+	public java.util.List<com.liferay.list.type.model.ListTypeDefinition>
+			getListTypeDefinitions()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getListTypeDefinitions();
+	}
+
+	@Override
+	public long getListTypeDefinitionsCount()
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return model.getListTypeDefinitionsCount();
+	}
+
+	@Override
+	public java.util.List<com.liferay.list.type.model.ListTypeEntry>
+		getListTypeEntries() {
+
+		return model.getListTypeEntries();
 	}
 
 	/**
@@ -357,6 +404,16 @@ public class CPSpecificationOptionWrapper
 	@Override
 	public long getPrimaryKey() {
 		return model.getPrimaryKey();
+	}
+
+	/**
+	 * Returns the priority of this cp specification option.
+	 *
+	 * @return the priority of this cp specification option
+	 */
+	@Override
+	public double getPriority() {
+		return model.getPriority();
 	}
 
 	/**
@@ -623,6 +680,16 @@ public class CPSpecificationOptionWrapper
 	}
 
 	/**
+	 * Sets the external reference code of this cp specification option.
+	 *
+	 * @param externalReferenceCode the external reference code of this cp specification option
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
+	}
+
+	/**
 	 * Sets whether this cp specification option is facetable.
 	 *
 	 * @param facetable the facetable of this cp specification option
@@ -680,6 +747,16 @@ public class CPSpecificationOptionWrapper
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		model.setPrimaryKey(primaryKey);
+	}
+
+	/**
+	 * Sets the priority of this cp specification option.
+	 *
+	 * @param priority the priority of this cp specification option
+	 */
+	@Override
+	public void setPriority(double priority) {
+		model.setPriority(priority);
 	}
 
 	/**

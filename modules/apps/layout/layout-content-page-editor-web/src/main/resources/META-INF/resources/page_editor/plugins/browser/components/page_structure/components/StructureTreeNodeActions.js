@@ -8,23 +8,33 @@ import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import {FocusScope} from '@clayui/shared';
 import classNames from 'classnames';
+import {FeatureIndicator} from 'frontend-js-components-web';
 import {openToast} from 'frontend-js-web';
 import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {flushSync} from 'react-dom';
 
 import SaveFragmentCompositionModal from '../../../../../app/components/SaveFragmentCompositionModal';
 import hasDropZoneChild from '../../../../../app/components/layout_data_items/hasDropZoneChild';
-import {FRAGMENT_ENTRY_TYPES} from '../../../../../app/config/constants/fragmentEntryTypes';
 import {ITEM_ACTIVATION_ORIGINS} from '../../../../../app/config/constants/itemActivationOrigins';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../app/config/constants/layoutDataItemTypes';
-import {useSelectItem} from '../../../../../app/contexts/ControlsContext';
+import {
+	useClipboard,
+	useSetClipboard,
+} from '../../../../../app/contexts/ClipboardContext';
+import {
+	useSelectItem,
+	useSelectMultipleItems,
+} from '../../../../../app/contexts/ControlsContext';
 import {useSetMovementText} from '../../../../../app/contexts/KeyboardMovementContext';
+import {useSetEditedNodeId} from '../../../../../app/contexts/ShortcutContext';
 import {
 	useDispatch,
 	useSelector,
 } from '../../../../../app/contexts/StoreContext';
+import {useGetWidgets} from '../../../../../app/contexts/WidgetsContext';
 import deleteItem from '../../../../../app/thunks/deleteItem';
 import duplicateItem from '../../../../../app/thunks/duplicateItem';
+import pasteItems from '../../../../../app/thunks/pasteItems';
 import canBeDuplicated from '../../../../../app/utils/canBeDuplicated';
 import canBeRemoved from '../../../../../app/utils/canBeRemoved';
 import canBeRenamed from '../../../../../app/utils/canBeRenamed';
@@ -33,14 +43,15 @@ import {
 	FORM_ERROR_TYPES,
 	getFormErrorDescription,
 } from '../../../../../app/utils/getFormErrorDescription';
+import isCuttable from '../../../../../app/utils/isCuttable';
+import isInputFragment from '../../../../../app/utils/isInputFragment';
+import {isMovementValid} from '../../../../../app/utils/isMovementValid';
+import isStepper from '../../../../../app/utils/isStepper';
+import toMovementItem from '../../../../../app/utils/toMovementItem';
 import updateItemStyle from '../../../../../app/utils/updateItemStyle';
 import useHasRequiredChild from '../../../../../app/utils/useHasRequiredChild';
 
-export default function StructureTreeNodeActions({
-	item,
-	setEditingNodeId,
-	visible,
-}) {
+export default function StructureTreeNodeActions({disabled, item, visible}) {
 	const [active, setActive] = useState(false);
 
 	const [openSaveModal, setOpenSaveModal] = useState(false);
@@ -68,11 +79,13 @@ export default function StructureTreeNodeActions({
 				aria-haspopup="true"
 				aria-label={Liferay.Language.get('options')}
 				className={classNames(
-					'ml-0 page-editor__page-structure__tree-node__actions-button',
+					'ml-0 page-editor__page-structure__tree-node__actions-button position-relative',
 					{
-						'page-editor__page-structure__tree-node__actions-button--visible': visible,
+						'page-editor__page-structure__tree-node__actions-button--visible':
+							visible,
 					}
 				)}
+				disabled={disabled}
 				displayType="unstyled"
 				onClick={(event) => {
 					event.stopPropagation();
@@ -87,6 +100,17 @@ export default function StructureTreeNodeActions({
 				}
 				title={Liferay.Language.get('options')}
 			>
+				{active ? (
+					<div
+						className="position-absolute"
+						style={{
+							height: '50px',
+							transform: 'translateX(-10px, -10px)',
+							width: '50px',
+						}}
+					/>
+				) : null}
+
 				<ClayIcon symbol="ellipsis-v" />
 			</ClayButton>
 
@@ -96,6 +120,7 @@ export default function StructureTreeNodeActions({
 				containerProps={{
 					className: 'cadmin',
 				}}
+				hasLeftSymbols
 				onActiveChange={updateActive}
 				ref={dropdownRef}
 			>
@@ -103,7 +128,6 @@ export default function StructureTreeNodeActions({
 					<ActionList
 						item={item}
 						setActive={updateActive}
-						setEditingNodeId={setEditingNodeId}
 						setOpenSaveModal={setOpenSaveModal}
 					/>
 				)}
@@ -119,37 +143,48 @@ export default function StructureTreeNodeActions({
 	);
 }
 
-const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
+const ActionList = ({item, setActive, setOpenSaveModal}) => {
 	const dispatch = useDispatch();
 	const hasRequiredChild = useHasRequiredChild(item.id);
 	const selectItem = useSelectItem();
+	const selectMultipleItems = useSelectMultipleItems();
+	const setEditedNodeId = useSetEditedNodeId();
 	const setText = useSetMovementText();
-	const widgets = useSelector((state) => state.widgets);
+	const getWidgets = useGetWidgets();
+
+	const clipboard = useClipboard();
+	const setClipboard = useSetClipboard();
+
+	const selectItems = Liferay.FeatureFlags['LPD-18221']
+		? selectMultipleItems
+		: selectItem;
 
 	const {fragmentEntryLinks, layoutData, selectedViewportSize} = useSelector(
 		(state) => state
 	);
 
-	const isInputFragment =
-		item.type === LAYOUT_DATA_ITEM_TYPES.fragment &&
-		fragmentEntryLinks[item.config.fragmentEntryLinkId]
-			.fragmentEntryType === FRAGMENT_ENTRY_TYPES.input;
+	const layoutDataItem = useSelector(
+		(state) => state.layoutData.items[item.id]
+	);
 
-	const isHidden = item.config.styles.display === 'none';
+	const isHidden = item.config?.styles?.display === 'none';
 
 	const dropdownItems = useMemo(() => {
 		const items = [];
 
 		if (
+			item.type !== LAYOUT_DATA_ITEM_TYPES.column &&
+			item.type !== LAYOUT_DATA_ITEM_TYPES.formStep &&
+			item.type !== LAYOUT_DATA_ITEM_TYPES.fragmentDropZone &&
 			item.type !== LAYOUT_DATA_ITEM_TYPES.dropZone &&
-			!hasDropZoneChild(item, layoutData) &&
-			!isInputFragment
+			!hasDropZoneChild(layoutDataItem, layoutData) &&
+			!isInputFragment(layoutDataItem, fragmentEntryLinks)
 		) {
 			items.push({
 				action: () => {
 					updateItemStyle({
 						dispatch,
-						itemId: item.id,
+						itemIds: [item.id],
 						selectedViewportSize,
 						styleName: 'display',
 						styleValue: isHidden ? 'block' : 'none',
@@ -183,7 +218,7 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 			});
 		}
 
-		if (canBeSaved(item, layoutData)) {
+		if (canBeSaved(layoutDataItem, layoutData)) {
 			items.push({
 				action: () => setOpenSaveModal(true),
 				icon: 'disk',
@@ -193,17 +228,63 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 
 		if (items.length) {
 			items.push({
-				type: 'separator',
+				type: 'divider',
 			});
 		}
 
-		if (canBeDuplicated(fragmentEntryLinks, item, layoutData, widgets)) {
+		if (isCuttable(item.id, fragmentEntryLinks, layoutData)) {
+			items.push({
+				action: () => {
+					setClipboard([item.id]);
+					dispatch(
+						deleteItem({
+							itemIds: [item.id],
+							selectItems,
+						})
+					);
+					setText(Liferay.Language.get('item-was-cut'));
+				},
+				icon: 'cut',
+				isBetaFeature: true,
+				label: Liferay.Language.get('cut'),
+			});
+		}
+
+		if (
+			Liferay.FeatureFlags['LPD-18221'] &&
+			canBeDuplicated(
+				fragmentEntryLinks,
+				layoutDataItem,
+				layoutData,
+				getWidgets
+			)
+		) {
+			items.push({
+				action: () => {
+					setClipboard([item.id]);
+
+					setText(Liferay.Language.get('item-copied'));
+				},
+				icon: 'copy',
+				isBetaFeature: true,
+				label: Liferay.Language.get('copy'),
+			});
+		}
+
+		if (
+			canBeDuplicated(
+				fragmentEntryLinks,
+				layoutDataItem,
+				layoutData,
+				getWidgets
+			)
+		) {
 			items.push({
 				action: () => {
 					dispatch(
 						duplicateItem({
-							itemId: item.id,
-							selectItem,
+							itemIds: [item.id],
+							selectItems,
 						})
 					);
 
@@ -214,26 +295,68 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 			});
 		}
 
-		if (canBeRenamed(item)) {
+		if (
+			Liferay.FeatureFlags['LPD-18221'] &&
+			(!isStepper(fragmentEntryLinks[item.config.fragmentEntryLinkId]) ||
+				item.type === LAYOUT_DATA_ITEM_TYPES.column ||
+				item.type === LAYOUT_DATA_ITEM_TYPES.fragmentDropZone ||
+				item.type === LAYOUT_DATA_ITEM_TYPES.formStep)
+		) {
 			items.push({
 				action: () => {
-					setEditingNodeId(item.id);
+					if (
+						isMovementValid({
+							fragmentEntryLinks,
+							getWidgets,
+							layoutData,
+							sources: clipboard.map((id) =>
+								toMovementItem(
+									id,
+									layoutData,
+									fragmentEntryLinks
+								)
+							),
+							targetId: item.id,
+						})
+					) {
+						dispatch(
+							pasteItems({
+								clipboard,
+								parentItemId: item.id,
+								selectItems,
+							})
+						);
+
+						setText(Liferay.Language.get('item-pasted'));
+					}
+				},
+				disabled: !clipboard?.length,
+				icon: 'paste',
+				isBetaFeature: true,
+				label: Liferay.Language.get('paste'),
+			});
+		}
+
+		if (canBeRenamed(layoutDataItem)) {
+			items.push({
+				action: () => {
+					setEditedNodeId(item.id);
 				},
 				label: Liferay.Language.get('rename'),
 			});
 		}
 
-		items.push({
-			type: 'separator',
-		});
+		if (canBeRemoved(layoutDataItem, layoutData)) {
+			items.push({
+				type: 'divider',
+			});
 
-		if (canBeRemoved(item, layoutData)) {
 			items.push({
 				action: () => {
 					dispatch(
 						deleteItem({
-							itemId: item.id,
-							selectItem,
+							itemIds: [item.id],
+							selectItems,
 						})
 					);
 
@@ -246,50 +369,52 @@ const ActionList = ({item, setActive, setEditingNodeId, setOpenSaveModal}) => {
 
 		return items;
 	}, [
+		clipboard,
 		dispatch,
 		fragmentEntryLinks,
+		getWidgets,
 		hasRequiredChild,
-		isInputFragment,
 		item,
 		layoutData,
+		layoutDataItem,
 		selectedViewportSize,
 		selectItem,
-		widgets,
+		setClipboard,
+		setEditedNodeId,
 		setOpenSaveModal,
 		setText,
 		isHidden,
-		setEditingNodeId,
+		selectItems,
 	]);
 
 	return (
 		<FocusScope>
 			<div>
-				<ClayDropDown.ItemList>
-					{dropdownItems.map((dropdownItem, index, array) =>
-						dropdownItem.type === 'separator' ? (
-							index !== array.length - 1 && (
-								<ClayDropDown.Divider key={index} />
-							)
+				<ClayDropDown.ItemList items={dropdownItems}>
+					{(item) =>
+						item.type === 'divider' ? (
+							<ClayDropDown.Divider />
 						) : (
-							<React.Fragment key={index}>
-								<ClayDropDown.Item
-									aria-label={Liferay.Language.get(
-										dropdownItem.label
-									)}
-									onClick={() => {
-										setActive(false);
+							<ClayDropDown.Item
+								aria-label={item.label}
+								disabled={item.disabled}
+								onClick={() => {
+									setActive(false);
 
-										dropdownItem.action();
-									}}
-									symbolLeft={dropdownItem.icon}
-								>
-									<p className="d-inline-block m-0 ml-4">
-										{dropdownItem.label}
-									</p>
-								</ClayDropDown.Item>
-							</React.Fragment>
+									item.action();
+								}}
+								symbolLeft={item.icon}
+							>
+								{item.label}
+
+								{item.isBetaFeature ? (
+									<span className="ml-2">
+										<FeatureIndicator type="beta" />
+									</span>
+								) : null}
+							</ClayDropDown.Item>
 						)
-					)}
+					}
 				</ClayDropDown.ItemList>
 			</div>
 		</FocusScope>

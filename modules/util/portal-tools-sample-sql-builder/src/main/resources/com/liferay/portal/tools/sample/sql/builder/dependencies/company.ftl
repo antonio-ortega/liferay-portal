@@ -15,7 +15,15 @@
 
 	${csvFileWriter.write("company", virtualHostModel.hostname + "," + companyModel.companyId + "\n")}
 
+	<#include "list_type_definitions.ftl">
+
 	<#include "roles.ftl">
+
+	<#include "default_groups.ftl">
+
+	<#include "notification_templates.ftl">
+
+	<#include "system_object_definitions.ftl">
 
 	<#include "groups.ftl">
 </#list>

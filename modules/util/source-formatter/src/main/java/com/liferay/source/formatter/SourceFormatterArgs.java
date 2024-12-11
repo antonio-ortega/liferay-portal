@@ -5,15 +5,7 @@
 
 package com.liferay.source.formatter;
 
-import com.liferay.petra.string.CharPool;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.ToolsUtil;
-
-import java.io.File;
-import java.io.IOException;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,7 +15,6 @@ import java.util.Set;
 
 /**
  * @author Raymond Augé
- * @author Drew Brokke
  */
 public class SourceFormatterArgs {
 
@@ -73,28 +64,15 @@ public class SourceFormatterArgs {
 	public static final boolean VALIDATE_COMMIT_MESSAGES = false;
 
 	public void addRecentChangesFileNames(
-			Collection<String> fileNames, String baseDirName)
-		throws IOException {
+		Collection<String> fileNames, String baseDirName) {
 
 		for (String fileName : fileNames) {
-			Path path = null;
-
 			if (baseDirName != null) {
-				path = Paths.get(baseDirName, fileName);
+				_recentChangesFileNames.add(_baseDirName.concat(fileName));
 			}
 			else {
-				path = Paths.get(fileName);
+				_recentChangesFileNames.add(fileName);
 			}
-
-			File file = path.toFile();
-
-			File canonicalFile = file.getCanonicalFile();
-
-			String canonicalPath = canonicalFile.getPath();
-
-			_recentChangesFileNames.add(
-				StringUtil.replace(
-					canonicalPath, CharPool.BACK_SLASH, CharPool.SLASH));
 		}
 	}
 
@@ -112,6 +90,14 @@ public class SourceFormatterArgs {
 
 	public int getCommitCount() {
 		return _commitCount;
+	}
+
+	public List<String> getCurrentBranchAddedFileNames() {
+		return _currentBranchAddedFileNames;
+	}
+
+	public List<String> getCurrentBranchRenamedFileNames() {
+		return _currentBranchRenamedFileNames;
 	}
 
 	public List<String> getFileExtensions() {
@@ -242,6 +228,18 @@ public class SourceFormatterArgs {
 		_commitCount = commitCount;
 	}
 
+	public void setCurrentBranchAddedFileNames(
+		List<String> currentBranchAddedFileNames) {
+
+		_currentBranchAddedFileNames = currentBranchAddedFileNames;
+	}
+
+	public void setCurrentBranchRenamedFileNames(
+		List<String> currentBranchRenamedFileNames) {
+
+		_currentBranchRenamedFileNames = currentBranchRenamedFileNames;
+	}
+
 	public void setFailOnAutoFix(boolean failOnAutoFix) {
 		_failOnAutoFix = failOnAutoFix;
 	}
@@ -343,6 +341,8 @@ public class SourceFormatterArgs {
 	private List<String> _checkNames = new ArrayList<>();
 	private boolean _checkVulnerabilities = CHECK_VULNERABILITIES;
 	private int _commitCount = COMMIT_COUNT;
+	private List<String> _currentBranchAddedFileNames = new ArrayList<>();
+	private List<String> _currentBranchRenamedFileNames = new ArrayList<>();
 	private boolean _failOnAutoFix = FAIL_ON_AUTO_FIX;
 	private boolean _failOnHasWarning = FAIL_ON_HAS_WARNING;
 	private List<String> _fileExtensions = new ArrayList<>();

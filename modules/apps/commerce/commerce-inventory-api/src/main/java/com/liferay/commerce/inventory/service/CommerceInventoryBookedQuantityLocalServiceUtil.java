@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -141,6 +142,19 @@ public class CommerceInventoryBookedQuantityLocalServiceUtil {
 
 		return getService().deleteCommerceInventoryBookedQuantity(
 			commerceInventoryBookedQuantityId);
+	}
+
+	public static CommerceInventoryBookedQuantity
+			deleteCommerceInventoryBookedQuantity(
+				long userId, long commerceInventoryBookedQuantityId,
+				Map<String, String> context,
+				com.liferay.commerce.inventory.type.CommerceInventoryAuditType
+					commerceInventoryAuditType)
+		throws PortalException {
+
+		return getService().deleteCommerceInventoryBookedQuantity(
+			userId, commerceInventoryBookedQuantityId, context,
+			commerceInventoryAuditType);
 	}
 
 	/**
@@ -442,16 +456,12 @@ public class CommerceInventoryBookedQuantityLocalServiceUtil {
 	}
 
 	public static CommerceInventoryBookedQuantityLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CommerceInventoryBookedQuantityLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile CommerceInventoryBookedQuantityLocalService
-		_service;
+	private static final Snapshot<CommerceInventoryBookedQuantityLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceInventoryBookedQuantityLocalServiceUtil.class,
+			CommerceInventoryBookedQuantityLocalService.class);
 
 }

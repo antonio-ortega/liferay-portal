@@ -21,6 +21,9 @@ import com.liferay.fragment.service.base.FragmentEntryLinkLocalServiceBaseImpl;
 import com.liferay.fragment.service.persistence.FragmentCollectionPersistence;
 import com.liferay.fragment.service.persistence.FragmentEntryPersistence;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntryTable;
+import com.liferay.layout.util.CheckNoninstanceablePortletThreadLocal;
+import com.liferay.layout.util.UpdateLayoutStatusThreadLocal;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.Table;
 import com.liferay.petra.sql.dsl.expression.Expression;
@@ -38,9 +41,9 @@ import com.liferay.portal.kernel.model.LayoutTable;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.security.auth.GuestOrUserUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -50,6 +53,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -81,11 +85,12 @@ public class FragmentEntryLinkLocalServiceImpl
 
 	@Override
 	public FragmentEntryLink addFragmentEntryLink(
-			long userId, long groupId, long originalFragmentEntryLinkId,
-			long fragmentEntryId, long segmentsExperienceId, long plid,
-			String css, String html, String js, String configuration,
-			String editableValues, String namespace, int position,
-			String rendererKey, int type, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long originalFragmentEntryLinkId, long fragmentEntryId,
+			long segmentsExperienceId, long plid, String css, String html,
+			String js, String configuration, String editableValues,
+			String namespace, int position, String rendererKey, int type,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		_checkUnlockedLayout(plid, userId);
@@ -98,6 +103,7 @@ public class FragmentEntryLinkLocalServiceImpl
 			fragmentEntryLinkPersistence.create(fragmentEntryLinkId);
 
 		fragmentEntryLink.setUuid(serviceContext.getUuid());
+		fragmentEntryLink.setExternalReferenceCode(externalReferenceCode);
 		fragmentEntryLink.setGroupId(groupId);
 		fragmentEntryLink.setCompanyId(user.getCompanyId());
 		fragmentEntryLink.setUserId(user.getUserId());
@@ -146,9 +152,6 @@ public class FragmentEntryLinkLocalServiceImpl
 						FragmentEntryLinkConstants.EDIT,
 						LocaleUtil.getMostRelevantLocale());
 
-			defaultFragmentEntryProcessorContext.setFragmentElementId(
-				StringPool.BLANK);
-
 			processedHTML =
 				_fragmentEntryProcessorRegistry.processFragmentEntryLinkHTML(
 					fragmentEntryLink, defaultFragmentEntryProcessorContext);
@@ -190,6 +193,16 @@ public class FragmentEntryLinkLocalServiceImpl
 
 		return fragmentEntryLinkLocalService.deleteFragmentEntryLink(
 			fragmentEntryLink);
+	}
+
+	@Override
+	public FragmentEntryLink deleteFragmentEntryLink(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return fragmentEntryLinkLocalService.deleteFragmentEntryLink(
+			getFragmentEntryLinkByExternalReferenceCode(
+				externalReferenceCode, groupId));
 	}
 
 	@Override
@@ -271,6 +284,30 @@ public class FragmentEntryLinkLocalServiceImpl
 				fragmentEntryLink);
 
 			deletedFragmentEntryLinks.add(fragmentEntryLink);
+
+			if (fragmentEntryLink.isTypePortlet()) {
+				try {
+					JSONObject jsonObject = _jsonFactory.createJSONObject(
+						fragmentEntryLink.getEditableValues());
+
+					String instanceId = jsonObject.getString("instanceId");
+					String portletId = jsonObject.getString("portletId");
+
+					if (Validator.isNotNull(instanceId)) {
+						portletId = portletId + "_INSTANCE_" + instanceId;
+					}
+
+					_portletPreferencesLocalService.deletePortletPreferences(
+						PortletKeys.PREFS_OWNER_ID_DEFAULT,
+						PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
+						fragmentEntryLink.getPlid(), portletId);
+				}
+				catch (PortalException portalException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(portalException);
+					}
+				}
+			}
 		}
 
 		return deletedFragmentEntryLinks;
@@ -617,29 +654,30 @@ public class FragmentEntryLinkLocalServiceImpl
 
 	@Override
 	public void updateClassedModel(long plid) {
-		try {
-			_layoutLocalService.updateStatus(
-				PrincipalThreadLocal.getUserId(), plid,
-				WorkflowConstants.STATUS_DRAFT,
-				ServiceContextThreadLocal.getServiceContext());
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
+		if (UpdateLayoutStatusThreadLocal.isUpdateLayoutStatus()) {
+			try {
+				_layoutLocalService.updateStatus(
+					PrincipalThreadLocal.getUserId(), plid,
+					WorkflowConstants.STATUS_DRAFT,
+					ServiceContextThreadLocal.getServiceContext());
+			}
+			catch (PortalException portalException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(portalException);
+				}
 			}
 		}
 	}
 
 	@Override
 	public FragmentEntryLink updateDeleted(
-			long fragmentEntryLinkId, boolean deleted)
+			long userId, long fragmentEntryLinkId, boolean deleted)
 		throws PortalException {
 
 		FragmentEntryLink fragmentEntryLink =
 			fragmentEntryLinkPersistence.findByPrimaryKey(fragmentEntryLinkId);
 
-		_checkUnlockedLayout(
-			fragmentEntryLink.getPlid(), GuestOrUserUtil.getUserId());
+		_checkUnlockedLayout(fragmentEntryLink.getPlid(), userId);
 
 		fragmentEntryLink.setDeleted(deleted);
 
@@ -648,14 +686,13 @@ public class FragmentEntryLinkLocalServiceImpl
 
 	@Override
 	public FragmentEntryLink updateFragmentEntryLink(
-			long fragmentEntryLinkId, int position)
+			long userId, long fragmentEntryLinkId, int position)
 		throws PortalException {
 
 		FragmentEntryLink fragmentEntryLink = fetchFragmentEntryLink(
 			fragmentEntryLinkId);
 
-		_checkUnlockedLayout(
-			fragmentEntryLink.getPlid(), GuestOrUserUtil.getUserId());
+		_checkUnlockedLayout(fragmentEntryLink.getPlid(), userId);
 
 		fragmentEntryLink.setPosition(position);
 
@@ -706,31 +743,23 @@ public class FragmentEntryLinkLocalServiceImpl
 
 	@Override
 	public FragmentEntryLink updateFragmentEntryLink(
-			long fragmentEntryLinkId, String editableValues)
+			long userId, long fragmentEntryLinkId, String editableValues)
 		throws PortalException {
 
-		FragmentEntryLink fragmentEntryLink = fetchFragmentEntryLink(
-			fragmentEntryLinkId);
-
-		_checkUnlockedLayout(
-			fragmentEntryLink.getPlid(), GuestOrUserUtil.getUserId());
-
-		fragmentEntryLink.setEditableValues(editableValues);
-
-		return fragmentEntryLinkPersistence.update(fragmentEntryLink);
+		return updateFragmentEntryLink(
+			userId, fragmentEntryLinkId, editableValues, true);
 	}
 
 	@Override
 	public FragmentEntryLink updateFragmentEntryLink(
-			long fragmentEntryLinkId, String editableValues,
+			long userId, long fragmentEntryLinkId, String editableValues,
 			boolean updateClassedModel)
 		throws PortalException {
 
 		FragmentEntryLink fragmentEntryLink = fetchFragmentEntryLink(
 			fragmentEntryLinkId);
 
-		_checkUnlockedLayout(
-			fragmentEntryLink.getPlid(), GuestOrUserUtil.getUserId());
+		_checkUnlockedLayout(fragmentEntryLink.getPlid(), userId);
 
 		fragmentEntryLink.setEditableValues(editableValues);
 
@@ -822,15 +851,20 @@ public class FragmentEntryLinkLocalServiceImpl
 			fragmentEntryLink);
 
 		if (modified) {
-			_updateFragmentEntryLinkLayout(fragmentEntryLink);
+			try (SafeCloseable safeCloseable =
+					CheckNoninstanceablePortletThreadLocal.
+						setCheckNoninstanceablePortletWithSafeCloseable(true)) {
 
-			for (FragmentEntryLinkListener fragmentEntryLinkListener :
-					_fragmentEntryLinkListenerRegistry.
-						getFragmentEntryLinkListeners()) {
+				_updateFragmentEntryLinkLayout(fragmentEntryLink);
 
-				fragmentEntryLinkListener.
-					onUpdateFragmentEntryLinkConfigurationValues(
-						fragmentEntryLink);
+				for (FragmentEntryLinkListener fragmentEntryLinkListener :
+						_fragmentEntryLinkListenerRegistry.
+							getFragmentEntryLinkListeners()) {
+
+					fragmentEntryLinkListener.
+						onUpdateFragmentEntryLinkConfigurationValues(
+							fragmentEntryLink);
+				}
 			}
 		}
 	}
@@ -1041,6 +1075,9 @@ public class FragmentEntryLinkLocalServiceImpl
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;

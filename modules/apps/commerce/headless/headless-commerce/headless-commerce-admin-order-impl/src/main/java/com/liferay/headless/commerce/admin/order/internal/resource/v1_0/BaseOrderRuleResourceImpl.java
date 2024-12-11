@@ -11,8 +11,8 @@ import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -349,6 +349,95 @@ public abstract class BaseOrderRuleResourceImpl
 			OrderRule orderRule)
 		throws Exception {
 
+		OrderRule existingOrderRule = getOrderRuleByExternalReferenceCode(
+			externalReferenceCode);
+
+		if (orderRule.getActive() != null) {
+			existingOrderRule.setActive(orderRule.getActive());
+		}
+
+		if (orderRule.getAuthor() != null) {
+			existingOrderRule.setAuthor(orderRule.getAuthor());
+		}
+
+		if (orderRule.getCreateDate() != null) {
+			existingOrderRule.setCreateDate(orderRule.getCreateDate());
+		}
+
+		if (orderRule.getDescription() != null) {
+			existingOrderRule.setDescription(orderRule.getDescription());
+		}
+
+		if (orderRule.getDisplayDate() != null) {
+			existingOrderRule.setDisplayDate(orderRule.getDisplayDate());
+		}
+
+		if (orderRule.getExpirationDate() != null) {
+			existingOrderRule.setExpirationDate(orderRule.getExpirationDate());
+		}
+
+		if (orderRule.getExternalReferenceCode() != null) {
+			existingOrderRule.setExternalReferenceCode(
+				orderRule.getExternalReferenceCode());
+		}
+
+		if (orderRule.getName() != null) {
+			existingOrderRule.setName(orderRule.getName());
+		}
+
+		if (orderRule.getNeverExpire() != null) {
+			existingOrderRule.setNeverExpire(orderRule.getNeverExpire());
+		}
+
+		if (orderRule.getPriority() != null) {
+			existingOrderRule.setPriority(orderRule.getPriority());
+		}
+
+		if (orderRule.getType() != null) {
+			existingOrderRule.setType(orderRule.getType());
+		}
+
+		if (orderRule.getTypeSettings() != null) {
+			existingOrderRule.setTypeSettings(orderRule.getTypeSettings());
+		}
+
+		preparePatch(orderRule, existingOrderRule);
+
+		return putOrderRuleByExternalReferenceCode(
+			externalReferenceCode, existingOrderRule);
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'PUT' 'http://localhost:8080/o/headless-commerce-admin-order/v1.0/order-rules/by-externalReferenceCode/{externalReferenceCode}' -d $'{"active": ___, "author": ___, "createDate": ___, "description": ___, "displayDate": ___, "expirationDate": ___, "externalReferenceCode": ___, "id": ___, "name": ___, "neverExpire": ___, "orderRuleAccount": ___, "orderRuleAccountGroup": ___, "orderRuleChannel": ___, "orderRuleOrderType": ___, "priority": ___, "type": ___, "typeSettings": ___}' --header 'Content-Type: application/json' -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "externalReferenceCode"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "OrderRule")}
+	)
+	@javax.ws.rs.Consumes({"application/json", "application/xml"})
+	@javax.ws.rs.Path(
+		"/order-rules/by-externalReferenceCode/{externalReferenceCode}"
+	)
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
+	public OrderRule putOrderRuleByExternalReferenceCode(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("externalReferenceCode")
+			String externalReferenceCode,
+			OrderRule orderRule)
+		throws Exception {
+
 		return new OrderRule();
 	}
 
@@ -500,6 +589,41 @@ public abstract class BaseOrderRuleResourceImpl
 			orderRuleUnsafeFunction = orderRule -> postOrderRule(orderRule);
 		}
 
+		if (StringUtil.equalsIgnoreCase(createStrategy, "UPSERT")) {
+			String updateStrategy = (String)parameters.getOrDefault(
+				"updateStrategy", "UPDATE");
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "UPDATE")) {
+				orderRuleUnsafeFunction =
+					orderRule -> putOrderRuleByExternalReferenceCode(
+						orderRule.getExternalReferenceCode(), orderRule);
+			}
+
+			if (StringUtil.equalsIgnoreCase(updateStrategy, "PARTIAL_UPDATE")) {
+				orderRuleUnsafeFunction = orderRule -> {
+					OrderRule persistedOrderRule = null;
+
+					try {
+						OrderRule getOrderRule =
+							getOrderRuleByExternalReferenceCode(
+								orderRule.getExternalReferenceCode());
+
+						persistedOrderRule = patchOrderRule(
+							getOrderRule.getId() != null ?
+								getOrderRule.getId() :
+									_parseLong(
+										(String)parameters.get("orderRuleId")),
+							orderRule);
+					}
+					catch (NoSuchModelException noSuchModelException) {
+						persistedOrderRule = postOrderRule(orderRule);
+					}
+
+					return persistedOrderRule;
+				};
+			}
+		}
+
 		if (orderRuleUnsafeFunction == null) {
 			throw new NotSupportedException(
 				"Create strategy \"" + createStrategy +
@@ -533,7 +657,7 @@ public abstract class BaseOrderRuleResourceImpl
 	}
 
 	public Set<String> getAvailableCreateStrategies() {
-		return SetUtil.fromArray("INSERT");
+		return SetUtil.fromArray("INSERT", "UPSERT");
 	}
 
 	public Set<String> getAvailableUpdateStrategies() {
@@ -553,6 +677,10 @@ public abstract class BaseOrderRuleResourceImpl
 		throws Exception {
 
 		return null;
+	}
+
+	public String getResourceName() {
+		return "OrderRule";
 	}
 
 	public String getVersion() {
@@ -805,7 +933,9 @@ public abstract class BaseOrderRuleResourceImpl
 	}
 
 	protected Map<String, String> addAction(
-		String actionName, GroupedModel groupedModel, String methodName) {
+		String actionName,
+		com.liferay.portal.kernel.model.GroupedModel groupedModel,
+		String methodName) {
 
 		return ActionUtil.addAction(
 			actionName, getClass(), groupedModel, methodName,
@@ -838,6 +968,10 @@ public abstract class BaseOrderRuleResourceImpl
 			actionName, siteId, methodName, null, permissionName, siteId);
 	}
 
+	protected void preparePatch(
+		OrderRule orderRule, OrderRule existingOrderRule) {
+	}
+
 	protected <T, R, E extends Throwable> List<R> transform(
 		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction) {
 
@@ -845,14 +979,15 @@ public abstract class BaseOrderRuleResourceImpl
 	}
 
 	protected <T, R, E extends Throwable> R[] transform(
-		T[] array, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz) {
+		T[] array, UnsafeFunction<T, R, E> unsafeFunction,
+		Class<? extends R> clazz) {
 
 		return TransformUtil.transform(array, unsafeFunction, clazz);
 	}
 
 	protected <T, R, E extends Throwable> R[] transformToArray(
 		Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction,
-		Class<?> clazz) {
+		Class<? extends R> clazz) {
 
 		return TransformUtil.transformToArray(
 			collection, unsafeFunction, clazz);
@@ -878,7 +1013,8 @@ public abstract class BaseOrderRuleResourceImpl
 	}
 
 	protected <T, R, E extends Throwable> R[] unsafeTransform(
-			T[] array, UnsafeFunction<T, R, E> unsafeFunction, Class<?> clazz)
+			T[] array, UnsafeFunction<T, R, E> unsafeFunction,
+			Class<? extends R> clazz)
 		throws E {
 
 		return TransformUtil.unsafeTransform(array, unsafeFunction, clazz);
@@ -886,7 +1022,7 @@ public abstract class BaseOrderRuleResourceImpl
 
 	protected <T, R, E extends Throwable> R[] unsafeTransformToArray(
 			Collection<T> collection, UnsafeFunction<T, R, E> unsafeFunction,
-			Class<?> clazz)
+			Class<? extends R> clazz)
 		throws E {
 
 		return TransformUtil.unsafeTransformToArray(

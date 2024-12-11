@@ -8,6 +8,8 @@ package com.liferay.frontend.taglib.clay.servlet.taglib;
 import com.liferay.frontend.taglib.clay.internal.servlet.taglib.BaseContainerTag;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -138,9 +140,20 @@ public class NavigationBarTag extends BaseContainerTag {
 					jspWriter.write("\"");
 				}
 
-				jspWriter.write("><span class=\"navbar-text-truncate\">");
+				jspWriter.write("><span>");
 				jspWriter.write(
 					HtmlUtil.escape((String)navigationItem.get("label")));
+
+				if (GetterUtil.getBoolean(navigationItem.get("deprecated"))) {
+					jspWriter.write("<span class=\"badge badge-warning ml-2 ");
+					jspWriter.write("text-uppercase badge-translucent\">");
+					jspWriter.write("<span class=\"badge-item ");
+					jspWriter.write("badge-item-expand\">");
+					jspWriter.write(
+						LanguageUtil.get(getRequest(), "deprecated"));
+					jspWriter.write("</span></span>");
+				}
+
 				jspWriter.write("</span></a></li>");
 			}
 

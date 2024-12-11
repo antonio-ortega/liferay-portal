@@ -325,7 +325,7 @@ public class SegmentsExperimentLocalServiceTest {
 
 		SegmentsExperience variantSegmentsExperience1 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(),
 				segmentsExperiment.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), false,
@@ -339,7 +339,7 @@ public class SegmentsExperimentLocalServiceTest {
 
 		SegmentsExperience variantSegmentsExperience2 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(),
 				segmentsExperiment.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), false,
@@ -369,7 +369,7 @@ public class SegmentsExperimentLocalServiceTest {
 
 		SegmentsExperience segmentsExperience =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsExperiment.getSegmentsEntryId(),
 				segmentsExperiment.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), false,
@@ -474,7 +474,7 @@ public class SegmentsExperimentLocalServiceTest {
 
 		SegmentsExperience segmentsExperience =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsExperiment.getSegmentsEntryId(),
 				segmentsExperiment.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), false,
@@ -522,7 +522,8 @@ public class SegmentsExperimentLocalServiceTest {
 		segmentsExperiment =
 			_segmentsExperimentLocalService.runSegmentsExperiment(
 				segmentsExperiment.getSegmentsExperimentId(), confidenceLevel,
-				segmentsExperienceIdSplitMap);
+				segmentsExperienceIdSplitMap,
+				SegmentsExperimentConstants.Type.AB.name());
 
 		Assert.assertEquals(
 			SegmentsExperimentConstants.STATUS_RUNNING,
@@ -576,7 +577,8 @@ public class SegmentsExperimentLocalServiceTest {
 					return variantSegmentsExperience.getSegmentsExperienceId();
 				},
 				0.30
-			).build());
+			).build(),
+			SegmentsExperimentConstants.Type.AB.name());
 	}
 
 	@Test(expected = RunSegmentsExperimentException.class)
@@ -587,7 +589,8 @@ public class SegmentsExperimentLocalServiceTest {
 			segmentsExperiment.getSegmentsExperimentId(), 0.95,
 			HashMapBuilder.put(
 				segmentsExperiment.getSegmentsExperienceId(), 1.00
-			).build());
+			).build(),
+			SegmentsExperimentConstants.Type.AB.name());
 	}
 
 	@Test(expected = SegmentsExperimentConfidenceLevelException.class)
@@ -611,7 +614,8 @@ public class SegmentsExperimentLocalServiceTest {
 				segmentsExperiment.getSegmentsExperienceId(), 0.70
 			).put(
 				variantSegmentsExperience.getSegmentsExperienceId(), 0.30
-			).build());
+			).build(),
+			SegmentsExperimentConstants.Type.AB.name());
 	}
 
 	@Test(expected = SegmentsExperimentRelSplitException.class)
@@ -635,7 +639,8 @@ public class SegmentsExperimentLocalServiceTest {
 				segmentsExperiment.getSegmentsExperienceId(), 0.70
 			).put(
 				variantSegmentsExperience.getSegmentsExperienceId(), 0.40
-			).build());
+			).build(),
+			SegmentsExperimentConstants.Type.AB.name());
 	}
 
 	@Test(expected = LockedSegmentsExperimentException.class)
@@ -663,7 +668,8 @@ public class SegmentsExperimentLocalServiceTest {
 				segmentsExperiment.getSegmentsExperienceId(), 0.70
 			).put(
 				variantSegmentsExperience.getSegmentsExperienceId(), 0.30
-			).build());
+			).build(),
+			SegmentsExperimentConstants.Type.AB.name());
 	}
 
 	@Test(expected = LockedSegmentsExperimentException.class)
@@ -690,7 +696,7 @@ public class SegmentsExperimentLocalServiceTest {
 
 		SegmentsExperience segmentsExperience1 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(), _layout.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), 1, true,
 				new UnicodeProperties(true),
@@ -698,7 +704,7 @@ public class SegmentsExperimentLocalServiceTest {
 
 		SegmentsExperience segmentsExperience2 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(), _layout.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), -1, true,
 				new UnicodeProperties(true),
@@ -706,7 +712,7 @@ public class SegmentsExperimentLocalServiceTest {
 
 		SegmentsExperience segmentsExperience3 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(), _layout.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), -2, true,
 				new UnicodeProperties(true),
@@ -777,21 +783,21 @@ public class SegmentsExperimentLocalServiceTest {
 
 		SegmentsExperience segmentsExperience1 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(), _layout.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), 2, true,
 				new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 		SegmentsExperience segmentsExperience2 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(), _layout.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), 1, true,
 				new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 		SegmentsExperience segmentsExperience3 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(), _layout.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), -1, true,
 				new UnicodeProperties(true),
@@ -862,14 +868,14 @@ public class SegmentsExperimentLocalServiceTest {
 
 		SegmentsExperience segmentsExperience1 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(), _layout.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), 1, true,
 				new UnicodeProperties(true),
 				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 		SegmentsExperience segmentsExperience2 =
 			_segmentsExperienceLocalService.addSegmentsExperience(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				segmentsEntry.getSegmentsEntryId(), _layout.getPlid(),
 				RandomTestUtil.randomLocaleStringMap(), -1, true,
 				new UnicodeProperties(true),

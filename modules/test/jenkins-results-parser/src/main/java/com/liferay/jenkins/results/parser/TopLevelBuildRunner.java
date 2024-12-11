@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +99,13 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		throw new RuntimeException(message, exception);
 	}
 
+	protected String getBaseInvocationURL(String cohortName) {
+		return JenkinsResultsParserUtil.getMostAvailableMasterURL(
+			JenkinsResultsParserUtil.combine(
+				"http://", cohortName, ".liferay.com"),
+			1);
+	}
+
 	protected String getBuildParameter(String key) {
 		TopLevelBuildData topLevelBuildData = getBuildData();
 
@@ -136,18 +144,10 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 
 		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
 
-		File buildDatabaseFile = buildDatabase.getBuildDatabaseFile();
-
-		FilePropagator filePropagator = new FilePropagator(
-			new String[] {buildDatabaseFile.getName()},
-			JenkinsResultsParserUtil.combine(
-				topLevelBuildData.getHostname(), ":",
-				buildDatabaseFile.getParent()),
-			topLevelBuildData.getDistPath(), topLevelBuildData.getDistNodes());
-
-		filePropagator.setCleanUpCommand(_COMMAND_FILE_PROPAGATOR_CLEAN_UP);
-
-		filePropagator.start(_THREADS_FILE_PROPAGATOR_THREAD_SIZE);
+		FilePropagator filePropagator = buildDatabase.rsyncBuildDatabaseFile(
+			topLevelBuildData.getDistNodes(), topLevelBuildData.getDistPath(),
+			_COMMAND_FILE_PROPAGATOR_PRE_DIST_COMMAND, null,
+			_THREADS_FILE_PROPAGATOR_THREAD_SIZE);
 
 		List<String> distNodes = Lists.newArrayList(
 			topLevelBuildData.getDistNodes());
@@ -162,9 +162,15 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 			return;
 		}
 
+		BuildData buildData = getBuildData();
+
 		BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase();
 
-		publishToUserContentDir(buildDatabase.getBuildDatabaseFile());
+		buildDatabase.rsyncBuildDatabaseFile(
+			Collections.singletonList(buildData.getTopLevelMasterHostname()),
+			"/opt/java/jenkins/userContent/" +
+				buildData.getUserContentRelativePath(),
+			null, null, _THREADS_FILE_PROPAGATOR_THREAD_SIZE);
 	}
 
 	protected void publishJenkinsReport() {
@@ -299,15 +305,9 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 			throw new RuntimeException(ioException);
 		}
 
-		String invocationURL =
-			JenkinsResultsParserUtil.getMostAvailableMasterURL(
-				JenkinsResultsParserUtil.combine(
-					"http://", cohortName, ".liferay.com"),
-				1);
-
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(invocationURL);
+		sb.append(getBaseInvocationURL(cohortName));
 		sb.append("/job/");
 		sb.append(jobName);
 		sb.append("/buildWithParameters?token=");
@@ -383,9 +383,9 @@ public abstract class TopLevelBuildRunner<T extends TopLevelBuildData>
 		}
 	}
 
-	private static final String _COMMAND_FILE_PROPAGATOR_CLEAN_UP =
+	private static final String _COMMAND_FILE_PROPAGATOR_PRE_DIST_COMMAND =
 		JenkinsResultsParserUtil.combine(
-			"find ", BuildData.FILE_PATH_DIST_ROOT,
+			"find ", JenkinsResultsParserUtil.getJenkinsDistRootPath(),
 			"/*/* -maxdepth 1 -type d -mmin +",
 			String.valueOf(
 				TopLevelBuildRunner._MILLIS_FILE_PROPAGATOR_EXPIRATION),

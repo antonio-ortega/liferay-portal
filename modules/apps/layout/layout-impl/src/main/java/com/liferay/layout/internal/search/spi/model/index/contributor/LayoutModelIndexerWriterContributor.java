@@ -7,25 +7,27 @@ package com.liferay.layout.internal.search.spi.model.index.contributor;
 
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.batch.BatchIndexingActionable;
 import com.liferay.portal.search.batch.DynamicQueryBatchIndexingActionableFactory;
 import com.liferay.portal.search.spi.model.index.contributor.ModelIndexerWriterContributor;
 import com.liferay.portal.search.spi.model.index.contributor.helper.IndexerWriterMode;
 import com.liferay.portal.search.spi.model.index.contributor.helper.ModelIndexerWriterDocumentHelper;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Vagner B.C
  */
-@Component(
-	property = "indexer.class.name=com.liferay.portal.kernel.model.Layout",
-	service = ModelIndexerWriterContributor.class
-)
 public class LayoutModelIndexerWriterContributor
 	implements ModelIndexerWriterContributor<Layout> {
+
+	public LayoutModelIndexerWriterContributor(
+		DynamicQueryBatchIndexingActionableFactory
+			dynamicQueryBatchIndexingActionableFactory,
+		LayoutLocalService layoutLocalService) {
+
+		_dynamicQueryBatchIndexingActionableFactory =
+			dynamicQueryBatchIndexingActionableFactory;
+		_layoutLocalService = layoutLocalService;
+	}
 
 	@Override
 	public void customize(
@@ -39,9 +41,9 @@ public class LayoutModelIndexerWriterContributor
 
 	@Override
 	public BatchIndexingActionable getBatchIndexingActionable() {
-		return dynamicQueryBatchIndexingActionableFactory.
+		return _dynamicQueryBatchIndexingActionableFactory.
 			getBatchIndexingActionable(
-				layoutLocalService.getIndexableActionableDynamicQuery());
+				_layoutLocalService.getIndexableActionableDynamicQuery());
 	}
 
 	@Override
@@ -51,18 +53,11 @@ public class LayoutModelIndexerWriterContributor
 
 	@Override
 	public IndexerWriterMode getIndexerWriterMode(Layout layout) {
-		if (layout.getStatus() != WorkflowConstants.STATUS_APPROVED) {
-			return IndexerWriterMode.SKIP;
-		}
-
 		return IndexerWriterMode.UPDATE;
 	}
 
-	@Reference
-	protected DynamicQueryBatchIndexingActionableFactory
-		dynamicQueryBatchIndexingActionableFactory;
-
-	@Reference
-	protected LayoutLocalService layoutLocalService;
+	private final DynamicQueryBatchIndexingActionableFactory
+		_dynamicQueryBatchIndexingActionableFactory;
+	private final LayoutLocalService _layoutLocalService;
 
 }

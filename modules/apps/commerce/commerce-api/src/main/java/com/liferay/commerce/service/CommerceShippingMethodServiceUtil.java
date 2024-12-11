@@ -7,6 +7,7 @@ package com.liferay.commerce.service;
 
 import com.liferay.commerce.model.CommerceShippingMethod;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -180,6 +181,14 @@ public class CommerceShippingMethodServiceUtil {
 	}
 
 	public static CommerceShippingMethod updateCommerceShippingMethod(
+			CommerceShippingMethod commerceShippingMethod)
+		throws PortalException {
+
+		return getService().updateCommerceShippingMethod(
+			commerceShippingMethod);
+	}
+
+	public static CommerceShippingMethod updateCommerceShippingMethod(
 			long commerceShippingMethodId,
 			Map<java.util.Locale, String> nameMap,
 			Map<java.util.Locale, String> descriptionMap, boolean active,
@@ -192,13 +201,12 @@ public class CommerceShippingMethodServiceUtil {
 	}
 
 	public static CommerceShippingMethodService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceShippingMethodService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceShippingMethodService _service;
+	private static final Snapshot<CommerceShippingMethodService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceShippingMethodServiceUtil.class,
+			CommerceShippingMethodService.class);
 
 }

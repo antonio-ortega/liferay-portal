@@ -9,11 +9,15 @@
 
 <dt>
 	<div class="autofit-col my-auto">
-		<aui:icon cssClass="icon-monospaced" image="document-default" markupView="lexicon" />
+		<span class="icon-monospaced">
+			<clay:icon
+				symbol="document-default"
+			/>
+		</span>
 	</div>
 
 	<div class="autofit-col autofit-col-expand">
-		<h5><%= HtmlUtil.escape(cpMedia.getTitle()) %></h5>
+		<div class="h5"><%= HtmlUtil.escape(cpMedia.getTitle()) %></div>
 
 		<p class="m-0"><%= LanguageUtil.formatStorageSize(cpMedia.getSize(), locale) %></p>
 	</div>

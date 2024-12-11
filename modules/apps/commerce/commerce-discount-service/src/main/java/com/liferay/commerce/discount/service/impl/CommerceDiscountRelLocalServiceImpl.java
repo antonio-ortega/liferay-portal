@@ -20,6 +20,7 @@ import com.liferay.commerce.product.model.CPDefinitionLocalizationTable;
 import com.liferay.commerce.product.model.CPDefinitionTable;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CPInstanceTable;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Expression;
@@ -30,6 +31,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
@@ -57,6 +59,7 @@ import org.osgi.service.component.annotations.Reference;
 	property = "model.class.name=com.liferay.commerce.discount.model.CommerceDiscountRel",
 	service = AopService.class
 )
+@CTAware
 public class CommerceDiscountRelLocalServiceImpl
 	extends CommerceDiscountRelLocalServiceBaseImpl {
 
@@ -147,7 +150,7 @@ public class CommerceDiscountRelLocalServiceImpl
 
 		return commerceDiscountRelPersistence.fetchByCN_CPK_First(
 			_classNameLocalService.getClassNameId(className), classPK,
-			new CommerceDiscountRelCreateDateComparator());
+			CommerceDiscountRelCreateDateComparator.getInstance(false));
 	}
 
 	@Override
@@ -212,14 +215,18 @@ public class CommerceDiscountRelLocalServiceImpl
 	public List<CommerceDiscountRel> getCommerceDiscountRels(
 		long classNameId, long classPK, String unitOfMeasureKey) {
 
-		return dslQuery(
-			_getGroupByStep(
-				DSLQueryFactoryUtil.selectDistinct(
-					CommerceDiscountRelTable.INSTANCE
-				).from(
-					CommerceDiscountRelTable.INSTANCE
-				),
-				classNameId, classPK, unitOfMeasureKey));
+		return TransformUtil.transform(
+			dslQuery(
+				_getGroupByStep(
+					DSLQueryFactoryUtil.selectDistinct(
+						CommerceDiscountRelTable.INSTANCE.commerceDiscountRelId
+					).from(
+						CommerceDiscountRelTable.INSTANCE
+					),
+					classNameId, classPK, unitOfMeasureKey)),
+			commerceDiscountRelId ->
+				commerceDiscountRelLocalService.getCommerceDiscountRel(
+					(Long)commerceDiscountRelId));
 	}
 
 	@Override

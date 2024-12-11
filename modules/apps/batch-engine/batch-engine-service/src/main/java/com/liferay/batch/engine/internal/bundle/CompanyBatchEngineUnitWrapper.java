@@ -7,6 +7,7 @@ package com.liferay.batch.engine.internal.bundle;
 
 import com.liferay.batch.engine.unit.BatchEngineUnit;
 import com.liferay.batch.engine.unit.BatchEngineUnitConfiguration;
+import com.liferay.batch.engine.unit.BatchEngineUnitMetaInfo;
 import com.liferay.batch.engine.unit.BundleBatchEngineUnit;
 import com.liferay.portal.kernel.model.Company;
 
@@ -52,15 +53,29 @@ public class CompanyBatchEngineUnitWrapper implements BundleBatchEngineUnit {
 	}
 
 	@Override
-	public Bundle getBundle() {
-		if (_batchEngineUnit instanceof BundleBatchEngineUnit) {
-			BundleBatchEngineUnit bundleBatchEngineUnit =
-				(BundleBatchEngineUnit)_batchEngineUnit;
+	public BatchEngineUnitMetaInfo getBatchEngineUnitMetaInfo()
+		throws IOException {
 
-			return bundleBatchEngineUnit.getBundle();
+		BatchEngineUnitMetaInfo batchEngineUnitMetaInfo =
+			_batchEngineUnit.getBatchEngineUnitMetaInfo();
+
+		return new BatchEngineUnitMetaInfo(
+			batchEngineUnitMetaInfo.isAdvanced(), _company.getCompanyId(),
+			batchEngineUnitMetaInfo.getFeatureFlag(),
+			batchEngineUnitMetaInfo.isMultiCompany(),
+			batchEngineUnitMetaInfo.getPaths());
+	}
+
+	@Override
+	public Bundle getBundle() {
+		if (!(_batchEngineUnit instanceof BundleBatchEngineUnit)) {
+			return null;
 		}
 
-		return null;
+		BundleBatchEngineUnit bundleBatchEngineUnit =
+			(BundleBatchEngineUnit)_batchEngineUnit;
+
+		return bundleBatchEngineUnit.getBundle();
 	}
 
 	@Override

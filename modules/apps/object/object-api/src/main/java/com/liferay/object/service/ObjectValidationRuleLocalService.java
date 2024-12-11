@@ -271,6 +271,10 @@ public interface ObjectValidationRuleLocalService
 			String uuid, long companyId)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectValidationRule> getObjectValidationRules(
+		boolean active, String engine);
+
 	/**
 	 * Returns a range of all the object validation rules.
 	 *
@@ -293,6 +297,10 @@ public interface ObjectValidationRuleLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<ObjectValidationRule> getObjectValidationRules(
 		long objectDefinitionId, boolean active);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<ObjectValidationRule> getObjectValidationRules(
+		long objectDefinitionId, String engine);
 
 	/**
 	 * Returns the number of object validation rules.

@@ -1,0 +1,117 @@
+{
+	"object-fields": [
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "CASE-RESULTS-BLOCKED",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Case Results Blocked"
+			},
+			"name": "caseResultBlocked",
+			"required": false,
+			"state": false,
+			"system": false
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "CASE-RESULTS-DID-NOT-RUN",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Case Results Did Not Run"
+			},
+			"name": "caseResultDidNotRun",
+			"required": false,
+			"state": false,
+			"system": false
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "CASE-RESULTS-FAILED",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Case Results Failed"
+			},
+			"name": "caseResultFailed",
+			"required": false,
+			"state": false,
+			"system": false
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "CASE-RESULTS-IN-PROGRESS",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Case Results In Progress"
+			},
+			"name": "caseResultInProgress",
+			"required": false,
+			"state": false,
+			"system": false
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "CASE-RESULTS-INCOMPLETE",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Case Results Incomplete"
+			},
+			"name": "caseResultIncomplete",
+			"required": false,
+			"state": false,
+			"system": false
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "CASE-RESULTS-PASSED",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Case Results Passed"
+			},
+			"name": "caseResultPassed",
+			"required": false,
+			"state": false,
+			"system": false
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "CASE-RESULTS-TEST-FIX",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Case Results Test Fix"
+			},
+			"name": "caseResultTestFix",
+			"required": false,
+			"state": false,
+			"system": false
+		},
+		{
+			"DBType": "Integer",
+			"businessType": "Integer",
+			"externalReferenceCode": "CASE-RESULTS-UNTESTED",
+			"indexed": false,
+			"indexedAsKeyword": false,
+			"label": {
+				"en_US": "Case Results Untested"
+			},
+			"name": "caseResultUntested",
+			"required": false,
+			"state": false,
+			"system": false
+		}
+	],
+	"objectDefinitionId": "[$OBJECT_DEFINITION_ID:Build$]"
+}

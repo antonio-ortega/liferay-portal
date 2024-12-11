@@ -254,6 +254,27 @@ public interface FaroProjectModel
 	public void setCorpProjectUuid(String corpProjectUuid);
 
 	/**
+	 * Returns the data source connected of this faro project.
+	 *
+	 * @return the data source connected of this faro project
+	 */
+	public boolean getDataSourceConnected();
+
+	/**
+	 * Returns <code>true</code> if this faro project is data source connected.
+	 *
+	 * @return <code>true</code> if this faro project is data source connected; <code>false</code> otherwise
+	 */
+	public boolean isDataSourceConnected();
+
+	/**
+	 * Sets whether this faro project is data source connected.
+	 *
+	 * @param dataSourceConnected the data source connected of this faro project
+	 */
+	public void setDataSourceConnected(boolean dataSourceConnected);
+
+	/**
 	 * Returns the ip addresses of this faro project.
 	 *
 	 * @return the ip addresses of this faro project
@@ -378,6 +399,20 @@ public interface FaroProjectModel
 	 * @param subscription the subscription of this faro project
 	 */
 	public void setSubscription(String subscription);
+
+	/**
+	 * Returns the subscription modified time of this faro project.
+	 *
+	 * @return the subscription modified time of this faro project
+	 */
+	public long getSubscriptionModifiedTime();
+
+	/**
+	 * Sets the subscription modified time of this faro project.
+	 *
+	 * @param subscriptionModifiedTime the subscription modified time of this faro project
+	 */
+	public void setSubscriptionModifiedTime(long subscriptionModifiedTime);
 
 	/**
 	 * Returns the time zone ID of this faro project.

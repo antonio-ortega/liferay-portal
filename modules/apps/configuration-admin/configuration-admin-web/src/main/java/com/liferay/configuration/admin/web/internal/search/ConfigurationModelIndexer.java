@@ -10,7 +10,7 @@ import com.liferay.configuration.admin.constants.ConfigurationAdminPortletKeys;
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationEntryRetriever;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationModelRetriever;
-import com.liferay.configuration.admin.web.internal.util.ResourceBundleLoaderProvider;
+import com.liferay.configuration.admin.web.internal.util.ResourceBundleLoaderProviderUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
@@ -50,10 +50,12 @@ import com.liferay.portal.search.index.IndexStatusManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.portlet.PortletException;
@@ -289,7 +291,7 @@ public class ConfigurationModelIndexer
 		}
 
 		ResourceBundleLoader resourceBundleLoader =
-			_resourceBundleLoaderProvider.getResourceBundleLoader(
+			ResourceBundleLoaderProviderUtil.getResourceBundleLoader(
 				configurationModel.getBundleSymbolicName());
 
 		for (Locale locale : _language.getAvailableLocales()) {
@@ -365,6 +367,8 @@ public class ConfigurationModelIndexer
 
 	@Override
 	protected void doReindex(String[] ids) throws Exception {
+		Set<Document> documents = new HashSet<>();
+
 		Map<String, ConfigurationModel> configurationModels =
 			_configurationModelRetriever.getConfigurationModels(
 				ExtendedObjectClassDefinition.Scope.SYSTEM, null);
@@ -372,8 +376,11 @@ public class ConfigurationModelIndexer
 		for (ConfigurationModel configurationModel :
 				configurationModels.values()) {
 
-			doReindex(configurationModel);
+			documents.add(getDocument(configurationModel));
 		}
+
+		_indexWriterHelper.updateDocuments(
+			CompanyConstants.SYSTEM, documents, false);
 	}
 
 	private static void _initialize(String osgiServiceIdentifier)
@@ -597,9 +604,6 @@ public class ConfigurationModelIndexer
 
 	@Reference
 	private Language _language;
-
-	@Reference
-	private ResourceBundleLoaderProvider _resourceBundleLoaderProvider;
 
 	private ServiceRegistration<IdentifiableOSGiService> _serviceRegistration;
 

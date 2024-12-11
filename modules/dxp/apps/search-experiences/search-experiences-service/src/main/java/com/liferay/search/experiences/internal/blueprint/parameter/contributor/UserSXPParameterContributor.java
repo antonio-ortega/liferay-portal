@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.model.UserGroupGroupRole;
@@ -45,6 +46,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.search.experiences.blueprint.parameter.SXPParameter;
+import com.liferay.search.experiences.blueprint.parameter.contributor.SXPParameterContributor;
 import com.liferay.search.experiences.blueprint.parameter.contributor.SXPParameterContributorDefinition;
 import com.liferay.search.experiences.internal.blueprint.parameter.BooleanArraySXPParameter;
 import com.liferay.search.experiences.internal.blueprint.parameter.BooleanSXPParameter;
@@ -59,7 +61,6 @@ import com.liferay.search.experiences.internal.blueprint.parameter.LongArraySXPP
 import com.liferay.search.experiences.internal.blueprint.parameter.LongSXPParameter;
 import com.liferay.search.experiences.internal.blueprint.parameter.StringArraySXPParameter;
 import com.liferay.search.experiences.internal.blueprint.parameter.StringSXPParameter;
-import com.liferay.search.experiences.rest.dto.v1_0.SXPBlueprint;
 import com.liferay.segments.SegmentsEntryRetriever;
 import com.liferay.segments.context.Context;
 
@@ -75,8 +76,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.lang.ArrayUtils;
 
 /**
  * @author Petteri Karttunen
@@ -112,7 +111,7 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 	@Override
 	public void contribute(
 		ExceptionListener exceptionListener, SearchContext searchContext,
-		SXPBlueprint sxpBlueprint, Set<SXPParameter> sxpParameters) {
+		Set<SXPParameter> sxpParameters) {
 
 		try {
 			_contribute(searchContext, sxpParameters);
@@ -158,9 +157,16 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 					StringSXPParameter.class, "email-domain",
 					"user.email_domain"),
 				new SXPParameterContributorDefinition(
+					StringSXPParameter.class, "external-reference-code",
+					"user.external_reference_code"),
+				new SXPParameterContributorDefinition(
 					StringSXPParameter.class, "first-name", "user.first_name"),
 				new SXPParameterContributorDefinition(
 					StringSXPParameter.class, "full-name", "user.full_name"),
+				new SXPParameterContributorDefinition(
+					StringArraySXPParameter.class,
+					"group-external-reference-codes",
+					"user.group_external_reference_codes"),
 				new SXPParameterContributorDefinition(
 					LongArraySXPParameter.class, "group-ids", "user.group_ids"),
 				new SXPParameterContributorDefinition(
@@ -191,6 +197,10 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 				new SXPParameterContributorDefinition(
 					LongArraySXPParameter.class, "regular-role-ids",
 					"user.regular_role_ids"),
+				new SXPParameterContributorDefinition(
+					StringArraySXPParameter.class,
+					"user-group-external-reference-codes",
+					"user.user_group_external_reference_codes"),
 				new SXPParameterContributorDefinition(
 					LongArraySXPParameter.class, "user-group-ids",
 					"user.user_group_ids")));
@@ -281,7 +291,7 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 				sxpParameters.add(
 					new BooleanArraySXPParameter(
 						expandoSXPParameterName, true,
-						ArrayUtils.toObject(expandoValue.getBooleanArray())));
+						ArrayUtil.toArray(expandoValue.getBooleanArray())));
 			}
 			else if (type == ExpandoColumnConstants.DATE) {
 				sxpParameters.add(
@@ -298,7 +308,7 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 				sxpParameters.add(
 					new DoubleArraySXPParameter(
 						expandoSXPParameterName, true,
-						ArrayUtils.toObject(expandoValue.getDoubleArray())));
+						ArrayUtil.toArray(expandoValue.getDoubleArray())));
 			}
 			else if (type == ExpandoColumnConstants.FLOAT) {
 				sxpParameters.add(
@@ -310,7 +320,7 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 				sxpParameters.add(
 					new FloatArraySXPParameter(
 						expandoSXPParameterName, true,
-						ArrayUtils.toObject(expandoValue.getFloatArray())));
+						ArrayUtil.toArray(expandoValue.getFloatArray())));
 			}
 			else if (type == ExpandoColumnConstants.GEOLOCATION) {
 				JSONObject jsonObject = expandoValue.getGeolocationJSONObject();
@@ -442,7 +452,8 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 							_language.getLanguageId(searchContext.getLocale()));
 						put(Context.SIGNED_IN, !user.isGuestUser());
 					}
-				});
+				},
+				new long[0]);
 
 			segmentsEntryIds = ArrayUtil.filter(
 				segmentsEntryIds, segmentsEntryId -> segmentsEntryId > 0);
@@ -473,9 +484,25 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 				"user.email_domain", true, _getEmailAddressDomain(user)));
 		sxpParameters.add(
 			new StringSXPParameter(
+				"user.external_reference_code", true,
+				user.getExternalReferenceCode()));
+		sxpParameters.add(
+			new StringSXPParameter(
 				"user.first_name", true, user.getFirstName()));
 		sxpParameters.add(
 			new StringSXPParameter("user.full_name", true, user.getFullName()));
+
+		List<Group> groups = _groupLocalService.getGroups(user.getGroupIds());
+
+		if (!groups.isEmpty()) {
+			sxpParameters.add(
+				new StringArraySXPParameter(
+					"user.group_external_reference_codes", true,
+					TransformUtil.transformToArray(
+						groups, Group::getExternalReferenceCode,
+						String.class)));
+		}
+
 		sxpParameters.add(
 			new LongArraySXPParameter(
 				"user.group_ids", true,
@@ -512,6 +539,12 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 
 		if (!userGroups.isEmpty()) {
 			sxpParameters.add(
+				new StringArraySXPParameter(
+					"user.user_group_external_reference_codes", true,
+					TransformUtil.transformToArray(
+						userGroups, UserGroup::getExternalReferenceCode,
+						String.class)));
+			sxpParameters.add(
 				new LongArraySXPParameter(
 					"user.user_group_ids", true,
 					TransformUtil.transformToArray(
@@ -523,10 +556,10 @@ public class UserSXPParameterContributor implements SXPParameterContributor {
 	}
 
 	private int _getAge(Date date) {
-		DateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+		DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
-		int x = GetterUtil.getInteger(formatter.format(date));
-		int y = GetterUtil.getInteger(formatter.format(new Date()));
+		int x = GetterUtil.getInteger(dateFormat.format(date));
+		int y = GetterUtil.getInteger(dateFormat.format(new Date()));
 
 		return (y - x) / 10000;
 	}

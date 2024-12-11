@@ -27,9 +27,10 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 @Component(service = MessageListenerRegistry.class)
 public class MessageListenerRegistryImpl implements MessageListenerRegistry {
 
+	@Override
 	public List<MessageListener> getMessageListeners(String destinationName) {
-		List<MessageListener> messageListeners =
-			_messageListenerServiceTrackerMap.getService(destinationName);
+		List<MessageListener> messageListeners = _serviceTrackerMap.getService(
+			destinationName);
 
 		if (messageListeners == null) {
 			return Collections.emptyList();
@@ -40,43 +41,40 @@ public class MessageListenerRegistryImpl implements MessageListenerRegistry {
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		_messageListenerServiceTrackerMap =
-			ServiceTrackerMapFactory.openMultiValueMap(
-				bundleContext, MessageListener.class, "destination.name",
-				new ServiceTrackerCustomizer
-					<MessageListener, MessageListener>() {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
+			bundleContext, MessageListener.class, "destination.name",
+			new ServiceTrackerCustomizer<MessageListener, MessageListener>() {
 
-					@Override
-					public MessageListener addingService(
-						ServiceReference<MessageListener> serviceReference) {
+				@Override
+				public MessageListener addingService(
+					ServiceReference<MessageListener> serviceReference) {
 
-						return new InvokerMessageListener(
-							bundleContext.getService(serviceReference));
-					}
+					return new InvokerMessageListener(
+						bundleContext.getService(serviceReference));
+				}
 
-					@Override
-					public void modifiedService(
-						ServiceReference<MessageListener> serviceReference,
-						MessageListener messageListener) {
-					}
+				@Override
+				public void modifiedService(
+					ServiceReference<MessageListener> serviceReference,
+					MessageListener messageListener) {
+				}
 
-					@Override
-					public void removedService(
-						ServiceReference<MessageListener> serviceReference,
-						MessageListener messageListener) {
+				@Override
+				public void removedService(
+					ServiceReference<MessageListener> serviceReference,
+					MessageListener messageListener) {
 
-						bundleContext.ungetService(serviceReference);
-					}
+					bundleContext.ungetService(serviceReference);
+				}
 
-				});
+			});
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_messageListenerServiceTrackerMap.close();
+		_serviceTrackerMap.close();
 	}
 
-	private ServiceTrackerMap<String, List<MessageListener>>
-		_messageListenerServiceTrackerMap;
+	private ServiceTrackerMap<String, List<MessageListener>> _serviceTrackerMap;
 
 }

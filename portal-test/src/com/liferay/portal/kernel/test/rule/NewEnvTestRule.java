@@ -5,6 +5,8 @@
 
 package com.liferay.portal.kernel.test.rule;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.process.ClassPathUtil;
 import com.liferay.petra.process.ProcessCallable;
 import com.liferay.petra.process.ProcessChannel;
@@ -80,6 +82,8 @@ public class NewEnvTestRule implements TestRule {
 
 		builder.setArguments(createArguments(description));
 		builder.setBootstrapClassPath(CLASS_PATH);
+		builder.setJavaExecutable(
+			System.getProperty("java.home") + "/bin/java");
 		builder.setRuntimeClassPath(CLASS_PATH);
 
 		setEnvironment(builder, description);
@@ -142,6 +146,16 @@ public class NewEnvTestRule implements TestRule {
 	protected List<String> createArguments(Description description) {
 		List<String> arguments = new ArrayList<>();
 
+		RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+
+		for (String jvmArg : runtimeMXBean.getInputArguments()) {
+			if (jvmArg.startsWith("--add-opens") ||
+				jvmArg.contains("java.locale.providers")) {
+
+				arguments.add(jvmArg);
+			}
+		}
+
 		Class<?> testClass = description.getTestClass();
 
 		NewEnv.JVMArgsLine jvmArgsLine = testClass.getAnnotation(
@@ -164,6 +178,7 @@ public class NewEnvTestRule implements TestRule {
 			arguments.add("-Djvm.debug=true");
 		}
 
+		arguments.add("-Dnet.bytebuddy.experimental=true");
 		arguments.add("-Dsun.zip.disableMemoryMapping=true");
 
 		String whipAgentLine = System.getProperty("whip.agent");
@@ -192,8 +207,11 @@ public class NewEnvTestRule implements TestRule {
 
 	protected ClassLoader createClassLoader(Description description) {
 		try {
+			ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+
 			return new URLClassLoader(
-				ClassPathUtil.getClassPathURLs(CLASS_PATH), null);
+				ClassPathUtil.getClassPathURLs(CLASS_PATH),
+				systemClassLoader.getParent());
 		}
 		catch (MalformedURLException malformedURLException) {
 			throw new RuntimeException(malformedURLException);
@@ -436,20 +454,15 @@ public class NewEnvTestRule implements TestRule {
 		public void evaluate() throws Throwable {
 			MethodKey.resetCache();
 
-			Thread currentThread = Thread.currentThread();
-
-			ClassLoader contextClassLoader =
-				currentThread.getContextClassLoader();
-
-			currentThread.setContextClassLoader(_newClassLoader);
-
 			String quiet = System.getProperty(
 				SystemProperties.SYSTEM_PROPERTIES_QUIET);
 
 			System.setProperty(
 				SystemProperties.SYSTEM_PROPERTIES_QUIET, StringPool.TRUE);
 
-			try {
+			try (SafeCloseable safeCloseable =
+					ThreadContextClassLoaderUtil.swap(_newClassLoader)) {
+
 				Class<?> clazz = _newClassLoader.loadClass(_testClassName);
 
 				Object object = clazz.newInstance();
@@ -476,8 +489,6 @@ public class NewEnvTestRule implements TestRule {
 					System.setProperty(
 						SystemProperties.SYSTEM_PROPERTIES_QUIET, quiet);
 				}
-
-				currentThread.setContextClassLoader(contextClassLoader);
 
 				MethodKey.resetCache();
 			}

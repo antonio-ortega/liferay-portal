@@ -18,6 +18,7 @@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/frontend-data-set" prefix="frontend-data-set" %><%@
 taglib uri="http://liferay.com/tld/item-selector" prefix="liferay-item-selector" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
@@ -33,7 +34,7 @@ page import="com.liferay.commerce.inventory.CPDefinitionInventoryEngine" %><%@
 page import="com.liferay.commerce.model.CPDAvailabilityEstimate" %><%@
 page import="com.liferay.commerce.model.CPDefinitionInventory" %><%@
 page import="com.liferay.commerce.model.CommerceAvailabilityEstimate" %><%@
-page import="com.liferay.commerce.price.list.model.CommercePriceEntry" %><%@
+page import="com.liferay.commerce.price.list.exception.CommercePriceEntryPriceException" %><%@
 page import="com.liferay.commerce.pricing.exception.CommerceUndefinedBasePriceListException" %><%@
 page import="com.liferay.commerce.product.constants.CPAttachmentFileEntryConstants" %><%@
 page import="com.liferay.commerce.product.constants.CPConstants" %><%@
@@ -41,8 +42,10 @@ page import="com.liferay.commerce.product.constants.CPInstanceConstants" %><%@
 page import="com.liferay.commerce.product.constants.CPMeasurementUnitConstants" %><%@
 page import="com.liferay.commerce.product.constants.CPPortletKeys" %><%@
 page import="com.liferay.commerce.product.constants.CPWebKeys" %><%@
+page import="com.liferay.commerce.product.definitions.web.internal.constants.CPConfigurationFDSNames" %><%@
 page import="com.liferay.commerce.product.definitions.web.internal.constants.CommerceProductFDSNames" %><%@
 page import="com.liferay.commerce.product.definitions.web.internal.display.context.CPAttachmentFileEntriesDisplayContext" %><%@
+page import="com.liferay.commerce.product.definitions.web.internal.display.context.CPConfigurationListDisplayContext" %><%@
 page import="com.liferay.commerce.product.definitions.web.internal.display.context.CPDefinitionConfigurationDisplayContext" %><%@
 page import="com.liferay.commerce.product.definitions.web.internal.display.context.CPDefinitionDisplayLayoutDisplayContext" %><%@
 page import="com.liferay.commerce.product.definitions.web.internal.display.context.CPDefinitionLinkDisplayContext" %><%@
@@ -68,17 +71,22 @@ page import="com.liferay.commerce.product.exception.CPDefinitionOptionValueRelKe
 page import="com.liferay.commerce.product.exception.CPDefinitionOptionValueRelPriceException" %><%@
 page import="com.liferay.commerce.product.exception.CPDefinitionOptionValueRelQuantityException" %><%@
 page import="com.liferay.commerce.product.exception.CPDefinitionProductTypeNameException" %><%@
+page import="com.liferay.commerce.product.exception.CPDefinitionSpecificationOptionValueKeyException" %><%@
 page import="com.liferay.commerce.product.exception.CPDisplayLayoutEntryException" %><%@
 page import="com.liferay.commerce.product.exception.CPDisplayLayoutEntryUuidException" %><%@
 page import="com.liferay.commerce.product.exception.CPInstanceJsonException" %><%@
 page import="com.liferay.commerce.product.exception.CPInstanceMaxPriceValueException" %><%@
+page import="com.liferay.commerce.product.exception.CPInstancePriceException" %><%@
 page import="com.liferay.commerce.product.exception.CPInstanceReplacementCPInstanceUuidException" %><%@
 page import="com.liferay.commerce.product.exception.CPInstanceSkuException" %><%@
 page import="com.liferay.commerce.product.exception.CPInstanceUnitOfMeasureIncrementalOrderQuantityException" %><%@
+page import="com.liferay.commerce.product.exception.CPInstanceUnitOfMeasurePriceException" %><%@
 page import="com.liferay.commerce.product.exception.CPInstanceUnitOfMeasureRateException" %><%@
 page import="com.liferay.commerce.product.exception.DuplicateCPAttachmentFileEntryException" %><%@
 page import="com.liferay.commerce.product.exception.DuplicateCPInstanceException" %><%@
+page import="com.liferay.commerce.product.exception.DuplicateCPInstanceExternalReferenceCodeException" %><%@
 page import="com.liferay.commerce.product.exception.DuplicateCPInstanceUnitOfMeasureKeyException" %><%@
+page import="com.liferay.commerce.product.exception.DuplicateCProductExternalReferenceCodeException" %><%@
 page import="com.liferay.commerce.product.exception.NoSuchCPAttachmentFileEntryException" %><%@
 page import="com.liferay.commerce.product.exception.NoSuchCPDefinitionException" %><%@
 page import="com.liferay.commerce.product.exception.NoSuchCPDefinitionLinkException" %><%@
@@ -89,6 +97,7 @@ page import="com.liferay.commerce.product.exception.NoSuchCProductException" %><
 page import="com.liferay.commerce.product.exception.NoSuchCatalogException" %><%@
 page import="com.liferay.commerce.product.exception.NoSuchSkuContributorCPDefinitionOptionRelException" %><%@
 page import="com.liferay.commerce.product.model.CPAttachmentFileEntry" %><%@
+page import="com.liferay.commerce.product.model.CPConfigurationList" %><%@
 page import="com.liferay.commerce.product.model.CPDefinition" %><%@
 page import="com.liferay.commerce.product.model.CPDefinitionLink" %><%@
 page import="com.liferay.commerce.product.model.CPDefinitionOptionRel" %><%@
@@ -103,6 +112,7 @@ page import="com.liferay.commerce.product.model.CPTaxCategory" %><%@
 page import="com.liferay.commerce.product.model.CProduct" %><%@
 page import="com.liferay.commerce.product.model.CommerceCatalog" %><%@
 page import="com.liferay.commerce.product.option.CommerceOptionType" %><%@
+page import="com.liferay.commerce.product.servlet.taglib.ui.constants.CPConfigurationListScreenNavigationConstants" %><%@
 page import="com.liferay.commerce.product.servlet.taglib.ui.constants.CPDefinitionScreenNavigationConstants" %><%@
 page import="com.liferay.commerce.product.servlet.taglib.ui.constants.CPInstanceScreenNavigationConstants" %><%@
 page import="com.liferay.commerce.product.type.virtual.constants.VirtualCPTypeConstants" %><%@
@@ -111,10 +121,10 @@ page import="com.liferay.commerce.util.CommerceUtil" %><%@
 page import="com.liferay.document.library.kernel.exception.NoSuchFileEntryException" %><%@
 page import="com.liferay.friendly.url.exception.FriendlyURLLengthException" %><%@
 page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem" %><%@
+page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.SelectOption" %><%@
 page import="com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
-page import="com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Layout" %><%@
 page import="com.liferay.portal.kernel.model.Portlet" %><%@
@@ -143,7 +153,8 @@ page import="java.util.Arrays" %><%@
 page import="java.util.Calendar" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
-page import="java.util.StringJoiner" %>
+page import="java.util.StringJoiner" %><%@
+page import="java.util.TimeZone" %>
 
 <%@ page import="javax.portlet.PortletURL" %>
 
@@ -155,6 +166,4 @@ page import="java.util.StringJoiner" %>
 
 <%
 String languageId = LanguageUtil.getLanguageId(locale);
-
-String redirect = ParamUtil.getString(request, "redirect");
 %>

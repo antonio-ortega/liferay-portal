@@ -10,6 +10,7 @@ import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.persistence.KBArticlePersistence;
 import com.liferay.knowledge.base.util.comparator.KBArticlePriorityComparator;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.List;
 
@@ -27,9 +28,10 @@ public class KBArticleSiblingNavigationHelper
 
 	@Override
 	protected KBArticle fetchFirstChildKBArticle(KBArticle kbArticle) {
-		List<KBArticle> kbArticles = _kbArticlePersistence.filterFindByG_P_M(
-			kbArticle.getGroupId(), kbArticle.getResourcePrimKey(), true, 0, 1,
-			new KBArticlePriorityComparator(true));
+		List<KBArticle> kbArticles = _kbArticlePersistence.filterFindByG_P_M_S(
+			kbArticle.getGroupId(), kbArticle.getResourcePrimKey(), true,
+			WorkflowConstants.STATUS_APPROVED, 0, 1,
+			KBArticlePriorityComparator.getInstance(true));
 
 		if (kbArticles.isEmpty()) {
 			return null;
@@ -40,10 +42,11 @@ public class KBArticleSiblingNavigationHelper
 
 	@Override
 	protected KBArticle fetchLastChildKBArticle(KBArticle previousKBArticle) {
-		List<KBArticle> kbArticles = _kbArticlePersistence.findByG_P_M(
+		List<KBArticle> kbArticles = _kbArticlePersistence.filterFindByG_P_M_S(
 			previousKBArticle.getGroupId(),
-			previousKBArticle.getResourcePrimKey(), true, 0, 1,
-			new KBArticlePriorityComparator(false));
+			previousKBArticle.getResourcePrimKey(), true,
+			WorkflowConstants.STATUS_APPROVED, 0, 1,
+			KBArticlePriorityComparator.getInstance(false));
 
 		if (kbArticles.isEmpty()) {
 			return null;
@@ -54,10 +57,10 @@ public class KBArticleSiblingNavigationHelper
 
 	@Override
 	protected List<KBArticle> findChildKBArticles(KBArticle kbArticle) {
-		return _kbArticlePersistence.filterFindByG_P_M(
+		return _kbArticlePersistence.filterFindByG_P_M_S(
 			kbArticle.getGroupId(), kbArticle.getParentResourcePrimKey(), true,
-			QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			new KBArticlePriorityComparator(true));
+			WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, KBArticlePriorityComparator.getInstance(true));
 	}
 
 	@Override

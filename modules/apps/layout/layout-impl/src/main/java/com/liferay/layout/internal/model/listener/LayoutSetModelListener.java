@@ -22,8 +22,21 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutSetModelListener extends BaseModelListener<LayoutSet> {
 
 	@Override
+	public void onAfterRemove(LayoutSet layoutSet) {
+	}
+
+	@Override
+	public void onAfterUpdate(
+		LayoutSet originalLayoutSet, LayoutSet layoutSet) {
+	}
+
+	@Override
 	public void onBeforeRemove(LayoutSet layoutSet)
 		throws ModelListenerException {
+
+		if (layoutSet == null) {
+			return;
+		}
 
 		_clientExtensionEntryRelLocalService.deleteClientExtensionEntryRels(
 			_portal.getClassNameId(LayoutSet.class),

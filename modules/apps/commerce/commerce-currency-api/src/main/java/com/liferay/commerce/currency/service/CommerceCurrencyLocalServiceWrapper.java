@@ -52,7 +52,7 @@ public class CommerceCurrencyLocalServiceWrapper
 	@Override
 	public com.liferay.commerce.currency.model.CommerceCurrency
 			addCommerceCurrency(
-				long userId, String code,
+				String externalReferenceCode, long userId, String code,
 				java.util.Map<java.util.Locale, String> nameMap, String symbol,
 				java.math.BigDecimal rate,
 				java.util.Map<java.util.Locale, String> formatPatternMap,
@@ -62,9 +62,9 @@ public class CommerceCurrencyLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceCurrencyLocalService.addCommerceCurrency(
-			userId, code, nameMap, symbol, rate, formatPatternMap,
-			maxFractionDigits, minFractionDigits, roundingMode, primary,
-			priority, active);
+			externalReferenceCode, userId, code, nameMap, symbol, rate,
+			formatPatternMap, maxFractionDigits, minFractionDigits,
+			roundingMode, primary, priority, active);
 	}
 
 	/**
@@ -261,6 +261,16 @@ public class CommerceCurrencyLocalServiceWrapper
 			commerceCurrencyId);
 	}
 
+	@Override
+	public com.liferay.commerce.currency.model.CommerceCurrency
+		fetchCommerceCurrencyByExternalReferenceCode(
+			String externalReferenceCode, long companyId) {
+
+		return _commerceCurrencyLocalService.
+			fetchCommerceCurrencyByExternalReferenceCode(
+				externalReferenceCode, companyId);
+	}
+
 	/**
 	 * Returns the commerce currency with the matching UUID and company.
 	 *
@@ -388,6 +398,17 @@ public class CommerceCurrencyLocalServiceWrapper
 			companyId, code);
 	}
 
+	@Override
+	public com.liferay.commerce.currency.model.CommerceCurrency
+			getCommerceCurrencyByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceCurrencyLocalService.
+			getCommerceCurrencyByExternalReferenceCode(
+				externalReferenceCode, companyId);
+	}
+
 	/**
 	 * Returns the commerce currency with the matching UUID and company.
 	 *
@@ -455,6 +476,19 @@ public class CommerceCurrencyLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.portal.kernel.search.BaseModelSearchResult
+		<com.liferay.commerce.currency.model.CommerceCurrency>
+				searchCommerceCurrencies(
+					long companyId, String keywords,
+					java.util.LinkedHashMap<String, Object> params, int start,
+					int end, com.liferay.portal.kernel.search.Sort sort)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _commerceCurrencyLocalService.searchCommerceCurrencies(
+			companyId, keywords, params, start, end, sort);
+	}
+
+	@Override
 	public com.liferay.commerce.currency.model.CommerceCurrency setActive(
 			long commerceCurrencyId, boolean active)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -495,7 +529,7 @@ public class CommerceCurrencyLocalServiceWrapper
 	@Override
 	public com.liferay.commerce.currency.model.CommerceCurrency
 			updateCommerceCurrency(
-				long commerceCurrencyId,
+				String externalReferenceCode, long commerceCurrencyId,
 				java.util.Map<java.util.Locale, String> nameMap, String symbol,
 				java.math.BigDecimal rate,
 				java.util.Map<java.util.Locale, String> formatPatternMap,
@@ -506,9 +540,9 @@ public class CommerceCurrencyLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _commerceCurrencyLocalService.updateCommerceCurrency(
-			commerceCurrencyId, nameMap, symbol, rate, formatPatternMap,
-			maxFractionDigits, minFractionDigits, roundingMode, primary,
-			priority, active, serviceContext);
+			externalReferenceCode, commerceCurrencyId, nameMap, symbol, rate,
+			formatPatternMap, maxFractionDigits, minFractionDigits,
+			roundingMode, primary, priority, active, serviceContext);
 	}
 
 	@Override

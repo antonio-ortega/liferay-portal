@@ -17,6 +17,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
@@ -30,21 +31,25 @@ import java.util.Objects;
 public class ObjectFieldSettingUtil {
 
 	public static String getDefaultValueAsString(
-		DDMExpressionFactory ddmExpressionFactory, long objectFieldId,
+		DDMExpressionFactory ddmExpressionFactory, ObjectField objectField,
 		ObjectFieldSettingLocalService objectFieldSettingLocalService,
 		Map<String, Object> values) {
 
+		List<ObjectFieldSetting> objectFieldSettings =
+			objectField.getObjectFieldSettings();
+
 		ObjectFieldSetting defaultValueObjectFieldSetting =
-			objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectFieldId, ObjectFieldSettingConstants.NAME_DEFAULT_VALUE);
+			_getObjectFieldSetting(
+				objectFieldSettings,
+				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE);
 
 		if (defaultValueObjectFieldSetting == null) {
 			return null;
 		}
 
 		ObjectFieldSetting defaultValueTypeObjectFieldSetting =
-			objectFieldSettingLocalService.fetchObjectFieldSetting(
-				objectFieldId,
+			_getObjectFieldSetting(
+				objectFieldSettings,
 				ObjectFieldSettingConstants.NAME_DEFAULT_VALUE_TYPE);
 
 		if ((defaultValueTypeObjectFieldSetting == null) ||
@@ -82,7 +87,7 @@ public class ObjectFieldSettingUtil {
 	public static String getTimeZoneId(
 		List<ObjectFieldSetting> objectFieldSettings, User user) {
 
-		if ((user == null) || ListUtil.isNull(objectFieldSettings) ||
+		if ((user == null) || ListUtil.isEmpty(objectFieldSettings) ||
 			!StringUtil.equals(
 				getValue(
 					ObjectFieldSettingConstants.NAME_TIME_STORAGE,
@@ -109,6 +114,31 @@ public class ObjectFieldSettingUtil {
 
 	public static String getValue(String name, ObjectField objectField) {
 		return getValue(name, objectField.getObjectFieldSettings());
+	}
+
+	public static boolean isUnique(
+		List<ObjectFieldSetting> objectFieldSetting) {
+
+		if (ListUtil.isEmpty(objectFieldSetting)) {
+			return false;
+		}
+
+		return GetterUtil.getBoolean(
+			getValue(
+				ObjectFieldSettingConstants.NAME_UNIQUE_VALUES,
+				objectFieldSetting));
+	}
+
+	private static ObjectFieldSetting _getObjectFieldSetting(
+		List<ObjectFieldSetting> objectFieldSettings, String name) {
+
+		for (ObjectFieldSetting objectFieldSetting : objectFieldSettings) {
+			if (Objects.equals(objectFieldSetting.getName(), name)) {
+				return objectFieldSetting;
+			}
+		}
+
+		return null;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

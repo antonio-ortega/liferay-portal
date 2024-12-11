@@ -7,11 +7,13 @@ package com.liferay.search.experiences.internal.upgrade.v3_0_0;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,12 +36,20 @@ public class SXPBlueprintUpgradeProcess extends UpgradeProcess {
 	private long _getSXPBlueprintIdByLargeValue(String largeValue)
 		throws Exception {
 
+		if (Validator.isNull(largeValue)) {
+			return 0;
+		}
+
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray(
 			StringBundler.concat(
 				StringPool.OPEN_BRACKET, largeValue, StringPool.CLOSE_BRACKET));
 
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject jsonObject = jsonArray.getJSONObject(i);
+
+			if (jsonObject == null) {
+				continue;
+			}
 
 			JSONObject attributesJSONObject = jsonObject.getJSONObject(
 				"attributes");
@@ -116,9 +126,11 @@ public class SXPBlueprintUpgradeProcess extends UpgradeProcess {
 			PreparedStatement preparedStatement2 = connection.prepareStatement(
 				"select externalReferenceCode from SXPBlueprint where " +
 					"sxpBlueprintId = ?");
-			PreparedStatement preparedStatement3 = connection.prepareStatement(
-				"update PortletPreferenceValue set smallValue = ? where " +
-					"portletPreferencesId = ? and name = 'attributes'")) {
+			PreparedStatement preparedStatement3 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"update PortletPreferenceValue set smallValue = ? where " +
+						"portletPreferencesId = ? and name = 'attributes'")) {
 
 			while (resultSet1.next()) {
 				String smallValue = resultSet1.getString("smallValue");
@@ -129,7 +141,7 @@ public class SXPBlueprintUpgradeProcess extends UpgradeProcess {
 				ResultSet resultSet2 = preparedStatement2.executeQuery();
 
 				if (!resultSet2.next()) {
-					return;
+					continue;
 				}
 
 				String newSmallValue = _updateSmallValueJSON(
@@ -164,10 +176,12 @@ public class SXPBlueprintUpgradeProcess extends UpgradeProcess {
 			PreparedStatement preparedStatement2 = connection.prepareStatement(
 				"select externalReferenceCode from SXPBlueprint where " +
 					"sxpBlueprintId = ?");
-			PreparedStatement preparedStatement3 = connection.prepareStatement(
-				"update PortletPreferenceValue set largeValue = ? where " +
-					"portletPreferencesId = ? and name = " +
-						"'suggestionsContributorConfigurations'")) {
+			PreparedStatement preparedStatement3 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"update PortletPreferenceValue set largeValue = ? where " +
+						"portletPreferencesId = ? and name = " +
+							"'suggestionsContributorConfigurations'")) {
 
 			while (resultSet1.next()) {
 				String largeValue = resultSet1.getString("largeValue");
@@ -178,7 +192,7 @@ public class SXPBlueprintUpgradeProcess extends UpgradeProcess {
 				ResultSet resultSet2 = preparedStatement2.executeQuery();
 
 				if (!resultSet2.next()) {
-					return;
+					continue;
 				}
 
 				String newLargeValue = StringUtil.replace(
@@ -222,19 +236,20 @@ public class SXPBlueprintUpgradeProcess extends UpgradeProcess {
 			PreparedStatement preparedStatement2 = connection.prepareStatement(
 				"select externalReferenceCode from SXPBlueprint where " +
 					"sxpBlueprintId = ?");
-			PreparedStatement preparedStatement3 = connection.prepareStatement(
-				"update PortletPreferenceValue set name = ?, smallValue = ? " +
-					"where portletPreferencesId = ? and name = " +
-						"'sxpBlueprintId'")) {
+			PreparedStatement preparedStatement3 =
+				AutoBatchPreparedStatementUtil.concurrentAutoBatch(
+					connection,
+					"update PortletPreferenceValue set name = ?, smallValue " +
+						"= ? where portletPreferencesId = ? and name = " +
+							"'sxpBlueprintId'")) {
 
 			while (resultSet1.next()) {
-				preparedStatement2.setString(
-					1, resultSet1.getString("smallValue"));
+				preparedStatement2.setLong(1, resultSet1.getLong("smallValue"));
 
 				ResultSet resultSet2 = preparedStatement2.executeQuery();
 
 				if (!resultSet2.next()) {
-					return;
+					continue;
 				}
 
 				preparedStatement3.setString(

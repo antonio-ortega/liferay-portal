@@ -15,7 +15,6 @@ import com.liferay.analytics.reports.web.internal.constants.ProductNavigationCon
 import com.liferay.analytics.reports.web.internal.info.item.provider.util.AnalyticsReportsInfoItemObjectProviderRegistryUtil;
 import com.liferay.analytics.reports.web.internal.util.AnalyticsReportsUtil;
 import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.frontend.taglib.clay.servlet.taglib.ButtonTag;
 import com.liferay.frontend.taglib.clay.servlet.taglib.IconTag;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
@@ -23,19 +22,27 @@ import com.liferay.info.item.InfoItemReference;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.react.renderer.ComponentDescriptor;
 import com.liferay.portal.template.react.renderer.ReactRenderer;
@@ -47,10 +54,14 @@ import com.liferay.taglib.util.BodyBottomTag;
 import java.io.IOException;
 import java.io.Writer;
 
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import javax.portlet.PortletRequest;
 
@@ -115,46 +126,54 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		Map<String, String> values = new HashMap<>();
-
-		if (isPanelStateOpen(
-				httpServletRequest,
-				ProductNavigationControlMenuEntryConstants.
-					SESSION_CLICKS_KEY)) {
-
-			values.put("cssClass", "active");
-		}
-		else {
-			values.put("cssClass", StringPool.BLANK);
-		}
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			_portal.getLocale(httpServletRequest), getClass());
-
-		values.put(
-			"title",
-			HtmlUtil.escape(
-				_language.get(resourceBundle, "content-performance")));
-
-		IconTag iconTag = new IconTag();
-
-		iconTag.setCssClass("icon-monospaced");
-		iconTag.setSymbol("analytics");
-
-		try {
-			values.put(
-				"iconTag",
-				iconTag.doTagAsString(httpServletRequest, httpServletResponse));
-		}
-		catch (JspException jspException) {
-			throw new IOException(jspException);
-		}
-
-		values.put("portletNamespace", _portletNamespace);
-
 		Writer writer = httpServletResponse.getWriter();
 
-		writer.write(StringUtil.replace(_ICON_TMPL_CONTENT, "${", "}", values));
+		writer.write(
+			StringUtil.replace(
+				_ICON_TMPL_CONTENT, "${", "}",
+				HashMapBuilder.put(
+					"cssClass",
+					() -> {
+						if (isPanelStateOpen(
+								httpServletRequest,
+								ProductNavigationControlMenuEntryConstants.
+									SESSION_CLICKS_KEY)) {
+
+							return "active";
+						}
+
+						return StringPool.BLANK;
+					}
+				).put(
+					"iconTag",
+					() -> {
+						IconTag iconTag = new IconTag();
+
+						iconTag.setCssClass("icon-monospaced");
+						iconTag.setSymbol("analytics");
+
+						return iconTag.doTagAsString(
+							httpServletRequest, httpServletResponse);
+					}
+				).put(
+					"nonceAttribute",
+					ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+						httpServletRequest)
+				).put(
+					"portletNamespace", _portletNamespace
+				).put(
+					"title",
+					() -> {
+						ResourceBundle resourceBundle =
+							ResourceBundleUtil.getBundle(
+								_portal.getLocale(httpServletRequest),
+								getClass());
+
+						return HtmlUtil.escape(
+							_language.get(
+								resourceBundle, "content-performance"));
+					}
+				).build()));
 
 		return true;
 	}
@@ -189,16 +208,18 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 			(AnalyticsReportsInfoItem<Object>)
 				_analyticsReportsInfoItemRegistry.getAnalyticsReportsInfoItem(
 					infoItemReference.getClassName());
-
-		if ((analyticsReportsInfoItem == null) ||
-			!analyticsReportsInfoItem.isShow(analyticsReportsInfoItemObject)) {
-
-			return false;
-		}
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
+
+		if ((analyticsReportsInfoItem == null) ||
+			(!analyticsReportsInfoItem.isShow(analyticsReportsInfoItemObject) &&
+			 !_hasResourcePermission(
+				 ActionKeys.UPDATE, httpServletRequest.getParameter("p_l_id"),
+				 _resourceNames, themeDisplay))) {
+
+			return false;
+		}
 
 		try {
 			if (!AnalyticsReportsUtil.isShowAnalyticsReportsPanel(
@@ -302,6 +323,57 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 		return infoItemReference;
 	}
 
+	private List<String> _getResourceNames(
+		String portletId, Map<String, List<String>> resourceNames) {
+
+		for (Map.Entry<String, List<String>> entry : resourceNames.entrySet()) {
+			if (portletId.contains(entry.getKey())) {
+				return entry.getValue();
+			}
+		}
+
+		return Collections.emptyList();
+	}
+
+	private boolean _hasResourcePermission(
+		String actionId, String plid, Map<String, List<String>> resourceNames,
+		ThemeDisplay themeDisplay) {
+
+		if (!themeDisplay.isSignedIn()) {
+			return false;
+		}
+
+		if (Validator.isNotNull(plid)) {
+			PermissionChecker permissionChecker =
+				PermissionThreadLocal.getPermissionChecker();
+
+			Set<String> resourceNamesSet = new HashSet<>();
+
+			List<PortletPreferences> portletPreferencesList =
+				_portletPreferencesLocalService.getPortletPreferencesByPlid(
+					GetterUtil.getLong(plid));
+
+			for (PortletPreferences portletPreferences :
+					portletPreferencesList) {
+
+				resourceNamesSet.addAll(
+					_getResourceNames(
+						portletPreferences.getPortletId(), resourceNames));
+			}
+
+			for (String resourceName : resourceNamesSet) {
+				if (permissionChecker.hasPermission(
+						themeDisplay.getScopeGroupId(), resourceName, "0",
+						actionId)) {
+
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	private void _processBodyBottomTagBody(PageContext pageContext) {
 		try {
 			HttpServletRequest httpServletRequest =
@@ -371,8 +443,7 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 
 			_reactRenderer.renderReact(
 				new ComponentDescriptor(
-					_npmResolver.resolveModuleName("analytics-reports-web") +
-						"/js/AnalyticsReportsApp"),
+					"{AnalyticsReportsApp} from analytics-reports-web"),
 				HashMapBuilder.<String, Object>put(
 					"context",
 					HashMapBuilder.<String, Object>put(
@@ -413,17 +484,33 @@ public class AnalyticsReportsProductNavigationControlMenuEntry
 	private Language _language;
 
 	@Reference
-	private NPMResolver _npmResolver;
-
-	@Reference
 	private Portal _portal;
 
 	private String _portletNamespace;
+
+	@Reference
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 	@Reference
 	private PortletURLFactory _portletURLFactory;
 
 	@Reference
 	private ReactRenderer _reactRenderer;
+
+	private final Map<String, List<String>> _resourceNames =
+		HashMapBuilder.<String, List<String>>put(
+			"com_liferay_blogs_web_portlet_BlogsPortlet",
+			Arrays.asList("com.liferay.blogs.model.BlogsEntry")
+		).put(
+			"com_liferay_document_library_web_portlet_DLPortlet",
+			Arrays.asList(
+				"com.liferay.document.library",
+				"com.liferay.document.library.kernel.model.DLFileEntry")
+		).put(
+			"com_liferay_journal_content_web_portlet_JournalContentPortlet",
+			Arrays.asList(
+				"com.liferay.journal",
+				"com.liferay.journal.model.JournalArticle")
+		).build();
 
 }

@@ -40,13 +40,17 @@ public class OptionCategoryDTOConverter
 
 		return new OptionCategory() {
 			{
-				description = LanguageUtils.getLanguageIdMap(
-					cpOptionCategory.getDescriptionMap());
-				id = cpOptionCategory.getCPOptionCategoryId();
-				key = cpOptionCategory.getKey();
-				priority = cpOptionCategory.getPriority();
-				title = LanguageUtils.getLanguageIdMap(
-					cpOptionCategory.getTitleMap());
+				setDescription(
+					() -> LanguageUtils.getLanguageIdMap(
+						cpOptionCategory.getDescriptionMap()));
+				setExternalReferenceCode(
+					cpOptionCategory::getExternalReferenceCode);
+				setId(cpOptionCategory::getCPOptionCategoryId);
+				setKey(cpOptionCategory::getKey);
+				setPriority(cpOptionCategory::getPriority);
+				setTitle(
+					() -> LanguageUtils.getLanguageIdMap(
+						cpOptionCategory.getTitleMap()));
 			}
 		};
 	}

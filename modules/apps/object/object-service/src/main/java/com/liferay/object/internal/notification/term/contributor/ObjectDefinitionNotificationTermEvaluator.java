@@ -5,8 +5,10 @@
 
 package com.liferay.object.internal.notification.term.contributor;
 
+import com.liferay.notification.context.NotificationContext;
 import com.liferay.notification.term.evaluator.NotificationTermEvaluator;
 import com.liferay.object.definition.notification.term.util.ObjectDefinitionNotificationTermUtil;
+import com.liferay.object.internal.notification.term.evaluator.util.ObjectDefinitionNotificationTermEvaluatorUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -24,14 +26,19 @@ import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ListTypeLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.text.DateFormat;
+
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -57,6 +64,28 @@ public class ObjectDefinitionNotificationTermEvaluator
 		_objectFieldLocalService = objectFieldLocalService;
 		_objectRelationshipLocalService = objectRelationshipLocalService;
 		_userLocalService = userLocalService;
+	}
+
+	@Override
+	public String evaluate(
+			Context context, NotificationContext notificationContext,
+			String termName)
+		throws PortalException {
+
+		Map<String, Object> termValues = notificationContext.getTermValues();
+
+		Locale locale = notificationContext.getUserLocale();
+
+		if (locale != null) {
+			if (_isObjectFieldTermName("createDate", termName)) {
+				return _format((Date)termValues.get("createDate"), locale);
+			}
+			else if (_isObjectFieldTermName("modifiedDate", termName)) {
+				return _format((Date)termValues.get("modifiedDate"), locale);
+			}
+		}
+
+		return evaluate(context, termValues, termName);
 	}
 
 	@Override
@@ -114,6 +143,20 @@ public class ObjectDefinitionNotificationTermEvaluator
 			user);
 	}
 
+	private String _evaluateCurrentDate(
+			Context context, String termName, Map<String, Object> termValues)
+		throws PortalException {
+
+		if (!termName.equals("[%CURRENT_DATE%]")) {
+			return null;
+		}
+
+		DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+			"yyyy-MM-dd");
+
+		return dateFormat.format(new Date());
+	}
+
 	private String _evaluateCurrentUser(
 			Context context, String termName, Map<String, Object> termValues)
 		throws PortalException {
@@ -146,12 +189,7 @@ public class ObjectDefinitionNotificationTermEvaluator
 				_objectFieldLocalService.getObjectFields(
 					_objectDefinition.getObjectDefinitionId())) {
 
-			if (!Objects.equals(
-					ObjectDefinitionNotificationTermUtil.getObjectFieldTermName(
-						_objectDefinition.getShortName(),
-						objectField.getName()),
-					termName)) {
-
+			if (!_isObjectFieldTermName(objectField.getName(), termName)) {
 				continue;
 			}
 
@@ -229,9 +267,9 @@ public class ObjectDefinitionNotificationTermEvaluator
 			Context context, String termName, Map<String, Object> termValues)
 		throws PortalException {
 
-		ObjectDefinition objectDefinition = null;
-		ObjectField objectField2 = null;
-		String objectFieldName = null;
+		ObjectDefinition parentObjectDefinition = null;
+		ObjectField parentObjectField = null;
+		ObjectField relationshipObjectField = null;
 
 		outerLoop:
 		for (ObjectRelationship objectRelationship :
@@ -239,17 +277,17 @@ public class ObjectDefinitionNotificationTermEvaluator
 					getObjectRelationshipsByObjectDefinitionId2(
 						_objectDefinition.getObjectDefinitionId())) {
 
-			objectDefinition =
+			parentObjectDefinition =
 				_objectDefinitionLocalService.getObjectDefinition(
 					objectRelationship.getObjectDefinitionId1());
 
 			String prefix =
 				ObjectRelationshipUtil.getNotificationTermNamePrefix(
-					objectDefinition, objectRelationship);
+					parentObjectDefinition, objectRelationship);
 
 			for (ObjectField objectField :
 					_objectFieldLocalService.getObjectFields(
-						objectDefinition.getObjectDefinitionId())) {
+						parentObjectDefinition.getObjectDefinitionId())) {
 
 				if (!Objects.equals(
 						termName,
@@ -260,58 +298,69 @@ public class ObjectDefinitionNotificationTermEvaluator
 					continue;
 				}
 
-				objectField2 = _objectFieldLocalService.getObjectField(
-					objectRelationship.getObjectFieldId2());
+				relationshipObjectField =
+					_objectFieldLocalService.getObjectField(
+						objectRelationship.getObjectFieldId2());
 
 				if (Validator.isNull(
 						GetterUtil.getLong(
-							termValues.get(objectField2.getName())))) {
+							termValues.get(
+								relationshipObjectField.getName())))) {
 
 					return null;
 				}
 
-				objectFieldName = objectField.getName();
+				parentObjectField = objectField;
 
 				break outerLoop;
 			}
 		}
 
-		if (objectFieldName == null) {
+		if (parentObjectField == null) {
 			return null;
 		}
 
 		long primaryKey = GetterUtil.getLong(
-			termValues.get(objectField2.getName()));
+			termValues.get(relationshipObjectField.getName()));
 
 		if (primaryKey == 0) {
 			return StringPool.BLANK;
 		}
 
-		if (objectDefinition.isSystem()) {
+		if (parentObjectDefinition.isSystem()) {
 			return MapUtil.getString(
 				_objectEntryLocalService.getSystemModelAttributes(
-					objectDefinition, primaryKey),
-				objectFieldName);
+					parentObjectDefinition, primaryKey),
+				parentObjectField.getName());
 		}
 
 		ObjectEntry objectEntry = _objectEntryLocalService.getObjectEntry(
 			primaryKey);
 
-		return MapUtil.getString(
-			HashMapBuilder.putAll(
-				objectEntry.getValues()
-			).put(
-				"createDate", objectEntry.getCreateDate()
-			).put(
-				"externalReferenceCode", objectEntry.getExternalReferenceCode()
-			).put(
-				"id", objectEntry.getObjectEntryId()
-			).put(
-				"modifiedDate", objectEntry.getModifiedDate()
-			).put(
-				"status", objectEntry.getStatus()
-			).build(),
-			objectFieldName);
+		Map<String, Object> values = HashMapBuilder.<String, Object>putAll(
+			objectEntry.getValues()
+		).put(
+			"createDate", objectEntry.getCreateDate()
+		).put(
+			"externalReferenceCode", objectEntry.getExternalReferenceCode()
+		).put(
+			"id", objectEntry.getObjectEntryId()
+		).put(
+			"modifiedDate", objectEntry.getModifiedDate()
+		).put(
+			"status", objectEntry.getStatus()
+		).build();
+
+		return String.valueOf(
+			ObjectDefinitionNotificationTermEvaluatorUtil.getTermValue(
+				parentObjectField, values.get(parentObjectField.getName())));
+	}
+
+	private String _format(Date date, Locale locale) {
+		DateFormat dateFormat = DateFormatFactoryUtil.getSimpleDateFormat(
+			"EEE MMM dd HH:mm:ss zzz yyyy", locale);
+
+		return dateFormat.format(date);
 	}
 
 	private String _getTermValue(String partialTermName, User user)
@@ -375,9 +424,23 @@ public class ObjectDefinitionNotificationTermEvaluator
 		return true;
 	}
 
+	private boolean _isObjectFieldTermName(
+		String objectFieldName, String termName) {
+
+		if (StringUtil.equals(
+				ObjectDefinitionNotificationTermUtil.getObjectFieldTermName(
+					_objectDefinition.getShortName(), objectFieldName),
+				termName)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private final List<EvaluatorFunction> _evaluatorFunctions = Arrays.asList(
-		this::_evaluateAuthor, this::_evaluateCurrentUser,
-		this::_evaluateObjectFields,
+		this::_evaluateAuthor, this::_evaluateCurrentDate,
+		this::_evaluateCurrentUser, this::_evaluateObjectFields,
 		this::_evaluateParentObjectDefinitionAuthor,
 		this::_evaluateParentObjectDefinitionObjectFields);
 	private final ListTypeLocalService _listTypeLocalService;

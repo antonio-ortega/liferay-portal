@@ -48,6 +48,14 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface WishListResource {
 
+	public Page<WishList> getChannelByExternalReferenceCodeWishListsPage(
+			String externalReferenceCode, Long accountId, Pagination pagination)
+		throws Exception;
+
+	public WishList postChannelByExternalReferenceCodeWishList(
+			String externalReferenceCode, Long accountId, WishList wishList)
+		throws Exception;
+
 	public Page<WishList> getChannelWishListsPage(
 			Long channelId, Long accountId, Pagination pagination)
 		throws Exception;
@@ -63,7 +71,8 @@ public interface WishListResource {
 
 	public WishList getWishList(Long wishListId) throws Exception;
 
-	public WishList patchWishList(Long wishListId, WishList wishList)
+	public WishList patchWishList(
+			Long wishListId, Long accountId, WishList wishList)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(

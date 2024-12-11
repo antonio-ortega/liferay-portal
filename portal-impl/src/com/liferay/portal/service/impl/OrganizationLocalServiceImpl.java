@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ListType;
 import com.liferay.portal.kernel.model.ListTypeConstants;
+import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.Region;
@@ -35,6 +36,7 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserConstants;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
@@ -74,7 +76,6 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -451,11 +452,14 @@ public class OrganizationLocalServiceImpl
 				regionId, countryId, statusListTypeId, comments, site,
 				serviceContext);
 
+			UserFileUploadsSettings userFileUploadsSettings =
+				_userFileUploadsSettingsSnapshot.get();
+
 			PortalUtil.updateImageId(
 				organization, hasLogo, logoBytes, "logoId",
-				_userFileUploadsSettings.getImageMaxSize(),
-				_userFileUploadsSettings.getImageMaxHeight(),
-				_userFileUploadsSettings.getImageMaxWidth());
+				userFileUploadsSettings.getImageMaxSize(),
+				userFileUploadsSettings.getImageMaxHeight(),
+				userFileUploadsSettings.getImageMaxWidth());
 
 			organization = organizationPersistence.update(organization);
 		}
@@ -648,7 +652,10 @@ public class OrganizationLocalServiceImpl
 
 	@Override
 	public String[] getChildrenTypes(String type) {
-		return _organizationTypesSettings.getChildrenTypes(type);
+		OrganizationTypesSettings organizationTypesSettings =
+			_organizationTypesSettingsSnapshot.get();
+
+		return organizationTypesSettings.getChildrenTypes(type);
 	}
 
 	@Override
@@ -753,7 +760,7 @@ public class OrganizationLocalServiceImpl
 		}
 
 		if (orderByComparator == null) {
-			orderByComparator = new OrganizationNameComparator(true);
+			orderByComparator = OrganizationNameComparator.getInstance(true);
 		}
 
 		Collections.sort(organizations, orderByComparator);
@@ -1070,7 +1077,10 @@ public class OrganizationLocalServiceImpl
 
 	@Override
 	public String[] getTypes() {
-		return _organizationTypesSettings.getTypes();
+		OrganizationTypesSettings organizationTypesSettings =
+			_organizationTypesSettingsSnapshot.get();
+
+		return organizationTypesSettings.getTypes();
 	}
 
 	/**
@@ -1282,17 +1292,26 @@ public class OrganizationLocalServiceImpl
 
 	@Override
 	public boolean isCountryEnabled(String type) {
-		return _organizationTypesSettings.isCountryEnabled(type);
+		OrganizationTypesSettings organizationTypesSettings =
+			_organizationTypesSettingsSnapshot.get();
+
+		return organizationTypesSettings.isCountryEnabled(type);
 	}
 
 	@Override
 	public boolean isCountryRequired(String type) {
-		return _organizationTypesSettings.isCountryRequired(type);
+		OrganizationTypesSettings organizationTypesSettings =
+			_organizationTypesSettingsSnapshot.get();
+
+		return organizationTypesSettings.isCountryRequired(type);
 	}
 
 	@Override
 	public boolean isRootable(String type) {
-		return _organizationTypesSettings.isRootable(type);
+		OrganizationTypesSettings organizationTypesSettings =
+			_organizationTypesSettingsSnapshot.get();
+
+		return organizationTypesSettings.isRootable(type);
 	}
 
 	/**
@@ -1321,7 +1340,7 @@ public class OrganizationLocalServiceImpl
 					return organizationPersistence.findByGtO_C_P(
 						previousId, companyId, parentPrimaryKey,
 						QueryUtil.ALL_POS, size,
-						new OrganizationIdComparator(true));
+						OrganizationIdComparator.getInstance(true));
 				}
 
 			});
@@ -1435,7 +1454,7 @@ public class OrganizationLocalServiceImpl
 		return search(
 			companyId, parentOrganizationId, keywords, type, regionId,
 			countryId, params, start, end,
-			new OrganizationNameComparator(true));
+			OrganizationNameComparator.getInstance(true));
 	}
 
 	/**
@@ -1549,7 +1568,7 @@ public class OrganizationLocalServiceImpl
 		return search(
 			companyId, parentOrganizationId, name, type, street, city, zip,
 			regionId, countryId, params, andOperator, start, end,
-			new OrganizationNameComparator(true));
+			OrganizationNameComparator.getInstance(true));
 	}
 
 	/**
@@ -2028,11 +2047,14 @@ public class OrganizationLocalServiceImpl
 		Organization organization = organizationPersistence.findByPrimaryKey(
 			organizationId);
 
+		UserFileUploadsSettings userFileUploadsSettings =
+			_userFileUploadsSettingsSnapshot.get();
+
 		PortalUtil.updateImageId(
 			organization, true, logoBytes, "logoId",
-			_userFileUploadsSettings.getImageMaxSize(),
-			_userFileUploadsSettings.getImageMaxHeight(),
-			_userFileUploadsSettings.getImageMaxWidth());
+			userFileUploadsSettings.getImageMaxSize(),
+			userFileUploadsSettings.getImageMaxHeight(),
+			userFileUploadsSettings.getImageMaxWidth());
 
 		return organizationPersistence.update(organization);
 	}
@@ -2095,11 +2117,14 @@ public class OrganizationLocalServiceImpl
 		organization.setStatusListTypeId(statusListTypeId);
 		organization.setComments(comments);
 
+		UserFileUploadsSettings userFileUploadsSettings =
+			_userFileUploadsSettingsSnapshot.get();
+
 		PortalUtil.updateImageId(
 			organization, hasLogo, logoBytes, "logoId",
-			_userFileUploadsSettings.getImageMaxSize(),
-			_userFileUploadsSettings.getImageMaxHeight(),
-			_userFileUploadsSettings.getImageMaxWidth());
+			userFileUploadsSettings.getImageMaxSize(),
+			userFileUploadsSettings.getImageMaxHeight(),
+			userFileUploadsSettings.getImageMaxWidth());
 
 		organization.setExpandoBridgeAttributes(serviceContext);
 
@@ -2414,7 +2439,7 @@ public class OrganizationLocalServiceImpl
 						organization.getOrganizationId(),
 						StringPool.FORWARD_SLASH))[0],
 				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new OrganizationNameComparator(true));
+				OrganizationNameComparator.getInstance(true));
 
 		long[] organizationIds = new long[organizations.size()];
 
@@ -2498,7 +2523,9 @@ public class OrganizationLocalServiceImpl
 	protected void reindex(long companyId, long[] userIds)
 		throws PortalException {
 
-		_reindexerBridge.reindex(companyId, User.class.getName(), userIds);
+		ReindexerBridge reindexerBridge = _reindexerBridgeSnapshot.get();
+
+		reindexerBridge.reindex(companyId, User.class.getName(), userIds);
 	}
 
 	protected void reindexUsers(List<Organization> organizations)
@@ -2593,7 +2620,15 @@ public class OrganizationLocalServiceImpl
 		}
 
 		if (Validator.isNull(name)) {
-			throw new OrganizationNameException();
+			throw new OrganizationNameException.MustNotBeNull();
+		}
+
+		int maxLength = ModelHintsUtil.getMaxLength(
+			Organization.class.getName(), "name");
+
+		if (name.length() > maxLength) {
+			throw new OrganizationNameException.MustNotExceedMaximumLength(
+				name, maxLength);
 		}
 
 		Organization organization = organizationPersistence.fetchByC_N(
@@ -2608,7 +2643,10 @@ public class OrganizationLocalServiceImpl
 				"There is another organization named " + name);
 		}
 
-		boolean countryRequired = _organizationTypesSettings.isCountryRequired(
+		OrganizationTypesSettings organizationTypesSettings =
+			_organizationTypesSettingsSnapshot.get();
+
+		boolean countryRequired = organizationTypesSettings.isCountryRequired(
 			type);
 
 		if (countryRequired || (countryId > 0)) {
@@ -2646,20 +2684,16 @@ public class OrganizationLocalServiceImpl
 	private static final String _TYPE_FIELD_NAME = Field.getSortableFieldName(
 		Field.TYPE + "_String");
 
-	private static volatile OrganizationTypesSettings
-		_organizationTypesSettings =
-			ServiceProxyFactory.newServiceTrackedInstance(
-				OrganizationTypesSettings.class,
-				OrganizationLocalServiceImpl.class,
-				"_organizationTypesSettings", false);
-	private static volatile ReindexerBridge _reindexerBridge =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			ReindexerBridge.class, OrganizationLocalServiceImpl.class,
-			"_reindexerBridge", false);
-	private static volatile UserFileUploadsSettings _userFileUploadsSettings =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			UserFileUploadsSettings.class, OrganizationLocalServiceImpl.class,
-			"_userFileUploadsSettings", false);
+	private static final Snapshot<OrganizationTypesSettings>
+		_organizationTypesSettingsSnapshot = new Snapshot<>(
+			OrganizationLocalServiceImpl.class,
+			OrganizationTypesSettings.class);
+	private static final Snapshot<ReindexerBridge> _reindexerBridgeSnapshot =
+		new Snapshot<>(
+			OrganizationLocalServiceImpl.class, ReindexerBridge.class);
+	private static final Snapshot<UserFileUploadsSettings>
+		_userFileUploadsSettingsSnapshot = new Snapshot<>(
+			OrganizationLocalServiceImpl.class, UserFileUploadsSettings.class);
 
 	@BeanReference(type = AddressLocalService.class)
 	private AddressLocalService _addressLocalService;

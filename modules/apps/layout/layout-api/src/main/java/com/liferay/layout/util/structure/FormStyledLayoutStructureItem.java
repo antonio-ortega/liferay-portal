@@ -9,6 +9,9 @@ import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
 import com.liferay.layout.util.constants.StyledLayoutStructureConstants;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Objects;
@@ -24,6 +27,10 @@ public class FormStyledLayoutStructureItem extends StyledLayoutStructureItem {
 
 	public FormStyledLayoutStructureItem(String parentItemId) {
 		super(parentItemId);
+	}
+
+	public FormStyledLayoutStructureItem(String itemId, String parentItemId) {
+		super(itemId, parentItemId);
 	}
 
 	@Override
@@ -56,6 +63,23 @@ public class FormStyledLayoutStructureItem extends StyledLayoutStructureItem {
 		return _align;
 	}
 
+	public String getClassName() {
+		if (_classNameId <= 0) {
+			return null;
+		}
+
+		try {
+			return PortalUtil.getClassName(_classNameId);
+		}
+		catch (RuntimeException runtimeException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(runtimeException);
+			}
+		}
+
+		return null;
+	}
+
 	public long getClassNameId() {
 		return _classNameId;
 	}
@@ -78,6 +102,10 @@ public class FormStyledLayoutStructureItem extends StyledLayoutStructureItem {
 
 	public int getFormConfig() {
 		return _formConfig;
+	}
+
+	public String getFormType() {
+		return _formType;
 	}
 
 	@Override
@@ -118,6 +146,8 @@ public class FormStyledLayoutStructureItem extends StyledLayoutStructureItem {
 		).put(
 			"formConfig", _formConfig
 		).put(
+			"formType", _formType
+		).put(
 			"indexed",
 			() -> {
 				if (_indexed) {
@@ -135,6 +165,10 @@ public class FormStyledLayoutStructureItem extends StyledLayoutStructureItem {
 
 				return _justify;
 			}
+		).put(
+			"localizationConfig", _localizationConfigJSONObject
+		).put(
+			"numberOfSteps", _numberOfSteps
 		).put(
 			"successMessage", _successMessageJSONObject
 		).put(
@@ -156,6 +190,14 @@ public class FormStyledLayoutStructureItem extends StyledLayoutStructureItem {
 
 	public String getJustify() {
 		return _justify;
+	}
+
+	public JSONObject getLocalizationConfigJSONObject() {
+		return _localizationConfigJSONObject;
+	}
+
+	public int getNumberOfSteps() {
+		return _numberOfSteps;
 	}
 
 	public JSONObject getSuccessMessageJSONObject() {
@@ -199,12 +241,26 @@ public class FormStyledLayoutStructureItem extends StyledLayoutStructureItem {
 		_formConfig = formConfig;
 	}
 
+	public void setFormType(String formType) {
+		_formType = formType;
+	}
+
 	public void setIndexed(boolean indexed) {
 		_indexed = indexed;
 	}
 
 	public void setJustify(String justify) {
 		_justify = justify;
+	}
+
+	public void setLocalizationConfigJSONObject(
+		JSONObject localizationConfigJSONObject) {
+
+		_localizationConfigJSONObject = localizationConfigJSONObject;
+	}
+
+	public void setNumberOfSteps(int numberOfSteps) {
+		_numberOfSteps = numberOfSteps;
 	}
 
 	public void setSuccessMessageJSONObject(
@@ -253,6 +309,19 @@ public class FormStyledLayoutStructureItem extends StyledLayoutStructureItem {
 			setIndexed(itemConfigJSONObject.getBoolean("indexed"));
 		}
 
+		if (itemConfigJSONObject.has("formType")) {
+			setFormType(itemConfigJSONObject.getString("formType"));
+		}
+
+		if (itemConfigJSONObject.has("localizationConfig")) {
+			setLocalizationConfigJSONObject(
+				itemConfigJSONObject.getJSONObject("localizationConfig"));
+		}
+
+		if (itemConfigJSONObject.has("numberOfSteps")) {
+			setNumberOfSteps(itemConfigJSONObject.getInt("numberOfSteps"));
+		}
+
 		if (itemConfigJSONObject.has("successMessage")) {
 			setSuccessMessageJSONObject(
 				itemConfigJSONObject.getJSONObject("successMessage"));
@@ -263,14 +332,20 @@ public class FormStyledLayoutStructureItem extends StyledLayoutStructureItem {
 		}
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		FormStyledLayoutStructureItem.class);
+
 	private String _align = "";
 	private long _classNameId;
 	private long _classTypeId;
 	private String _contentDisplay = "";
 	private String _flexWrap = "";
 	private int _formConfig;
+	private String _formType;
 	private boolean _indexed = true;
 	private String _justify = "";
+	private JSONObject _localizationConfigJSONObject;
+	private int _numberOfSteps;
 	private JSONObject _successMessageJSONObject;
 	private String _widthType = StyledLayoutStructureConstants.WIDTH_TYPE;
 

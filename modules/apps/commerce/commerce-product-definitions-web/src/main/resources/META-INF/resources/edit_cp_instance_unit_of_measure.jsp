@@ -26,7 +26,9 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 		<aui:input name="cpInstanceUnitOfMeasureId" type="hidden" value="<%= cpInstanceUnitOfMeasure.getCPInstanceUnitOfMeasureId() %>" />
 		<aui:input name="sku" type="hidden" value="<%= cpInstanceUnitOfMeasure.getSku() %>" />
 
+		<liferay-ui:error exception="<%= CommercePriceEntryPriceException.class %>" message="please-enter-a-valid-price" />
 		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasureIncrementalOrderQuantityException.class %>" message="decimals-allowed-cannot-be-less-than-the-number-of-decimals-in-the-base-unit-quantity" />
+		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasurePriceException.class %>" message="please-enter-a-valid-price" />
 		<liferay-ui:error exception="<%= CPInstanceUnitOfMeasureRateException.class %>" message="conversion-rate-quantity-must-be-greater-than-zero" />
 		<liferay-ui:error exception="<%= DuplicateCPInstanceUnitOfMeasureKeyException.class %>" message="there-is-another-unit-of-measure-with-the-same-key" />
 
@@ -89,6 +91,13 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 										<aui:validator name="number" />
 									</aui:input>
 								</div>
+
+								<div class="col-6">
+									<aui:input helpMessage="pricing-quantity-help" label="pricing-quantity" name="pricingQuantity" type="text">
+										<aui:validator name="number" />
+										<aui:validator name="min">0</aui:validator>
+									</aui:input>
+								</div>
 							</div>
 						</c:when>
 						<c:otherwise>
@@ -131,6 +140,15 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 									</aui:input>
 								</div>
 							</div>
+
+							<div class="row">
+								<div class="col-6">
+									<aui:input helpMessage="pricing-quantity-help" label="pricing-quantity" name="pricingQuantity" type="text">
+										<aui:validator name="number" />
+										<aui:validator name="min">0</aui:validator>
+									</aui:input>
+								</div>
+							</div>
 						</c:otherwise>
 					</c:choose>
 
@@ -158,6 +176,6 @@ CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasureDisplay
 				"primary", cpInstanceUnitOfMeasure.isPrimary()
 			).build()
 		%>'
-		module="js/edit_cp_instance_unit_of_measure"
+		module="{editCpInstanceUnitOfMeasure} from commerce-product-definitions-web"
 	/>
 </liferay-frontend:side-panel-content>

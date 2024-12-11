@@ -12,6 +12,8 @@ import com.liferay.headless.commerce.admin.inventory.client.pagination.Paginatio
 import com.liferay.headless.commerce.admin.inventory.client.problem.Problem;
 import com.liferay.headless.commerce.admin.inventory.client.serdes.v1_0.WarehouseSerDes;
 
+import java.net.URL;
+
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -33,21 +35,23 @@ public interface WarehouseResource {
 	}
 
 	public Page<Warehouse> getWarehousesPage(
-			String filterString, Pagination pagination, String sortString)
+			String search, String filterString, Pagination pagination,
+			String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getWarehousesPageHttpResponse(
-			String filterString, Pagination pagination, String sortString)
+			String search, String filterString, Pagination pagination,
+			String sortString)
 		throws Exception;
 
 	public void postWarehousesPageExportBatch(
-			String filterString, String sortString, String callbackURL,
-			String contentType, String fieldNames)
+			String search, String filterString, String sortString,
+			String callbackURL, String contentType, String fieldNames)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse postWarehousesPageExportBatchHttpResponse(
-			String filterString, String sortString, String callbackURL,
-			String contentType, String fieldNames)
+			String search, String filterString, String sortString,
+			String callbackURL, String contentType, String fieldNames)
 		throws Exception;
 
 	public Warehouse postWarehouse(Warehouse warehouse) throws Exception;
@@ -87,6 +91,15 @@ public interface WarehouseResource {
 
 	public HttpInvoker.HttpResponse
 			patchWarehouseByExternalReferenceCodeHttpResponse(
+				String externalReferenceCode, Warehouse warehouse)
+		throws Exception;
+
+	public Warehouse putWarehouseByExternalReferenceCode(
+			String externalReferenceCode, Warehouse warehouse)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse
+			putWarehouseByExternalReferenceCodeHttpResponse(
 				String externalReferenceCode, Warehouse warehouse)
 		throws Exception;
 
@@ -159,6 +172,10 @@ public interface WarehouseResource {
 			return this;
 		}
 
+		public Builder endpoint(URL url) {
+			return endpoint(url.getHost(), url.getPort(), url.getProtocol());
+		}
+
 		public Builder header(String key, String value) {
 			_headers.put(key, value);
 
@@ -211,12 +228,13 @@ public interface WarehouseResource {
 	public static class WarehouseResourceImpl implements WarehouseResource {
 
 		public Page<Warehouse> getWarehousesPage(
-				String filterString, Pagination pagination, String sortString)
+				String search, String filterString, Pagination pagination,
+				String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getWarehousesPageHttpResponse(
-					filterString, pagination, sortString);
+					search, filterString, pagination, sortString);
 
 			String content = httpResponse.getContent();
 
@@ -278,7 +296,8 @@ public interface WarehouseResource {
 		}
 
 		public HttpInvoker.HttpResponse getWarehousesPageHttpResponse(
-				String filterString, Pagination pagination, String sortString)
+				String search, String filterString, Pagination pagination,
+				String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -301,6 +320,10 @@ public interface WarehouseResource {
 			}
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.GET);
+
+			if (search != null) {
+				httpInvoker.parameter("search", String.valueOf(search));
+			}
 
 			if (filterString != null) {
 				httpInvoker.parameter("filter", filterString);
@@ -329,13 +352,13 @@ public interface WarehouseResource {
 		}
 
 		public void postWarehousesPageExportBatch(
-				String filterString, String sortString, String callbackURL,
-				String contentType, String fieldNames)
+				String search, String filterString, String sortString,
+				String callbackURL, String contentType, String fieldNames)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				postWarehousesPageExportBatchHttpResponse(
-					filterString, sortString, callbackURL, contentType,
+					search, filterString, sortString, callbackURL, contentType,
 					fieldNames);
 
 			String content = httpResponse.getContent();
@@ -388,8 +411,8 @@ public interface WarehouseResource {
 
 		public HttpInvoker.HttpResponse
 				postWarehousesPageExportBatchHttpResponse(
-					String filterString, String sortString, String callbackURL,
-					String contentType, String fieldNames)
+					String search, String filterString, String sortString,
+					String callbackURL, String contentType, String fieldNames)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -414,6 +437,10 @@ public interface WarehouseResource {
 			}
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
+
+			if (search != null) {
+				httpInvoker.parameter("search", String.valueOf(search));
+			}
 
 			if (filterString != null) {
 				httpInvoker.parameter("filter", filterString);
@@ -941,6 +968,114 @@ public interface WarehouseResource {
 			}
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-commerce-admin-inventory/v1.0/warehouses/by-externalReferenceCode/{externalReferenceCode}");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
+		public Warehouse putWarehouseByExternalReferenceCode(
+				String externalReferenceCode, Warehouse warehouse)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				putWarehouseByExternalReferenceCodeHttpResponse(
+					externalReferenceCode, warehouse);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return WarehouseSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				putWarehouseByExternalReferenceCodeHttpResponse(
+					String externalReferenceCode, Warehouse warehouse)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(warehouse.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +

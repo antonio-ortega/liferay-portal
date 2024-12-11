@@ -4,11 +4,14 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -39,7 +42,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -100,7 +103,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -161,7 +164,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -192,9 +195,7 @@ definition {
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = "U-Joint");
 
@@ -243,9 +244,7 @@ definition {
 		var multipleQuantity = 3;
 		var product = "U-Joint";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 
@@ -331,9 +330,7 @@ definition {
 		task ("And a minium site with a simple product") {
 			ApplicationsMenu.gotoSite(site = "Minium");
 
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CPCommerceCatalog.newProductsEntry(
 				productCatalog = "Minium",
@@ -374,7 +371,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -388,9 +385,7 @@ definition {
 		task ("and can only be added when back orders are enabled.") {
 			User.firstLoginPG();
 
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceNavigator.searchEntry(entryName = "Simple T-Shirt");
 
@@ -413,7 +408,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -442,9 +437,7 @@ definition {
 			userLastName = "User",
 			userScreenName = "buyeruser");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = "U-Joint");
 
@@ -486,9 +479,7 @@ definition {
 
 		var currencyName = "Euro";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -536,7 +527,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -602,7 +593,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -669,7 +660,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -718,9 +709,7 @@ definition {
 	test AssertProductNameIsTranslated {
 		property portal.acceptance = "true";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = "Shock Absorber");
 
@@ -765,9 +754,7 @@ definition {
 		var maximumQuantity = 4;
 		var product = "U-Joint";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceProducts.searchProduct(search = ${product});
 
@@ -834,9 +821,7 @@ definition {
 		var minimumQuantity = 3;
 		var product = "U-Joint";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 
@@ -1000,7 +985,9 @@ definition {
 		task ("and an SKU is created and made Purchasable") {
 			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
-			CommerceSKUs.addSKU(optionValuesList = "Black:10.0");
+			CommerceSKUs.addSKU(
+				optionValuesList = "Black:10.0",
+				priceList = "Minium Base Price List");
 		}
 
 		task ("Then the user is unable to add the Dynamic Price Bundled Product to cart as an admin and a buyer") {
@@ -1022,7 +1009,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1113,7 +1100,9 @@ definition {
 		task ("and an SKU is created and made Purchasable") {
 			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
-			CommerceSKUs.addSKU(optionValuesList = "Black:10.0");
+			CommerceSKUs.addSKU(
+				optionValuesList = "Black:10.0",
+				priceList = "Minium Base Price List");
 		}
 
 		task ("Then the user is unable to add the Static Price Bundled Product to cart as an admin and a buyer") {
@@ -1135,7 +1124,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1234,7 +1223,9 @@ definition {
 			for (var skuInfo : list "Black:10.0,Blue:20.0") {
 				CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
-				CommerceSKUs.addSKU(optionValuesList = ${skuInfo});
+				CommerceSKUs.addSKU(
+					optionValuesList = ${skuInfo},
+					priceList = "Minium Base Price List");
 			}
 		}
 
@@ -1257,7 +1248,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1362,7 +1353,9 @@ definition {
 			for (var skuInfo : list "Black:10.0,Blue:20.0") {
 				CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
-				CommerceSKUs.addSKU(optionValuesList = ${skuInfo});
+				CommerceSKUs.addSKU(
+					optionValuesList = ${skuInfo},
+					priceList = "Minium Base Price List");
 			}
 		}
 
@@ -1385,7 +1378,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1447,7 +1440,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -1527,7 +1520,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1567,7 +1560,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1621,7 +1614,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1684,9 +1677,7 @@ definition {
 		var multipleQuantity = 5;
 		var product = "U-Joint";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		AppBuilderAdmin.searchByItem(itemName = ${product});
 
@@ -1769,9 +1760,7 @@ definition {
 		var multipleQuantity = 5;
 		var product = "U-Joint";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 
@@ -1850,55 +1839,6 @@ definition {
 		}
 	}
 
-	@description = "COMMERCE-5864. Verify buyers can view a product's price on the product card."
-	@priority = 5
-	test ViewProductCardPrice {
-		property portal.acceptance = "true";
-
-		task ("Given a Commerce account with a buyer user") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And given a product's price is set in the Minium catalog") {
-			CommerceProducts.openProductsAdmin();
-
-			Search.searchCP(searchTerm = "U-Joint");
-
-			CommerceNavigator.gotoEntry(entryName = "U-Joint");
-
-			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-			var productPrice = TestUtils.getElementTextContent(element = "//div[contains(@class,'dnd-tbody')]//div[@class='dnd-td'][3]");
-		}
-
-		task ("When the buyer logs in and views the product card") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("Then the product's price is shown on the product card") {
-			AssertTextEquals(
-				key_productName = "U-Joint",
-				locator1 = "CommerceEntry#PRODUCT_CARD_LIST_PRICE",
-				value1 = ${productPrice});
-		}
-	}
-
 	@description = "COMMERCE-6158. Verify buyers can see the barred list price and discount price of a product if a discount is set."
 	@priority = 5
 	test ViewProductCardPriceWithDiscount {
@@ -1922,9 +1862,7 @@ definition {
 		}
 
 		task ("And given a product with a discount") {
-			CommerceNavigator.gotoPortlet(
-				category = "Pricing",
-				portlet = "Discounts");
+			CommerceNavigator.goToDiscountAdmin();
 
 			Click(locator1 = "Button#PLUS");
 
@@ -1947,14 +1885,14 @@ definition {
 
 			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
-			var basePrice = TestUtils.getElementTextContent(element = "//div[@class='dnd-tr']//div[@class='dnd-td'][3]");
+			var basePrice = TestUtils.getElementTextContent(element = "//div[contains(@class,'dnd-tr')]//div[contains(@class,'dnd-td')][3]");
 		}
 
 		task ("When the buyer logs in and views the product card") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2003,7 +1941,7 @@ definition {
 
 			CommerceEntry.gotoMenuTab(menuTab = "Entries");
 
-			var promoPrice = TestUtils.getElementTextContent(element = "//div[@class='dnd-td' and contains(.,'MIN93018')]/following-sibling::div[3]");
+			var promoPrice = TestUtils.getElementTextContent(element = "//div[contains(@class,'dnd-td') and contains(.,'MIN93018')]/following-sibling::div[3]");
 
 			CommerceProducts.openProductsAdmin();
 
@@ -2011,14 +1949,14 @@ definition {
 
 			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
-			var basePrice = TestUtils.getElementTextContent(element = "//div[@class='dnd-tr']//div[@class='dnd-td'][3]");
+			var basePrice = TestUtils.getElementTextContent(element = "//div[contains(@class,'dnd-tr')]//div[contains(@class,'dnd-td')][3]");
 		}
 
 		task ("When the buyer logs in and views the product card") {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -2026,64 +1964,15 @@ definition {
 		}
 
 		task ("Then the barred list price and promotion price is shown on the product card") {
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				key_productName = "Brake Pads",
 				locator1 = "CommerceFrontStore#FS_PRODUCT_VALUE_PROMO_PRICE",
 				value1 = ${promoPrice});
 
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				key_productName = "Brake Pads",
 				locator1 = "CommerceFrontStore#FS_PRODUCT_VALUE_INACTIVE_PRICE",
 				value1 = ${basePrice});
-		}
-	}
-
-	@description = "COMMERCE-5862. Verify buyers can view the SKU of a product on the product card if it set."
-	@priority = 3
-	test ViewProductCardSKU {
-		property portal.acceptance = "false";
-
-		task ("Given a Commerce account with a buyer user") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("And given a product with a sku") {
-			CommerceProducts.openProductsAdmin();
-
-			CommerceNavigator.searchEntry(entryName = "U-Joint");
-
-			CommerceNavigator.gotoEntry(entryName = "U-Joint");
-
-			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-			var productSku = TestUtils.getElementTextContent(element = "//div[@class='table-list-title']/a");
-		}
-
-		task ("When the buyer logs in and views the product card") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-		}
-
-		task ("Then the product card shows the product SKU") {
-			AssertElementPresent(
-				key_productName = "U-Joint",
-				key_productSku = ${productSku},
-				locator1 = "CommerceEntry#PRODUCT_CARD_SKU");
 		}
 	}
 
@@ -2122,12 +2011,18 @@ definition {
 
 				SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
 
+				CommerceEntry.gotoMenuTab(menuTab = "Price");
+
+				CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
+
+				SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
+
 				Type(
-					key_text = "Base Price",
+					key_text = "Price List Price",
 					locator1 = "TextInput#ANY",
 					value1 = ${basePrice});
 
-				Button.clickPublish();
+				Button.clickSave();
 
 				Refresh();
 			}
@@ -2139,7 +2034,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 

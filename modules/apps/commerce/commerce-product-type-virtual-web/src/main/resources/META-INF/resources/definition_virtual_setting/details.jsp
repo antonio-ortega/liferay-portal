@@ -12,19 +12,27 @@ CPDefinitionVirtualSettingDisplayContext cpDefinitionVirtualSettingDisplayContex
 
 CPDefinitionVirtualSetting cpDefinitionVirtualSetting = cpDefinitionVirtualSettingDisplayContext.getCPDefinitionVirtualSetting();
 
-FileEntry fileEntry = cpDefinitionVirtualSettingDisplayContext.getFileEntry();
+String className = CPDefinition.class.getName();
+long classPK = cpDefinitionVirtualSettingDisplayContext.getCPDefinitionId();
 
-long fileEntryId = BeanParamUtil.getLong(cpDefinitionVirtualSetting, request, "fileEntryId");
-
-String textCssClass = "text-default ";
-
-boolean useFileEntry = false;
-
-if (fileEntryId > 0) {
-	textCssClass += "hide";
-
-	useFileEntry = true;
+if (cpDefinitionVirtualSetting != null) {
+	className = cpDefinitionVirtualSetting.getClassName();
+	classPK = cpDefinitionVirtualSetting.getClassPK();
 }
 %>
 
-<%@ include file="/details.jspf" %>
+<frontend-data-set:classic-display
+	contextParams='<%=
+		HashMapBuilder.<String, String>put(
+			"className", className
+		).put(
+			"classPK", String.valueOf(classPK)
+		).build()
+	%>'
+	creationMenu="<%= cpDefinitionVirtualSettingDisplayContext.getCreationMenu() %>"
+	dataProviderKey="<%= CPDefinitionVirtualSettingFDSNames.VIRTUAL_SETTING_FILES %>"
+	formName="fm"
+	id="<%= CPDefinitionVirtualSettingFDSNames.VIRTUAL_SETTING_FILES %>"
+	itemsPerPage="<%= 10 %>"
+	selectedItemsKey="cpDefinitionVirtualSettingFileId"
+/>

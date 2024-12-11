@@ -13,11 +13,9 @@ import FormReport from '../../form-report/index';
 
 import './PartialResults.scss';
 
-const PartialResults: React.FC<IProps> = ({
-	dataEngineModule,
-	displayChartAsTable,
-	reportDataURL,
-}) => {
+const PartialResults: React.FC<
+	{children?: React.ReactNode | undefined} & IProps
+> = ({dataEngineModule, displayChartAsTable, reportDataURL}) => {
 	const [resourceState, setResourceState] = useState(() => 'loading');
 	const {resource} = useResource({
 		fetch,
@@ -69,10 +67,10 @@ const PartialResults: React.FC<IProps> = ({
 								{totalItems === 1
 									? sub(Liferay.Language.get('x-entry'), [
 											totalItems,
-									  ])
+										])
 									: sub(Liferay.Language.get('x-entries'), [
 											totalItems,
-									  ])}
+										])}
 							</span>
 						</div>
 
@@ -82,7 +80,7 @@ const PartialResults: React.FC<IProps> = ({
 									? lastModifiedDate
 									: Liferay.Language.get(
 											'there-are-no-entries'
-									  )}
+										)}
 							</span>
 						</div>
 					</div>

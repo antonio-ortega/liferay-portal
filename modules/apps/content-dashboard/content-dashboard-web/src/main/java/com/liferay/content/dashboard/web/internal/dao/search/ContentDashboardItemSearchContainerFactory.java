@@ -11,6 +11,7 @@ import com.liferay.content.dashboard.item.ContentDashboardItem;
 import com.liferay.content.dashboard.item.ContentDashboardItemFactory;
 import com.liferay.content.dashboard.web.internal.constants.ContentDashboardPortletKeys;
 import com.liferay.content.dashboard.web.internal.item.ContentDashboardItemFactoryRegistry;
+import com.liferay.content.dashboard.web.internal.item.filter.ContentDashboardItemFilterProviderRegistry;
 import com.liferay.content.dashboard.web.internal.search.request.ContentDashboardSearchContextBuilder;
 import com.liferay.content.dashboard.web.internal.searcher.ContentDashboardSearchRequestBuilderFactory;
 import com.liferay.info.search.InfoSearchClassMapperRegistry;
@@ -48,6 +49,8 @@ public class ContentDashboardItemSearchContainerFactory {
 		AssetCategoryLocalService assetCategoryLocalService,
 		AssetVocabularyLocalService assetVocabularyLocalService,
 		ContentDashboardItemFactoryRegistry contentDashboardItemFactoryRegistry,
+		ContentDashboardItemFilterProviderRegistry
+			contentDashboardItemFilterProviderRegistry,
 		ContentDashboardSearchRequestBuilderFactory
 			contentDashboardSearchRequestBuilderFactory,
 		InfoSearchClassMapperRegistry infoSearchClassMapperRegistry,
@@ -57,6 +60,7 @@ public class ContentDashboardItemSearchContainerFactory {
 		return new ContentDashboardItemSearchContainerFactory(
 			assetCategoryLocalService, assetVocabularyLocalService,
 			contentDashboardItemFactoryRegistry,
+			contentDashboardItemFilterProviderRegistry,
 			contentDashboardSearchRequestBuilderFactory,
 			infoSearchClassMapperRegistry, portal, portletRequest,
 			portletResponse, searcher);
@@ -77,6 +81,8 @@ public class ContentDashboardItemSearchContainerFactory {
 		AssetCategoryLocalService assetCategoryLocalService,
 		AssetVocabularyLocalService assetVocabularyLocalService,
 		ContentDashboardItemFactoryRegistry contentDashboardItemFactoryRegistry,
+		ContentDashboardItemFilterProviderRegistry
+			contentDashboardItemFilterProviderRegistry,
 		ContentDashboardSearchRequestBuilderFactory
 			contentDashboardSearchRequestBuilderFactory,
 		InfoSearchClassMapperRegistry infoSearchClassMapperRegistry,
@@ -87,6 +93,8 @@ public class ContentDashboardItemSearchContainerFactory {
 		_assetVocabularyLocalService = assetVocabularyLocalService;
 		_contentDashboardItemFactoryRegistry =
 			contentDashboardItemFactoryRegistry;
+		_contentDashboardItemFilterProviderRegistry =
+			contentDashboardItemFilterProviderRegistry;
 		_contentDashboardSearchRequestBuilderFactory =
 			contentDashboardSearchRequestBuilderFactory;
 		_infoSearchClassMapperRegistry = infoSearchClassMapperRegistry;
@@ -172,7 +180,8 @@ public class ContentDashboardItemSearchContainerFactory {
 			_contentDashboardSearchRequestBuilderFactory.builder(
 				new ContentDashboardSearchContextBuilder(
 					_portal.getHttpServletRequest(_portletRequest),
-					_assetCategoryLocalService, _assetVocabularyLocalService
+					_assetCategoryLocalService, _assetVocabularyLocalService,
+					_contentDashboardItemFilterProviderRegistry
 				).withEnd(
 					end
 				).withSort(
@@ -206,8 +215,15 @@ public class ContentDashboardItemSearchContainerFactory {
 		Document document) {
 
 		try {
-			return contentDashboardItemFactory.create(
-				GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)));
+			long classPK = GetterUtil.getLong(
+				document.get(Field.ENTRY_CLASS_PK));
+
+			if (classPK == 0) {
+				classPK = GetterUtil.getLong(
+					document.get(Field.ROOT_ENTRY_CLASS_PK));
+			}
+
+			return contentDashboardItemFactory.create(classPK);
 		}
 		catch (PortalException portalException) {
 			_log.error(portalException);
@@ -236,6 +252,8 @@ public class ContentDashboardItemSearchContainerFactory {
 	private final AssetVocabularyLocalService _assetVocabularyLocalService;
 	private final ContentDashboardItemFactoryRegistry
 		_contentDashboardItemFactoryRegistry;
+	private final ContentDashboardItemFilterProviderRegistry
+		_contentDashboardItemFilterProviderRegistry;
 	private final ContentDashboardSearchRequestBuilderFactory
 		_contentDashboardSearchRequestBuilderFactory;
 	private final InfoSearchClassMapperRegistry _infoSearchClassMapperRegistry;

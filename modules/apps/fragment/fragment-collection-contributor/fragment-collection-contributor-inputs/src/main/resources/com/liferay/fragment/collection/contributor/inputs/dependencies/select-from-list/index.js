@@ -5,26 +5,32 @@ const dropdownElement = fragmentElement.querySelector('.dropdown-menu');
 const optionListElement = fragmentElement.querySelector('.list-unstyled');
 
 const chooseOptionElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-choose-option-message`
 );
 const labelInputElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-label-input`
 );
 const loadingResultsElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-loading-results-message`
 );
 const noResultsElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-no-results-message`
 );
 const uiInputElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-select-from-list-input`
 );
 const valueInputElement = document.getElementById(
+
 	// eslint-disable-next-line no-undef
 	`${fragmentEntryLinkNamespace}-value-input`
 );
@@ -50,23 +56,27 @@ window.addEventListener('scroll', handleWindowResizeOrScroll, {
 });
 
 let lastSearchAbortController = new AbortController();
-let lastSearchQuery = input.value ? input.value : null;
-
-valueInputElement.value = input.value ? input.value : '';
+let lastSearchQuery = null;
 
 if (input.value) {
-	lastSearchQuery = input.value;
-	valueInputElement.value = input.value;
-
-	const selectedOption = optionListElement.querySelector(
-		'.active.dropdown-item'
+	const selectedOption = (input.attributes.options || []).find(
+		(option) => option.value === input.value
 	);
 
 	if (selectedOption) {
-		optionListElement.setAttribute(
-			'aria-activedescendant',
-			selectedOption.id
+		lastSearchQuery = selectedOption.label.toLowerCase();
+		valueInputElement.value = selectedOption.value;
+
+		const selectedOptionElement = optionListElement.querySelector(
+			'.active.dropdown-item'
 		);
+
+		if (selectedOptionElement) {
+			optionListElement.setAttribute(
+				'aria-activedescendant',
+				selectedOptionElement.id
+			);
+		}
 	}
 }
 
@@ -95,7 +105,7 @@ function handleResultListClick(event) {
 	}
 
 	if (selectedOptionElement) {
-		setFocusedOption(selectedOptionElement);
+		setFocusedOption(selectedOptionElement, {scrollToElement: false});
 		setSelectedOption(selectedOptionElement);
 	}
 }
@@ -180,7 +190,10 @@ function handleInputChange() {
 			if (optionListElement.firstElementChild) {
 				chooseOptionElement.classList.remove('d-none');
 				noResultsElement.classList.add('d-none');
-				setFocusedOption(optionListElement.firstElementChild);
+
+				setFocusedOption(optionListElement.firstElementChild, {
+					scrollToElement: false,
+				});
 			}
 			else {
 				chooseOptionElement.classList.add('d-none');
@@ -292,7 +305,10 @@ function handleWindowResizeOrScroll() {
 	}
 }
 
-function setFocusedOption(optionElement) {
+function setFocusedOption(
+	optionElement,
+	{scrollToElement = true} = {scrollToElement: true}
+) {
 	const currentFocusedOption = document.getElementById(
 		optionListElement.getAttribute('aria-activedescendant')
 	);
@@ -308,7 +324,10 @@ function setFocusedOption(optionElement) {
 		);
 
 		optionElement.setAttribute('aria-selected', 'true');
-		optionElement.scrollIntoView({block: 'center'});
+
+		if (scrollToElement) {
+			optionElement.scrollIntoView({block: 'nearest'});
+		}
 	}
 	else {
 		optionListElement.removeAttribute('aria-activedescendant');
@@ -318,7 +337,9 @@ function setFocusedOption(optionElement) {
 function createOptionElement(option) {
 	const optionElement = document.createElement('li');
 
+	optionElement.dataset.optionLabel = option.textContent;
 	optionElement.dataset.optionValue = option.value;
+
 	// eslint-disable-next-line no-undef
 	optionElement.id = `${fragmentEntryLinkNamespace}-option-${option.value}`;
 	optionElement.textContent = option.textContent;
@@ -331,7 +352,7 @@ function createOptionElement(option) {
 		optionElement.id
 	) {
 		optionElement.setAttribute('aria-selected', 'true');
-		optionElement.scrollIntoView({block: 'center'});
+		optionElement.scrollIntoView({block: 'nearest'});
 	}
 
 	if (valueInputElement.value === option.value) {
@@ -345,6 +366,7 @@ function setSelectedOption(optionElement) {
 	closeDropdown();
 
 	const selectedOption = document.getElementById(
+
 		// eslint-disable-next-line no-undef
 		`${fragmentEntryLinkNamespace}-option-${valueInputElement.value}`
 	);
@@ -357,8 +379,8 @@ function setSelectedOption(optionElement) {
 
 	optionElement.classList.add('active');
 
-	labelInputElement.value = optionElement.textContent;
-	uiInputElement.value = optionElement.textContent;
+	labelInputElement.value = optionElement.dataset.optionLabel;
+	uiInputElement.value = optionElement.dataset.optionLabel;
 	valueInputElement.value = optionElement.dataset.optionValue;
 }
 
@@ -379,6 +401,12 @@ function openDropdown() {
 	dropdownElement.classList.replace('d-none', 'show');
 	uiInputElement.setAttribute('aria-expanded', 'true');
 	buttonElement.setAttribute('aria-expanded', 'true');
+
+	const wrapperWidth = `${fragmentElement.getBoundingClientRect().width}px`;
+
+	dropdownElement.style.maxWidth = wrapperWidth;
+	dropdownElement.style.minWidth = wrapperWidth;
+	dropdownElement.style.width = wrapperWidth;
 
 	requestAnimationFrame(() => {
 		handleInputChange();

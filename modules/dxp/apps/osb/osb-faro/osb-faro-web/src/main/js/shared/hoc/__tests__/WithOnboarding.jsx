@@ -2,7 +2,6 @@ import 'test/mock-modal';
 
 import * as API from 'shared/api';
 import mockStore from 'test/mock-store';
-import Promise from 'metal-promise';
 import React from 'react';
 import withOnboarding from '../WithOnboarding';
 import {cleanup, render} from '@testing-library/react';
@@ -71,14 +70,12 @@ describe('WithOnboarding', () => {
 		expect(open).toBeCalled();
 	});
 
-	it('should not trigger the onboarding modal for non-admin users', () => {
+	it('should not trigger the onboarding modal for non-admin users', async () => {
 		API.user.fetchCurrentUser.mockReturnValueOnce(
 			Promise.resolve(mockMemberUser('23'))
 		);
 
 		render(<DefaultComponent />);
-
-		jest.runAllTimers();
 
 		expect(open).not.toBeCalled();
 	});

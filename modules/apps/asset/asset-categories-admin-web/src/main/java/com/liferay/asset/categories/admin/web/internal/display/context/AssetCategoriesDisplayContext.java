@@ -12,6 +12,7 @@ import com.liferay.asset.categories.admin.web.internal.constants.AssetCategories
 import com.liferay.asset.categories.admin.web.internal.item.selector.criterion.AssetVocabularyItemSelectorCriterion;
 import com.liferay.asset.categories.admin.web.internal.util.AssetCategoryTreePathComparator;
 import com.liferay.asset.categories.configuration.AssetCategoriesCompanyConfiguration;
+import com.liferay.asset.entry.rel.service.AssetEntryAssetCategoryRelLocalServiceUtil;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
@@ -29,6 +30,7 @@ import com.liferay.asset.kernel.service.AssetVocabularyServiceUtil;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryServiceUtil;
 import com.liferay.exportimport.kernel.staging.permission.StagingPermissionUtil;
+import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.IconItem;
@@ -63,7 +65,6 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
@@ -84,7 +85,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -155,6 +155,15 @@ public class AssetCategoriesDisplayContext {
 		).buildString();
 	}
 
+	public int getAssetEntryAssetCategoryRelsCountByClassNameId(
+		long assetCategoryId) {
+
+		return AssetEntryAssetCategoryRelLocalServiceUtil.
+			getAssetEntryAssetCategoryRelsCountByClassNameId(
+				assetCategoryId,
+				PortalUtil.getClassNameId(FriendlyURLEntry.class));
+	}
+
 	public String getAssetType(AssetVocabulary vocabulary) {
 		long[] selectedClassNameIds = vocabulary.getSelectedClassNameIds();
 		long[] selectedClassTypePKs = vocabulary.getSelectedClassTypePKs();
@@ -203,7 +212,10 @@ public class AssetCategoriesDisplayContext {
 
 			sb.append(name);
 
-			if (vocabulary.isRequired(classNameId, classTypePK)) {
+			if (vocabulary.isRequired(
+					classNameId, classTypePK,
+					_themeDisplay.getScopeGroupId())) {
+
 				sb.append(StringPool.SPACE);
 				sb.append(StringPool.STAR);
 				sb.append(StringPool.OPEN_PARENTHESIS);
@@ -257,7 +269,7 @@ public class AssetCategoriesDisplayContext {
 		}
 
 		categoriesSearchContainer.setOrderByComparator(
-			new AssetCategoryCreateDateComparator(orderByAsc));
+			AssetCategoryCreateDateComparator.getInstance(orderByAsc));
 		categoriesSearchContainer.setOrderByType(orderByType);
 
 		AssetVocabulary vocabulary = getVocabulary();
@@ -499,7 +511,7 @@ public class AssetCategoriesDisplayContext {
 				AssetVocabularyServiceUtil.getGroupVocabularies(
 					company.getGroupId(), false, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS,
-					new AssetVocabularyCreateDateComparator()));
+					AssetVocabularyCreateDateComparator.getInstance(true)));
 		}
 
 		List<DepotEntry> depotEntries =
@@ -514,7 +526,7 @@ public class AssetCategoriesDisplayContext {
 				AssetVocabularyServiceUtil.getGroupVocabularies(
 					group.getGroupId(), false, QueryUtil.ALL_POS,
 					QueryUtil.ALL_POS,
-					new AssetVocabularyCreateDateComparator());
+					AssetVocabularyCreateDateComparator.getInstance(true));
 
 			if (ListUtil.isNotEmpty(groupVocabularies)) {
 				_inheritedVocabularies.put(
@@ -622,8 +634,8 @@ public class AssetCategoriesDisplayContext {
 							"vocabularyId", vocabulary.getVocabularyId()
 						).buildString());
 
-					String name = HtmlUtil.escape(
-						vocabulary.getTitle(_httpServletRequest.getLocale()));
+					String name = vocabulary.getTitle(
+						_httpServletRequest.getLocale());
 
 					verticalNavItem.setId(name);
 					verticalNavItem.setLabel(name);
@@ -640,20 +652,19 @@ public class AssetCategoriesDisplayContext {
 
 		_vocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(
 			_themeDisplay.getScopeGroupId(), false, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, new AssetVocabularyCreateDateComparator());
+			QueryUtil.ALL_POS,
+			AssetVocabularyCreateDateComparator.getInstance(true));
 
 		return _vocabularies;
 	}
 
 	public List<DropdownItem> getVocabulariesDropdownItems() {
 		LiferayPortletURL deleteVocabulariesURL =
-			_renderResponse.createActionURL();
+			(LiferayPortletURL)_renderResponse.createResourceURL();
 
 		deleteVocabulariesURL.setCopyCurrentRenderParameters(false);
-		deleteVocabulariesURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/asset_categories_admin/delete_asset_vocabulary");
-		deleteVocabulariesURL.setParameter("redirect", getDefaultRedirect());
+		deleteVocabulariesURL.setResourceID(
+			"/asset_categories_admin/delete_asset_vocabularies");
 
 		ItemSelector itemSelector =
 			(ItemSelector)_httpServletRequest.getAttribute(
@@ -671,6 +682,7 @@ public class AssetCategoriesDisplayContext {
 				dropdownItem.putData("action", "deleteVocabularies");
 				dropdownItem.putData(
 					"deleteVocabulariesURL", deleteVocabulariesURL.toString());
+				dropdownItem.putData("redirectURL", getDefaultRedirect());
 				dropdownItem.putData(
 					"viewVocabulariesURL",
 					String.valueOf(
@@ -709,7 +721,7 @@ public class AssetCategoriesDisplayContext {
 		}
 
 		vocabulariesSearchContainer.setOrderByComparator(
-			new AssetVocabularyCreateDateComparator(orderByAsc));
+			AssetVocabularyCreateDateComparator.getInstance(orderByAsc));
 		vocabulariesSearchContainer.setOrderByType(orderByType);
 
 		String keywords = _getKeywords();

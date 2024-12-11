@@ -40,12 +40,14 @@ import org.osgi.service.component.annotations.ServiceScope;
 
 /**
  * @author Alessio Antonio Rendina
+ * @deprecated As of Cavanaugh (7.4.x)
  */
 @Component(
 	properties = "OSGI-INF/liferay/rest/v1_0/account-address.properties",
 	property = "nested.field.support=true", scope = ServiceScope.PROTOTYPE,
 	service = AccountAddressResource.class
 )
+@Deprecated
 public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 
 	@Override
@@ -63,7 +65,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 		throws Exception {
 
 		CommerceAddress commerceAddress =
-			_commerceAddressService.fetchByExternalReferenceCode(
+			_commerceAddressService.fetchCommerceAddressByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceAddress == null) {
@@ -92,7 +94,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 		throws Exception {
 
 		CommerceAddress commerceAddress =
-			_commerceAddressService.fetchByExternalReferenceCode(
+			_commerceAddressService.fetchCommerceAddressByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceAddress == null) {
@@ -185,7 +187,7 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 		throws Exception {
 
 		CommerceAddress commerceAddress =
-			_commerceAddressService.fetchByExternalReferenceCode(
+			_commerceAddressService.fetchCommerceAddressByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceAddress == null) {
@@ -257,9 +259,10 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 		}
 		else if (accountAddress.getExternalReferenceCode() != null) {
 			commerceAddress =
-				_commerceAddressService.fetchByExternalReferenceCode(
-					accountAddress.getExternalReferenceCode(),
-					contextCompany.getCompanyId());
+				_commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						accountAddress.getExternalReferenceCode(),
+						contextCompany.getCompanyId());
 		}
 
 		if (commerceAddress != null) {
@@ -373,11 +376,11 @@ public class AccountAddressResourceImpl extends BaseAccountAddressResourceImpl {
 				pagination.getStartPosition(), pagination.getEndPosition(),
 				null);
 
-		int totalItems = _commerceAddressService.getCommerceAddressesCount(
+		int totalCount = _commerceAddressService.getCommerceAddressesCount(
 			AccountEntry.class.getName(), accountEntry.getAccountEntryId());
 
 		return Page.of(
-			_toAccountAddresses(commerceAddresses), pagination, totalItems);
+			_toAccountAddresses(commerceAddresses), pagination, totalCount);
 	}
 
 	private long _getCountryId(Country country) {

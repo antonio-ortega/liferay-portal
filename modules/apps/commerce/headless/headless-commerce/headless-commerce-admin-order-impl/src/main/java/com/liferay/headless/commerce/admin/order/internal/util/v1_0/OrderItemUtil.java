@@ -7,11 +7,15 @@ package com.liferay.headless.commerce.admin.order.internal.util.v1_0;
 
 import com.liferay.commerce.constants.CommerceActionKeys;
 import com.liferay.commerce.context.CommerceContext;
+import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.product.exception.CPInstanceSkuException;
 import com.liferay.commerce.product.model.CPInstance;
+import com.liferay.commerce.product.model.CPInstanceUnitOfMeasure;
 import com.liferay.commerce.product.service.CPInstanceService;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureService;
+import com.liferay.commerce.service.CommerceAddressService;
 import com.liferay.commerce.service.CommerceOrderItemService;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.headless.commerce.admin.order.dto.v1_0.OrderItem;
@@ -35,6 +39,7 @@ public class OrderItemUtil {
 
 	public static CommerceOrderItem addCommerceOrderItem(
 			CPInstanceService cpInstanceService,
+			CommerceAddressService commerceAddressService,
 			CommerceOrderItemService commerceOrderItemService,
 			ModelResourcePermission<CommerceOrder>
 				commerceOrderModelResourcePermission,
@@ -53,16 +58,30 @@ public class OrderItemUtil {
 		if ((cpInstance == null) &&
 			(orderItem.getSkuExternalReferenceCode() != null)) {
 
-			cpInstance = cpInstanceService.fetchByExternalReferenceCode(
-				orderItem.getSkuExternalReferenceCode(),
-				serviceContext.getCompanyId());
+			cpInstance =
+				cpInstanceService.fetchCPInstanceByExternalReferenceCode(
+					orderItem.getSkuExternalReferenceCode(),
+					serviceContext.getCompanyId());
 		}
 
 		if (cpInstance == null) {
 			throw new CPInstanceSkuException();
 		}
 
-		CommerceOrderItem commerceOrderItem;
+		CommerceOrderItem commerceOrderItem = null;
+
+		long replacedSkuId = GetterUtil.getLong(orderItem.getReplacedSkuId());
+
+		if (replacedSkuId == 0) {
+			CPInstance replacedCPInstance =
+				cpInstanceService.fetchCPInstanceByExternalReferenceCode(
+					orderItem.getReplacedSkuExternalReferenceCode(),
+					serviceContext.getCompanyId());
+
+			if (replacedCPInstance != null) {
+				replacedSkuId = replacedCPInstance.getCPInstanceId();
+			}
+		}
 
 		if (commerceOrder.isOpen()) {
 			commerceOrderItem = commerceOrderItemService.addCommerceOrderItem(
@@ -70,7 +89,7 @@ public class OrderItemUtil {
 				cpInstance.getCPInstanceId(),
 				GetterUtil.getString(orderItem.getOptions(), null),
 				BigDecimal.valueOf(GetterUtil.get(orderItem.getQuantity(), 0)),
-				GetterUtil.getLong(orderItem.getReplacedSkuId()),
+				replacedSkuId,
 				BigDecimalUtil.get(
 					orderItem.getShippedQuantity(), BigDecimal.ZERO),
 				StringPool.BLANK, commerceContext, serviceContext);
@@ -90,11 +109,36 @@ public class OrderItemUtil {
 					BigDecimal.ZERO, StringPool.BLANK, serviceContext);
 		}
 
+		long shippingAddressId = GetterUtil.getLong(
+			orderItem.getShippingAddressId());
+
+		if (shippingAddressId == 0) {
+			CommerceAddress commerceAddress =
+				commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						orderItem.getShippingAddressExternalReferenceCode(),
+						serviceContext.getCompanyId());
+
+			if (commerceAddress != null) {
+				shippingAddressId = commerceAddress.getCommerceAddressId();
+			}
+			else {
+				shippingAddressId = commerceOrderItem.getShippingAddressId();
+			}
+		}
+
+		String deliveryGroupName = GetterUtil.getString(
+			orderItem.getDeliveryGroupName());
+
+		if (Validator.isNull(deliveryGroupName)) {
+			deliveryGroupName = GetterUtil.getString(
+				orderItem.getDeliveryGroup());
+		}
+
 		commerceOrderItem =
 			commerceOrderItemService.updateCommerceOrderItemInfo(
-				commerceOrderItem.getCommerceOrderItemId(),
-				GetterUtil.get(orderItem.getShippingAddressId(), 0L),
-				GetterUtil.get(orderItem.getDeliveryGroup(), StringPool.BLANK),
+				commerceOrderItem.getCommerceOrderItemId(), shippingAddressId,
+				deliveryGroupName,
 				GetterUtil.get(orderItem.getPrintedNote(), StringPool.BLANK));
 
 		Date requestedDeliveryDate = orderItem.getRequestedDeliveryDate();
@@ -182,6 +226,8 @@ public class OrderItemUtil {
 
 	public static CommerceOrderItem addOrUpdateCommerceOrderItem(
 			CPInstanceService cpInstanceService,
+			CPInstanceUnitOfMeasureService cpInstanceUnitOfMeasureService,
+			CommerceAddressService commerceAddressService,
 			CommerceOrderItemService commerceOrderItemService,
 			ModelResourcePermission<CommerceOrder>
 				commerceOrderModelResourcePermission,
@@ -198,21 +244,21 @@ public class OrderItemUtil {
 		}
 
 		if (orderItem.getSkuExternalReferenceCode() != null) {
-			cpInstance = cpInstanceService.fetchByExternalReferenceCode(
-				orderItem.getSkuExternalReferenceCode(),
-				serviceContext.getCompanyId());
+			cpInstance =
+				cpInstanceService.fetchCPInstanceByExternalReferenceCode(
+					orderItem.getSkuExternalReferenceCode(),
+					serviceContext.getCompanyId());
 		}
 
 		if (cpInstance == null) {
 			throw new CPInstanceSkuException();
 		}
 
-		String deliveryGroup = StringPool.BLANK;
+		String currentDeliveryGroupName = StringPool.BLANK;
 		String json = null;
 		String printedNote = StringPool.BLANK;
 		BigDecimal quantity = BigDecimal.ZERO;
 		BigDecimal shippedQuantity = BigDecimal.ZERO;
-		long shippingAddressId = 0;
 
 		CommerceOrderItem commerceOrderItem =
 			commerceOrderItemService.fetchCommerceOrderItem(
@@ -222,18 +268,34 @@ public class OrderItemUtil {
 			!Validator.isBlank(orderItem.getExternalReferenceCode())) {
 
 			commerceOrderItem =
-				commerceOrderItemService.fetchByExternalReferenceCode(
-					orderItem.getExternalReferenceCode(),
-					serviceContext.getCompanyId());
+				commerceOrderItemService.
+					fetchCommerceOrderItemByExternalReferenceCode(
+						orderItem.getExternalReferenceCode(),
+						serviceContext.getCompanyId());
 		}
 
 		if (commerceOrderItem != null) {
-			deliveryGroup = commerceOrderItem.getDeliveryGroup();
+			currentDeliveryGroupName = commerceOrderItem.getDeliveryGroupName();
 			json = commerceOrderItem.getJson();
 			printedNote = commerceOrderItem.getPrintedNote();
 			quantity = commerceOrderItem.getQuantity();
 			shippedQuantity = commerceOrderItem.getShippedQuantity();
-			shippingAddressId = commerceOrderItem.getShippingAddressId();
+		}
+
+		long replacedSkuId = GetterUtil.getLong(orderItem.getReplacedSkuId());
+
+		if (replacedSkuId == 0) {
+			CPInstance replacedSku =
+				cpInstanceService.fetchCPInstanceByExternalReferenceCode(
+					orderItem.getReplacedSkuExternalReferenceCode(),
+					serviceContext.getCompanyId());
+
+			if (replacedSku != null) {
+				replacedSkuId = replacedSku.getCPInstanceId();
+			}
+			else if (commerceOrderItem != null) {
+				replacedSkuId = commerceOrderItem.getReplacedCPInstanceId();
+			}
 		}
 
 		if (commerceOrder.isOpen()) {
@@ -245,14 +307,29 @@ public class OrderItemUtil {
 					BigDecimal.valueOf(
 						GetterUtil.get(
 							orderItem.getQuantity(), quantity.intValue())),
-					GetterUtil.getLong(orderItem.getReplacedSkuId()),
+					replacedSkuId,
 					BigDecimalUtil.get(
 						orderItem.getShippedQuantity(), shippedQuantity),
-					StringPool.BLANK, commerceContext, serviceContext);
+					GetterUtil.getString(orderItem.getUnitOfMeasureKey()),
+					commerceContext, serviceContext);
 		}
 		else {
 			quantity = BigDecimal.valueOf(
 				GetterUtil.get(orderItem.getQuantity(), quantity.intValue()));
+
+			BigDecimal unitOfMeasureIncrementalOrderQuantity = BigDecimal.ONE;
+
+			String unitOfMeasureKey = GetterUtil.getString(
+				orderItem.getUnitOfMeasureKey());
+
+			CPInstanceUnitOfMeasure cpInstanceUnitOfMeasure =
+				cpInstanceUnitOfMeasureService.fetchCPInstanceUnitOfMeasure(
+					cpInstance.getCPInstanceId(), unitOfMeasureKey);
+
+			if (cpInstanceUnitOfMeasure != null) {
+				unitOfMeasureIncrementalOrderQuantity =
+					cpInstanceUnitOfMeasure.getIncrementalOrderQuantity();
+			}
 
 			commerceOrderItem =
 				commerceOrderItemService.importCommerceOrderItem(
@@ -264,7 +341,34 @@ public class OrderItemUtil {
 					quantity,
 					BigDecimalUtil.get(
 						orderItem.getShippedQuantity(), shippedQuantity),
-					BigDecimal.ONE, StringPool.BLANK, serviceContext);
+					unitOfMeasureIncrementalOrderQuantity, unitOfMeasureKey,
+					serviceContext);
+		}
+
+		long shippingAddressId = GetterUtil.getLong(
+			orderItem.getShippingAddressId());
+
+		if (shippingAddressId == 0) {
+			CommerceAddress commerceAddress =
+				commerceAddressService.
+					fetchCommerceAddressByExternalReferenceCode(
+						orderItem.getShippingAddressExternalReferenceCode(),
+						serviceContext.getCompanyId());
+
+			if (commerceAddress != null) {
+				shippingAddressId = commerceAddress.getCommerceAddressId();
+			}
+			else if (commerceOrderItem != null) {
+				shippingAddressId = commerceOrderItem.getShippingAddressId();
+			}
+		}
+
+		String deliveryGroupName = GetterUtil.getString(
+			orderItem.getDeliveryGroupName());
+
+		if (Validator.isNull(deliveryGroupName)) {
+			deliveryGroupName = GetterUtil.getString(
+				orderItem.getDeliveryGroup(), currentDeliveryGroupName);
 		}
 
 		commerceOrderItem =
@@ -272,7 +376,7 @@ public class OrderItemUtil {
 				commerceOrderItem.getCommerceOrderItemId(),
 				GetterUtil.get(
 					orderItem.getShippingAddressId(), shippingAddressId),
-				GetterUtil.get(orderItem.getDeliveryGroup(), deliveryGroup),
+				deliveryGroupName,
 				GetterUtil.get(orderItem.getPrintedNote(), printedNote));
 
 		Date requestedDeliveryDate = orderItem.getRequestedDeliveryDate();

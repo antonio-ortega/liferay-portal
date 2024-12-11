@@ -67,6 +67,8 @@ components:
                     type: object
                 active:
                     type: boolean
+                className:
+                    type: string
                 dateCreated:
                     format: date
                     readOnly: true
@@ -80,6 +82,8 @@ components:
                 enableCategorization:
                     type: boolean
                 enableComments:
+                    type: boolean
+                enableIndexSearch:
                     type: boolean
                 enableLocalization:
                     type: boolean
@@ -144,6 +148,7 @@ components:
                     readOnly: true
                     type: string
                 rootObjectDefinitionExternalReferenceCode:
+                    readOnly: true
                     type: string
                 scope:
                     type: string
@@ -169,7 +174,7 @@ components:
                     readOnly: true
                     type: object
                 businessType:
-                    enum: [Aggregation, Attachment, Boolean, Date, DateTime, Decimal, Encrypted, Formula, Integer, LongInteger, LongText, MultiselectPicklist, Picklist, PrecisionDecimal, Relationship, RichText, Text]
+                    enum: [Aggregation, Attachment, AutoIncrement, Boolean, Date, DateTime, Decimal, Encrypted, Formula, Integer, LongInteger, LongText, MultiselectPicklist, Picklist, PrecisionDecimal, Relationship, RichText, Text]
                     type: string
                 defaultValue:
                     deprecated: true
@@ -199,10 +204,14 @@ components:
                     type: boolean
                 name:
                     type: string
+                objectDefinitionExternalReferenceCode1:
+                    type: string
                 objectFieldSettings:
                     items:
                         $ref: "#/components/schemas/ObjectFieldSetting"
                     type: array
+                objectRelationshipExternalReferenceCode:
+                    type: string
                 readOnly:
                     enum: [conditional, false, true]
                     type: string
@@ -222,6 +231,10 @@ components:
                     deprecated: true
                     enum: [BigDecimal, Boolean, Clob, Date, DateTime, Double, Integer, Long, String]
                     type: string
+                unique:
+                    readOnly: true
+                    type: boolean
+            type: object
         ObjectFieldSetting:
             properties:
                 id:
@@ -235,6 +248,7 @@ components:
                     type: integer
                 value:
                     type: object
+            type: object
         ObjectFolder:
             properties:
                 actions:
@@ -268,11 +282,13 @@ components:
                     items:
                         $ref: "#/components/schemas/ObjectFolderItem"
                     type: array
+            type: object
         ObjectFolderItem:
             properties:
                 linkedObjectDefinition:
-                    readOnly: true
                     type: boolean
+                objectDefinition:
+                    $ref: "#/components/schemas/ObjectDefinition"
                 objectDefinitionExternalReferenceCode:
                     type: string
                 positionX:
@@ -281,6 +297,7 @@ components:
                 positionY:
                     format: int32
                     type: integer
+            type: object
         ObjectLayout:
             properties:
                 actions:
@@ -317,6 +334,7 @@ components:
                     items:
                         $ref: "#/components/schemas/ObjectLayoutTab"
                     type: array
+            type: object
         ObjectLayoutBox:
             properties:
                 collapsable:
@@ -339,6 +357,7 @@ components:
                 type:
                     enum: [categorization, regular]
                     type: string
+            type: object
         ObjectLayoutColumn:
             properties:
                 id:
@@ -353,6 +372,7 @@ components:
                 size:
                     format: int32
                     type: integer
+            type: object
         ObjectLayoutRow:
             properties:
                 id:
@@ -366,6 +386,7 @@ components:
                 priority:
                     format: int32
                     type: integer
+            type: object
         ObjectLayoutTab:
             properties:
                 id:
@@ -380,12 +401,15 @@ components:
                     items:
                         $ref: "#/components/schemas/ObjectLayoutBox"
                     type: array
+                objectRelationshipExternalReferenceCode:
+                    type: string
                 objectRelationshipId:
                     format: int64
                     type: integer
                 priority:
                     format: int32
                     type: integer
+            type: object
         ObjectRelationship:
             properties:
                 actions:
@@ -400,6 +424,8 @@ components:
                     type: string
                 edge:
                     type: boolean
+                externalReferenceCode:
+                    type: string
                 id:
                     format: int64
                     readOnly: true
@@ -426,6 +452,8 @@ components:
                     type: string
                 objectDefinitionSystem2:
                     type: boolean
+                objectField:
+                    $ref: "#/components/schemas/ObjectField"
                 parameterObjectFieldId:
                     format: int64
                     type: integer
@@ -439,6 +467,7 @@ components:
                 type:
                     enum: [oneToMany, oneToOne, manyToMany]
                     type: string
+            type: object
         ObjectState:
             properties:
                 id:
@@ -450,6 +479,7 @@ components:
                     items:
                         $ref: "#/components/schemas/ObjectStateTransition"
                     type: array
+            type: object
         ObjectStateFlow:
             properties:
                 id:
@@ -459,6 +489,7 @@ components:
                     items:
                         $ref: "#/components/schemas/ObjectState"
                     type: array
+            type: object
         ObjectStateTransition:
             properties:
                 key:
@@ -525,6 +556,7 @@ components:
                     type: string
                 value:
                     type: object
+            type: object
         ObjectView:
             properties:
                 actions:
@@ -569,6 +601,7 @@ components:
                     items:
                         $ref: "#/components/schemas/ObjectViewSortColumn"
                     type: array
+            type: object
         ObjectViewColumn:
             properties:
                 id:
@@ -584,6 +617,7 @@ components:
                 priority:
                     format: int32
                     type: integer
+            type: object
         ObjectViewFilterColumn:
             properties:
                 filterType:
@@ -600,6 +634,7 @@ components:
                 valueSummary:
                     readOnly: true
                     type: string
+            type: object
         ObjectViewSortColumn:
             properties:
                 id:
@@ -614,6 +649,7 @@ components:
                 sortOrder:
                     enum: [asc, desc]
                     type: string
+            type: object
         Status:
             properties:
                 code:
@@ -627,7 +663,7 @@ components:
 info:
     description:
         "A Java client JAR is available for use with the group ID 'com.liferay', artifact ID
-        'com.liferay.object.admin.rest.client', and version '1.0.61'."
+        'com.liferay.object.admin.rest.client', and version '1.0.72'."
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -2116,6 +2152,33 @@ paths:
                             schema:
                                 $ref: "#/components/schemas/ObjectLayout"
             tags: ["ObjectLayout"]
+    "/object-relationships/by-external-reference-code/{externalReferenceCode}":
+        put:
+            operationId: putObjectRelationshipByExternalReferenceCode
+            parameters:
+                - in: path
+                  name: externalReferenceCode
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/ObjectRelationship"
+                    application/xml:
+                        schema:
+                            $ref: "#/components/schemas/ObjectRelationship"
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ObjectRelationship"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/ObjectRelationship"
+            tags: ["ObjectRelationship"]
     "/object-relationships/{objectRelationshipId}":
         delete:
             operationId: deleteObjectRelationship

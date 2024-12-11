@@ -5,69 +5,30 @@
 
 import {useMemo} from 'react';
 
-import {PartnerOpportunitiesColumnKey} from '../../../common/enums/partnerOpportunitiesColumnKey';
-import DealRegistrationDTO from '../../../common/interfaces/dto/dealRegistrationDTO';
+import OpportunityPartnerRoleDTO from '../../../common/interfaces/dto/opportunityPartnerRoleDTO';
 import {LiferayAPIs} from '../../../common/services/liferay/common/enums/apis';
 import LiferayItems from '../../../common/services/liferay/common/interfaces/liferayItems';
 import {ResourceName} from '../../../common/services/liferay/object/enum/resourceName';
 import useGet from '../../../common/services/liferay/object/useGet';
-import getOpportunityAmount from '../utils/getOpportunityAmount';
-import getOpportunityDates from '../utils/getOpportunityDates';
+import getItemPartnerOpportunity from '../utils/getItemPartnerOpportunity';
 
 export default function useGetListItemsFromPartnerOpportunities(
 	page: number,
 	pageSize: number,
-	filtersTerm: string,
-	sort: string
+	urlParams: URLSearchParams
 ) {
-	const swrResponse = useGet<LiferayItems<DealRegistrationDTO[]>>(
-		`/o/${LiferayAPIs.OBJECT}/${ResourceName.OPPORTUNITIES_SALESFORCE}?&filter=${filtersTerm}&page=${page}&pageSize=${pageSize}&sort=${sort}`
+	const swrResponse = useGet<LiferayItems<OpportunityPartnerRoleDTO[]>>(
+		urlParams &&
+			`/o/${LiferayAPIs.OBJECT}/${
+				ResourceName.OPPORTUNITIES_PARTNER_ROLE_SALESFORCE
+			}?${urlParams.toString()}&page=${page}&pageSize=${pageSize}`
 	);
 
 	const listItems = useMemo(
 		() =>
-			swrResponse.data?.items.map((item) => ({
-				[PartnerOpportunitiesColumnKey.PARTNER_ACCOUNT_NAME]: item.partnerAccountName
-					? item.partnerAccountName
-					: ' - ',
-				...(item.projectSubscriptionStartDate
-					? getOpportunityDates(
-							item.projectSubscriptionStartDate,
-							item.projectSubscriptionEndDate
-					  )
-					: {
-							[PartnerOpportunitiesColumnKey.START_DATE]: ' - ',
-							[PartnerOpportunitiesColumnKey.END_DATE]: ' - ',
-					  }),
-				[PartnerOpportunitiesColumnKey.ACCOUNT_NAME]: item.accountName
-					? item.accountName
-					: ' - ',
-				...(item.amount
-					? getOpportunityAmount(item.amount, item.currency)
-					: {[PartnerOpportunitiesColumnKey.DEAL_AMOUNT]: ' - '}),
-
-				[PartnerOpportunitiesColumnKey.CLOSE_DATE]: item.closeDate
-					? item.closeDate
-					: '- ',
-				[PartnerOpportunitiesColumnKey.PARTNER_REP_NAME]: `${
-					item.partnerFirstName ? item.partnerFirstName : ''
-				}${item.partnerLastName ? ' ' + item.partnerLastName : ''}`,
-				[PartnerOpportunitiesColumnKey.PARTNER_REP_EMAIL]: item.partnerEmail
-					? item.partnerEmail
-					: ' - ',
-				[PartnerOpportunitiesColumnKey.LIFERAY_REP]: item.ownerName
-					? item.ownerName
-					: ' - ',
-				[PartnerOpportunitiesColumnKey.STAGE]: item.stage
-					? item.stage
-					: '- ',
-				[PartnerOpportunitiesColumnKey.TYPE]: item.type
-					? item.type
-					: '- ',
-				[PartnerOpportunitiesColumnKey.CURRENCY]: item.currency.name
-					? item.currency.name
-					: '- ',
-			})),
+			swrResponse.data?.items.map((item) =>
+				getItemPartnerOpportunity(item)
+			),
 		[swrResponse.data?.items]
 	);
 

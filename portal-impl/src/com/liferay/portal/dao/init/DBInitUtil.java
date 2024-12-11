@@ -7,7 +7,7 @@ package com.liferay.portal.dao.init;
 
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.portal.dao.jdbc.util.DynamicDataSource;
-import com.liferay.portal.db.partition.DBPartitionUtil;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.events.StartupHelperUtil;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
@@ -19,6 +19,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ReleaseConstants;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.ReleaseInfo;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.spring.hibernate.DialectDetector;
 import com.liferay.portal.upgrade.PortalUpgradeProcess;
@@ -28,10 +29,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+import java.util.Date;
 import java.util.Objects;
 import java.util.Properties;
 
 import javax.sql.DataSource;
+
+import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
 /**
  * @author Preston Crary
@@ -62,10 +66,14 @@ public class DBInitUtil {
 		try (Connection connection = _dataSource.getConnection()) {
 			_init(DBManagerUtil.getDB(), connection);
 
+			DBPartitionUtil.checkDatabasePartitionSchemaNamePrefix();
+
 			_dataSource = DBPartitionUtil.wrapDataSource(_dataSource);
 
 			DBPartitionUtil.setDefaultCompanyId(connection);
 		}
+
+		_dataSource = new LazyConnectionDataSourceProxy(_dataSource);
 	}
 
 	private static boolean _checkDefaultRelease(Connection connection) {
@@ -75,6 +83,13 @@ public class DBInitUtil {
 
 				_setDBNew();
 			}
+
+			Date currentBuildDate = PortalUpgradeProcess.getCurrentBuildDate(
+				connection);
+
+			StartupHelperUtil.setNewRelease(
+				(currentBuildDate == null) ? true :
+					currentBuildDate.before(ReleaseInfo.getBuildDate()));
 
 			return true;
 		}
@@ -96,10 +111,10 @@ public class DBInitUtil {
 
 		ClassLoader classLoader = DBInitUtil.class.getClassLoader();
 
-		_runSQLTemplate(db, connection, classLoader, "portal-tables.sql");
-		_runSQLTemplate(db, connection, classLoader, "portal-data-counter.sql");
-		_runSQLTemplate(db, connection, classLoader, "indexes.sql");
-		_runSQLTemplate(db, connection, classLoader, "sequences.sql");
+		_runSQLFile(db, connection, classLoader, "portal-tables.sql");
+		_runSQLFile(db, connection, classLoader, "portal-data-counter.sql");
+		_runSQLFile(db, connection, classLoader, "indexes.sql");
+		_runSQLFile(db, connection, classLoader, "sequences.sql");
 
 		PortalUpgradeProcess.createPortalRelease(connection);
 
@@ -197,11 +212,11 @@ public class DBInitUtil {
 		return dataSource;
 	}
 
-	private static void _runSQLTemplate(
+	private static void _runSQLFile(
 			DB db, Connection connection, ClassLoader classLoader, String path)
 		throws Exception {
 
-		db.runSQLTemplateString(
+		db.runSQLTemplate(
 			connection,
 			StreamUtil.toString(
 				classLoader.getResourceAsStream(

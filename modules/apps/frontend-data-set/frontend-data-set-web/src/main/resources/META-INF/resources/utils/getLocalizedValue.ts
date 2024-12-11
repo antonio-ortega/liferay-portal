@@ -3,17 +3,23 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-interface ILocalizedItemDetails {
+import {
+	FDS_ARRAY_FIELD_NAME_DELIMITER,
+	FDS_ARRAY_FIELD_NAME_PARENT_SUFFIX,
+	FDS_NESTED_FIELD_NAME_DELIMITER,
+	FDS_NESTED_FIELD_NAME_PARENT_SUFFIX,
+} from '../constants';
+import {getItemField} from './getItemField';
+export interface ILocalizedItemDetails {
 	rootPropertyName: string;
 	value: string;
 	valuePath: Array<string>;
 }
 
-const languageId = Liferay.ThemeDisplay.getLanguageId();
-const BCP47LanguageId = Liferay.ThemeDisplay.getBCP47LanguageId();
-const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
-
 function getLanguageKey(data: any): string {
+	const languageId = Liferay.ThemeDisplay.getLanguageId();
+	const defaultLanguageId = Liferay.ThemeDisplay.getDefaultLanguageId();
+
 	let languageKey = '';
 
 	if (data[languageId]) {
@@ -32,33 +38,76 @@ function getLanguageKey(data: any): string {
 	return languageKey;
 }
 
+function getFieldName(
+	fieldname: string | Array<string>
+): string | Array<string> {
+	if (
+		Array.isArray(fieldname) ||
+		!!(
+			!fieldname.includes(FDS_ARRAY_FIELD_NAME_DELIMITER) &&
+			!fieldname.includes(FDS_NESTED_FIELD_NAME_DELIMITER)
+		)
+	) {
+		return fieldname;
+	}
+	else {
+		const itemPath = fieldname
+			.replace(/\[\]/g, '.')
+			.split(FDS_NESTED_FIELD_NAME_DELIMITER);
+
+		if (
+			fieldname.includes(FDS_ARRAY_FIELD_NAME_PARENT_SUFFIX) ||
+			fieldname.includes(FDS_NESTED_FIELD_NAME_PARENT_SUFFIX)
+		) {
+			itemPath.pop();
+		}
+
+		return itemPath[itemPath.length - 1];
+	}
+}
+
+function getRootPropertyName(fieldname: string | Array<string>): string {
+	return Array.isArray(fieldname)
+		? fieldname[0]
+		: fieldname
+				.replace(/\[\]/g, '.')
+				.split(FDS_NESTED_FIELD_NAME_DELIMITER)[0];
+}
+
 export function getLocalizedValue(
 	item: any,
-	fieldName: string | Array<string>
+	fieldname: string | Array<string>
 ): ILocalizedItemDetails | null {
-	if (!fieldName) {
+	if (!fieldname) {
 		return null;
 	}
 
-	const i18nFieldName = `${fieldName}_i18n`;
-	const rootPropertyName =
-		typeof fieldName === 'string' ? fieldName : fieldName[0];
-	let navigatedValue = item;
+	const resolvedFieldname = getFieldName(fieldname);
+	const resolvedItem: any =
+		typeof fieldname === 'string' ? getItemField(fieldname, item) : item;
+	const rootPropertyName = getRootPropertyName(fieldname);
+
+	const i18nFieldName = `${resolvedFieldname}_i18n`;
+	let navigatedValue = resolvedItem;
 	const valuePath = [];
 
-	if (Array.isArray(fieldName)) {
-		fieldName.forEach((property) => {
+	if (Array.isArray(resolvedFieldname)) {
+		resolvedFieldname.forEach((property) => {
 			let formattedProperty = property;
 
 			if (property === 'LANG') {
-				if (navigatedValue[languageId]) {
-					formattedProperty = languageId;
+				if (navigatedValue[Liferay.ThemeDisplay.getLanguageId()]) {
+					formattedProperty = Liferay.ThemeDisplay.getLanguageId();
 				}
-				else if (navigatedValue[BCP47LanguageId]) {
-					formattedProperty = BCP47LanguageId;
+				else if (
+					navigatedValue[Liferay.ThemeDisplay.getBCP47LanguageId()]
+				) {
+					formattedProperty =
+						Liferay.ThemeDisplay.getBCP47LanguageId();
 				}
 				else {
-					formattedProperty = defaultLanguageId;
+					formattedProperty =
+						Liferay.ThemeDisplay.getDefaultLanguageId();
 				}
 			}
 
@@ -70,30 +119,45 @@ export function getLocalizedValue(
 		});
 	}
 	else if (
-		typeof fieldName === 'string' &&
-		item[i18nFieldName] &&
+		typeof resolvedFieldname === 'string' &&
+		resolvedItem[i18nFieldName] &&
 		Object.keys(Liferay.Language.available).includes(
-			Object.keys(item[i18nFieldName])[0]
+			Object.keys(resolvedItem[i18nFieldName])[0]
 		)
 	) {
-		valuePath.push(fieldName);
+		valuePath.push(resolvedFieldname);
 		navigatedValue =
-			navigatedValue[i18nFieldName][getLanguageKey(item[i18nFieldName])];
+			navigatedValue[i18nFieldName][
+				getLanguageKey(resolvedItem[i18nFieldName])
+			];
 	}
 	else if (
-		typeof fieldName === 'string' &&
-		item[fieldName] &&
+		typeof resolvedFieldname === 'string' &&
+		resolvedItem[resolvedFieldname] &&
 		Object.keys(Liferay.Language.available).includes(
-			Object.keys(item[fieldName])[0]
+			Object.keys(resolvedItem[resolvedFieldname])[0]
 		)
 	) {
-		valuePath.push(fieldName);
+		valuePath.push(resolvedFieldname);
 		navigatedValue =
-			navigatedValue[fieldName][getLanguageKey(item[fieldName])];
+			navigatedValue[resolvedFieldname][
+				getLanguageKey(resolvedItem[resolvedFieldname])
+			];
 	}
 	else {
-		valuePath.push(fieldName);
-		navigatedValue = navigatedValue[fieldName];
+		valuePath.push(resolvedFieldname);
+		if (Array.isArray(navigatedValue)) {
+			navigatedValue = navigatedValue.map(
+				(value) => getLocalizedValue(value, resolvedFieldname)?.value
+			);
+		}
+		else {
+			navigatedValue = navigatedValue[resolvedFieldname];
+		}
+	}
+
+	if (fieldname !== resolvedFieldname) {
+		valuePath.unshift(rootPropertyName);
 	}
 
 	return {

@@ -5,7 +5,9 @@
 
 package com.liferay.document.library.web.internal.portlet;
 
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
@@ -16,6 +18,8 @@ import javax.portlet.Portlet;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
+import javax.portlet.ResourceRequest;
+import javax.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -60,7 +64,20 @@ public class DLAdminPortlet extends MVCPortlet {
 
 		renderRequest.setAttribute(ItemSelector.class.getName(), _itemSelector);
 
+		CTTimelineUtil.setClassName(renderRequest, DLFileEntry.class);
+
 		super.render(renderRequest, renderResponse);
+	}
+
+	@Override
+	public void serveResource(
+			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
+		throws IOException, PortletException {
+
+		resourceRequest.setAttribute(
+			ItemSelector.class.getName(), _itemSelector);
+
+		super.serveResource(resourceRequest, resourceResponse);
 	}
 
 	@Reference

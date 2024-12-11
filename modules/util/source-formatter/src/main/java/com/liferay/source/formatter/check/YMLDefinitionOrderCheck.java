@@ -8,11 +8,13 @@ package com.liferay.source.formatter.check;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.check.util.YMLSourceUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -47,7 +49,13 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 
 		sb.setIndex(sb.index() - 1);
 
-		return _sortPathParameters(sb.toString());
+		content = _sortFeatureFlags(sb.toString());
+
+		if (fileName.endsWith("docker-compose.yaml")) {
+			content = _sortPorts(sb.toString());
+		}
+
+		return _sortPathParameters(content);
 	}
 
 	private List<String> _combineComments(
@@ -92,14 +100,6 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 	private int _getParameterTypeWeight(String definitionKey) {
 		if (_parameterTypesWeightMap.containsKey(definitionKey)) {
 			return _parameterTypesWeightMap.get(definitionKey);
-		}
-
-		return -1;
-	}
-
-	private int _getSpecialQueryKeyWeight(String definitionKey) {
-		if (_specialQueriesKeyWeightMap.containsKey(definitionKey)) {
-			return _specialQueriesKeyWeightMap.get(definitionKey);
 		}
 
 		return -1;
@@ -278,6 +278,41 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 		return content;
 	}
 
+	private String _sortFeatureFlags(String content) {
+		int x = -1;
+
+		while (true) {
+			x = content.indexOf("featureFlags: ", x + 1);
+
+			if (x == -1) {
+				return content;
+			}
+
+			String featureFlags = content.substring(x + 14);
+
+			int y = featureFlags.indexOf("\n");
+
+			if (y != -1) {
+				featureFlags = featureFlags.substring(0, y);
+			}
+
+			String[] array = featureFlags.split(",");
+
+			if (array.length < 2) {
+				return content;
+			}
+
+			Arrays.sort(array, new NaturalOrderStringComparator());
+
+			String newFeatureFlags = StringUtil.merge(array);
+
+			if (!featureFlags.equals(newFeatureFlags)) {
+				return StringUtil.replaceFirst(
+					content, featureFlags, newFeatureFlags, x);
+			}
+		}
+	}
+
 	private String _sortPathParameters(String content) {
 		Matcher matcher1 = _pathPattern1.matcher(content);
 
@@ -328,6 +363,46 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 		return content;
 	}
 
+	private String _sortPorts(String content) {
+		Matcher matcher = _portsPattern.matcher(content);
+
+		while (matcher.find()) {
+			String indent = matcher.group(1) + StringPool.FOUR_SPACES;
+
+			String ports = matcher.group(2);
+
+			String trimmedPorts = StringUtil.trimLeading(ports);
+
+			trimmedPorts = trimmedPorts.replaceAll(" *-\n +", "");
+
+			String[] portsArray = StringUtil.splitLines(trimmedPorts);
+
+			Arrays.sort(portsArray);
+
+			StringBundler sb = new StringBundler(portsArray.length * 8);
+
+			for (String port : portsArray) {
+				sb.append(StringPool.NEW_LINE);
+				sb.append(indent);
+				sb.append(StringPool.DASH);
+				sb.append(StringPool.NEW_LINE);
+				sb.append(indent);
+				sb.append(StringPool.SPACE);
+				sb.append(StringPool.SPACE);
+				sb.append(port);
+			}
+
+			String newPorts = sb.toString();
+
+			if (!ports.equals(newPorts)) {
+				return StringUtil.replaceFirst(
+					content, ports, newPorts, matcher.start(2));
+			}
+		}
+
+		return content;
+	}
+
 	private int _sortSpecificDefinitions(
 		String definition1, String definition2, String key) {
 
@@ -354,15 +429,6 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 		}
 
 		if (parameter1Type.equals(parameter2Type)) {
-			if (parameter1Type.equals("query")) {
-				int weight1 = _getSpecialQueryKeyWeight(value1);
-				int weight2 = _getSpecialQueryKeyWeight(value2);
-
-				if ((weight1 != -1) || (weight2 != -1)) {
-					return weight1 - weight2;
-				}
-			}
-
 			return value1.compareTo(value2);
 		}
 
@@ -386,17 +452,7 @@ public class YMLDefinitionOrderCheck extends BaseFileCheck {
 		"\\{([^{}]+)\\}");
 	private static final Pattern _pathPattern3 = Pattern.compile(
 		" *-\n( +)in: path(\n\\1.+)*\n");
-	private static final Map<String, Integer> _specialQueriesKeyWeightMap =
-		HashMapBuilder.put(
-			"filter", 1
-		).put(
-			"page", 2
-		).put(
-			"pageSize", 3
-		).put(
-			"search", 4
-		).put(
-			"sort", 5
-		).build();
+	private static final Pattern _portsPattern = Pattern.compile(
+		"\n( +)ports:((\n +-\\s+\\d{4}:\\d{4}){2,})");
 
 }

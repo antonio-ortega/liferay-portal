@@ -11,7 +11,6 @@ import com.liferay.portal.background.task.util.comparator.BackgroundTaskCreateDa
 import com.liferay.portal.background.task.util.comparator.BackgroundTaskNameComparator;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
-import com.liferay.portal.kernel.cluster.ClusterMasterExecutor;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.ClassUtil;
@@ -567,20 +566,21 @@ public class BackgroundTaskManagerImpl implements BackgroundTaskManager {
 		if (orderByComparator instanceof
 				BackgroundTaskCompletionDateComparator) {
 
-			return new com.liferay.portal.background.task.internal.comparator.
-				BackgroundTaskCompletionDateComparator(
+			return com.liferay.portal.background.task.internal.comparator.
+				BackgroundTaskCompletionDateComparator.getInstance(
 					orderByComparator.isAscending());
 		}
 		else if (orderByComparator instanceof
 					BackgroundTaskCreateDateComparator) {
 
-			return new com.liferay.portal.background.task.internal.comparator.
-				BackgroundTaskCreateDateComparator(
+			return com.liferay.portal.background.task.internal.comparator.
+				BackgroundTaskCreateDateComparator.getInstance(
 					orderByComparator.isAscending());
 		}
 		else if (orderByComparator instanceof BackgroundTaskNameComparator) {
-			return new com.liferay.portal.background.task.internal.comparator.
-				BackgroundTaskNameComparator(orderByComparator.isAscending());
+			return com.liferay.portal.background.task.internal.comparator.
+				BackgroundTaskNameComparator.getInstance(
+					orderByComparator.isAscending());
 		}
 
 		throw new IllegalArgumentException(
@@ -589,8 +589,5 @@ public class BackgroundTaskManagerImpl implements BackgroundTaskManager {
 
 	@Reference
 	private BackgroundTaskLocalService _backgroundTaskLocalService;
-
-	@Reference
-	private ClusterMasterExecutor _clusterMasterExecutor;
 
 }

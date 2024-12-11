@@ -1,5 +1,5 @@
+import BaseCard from 'shared/components/base-card';
 import Card from 'shared/components/Card';
-import CardWithRangeKey from 'shared/hoc/CardWithRangeKey';
 import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
 import InterestsQuery from 'shared/queries/InterestsQuery';
@@ -12,6 +12,7 @@ import {
 	mapCardPropsToOptions
 } from './mappers/composition-query';
 import {graphql} from '@apollo/react-hoc';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {Routes, setUriQueryValues, toRoute} from 'shared/util/router';
 import {useParams} from 'react-router-dom';
 import {withTableData} from 'shared/hoc';
@@ -68,11 +69,12 @@ const InterestsCard = () => {
 	const rangeKeys = [Yesterday, Last7Days, Last30Days, Last90Days];
 
 	return (
-		<CardWithRangeKey
+		<BaseCard
 			className='interests-card-root'
 			label={Liferay.Language.get('interests')}
 			legacyDropdownRangeKey={false}
 			rangeKeys={rangeKeys}
+			reportContainer={ReportContainer.InterestsCard}
 		>
 			{({rangeSelectors}) => (
 				<>
@@ -107,7 +109,7 @@ const InterestsCard = () => {
 					</Card.Footer>
 				</>
 			)}
-		</CardWithRangeKey>
+		</BaseCard>
 	);
 };
 

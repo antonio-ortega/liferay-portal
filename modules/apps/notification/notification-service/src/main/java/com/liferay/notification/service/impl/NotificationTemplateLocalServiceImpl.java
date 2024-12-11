@@ -7,6 +7,7 @@ package com.liferay.notification.service.impl;
 
 import com.liferay.notification.constants.NotificationTemplateConstants;
 import com.liferay.notification.context.NotificationContext;
+import com.liferay.notification.internal.template.util.NotificationTemplateUtil;
 import com.liferay.notification.model.NotificationQueueEntry;
 import com.liferay.notification.model.NotificationRecipient;
 import com.liferay.notification.model.NotificationRecipientSetting;
@@ -21,6 +22,8 @@ import com.liferay.notification.service.persistence.NotificationTemplateAttachme
 import com.liferay.notification.type.NotificationType;
 import com.liferay.notification.type.NotificationTypeServiceTracker;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
@@ -59,10 +62,14 @@ public class NotificationTemplateLocalServiceImpl
 			NotificationContext notificationContext)
 		throws PortalException {
 
-		_validate(notificationContext);
-
 		NotificationTemplate notificationTemplate =
 			notificationContext.getNotificationTemplate();
+
+		NotificationTemplateUtil.validateInvokerBundle(
+			"Only allowed bundles can add system notification templates",
+			notificationTemplate.isSystem());
+
+		_validate(notificationContext);
 
 		notificationTemplate.setNotificationTemplateId(
 			counterLocalService.increment());
@@ -136,6 +143,7 @@ public class NotificationTemplateLocalServiceImpl
 		notificationTemplate.setEditorType(
 			NotificationTemplateConstants.EDITOR_TYPE_RICH_TEXT);
 		notificationTemplate.setName(externalReferenceCode);
+		notificationTemplate.setSystem(false);
 		notificationTemplate.setType(type);
 
 		notificationTemplate = notificationTemplatePersistence.update(
@@ -178,6 +186,22 @@ public class NotificationTemplateLocalServiceImpl
 	}
 
 	@Override
+	public void deleteCompanyNotificationTemplates(long companyId)
+		throws PortalException {
+
+		ActionableDynamicQuery actionableDynamicQuery =
+			getActionableDynamicQuery();
+
+		actionableDynamicQuery.setAddCriteriaMethod(
+			dynamicQuery -> RestrictionsFactoryUtil.eq("companyId", companyId));
+		actionableDynamicQuery.setPerformActionMethod(
+			(NotificationTemplate notificationTemplate) ->
+				deleteNotificationTemplate(notificationTemplate));
+
+		actionableDynamicQuery.performActions();
+	}
+
+	@Override
 	public NotificationTemplate deleteNotificationTemplate(
 			long notificationTemplateId)
 		throws PortalException {
@@ -196,6 +220,10 @@ public class NotificationTemplateLocalServiceImpl
 	public NotificationTemplate deleteNotificationTemplate(
 			NotificationTemplate notificationTemplate)
 		throws PortalException {
+
+		NotificationTemplateUtil.validateInvokerBundle(
+			"Only allowed bundles can delete system notification templates",
+			notificationTemplate.isSystem());
 
 		notificationTemplate = notificationTemplatePersistence.remove(
 			notificationTemplate);
@@ -251,6 +279,16 @@ public class NotificationTemplateLocalServiceImpl
 			NotificationContext notificationContext)
 		throws PortalException {
 
+		NotificationTemplate notificationTemplate =
+			notificationContext.getNotificationTemplate();
+
+		notificationTemplate = notificationTemplatePersistence.findByPrimaryKey(
+			notificationTemplate.getNotificationTemplateId());
+
+		NotificationTemplateUtil.validateInvokerBundle(
+			"Only allowed bundles can update system notification templates",
+			notificationTemplate.isSystem());
+
 		_validate(notificationContext);
 
 		NotificationRecipient notificationRecipient =
@@ -277,9 +315,8 @@ public class NotificationTemplateLocalServiceImpl
 					notificationRecipientSetting);
 		}
 
-		NotificationTemplate notificationTemplate =
-			notificationTemplatePersistence.update(
-				notificationContext.getNotificationTemplate());
+		notificationTemplate = notificationTemplatePersistence.update(
+			notificationContext.getNotificationTemplate());
 
 		List<Long> oldAttachmentObjectFieldIds = new ArrayList<>();
 

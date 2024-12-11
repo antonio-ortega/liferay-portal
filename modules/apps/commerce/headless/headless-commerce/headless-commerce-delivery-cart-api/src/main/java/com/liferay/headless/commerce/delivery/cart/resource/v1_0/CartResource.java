@@ -49,6 +49,33 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface CartResource {
 
+	public Response deleteCartByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Cart getCartByExternalReferenceCode(String externalReferenceCode)
+		throws Exception;
+
+	public Cart patchCartByExternalReferenceCode(
+			String externalReferenceCode, Cart cart)
+		throws Exception;
+
+	public Cart putCartByExternalReferenceCode(
+			String externalReferenceCode, Cart cart)
+		throws Exception;
+
+	public Cart postCartByExternalReferenceCodeCheckout(
+			String externalReferenceCode)
+		throws Exception;
+
+	public Cart postCartByExternalReferenceCodeCouponCode(
+			String externalReferenceCode, CouponCode couponCode)
+		throws Exception;
+
+	public String getCartByExternalReferenceCodePaymentUrl(
+			String externalReferenceCode, String callbackURL)
+		throws Exception;
+
 	public Response deleteCart(Long cartId) throws Exception;
 
 	public Response deleteCartBatch(String callbackURL, Object object)
@@ -71,9 +98,25 @@ public interface CartResource {
 	public String getCartPaymentURL(Long cartId, String callbackURL)
 		throws Exception;
 
-	public Page<Cart> getChannelCartsPage(
+	public Page<Cart>
+			getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodeCartsPage(
+				String accountExternalReferenceCode,
+				String channelExternalReferenceCode, String search,
+				Pagination pagination)
+		throws Exception;
+
+	public Cart postChannelCartByExternalReferenceCode(
+			String externalReferenceCode, Cart cart)
+		throws Exception;
+
+	public Page<Cart> getChannelAccountCartsPage(
 			Long accountId, Long channelId, String search,
 			Pagination pagination)
+		throws Exception;
+
+	public Page<Cart> getChannelCartsPage(
+			Long channelId, String search, Filter filter, Pagination pagination,
+			Sort[] sorts)
 		throws Exception;
 
 	public Cart postChannelCart(Long channelId, Cart cart) throws Exception;

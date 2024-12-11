@@ -6,12 +6,12 @@
 package com.liferay.portal.cache.ehcache.internal;
 
 import com.liferay.petra.concurrent.DCLSingleton;
-import com.liferay.portal.cache.ehcache.internal.configurator.BaseEhcachePortalCacheManagerConfigurator;
 import com.liferay.portal.cache.test.util.TestPortalCacheListener;
 import com.liferay.portal.cache.test.util.TestPortalCacheReplicator;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
 import com.liferay.portal.kernel.cache.PortalCacheListener;
 import com.liferay.portal.kernel.cache.PortalCacheListenerScope;
+import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
@@ -36,6 +36,11 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 /**
  * @author Shuyang Zhou
@@ -82,14 +87,6 @@ public class BaseEhcachePortalCacheTest {
 
 		BaseEhcachePortalCacheManager baseEhcachePortalCacheManager =
 			new BaseEhcachePortalCacheManager() {
-
-				@Override
-				protected BaseEhcachePortalCacheManagerConfigurator
-					getBaseEhcachePortalCacheManagerConfigurator() {
-
-					return null;
-				}
-
 			};
 
 		ReflectionTestUtil.setFieldValue(
@@ -325,6 +322,12 @@ public class BaseEhcachePortalCacheTest {
 	public void testGetName() {
 		Assert.assertEquals(
 			_PORTAL_CACHE_NAME, _ehcachePortalCache.getPortalCacheName());
+	}
+
+	@Test
+	public void testGetPortalCache() {
+		_testGetPortalCache(false);
+		_testGetPortalCache(true);
 	}
 
 	@Test
@@ -619,14 +622,6 @@ public class BaseEhcachePortalCacheTest {
 	public void testSerializable() {
 		BaseEhcachePortalCacheManager baseEhcachePortalCacheManager =
 			new BaseEhcachePortalCacheManager() {
-
-				@Override
-				protected BaseEhcachePortalCacheManagerConfigurator
-					getBaseEhcachePortalCacheManagerConfigurator() {
-
-					return null;
-				}
-
 			};
 
 		ReflectionTestUtil.setFieldValue(
@@ -759,6 +754,58 @@ public class BaseEhcachePortalCacheTest {
 			_KEY_1, _VALUE_2, timeToLive);
 
 		_defaultPortalCacheReplicator.reset();
+	}
+
+	private void _testGetPortalCache(boolean dbPartitionEnabled) {
+		BaseEhcachePortalCacheManager baseEhcachePortalCacheManager =
+			Mockito.spy(BaseEhcachePortalCacheManager.class);
+
+		try (MockedStatic<DBPartition> dbPartitionMockedStatic =
+				Mockito.mockStatic(DBPartition.class)) {
+
+			dbPartitionMockedStatic.when(
+				DBPartition::isPartitionEnabled
+			).thenReturn(
+				dbPartitionEnabled
+			);
+
+			Mockito.doReturn(
+				null
+			).when(
+				baseEhcachePortalCacheManager
+			).getPortalCache(
+				ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean(),
+				ArgumentMatchers.anyBoolean()
+			);
+
+			baseEhcachePortalCacheManager.getPortalCache(_PORTAL_CACHE_NAME);
+
+			ArgumentCaptor<Boolean> argumentCaptor = ArgumentCaptor.forClass(
+				Boolean.class);
+
+			Mockito.verify(
+				baseEhcachePortalCacheManager
+			).getPortalCache(
+				ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean(),
+				argumentCaptor.capture()
+			);
+
+			Assert.assertEquals(dbPartitionEnabled, argumentCaptor.getValue());
+
+			Mockito.clearInvocations(baseEhcachePortalCacheManager);
+
+			baseEhcachePortalCacheManager.getPortalCache(
+				_PORTAL_CACHE_NAME, false);
+
+			Mockito.verify(
+				baseEhcachePortalCacheManager
+			).getPortalCache(
+				ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean(),
+				argumentCaptor.capture()
+			);
+
+			Assert.assertEquals(dbPartitionEnabled, argumentCaptor.getValue());
+		}
 	}
 
 	private static final String _KEY_1 = "KEY_1";

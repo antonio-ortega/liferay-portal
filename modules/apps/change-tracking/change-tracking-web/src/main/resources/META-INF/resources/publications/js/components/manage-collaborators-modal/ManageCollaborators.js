@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayBadge from '@clayui/badge';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {useResource} from '@clayui/data-provider';
 import ClayDropDown, {Align} from '@clayui/drop-down';
@@ -14,6 +13,7 @@ import ClayMultiSelect from '@clayui/multi-select';
 import ClaySticker from '@clayui/sticker';
 import ClayTable from '@clayui/table';
 import ClayTabs from '@clayui/tabs';
+import {FeatureIndicator} from 'frontend-js-components-web';
 import {
 	fetch,
 	getOpener,
@@ -60,10 +60,8 @@ const ManageCollaborators = ({
 	const [networkStatus, setNetworkStatus] = useState(4);
 	const [selectedItems, setSelectedItems] = useState({});
 	const [selectedUserData, setSelectedUserData] = useState({});
-	const [
-		sharePublicationLinkVisible,
-		setSharePublicationLinkVisible,
-	] = useState(!!sharePublicationLink);
+	const [sharePublicationLinkVisible, setSharePublicationLinkVisible] =
+		useState(!!sharePublicationLink);
 	const [tab, setTab] = useState(TABS.collaborators);
 	const [updatedRoles, setUpdatedRoles] = useState({});
 
@@ -89,23 +87,21 @@ const ManageCollaborators = ({
 		},
 	});
 
-	const {
-		refetch: collaboratorsRefetch,
-		resource: collaboratorsResource,
-	} = useResource({
-		fetchOptions: {
-			credentials: 'include',
-			headers: new Headers({'x-csrf-token': Liferay.authToken}),
-			method: 'GET',
-		},
-		fetchRetry: {
-			attempts: 0,
-		},
-		link:
-			isPublicationTemplate && !!getTemplateCollaboratorsURL
-				? getTemplateCollaboratorsURL
-				: getCollaboratorsURL,
-	});
+	const {refetch: collaboratorsRefetch, resource: collaboratorsResource} =
+		useResource({
+			fetchOptions: {
+				credentials: 'include',
+				headers: new Headers({'x-csrf-token': Liferay.authToken}),
+				method: 'GET',
+			},
+			fetchRetry: {
+				attempts: 0,
+			},
+			link:
+				isPublicationTemplate && !!getTemplateCollaboratorsURL
+					? getTemplateCollaboratorsURL
+					: getCollaboratorsURL,
+		});
 
 	const {resource: autocompleteResource} = useResource({
 		fetchOptions: {
@@ -249,9 +245,8 @@ const ManageCollaborators = ({
 									item.emailAddress
 							)
 						) {
-							newUpdatedRoles[
-								item.userId.toString()
-							] = selectedRole;
+							newUpdatedRoles[item.userId.toString()] =
+								selectedRole;
 
 							return;
 						}
@@ -330,10 +325,10 @@ const ManageCollaborators = ({
 			publicationsUserRoleUserIds.length > 1
 				? Liferay.Language.get(
 						'you-are-inviting-users-x-who-do-not-have-access-to-publications'
-				  )
+					)
 				: Liferay.Language.get(
 						'you-are-inviting-user-x-who-does-not-have-access-to-publications'
-				  );
+					);
 
 		if (publicationsUserRoleUserIds.length) {
 			openConfirmModal({
@@ -711,8 +706,8 @@ const ManageCollaborators = ({
 					{showShareLinkTab
 						? Liferay.Language.get('share-access')
 						: readOnly
-						? Liferay.Language.get('view-collaborators')
-						: Liferay.Language.get('invite-users')}
+							? Liferay.Language.get('view-collaborators')
+							: Liferay.Language.get('invite-users')}
 				</div>
 			</div>
 		);
@@ -792,10 +787,9 @@ const ManageCollaborators = ({
 														portraitURL:
 															user.portraitURL,
 														userId: user.userId,
-														value:
-															user.emailAddress,
+														value: user.emailAddress,
 													};
-											  })
+												})
 											: []
 									}
 									spritemap={spritemap}
@@ -811,7 +805,7 @@ const ManageCollaborators = ({
 												item.isOwner
 													? Liferay.Language.get(
 															'cannot-update-permissions-for-an-owner'
-													  )
+														)
 													: ''
 											}
 										>
@@ -822,7 +816,7 @@ const ManageCollaborators = ({
 															item.portraitURL
 																? ''
 																: 'user-icon-color-' +
-																  (item.userId %
+																	(item.userId %
 																		10)
 														}`}
 														size="lg"
@@ -1003,7 +997,7 @@ const ManageCollaborators = ({
 					{Liferay.Language.get('share-link')}
 
 					<div className="c-ml-1 float-right">
-						<ClayBadge displayType="beta" label="beta" />
+						<FeatureIndicator type="beta" />
 					</div>
 				</ClayTabs.Item>
 			</ClayTabs>
@@ -1064,9 +1058,8 @@ const ManageCollaborators = ({
 			}
 
 			setCollaboratorData({
-				[`publicationsUserRoleUserIds`]: publicationsUserRoleUserIds.join(
-					','
-				),
+				[`publicationsUserRoleUserIds`]:
+					publicationsUserRoleUserIds.join(','),
 				[`roleValues`]: roleValues.join(','),
 				[`userIds`]: userIds.join(','),
 			});
@@ -1086,9 +1079,8 @@ const ManageCollaborators = ({
 			}
 
 			const formData = {
-				[`${namespace}publicationsUserRoleUserIds`]: publicationsUserRoleUserIds.join(
-					','
-				),
+				[`${namespace}publicationsUserRoleUserIds`]:
+					publicationsUserRoleUserIds.join(','),
 				[`${namespace}roleValues`]: roleValues.join(','),
 				[`${namespace}userIds`]: userIds.join(','),
 			};

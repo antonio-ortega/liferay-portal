@@ -12,6 +12,10 @@ public class ObjectDDMFormFieldTypeConstants {
 
 	public static final String ATTACHMENT = "attachment";
 
+	public static final String AUTO_INCREMENT = "auto-increment";
+
+	public static final String MULTISELECT_PICKLIST = "multiselect-picklist";
+
 	public static final String OBJECT_RELATIONSHIP = "object-relationship";
 
 }

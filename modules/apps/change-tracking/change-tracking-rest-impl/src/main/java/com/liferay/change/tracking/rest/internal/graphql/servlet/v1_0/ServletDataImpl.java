@@ -117,6 +117,16 @@ public class ServletDataImpl implements ServletData {
 							CTCollectionResourceImpl.class,
 							"patchCTCollectionByExternalReferenceCode"));
 					put(
+						"mutation#createCTCollectionByExternalReferenceCodePublish",
+						new ObjectValuePair<>(
+							CTCollectionResourceImpl.class,
+							"postCTCollectionByExternalReferenceCodePublish"));
+					put(
+						"mutation#createCTCollectionByExternalReferenceCodeSchedulePublish",
+						new ObjectValuePair<>(
+							CTCollectionResourceImpl.class,
+							"postCTCollectionByExternalReferenceCodeSchedulePublish"));
+					put(
 						"mutation#deleteCTCollection",
 						new ObjectValuePair<>(
 							CTCollectionResourceImpl.class,
@@ -160,6 +170,15 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CTProcessResourceImpl.class,
 							"postCTProcessesPageExportBatch"));
+					put(
+						"mutation#deleteCTProcess",
+						new ObjectValuePair<>(
+							CTProcessResourceImpl.class, "deleteCTProcess"));
+					put(
+						"mutation#deleteCTProcessBatch",
+						new ObjectValuePair<>(
+							CTProcessResourceImpl.class,
+							"deleteCTProcessBatch"));
 					put(
 						"mutation#createCTProcessRevert",
 						new ObjectValuePair<>(
@@ -210,6 +229,21 @@ public class ServletDataImpl implements ServletData {
 							CTCollectionResourceImpl.class,
 							"getCTCollectionByExternalReferenceCode"));
 					put(
+						"query#cTCollectionByExternalReferenceCodeShareLink",
+						new ObjectValuePair<>(
+							CTCollectionResourceImpl.class,
+							"getCTCollectionByExternalReferenceCodeShareLink"));
+					put(
+						"query#cTCollectionShareLink",
+						new ObjectValuePair<>(
+							CTCollectionResourceImpl.class,
+							"getCTCollectionShareLink"));
+					put(
+						"query#cTCollectionsHistory",
+						new ObjectValuePair<>(
+							CTCollectionResourceImpl.class,
+							"getCTCollectionsHistoryPage"));
+					put(
 						"query#cTCollection",
 						new ObjectValuePair<>(
 							CTCollectionResourceImpl.class, "getCTCollection"));
@@ -218,6 +252,16 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CTEntryResourceImpl.class,
 							"getCtCollectionCTEntriesPage"));
+					put(
+						"query#ctCollectionCTEntryByModelClassNameByModelClassPkModelClassPK",
+						new ObjectValuePair<>(
+							CTEntryResourceImpl.class,
+							"getCtCollectionCTEntryByModelClassNameByModelClassPkModelClassPK"));
+					put(
+						"query#cTEntriesHistory",
+						new ObjectValuePair<>(
+							CTEntryResourceImpl.class,
+							"getCTEntriesHistoryPage"));
 					put(
 						"query#cTEntry",
 						new ObjectValuePair<>(
@@ -240,6 +284,16 @@ public class ServletDataImpl implements ServletData {
 							CTRemoteResourceImpl.class, "getCTRemote"));
 
 					put(
+						"query#CTCollection.shareLink",
+						new ObjectValuePair<>(
+							CTCollectionResourceImpl.class,
+							"getCTCollectionShareLink"));
+					put(
+						"query#CTCollection.byExternalReferenceCodeShareLink",
+						new ObjectValuePair<>(
+							CTCollectionResourceImpl.class,
+							"getCTCollectionByExternalReferenceCodeShareLink"));
+					put(
 						"query#CTProcess.cTCollection",
 						new ObjectValuePair<>(
 							CTCollectionResourceImpl.class, "getCTCollection"));
@@ -248,6 +302,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							CTEntryResourceImpl.class,
 							"getCtCollectionCTEntriesPage"));
+					put(
+						"query#CTCollection.ctCollectionCTEntryByModelClassNameByModelClassPkModelClassPK",
+						new ObjectValuePair<>(
+							CTEntryResourceImpl.class,
+							"getCtCollectionCTEntryByModelClassNameByModelClassPkModelClassPK"));
 				}
 			};
 

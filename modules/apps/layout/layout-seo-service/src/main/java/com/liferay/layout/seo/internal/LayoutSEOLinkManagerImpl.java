@@ -7,11 +7,14 @@ package com.liferay.layout.seo.internal;
 
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.layout.seo.canonical.url.LayoutSEOCanonicalURLProvider;
+import com.liferay.layout.seo.internal.configuration.LayoutSEOGeneralGroupConfiguration;
 import com.liferay.layout.seo.internal.util.AlternateURLMapperProvider;
 import com.liferay.layout.seo.kernel.LayoutSEOLink;
 import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
 import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.service.LayoutSEOEntryLocalService;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -75,9 +78,14 @@ public class LayoutSEOLinkManagerImpl implements LayoutSEOLinkManager {
 		String layoutTitle = _getPageTitle(
 			layout, portletId, tilesTitle, titleListMergeable,
 			subtitleListMergeable, locale);
-		String siteAndCompanyName = _getPageTitleSuffix(layout, companyName);
 
-		return _merge(layoutTitle, siteAndCompanyName);
+		String suffix = _getPageTitleSuffix(layout, companyName);
+
+		if (Validator.isNotNull(suffix)) {
+			return _merge(layoutTitle, suffix);
+		}
+
+		return layoutTitle;
 	}
 
 	@Override
@@ -233,15 +241,37 @@ public class LayoutSEOLinkManagerImpl implements LayoutSEOLinkManager {
 	private String _getPageTitleSuffix(Layout layout, String companyName)
 		throws PortalException {
 
-		Group group = layout.getGroup();
+		LayoutSEOGeneralGroupConfiguration layoutSEOGeneralGroupConfiguration =
+			_configurationProvider.getGroupConfiguration(
+				LayoutSEOGeneralGroupConfiguration.class, layout.getGroupId());
 
-		if (group.isControlPanel() || group.isLayoutPrototype() ||
-			StringUtil.equals(companyName, group.getDescriptiveName())) {
+		if (!layoutSEOGeneralGroupConfiguration.includeInstanceName() &&
+			!layoutSEOGeneralGroupConfiguration.includeSiteName()) {
 
+			return StringPool.BLANK;
+		}
+
+		if (layoutSEOGeneralGroupConfiguration.includeInstanceName() &&
+			layoutSEOGeneralGroupConfiguration.includeSiteName()) {
+
+			Group group = layout.getGroup();
+
+			if (group.isControlPanel() || group.isLayoutPrototype() ||
+				StringUtil.equals(companyName, group.getDescriptiveName())) {
+
+				return companyName;
+			}
+
+			return _merge(group.getDescriptiveName(), companyName);
+		}
+
+		if (layoutSEOGeneralGroupConfiguration.includeInstanceName()) {
 			return companyName;
 		}
 
-		return _merge(group.getDescriptiveName(), companyName);
+		Group group = layout.getGroup();
+
+		return group.getDescriptiveName();
 	}
 
 	private ThemeDisplay _getThemeDisplay() {
@@ -304,6 +334,9 @@ public class LayoutSEOLinkManagerImpl implements LayoutSEOLinkManager {
 
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private Language _language;

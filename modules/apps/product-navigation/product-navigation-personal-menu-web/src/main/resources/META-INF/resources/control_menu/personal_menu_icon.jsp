@@ -7,7 +7,7 @@
 
 <%@ include file="/init.jsp" %>
 
-<style type="text/css">
+<aui:style type="text/css">
 	#impersonate-user-icon {
 		color: #272833;
 	}
@@ -28,7 +28,7 @@
 	#personal-menu-icon-wrapper .lexicon-icon {
 		margin-top: -.25rem;
 	}
-</style>
+</aui:style>
 
 <li class="control-menu-nav-item">
 	<span class="user-avatar-link">
@@ -46,13 +46,12 @@
 			String notificationsURL = PersonalApplicationURLUtil.getPersonalApplicationURL(request, PortletProviderUtil.getPortletId(UserNotificationEvent.class.getName(), PortletProvider.Action.VIEW));
 			%>
 
-			<aui:a href="<%= (notificationsURL != null) ? notificationsURL : null %>">
+			<a aria-label="<%= notificationsCount + StringPool.SPACE + LanguageUtil.get(request, "new-notification") %>" class="panel-notifications-count" href="<%= (notificationsURL != null) ? notificationsURL : null %>" title="<%= notificationsCount + StringPool.SPACE + LanguageUtil.get(request, "new-notification") %>">
 				<clay:badge
-					cssClass="panel-notifications-count"
 					displayType="danger"
 					label="<%= String.valueOf(notificationsCount) %>"
 				/>
-			</aui:a>
+			</a>
 		</c:if>
 	</span>
 </li>

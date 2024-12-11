@@ -80,16 +80,19 @@ public interface UserAccountResource {
 			String externalReferenceCode, String[] strings)
 		throws Exception;
 
-	public void postAccountUserAccountsByExternalReferenceCodeByEmailAddress(
-			String externalReferenceCode, String[] strings)
+	public Page<UserAccount>
+			postAccountUserAccountsByExternalReferenceCodeByEmailAddress(
+				String externalReferenceCode, String accountRoleIds,
+				String[] strings)
 		throws Exception;
 
 	public void deleteAccountUserAccountByExternalReferenceCodeByEmailAddress(
 			String externalReferenceCode, String emailAddress)
 		throws Exception;
 
-	public void postAccountUserAccountByExternalReferenceCodeByEmailAddress(
-			String externalReferenceCode, String emailAddress)
+	public UserAccount
+			postAccountUserAccountByExternalReferenceCodeByEmailAddress(
+				String externalReferenceCode, String emailAddress)
 		throws Exception;
 
 	public Page<UserAccount> getAccountUserAccountsPage(
@@ -133,6 +136,12 @@ public interface UserAccountResource {
 		throws Exception;
 
 	public UserAccount getMyUserAccount() throws Exception;
+
+	public Page<UserAccount>
+			getOrganizationByExternalReferenceCodeUserAccountsPage(
+				String externalReferenceCode, String search, Filter filter,
+				Pagination pagination, Sort[] sorts)
+		throws Exception;
 
 	public Page<UserAccount> getOrganizationUserAccountsPage(
 			String organizationId, String search, Filter filter,
@@ -180,6 +189,10 @@ public interface UserAccountResource {
 			String externalReferenceCode)
 		throws Exception;
 
+	public UserAccount patchUserAccountByExternalReferenceCode(
+			String externalReferenceCode, UserAccount userAccount)
+		throws Exception;
+
 	public UserAccount putUserAccountByExternalReferenceCode(
 			String externalReferenceCode, UserAccount userAccount)
 		throws Exception;
@@ -209,6 +222,16 @@ public interface UserAccountResource {
 
 	public Response postUserAccountImage(
 			Long userAccountId, MultipartBody multipartBody)
+		throws Exception;
+
+	public Page<UserAccount> getUserGroupByExternalReferenceCodeUsersPage(
+			String externalReferenceCode, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception;
+
+	public Page<UserAccount> getUserGroupUsersPage(
+			Long userGroupId, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
 		throws Exception;
 
 	public default void setContextAcceptLanguage(

@@ -33,6 +33,10 @@ public class CPSpecificationOptionTable
 			"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<CPSpecificationOptionTable, String> uuid = createColumn(
 		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<CPSpecificationOptionTable, String>
+		externalReferenceCode = createColumn(
+			"externalReferenceCode", String.class, Types.VARCHAR,
+			Column.FLAG_DEFAULT);
 	public final Column<CPSpecificationOptionTable, Long>
 		CPSpecificationOptionId = createColumn(
 			"CPSpecificationOptionId", Long.class, Types.BIGINT,
@@ -65,6 +69,9 @@ public class CPSpecificationOptionTable
 			"facetable", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
 	public final Column<CPSpecificationOptionTable, String> key = createColumn(
 		"key_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<CPSpecificationOptionTable, Double> priority =
+		createColumn(
+			"priority", Double.class, Types.DOUBLE, Column.FLAG_DEFAULT);
 	public final Column<CPSpecificationOptionTable, Date> lastPublishDate =
 		createColumn(
 			"lastPublishDate", Date.class, Types.TIMESTAMP,

@@ -1,4 +1,4 @@
-@component-name = "portal-platform-experience-and-design-system"
+@component-name = "portal-platform-experience"
 definition {
 
 	property portal.release = "true";
@@ -56,39 +56,6 @@ definition {
 			ControlMenu.viewHeaderTitleNotPresent(headerTitle = "Import Translations");
 
 			ControlMenu.viewHeaderTitle(headerTitle = "Language Override");
-		}
-	}
-
-	@description = "This test ensures that separate language keys with overridden translation of the same locale will export successfully"
-	@priority = 4
-	test CanExportMultipleLanguageKeysWithOverride {
-		task ("Given that there are two language keys with en-US override") {
-			LanguageOverride.addLanguageKey(
-				languageKey = "hello-world",
-				translationOverrideList = "en-US",
-				translationOverrideValueList = "Hello world");
-
-			LanguageOverride.addLanguageKey(
-				languageKey = "this-is-a-language-key",
-				translationOverrideList = "en-US",
-				translationOverrideValueList = "This is a language key");
-		}
-
-		task ("When a user exports overridden translations,") {
-			LanguageOverride.exportOverriddenTranslations();
-
-			var originalFileDownloadName = TestCase.getDownloadedTempFileName(fileNamePattern = "*.zip");
-
-			AntCommands.runCommand("build-test.xml", "unzip-temp-file -DfileName=${originalFileDownloadName}");
-		}
-
-		task ("Then the language properties file for en-US displays all translations") {
-			DMDocument.assertFileNameFromTempFolder(fileName = "Language_en_US.properties");
-
-			DMDocument.assertDownloadedFileContent(
-				downloadedContent = '''hello-world=Hello world
-this-is-a-language-key=This is a language key''',
-				fileName = "Language_en_US.properties");
 		}
 	}
 
@@ -266,9 +233,9 @@ this-is-a-language-key=This is a language key''',
 
 			Search.searchCP(searchTerm = "newkey");
 
-			AssertTextEquals(
+			AssertTextEquals.assertPartialText(
 				locator1 = "Search#SEARCH_INFO",
-				value1 = "0 Results for \"newkey\"");
+				value1 = "0 Results Found for \"newkey\"");
 		}
 	}
 

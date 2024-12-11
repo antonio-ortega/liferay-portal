@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -80,8 +81,11 @@ public class CommerceInventoryWarehouseItemLocalServiceUtil {
 			commerceInventoryWarehouseId, quantity, sku, unitOfMeasureKey);
 	}
 
-	public static int countItemsByCompanyId(long companyId, String sku) {
-		return getService().countItemsByCompanyId(companyId, sku);
+	public static int countItemsByCompanyId(
+		long companyId, String sku, boolean replacePermissionCheck) {
+
+		return getService().countItemsByCompanyId(
+			companyId, sku, replacePermissionCheck);
 	}
 
 	/**
@@ -399,11 +403,12 @@ public class CommerceInventoryWarehouseItemLocalServiceUtil {
 	public static List<CommerceInventoryWarehouseItem>
 		getCommerceInventoryWarehouseItemsByCompanyIdSkuAndUnitOfMeasureKey(
 			long companyId, String sku, String unitOfMeasureKey, int start,
-			int end) {
+			int end, boolean replacePermissionCheck) {
 
 		return getService().
 			getCommerceInventoryWarehouseItemsByCompanyIdSkuAndUnitOfMeasureKey(
-				companyId, sku, unitOfMeasureKey, start, end);
+				companyId, sku, unitOfMeasureKey, start, end,
+				replacePermissionCheck);
 	}
 
 	public static List<CommerceInventoryWarehouseItem>
@@ -432,17 +437,19 @@ public class CommerceInventoryWarehouseItemLocalServiceUtil {
 	}
 
 	public static int getCommerceInventoryWarehouseItemsCount(
-		long companyId, long groupId, String sku, String unitOfMeasureKey) {
+		long companyId, long accountEntryId, long groupId, String sku,
+		String unitOfMeasureKey) {
 
 		return getService().getCommerceInventoryWarehouseItemsCount(
-			companyId, groupId, sku, unitOfMeasureKey);
+			companyId, accountEntryId, groupId, sku, unitOfMeasureKey);
 	}
 
 	public static int getCommerceInventoryWarehouseItemsCount(
-		long companyId, String sku, String unitOfMeasureKey) {
+		long companyId, String sku, String unitOfMeasureKey,
+		boolean replacePermissionCheck) {
 
 		return getService().getCommerceInventoryWarehouseItemsCount(
-			companyId, sku, unitOfMeasureKey);
+			companyId, sku, unitOfMeasureKey, replacePermissionCheck);
 	}
 
 	public static int getCommerceInventoryWarehouseItemsCountByCompanyId(
@@ -476,9 +483,12 @@ public class CommerceInventoryWarehouseItemLocalServiceUtil {
 	}
 
 	public static List<com.liferay.commerce.inventory.model.CIWarehouseItem>
-		getItemsByCompanyId(long companyId, String sku, int start, int end) {
+		getItemsByCompanyId(
+			long companyId, String sku, int start, int end,
+			boolean replacePermissionCheck) {
 
-		return getService().getItemsByCompanyId(companyId, sku, start, end);
+		return getService().getItemsByCompanyId(
+			companyId, sku, start, end, replacePermissionCheck);
 	}
 
 	/**
@@ -500,10 +510,11 @@ public class CommerceInventoryWarehouseItemLocalServiceUtil {
 	}
 
 	public static java.math.BigDecimal getStockQuantity(
-		long companyId, long groupId, String sku, String unitOfMeasureKey) {
+		long companyId, long accountEntryId, long groupId, String sku,
+		String unitOfMeasureKey) {
 
 		return getService().getStockQuantity(
-			companyId, groupId, sku, unitOfMeasureKey);
+			companyId, accountEntryId, groupId, sku, unitOfMeasureKey);
 	}
 
 	public static java.math.BigDecimal getStockQuantity(
@@ -576,15 +587,12 @@ public class CommerceInventoryWarehouseItemLocalServiceUtil {
 	}
 
 	public static CommerceInventoryWarehouseItemLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CommerceInventoryWarehouseItemLocalService service) {
-
-		_service = service;
-	}
-
-	private static volatile CommerceInventoryWarehouseItemLocalService _service;
+	private static final Snapshot<CommerceInventoryWarehouseItemLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceInventoryWarehouseItemLocalServiceUtil.class,
+			CommerceInventoryWarehouseItemLocalService.class);
 
 }

@@ -6,6 +6,7 @@
 package com.liferay.segments.service;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.segments.model.SegmentsExperience;
 
@@ -32,15 +33,30 @@ public class SegmentsExperienceServiceUtil {
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.segments.service.impl.SegmentsExperienceServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
 	public static SegmentsExperience addSegmentsExperience(
-			long groupId, long segmentsEntryId, long plid,
-			Map<java.util.Locale, String> nameMap, boolean active,
+			String externalReferenceCode, long groupId, long segmentsEntryId,
+			long plid, Map<java.util.Locale, String> nameMap, boolean active,
 			com.liferay.portal.kernel.util.UnicodeProperties
 				typeSettingsUnicodeProperties,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
 		return getService().addSegmentsExperience(
-			groupId, segmentsEntryId, plid, nameMap, active,
+			externalReferenceCode, groupId, segmentsEntryId, plid, nameMap,
+			active, typeSettingsUnicodeProperties, serviceContext);
+	}
+
+	public static SegmentsExperience addSegmentsExperience(
+			String externalReferenceCode, long groupId, long segmentsEntryId,
+			String segmentsExperienceKey, long plid,
+			Map<java.util.Locale, String> nameMap, int priority, boolean active,
+			com.liferay.portal.kernel.util.UnicodeProperties
+				typeSettingsUnicodeProperties,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addSegmentsExperience(
+			externalReferenceCode, groupId, segmentsEntryId,
+			segmentsExperienceKey, plid, nameMap, priority, active,
 			typeSettingsUnicodeProperties, serviceContext);
 	}
 
@@ -74,12 +90,29 @@ public class SegmentsExperienceServiceUtil {
 		return getService().deleteSegmentsExperience(segmentsExperienceId);
 	}
 
+	public static SegmentsExperience deleteSegmentsExperience(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().deleteSegmentsExperience(
+			externalReferenceCode, groupId);
+	}
+
 	public static SegmentsExperience fetchSegmentsExperience(
 			long groupId, String segmentsExperienceKey, long plid)
 		throws PortalException {
 
 		return getService().fetchSegmentsExperience(
 			groupId, segmentsExperienceKey, plid);
+	}
+
+	public static SegmentsExperience
+			fetchSegmentsExperienceByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().fetchSegmentsExperienceByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -104,6 +137,15 @@ public class SegmentsExperienceServiceUtil {
 
 		return getService().getSegmentsExperience(
 			groupId, segmentsExperienceKey, plid);
+	}
+
+	public static SegmentsExperience
+			getSegmentsExperienceByExternalReferenceCode(
+				String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getSegmentsExperienceByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	public static List<SegmentsExperience> getSegmentsExperiences(
@@ -150,22 +192,21 @@ public class SegmentsExperienceServiceUtil {
 			typeSettingsUnicodeProperties);
 	}
 
-	public static void updateSegmentsExperiencePriority(
+	public static SegmentsExperience updateSegmentsExperiencePriority(
 			long segmentsExperienceId, int newPriority)
 		throws PortalException {
 
-		getService().updateSegmentsExperiencePriority(
+		return getService().updateSegmentsExperiencePriority(
 			segmentsExperienceId, newPriority);
 	}
 
 	public static SegmentsExperienceService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(SegmentsExperienceService service) {
-		_service = service;
-	}
-
-	private static volatile SegmentsExperienceService _service;
+	private static final Snapshot<SegmentsExperienceService> _serviceSnapshot =
+		new Snapshot<>(
+			SegmentsExperienceServiceUtil.class,
+			SegmentsExperienceService.class);
 
 }

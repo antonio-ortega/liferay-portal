@@ -57,7 +57,7 @@ public class DateObjectFieldBusinessType implements ObjectFieldBusinessType {
 			return StringPool.BLANK;
 		}
 
-		return value.replaceAll(" [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}.*", "");
+		return value.replaceAll(".[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}.*", "");
 	}
 
 	@Override
@@ -73,6 +73,11 @@ public class DateObjectFieldBusinessType implements ObjectFieldBusinessType {
 	@Override
 	public PropertyDefinition.PropertyType getPropertyType() {
 		return PropertyDefinition.PropertyType.DATE_TIME;
+	}
+
+	@Override
+	public boolean isLocalizable() {
+		return true;
 	}
 
 	@Reference

@@ -1,10 +1,9 @@
-@component-name = "portal-solutions"
+@component-name = "portal-site-management"
 definition {
 
 	property osgi.modules.includes = "site-initializer-raylife-d2c";
 	property portal.release = "false";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Site Initializer Raylife D2C";
 
 	var testSiteName = "Raylife D2C";
@@ -14,6 +13,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 
 		HeadlessSite.addSite(
 			siteName = ${testSiteName},
@@ -53,15 +56,13 @@ definition {
 
 		Click(locator1 = "RaylifeSaveExit#SEND_LINK_EXIT");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		Refresh();
 
 		CommerceNavigator.gotoEntry(entryName = "Raylife Channel");
 
-		CommerceEntry.gotoMenuTab(menuTab = "Notification Queue");
+		CommerceEntry.gotoMenuTab(menuTab = "Notification Queue DEPRECATED");
 
 		AssertElementPresent(
 			key_name = "Test",

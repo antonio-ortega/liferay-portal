@@ -1,4 +1,4 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -53,7 +53,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-70143."
-	@priority = 4
+	@priority = 3
 	@refactorneeded
 	test AddBlogsEntryWithDMLink {
 		JSONDocument.addFileWithUploadedFile(
@@ -118,7 +118,7 @@ definition {
 			uploadFileName = "Document_1.jpg");
 
 		BlogsEntry.addEntryContent(
-			entryContent = '''A World-Renowned Professor<br />It's no secret that Agricultural Science Department professor Dr. Wolfgang von Richter has built his entire career on solving the problem of sustainable living on other planets. For Dr. von Richter, the humble lima bean, which comes from the aptly-named phaseolus lunatus plant of the legume family, is the solution. For years, Dr. von Richter has cultivated variety after variety of lima bean. He's turned lima beans cobalt blue by adding the hardiness of a violet gene; he's grown lima beans the size of fists with his nutrient-rich, hyper-growth soil. But how realistic is his dream of getting lima beans to grow in the harsh, unpredictable, and, frankly, otherworldly conditions of different planets?''',
+			entryContent = '''A World-Renowned Professor<br />It's no secret that Agricultural Science Department professor Dr. Wolfgang von Richter has built his entire career on solving the problem of sustainable living on other planets. For Dr. von Richter, the humble content-management bean, which comes from the aptly-named phaseolus lunatus plant of the legume family, is the solution. For years, Dr. von Richter has cultivated variety after variety of lima bean. He's turned lima beans cobalt blue by adding the hardiness of a violet gene; he's grown lima beans the size of fists with his nutrient-rich, hyper-growth soil. But how realistic is his dream of getting lima beans to grow in the harsh, unpredictable, and, frankly, otherworldly conditions of different planets?''',
 			entrySubtitle = "A conversation with Dr. Von Richter",
 			entryTitle = "Is the Lima Bean Really the Answer to Our Life on Other Planets?");
 
@@ -383,7 +383,7 @@ definition {
 	}
 
 	@description = "This is a usecase for LPS-75241. It checks that an embedded video can be added to a blog."
-	@priority = 5
+	@priority = 4
 	@refactordone
 	test CanAddWithEmbeddedVideo {
 		property testray.component.names = "WYSIWYG";
@@ -420,7 +420,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-126756. It ensures that a blog entry can be added with a static gif."
-	@priority = 5
+	@priority = 3
 	@refactorneeded
 	test CanAddWithStaticGif {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -446,7 +446,7 @@ definition {
 
 	@description = "This checks that basic text can be inputted and displayed in the most common fields in a blog entry."
 	@e2etest
-	@priority = 5
+	@priority = 3
 	@refactordone
 	test CanAddWithSubtitle {
 		JSONLayout.addPublicLayout(
@@ -535,7 +535,7 @@ definition {
 				portlet = "Blogs");
 
 			Click(
-				key_card = "test",
+				key_card = "Test",
 				locator1 = "Card#CARD_TITLE_LINK");
 		}
 
@@ -567,7 +567,7 @@ definition {
 	}
 
 	@description = "This checks that a blog entry can be automatically saved as a draft."
-	@priority = 5
+	@priority = 4
 	@refactordone
 	test CanAutomaticallySaveEntryAsDraft {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
@@ -591,7 +591,7 @@ definition {
 
 	@description = "This checks that a user can change the publish date for a scheduled entry to the present and publish it."
 	@e2etest
-	@priority = 4
+	@priority = 3
 	@refactordone
 	test CanChangeAScheduledEntryToThePresentAndPublish {
 		property custom.properties = "company.default.time.zone=America/Los_Angeles";
@@ -727,7 +727,7 @@ definition {
 	}
 
 	@description = "This checks that blog entries can be deleted through the UI."
-	@priority = 5
+	@priority = 4
 	@refactordone
 	test CanDeleteMultipleEntriesSequentially {
 		JSONBlog.addEntry(
@@ -860,7 +860,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-108029. It ensures that a blog entry can be edited from the search result."
-	@priority = 4
+	@priority = 3
 	@refactorneeded
 	test CanEditViaSearchResults {
 		JSONBlog.addEntry(
@@ -915,7 +915,7 @@ definition {
 
 		Portlet.shutdownServer();
 
-		SQL.executeMySQLStatement(mysqlStatement = "drop database if exists lportal;");
+		SQL.executeSQLStatement(sqlStatement = "drop database if exists lportal;");
 
 		AntCommands.runCommand("build-test.xml", "rebuild-database -Ddatabase.type=mysql -Dkeep.osgi.state=true -Dsql.dir=sql/create-bare/ -Dsql.file=create-bare-mysql.sql");
 
@@ -925,7 +925,7 @@ definition {
 			License.deployLicenseFile();
 		}
 
-		Open.openInTheNewTab(locator1 = "http://localhost:8080");
+		Open.openInTheNewTab(value1 = "http://localhost:8080");
 
 		takeScreenshot();
 
@@ -1026,7 +1026,7 @@ definition {
 
 		Portlet.shutdownServer();
 
-		SQL.executeMySQLStatement(mysqlStatement = "drop database if exists lportal;");
+		SQL.executeSQLStatement(sqlStatement = "drop database if exists lportal;");
 
 		AntCommands.runCommand("build-test.xml", "rebuild-database -Ddatabase.type=mysql -Dkeep.osgi.state=true -Dsql.dir=sql/create-bare/ -Dsql.file=create-bare-mysql.sql");
 
@@ -1036,7 +1036,7 @@ definition {
 			License.deployLicenseFile();
 		}
 
-		Open.openInTheNewTab(locator1 = "http://localhost:8080");
+		Open.openInTheNewTab(value1 = "http://localhost:8080");
 
 		takeScreenshot();
 
@@ -1133,7 +1133,7 @@ definition {
 	}
 
 	@description = "This this a use case for LPS-69240. It checks that a blog entry with a URL that duplicates an existing one cannot be published."
-	@priority = 4
+	@priority = 3
 	@refactordone
 	test CannotAddDuplicateCustomURLThroughUI {
 		JSONBlog.addEntry(
@@ -1170,7 +1170,7 @@ definition {
 	}
 
 	@description = "This checks that a blog entry cannot be published if the custom abstracted is selected but empty."
-	@priority = 4
+	@priority = 3
 	@refactorneeded
 	test CannotAddWhenCustomAbstractIsSelectedButEmpty {
 		BlogsNavigator.openToAddEntry(siteURLKey = "guest");
@@ -1219,7 +1219,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-147320. It checks that Javascript cannot be executed in the code view."
-	@priority = 4
+	@priority = 3
 	test CannotExecuteXSSInCodeView {
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
@@ -1341,8 +1341,12 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-82204. View blogs entry with XSS custom abstract."
-	@priority = 5
+	@priority = 3
 	test CannotExecuteXSSInCustomAbstractViaAP {
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
+
 		property testray.component.names = "Security";
 
 		var entryAbstractDescription = '''<script>alert(123)</script>''';
@@ -1379,7 +1383,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-49419. It validates that BBCode cannot be injected into a blog comment using Pingback."
-	@priority = 4
+	@priority = 3
 	test CannotInjectBBCodeIntoCommentUsingPingback {
 		property portal.acceptance = "false";
 		property test.liferay.virtual.instance = "false";
@@ -1566,7 +1570,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-80502. It asserts that user can search a draft blog entry."
-	@priority = 5
+	@priority = 4
 	test CanSearchForDraftEntry {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -1678,7 +1682,7 @@ definition {
 	}
 
 	@description = "This ensures that an external video in the Blogs content field can be rendered correctly when publication is enabled."
-	@priority = 5
+	@priority = 4
 	test CanViewInlineVideoWithPublication {
 		property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 		property osgi.module.configurations = "enabled=B\"true\"";
@@ -1728,6 +1732,12 @@ definition {
 	@description = "This checks that an external video embedded in a blog content can be played correctly."
 	@priority = 3
 	test ExternalVideoEmbeddedInBlogContentFieldCanBePlayed {
+		PortalSettings.openToConfigInInstanceSettings(portletId = "com.liferay.portal.security.iframe.sanitizer.configuration.IFrameConfiguration");
+
+		SystemSettings.configureSystemSetting(
+			enableSetting = "false",
+			settingFieldName = "Enabled");
+
 		JSONLayout.addPublicLayout(
 			groupName = "Guest",
 			layoutName = "Blogs Page");
@@ -1760,7 +1770,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-90966. It checks that the caption link will keep persisting."
-	@priority = 4
+	@priority = 3
 	test LinkToImageInCaptionPersistsAfterBeingAdded {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
@@ -1833,7 +1843,7 @@ definition {
 				entryContent = "Blogs Entry Content",
 				entryTitle = "Blogs Entry Title",
 				userEmailAddress = "test@liferay.com",
-				userPassword = "test");
+				userPassword = PropsUtil.get("default.admin.password"));
 		}
 
 		task ("Check entry creator has a notification") {
@@ -1844,7 +1854,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-69240. It checks that when blog entries are duplicated their custom URL's are unique."
-	@priority = 4
+	@priority = 3
 	@refactordone
 	test ShouldHaveUniqueURLForDuplicate {
 		var portalURL = PropsUtil.get("portal.url");
@@ -1883,7 +1893,7 @@ definition {
 	}
 
 	@description = "This checks that a string that is over 255 characters in the title will be trimmed to 255."
-	@priority = 4
+	@priority = 3
 	@refactordone
 	test ShouldTrimTitleTo255CharactersWhenOver {
 		JSONLayout.addPublicLayout(
@@ -1913,7 +1923,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-128451. It ensures that a blog entry can be published normally with xss code injected title."
-	@priority = 4
+	@priority = 3
 	@refactordone
 	test TitleWillNotExecuteXSS {
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");

@@ -24,6 +24,7 @@ import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
 import com.liferay.commerce.product.type.virtual.constants.VirtualCPTypeConstants;
 import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItem;
+import com.liferay.commerce.product.type.virtual.order.model.CommerceVirtualOrderItemFileEntry;
 import com.liferay.commerce.product.type.virtual.order.service.CommerceVirtualOrderItemLocalService;
 import com.liferay.commerce.product.type.virtual.order.util.CommerceVirtualOrderItemChecker;
 import com.liferay.commerce.product.type.virtual.service.CPDefinitionVirtualSettingLocalService;
@@ -84,7 +85,7 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 			"business", 1, _serviceContext);
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE,
 			RandomTestUtil.randomLocaleStringMap(), 2, 2, "HALF_EVEN", false,
@@ -142,7 +143,7 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 			RandomTestUtil.randomString() + ".jpg", ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(
 				OrderItemResourceTest.class, "dependencies/image.jpg"),
-			null, null, _serviceContext);
+			null, null, null, _serviceContext);
 
 		OrderItem postOrderItem = _addCommerceOrderItem(
 			_getOrderItem(fileEntry.getFileEntryId(), null));
@@ -332,7 +333,7 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 			{
 				bookedQuantityId =
 					commerceOrderItem.getCommerceInventoryBookedQuantityId();
-				deliveryGroup = commerceOrderItem.getDeliveryGroup();
+				deliveryGroupName = commerceOrderItem.getDeliveryGroupName();
 				discountManuallyAdjusted =
 					commerceOrderItem.isDiscountManuallyAdjusted();
 				externalReferenceCode =
@@ -347,6 +348,7 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 				quantity = commerceOrderItem.getQuantity();
 				requestedDeliveryDate =
 					commerceOrderItem.getRequestedDeliveryDate();
+				shippable = commerceOrderItem.isShippable();
 				shippedQuantity = commerceOrderItem.getShippedQuantity();
 				shippingAddressId = commerceOrderItem.getShippingAddressId();
 				sku = commerceOrderItem.getSku();
@@ -366,7 +368,18 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 							return null;
 						}
 
-						return new String[] {commerceVirtualOrderItem.getUrl()};
+						List<CommerceVirtualOrderItemFileEntry>
+							commerceVirtualOrderItemFileEntries =
+								commerceVirtualOrderItem.
+									getCommerceVirtualOrderItemFileEntries();
+
+						CommerceVirtualOrderItemFileEntry
+							commerceVirtualOrderItemFileEntry =
+								commerceVirtualOrderItemFileEntries.get(0);
+
+						return new String[] {
+							commerceVirtualOrderItemFileEntry.getUrl()
+						};
 					});
 			}
 		};
@@ -387,7 +400,7 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 			cpDefinition.getModelClassName(), cpDefinition.getCPDefinitionId(),
 			fileEntryId, url, CommerceOrderConstants.ORDER_STATUS_PENDING, 0,
 			RandomTestUtil.randomInt(), true, 0, "https://liferay.com", false,
-			null, 0, _serviceContext);
+			null, 0, false, _serviceContext);
 
 		CommerceTestUtil.updateBackOrderCPDefinitionInventory(cpDefinition);
 
@@ -406,9 +419,14 @@ public class OrderItemResourceTest extends BaseOrderItemResourceTestCase {
 				printedNote = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				quantity = BigDecimal.valueOf(RandomTestUtil.randomInt(1, 100));
+				replacedSkuExternalReferenceCode =
+					RandomTestUtil.randomString();
 				requestedDeliveryDate = RandomTestUtil.nextDate();
+				shippable = RandomTestUtil.randomBoolean();
 				shippedQuantity = BigDecimal.valueOf(
 					RandomTestUtil.randomInt());
+				shippingAddressExternalReferenceCode =
+					RandomTestUtil.randomString();
 				shippingAddressId = RandomTestUtil.randomLong();
 				sku = cpInstance.getSku();
 				skuExternalReferenceCode =

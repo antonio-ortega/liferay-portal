@@ -27,7 +27,7 @@ KaleoDefinition kaleoDefinition = kaleoDesignerDisplayContext.getKaleoDefinition
 
 String name = BeanParamUtil.getString(kaleoDefinitionVersion, request, "name");
 String draftVersion = BeanParamUtil.getString(kaleoDefinitionVersion, request, "version");
-String content = BeanParamUtil.getString(kaleoDefinitionVersion, request, "content");
+String content = BeanParamUtil.getString(kaleoDefinitionVersion, request, "contentAsXML");
 
 String latestDraftVersion = StringPool.BLANK;
 int version = 0;
@@ -154,11 +154,11 @@ String randomNamespace = StringUtil.randomId() + StringPool.UNDERLINE;
 
 				<div class="sidebar-header">
 					<div class="sidebar-section">
-						<h4 class="component-title">
+						<div class="component-title">
 							<span class="text-truncate-inline">
 								<span class="text-truncate"><%= HtmlUtil.escape(kaleoDefinitionVersion.getTitle(locale)) %></span>
 							</span>
-						</h4>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -308,7 +308,8 @@ String randomNamespace = StringUtil.randomId() + StringPool.UNDERLINE;
 								window['<portlet:namespace />updateContent'] = function () {
 									var content = document.getElementById('<portlet:namespace />content');
 
-									var activeTab = <portlet:namespace />kaleoDesigner.contentTabView.getActiveTab();
+									var activeTab =
+										<portlet:namespace />kaleoDesigner.contentTabView.getActiveTab();
 
 									if (activeTab === <portlet:namespace />kaleoDesigner.sourceNode) {
 										content.value = <portlet:namespace />kaleoDesigner.editor.get('value');
@@ -434,7 +435,8 @@ String randomNamespace = StringUtil.randomId() + StringPool.UNDERLINE;
 
 											reader.onloadend = function (evt) {
 												if (evt.target.readyState == FileReader.DONE) {
-													previousContent = <portlet:namespace />kaleoDesigner.getEditorContent();
+													previousContent =
+														<portlet:namespace />kaleoDesigner.getEditorContent();
 
 													<portlet:namespace />kaleoDesigner.setEditorContent(
 														evt.target.result
@@ -698,7 +700,7 @@ String randomNamespace = StringUtil.randomId() + StringPool.UNDERLINE;
 			<aui:input name="randomNamespace" type="hidden" value="<%= randomNamespace %>" />
 			<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 			<aui:input name="name" type="hidden" value="<%= PortalUUIDUtil.generate() %>" />
-			<aui:input name="content" type="hidden" value="<%= kaleoDefinition.getContent() %>" />
+			<aui:input name="content" type="hidden" value="<%= kaleoDefinition.getContentAsXML() %>" />
 			<aui:input name="defaultDuplicationTitle" type="hidden" value="<%= duplicateTitle %>" />
 			<aui:input name="duplicatedDefinitionName" type="hidden" value="<%= kaleoDefinition.getName() %>" />
 			<aui:input name="duplicatedDefinitionTitle" type="hidden" value="<%= HtmlUtil.escape(kaleoDefinition.getTitle(LanguageUtil.getLanguageId(request))) %>" />

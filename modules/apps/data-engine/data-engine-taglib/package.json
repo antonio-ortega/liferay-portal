@@ -1,19 +1,19 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.93.0",
-		"@clayui/button": "3.100.0",
-		"@clayui/data-provider": "3.104.0",
-		"@clayui/drop-down": "3.105.0",
-		"@clayui/empty-state": "3.101.0",
-		"@clayui/form": "3.104.0",
-		"@clayui/icon": "3.56.0",
-		"@clayui/label": "3.88.0",
-		"@clayui/layout": "3.93.0",
-		"@clayui/loading-indicator": "3.60.0",
-		"@clayui/modal": "3.104.0",
-		"@clayui/panel": "3.104.0",
-		"@clayui/sticker": "3.65.0",
-		"@clayui/tooltip": "3.104.0",
+		"@clayui/alert": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/data-provider": "3.119.0",
+		"@clayui/drop-down": "3.123.1",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.122.0",
+		"@clayui/icon": "3.111.0",
+		"@clayui/label": "3.111.0",
+		"@clayui/layout": "3.111.0",
+		"@clayui/loading-indicator": "3.111.0",
+		"@clayui/modal": "3.122.0",
+		"@clayui/panel": "3.119.0",
+		"@clayui/sticker": "3.111.0",
+		"@clayui/tooltip": "3.119.0",
 		"@liferay/frontend-js-react-web": "*",
 		"@liferay/frontend-js-state-web": "*",
 		"classnames": "2.3.1",
@@ -21,19 +21,16 @@
 		"dynamic-data-mapping-form-field-type": "*",
 		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
-		"react": "16.12.0",
+		"react": "18.2.0",
 		"react-dnd": "11.1.1",
 		"react-dnd-html5-backend": "11.1.1"
 	},
 	"jest": {
 		"collectCoverageFrom": [
-			"src/main/resources/META-INF/resources/data_layout_builder/js/**/*.es.js"
+			"src/main/resources/META-INF/resources/js/**/*.es.js"
 		],
 		"setupFilesAfterEnv": [
 			"<rootDir>/jest-setup.config.js"
-		],
-		"snapshotSerializers": [
-			"metal-jest-serializer"
 		],
 		"testMatch": [
 			"<rootDir>/test/js/**/*.es.js"
@@ -44,14 +41,14 @@
 			"<rootDir>/jest-setup.config.js"
 		]
 	},
-	"main": "data_layout_builder/js/index.es.js",
+	"main": "js/index.js",
 	"name": "data-engine-taglib",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "USE_REACT_16=true node-scripts test"
 	},
-	"version": "3.4.22"
+	"version": "4.0.15"
 }

@@ -7,6 +7,7 @@ package com.liferay.commerce.product.type.virtual.service;
 
 import com.liferay.commerce.product.type.virtual.model.CPDefinitionVirtualSetting;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.util.Map;
 
@@ -46,23 +47,6 @@ public class CPDefinitionVirtualSettingServiceUtil {
 			termsOfUseJournalArticleResourcePrimKey, override, serviceContext);
 	}
 
-	public static CPDefinitionVirtualSetting addCPDefinitionVirtualSetting(
-			String className, long classPK, long fileEntryId, String url,
-			int activationStatus, long duration, int maxUsages,
-			boolean useSample, long sampleFileEntryId, String sampleURL,
-			boolean termsOfUseRequired,
-			Map<java.util.Locale, String> termsOfUseContentMap,
-			long termsOfUseJournalArticleResourcePrimKey,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().addCPDefinitionVirtualSetting(
-			className, classPK, fileEntryId, url, activationStatus, duration,
-			maxUsages, useSample, sampleFileEntryId, sampleURL,
-			termsOfUseRequired, termsOfUseContentMap,
-			termsOfUseJournalArticleResourcePrimKey, serviceContext);
-	}
-
 	public static CPDefinitionVirtualSetting deleteCPDefinitionVirtualSetting(
 			String className, long classPK)
 		throws PortalException {
@@ -76,6 +60,14 @@ public class CPDefinitionVirtualSettingServiceUtil {
 		throws PortalException {
 
 		return getService().fetchCPDefinitionVirtualSetting(className, classPK);
+	}
+
+	public static CPDefinitionVirtualSetting getCPDefinitionVirtualSetting(
+			long cpDefinitionVirtualSettingId)
+		throws PortalException {
+
+		return getService().getCPDefinitionVirtualSetting(
+			cpDefinitionVirtualSettingId);
 	}
 
 	/**
@@ -122,13 +114,12 @@ public class CPDefinitionVirtualSettingServiceUtil {
 	}
 
 	public static CPDefinitionVirtualSettingService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPDefinitionVirtualSettingService service) {
-		_service = service;
-	}
-
-	private static volatile CPDefinitionVirtualSettingService _service;
+	private static final Snapshot<CPDefinitionVirtualSettingService>
+		_serviceSnapshot = new Snapshot<>(
+			CPDefinitionVirtualSettingServiceUtil.class,
+			CPDefinitionVirtualSettingService.class);
 
 }

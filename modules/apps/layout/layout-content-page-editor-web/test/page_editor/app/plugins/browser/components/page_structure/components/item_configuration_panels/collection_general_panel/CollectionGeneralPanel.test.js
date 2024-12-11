@@ -103,6 +103,7 @@ const renderComponent = ({
 				languageId: 'en_US',
 				layoutData,
 				permissions: {UPDATE: true},
+				restrictedItemIds: new Set(),
 				segmentsExperienceId: '0',
 				selectedViewportSize,
 			})}
@@ -143,7 +144,7 @@ describe('CollectionGeneralPanel', () => {
 
 		expect(updateItemConfig).toHaveBeenCalledWith({
 			itemConfig: {gutters: true},
-			itemId: '0',
+			itemIds: ['0'],
 		});
 	});
 
@@ -161,7 +162,7 @@ describe('CollectionGeneralPanel', () => {
 			itemConfig: {
 				verticalAlignment: 'center',
 			},
-			itemId: '0',
+			itemIds: ['0'],
 		});
 	});
 
@@ -203,7 +204,7 @@ describe('CollectionGeneralPanel', () => {
 					displayMessage: false,
 				},
 			}),
-			itemId: '0',
+			itemIds: ['0'],
 		});
 	});
 
@@ -228,7 +229,7 @@ describe('CollectionGeneralPanel', () => {
 					},
 				},
 			}),
-			itemId: '0',
+			itemIds: ['0'],
 		});
 	});
 
@@ -246,7 +247,7 @@ describe('CollectionGeneralPanel', () => {
 			itemConfig: {
 				paginationType: 'none',
 			},
-			itemId: '0',
+			itemIds: ['0'],
 		});
 	});
 
@@ -265,7 +266,7 @@ describe('CollectionGeneralPanel', () => {
 			itemConfig: expect.objectContaining({
 				displayAllItems: true,
 			}),
-			itemId: '0',
+			itemIds: ['0'],
 		});
 	});
 
@@ -301,7 +302,7 @@ describe('CollectionGeneralPanel', () => {
 			itemConfig: expect.objectContaining({
 				displayAllPages: true,
 			}),
-			itemId: '0',
+			itemIds: ['0'],
 		});
 	});
 
@@ -321,7 +322,7 @@ describe('CollectionGeneralPanel', () => {
 			itemConfig: {
 				tablet: {numberOfColumns: '1'},
 			},
-			itemId: '0',
+			itemIds: ['0'],
 		});
 	});
 
@@ -382,7 +383,7 @@ describe('CollectionGeneralPanel', () => {
 				itemConfig: {
 					numberOfItems: 3,
 				},
-				itemId: '0',
+				itemIds: ['0'],
 			});
 		});
 
@@ -422,7 +423,7 @@ describe('CollectionGeneralPanel', () => {
 				itemConfig: {
 					numberOfPages: 3,
 				},
-				itemId: '0',
+				itemIds: ['0'],
 			});
 		});
 	});
@@ -447,7 +448,7 @@ describe('CollectionGeneralPanel', () => {
 				itemConfig: {
 					numberOfItemsPerPage: 2,
 				},
-				itemId: '0',
+				itemIds: ['0'],
 			});
 		});
 
@@ -505,12 +506,14 @@ describe('CollectionGeneralPanel', () => {
 									targetCollections: ['collection-display-a'],
 								},
 							},
-							fragmentEntryKey: COLLECTION_FILTER_FRAGMENT_ENTRY_KEY,
+							fragmentEntryKey:
+								COLLECTION_FILTER_FRAGMENT_ENTRY_KEY,
 						},
 					},
 
 					itemId: 'collection-display-a',
 					layoutData: {
+						deletedItems: [],
 						items: {
 							'collection-display-a': {
 								itemId: 'collection-display-a',

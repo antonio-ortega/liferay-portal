@@ -40,15 +40,15 @@ public class DataEngineDLFileEntryTypeLocalServiceWrapper
 
 	@Override
 	public DLFileEntryType addFileEntryType(
-			long userId, long groupId, long dataDefinitionId,
-			String fileEntryTypeKey, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, int scope,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long dataDefinitionId, String fileEntryTypeKey,
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			int scope, ServiceContext serviceContext)
 		throws PortalException {
 
 		DLFileEntryType fileEntryType = super.addFileEntryType(
-			userId, groupId, dataDefinitionId, fileEntryTypeKey, nameMap,
-			descriptionMap, scope, serviceContext);
+			externalReferenceCode, userId, groupId, dataDefinitionId,
+			fileEntryTypeKey, nameMap, descriptionMap, scope, serviceContext);
 
 		_updateDDMStructure(dataDefinitionId);
 
@@ -57,14 +57,15 @@ public class DataEngineDLFileEntryTypeLocalServiceWrapper
 
 	@Override
 	public DLFileEntryType addFileEntryType(
-			long userId, long groupId, long dataDefinitionId,
-			String fileEntryTypeKey, Map<Locale, String> nameMap,
-			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long groupId,
+			long dataDefinitionId, String fileEntryTypeKey,
+			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		DLFileEntryType fileEntryType = super.addFileEntryType(
-			userId, groupId, dataDefinitionId, fileEntryTypeKey, nameMap,
-			descriptionMap, serviceContext);
+			externalReferenceCode, userId, groupId, dataDefinitionId,
+			fileEntryTypeKey, nameMap, descriptionMap, serviceContext);
 
 		_updateDDMStructure(dataDefinitionId);
 
@@ -72,13 +73,15 @@ public class DataEngineDLFileEntryTypeLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteFileEntryType(DLFileEntryType dlFileEntryType)
+	public DLFileEntryType deleteFileEntryType(DLFileEntryType dlFileEntryType)
 		throws PortalException {
 
-		super.deleteFileEntryType(dlFileEntryType);
+		dlFileEntryType = super.deleteFileEntryType(dlFileEntryType);
 
 		updateDDMStructureLinks(
 			dlFileEntryType.getFileEntryTypeId(), Collections.emptySet());
+
+		return dlFileEntryType;
 	}
 
 	private void _updateDDMStructure(long structureId) {

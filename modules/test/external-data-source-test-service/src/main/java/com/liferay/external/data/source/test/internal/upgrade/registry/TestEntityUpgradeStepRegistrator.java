@@ -5,10 +5,12 @@
 
 package com.liferay.external.data.source.test.internal.upgrade.registry;
 
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Shuyang Zhou
@@ -33,5 +35,10 @@ public class TestEntityUpgradeStepRegistrator
 
 			});
 	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.external.data.source.test.service)(&(release.schema.version>=1.0.0)))"
+	)
+	private Release _release;
 
 }

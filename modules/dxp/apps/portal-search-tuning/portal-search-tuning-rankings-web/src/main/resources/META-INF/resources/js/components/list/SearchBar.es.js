@@ -26,6 +26,7 @@ class SearchBar extends Component {
 		 */
 		dataMap: PropTypes.object.isRequired,
 		disableSearch: PropTypes.bool,
+		disabled: PropTypes.bool,
 		fetchDocumentsSearchURL: PropTypes.string,
 		onAddResultSubmit: PropTypes.func,
 		onClickHide: PropTypes.func,
@@ -41,6 +42,7 @@ class SearchBar extends Component {
 	};
 
 	static defaultProps = {
+		disabled: false,
 		resultIds: [],
 		selectedIds: [],
 	};
@@ -107,6 +109,7 @@ class SearchBar extends Component {
 
 	render() {
 		const {
+			disabled,
 			fetchDocumentsSearchURL,
 			onAddResultSubmit,
 			resultIds,
@@ -136,7 +139,7 @@ class SearchBar extends Component {
 										'select-all'
 									)}
 									checked={this._hasSelectedIds()}
-									disabled={!resultIds.length}
+									disabled={!resultIds.length || disabled}
 									indeterminate={
 										!!selectedIds.length &&
 										selectedIds.length !== resultIds.length
@@ -172,10 +175,10 @@ class SearchBar extends Component {
 													this._isAnyHidden()
 														? Liferay.Language.get(
 																'show-result'
-														  )
+															)
 														: Liferay.Language.get(
 																'hide-result'
-														  )
+															)
 												}
 												className="btn-outline-borderless component-action"
 												displayType="secondary"
@@ -184,10 +187,10 @@ class SearchBar extends Component {
 													this._isAnyHidden()
 														? Liferay.Language.get(
 																'show-result'
-														  )
+															)
 														: Liferay.Language.get(
 																'hide-result'
-														  )
+															)
 												}
 											>
 												<ClayIcon
@@ -208,10 +211,10 @@ class SearchBar extends Component {
 													this._isAnyUnpinned()
 														? Liferay.Language.get(
 																'pin-result'
-														  )
+															)
 														: Liferay.Language.get(
 																'unpin-result'
-														  )
+															)
 												}
 												className="btn-outline-borderless component-action"
 												displayType="secondary"
@@ -220,10 +223,10 @@ class SearchBar extends Component {
 													this._isAnyUnpinned()
 														? Liferay.Language.get(
 																'pin-result'
-														  )
+															)
 														: Liferay.Language.get(
 																'unpin-result'
-														  )
+															)
 												}
 											>
 												{this._isAnyUnpinned() ? (
@@ -263,7 +266,7 @@ class SearchBar extends Component {
 						{!this._hasSelectedIds() && (
 							<>
 								<ManagementToolbar.ItemList expand>
-									{!!resultIds.length && (
+									{!!resultIds.length && !disabled && (
 										<ManagementToolbar.Item>
 											<span className="component-text navbar-text">
 												{Liferay.Language.get(
@@ -278,6 +281,7 @@ class SearchBar extends Component {
 									<ManagementToolbar.ItemList>
 										<ManagementToolbar.Item>
 											<AddResult
+												disabled={disabled}
 												fetchDocumentsSearchURL={
 													fetchDocumentsSearchURL
 												}

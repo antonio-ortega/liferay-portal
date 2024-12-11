@@ -15,12 +15,17 @@ import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsD
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
 import {LIST_ITEM_TYPES} from '../../../app/config/constants/listItemTypes';
 import {
+	useSelectItem,
+	useSelectMultipleItems,
+} from '../../../app/contexts/ControlsContext';
+import {
 	useDisableKeyboardMovement,
-	useSetMovementSource,
+	useSetMovementSources,
 } from '../../../app/contexts/KeyboardMovementContext';
 import {useDispatch} from '../../../app/contexts/StoreContext';
 import addFragment from '../../../app/thunks/addFragment';
 import addItem from '../../../app/thunks/addItem';
+import addStepper from '../../../app/thunks/addStepper';
 import addWidget from '../../../app/thunks/addWidget';
 import toggleFragmentHighlighted from '../../../app/thunks/toggleFragmentHighlighted';
 import toggleWidgetHighlighted from '../../../app/thunks/toggleWidgetHighlighted';
@@ -39,6 +44,27 @@ const ITEM_PROPTYPES_SHAPE = PropTypes.shape({
 export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 	const dispatch = useDispatch();
 	const [disabled, setDisabled] = useState(item.disabled);
+	const setMovementSources = useSetMovementSources();
+	const selectItem = useSelectItem();
+	const selectMultipleItems = useSelectMultipleItems();
+
+	const onMovementSource = (event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+
+			setMovementSources([
+				{
+					...item.data,
+					fragmentEntryType: item.data.type,
+					icon: item.icon,
+					isWidget: Boolean(item.data.portletId),
+					name: item.label,
+					portletId: item.data.portletId,
+					type: item.type,
+				},
+			]);
+		}
+	};
 
 	const onToggleHighlighted = useCallback(() => {
 		if (item.data.portletId) {
@@ -67,10 +93,12 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 
 	const {isDraggingSource, sourceRef} = useDragSymbol(
 		{
+			fieldTypes: item.data.fieldTypes,
 			fragmentEntryType: item.data.type,
 			icon: item.icon,
-			isWidget: item.data.portletId,
+			isWidget: Boolean(item.data.portletId),
 			label: item.label,
+			portletId: item.data.portletId,
 			type: item.type,
 		},
 		(parentId, position) => {
@@ -79,6 +107,9 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 			if (item.type === LAYOUT_DATA_ITEM_TYPES.fragment) {
 				if (item.data.portletId) {
 					thunk = addWidget;
+				}
+				else if (item.data.fieldTypes?.includes('stepper')) {
+					thunk = addStepper;
 				}
 				else {
 					thunk = addFragment;
@@ -96,10 +127,17 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 					itemType: item.type,
 					parentItemId: parentId,
 					position,
+					selectItems: Liferay.FeatureFlags['LPD-18221']
+						? selectMultipleItems
+						: selectItem,
 				})
-			).catch(() => {
-				setDisabled(false);
-			});
+			)
+				.then(() => {
+					setDisabled(false);
+				})
+				.catch(() => {
+					setDisabled(false);
+				});
 		}
 	);
 
@@ -108,13 +146,15 @@ export default function TabItem({displayStyle, item, onRemoveHighlighted}) {
 			disabled={disabled || isDraggingSource || item.disabled}
 			handlerRef={item.disabled ? null : sourceRef}
 			item={item}
+			onMovementSource={onMovementSource}
 			onToggleHighlighted={onToggleHighlighted}
 		/>
 	) : (
 		<ListItem
 			disabled={disabled || isDraggingSource || item.disabled}
-			handlerRef={item.disabled ? null : sourceRef}
+			handlerRef={item.disabled || disabled ? null : sourceRef}
 			item={item}
+			onMovementSource={onMovementSource}
 			onToggleHighlighted={onToggleHighlighted}
 		/>
 	);
@@ -125,7 +165,13 @@ TabItem.propTypes = {
 	item: ITEM_PROPTYPES_SHAPE.isRequired,
 };
 
-const ListItem = ({disabled, handlerRef, item, onToggleHighlighted}) => {
+const ListItem = ({
+	disabled,
+	handlerRef,
+	item,
+	onMovementSource,
+	onToggleHighlighted,
+}) => {
 	const {isTarget, setElement} = useKeyboardNavigation({
 		type: LIST_ITEM_TYPES.listItem,
 	});
@@ -140,9 +186,11 @@ const ListItem = ({disabled, handlerRef, item, onToggleHighlighted}) => {
 					disabled,
 					'ml-3 page-editor__fragments-widgets__tab-portlet-item':
 						item.data.portletItemId,
-					'page-editor__fragments-widgets__tab-list-item--active': isActive,
+					'page-editor__fragments-widgets__tab-list-item--active':
+						isActive,
 				}
 			)}
+			onKeyDown={onMovementSource}
 			ref={setElement}
 			role="menuitem"
 			tabIndex={isTarget ? 0 : -1}
@@ -154,7 +202,7 @@ const ListItem = ({disabled, handlerRef, item, onToggleHighlighted}) => {
 				<div className="align-items-center d-flex page-editor__fragments-widgets__tab-list-item-body">
 					<ClayIcon className="mr-3" symbol={item.icon} />
 
-					<div className="text-truncate title">{item.label}</div>
+					<div className="title">{item.label}</div>
 				</div>
 
 				{!disabled && (
@@ -177,13 +225,19 @@ const ListItem = ({disabled, handlerRef, item, onToggleHighlighted}) => {
 };
 
 ListItem.propTypes = {
-	disabled: PropTypes.bool.isRequired,
+	disabled: PropTypes.bool,
 	handlerRef: PropTypes.func.isRequired,
 	item: ITEM_PROPTYPES_SHAPE.isRequired,
 	onToggleHighlighted: PropTypes.func.isRequired,
 };
 
-const CardItem = ({disabled, handlerRef, item, onToggleHighlighted}) => {
+const CardItem = ({
+	disabled,
+	handlerRef,
+	item,
+	onMovementSource,
+	onToggleHighlighted,
+}) => {
 	const {isTarget, setElement} = useKeyboardNavigation({
 		type: LIST_ITEM_TYPES.listItem,
 	});
@@ -196,9 +250,11 @@ const CardItem = ({disabled, handlerRef, item, onToggleHighlighted}) => {
 				'page-editor__fragments-widgets__tab-card-item',
 				{
 					disabled,
-					'page-editor__fragments-widgets__tab-list-item--active': isActive,
+					'page-editor__fragments-widgets__tab-list-item--active':
+						isActive,
 				}
 			)}
+			onKeyDown={onMovementSource}
 			ref={setElement}
 			role="menuitem"
 			tabIndex={isTarget ? 0 : -1}
@@ -311,6 +367,7 @@ const HighlightButton = ({
 			onBlur={() => setItemActive(false)}
 			onClick={onToggleHighlighted}
 			onFocus={onFocus}
+			onKeyDown={(event) => event.stopPropagation()}
 			symbol={highlighted ? 'star' : 'star-o'}
 			tabIndex={isNavigationTarget ? 0 : -1}
 			title={title}
@@ -326,7 +383,7 @@ HighlightButton.propTypes = {
 };
 
 const AddButton = ({isNavigationTarget, item, setItemActive}) => {
-	const setMovementSource = useSetMovementSource();
+	const setMovementSources = useSetMovementSources();
 	const disableMovement = useDisableKeyboardMovement();
 
 	return (
@@ -340,16 +397,19 @@ const AddButton = ({isNavigationTarget, item, setItemActive}) => {
 				disableMovement();
 			}}
 			onClick={() =>
-				setMovementSource({
-					...item.data,
-					fragmentEntryType: item.data.type,
-					icon: item.icon,
-					isWidget: Boolean(item.data.portletId),
-					name: item.label,
-					type: item.type,
-				})
+				setMovementSources([
+					{
+						...item.data,
+						fragmentEntryType: item.data.type,
+						icon: item.icon,
+						isWidget: Boolean(item.data.portletId),
+						name: item.label,
+						type: item.type,
+					},
+				])
 			}
 			onFocus={() => setItemActive(true)}
+			onKeyDown={(event) => event.stopPropagation()}
 			symbol="plus"
 			tabIndex={isNavigationTarget ? 0 : -1}
 			title={sub(Liferay.Language.get('add-x'), item.label)}

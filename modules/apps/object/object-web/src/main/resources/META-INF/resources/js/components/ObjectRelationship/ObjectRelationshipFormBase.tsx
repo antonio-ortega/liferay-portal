@@ -3,47 +3,41 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import {
 	API,
 	FormError,
 	Input,
-	REQUIRED_MSG,
 	SingleSelect,
-	filterArrayByQuery,
-	getLocalizableLabel,
-	invalidateRequired,
-	useForm,
+	stringUtils,
 } from '@liferay/object-js-components-web';
 import {createResourceURL} from 'frontend-js-web';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
-import {defaultLanguageId} from '../../utils/constants';
 import CurrentObjectDefinition from './CurrentObjectDefinition';
+import {ObjectRelationshipInheritanceCheckbox} from './ObjectRelationshipInheritanceCheckbox';
 import SelectObjectDefinition from './SelectObjectDefinition';
 
 interface ObjectRelationshipFormBaseProps {
 	baseResourceURL: string;
+	children?: JSX.Element;
+	className?: string;
 	errors: FormError<ObjectRelationship>;
 	handleChange: React.ChangeEventHandler<HTMLInputElement>;
 	hasDefinedObjectDefinitionTarget?: boolean;
 	objectDefinitionExternalReferenceCode1: string;
 	objectDefinitionExternalReferenceCode2?: string;
+	onChangeInheritanceCheckbox?: (
+		event: React.ChangeEvent<HTMLInputElement>
+	) => void;
+	onSubmit?: (values?: Partial<ObjectRelationship>) => Promise<void>;
 	readonly?: boolean;
 	setValues: (values: Partial<ObjectRelationship>) => void;
+	submitError?: SubmitError;
 	values: Partial<ObjectRelationship>;
 }
 
-interface UseObjectRelationshipFormProps {
-	initialValues: Partial<ObjectRelationship>;
-	onSubmit: (relationship: ObjectRelationship) => void;
-	parameterRequired: boolean;
-}
-
-export enum ObjectRelationshipType {
-	MANY_TO_MANY = 'manyToMany',
-	ONE_TO_MANY = 'oneToMany',
-	ONE_TO_ONE = 'oneToOne',
-}
+export type ObjectRelationshipType = 'manyToMany' | 'oneToMany' | 'oneToOne';
 
 type ObjectRelationshipTypeInfo = {
 	description: string;
@@ -60,8 +54,9 @@ const MANY_TO_MANY = {
 	label: Liferay.Language.get('many-to-many'),
 	objectInputLabel1: Liferay.Language.get('many-records-of'),
 	objectInputLabel2: Liferay.Language.get('many-records-of'),
-	value: ObjectRelationshipType.MANY_TO_MANY,
-};
+	value: 'manyToMany',
+} as ObjectRelationshipTypeInfo;
+
 const ONE_TO_MANY = {
 	description: Liferay.Language.get(
 		"one-object's-entry-interacts-with-many-others-object's-entries"
@@ -69,8 +64,9 @@ const ONE_TO_MANY = {
 	label: Liferay.Language.get('one-to-many'),
 	objectInputLabel1: Liferay.Language.get('one-record-of'),
 	objectInputLabel2: Liferay.Language.get('many-records-of'),
-	value: ObjectRelationshipType.ONE_TO_MANY,
-};
+	value: 'oneToMany',
+} as ObjectRelationshipTypeInfo;
+
 const ONE_TO_ONE = {
 	description: Liferay.Language.get(
 		"one-object's-entry-interacts-only-with-one-other-object's-entry"
@@ -78,8 +74,8 @@ const ONE_TO_ONE = {
 	label: Liferay.Language.get('one-to-one'),
 	objectInputLabel1: Liferay.Language.get('one-record-of'),
 	objectInputLabel2: Liferay.Language.get('one-record-of'),
-	value: ObjectRelationshipType.ONE_TO_ONE,
-};
+	value: 'oneToOne',
+} as ObjectRelationshipTypeInfo;
 
 export const OBJECT_RELATIONSHIP_TYPES = [
 	MANY_TO_MANY,
@@ -87,110 +83,36 @@ export const OBJECT_RELATIONSHIP_TYPES = [
 	ONE_TO_ONE,
 ];
 
-export function useObjectRelationshipForm({
-	initialValues,
-	onSubmit,
-	parameterRequired,
-}: UseObjectRelationshipFormProps) {
-	const validate = (relationship: Partial<ObjectRelationship>) => {
-		const errors: FormError<ObjectRelationship> = {};
-
-		const label = relationship.label?.[defaultLanguageId];
-
-		if (invalidateRequired(label)) {
-			errors.label = REQUIRED_MSG;
-		}
-
-		if (invalidateRequired(relationship.name ?? label)) {
-			errors.name = REQUIRED_MSG;
-		}
-
-		if (invalidateRequired(relationship.type)) {
-			errors.type = REQUIRED_MSG;
-		}
-
-		if (!relationship.objectDefinitionId1) {
-			errors.objectDefinitionId1 = REQUIRED_MSG;
-		}
-
-		if (!relationship.objectDefinitionId2) {
-			errors.objectDefinitionId2 = REQUIRED_MSG;
-		}
-
-		if (
-			parameterRequired &&
-			relationship.type === ObjectRelationshipType.ONE_TO_MANY &&
-			!relationship.parameterObjectFieldName
-		) {
-			errors.parameterObjectFieldName = REQUIRED_MSG;
-		}
-
-		return errors;
-	};
-
-	const {
-		errors,
-		handleChange,
-		handleSubmit,
-		handleValidate,
-		setValues,
-		values,
-	} = useForm({
-		initialValues,
-		onSubmit,
-		validate,
-	});
-
-	return {
-		errors,
-		handleChange,
-		handleSubmit,
-		handleValidate,
-		setValues,
-		values,
-	};
-}
-
 export function ObjectRelationshipFormBase({
 	baseResourceURL,
+	children,
+	className,
 	errors,
 	handleChange,
 	hasDefinedObjectDefinitionTarget,
 	objectDefinitionExternalReferenceCode1,
 	objectDefinitionExternalReferenceCode2,
+	onChangeInheritanceCheckbox,
 	readonly,
 	setValues,
+	submitError,
 	values,
 }: ObjectRelationshipFormBaseProps) {
-	const [creationLanguageId, setCreationLanguageId] = useState<
-		Liferay.Language.Locale
-	>();
-	const [currentObjectDefinition, setCurrentObjectDefinition] = useState<
-		Partial<ObjectDefinition>
-	>();
-	const [objectDefinition1, setObjectDefinition1] = useState<
-		Partial<ObjectDefinition>
-	>();
-	const [objectDefinition2, setObjectDefinition2] = useState<
-		Partial<ObjectDefinition>
-	>();
+	const [creationLanguageId, setCreationLanguageId] =
+		useState<Liferay.Language.Locale>();
+	const [currentObjectDefinition, setCurrentObjectDefinition] =
+		useState<Partial<ObjectDefinition>>();
+	const [objectDefinition1, setObjectDefinition1] =
+		useState<Partial<ObjectDefinition>>();
+	const [objectDefinition2, setObjectDefinition2] =
+		useState<Partial<ObjectDefinition>>();
 	const [objectDefinitions, setObjectDefinitions] = useState<
 		Partial<ObjectDefinition>[]
 	>([]);
 	const [objectRelationshipTypes, setObjectRelationshipTypes] = useState<
-		ObjectRelationshipTypeInfo[] | undefined
-	>();
-	const [query, setQuery] = useState<string>('');
+		ObjectRelationshipTypeInfo[]
+	>([ONE_TO_MANY]);
 	const [reverseOrder, setReverseOrder] = useState<boolean>(false);
-
-	const filteredRelationships = useMemo(() => {
-		return filterArrayByQuery({
-			array: objectDefinitions,
-			creationLanguageId,
-			query,
-			str: 'label',
-		});
-	}, [creationLanguageId, objectDefinitions, query]);
 
 	const switchObjects = () => {
 		const previousObjectDefinition1 = {
@@ -257,14 +179,16 @@ export function ObjectRelationshipFormBase({
 		if (objectDefinition1) {
 			handleObjectRelationshipTypes(objectDefinition1);
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [values.objectDefinitionExternalReferenceCode1]);
 
 	useEffect(() => {
 		const fetchObjectDefinition = async () => {
-			const objectDefinition1 = await API.getObjectDefinitionByExternalReferenceCode(
-				objectDefinitionExternalReferenceCode1 as string
-			);
+			const objectDefinition1 =
+				await API.getObjectDefinitionByExternalReferenceCode(
+					objectDefinitionExternalReferenceCode1 as string
+				);
 			let newObjectRelationshipValues: Partial<ObjectRelationship> = {
 				objectDefinitionExternalReferenceCode1:
 					objectDefinition1.externalReferenceCode,
@@ -272,9 +196,10 @@ export function ObjectRelationshipFormBase({
 			};
 
 			if (objectDefinitionExternalReferenceCode2) {
-				const objectDefinition2 = await API.getObjectDefinitionByExternalReferenceCode(
-					objectDefinitionExternalReferenceCode2 as string
-				);
+				const objectDefinition2 =
+					await API.getObjectDefinitionByExternalReferenceCode(
+						objectDefinitionExternalReferenceCode2 as string
+					);
 
 				setObjectDefinition2(objectDefinition2);
 
@@ -295,12 +220,13 @@ export function ObjectRelationshipFormBase({
 		};
 
 		fetchObjectDefinition();
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionExternalReferenceCode1]);
 
 	useEffect(() => {
 		const fetchObjectDefinitions = async () => {
-			const items = await API.getAllObjectDefinitions();
+			const {items} = await API.getAllObjectDefinitions();
 
 			const objectDefinition = items.find(
 				({externalReferenceCode}) =>
@@ -327,7 +253,8 @@ export function ObjectRelationshipFormBase({
 		if (readonly) {
 			setObjectDefinitions([
 				{
-					externalReferenceCode: values.objectDefinitionExternalReferenceCode2 as string,
+					externalReferenceCode:
+						values.objectDefinitionExternalReferenceCode2 as string,
 					id: values.objectDefinitionId2 as number,
 					label: values.label as LocalizedValue<string>,
 					name: values.objectDefinitionName2 as string,
@@ -338,6 +265,7 @@ export function ObjectRelationshipFormBase({
 		else {
 			fetchObjectDefinitions();
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionExternalReferenceCode1, readonly]);
 
@@ -346,6 +274,7 @@ export function ObjectRelationshipFormBase({
 			<Input
 				disabled={readonly}
 				error={errors.name}
+				id="lfr-objects__object-relationship-form-base-name"
 				label={Liferay.Language.get('name')}
 				name="name"
 				onChange={handleChange}
@@ -354,10 +283,13 @@ export function ObjectRelationshipFormBase({
 			/>
 
 			<SingleSelect
+				className={className}
 				disabled={readonly}
 				error={errors.type}
+				id="lfr-objects__object-relationship-form-base-type"
+				items={objectRelationshipTypes}
 				label={Liferay.Language.get('type')}
-				onChange={({value}) => {
+				onSelectionChange={(value) => {
 					if (
 						(value === 'manyToMany' || value === 'oneToOne') &&
 						currentObjectDefinition?.id !== objectDefinition1?.id
@@ -382,17 +314,12 @@ export function ObjectRelationshipFormBase({
 							objectDefinitionExternalReferenceCode1:
 								objectDefinition1?.externalReferenceCode,
 							objectDefinitionId1: objectDefinition1?.id,
-							type: value,
+							type: value as ObjectRelationshipType,
 						});
 					}
 				}}
-				options={objectRelationshipTypes ?? [ONE_TO_MANY]}
 				required
-				value={
-					OBJECT_RELATIONSHIP_TYPES.find(
-						({value}) => value === values.type
-					)?.label
-				}
+				selectedKey={values.type}
 			/>
 
 			{values.type &&
@@ -424,7 +351,7 @@ export function ObjectRelationshipFormBase({
 								name="currentObjectInput"
 								readOnly={true}
 								required
-								value={getLocalizableLabel(
+								value={stringUtils.getLocalizableLabel(
 									objectDefinition2?.defaultLanguageId as Liferay.Language.Locale,
 									objectDefinition2?.label,
 									objectDefinition2?.name
@@ -437,7 +364,6 @@ export function ObjectRelationshipFormBase({
 								}
 								disabled={readonly}
 								error={errors.objectDefinitionId2}
-								filteredRelationships={filteredRelationships}
 								label={
 									OBJECT_RELATIONSHIP_TYPES.find(
 										({value}) => value === values.type
@@ -447,11 +373,10 @@ export function ObjectRelationshipFormBase({
 								objectDefinitionExternalReferenceCode={
 									values.objectDefinitionExternalReferenceCode2
 								}
-								query={query}
+								objectDefinitions={objectDefinitions}
 								readOnly={readonly}
 								reverseOrder={reverseOrder}
 								setObjectDefinition={setObjectDefinition2}
-								setQuery={setQuery}
 								setValues={setValues}
 							/>
 						)}
@@ -469,7 +394,7 @@ export function ObjectRelationshipFormBase({
 								name="currentObjectInput"
 								readOnly={true}
 								required
-								value={getLocalizableLabel(
+								value={stringUtils.getLocalizableLabel(
 									objectDefinition1?.defaultLanguageId as Liferay.Language.Locale,
 									objectDefinition1?.label,
 									objectDefinition1?.name
@@ -482,7 +407,6 @@ export function ObjectRelationshipFormBase({
 								}
 								disabled={readonly}
 								error={errors.objectDefinitionId1}
-								filteredRelationships={filteredRelationships}
 								label={
 									OBJECT_RELATIONSHIP_TYPES.find(
 										({value}) => value === values.type
@@ -492,11 +416,10 @@ export function ObjectRelationshipFormBase({
 								objectDefinitionExternalReferenceCode={
 									values.objectDefinitionExternalReferenceCode1
 								}
-								query={query}
+								objectDefinitions={objectDefinitions}
 								readOnly={readonly}
 								reverseOrder={reverseOrder}
 								setObjectDefinition={setObjectDefinition1}
-								setQuery={setQuery}
 								setValues={setValues}
 							/>
 						)}
@@ -517,6 +440,26 @@ export function ObjectRelationshipFormBase({
 						/>
 					</>
 				))}
+
+			{children}
+
+			{onChangeInheritanceCheckbox &&
+				values.type === 'oneToMany' &&
+				Liferay.FeatureFlags['LPS-187142'] && (
+					<ObjectRelationshipInheritanceCheckbox
+						onChange={onChangeInheritanceCheckbox}
+						values={values}
+					/>
+				)}
+
+			{submitError && (
+				<ClayAlert
+					displayType="danger"
+					title={`${Liferay.Language.get('error')}:`}
+				>
+					{submitError}
+				</ClayAlert>
+			)}
 		</>
 	);
 }

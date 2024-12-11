@@ -4,11 +4,14 @@ definition {
 	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property release.feature.flags.disable.DISABLE_PRIVATE_LAYOUTS = "true";
 	property testray.main.component.name = "Shopping Experience";
 
 	setUp {
 		CommerceConfiguration.commerceSetUp(minium = "true");
+
+		task ("Enable private pages") {
+			PagesAdmin.enablePrivatePages();
+		}
 	}
 
 	tearDown {
@@ -22,9 +25,7 @@ definition {
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceProducts.searchProduct(search = "U-Joint");
 
@@ -90,9 +91,7 @@ definition {
 		var product = "U-Joint";
 		var productSku = "MIN55861";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 
@@ -231,9 +230,7 @@ definition {
 		var product = "U-Joint";
 		var productSku = "MIN55861";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceProducts.searchProduct(search = ${product});
 
@@ -315,9 +312,7 @@ definition {
 		var product = "U-Joint";
 		var productSku = "MIN55861";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceProducts.searchProduct(search = ${product});
 
@@ -392,6 +387,62 @@ definition {
 		}
 	}
 
+	@description = "This is a test for COMMERCE-12621.Can view that product image cotains img tag and has the alt attribute "
+	@priority = 5
+	test CanAssertProductImagesAltAttribute {
+		property portal.acceptance = "true";
+
+		task ("Given a commerce account with a buyer user is created") {
+			CommerceEntry.addAccountEntryUser(
+				accountName = "Commerce Account",
+				accountType = "Business",
+				agreeToTermsAndAnswerReminderQuery = "true",
+				createNewAccount = "true",
+				requireReset = "false",
+				userEmailAddress = "buyer@liferay.com",
+				userFirstName = "Buyer",
+				userLastName = "User",
+				userRole = "Buyer",
+				userScreenName = "buyeruser",
+				userSiteMembership = "Minium");
+		}
+
+		task ("When the buyer adds the product to the cart and opens the mini-cart") {
+			User.logoutPG();
+
+			CommerceLogin.miniumLogin(
+				password = PropsUtil.get("default.admin.password"),
+				urlAppend = "web/minium",
+				userEmailAddress = "buyer@liferay.com");
+
+			FrontStore.addInitializerProductToCart(
+				productName = "U-Joint",
+				productQuantity = 1);
+
+			CommerceNavigator.gotoMiniCart();
+		}
+
+		task ("Then the buyer can check the alt attribute is present on the mini-cart and in the checkout") {
+			AssertElementPresent(
+				key_cartItemSku = "MIN55861",
+				locator1 = "CommerceAccelerators#MINI_CART_ITEM_THUMBNAIL");
+
+			CommerceCheckout.gotoCheckoutViaMiniCart();
+
+			CommerceCheckout.initializersCheckout(
+				newAddressAddress = "Test Address",
+				newAddressCity = "Test City",
+				newAddressCountry = "United States",
+				newAddressName = "Address Name",
+				newAddressZipCode = "Test Zip Code",
+				productImage = "U-Joint",
+				productName = "U-Joint",
+				productQuantity = 1,
+				productUnitPrice = 24,
+				shippingMethod = "Standard");
+		}
+	}
+
 	@description = "Verify products with long names are truncated in the mini-cart."
 	@priority = 3
 	test CanSeeProductNameTruncated {
@@ -423,7 +474,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -437,7 +488,7 @@ definition {
 		}
 
 		task ("Then the product name is shown truncated") {
-			TestUtils.assertTruncatedText(element = "//div[contains(@class,'mini-cart-item-info')]//h5[contains(text(),'This Is a Product With a Very Long Name That Will Be Truncated')]");
+			TestUtils.assertTruncatedText(element = "//div[contains(@class,'mini-cart-item')]//div[contains(text(),'This Is a Product With a Very Long Name That Will Be Truncated')]");
 		}
 	}
 
@@ -462,9 +513,7 @@ definition {
 		}
 
 		task ("And given a product with subscription") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CommerceProducts.searchProduct(search = "ABS Sensor");
 
@@ -483,7 +532,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -581,7 +630,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -615,9 +664,7 @@ definition {
 		var approvedCount = 0;
 
 		task ("Given the admin enabled the 'Buyer Order Approval Workflow' for Minium Portal") {
-			CommerceNavigator.gotoPortlet(
-				category = "Store Management",
-				portlet = "Channels");
+			CommerceChannels.openChannelsAdmin();
 
 			CommerceNavigator.gotoEntry(entryName = "Minium Portal");
 
@@ -638,9 +685,7 @@ definition {
 		task ("And a business account is created") {
 			CommerceNavigator.gotoMiniumSidebarItem(menuItem = "Account Management");
 
-			CommerceAcceleratorsInitializer.createNewAccountViaFront(
-				accountName = "Commerce Account",
-				adminEmailAddress = "test@liferay.com");
+			CommerceAcceleratorsInitializer.createNewAccountViaFront(accountName = "Commerce Account");
 		}
 
 		task ("And add something to the cart") {
@@ -795,164 +840,6 @@ definition {
 		}
 	}
 
-	@description = "COMMERCE-6335. As a buyer, I want to edit the quantity of an bundled product in the mini-cart using it's quantity selector and I want to view the changes applied to the mini-cart summary and the bundled items to change their quantity"
-	@priority = 5
-	test EditBundledProductQuantityFromMiniCart {
-		property portal.acceptance = "true";
-
-		task ("Given a commerce account with a buyer user is created") {
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("and a new option is created with Faceted Navigation, Required, and SKU Contributor enabled with an option value") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Options");
-
-			CPCommerceCatalog.newOptionsEntry(
-				facetable = "true",
-				optionDescription = "Option Description",
-				optionFieldType = "Select from List",
-				optionName = "Color",
-				required = "true",
-				skuContributor = "true");
-
-			Button.clickSave();
-
-			CommerceOptions.addNewOptionValue(
-				valueName = "Black",
-				valuePosition = "");
-
-			SelectFrameTop();
-
-			Button.clickSave();
-		}
-
-		task ("When creating a simple product with a set option value") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
-
-			CPCommerceCatalog.newProductsEntry(
-				productCatalog = "Minium",
-				productName = "Bundled Product",
-				productType = "Simple");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Options");
-
-			CommerceOptions.addColorOption();
-
-			Refresh();
-
-			CommerceNavigator.gotoEntry(entryName = "Color");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-			CommerceOptions.setPriceType(priceType = "Static");
-
-			Button.clickSave();
-
-			Alert.viewSuccessMessage();
-
-			CommerceOptions.setDeltaPrice(
-				deltaPrice = "60.00",
-				key_index = "Black",
-				productSKU = "MIN55861");
-
-			Button.clickSave();
-
-			Alert.viewSuccessMessage();
-
-			Refresh();
-
-			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-			CommerceSKUs.addSKU(optionValuesList = "Black:10.0");
-
-			Refresh();
-		}
-
-		task ("and adding the product to the bundled product to the cart") {
-			ApplicationsMenu.gotoSite(site = "Minium");
-
-			FrontStore.addInitializerProductToCart(
-				productName = "Bundled Product",
-				productQuantity = 1);
-		}
-
-		task ("Then as an admin and a buyer, the user is able to edit and view the bundled product details in the mini cart.") {
-			CommerceNavigator.gotoMiniCart();
-
-			FrontStore.viewMiniCartItem(
-				cartItemName = "Bundled Product",
-				cartItemOption = "black",
-				cartItemPriceValue = "70.00",
-				cartItemQuantity = 1,
-				cartItemSku = "BLACKSKU");
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "CommerceAccelerators#MINI_CART_ITEM_BUNDLED_ITEMS",
-				value1 = "1 × U-Joint");
-
-			AssertElementPresent(
-				key_cartItemSku = "BLACKSKU",
-				locator1 = "CommerceAccelerators#MINI_CART_ITEM_DEFAULT_THUMBNAIL");
-
-			CommerceNavigator.editMiniCartItemQuantity(
-				cartItemSku = "BLACKSKU",
-				productQuantity = 2);
-
-			AssertTextEquals(
-				key_summaryTableItem = "Quantity",
-				locator1 = "CommerceAccelerators#MINI_CART_SUMMARY_TABLE_ITEM",
-				value1 = 2);
-
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			CommerceNavigator.gotoMiniCart();
-
-			FrontStore.viewMiniCartItem(
-				cartItemName = "Bundled Product",
-				cartItemOption = "black",
-				cartItemPriceValue = "70.00",
-				cartItemQuantity = 2,
-				cartItemSku = "BLACKSKU");
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "CommerceAccelerators#MINI_CART_ITEM_BUNDLED_ITEMS",
-				value1 = "2 × U-Joint");
-
-			AssertElementPresent(
-				key_cartItemSku = "BLACKSKU",
-				locator1 = "CommerceAccelerators#MINI_CART_ITEM_DEFAULT_THUMBNAIL");
-
-			CommerceNavigator.editMiniCartItemQuantity(
-				cartItemSku = "BLACKSKU",
-				productQuantity = 3);
-
-			AssertTextEquals(
-				key_summaryTableItem = "Quantity",
-				locator1 = "CommerceAccelerators#MINI_CART_SUMMARY_TABLE_ITEM",
-				value1 = 3);
-		}
-	}
-
 	@description = "COMMERCE-6333. As a buyer, I want to edit the quantity of an item in the mini-cart using the quantity selector and I want to view the changes applied to the mini-cart summary"
 	@priority = 5
 	test EditCartItemQuantityFromMiniCart {
@@ -1016,7 +903,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1121,7 +1008,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1220,7 +1107,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1313,9 +1200,7 @@ definition {
 		var product = "U-Joint";
 		var productSku = "MIN55861";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 
@@ -1413,9 +1298,7 @@ definition {
 		var product = "U-Joint";
 		var productSku = "MIN55861";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Products");
+		CommerceProducts.openProductsAdmin();
 
 		CommerceNavigator.searchEntry(entryName = ${product});
 
@@ -1553,9 +1436,7 @@ definition {
 		}
 
 		task ("When creating a simple product with a set option value") {
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CPCommerceCatalog.newProductsEntry(
 				productCatalog = "Minium",
@@ -1591,7 +1472,9 @@ definition {
 
 			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
 
-			CommerceSKUs.addSKU(optionValuesList = "Black:10.0");
+			CommerceSKUs.addSKU(
+				optionValuesList = "Black:10.0",
+				priceList = "Minium Base Price List");
 
 			Refresh();
 		}
@@ -1608,11 +1491,13 @@ definition {
 			CommerceNavigator.gotoMiniCart();
 
 			FrontStore.viewMiniCartItem(
+				bundledItems = "Black(1 × U-Joint )",
 				cartItemName = "Bundled Product",
 				cartItemOption = "black",
 				cartItemPriceValue = "70.00",
 				cartItemQuantity = 1,
-				cartItemSku = "BLACKSKU");
+				cartItemSku = "BLACKSKU",
+				optionName = "Color");
 
 			AssertTextEquals.assertPartialText(
 				locator1 = "CommerceAccelerators#MINI_CART_ITEM_BUNDLED_ITEMS",
@@ -1625,7 +1510,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1726,7 +1611,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1775,9 +1660,7 @@ definition {
 	test ViewMiniCartItemWithBulkPrice {
 		property portal.acceptance = "false";
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 
@@ -1875,9 +1758,7 @@ definition {
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Discounts");
+		CommerceNavigator.goToDiscountAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -1943,9 +1824,7 @@ definition {
 
 		CommerceUtilities.checkSuccessAlertAppearsAndDisappears();
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 
@@ -2019,9 +1898,7 @@ definition {
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Discounts");
+		CommerceNavigator.goToDiscountAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -2079,9 +1956,7 @@ definition {
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Discounts");
+		CommerceNavigator.goToDiscountAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -2171,9 +2046,7 @@ definition {
 
 		// TODO Review
 
-		CommerceNavigator.gotoPortlet(
-			category = "Pricing",
-			portlet = "Price Lists");
+		CommerceNavigator.goToPriceListAdmin();
 
 		CommerceNavigator.gotoEntry(entryName = "Minium Base Price List");
 

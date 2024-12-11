@@ -12,10 +12,8 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
-import com.liferay.layout.constants.LockedLayoutType;
-import com.liferay.layout.model.LockedLayoutOrder;
+import com.liferay.layout.model.LockedLayoutType;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -67,7 +65,8 @@ public class LockedLayoutsSearchContainerManagementToolbarDisplayContext
 			StringPool.BLANK
 		).setParameter(
 			"orderByCol",
-			LockedLayoutOrder.LockedLayoutOrderType.LAST_AUTOSAVE.getValue()
+			LockedLayoutsDisplayContext.LockedLayoutOrder.LockedLayoutOrderType.
+				LAST_AUTOSAVE.getValue()
 		).setParameter(
 			"orderByType", "desc"
 		).setParameter(
@@ -82,12 +81,6 @@ public class LockedLayoutsSearchContainerManagementToolbarDisplayContext
 				dropdownGroupItem.setDropdownItems(_getFilterDropdownItems());
 				dropdownGroupItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "filter-by-type"));
-			}
-		).addGroup(
-			() -> !FeatureFlagManagerUtil.isEnabled("LPS-144527"),
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(_getOrderDropdownItems());
-				dropdownGroupItem.setLabel(getOrderByDropdownItemsLabel());
 			}
 		).build();
 
@@ -186,14 +179,15 @@ public class LockedLayoutsSearchContainerManagementToolbarDisplayContext
 	}
 
 	private List<DropdownItem> _getOrderDropdownItems() {
-		LockedLayoutOrder lockedLayoutOrder =
+		LockedLayoutsDisplayContext.LockedLayoutOrder lockedLayoutOrder =
 			_lockedLayoutsDisplayContext.getLockedLayoutOrder();
 
 		return new DropdownItemList() {
 			{
-				for (LockedLayoutOrder.LockedLayoutOrderType
-						lockedLayoutOrderType :
-							LockedLayoutOrder.LockedLayoutOrderType.values()) {
+				for (LockedLayoutsDisplayContext.LockedLayoutOrder.
+						LockedLayoutOrderType lockedLayoutOrderType :
+							LockedLayoutsDisplayContext.LockedLayoutOrder.
+								LockedLayoutOrderType.values()) {
 
 					add(
 						dropdownItem -> {

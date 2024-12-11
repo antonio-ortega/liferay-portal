@@ -6,6 +6,10 @@
 package com.liferay.blogs.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
+import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
 import com.liferay.blogs.attachments.test.BlogsEntryAttachmentFileEntryHelperTest;
 import com.liferay.blogs.constants.BlogsConstants;
 import com.liferay.blogs.exception.EntryContentException;
@@ -14,9 +18,11 @@ import com.liferay.blogs.exception.EntryTitleException;
 import com.liferay.blogs.exception.EntryUrlTitleException;
 import com.liferay.blogs.exception.NoSuchEntryException;
 import com.liferay.blogs.model.BlogsEntry;
-import com.liferay.blogs.service.BlogsEntryLocalServiceUtil;
+import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.blogs.test.util.BlogsTestUtil;
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.friendly.url.exception.DuplicateFriendlyURLEntryException;
 import com.liferay.message.boards.constants.MBMessageConstants;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.model.MBMessageDisplay;
@@ -64,6 +70,8 @@ import com.liferay.portal.kernel.util.TempFileEntryUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
+import com.liferay.portal.test.rule.FeatureFlags;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.SynchronousMailTestRule;
 import com.liferay.subscription.service.SubscriptionLocalServiceUtil;
@@ -131,10 +139,10 @@ public class BlogsEntryLocalServiceTest {
 
 		String coverImageURL = StringUtil.randomString();
 
-		BlogsEntryLocalServiceUtil.addCoverImage(
+		_blogsEntryLocalService.addCoverImage(
 			entry.getEntryId(), new ImageSelector(coverImageURL));
 
-		BlogsEntry updatedEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry updatedEntry = _blogsEntryLocalService.getEntry(
 			entry.getEntryId());
 
 		Assert.assertEquals(0, updatedEntry.getCoverImageFileEntryId());
@@ -149,13 +157,13 @@ public class BlogsEntryLocalServiceTest {
 		byte[] bytes = FileUtil.getBytes(
 			new UnsyncByteArrayInputStream(TestDataConstants.TEST_BYTE_ARRAY));
 
-		BlogsEntryLocalServiceUtil.addCoverImage(
+		_blogsEntryLocalService.addCoverImage(
 			entry.getEntryId(),
 			new ImageSelector(
 				bytes, StringUtil.randomString() + ".bin",
 				ContentTypes.APPLICATION_OCTET_STREAM, StringPool.BLANK));
 
-		BlogsEntry updatedEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry updatedEntry = _blogsEntryLocalService.getEntry(
 			entry.getEntryId());
 
 		Assert.assertNotEquals(0, updatedEntry.getCoverImageFileEntryId());
@@ -169,10 +177,10 @@ public class BlogsEntryLocalServiceTest {
 
 		String imageURL = StringUtil.randomString();
 
-		BlogsEntryLocalServiceUtil.addCoverImage(
+		_blogsEntryLocalService.addCoverImage(
 			entry.getEntryId(), new ImageSelector(imageURL));
 
-		BlogsEntry updatedEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry updatedEntry = _blogsEntryLocalService.getEntry(
 			entry.getEntryId());
 
 		Assert.assertEquals(0, updatedEntry.getCoverImageFileEntryId());
@@ -184,30 +192,30 @@ public class BlogsEntryLocalServiceTest {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext();
 
-		BlogsEntry blogsEntry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			TestPropsValues.getUserId(), StringUtil.randomString(),
 			StringUtil.randomString(), new Date(), serviceContext);
 
-		_blogsEntries.add(blogsEntry);
+		_blogsEntries.add(entry);
 
 		long initialCommentsCount = CommentManagerUtil.getCommentsCount(
-			BlogsEntry.class.getName(), blogsEntry.getEntryId());
+			BlogsEntry.class.getName(), entry.getEntryId());
 
 		CommentManagerUtil.addComment(
-			TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
-			BlogsEntry.class.getName(), blogsEntry.getEntryId(),
+			TestPropsValues.getUserId(), _group.getGroupId(),
+			BlogsEntry.class.getName(), entry.getEntryId(),
 			StringUtil.randomString(),
 			new IdentityServiceContextFunction(serviceContext));
 
 		Assert.assertEquals(
 			initialCommentsCount + 1,
 			CommentManagerUtil.getCommentsCount(
-				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
+				BlogsEntry.class.getName(), entry.getEntryId()));
 	}
 
 	@Test
 	public void testAddDraftEntryWithBlankTitle() throws Exception {
-		int initialCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+		int initialCount = _blogsEntryLocalService.getGroupEntriesCount(
 			_group.getGroupId(), _statusAnyQueryDefinition);
 
 		ServiceContext serviceContext =
@@ -215,11 +223,11 @@ public class BlogsEntryLocalServiceTest {
 
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
 
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			_user.getUserId(), StringPool.BLANK, RandomTestUtil.randomString(),
 			serviceContext);
 
-		int actualCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+		int actualCount = _blogsEntryLocalService.getGroupEntriesCount(
 			_group.getGroupId(), _statusAnyQueryDefinition);
 
 		Assert.assertEquals(initialCount + 1, actualCount);
@@ -232,7 +240,7 @@ public class BlogsEntryLocalServiceTest {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
 
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			urlTitle, RandomTestUtil.randomString(),
@@ -241,7 +249,7 @@ public class BlogsEntryLocalServiceTest {
 
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
 
-		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			urlTitle, RandomTestUtil.randomString(),
@@ -253,7 +261,7 @@ public class BlogsEntryLocalServiceTest {
 
 	@Test
 	public void testAddDraftEntryWithNullTitle() throws Exception {
-		int initialCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+		int initialCount = _blogsEntryLocalService.getGroupEntriesCount(
 			_group.getGroupId(), _statusAnyQueryDefinition);
 
 		ServiceContext serviceContext =
@@ -261,11 +269,11 @@ public class BlogsEntryLocalServiceTest {
 
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
 
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			_user.getUserId(), null, RandomTestUtil.randomString(),
 			serviceContext);
 
-		int actualCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+		int actualCount = _blogsEntryLocalService.getGroupEntriesCount(
 			_group.getGroupId(), _statusAnyQueryDefinition);
 
 		Assert.assertEquals(initialCount + 1, actualCount);
@@ -273,21 +281,11 @@ public class BlogsEntryLocalServiceTest {
 
 	@Test
 	public void testAddDuplicateAttachmentFileEntry() throws Exception {
-		BlogsEntry entry = addEntry(false);
-
 		String fileName = StringUtil.randomString();
 
-		FileEntry fileEntry1 =
-			BlogsEntryLocalServiceUtil.addAttachmentFileEntry(
-				entry, entry.getUserId(), fileName,
-				ContentTypes.APPLICATION_OCTET_STREAM,
-				new UnsyncByteArrayInputStream(new byte[0]));
+		FileEntry fileEntry1 = _addAttachmentFileEntry(null, fileName);
 
-		FileEntry fileEntry2 =
-			BlogsEntryLocalServiceUtil.addAttachmentFileEntry(
-				entry, entry.getUserId(), fileName,
-				ContentTypes.APPLICATION_OCTET_STREAM,
-				new UnsyncByteArrayInputStream(new byte[0]));
+		FileEntry fileEntry2 = _addAttachmentFileEntry(null, fileName);
 
 		Assert.assertNotEquals(
 			fileEntry1.getFileName(), fileEntry2.getFileName());
@@ -302,10 +300,10 @@ public class BlogsEntryLocalServiceTest {
 	public void testAddEmptyCoverImage() throws Exception {
 		BlogsEntry entry = addEntry(false);
 
-		BlogsEntryLocalServiceUtil.addCoverImage(
+		_blogsEntryLocalService.addCoverImage(
 			entry.getEntryId(), new ImageSelector());
 
-		BlogsEntry updatedEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry updatedEntry = _blogsEntryLocalService.getEntry(
 			entry.getEntryId());
 
 		Assert.assertEquals(0, updatedEntry.getCoverImageFileEntryId());
@@ -318,7 +316,7 @@ public class BlogsEntryLocalServiceTest {
 
 		Assert.assertEquals(
 			0,
-			BlogsEntryLocalServiceUtil.addOriginalImageFileEntry(
+			_blogsEntryLocalService.addOriginalImageFileEntry(
 				entry.getUserId(), entry.getGroupId(), entry.getEntryId(),
 				new ImageSelector()));
 	}
@@ -327,10 +325,10 @@ public class BlogsEntryLocalServiceTest {
 	public void testAddEmptySmallImage() throws Exception {
 		BlogsEntry entry = addEntry(false);
 
-		BlogsEntryLocalServiceUtil.addSmallImage(
+		_blogsEntryLocalService.addSmallImage(
 			entry.getEntryId(), new ImageSelector());
 
-		BlogsEntry updatedEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry updatedEntry = _blogsEntryLocalService.getEntry(
 			entry.getEntryId());
 
 		Assert.assertEquals(0, updatedEntry.getSmallImageFileEntryId());
@@ -340,12 +338,12 @@ public class BlogsEntryLocalServiceTest {
 
 	@Test
 	public void testAddEntry() throws Exception {
-		int initialCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+		int initialCount = _blogsEntryLocalService.getGroupEntriesCount(
 			_group.getGroupId(), _statusApprovedQueryDefinition);
 
 		addEntry(false);
 
-		int actualCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+		int actualCount = _blogsEntryLocalService.getGroupEntriesCount(
 			_group.getGroupId(), _statusApprovedQueryDefinition);
 
 		Assert.assertEquals(initialCount + 1, actualCount);
@@ -363,20 +361,81 @@ public class BlogsEntryLocalServiceTest {
 					ServiceContextTestUtil.getServiceContext(
 						_group.getGroupId(), _creatorUser.getUserId());
 
-				BlogsEntry blogsEntry = BlogsEntryLocalServiceUtil.addEntry(
+				BlogsEntry entry = _blogsEntryLocalService.addEntry(
 					_creatorUser.getUserId(), RandomTestUtil.randomString(),
 					RandomTestUtil.randomString(), serviceContext);
 
 				_addMBMessage(
-					TestPropsValues.getUserId(), serviceContext, blogsEntry);
+					TestPropsValues.getUserId(), serviceContext, entry);
 
 				Assert.assertEquals(1, MailServiceTestUtil.getInboxSize());
 			});
 	}
 
+	@Test
+	public void testAddEntryWithDuplicatedAutogeneratedFriendlyURL()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
+
+		String title = "title";
+
+		_blogsEntryLocalService.addEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(), title,
+			StringUtil.randomString(), StringPool.BLANK,
+			StringUtil.randomString(), StringUtil.randomString(), new Date(),
+			true, true, new String[0], null, null, null, serviceContext);
+
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(), title,
+			StringUtil.randomString(), StringPool.BLANK,
+			StringUtil.randomString(), StringUtil.randomString(), new Date(),
+			true, true, new String[0], null, null, null, serviceContext);
+
+		Assert.assertEquals("title-1", entry.getUrlTitle());
+	}
+
+	@FeatureFlags("LPD-11147")
+	@Test(expected = DuplicateFriendlyURLEntryException.class)
+	public void testAddEntryWithDuplicatedCategorizedFriendlyURL()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
+
+		AssetVocabulary assetVocabulary =
+			_assetVocabularyLocalService.addVocabulary(
+				TestPropsValues.getUserId(), _group.getGroupId(),
+				RandomTestUtil.randomString(), serviceContext);
+
+		AssetCategory assetCategory = _assetCategoryLocalService.addCategory(
+			TestPropsValues.getUserId(), _group.getGroupId(),
+			RandomTestUtil.randomString(), assetVocabulary.getVocabularyId(),
+			serviceContext);
+
+		serviceContext.setAttribute(
+			"friendlyURLAssetCategoryIds",
+			new long[] {assetCategory.getCategoryId()});
+
+		String urlTitle = "urlTitle";
+
+		_blogsEntryLocalService.addEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			StringUtil.randomString(), StringUtil.randomString(), urlTitle,
+			StringUtil.randomString(), StringUtil.randomString(), new Date(),
+			true, true, new String[0], null, null, null, serviceContext);
+
+		_blogsEntryLocalService.addEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			StringUtil.randomString(), StringUtil.randomString(), urlTitle,
+			StringUtil.randomString(), StringUtil.randomString(), new Date(),
+			true, true, new String[0], null, null, null, serviceContext);
+	}
+
 	@Test(expected = EntryUrlTitleException.class)
 	public void testAddEntryWithInvalidURLTitle() throws Exception {
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			StringUtil.randomString(), StringUtil.randomString(),
 			StringUtil.randomString(256), StringUtil.randomString(),
@@ -386,7 +445,7 @@ public class BlogsEntryLocalServiceTest {
 
 	@Test
 	public void testAddEntryWithNoImages() throws Exception {
-		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			StringUtil.randomString(), StringUtil.randomString(),
 			StringUtil.randomString(), StringUtil.randomString(),
@@ -405,7 +464,7 @@ public class BlogsEntryLocalServiceTest {
 	public void testAddEntryWithURLTitle() throws Exception {
 		String urlTitle = StringUtil.toLowerCase(StringUtil.randomString());
 
-		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
 			StringUtil.randomString(), StringUtil.randomString(), urlTitle,
 			StringUtil.randomString(), StringUtil.randomString(), new Date(),
@@ -415,6 +474,23 @@ public class BlogsEntryLocalServiceTest {
 		Assert.assertEquals(urlTitle, entry.getUrlTitle());
 	}
 
+	@Test
+	public void testAddEntryWithURLTitleWithSlashPrefix() throws Exception {
+		String expectedUrlTitle = StringUtil.toLowerCase(
+			StringUtil.randomString());
+
+		String bakedUrlTitle = "///////" + expectedUrlTitle;
+
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			StringUtil.randomString(), StringUtil.randomString(), bakedUrlTitle,
+			StringUtil.randomString(), StringUtil.randomString(), new Date(),
+			true, true, new String[0], null, null, null,
+			ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(expectedUrlTitle, entry.getUrlTitle());
+	}
+
 	@Test(expected = EntryContentException.class)
 	public void testAddEntryWithVeryLongContent() throws Exception {
 		int maxLength = ModelHintsUtil.getMaxLength(
@@ -422,7 +498,7 @@ public class BlogsEntryLocalServiceTest {
 
 		String content = _repeat("0", maxLength + 1);
 
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			_user.getUserId(), RandomTestUtil.randomString(), content,
 			ServiceContextTestUtil.getServiceContext(
 				_group, _user.getUserId()));
@@ -435,7 +511,7 @@ public class BlogsEntryLocalServiceTest {
 
 		String title = _repeat("0", maxLength + 1);
 
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			_user.getUserId(), title, RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group, _user.getUserId()));
@@ -445,9 +521,9 @@ public class BlogsEntryLocalServiceTest {
 	public void testAddNullCoverImage() throws Exception {
 		BlogsEntry entry = addEntry(false);
 
-		BlogsEntryLocalServiceUtil.addCoverImage(entry.getEntryId(), null);
+		_blogsEntryLocalService.addCoverImage(entry.getEntryId(), null);
 
-		BlogsEntry updatedEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry updatedEntry = _blogsEntryLocalService.getEntry(
 			entry.getEntryId());
 
 		Assert.assertEquals(0, updatedEntry.getCoverImageFileEntryId());
@@ -459,9 +535,9 @@ public class BlogsEntryLocalServiceTest {
 	public void testAddNullSmallImage() throws Exception {
 		BlogsEntry entry = addEntry(false);
 
-		BlogsEntryLocalServiceUtil.addSmallImage(entry.getEntryId(), null);
+		_blogsEntryLocalService.addSmallImage(entry.getEntryId(), null);
 
-		BlogsEntry updatedEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry updatedEntry = _blogsEntryLocalService.getEntry(
 			entry.getEntryId());
 
 		Assert.assertEquals(0, updatedEntry.getSmallImageFileEntryId());
@@ -471,7 +547,7 @@ public class BlogsEntryLocalServiceTest {
 
 	@Test
 	public void testAddOriginalImageInVisibleImageFolder() throws Exception {
-		BlogsEntry blogsEntry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			_user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
@@ -486,8 +562,8 @@ public class BlogsEntryLocalServiceTest {
 			StringPool.BLANK);
 
 		long originalImageFileEntryId =
-			BlogsEntryLocalServiceUtil.addOriginalImageFileEntry(
-				_user.getUserId(), _group.getGroupId(), blogsEntry.getEntryId(),
+			_blogsEntryLocalService.addOriginalImageFileEntry(
+				_user.getUserId(), _group.getGroupId(), entry.getEntryId(),
 				imageSelector);
 
 		FileEntry portletFileEntry =
@@ -515,7 +591,7 @@ public class BlogsEntryLocalServiceTest {
 			FileUtil.getBytes(fileEntry.getContentStream()),
 			fileEntry.getTitle(), fileEntry.getMimeType(), StringPool.BLANK);
 
-		BlogsEntryLocalServiceUtil.addSmallImage(
+		_blogsEntryLocalService.addSmallImage(
 			entry.getEntryId(), imageSelector);
 	}
 
@@ -525,10 +601,10 @@ public class BlogsEntryLocalServiceTest {
 
 		String imageURL = StringUtil.randomString();
 
-		BlogsEntryLocalServiceUtil.addSmallImage(
+		_blogsEntryLocalService.addSmallImage(
 			entry.getEntryId(), new ImageSelector(imageURL));
 
-		BlogsEntry updatedEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry updatedEntry = _blogsEntryLocalService.getEntry(
 			entry.getEntryId());
 
 		Assert.assertEquals(0, updatedEntry.getSmallImageFileEntryId());
@@ -537,41 +613,67 @@ public class BlogsEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testDeleteAttachmentFileEntry() throws Exception {
+		FileEntry fileEntry = _addAttachmentFileEntry(
+			null, StringUtil.randomString());
+
+		_blogsEntryLocalService.deleteAttachmentFileEntry(
+			fileEntry.getFileEntryId());
+
+		try {
+			_blogsEntryLocalService.getAttachmentFileEntry(
+				fileEntry.getFileEntryId());
+
+			Assert.fail();
+		}
+		catch (Exception exception) {
+			Assert.assertTrue(exception instanceof NoSuchFileEntryException);
+		}
+	}
+
+	@Test
 	public void testDeleteDiscussion() throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext();
 
-		BlogsEntry blogsEntry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			TestPropsValues.getUserId(), StringUtil.randomString(),
 			StringUtil.randomString(), new Date(), serviceContext);
 
-		_blogsEntries.add(blogsEntry);
+		_blogsEntries.add(entry);
 
 		CommentManagerUtil.addComment(
-			TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
-			BlogsEntry.class.getName(), blogsEntry.getEntryId(),
+			TestPropsValues.getUserId(), _group.getGroupId(),
+			BlogsEntry.class.getName(), entry.getEntryId(),
 			StringUtil.randomString(),
 			new IdentityServiceContextFunction(serviceContext));
 
 		Assert.assertTrue(
 			CommentManagerUtil.hasDiscussion(
-				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
+				BlogsEntry.class.getName(), entry.getEntryId()));
 
 		CommentManagerUtil.deleteDiscussion(
-			BlogsEntry.class.getName(), blogsEntry.getEntryId());
+			BlogsEntry.class.getName(), entry.getEntryId());
 
 		Assert.assertFalse(
 			CommentManagerUtil.hasDiscussion(
-				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
+				BlogsEntry.class.getName(), entry.getEntryId()));
 	}
 
-	@Test(expected = NoSuchEntryException.class)
+	@Test
 	public void testDeleteEntry() throws Exception {
 		BlogsEntry entry = addEntry(false);
 
-		BlogsEntryLocalServiceUtil.deleteEntry(entry);
+		_blogsEntryLocalService.deleteEntry(entry);
 
-		BlogsEntryLocalServiceUtil.getEntry(entry.getEntryId());
+		try {
+			_blogsEntryLocalService.getEntry(entry.getEntryId());
+
+			Assert.fail();
+		}
+		catch (Exception exception) {
+			Assert.assertTrue(exception instanceof NoSuchEntryException);
+		}
 	}
 
 	@Test
@@ -586,22 +688,53 @@ public class BlogsEntryLocalServiceTest {
 			bytes = FileUtil.getBytes(inputStream);
 		}
 
-		BlogsEntryLocalServiceUtil.addOriginalImageFileEntry(
+		_blogsEntryLocalService.addOriginalImageFileEntry(
 			entry.getUserId(), entry.getGroupId(), entry.getEntryId(),
 			new ImageSelector(
 				bytes, StringUtil.randomString() + ".bin",
 				ContentTypes.APPLICATION_OCTET_STREAM, StringPool.BLANK));
 
 		Assert.assertNotNull(
-			BlogsEntryLocalServiceUtil.fetchAttachmentsFolder(
+			_blogsEntryLocalService.fetchAttachmentsFolder(
 				entry.getUserId(), entry.getGroupId()));
 	}
 
 	@Test
 	public void testFetchNullAttachmentsFolder() throws Exception {
 		Assert.assertNull(
-			BlogsEntryLocalServiceUtil.fetchAttachmentsFolder(
-				TestPropsValues.getUserId(), TestPropsValues.getGroupId()));
+			_blogsEntryLocalService.fetchAttachmentsFolder(
+				TestPropsValues.getUserId(), _group.getGroupId()));
+	}
+
+	@Test
+	public void testGetAttachmentFileEntry() throws Exception {
+		FileEntry fileEntry1 = _addAttachmentFileEntry(
+			null, StringUtil.randomString());
+
+		FileEntry fileEntry2 = _blogsEntryLocalService.getAttachmentFileEntry(
+			fileEntry1.getFileEntryId());
+
+		Assert.assertEquals(fileEntry1, fileEntry2);
+	}
+
+	@Test
+	public void testGetAttachmentFileEntryByExternalReferenceCode()
+		throws Exception {
+
+		String externalReferenceCode = StringUtil.randomString();
+
+		FileEntry fileEntry1 = _addAttachmentFileEntry(
+			externalReferenceCode, StringUtil.randomString());
+
+		Assert.assertEquals(
+			externalReferenceCode, fileEntry1.getExternalReferenceCode());
+
+		FileEntry fileEntry2 =
+			_blogsEntryLocalService.
+				getAttachmentFileEntryByExternalReferenceCode(
+					externalReferenceCode, fileEntry1.getGroupId());
+
+		Assert.assertEquals(fileEntry1, fileEntry2);
 	}
 
 	@Test
@@ -641,7 +774,7 @@ public class BlogsEntryLocalServiceTest {
 
 		BlogsEntry secondEntry = addEntry(false, 2);
 
-		BlogsEntry[] entries = BlogsEntryLocalServiceUtil.getEntriesPrevAndNext(
+		BlogsEntry[] entries = _blogsEntryLocalService.getEntriesPrevAndNext(
 			secondEntry.getEntryId());
 
 		Assert.assertNotNull(
@@ -690,7 +823,7 @@ public class BlogsEntryLocalServiceTest {
 
 		BlogsEntry nextEntry = addEntry(false);
 
-		BlogsEntry[] entries = BlogsEntryLocalServiceUtil.getEntriesPrevAndNext(
+		BlogsEntry[] entries = _blogsEntryLocalService.getEntriesPrevAndNext(
 			currentEntry.getEntryId());
 
 		Assert.assertNotNull(
@@ -739,7 +872,7 @@ public class BlogsEntryLocalServiceTest {
 
 		BlogsEntry nextEntry = addEntry(false);
 
-		BlogsEntry[] entries = BlogsEntryLocalServiceUtil.getEntriesPrevAndNext(
+		BlogsEntry[] entries = _blogsEntryLocalService.getEntriesPrevAndNext(
 			nextEntry.getEntryId());
 
 		Assert.assertNull(
@@ -778,7 +911,7 @@ public class BlogsEntryLocalServiceTest {
 
 		addEntry(false);
 
-		BlogsEntry[] entries = BlogsEntryLocalServiceUtil.getEntriesPrevAndNext(
+		BlogsEntry[] entries = _blogsEntryLocalService.getEntriesPrevAndNext(
 			previousEntry.getEntryId());
 
 		Assert.assertNull(
@@ -817,7 +950,7 @@ public class BlogsEntryLocalServiceTest {
 
 		String urlTitle = "new-friendly-url";
 
-		BlogsEntryLocalServiceUtil.updateEntry(
+		_blogsEntryLocalService.updateEntry(
 			expectedEntry.getUserId(), expectedEntry.getEntryId(),
 			expectedEntry.getTitle(), expectedEntry.getSubtitle(), urlTitle,
 			expectedEntry.getDescription(), expectedEntry.getContent(),
@@ -827,12 +960,12 @@ public class BlogsEntryLocalServiceTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, _user.getUserId()));
 
-		BlogsEntry actualEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry actualEntry = _blogsEntryLocalService.getEntry(
 			expectedEntry.getGroupId(), oldUrlTitle);
 
 		BlogsTestUtil.assertEquals(expectedEntry, actualEntry);
 
-		actualEntry = BlogsEntryLocalServiceUtil.getEntry(
+		actualEntry = _blogsEntryLocalService.getEntry(
 			expectedEntry.getGroupId(), urlTitle);
 
 		BlogsTestUtil.assertEquals(expectedEntry, actualEntry);
@@ -842,7 +975,7 @@ public class BlogsEntryLocalServiceTest {
 	public void testGetEntryByGroupAndUrlTitle() throws Exception {
 		BlogsEntry expectedEntry = addEntry(false);
 
-		BlogsEntry actualEntry = BlogsEntryLocalServiceUtil.getEntry(
+		BlogsEntry actualEntry = _blogsEntryLocalService.getEntry(
 			expectedEntry.getGroupId(), expectedEntry.getUrlTitle());
 
 		BlogsTestUtil.assertEquals(expectedEntry, actualEntry);
@@ -905,7 +1038,7 @@ public class BlogsEntryLocalServiceTest {
 	@Test
 	public void testGetGroupsEntries() throws Exception {
 		List<BlogsEntry> groupsEntries =
-			BlogsEntryLocalServiceUtil.getGroupsEntries(
+			_blogsEntryLocalService.getGroupsEntries(
 				_user.getCompanyId(), _group.getGroupId(), new Date(),
 				_statusInTrashQueryDefinition);
 
@@ -915,7 +1048,7 @@ public class BlogsEntryLocalServiceTest {
 		addEntry(true);
 
 		List<BlogsEntry> groupsEntriesInTrash =
-			BlogsEntryLocalServiceUtil.getGroupsEntries(
+			_blogsEntryLocalService.getGroupsEntries(
 				_user.getCompanyId(), _group.getGroupId(), new Date(),
 				_statusInTrashQueryDefinition);
 
@@ -977,7 +1110,7 @@ public class BlogsEntryLocalServiceTest {
 
 	@Test(expected = EntryTitleException.class)
 	public void testPublishWithBlankTitle() throws Exception {
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			_user.getUserId(), StringPool.BLANK, RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group, _user.getUserId()));
@@ -985,7 +1118,7 @@ public class BlogsEntryLocalServiceTest {
 
 	@Test(expected = EntryTitleException.class)
 	public void testPublishWithNullTitle() throws Exception {
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			_user.getUserId(), null, RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group, _user.getUserId()));
@@ -993,7 +1126,7 @@ public class BlogsEntryLocalServiceTest {
 
 	@Test(expected = EntryTitleException.class)
 	public void testPublishWithoutTitle() throws Exception {
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			_user.getUserId(), StringPool.BLANK, RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group, _user.getUserId()));
@@ -1005,7 +1138,7 @@ public class BlogsEntryLocalServiceTest {
 			SubscriptionLocalServiceUtil.getUserSubscriptionsCount(
 				_user.getUserId());
 
-		BlogsEntryLocalServiceUtil.subscribe(
+		_blogsEntryLocalService.subscribe(
 			_user.getUserId(), _group.getGroupId());
 
 		int actualCount =
@@ -1021,10 +1154,10 @@ public class BlogsEntryLocalServiceTest {
 			SubscriptionLocalServiceUtil.getUserSubscriptionsCount(
 				_user.getUserId());
 
-		BlogsEntryLocalServiceUtil.subscribe(
+		_blogsEntryLocalService.subscribe(
 			_user.getUserId(), _group.getGroupId());
 
-		BlogsEntryLocalServiceUtil.unsubscribe(
+		_blogsEntryLocalService.unsubscribe(
 			_user.getUserId(), _group.getGroupId());
 
 		int actualCount =
@@ -1041,7 +1174,7 @@ public class BlogsEntryLocalServiceTest {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
 
-		BlogsEntryLocalServiceUtil.addEntry(
+		_blogsEntryLocalService.addEntry(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			urlTitle, RandomTestUtil.randomString(),
@@ -1050,14 +1183,14 @@ public class BlogsEntryLocalServiceTest {
 
 		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_SAVE_DRAFT);
 
-		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			RandomTestUtil.randomString(), _user.getUserId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			urlTitle, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), new Date(), false, false, null, null,
 			null, null, serviceContext);
 
-		entry = BlogsEntryLocalServiceUtil.updateEntry(
+		entry = _blogsEntryLocalService.updateEntry(
 			_user.getUserId(), entry.getEntryId(), entry.getTitle(),
 			entry.getSubtitle(), urlTitle, entry.getDescription(),
 			entry.getContent(), entry.getDisplayDate(), false, false, null,
@@ -1070,8 +1203,30 @@ public class BlogsEntryLocalServiceTest {
 	public void testUpdateEntryResources() throws Exception {
 		BlogsEntry entry = addEntry(false);
 
-		BlogsEntryLocalServiceUtil.updateEntryResources(
+		_blogsEntryLocalService.updateEntryResources(
 			entry, new String[] {ActionKeys.ADD_DISCUSSION}, null);
+	}
+
+	@Test
+	public void testUpdateEntryWithURLTitleWithSlashPrefix() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
+
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
+			_user.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), serviceContext);
+
+		String expectedUrlTitle = entry.getUrlTitle();
+
+		String bakedUrlTitle = "///////" + expectedUrlTitle;
+
+		entry = _blogsEntryLocalService.updateEntry(
+			_user.getUserId(), entry.getEntryId(), entry.getTitle(),
+			entry.getSubtitle(), bakedUrlTitle, entry.getDescription(),
+			entry.getContent(), entry.getDisplayDate(), false, false, null,
+			null, null, null, serviceContext);
+
+		Assert.assertEquals(expectedUrlTitle, entry.getUrlTitle());
 	}
 
 	@Test
@@ -1081,13 +1236,13 @@ public class BlogsEntryLocalServiceTest {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
 
-		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			_user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), serviceContext);
 
 		String urlTitle = entry.getUrlTitle();
 
-		entry = BlogsEntryLocalServiceUtil.updateEntry(
+		entry = _blogsEntryLocalService.updateEntry(
 			_user.getUserId(), entry.getEntryId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			serviceContext);
@@ -1102,7 +1257,7 @@ public class BlogsEntryLocalServiceTest {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
 
-		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			_user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), serviceContext);
 
@@ -1110,7 +1265,7 @@ public class BlogsEntryLocalServiceTest {
 
 		serviceContext.setWorkflowAction(WorkflowConstants.STATUS_DRAFT);
 
-		entry = BlogsEntryLocalServiceUtil.updateEntry(
+		entry = _blogsEntryLocalService.updateEntry(
 			_user.getUserId(), entry.getEntryId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			serviceContext);
@@ -1122,7 +1277,7 @@ public class BlogsEntryLocalServiceTest {
 	public void testURLTitleIsSavedWhenAddingApprovedEntry() throws Exception {
 		String title = RandomTestUtil.randomString();
 
-		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			_user.getUserId(), title, RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(
 				_group, _user.getUserId()));
@@ -1155,7 +1310,7 @@ public class BlogsEntryLocalServiceTest {
 
 		serviceContext.setWorkflowAction(WorkflowConstants.STATUS_DRAFT);
 
-		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			_user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), serviceContext);
 
@@ -1200,13 +1355,13 @@ public class BlogsEntryLocalServiceTest {
 		Calendar displayDateCalendar = CalendarFactoryUtil.getCalendar(
 			2012, 1, date);
 
-		BlogsEntry entry = BlogsEntryLocalServiceUtil.addEntry(
+		BlogsEntry entry = _blogsEntryLocalService.addEntry(
 			userId, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), displayDateCalendar.getTime(),
 			serviceContext);
 
 		if (statusInTrash) {
-			entry = BlogsEntryLocalServiceUtil.moveEntryToTrash(userId, entry);
+			entry = _blogsEntryLocalService.moveEntryToTrash(userId, entry);
 		}
 
 		return entry;
@@ -1257,7 +1412,7 @@ public class BlogsEntryLocalServiceTest {
 		}
 
 		List<BlogsEntry> initialEntries =
-			BlogsEntryLocalServiceUtil.getCompanyEntries(
+			_blogsEntryLocalService.getCompanyEntries(
 				_user.getCompanyId(), new Date(), queryDefinition);
 
 		int initialCount = initialEntries.size();
@@ -1266,7 +1421,7 @@ public class BlogsEntryLocalServiceTest {
 		addEntry(true);
 
 		List<BlogsEntry> actualEntries =
-			BlogsEntryLocalServiceUtil.getCompanyEntries(
+			_blogsEntryLocalService.getCompanyEntries(
 				_user.getCompanyId(), new Date(), queryDefinition);
 
 		Assert.assertEquals(
@@ -1285,13 +1440,13 @@ public class BlogsEntryLocalServiceTest {
 			queryDefinition = _statusAnyQueryDefinition;
 		}
 
-		int initialCount = BlogsEntryLocalServiceUtil.getCompanyEntriesCount(
+		int initialCount = _blogsEntryLocalService.getCompanyEntriesCount(
 			_user.getCompanyId(), new Date(), queryDefinition);
 
 		addEntry(false);
 		addEntry(true);
 
-		int actualCount = BlogsEntryLocalServiceUtil.getCompanyEntriesCount(
+		int actualCount = _blogsEntryLocalService.getCompanyEntriesCount(
 			_user.getCompanyId(), new Date(), queryDefinition);
 
 		Assert.assertEquals(initialCount + 1, actualCount);
@@ -1311,11 +1466,11 @@ public class BlogsEntryLocalServiceTest {
 		List<BlogsEntry> initialEntries = null;
 
 		if (displayDate) {
-			initialEntries = BlogsEntryLocalServiceUtil.getGroupEntries(
+			initialEntries = _blogsEntryLocalService.getGroupEntries(
 				_group.getGroupId(), new Date(), queryDefinition);
 		}
 		else {
-			initialEntries = BlogsEntryLocalServiceUtil.getGroupEntries(
+			initialEntries = _blogsEntryLocalService.getGroupEntries(
 				_group.getGroupId(), queryDefinition);
 		}
 
@@ -1327,11 +1482,11 @@ public class BlogsEntryLocalServiceTest {
 		List<BlogsEntry> actualEntries = null;
 
 		if (displayDate) {
-			actualEntries = BlogsEntryLocalServiceUtil.getGroupEntries(
+			actualEntries = _blogsEntryLocalService.getGroupEntries(
 				_group.getGroupId(), new Date(), queryDefinition);
 		}
 		else {
-			actualEntries = BlogsEntryLocalServiceUtil.getGroupEntries(
+			actualEntries = _blogsEntryLocalService.getGroupEntries(
 				_group.getGroupId(), queryDefinition);
 		}
 
@@ -1355,11 +1510,11 @@ public class BlogsEntryLocalServiceTest {
 		int initialCount = 0;
 
 		if (displayDate) {
-			initialCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+			initialCount = _blogsEntryLocalService.getGroupEntriesCount(
 				_group.getGroupId(), new Date(), queryDefinition);
 		}
 		else {
-			initialCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+			initialCount = _blogsEntryLocalService.getGroupEntriesCount(
 				_group.getGroupId(), queryDefinition);
 		}
 
@@ -1369,11 +1524,11 @@ public class BlogsEntryLocalServiceTest {
 		int actualCount = 0;
 
 		if (displayDate) {
-			actualCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+			actualCount = _blogsEntryLocalService.getGroupEntriesCount(
 				_group.getGroupId(), new Date(), queryDefinition);
 		}
 		else {
-			actualCount = BlogsEntryLocalServiceUtil.getGroupEntriesCount(
+			actualCount = _blogsEntryLocalService.getGroupEntriesCount(
 				_group.getGroupId(), queryDefinition);
 		}
 
@@ -1391,7 +1546,7 @@ public class BlogsEntryLocalServiceTest {
 		}
 
 		List<BlogsEntry> initialEntries =
-			BlogsEntryLocalServiceUtil.getGroupUserEntries(
+			_blogsEntryLocalService.getGroupUserEntries(
 				_group.getGroupId(), _user.getUserId(), new Date(),
 				queryDefinition);
 
@@ -1401,7 +1556,7 @@ public class BlogsEntryLocalServiceTest {
 		addEntry(true);
 
 		List<BlogsEntry> actualEntries =
-			BlogsEntryLocalServiceUtil.getGroupUserEntries(
+			_blogsEntryLocalService.getGroupUserEntries(
 				_group.getGroupId(), _user.getUserId(), new Date(),
 				queryDefinition);
 
@@ -1421,14 +1576,14 @@ public class BlogsEntryLocalServiceTest {
 			queryDefinition = _statusAnyQueryDefinition;
 		}
 
-		int initialCount = BlogsEntryLocalServiceUtil.getGroupUserEntriesCount(
+		int initialCount = _blogsEntryLocalService.getGroupUserEntriesCount(
 			_group.getGroupId(), _user.getUserId(), new Date(),
 			queryDefinition);
 
 		addEntry(false);
 		addEntry(true);
 
-		int actualCount = BlogsEntryLocalServiceUtil.getGroupUserEntriesCount(
+		int actualCount = _blogsEntryLocalService.getGroupUserEntriesCount(
 			_group.getGroupId(), _user.getUserId(), new Date(),
 			queryDefinition);
 
@@ -1451,7 +1606,7 @@ public class BlogsEntryLocalServiceTest {
 			_organization);
 
 		List<BlogsEntry> initialEntries =
-			BlogsEntryLocalServiceUtil.getOrganizationEntries(
+			_blogsEntryLocalService.getOrganizationEntries(
 				_organization.getOrganizationId(), new Date(), queryDefinition);
 
 		int initialCount = initialEntries.size();
@@ -1460,7 +1615,7 @@ public class BlogsEntryLocalServiceTest {
 		addEntry(_organizationUser.getUserId(), true);
 
 		List<BlogsEntry> actualEntries =
-			BlogsEntryLocalServiceUtil.getOrganizationEntries(
+			_blogsEntryLocalService.getOrganizationEntries(
 				_organization.getOrganizationId(), new Date(), queryDefinition);
 
 		Assert.assertEquals(
@@ -1484,18 +1639,26 @@ public class BlogsEntryLocalServiceTest {
 		_organizationUser = UserTestUtil.addOrganizationOwnerUser(
 			_organization);
 
-		int initialCount =
-			BlogsEntryLocalServiceUtil.getOrganizationEntriesCount(
-				_organization.getOrganizationId(), new Date(), queryDefinition);
+		int initialCount = _blogsEntryLocalService.getOrganizationEntriesCount(
+			_organization.getOrganizationId(), new Date(), queryDefinition);
 
 		addEntry(_organizationUser.getUserId(), false);
 		addEntry(_organizationUser.getUserId(), true);
 
-		int actualCount =
-			BlogsEntryLocalServiceUtil.getOrganizationEntriesCount(
-				_organization.getOrganizationId(), new Date(), queryDefinition);
+		int actualCount = _blogsEntryLocalService.getOrganizationEntriesCount(
+			_organization.getOrganizationId(), new Date(), queryDefinition);
 
 		Assert.assertEquals(initialCount + 1, actualCount);
+	}
+
+	private FileEntry _addAttachmentFileEntry(
+			String externalReferenceCode, String fileName)
+		throws Exception {
+
+		return _blogsEntryLocalService.addAttachmentFileEntry(
+			externalReferenceCode, _user.getUserId(), _group.getGroupId(),
+			fileName, ContentTypes.APPLICATION_OCTET_STREAM,
+			new UnsyncByteArrayInputStream(new byte[0]));
 	}
 
 	private MBMessage _addMBMessage(
@@ -1553,8 +1716,17 @@ public class BlogsEntryLocalServiceTest {
 
 	private static Method _getUrlTitleMethod;
 
+	@Inject
+	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Inject
+	private AssetVocabularyLocalService _assetVocabularyLocalService;
+
 	@DeleteAfterTestRun
 	private final List<BlogsEntry> _blogsEntries = new ArrayList<>();
+
+	@Inject
+	private BlogsEntryLocalService _blogsEntryLocalService;
 
 	@DeleteAfterTestRun
 	private User _creatorUser;

@@ -5,7 +5,6 @@
 
 import ClayAlert from '@clayui/alert';
 import ClayDatePicker from '@clayui/date-picker';
-import ClayTimePicker from '@clayui/time-picker';
 import {navigate} from 'frontend-js-web';
 import React from 'react';
 
@@ -65,15 +64,15 @@ class ChangeTrackingRescheduleView extends ChangeTrackingBaseScheduleView {
 										typeof this.state.date === 'string'
 											? this.state.date
 											: this.state.date.getFullYear() +
-											  '-' +
-											  this.pad(
+												'-' +
+												this.pad(
 													this.state.date.getMonth() +
 														1
-											  ) +
-											  '-' +
-											  this.pad(
+												) +
+												'-' +
+												this.pad(
 													this.state.date.getDate()
-											  )
+												)
 									}
 									years={{
 										end: new Date().getFullYear() + 1,
@@ -87,14 +86,24 @@ class ChangeTrackingRescheduleView extends ChangeTrackingBaseScheduleView {
 
 						<div className={this.getTimeClassName()}>
 							<div>
-								<ClayTimePicker
-									onChange={this.handleTimeChange}
-									spritemap={this.spritemap}
-									timezone={this.timeZone}
+								<input
+									className="form-control"
+									onChange={(event) =>
+										this.handleTimeChange(
+											event.target.value
+										)
+									}
+									type="time"
 									value={this.state.time}
 								/>
 
 								{this.getTimeHelpText()}
+							</div>
+
+							<div className="input-group-item input-group-item-shrink">
+								<span className="input-group-text">
+									({this.timeZone})
+								</span>
 							</div>
 						</div>
 					</div>

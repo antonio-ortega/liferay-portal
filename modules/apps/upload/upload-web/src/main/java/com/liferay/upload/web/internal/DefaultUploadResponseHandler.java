@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.editor.constants.EditorConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.servlet.ServletResponseConstants;
@@ -34,6 +35,7 @@ import javax.portlet.PortletRequest;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Modified;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Alejandro Tardín
@@ -62,33 +64,47 @@ public class DefaultUploadResponseHandler implements UploadResponseHandler {
 					return null;
 				}
 
-				String errorMessage = StringPool.BLANK;
 				int errorType = 0;
+				String message = StringPool.BLANK;
 
 				if (portalException instanceof AntivirusScannerException) {
 					errorType =
 						ServletResponseConstants.SC_FILE_ANTIVIRUS_EXCEPTION;
-					AntivirusScannerException antivirusScannerException =
-						(AntivirusScannerException)portalException;
 
 					ThemeDisplay themeDisplay =
 						(ThemeDisplay)portletRequest.getAttribute(
 							WebKeys.THEME_DISPLAY);
 
-					errorMessage = themeDisplay.translate(
+					AntivirusScannerException antivirusScannerException =
+						(AntivirusScannerException)portalException;
+
+					message = themeDisplay.translate(
 						antivirusScannerException.getMessageKey());
 				}
 				else if (portalException instanceof FileExtensionException) {
 					errorType =
 						ServletResponseConstants.SC_FILE_EXTENSION_EXCEPTION;
-
-					errorMessage = _getAllowedFileExtensions();
+					message = _getAllowedFileExtensions();
 				}
 				else if (portalException instanceof FileNameException) {
 					errorType = ServletResponseConstants.SC_FILE_NAME_EXCEPTION;
 				}
 				else if (portalException instanceof FileSizeException) {
 					errorType = ServletResponseConstants.SC_FILE_SIZE_EXCEPTION;
+
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)portletRequest.getAttribute(
+							WebKeys.THEME_DISPLAY);
+
+					FileSizeException fileSizeException =
+						(FileSizeException)portalException;
+
+					message = themeDisplay.translate(
+						"please-enter-a-file-with-a-valid-file-size-no-" +
+							"larger-than-x",
+						_language.formatStorageSize(
+							fileSizeException.getMaxSize(),
+							themeDisplay.getLocale()));
 				}
 				else if (portalException instanceof
 							UploadRequestSizeException) {
@@ -101,7 +117,7 @@ public class DefaultUploadResponseHandler implements UploadResponseHandler {
 				return JSONUtil.put(
 					"errorType", errorType
 				).put(
-					"message", errorMessage
+					"message", message
 				);
 			}
 		).put(
@@ -164,5 +180,8 @@ public class DefaultUploadResponseHandler implements UploadResponseHandler {
 	}
 
 	private volatile DLConfiguration _dlConfiguration;
+
+	@Reference
+	private Language _language;
 
 }

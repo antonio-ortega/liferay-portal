@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -46,6 +47,9 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @CTAware
+@OSGiBeanProperties(
+	property = {"model.class.name=com.liferay.portal.kernel.model.EmailAddress"}
+)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -75,8 +79,9 @@ public interface EmailAddressLocalService
 	public EmailAddress addEmailAddress(EmailAddress emailAddress);
 
 	public EmailAddress addEmailAddress(
-			long userId, String className, long classPK, String address,
-			long listTypeId, boolean primary, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, String className,
+			long classPK, String address, long listTypeId, boolean primary,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -211,6 +216,10 @@ public interface EmailAddressLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public EmailAddress fetchEmailAddress(long emailAddressId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public EmailAddress fetchEmailAddressByExternalReferenceCode(
+		String externalReferenceCode, long companyId);
+
 	/**
 	 * Returns the email address with the matching UUID and company.
 	 *
@@ -234,6 +243,11 @@ public interface EmailAddressLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public EmailAddress getEmailAddress(long emailAddressId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public EmailAddress getEmailAddressByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	/**
@@ -314,8 +328,8 @@ public interface EmailAddressLocalService
 	public EmailAddress updateEmailAddress(EmailAddress emailAddress);
 
 	public EmailAddress updateEmailAddress(
-			long emailAddressId, String address, long listTypeId,
-			boolean primary)
+			String externalReferenceCode, long emailAddressId, String address,
+			long listTypeId, boolean primary)
 		throws PortalException;
 
 	@Override

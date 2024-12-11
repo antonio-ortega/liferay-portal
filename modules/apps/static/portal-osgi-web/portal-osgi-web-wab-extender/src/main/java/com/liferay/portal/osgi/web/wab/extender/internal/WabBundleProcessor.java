@@ -5,6 +5,8 @@
 
 package com.liferay.portal.osgi.web.wab.extender.internal;
 
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
@@ -15,7 +17,6 @@ import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.osgi.web.servlet.JSPServletFactory;
-import com.liferay.portal.osgi.web.servlet.JSPTaglibHelper;
 import com.liferay.portal.osgi.web.servlet.context.helper.ServletContextHelperRegistration;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.FilterDefinition;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.ListenerDefinition;
@@ -87,12 +88,10 @@ import org.osgi.service.http.whiteboard.HttpWhiteboardConstants;
 public class WabBundleProcessor {
 
 	public WabBundleProcessor(
-		Bundle bundle, JSPServletFactory jspServletFactory,
-		JSPTaglibHelper jspTaglibHelper) {
+		Bundle bundle, JSPServletFactory jspServletFactory) {
 
 		_bundle = bundle;
 		_jspServletFactory = jspServletFactory;
-		_jspTaglibHelper = jspTaglibHelper;
 
 		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
 
@@ -102,12 +101,8 @@ public class WabBundleProcessor {
 	}
 
 	public void destroy() throws Exception {
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		try {
-			currentThread.setContextClassLoader(_bundleClassLoader);
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				_bundleClassLoader)) {
 
 			_destroyServlets();
 
@@ -118,18 +113,11 @@ public class WabBundleProcessor {
 			_bundleContext.ungetService(
 				_servletContextHelperRegistrationServiceReference);
 		}
-		finally {
-			currentThread.setContextClassLoader(contextClassLoader);
-		}
 	}
 
 	public void init(Dictionary<String, Object> properties) throws Exception {
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
-
-		try {
-			currentThread.setContextClassLoader(_bundleClassLoader);
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				_bundleClassLoader)) {
 
 			ServletContextHelperRegistration servletContextHelperRegistration =
 				_initContext();
@@ -165,9 +153,7 @@ public class WabBundleProcessor {
 			_initServletContainerInitializers(
 				_bundle, servletContext, allClasses, annotatedClasses);
 
-			if (!allClasses.equals(annotatedClasses)) {
-				_saveScannedAnnotatedClasses(annotatedClasses);
-			}
+			_saveScannedAnnotatedClasses(annotatedClasses);
 
 			ModifiableServletContext modifiableServletContext =
 				(ModifiableServletContext)servletContext;
@@ -244,9 +230,6 @@ public class WabBundleProcessor {
 			destroy();
 
 			throw exception;
-		}
-		finally {
-			currentThread.setContextClassLoader(contextClassLoader);
 		}
 	}
 
@@ -871,7 +854,8 @@ public class WabBundleProcessor {
 
 		List<String> listenerClassNames = new ArrayList<>();
 
-		_jspTaglibHelper.scanTLDs(_bundle, servletContext, listenerClassNames);
+		JSPTaglibHelperUtil.scanTLDs(
+			_bundle, servletContext, listenerClassNames);
 
 		for (String listenerClassName : listenerClassNames) {
 			try {
@@ -913,7 +897,6 @@ public class WabBundleProcessor {
 	private final Set<ServiceRegistration<Filter>> _filterServiceRegistrations =
 		new ConcurrentSkipListSet<>();
 	private final JSPServletFactory _jspServletFactory;
-	private final JSPTaglibHelper _jspTaglibHelper;
 	private final Set<ServiceRegistration<?>> _listenerServiceRegistrations =
 		new ConcurrentSkipListSet<>(
 			new ListenerServiceRegistrationComparator());

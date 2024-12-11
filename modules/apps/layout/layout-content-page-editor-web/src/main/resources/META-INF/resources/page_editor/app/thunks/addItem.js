@@ -5,15 +5,17 @@
 
 import addItemAction from '../actions/addItem';
 import LayoutService from '../services/LayoutService';
+import selectFirstControlsItem from '../utils/selectFirstControlsItem';
+import {clearPageContents} from '../utils/usePageContents';
 
 export default function addItem({
 	itemType,
 	parentItemId,
 	position,
-	selectItem = () => {},
+	selectItems = () => {},
 }) {
 	return (dispatch, getState) => {
-		const {pageContents, segmentsExperienceId} = getState();
+		const {segmentsExperienceId} = getState();
 
 		return LayoutService.addItem({
 			itemType,
@@ -22,12 +24,16 @@ export default function addItem({
 			position,
 			segmentsExperienceId,
 		}).then(({addedItemId, layoutData}) => {
-			dispatch(
-				addItemAction({itemId: addedItemId, layoutData, pageContents})
-			);
+			dispatch(addItemAction({itemIds: [addedItemId], layoutData}));
+
+			clearPageContents();
 
 			if (addedItemId) {
-				selectItem(addedItemId);
+				selectFirstControlsItem({
+					itemId: addedItemId,
+					layoutData,
+					selectItems,
+				});
 			}
 		});
 	};

@@ -70,7 +70,7 @@ public class CommerceOrderCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(153);
+		StringBundler sb = new StringBundler(157);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -96,8 +96,8 @@ public class CommerceOrderCacheModel
 		sb.append(billingAddressId);
 		sb.append(", commerceAccountId=");
 		sb.append(commerceAccountId);
-		sb.append(", commerceCurrencyId=");
-		sb.append(commerceCurrencyId);
+		sb.append(", commerceCurrencyCode=");
+		sb.append(commerceCurrencyCode);
 		sb.append(", commerceOrderTypeId=");
 		sb.append(commerceOrderTypeId);
 		sb.append(", commerceShippingMethodId=");
@@ -122,6 +122,8 @@ public class CommerceOrderCacheModel
 		sb.append(lastPriceUpdateDate);
 		sb.append(", manuallyAdjusted=");
 		sb.append(manuallyAdjusted);
+		sb.append(", name=");
+		sb.append(name);
 		sb.append(", orderDate=");
 		sb.append(orderDate);
 		sb.append(", orderStatus=");
@@ -138,6 +140,8 @@ public class CommerceOrderCacheModel
 		sb.append(purchaseOrderNumber);
 		sb.append(", requestedDeliveryDate=");
 		sb.append(requestedDeliveryDate);
+		sb.append(", shippable=");
+		sb.append(shippable);
 		sb.append(", shippingAmount=");
 		sb.append(shippingAmount);
 		sb.append(", shippingDiscountAmount=");
@@ -277,7 +281,14 @@ public class CommerceOrderCacheModel
 
 		commerceOrderImpl.setBillingAddressId(billingAddressId);
 		commerceOrderImpl.setCommerceAccountId(commerceAccountId);
-		commerceOrderImpl.setCommerceCurrencyId(commerceCurrencyId);
+
+		if (commerceCurrencyCode == null) {
+			commerceOrderImpl.setCommerceCurrencyCode("");
+		}
+		else {
+			commerceOrderImpl.setCommerceCurrencyCode(commerceCurrencyCode);
+		}
+
 		commerceOrderImpl.setCommerceOrderTypeId(commerceOrderTypeId);
 		commerceOrderImpl.setCommerceShippingMethodId(commerceShippingMethodId);
 		commerceOrderImpl.setDeliveryCommerceTermEntryId(
@@ -334,6 +345,13 @@ public class CommerceOrderCacheModel
 
 		commerceOrderImpl.setManuallyAdjusted(manuallyAdjusted);
 
+		if (name == null) {
+			commerceOrderImpl.setName("");
+		}
+		else {
+			commerceOrderImpl.setName(name);
+		}
+
 		if (orderDate == Long.MIN_VALUE) {
 			commerceOrderImpl.setOrderDate(null);
 		}
@@ -383,6 +401,7 @@ public class CommerceOrderCacheModel
 				new Date(requestedDeliveryDate));
 		}
 
+		commerceOrderImpl.setShippable(shippable);
 		commerceOrderImpl.setShippingAmount(shippingAmount);
 		commerceOrderImpl.setShippingDiscountAmount(shippingDiscountAmount);
 		commerceOrderImpl.setShippingDiscountPercentageLevel1(
@@ -507,8 +526,7 @@ public class CommerceOrderCacheModel
 		billingAddressId = objectInput.readLong();
 
 		commerceAccountId = objectInput.readLong();
-
-		commerceCurrencyId = objectInput.readLong();
+		commerceCurrencyCode = objectInput.readUTF();
 
 		commerceOrderTypeId = objectInput.readLong();
 
@@ -527,6 +545,7 @@ public class CommerceOrderCacheModel
 		lastPriceUpdateDate = objectInput.readLong();
 
 		manuallyAdjusted = objectInput.readBoolean();
+		name = objectInput.readUTF();
 		orderDate = objectInput.readLong();
 
 		orderStatus = objectInput.readInt();
@@ -537,6 +556,8 @@ public class CommerceOrderCacheModel
 		printedNote = objectInput.readUTF();
 		purchaseOrderNumber = objectInput.readUTF();
 		requestedDeliveryDate = objectInput.readLong();
+
+		shippable = objectInput.readBoolean();
 		shippingAmount = (BigDecimal)objectInput.readObject();
 		shippingDiscountAmount = (BigDecimal)objectInput.readObject();
 		shippingDiscountPercentageLevel1 = (BigDecimal)objectInput.readObject();
@@ -636,7 +657,12 @@ public class CommerceOrderCacheModel
 
 		objectOutput.writeLong(commerceAccountId);
 
-		objectOutput.writeLong(commerceCurrencyId);
+		if (commerceCurrencyCode == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(commerceCurrencyCode);
+		}
 
 		objectOutput.writeLong(commerceOrderTypeId);
 
@@ -686,6 +712,14 @@ public class CommerceOrderCacheModel
 		objectOutput.writeLong(lastPriceUpdateDate);
 
 		objectOutput.writeBoolean(manuallyAdjusted);
+
+		if (name == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(name);
+		}
+
 		objectOutput.writeLong(orderDate);
 
 		objectOutput.writeInt(orderStatus);
@@ -721,6 +755,8 @@ public class CommerceOrderCacheModel
 		}
 
 		objectOutput.writeLong(requestedDeliveryDate);
+
+		objectOutput.writeBoolean(shippable);
 		objectOutput.writeObject(shippingAmount);
 		objectOutput.writeObject(shippingDiscountAmount);
 		objectOutput.writeObject(shippingDiscountPercentageLevel1);
@@ -800,7 +836,7 @@ public class CommerceOrderCacheModel
 	public long modifiedDate;
 	public long billingAddressId;
 	public long commerceAccountId;
-	public long commerceCurrencyId;
+	public String commerceCurrencyCode;
 	public long commerceOrderTypeId;
 	public long commerceShippingMethodId;
 	public long deliveryCommerceTermEntryId;
@@ -813,6 +849,7 @@ public class CommerceOrderCacheModel
 	public String deliveryCommerceTermEntryName;
 	public long lastPriceUpdateDate;
 	public boolean manuallyAdjusted;
+	public String name;
 	public long orderDate;
 	public int orderStatus;
 	public String paymentCommerceTermEntryDescription;
@@ -821,6 +858,7 @@ public class CommerceOrderCacheModel
 	public String printedNote;
 	public String purchaseOrderNumber;
 	public long requestedDeliveryDate;
+	public boolean shippable;
 	public BigDecimal shippingAmount;
 	public BigDecimal shippingDiscountAmount;
 	public BigDecimal shippingDiscountPercentageLevel1;

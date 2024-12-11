@@ -279,7 +279,7 @@ if (hints != null) {
 					if (checkbox) {
 						checkbox.once(
 							'click',
-							function() {
+							function () {
 								Liferay.component('<portlet:namespace /><%= fieldParam %>DatePicker');
 							}
 						);
@@ -545,7 +545,9 @@ if (hints != null) {
 							/>
 						</c:when>
 						<c:otherwise>
-							<textarea maxLength="<%= maxLength %>" aria-labelledby="<%= namespace + id %> <%= namespace + id %>_maxCharacters" class="<%= cssClass %> lfr-textarea" <%= disabled ? "disabled=\"disabled\"" : StringPool.BLANK %> id="<%= namespace %><%= id %>" name="<%= namespace %><%= fieldParam %>" onKeyDown="Liferay.Util.disableEsc();" <%= Validator.isNotNull(placeholder) ? "placeholder=\"" + LanguageUtil.get(resourceBundle, placeholder) + "\"" : StringPool.BLANK %> style="<%= !autoSize ? "height: " + displayHeight + (Validator.isDigit(displayHeight) ? "px" : StringPool.BLANK) + ";" : StringPool.BLANK %>" wrap="soft"><%= autoEscape ? HtmlUtil.escape(value) : value %></textarea>
+							<liferay-ui:csp>
+								<textarea maxLength="<%= maxLength %>" aria-labelledby="<%= namespace + id %> <%= namespace + id %>_maxCharacters" class="<%= cssClass %> lfr-textarea" <%= disabled ? "disabled=\"disabled\"" : StringPool.BLANK %> id="<%= namespace %><%= id %>" name="<%= namespace %><%= fieldParam %>" onKeyDown="Liferay.Util.disableEsc();" <%= Validator.isNotNull(placeholder) ? "placeholder=\"" + LanguageUtil.get(resourceBundle, placeholder) + "\"" : StringPool.BLANK %> style="<%= !autoSize ? "height: " + displayHeight + (Validator.isDigit(displayHeight) ? "px" : StringPool.BLANK) + ";" : StringPool.BLANK %>" wrap="soft"><%= autoEscape ? HtmlUtil.escape(value) : value %></textarea>
+							</liferay-ui:csp>
 
 							<span class="sr-only" id="<%= namespace + id %>_maxCharacters">
 								<liferay-ui:message key="characters-maximum" />: <%= maxLength %>
@@ -591,9 +593,7 @@ if (hints != null) {
 	</c:choose>
 </c:if>
 
-<aui:script require="frontend-js-web/index as frontendJsWeb">
-	const {delegate} = frontendJsWeb;
-
+<aui:script sandbox="<%= true %>">
 	var state = null;
 	var textarea = document.querySelector('textarea#<portlet:namespace /><%= id %>')
 	var counterWrapper = document.querySelector('#<portlet:namespace /><%= id %>_counterWrapper')
@@ -610,7 +610,7 @@ if (hints != null) {
 		setCounter(textarea);
 	}
 
-	var onKeydownHandler = delegate(
+	var onKeydownHandler = Liferay.Util.delegate(
 		document.body,
 		'keyup',
 		'textarea[id=<portlet:namespace /><%= id %>]',

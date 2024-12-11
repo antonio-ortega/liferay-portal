@@ -1,7 +1,10 @@
 definition {
 
-	macro _curlAPIEndpoint {
+	@summary = "Default summary"
+	macro _curlAPIEndpoint(path = null, baseURL = null, virtualHost = null) {
 		Variables.assertDefined(parameterList = "${baseURL},${path}");
+
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		if (isSet(virtualHost)) {
 			if (!(isSet(port))) {
@@ -18,20 +21,41 @@ definition {
 
 		var api = "${baseURL}${path}";
 
+		if (isSet(filter)) {
+			var api = StringUtil.add(${api}, "?filter=${filter}", "");
+		}
+
 		var curl = '''
 			${portalURL}/o/c/${api} \
-				-u test@liferay.com:test \
+				-u test@liferay.com:${userPassword} \
 				-H Content-Type: application/json
 		''';
 
 		return ${curl};
 	}
 
-	macro getEndpoint {
+	@summary = "Default summary"
+	macro assertCorrectItemInResponse(baseURL = null, expectedValue = null, jsonObject = null, path = null) {
+		Variables.assertDefined(parameterList = "${baseURL},${path},${jsonObject},${expectedValue}");
+
+		var response = APIApplicationEndpoint.getEndpoint(
+			baseURL = ${baseURL},
+			path = ${path});
+
+		var actualValue = JSONUtil.getWithJSONPath(${response}, "$.items..${jsonObject}");
+
+		TestUtils.assertEquals(
+			actual = ${actualValue},
+			expected = ${expectedValue});
+	}
+
+	@summary = "Default summary"
+	macro getEndpoint(baseURL = null, filter = null, path = null, portalURL = null) {
 		Variables.assertDefined(parameterList = "${baseURL},${path}");
 
 		var curl = APIApplicationEndpoint._curlAPIEndpoint(
 			baseURL = ${baseURL},
+			filter = ${filter},
 			path = ${path},
 			portalURL = ${portalURL});
 

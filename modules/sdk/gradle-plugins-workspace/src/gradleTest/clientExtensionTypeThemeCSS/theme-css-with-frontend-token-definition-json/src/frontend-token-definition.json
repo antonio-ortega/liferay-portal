@@ -1,0 +1,25 @@
+{
+	"frontendTokenCategories": [
+		{
+			"frontendTokenSets": [
+				{
+					"frontendTokens": [
+						{
+							"defaultValue": "calc(3 / 4 * 100%)",
+							"editorType": "ColorPicker",
+							"label": "brand-color-1",
+							"mappings": [
+								{
+									"type": "cssVariable",
+									"value": "brand-color-1"
+								}
+							],
+							"name": "brandColor1",
+							"type": "String"
+						}
+					]
+				}
+			]
+		}
+	]
+}

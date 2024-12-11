@@ -1,7 +1,7 @@
 @component-name = "portal-upgrades"
 definition {
 
-	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.liferay.virtual.instance = "false";
@@ -16,7 +16,6 @@ definition {
 
 	@priority = 5
 	test AssertPublicationsHistoryRemainsAfterUpgradingArchive7413u73 {
-		property custom.properties = "feature.flag.LPS-161033=true";
 		property data.archive.type = "data-archive-publications-timeline";
 		property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config";
 		property osgi.module.configurations = "enabled=B\"true\"";
@@ -34,10 +33,8 @@ definition {
 			Publications.viewPublicationTimeline(publicationName = "Publication Name 2");
 		}
 
-		task ("Assert timeline isn't present for Publication Name 1") {
-			Publications.viewPublicationTimeline(
-				isNotPresent = "true",
-				publicationName = "Publication Name 1");
+		task ("Assert timeline is present for Publication Name 1") {
+			Publications.viewPublicationTimeline(publicationName = "Publication Name 1");
 		}
 	}
 
@@ -49,27 +46,9 @@ definition {
 
 		PublicationsNavigator.openPublicationsAdmin();
 
-		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
 		AssertTextEquals(
 			key_publicationName = "Publication Name",
-			locator1 = "Publications#LIST_OUT_OF_DATE_STATUS",
-			value1 = "Out of Date");
-	}
-
-	@priority = 5
-	test RemoveOrphanedPortletPreferences7413 {
-		property data.archive.type = "data-archive-publications-with-orphaned-portlet-preferences";
-		property portal.version = "7.4.13";
-		property test.run.environment = "EE";
-
-		PublicationsNavigator.openPublicationsAdmin();
-
-		LexiconEntry.changeDisplayStyle(displayStyle = "list");
-
-		AssertTextEquals(
-			key_publicationName = "Publication Name",
-			locator1 = "Publications#LIST_OUT_OF_DATE_STATUS",
+			locator1 = "Publications#OUT_OF_DATE_STATUS",
 			value1 = "Out of Date");
 	}
 
@@ -94,7 +73,7 @@ definition {
 	@priority = 5
 	test ViewAdminRoleNameArchive7310 {
 		property data.archive.type = "data-archive-publications";
-		property database.types = "mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property database.types = "mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.version = "7.3.10";
 		property test.run.environment = "EE";
 
@@ -122,71 +101,58 @@ definition {
 	}
 
 	@priority = 5
-	test ViewNoUnrelatedPreviewsArchive7310 {
-		property data.archive.type = "data-archive-publications-with-unrelated-previews-generated";
-		property database.types = "db2,mariadb,mysql,sybase";
-		property portal.version = "7.3.10";
-		property test.run.environment = "EE";
-
-		ValidatePublicationsUpgrade.viewNoUnrelatedPreviews();
-	}
-
-	@priority = 5
-	test ViewNoUnrelatedPreviewsArchive7413 {
-		property data.archive.type = "data-archive-publications-with-unrelated-previews-generated";
-		property database.types = "db2,mysql,sybase";
-		property portal.version = "7.4.13";
-		property test.run.environment = "EE";
-
-		ValidatePublicationsUpgrade.viewNoUnrelatedPreviews();
-	}
-
-	@priority = 5
-	test ViewOutOfDatePublicationsArchive735 {
-		property data.archive.type = "data-archive-publications";
-		property database.types = "mariadb,mysql,postgresql";
-		property portal.version = "7.3.5";
-
-		ValidatePublicationsUpgrade.viewOutOfDatePublications();
-	}
-
-	@priority = 5
-	test ViewOutOfDatePublicationsArchive740 {
+	test ViewNotOutOfDatePublicationsArchive740 {
 		property data.archive.type = "data-archive-publications";
 		property database.types = "mariadb,mysql,postgresql";
 		property portal.version = "7.4.0";
 
-		ValidatePublicationsUpgrade.viewOutOfDatePublications();
+		PublicationsNavigator.openPublicationsAdmin();
+
+		AssertTextEquals(
+			key_publicationName = "Publication 2 Name",
+			locator1 = "Publications#IN_PROGRESS_STATUS",
+			value1 = "In Progress");
 	}
 
 	@priority = 5
-	test ViewOutOfDatePublicationsArchive7310 {
-		property data.archive.type = "data-archive-publications";
-		property database.types = "mariadb,mysql,oracle,postgresql,sqlserver,sybase";
-		property portal.version = "7.3.10";
-		property test.run.environment = "EE";
-
-		ValidatePublicationsUpgrade.viewOutOfDatePublications();
-	}
-
-	@priority = 5
-	test ViewOutOfDatePublicationsArchive7413 {
+	test ViewNotOutOfDatePublicationsArchive7413 {
 		property data.archive.type = "data-archive-publications";
 		property database.types = "mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.version = "7.4.13";
 		property test.run.environment = "EE";
 
-		ValidatePublicationsUpgrade.viewOutOfDatePublications();
+		PublicationsNavigator.openPublicationsAdmin();
+
+		AssertTextEquals(
+			key_publicationName = "Publication 2 Name",
+			locator1 = "Publications#IN_PROGRESS_STATUS",
+			value1 = "In Progress");
 	}
 
 	@priority = 5
-	test ViewOutOfDatePublicationsArchive73101 {
+	test ViewNotOutOfDatePublicationsArchiveAutoUpgrade7413 {
 		property data.archive.type = "data-archive-publications";
+		property database.auto.upgrade.enabled = "true";
 		property database.types = "mariadb,mysql,oracle,postgresql,sqlserver";
-		property portal.version = "7.3.10.1";
+		property portal.version = "7.4.13";
 		property test.run.environment = "EE";
 
-		ValidatePublicationsUpgrade.viewOutOfDatePublications();
+		PublicationsNavigator.openPublicationsAdmin();
+
+		AssertTextEquals(
+			key_publicationName = "Publication 2 Name",
+			locator1 = "Publications#IN_PROGRESS_STATUS",
+			value1 = "In Progress");
+	}
+
+	@priority = 5
+	test ViewNoUnrelatedPreviewsArchive7310 {
+		property data.archive.type = "data-archive-publications-with-unrelated-previews-generated";
+		property database.types = "db2,mariadb,mysql";
+		property portal.version = "7.3.10";
+		property test.run.environment = "EE";
+
+		ValidatePublicationsUpgrade.viewNoUnrelatedPreviews();
 	}
 
 	@priority = 5
@@ -210,7 +176,7 @@ definition {
 	@priority = 5
 	test ViewPublicationsUserRolePermissionsArchive7310 {
 		property data.archive.type = "data-archive-publications";
-		property database.types = "mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property database.types = "mariadb,mysql,oracle,postgresql,sqlserver";
 		property portal.version = "7.3.10";
 		property test.run.environment = "EE";
 
@@ -253,9 +219,9 @@ definition {
 			publicationName = "Publication Name test",
 			templateName = "Template Name");
 
-		PublicationsNavigator.gotoPublicationEllipsisItem(
-			menuItem = "Invite Users",
-			publicationName = "Publication Name test");
+		PublicationsNavigator.gotoReviewChanges();
+
+		Click.javaScriptClick(locator1 = "PublicationsChanges#INVITE_USERS_ICON");
 
 		Publications.viewInvitedUser(
 			publicationRole = "Editor",

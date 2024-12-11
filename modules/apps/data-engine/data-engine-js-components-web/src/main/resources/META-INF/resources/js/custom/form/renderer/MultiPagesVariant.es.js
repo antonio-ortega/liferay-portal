@@ -27,7 +27,7 @@ export function Container({children, empty, pageIndex, pages}) {
 					className: 'ddm-btn-disabled',
 					disabled: true,
 					label: Liferay.Language.get('reset-page'),
-			  }
+				}
 			: {
 					label: Liferay.Language.get('reset-page'),
 					onClick: () =>
@@ -43,7 +43,7 @@ export function Container({children, empty, pageIndex, pages}) {
 								rules,
 							})
 						),
-			  },
+				},
 		pageIndex > 0
 			? {
 					label: Liferay.Language.get('remove-page'),
@@ -52,7 +52,7 @@ export function Container({children, empty, pageIndex, pages}) {
 							payload: {pageIndex},
 							type: EVENT_TYPES.PAGE.DELETE,
 						}),
-			  }
+				}
 			: false,
 	].filter(Boolean);
 
@@ -89,7 +89,7 @@ export function Container({children, empty, pageIndex, pages}) {
 					role="tabpanel"
 				>
 					<div className="form-builder-layout">
-						<h5 className="pagination">
+						<div className="h5 pagination">
 							{sub(Liferay.Language.get('page-x-of-x'), [
 								pageIndex + 1,
 								pages[pages.length - 1].contentRenderer ===
@@ -97,7 +97,7 @@ export function Container({children, empty, pageIndex, pages}) {
 									? pages.length - 1
 									: pages.length,
 							])}
-						</h5>
+						</div>
 
 						{children}
 					</div>
@@ -212,7 +212,7 @@ export function PageHeader({localizedDescription, localizedTitle}) {
 		<div>
 			<input
 				className="form-builder-page-header-title form-control p-0"
-				maxLength="120"
+				maxLength="255"
 				onChange={(event) =>
 					dispatch({
 						payload: {pageIndex, value: event.target.value},
@@ -228,7 +228,7 @@ export function PageHeader({localizedDescription, localizedTitle}) {
 
 			<input
 				className="form-builder-page-header-description form-control p-0"
-				maxLength="120"
+				maxLength="255"
 				onChange={(event) =>
 					dispatch({
 						payload: {pageIndex, value: event.target.value},

@@ -47,11 +47,43 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface PlacedOrderResource {
 
+	public Page<PlacedOrder>
+			getChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage(
+				String accountExternalReferenceCode,
+				String channelExternalReferenceCode, Pagination pagination)
+		throws Exception;
+
+	public Page<PlacedOrder> getChannelByExternalReferenceCodePlacedOrdersPage(
+			String externalReferenceCode, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception;
+
 	public Page<PlacedOrder> getChannelAccountPlacedOrdersPage(
 			Long accountId, Long channelId, Pagination pagination)
 		throws Exception;
 
+	public Page<PlacedOrder> getChannelPlacedOrdersPage(
+			Long channelId, String search, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception;
+
+	public PlacedOrder getPlacedOrderByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public PlacedOrder patchPlacedOrderByExternalReferenceCode(
+			String externalReferenceCode, PlacedOrder placedOrder)
+		throws Exception;
+
+	public String getPlacedOrderByExternalReferenceCodePaymentURL(
+			String externalReferenceCode, String callbackURL)
+		throws Exception;
+
 	public PlacedOrder getPlacedOrder(Long placedOrderId) throws Exception;
+
+	public PlacedOrder patchPlacedOrder(
+			Long placedOrderId, PlacedOrder placedOrder)
+		throws Exception;
 
 	public String getPlacedOrderPaymentURL(
 			Long placedOrderId, String callbackURL)

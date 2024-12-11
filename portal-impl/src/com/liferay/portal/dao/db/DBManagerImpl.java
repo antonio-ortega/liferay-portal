@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.InstanceFactory;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.spring.hibernate.DialectDetector;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.EnumMap;
@@ -39,10 +40,6 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.SybaseDialect;
 
 /**
  * @author Alexander Chow
@@ -147,6 +144,11 @@ public class DBManagerImpl implements DBManager {
 	}
 
 	@Override
+	public DBType getDBType(DataSource dataSource) {
+		return getDBType(DialectDetector.getDialect(dataSource));
+	}
+
+	@Override
 	public DBType getDBType(Object dialect) {
 		if (dialect instanceof DialectImpl) {
 			DialectImpl dialectImpl = (DialectImpl)dialect;
@@ -182,14 +184,6 @@ public class DBManagerImpl implements DBManager {
 
 		if (dialect instanceof SQLServerDialect) {
 			return DBType.SQLSERVER;
-		}
-
-		if (dialect instanceof Sybase11Dialect ||
-			dialect instanceof SybaseAnywhereDialect ||
-			dialect instanceof SybaseASE15Dialect ||
-			dialect instanceof SybaseDialect) {
-
-			return DBType.SYBASE;
 		}
 
 		throw new IllegalArgumentException("Unknown dialect type " + dialect);

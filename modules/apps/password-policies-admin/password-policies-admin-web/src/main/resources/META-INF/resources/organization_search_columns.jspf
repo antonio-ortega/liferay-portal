@@ -58,7 +58,11 @@
 
 									<span class="custom-control-label"></span>
 
-									<aui:icon cssClass="aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon" image="users" markupView="lexicon" />
+									<span class="aspect-ratio-item-center-middle aspect-ratio-item-fluid card-type-asset-icon">
+										<clay:icon
+											symbol="users"
+										/>
+									</span>
 								</label>
 							</div>
 						</div>
@@ -89,21 +93,21 @@
 			<liferay-ui:search-container-column-text
 				colspan="<%= 2 %>"
 			>
-				<h5><%= name %></h5>
+				<div class="h5"><%= name %></div>
 
-				<h6 class="text-default">
+				<div class="h6 text-default">
 					<span><%= HtmlUtil.escape(organization.getParentOrganizationName()) %></span>
-				</h6>
+				</div>
 
-				<h6 class="text-default">
+				<div class="h6 text-default">
 					<span><liferay-ui:message key="<%= organization.getType() %>" /></span>
-				</h6>
+				</div>
 
-				<h6 class="text-default">
+				<div class="h6 text-default">
 					<span><%= HtmlUtil.escape(organization.getAddress().getCity()) %></span>
 					<span><%= UsersAdminUtil.ORGANIZATION_REGION_NAME_ACCESSOR.get(organization) %></span>
 					<span><%= UsersAdminUtil.ORGANIZATION_COUNTRY_NAME_ACCESSOR.get(organization) %></span>
-				</h6>
+				</div>
 			</liferay-ui:search-container-column-text>
 		</c:when>
 		<c:otherwise>

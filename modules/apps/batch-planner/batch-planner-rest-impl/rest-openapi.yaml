@@ -2,6 +2,8 @@ components:
     schemas:
         Field:
             properties:
+                anyOfGroup:
+                    type: string
                 description:
                     type: string
                 name:
@@ -10,6 +12,10 @@ components:
                     type: boolean
                 type:
                     type: string
+                unsupportedFormats:
+                    items:
+                        type: string
+                    type: array
         Mapping:
             properties:
                 externalFieldName:

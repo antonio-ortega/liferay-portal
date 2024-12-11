@@ -14,7 +14,7 @@ DLAdminManagementToolbarDisplayContext dlAdminManagementToolbarDisplayContext = 
 DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisplayContext, request, renderRequest, renderResponse);
 %>
 
-<liferay-ui:success key='<%= portletDisplay.getId() + "requestProcessed" %>' message="your-request-completed-successfully" />
+<liferay-ui:success key='<%= DLPortletKeys.DOCUMENT_LIBRARY_ADMIN + "requestProcessed" %>' message="your-request-completed-successfully" />
 
 <c:choose>
 	<c:when test="<%= dlViewDisplayContext.isFileEntryTypesNavigation() %>">
@@ -41,6 +41,8 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 		<clay:management-toolbar
 			additionalProps='<%=
 				HashMapBuilder.<String, Object>put(
+					"addFileEntryURL", dlViewDisplayContext.getAddFileEntryURL()
+				).put(
 					"bulkCopyURL", dlViewDisplayContext.getCopyURL()
 				).put(
 					"bulkPermissionsConfiguration",
@@ -77,6 +79,8 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 				).put(
 					"openViewMoreFileEntryTypesURL", dlViewDisplayContext.getViewMoreFileEntryTypesURL()
 				).put(
+					"redirect", dlViewDisplayContext.getRedirect()
+				).put(
 					"selectAssetCategoriesURL", dlViewDisplayContext.getSelectAssetCategoriesURL()
 				).put(
 					"selectAssetTagsURL", dlViewDisplayContext.getSelectAssetTagsURL()
@@ -95,7 +99,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 				).build()
 			%>'
 			managementToolbarDisplayContext="<%= dlAdminManagementToolbarDisplayContext %>"
-			propsTransformer="document_library/js/DLManagementToolbarPropsTransformer"
+			propsTransformer="{DLManagementToolbarPropsTransformer} from document-library-web"
 		/>
 
 		<%
@@ -104,7 +108,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 
 		<div>
 			<react:component
-				module="document_library/js/bulk/BulkStatus.es"
+				module="{BulkStatus} from document-library-web"
 				props='<%=
 					HashMapBuilder.<String, Object>put(
 						"bulkComponentId", liferayPortletResponse.getNamespace() + "BulkStatus"
@@ -273,8 +277,6 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 				).put(
 					"searchContainerId", "entries"
 				).put(
-					"selectFolderURL", dlViewDisplayContext.getSelectFolderURL()
-				).put(
 					"uploadable", dlViewDisplayContext.isUploadable()
 				).put(
 					"uploadURL", dlViewDisplayContext.getUploadURL()
@@ -283,7 +285,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 				).build()
 			%>'
 			destroyOnNavigate="<%= true %>"
-			module="document_library/js/DocumentLibrary"
+			module="{DocumentLibrary} from document-library-web"
 		/>
 
 		<%
@@ -300,7 +302,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 
 		<div>
 			<react:component
-				module="document_library/js/categorization/tags/EditTags"
+				module="{EditTags} from document-library-web"
 				props='<%=
 					HashMapBuilder.<String, Object>put(
 						"context", Collections.singletonMap("namespace", liferayPortletResponse.getNamespace())
@@ -325,7 +327,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 
 		<div>
 			<react:component
-				module="document_library/js/categorization/categories/EditCategories"
+				module="{EditCategories} from document-library-web"
 				props='<%=
 					HashMapBuilder.<String, Object>put(
 						"context", Collections.singletonMap("namespace", liferayPortletResponse.getNamespace())
@@ -340,7 +342,7 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 
 		<div>
 			<react:component
-				module="document_library/js/image-editor/EditImageWithImageEditor"
+				module="{EditImageWithImageEditor} from document-library-web"
 				props='<%=
 					HashMapBuilder.<String, Object>put(
 						"editImageURL", editImageURL
@@ -351,8 +353,14 @@ DLViewDisplayContext dlViewDisplayContext = new DLViewDisplayContext(dlAdminDisp
 			/>
 		</div>
 
+		<div>
+			<react:component
+				module="{ConfigureAIModal} from document-library-web"
+			/>
+		</div>
+
 		<liferay-util:dynamic-include key="com.liferay.document.library.web#/document_library/view.jsp#post" />
 	</c:otherwise>
 </c:choose>
 
-<%@ include file="/document_library/friendly_url_changed_message.jspf" %>
+<%@ include file="/document_library/session_messages.jspf" %>

@@ -48,9 +48,8 @@ export default function PageTemplateModal({
 	const [availableSets, setAvailableSets] = useState<Set[]>([]);
 	const [formErrors, setFormErrors] = useState<Errors>({});
 	const [loading, setLoading] = useState(false);
-	const [openAddTemplateSetModal, setOpenAddTemplateSetModal] = useState(
-		false
-	);
+	const [openAddTemplateSetModal, setOpenAddTemplateSetModal] =
+		useState(false);
 	const [templateSetDescription, setTemplateSetDescription] = useState('');
 	const [templateSetId, setTemplateSetId] = useState('');
 	const [templateSetName, setTemplateSetName] = useState(
@@ -103,9 +102,6 @@ export default function PageTemplateModal({
 							Liferay.Language.get('untitled-set')
 						)
 					);
-				}
-				else {
-					throw new Error();
 				}
 			})
 			.catch((error) => {
@@ -174,7 +170,7 @@ export default function PageTemplateModal({
 	);
 
 	const handleSubmit = useCallback(
-		(event) => {
+		(event: any) => {
 			event.preventDefault();
 
 			const errors = validateForm();
@@ -327,6 +323,7 @@ export default function PageTemplateModal({
 								error={formErrors.templateSetId}
 								id={`${namespace}templateSet`}
 								name={Liferay.Language.get('page-template-set')}
+								required
 							>
 								<ClaySelectWithOption
 									id={`${namespace}templateSet`}

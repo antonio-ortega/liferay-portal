@@ -2,10 +2,10 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -15,7 +15,6 @@ definition {
 		task ("Given create an API application") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "test",
-				status = "unpublished",
 				title = "test");
 		}
 	}
@@ -31,8 +30,7 @@ definition {
 	}
 
 	@priority = 4
-	test CanDeleteAPIFromApiBuilderAndApi {
-		property portal.acceptance = "true";
+	test CanDeleteAPIFromAPIBuilderAndAPI {
 		property test.liferay.virtual.instance = "false";
 
 		task ("And Given from dropdown menu I click Delete option") {
@@ -65,8 +63,7 @@ definition {
 	}
 
 	@priority = 4
-	test CanDeletePublishedApiAndAssociatedEntities {
-		property portal.acceptance = "true";
+	test CanDeletePublishedAPIAndAssociatedEntities {
 		property test.liferay.virtual.instance = "false";
 
 		task ("Given publish an API application in API Builder") {
@@ -75,14 +72,14 @@ definition {
 
 		task ("And Given with postAPISchema to create a Schema associate to the API application") {
 			SchemaAPI.createAPISchema(
-				externalReferenceCode = "test",
+				apiApplicationERC = "test",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "mySchema");
 		}
 
 		task ("And Given with postAPIEndpoint to create an Endpoint associate to API application and Schema") {
 			EndpointAPI.createAPIEndpoint(
-				externalReferenceCode = "test",
+				apiApplicationERC = "test",
 				name = "myEndpoint",
 				path = "/myEndpoint");
 		}
@@ -123,20 +120,19 @@ definition {
 	}
 
 	@priority = 4
-	test CanDeleteUnpublishedApiAndAssociatedEntities {
-		property portal.acceptance = "true";
+	test CanDeleteUnpublishedAPIAndAssociatedEntities {
 		property test.liferay.virtual.instance = "false";
 
 		task ("And Given with postAPISchema to create a Schema associate to the API application") {
 			SchemaAPI.createAPISchema(
-				externalReferenceCode = "test",
+				apiApplicationERC = "test",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "mySchema");
 		}
 
 		task ("And Given with postAPIEndpoint to create an Endpoint associate to API application and Schema") {
 			EndpointAPI.createAPIEndpoint(
-				externalReferenceCode = "test",
+				apiApplicationERC = "test",
 				name = "myEndpoint",
 				path = "/myEndpoint");
 		}
@@ -177,8 +173,7 @@ definition {
 	}
 
 	@priority = 4
-	test CannotDeleteApiWithIncorrectTitleValue {
-		property portal.acceptance = "true";
+	test CannotDeleteAPIWithIncorrectTitleValue {
 		property test.liferay.virtual.instance = "false";
 
 		task ("And Given from dropdown menu I click Delete option") {
@@ -206,8 +201,7 @@ definition {
 	}
 
 	@priority = 4
-	test CanSeeDeleteApiApplicationDialog {
-		property portal.acceptance = "true";
+	test CanSeeDeleteAPIApplicationDialog {
 		property test.liferay.virtual.instance = "false";
 
 		task ("When from dropdown menu I click Delete option") {

@@ -83,8 +83,9 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -111,8 +112,9 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -156,8 +158,9 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 		throws Exception {
 
 		CommerceDiscount commerceDiscount =
-			_commerceDiscountService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceDiscountService.
+				fetchCommerceDiscountByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceDiscount == null) {
 			throw new NoSuchDiscountException(
@@ -175,12 +178,24 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 	@Override
 	public Discount postDiscount(Discount discount) throws Exception {
 		CommerceDiscount commerceDiscount = _addOrUpdateCommerceDiscount(
-			discount);
+			discount.getExternalReferenceCode(), discount);
 
 		return _toDiscount(commerceDiscount.getCommerceDiscountId());
 	}
 
-	private CommerceDiscount _addOrUpdateCommerceDiscount(Discount discount)
+	@Override
+	public Discount putDiscountByExternalReferenceCode(
+			String externalReferenceCode, Discount discount)
+		throws Exception {
+
+		CommerceDiscount commerceDiscount = _addOrUpdateCommerceDiscount(
+			externalReferenceCode, discount);
+
+		return _toDiscount(commerceDiscount.getCommerceDiscountId());
+	}
+
+	private CommerceDiscount _addOrUpdateCommerceDiscount(
+			String externalReferenceCode, Discount discount)
 		throws Exception {
 
 		ServiceContext serviceContext =
@@ -200,9 +215,8 @@ public class DiscountResourceImpl extends BaseDiscountResourceImpl {
 
 		CommerceDiscount commerceDiscount =
 			_commerceDiscountService.addOrUpdateCommerceDiscount(
-				discount.getExternalReferenceCode(),
-				GetterUtil.getLong(discount.getId()), discount.getTitle(),
-				discount.getTarget(),
+				externalReferenceCode, GetterUtil.getLong(discount.getId()),
+				discount.getTitle(), discount.getTarget(),
 				GetterUtil.getBoolean(discount.getUseCouponCode()),
 				discount.getCouponCode(),
 				GetterUtil.getBoolean(discount.getUsePercentage()),

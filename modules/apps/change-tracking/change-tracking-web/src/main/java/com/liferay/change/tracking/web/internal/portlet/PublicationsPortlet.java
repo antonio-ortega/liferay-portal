@@ -7,8 +7,6 @@ package com.liferay.change.tracking.web.internal.portlet;
 
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
-import com.liferay.change.tracking.service.CTCollectionService;
-import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
 import com.liferay.change.tracking.service.CTRemoteLocalService;
 import com.liferay.change.tracking.spi.display.CTDisplayRendererRegistry;
@@ -22,7 +20,8 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 
@@ -75,13 +74,16 @@ public class PublicationsPortlet extends MVCPortlet {
 			checkPermissions(renderRequest);
 		}
 		catch (Exception exception) {
-			throw new PortletException(exception);
+			SessionErrors.add(renderRequest, exception.getClass());
+
+			include("/publications/error.jsp", renderRequest, renderResponse);
+
+			return;
 		}
 
 		PublicationsDisplayContext publicationsDisplayContext =
 			new PublicationsDisplayContext(
-				_ctCollectionLocalService, _ctCollectionService,
-				_ctDisplayRendererRegistry, _ctEntryLocalService,
+				_ctCollectionLocalService, _ctDisplayRendererRegistry,
 				_ctPreferencesLocalService, _ctRemoteLocalService,
 				_portal.getHttpServletRequest(renderRequest), _language,
 				_publicationHelper, renderRequest, renderResponse);
@@ -114,7 +116,7 @@ public class PublicationsPortlet extends MVCPortlet {
 			}
 		}
 
-		_portletPermission.check(
+		PortletPermissionUtil.check(
 			PermissionThreadLocal.getPermissionChecker(),
 			CTPortletKeys.PUBLICATIONS, ActionKeys.VIEW);
 	}
@@ -123,13 +125,7 @@ public class PublicationsPortlet extends MVCPortlet {
 	private CTCollectionLocalService _ctCollectionLocalService;
 
 	@Reference
-	private CTCollectionService _ctCollectionService;
-
-	@Reference
 	private CTDisplayRendererRegistry _ctDisplayRendererRegistry;
-
-	@Reference
-	private CTEntryLocalService _ctEntryLocalService;
 
 	@Reference
 	private CTPreferencesLocalService _ctPreferencesLocalService;
@@ -145,9 +141,6 @@ public class PublicationsPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference
-	private PortletPermission _portletPermission;
 
 	@Reference
 	private PublicationHelper _publicationHelper;

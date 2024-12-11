@@ -10,12 +10,10 @@ import {
 	SearchResultsMessage,
 	SegmentExperience,
 } from '@liferay/layout-js-components-web';
-import {BetaButton} from 'frontend-js-components-web';
 import {fetch} from 'frontend-js-web';
-import React, {useContext, useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
 import {Fragment, FragmentFilter} from '../../constants/Fragment';
-import {ConstantsContext} from '../../context/ConstantsContext';
 import Filter from './Filter';
 import FragmentList from './FragmentList';
 import ResultsBar from './ResultsBar';
@@ -39,7 +37,6 @@ export default function RenderTimes({
 	const [fragments, setFragments] = useState<Fragment[]>([]);
 	const [searchValue, setSearchValue] = useState('');
 	const [visibleInfo, setVisibleInfo] = useState<boolean>(true);
-	const {learnResources} = useContext(ConstantsContext);
 
 	const filteredFragments = useMemo(() => {
 		const fragmentsByFilterValue = getFragmentsByFilterValue(
@@ -51,7 +48,7 @@ export default function RenderTimes({
 			? fragmentsByFilterValue.filter(
 					(fragment) =>
 						fragment.name.toLowerCase().indexOf(searchValue) !== -1
-			  )
+				)
 			: fragmentsByFilterValue;
 
 		return fragmentsBySearchValue;
@@ -66,12 +63,6 @@ export default function RenderTimes({
 
 	return (
 		<>
-			<BetaButton
-				containerClassName="c-mb-3"
-				learnResourceContext={learnResources}
-				tooltipAlign="top-left"
-			/>
-
 			{segmentsExperiences.length > 1 ? (
 				<ExperienceSelector
 					className="page-audit__experience-selector"
@@ -120,7 +111,7 @@ export default function RenderTimes({
 					description={Liferay.Language.get(
 						'try-again-with-a-different-search'
 					)}
-					imgSrc={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/search_state.gif`}
+					imgSrc={`${Liferay.ThemeDisplay.getPathThemeImages()}/states/search_state.svg`}
 					small
 					title={Liferay.Language.get('no-results-found')}
 				/>

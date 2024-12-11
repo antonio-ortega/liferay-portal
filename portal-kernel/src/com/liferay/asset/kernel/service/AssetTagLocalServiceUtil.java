@@ -72,19 +72,22 @@ public class AssetTagLocalServiceUtil {
 	/**
 	 * Adds an asset tag.
 	 *
-	 * @param userId the primary key of the user adding the asset tag
-	 * @param groupId the primary key of the group in which the asset tag is to
+	 * @param externalReferenceCode
+	 * @param userId                the primary key of the user adding the asset tag
+	 * @param groupId               the primary key of the group in which the asset tag is to
 	 be added
-	 * @param name the asset tag's name
-	 * @param serviceContext the service context to be applied
+	 * @param name                  the asset tag's name
+	 * @param serviceContext        the service context to be applied
 	 * @return the asset tag that was added
 	 */
 	public static AssetTag addTag(
-			long userId, long groupId, String name,
+			String externalReferenceCode, long userId, long groupId,
+			String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
-		return getService().addTag(userId, groupId, name, serviceContext);
+		return getService().addTag(
+			externalReferenceCode, userId, groupId, name, serviceContext);
 	}
 
 	/**
@@ -342,6 +345,13 @@ public class AssetTagLocalServiceUtil {
 		return getService().fetchAssetTag(tagId);
 	}
 
+	public static AssetTag fetchAssetTagByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return getService().fetchAssetTagByExternalReferenceCode(
+			externalReferenceCode, groupId);
+	}
+
 	/**
 	 * Returns the asset tag matching the UUID and group.
 	 *
@@ -414,6 +424,14 @@ public class AssetTagLocalServiceUtil {
 	 */
 	public static AssetTag getAssetTag(long tagId) throws PortalException {
 		return getService().getAssetTag(tagId);
+	}
+
+	public static AssetTag getAssetTagByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return getService().getAssetTagByExternalReferenceCode(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -591,22 +609,6 @@ public class AssetTagLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
-	public static List<AssetTag> getSocialActivityCounterOffsetTags(
-		long groupId, String socialActivityCounterName, int startOffset,
-		int endOffset) {
-
-		return getService().getSocialActivityCounterOffsetTags(
-			groupId, socialActivityCounterName, startOffset, endOffset);
-	}
-
-	public static List<AssetTag> getSocialActivityCounterPeriodTags(
-		long groupId, String socialActivityCounterName, int startPeriod,
-		int endPeriod) {
-
-		return getService().getSocialActivityCounterPeriodTags(
-			groupId, socialActivityCounterName, startPeriod, endPeriod);
-	}
-
 	/**
 	 * Returns the asset tag with the primary key.
 	 *
@@ -751,10 +753,6 @@ public class AssetTagLocalServiceUtil {
 		return getService().getTagsSize(groupId, classNameId, name);
 	}
 
-	public static int getTagsSize(long groupId, String name) {
-		return getService().getTagsSize(groupId, name);
-	}
-
 	public static boolean hasAssetEntryAssetTag(long entryId, long tagId) {
 		return getService().hasAssetEntryAssetTag(entryId, tagId);
 	}
@@ -874,11 +872,12 @@ public class AssetTagLocalServiceUtil {
 	}
 
 	public static AssetTag updateTag(
-			long userId, long tagId, String name,
+			String externalReferenceCode, long userId, long tagId, String name,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
 
-		return getService().updateTag(userId, tagId, name, serviceContext);
+		return getService().updateTag(
+			externalReferenceCode, userId, tagId, name, serviceContext);
 	}
 
 	public static AssetTagLocalService getService() {

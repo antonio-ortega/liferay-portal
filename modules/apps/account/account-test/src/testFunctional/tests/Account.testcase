@@ -1,4 +1,4 @@
-@component-name = "portal-user-management"
+@component-name = "portal-commerce"
 definition {
 
 	property portal.release = "true";
@@ -22,81 +22,38 @@ definition {
 		}
 	}
 
-	@description = "This test asserts that a user can view all the Account Groups an account is assigned to via Account details page"
+	@description = "This is a test for LPS-195988. This test asserts that an account name will automatically truncate and will stop adding more characters as you type after it reaches the character limit of 250."
 	@priority = 4
-	test AccountGroupsAreDisplayedInAccountDetailsPage {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
-		property portal.acceptance = "true";
-		property test.liferay.virtual.instance = "false";
-
-		JSONAccountEntry.addAccountEntry(
-			accountEntryName = "Accounts Name",
-			accountEntryType = "Business");
-
-		AccountGroups.openAccountGroupsAdmin();
-
-		for (var accountGroupNum : list "1,2,3") {
-			AccountGroups.addCP(
-				accountGroupDescription = "Account Group Description ${accountGroupNum}",
-				accountGroupName = "Account Group ${accountGroupNum}");
-
-			Navigator.gotoNavTab(navTab = "Accounts");
-
-			AccountGroups.addAssignee(
-				accountGroupName = "Account Group ${accountGroupNum}",
-				assigneeNames = "Accounts Name",
-				assigneeType = "Accounts");
-
-			Navigator.gotoBack();
-		}
-
-		Account.openAccountsAdmin();
-
-		LexiconEntry.gotoEntry(rowEntry = "Accounts Name");
-
-		Account.gotoAssigneeTab(assigneeTab = "Account Groups");
-
-		for (var accountGroupNum : list "1,2,3") {
-			AssertTextEquals(
-				key_columnName = "lfr-name",
-				key_tableEntry = "Account Group ${accountGroupNum}",
-				locator1 = "LexiconTable#TABLE_ENTRY_INFO",
-				value1 = "Account Group ${accountGroupNum}");
-
-			AssertTextEquals(
-				key_columnName = "lfr-description",
-				key_tableEntry = "Account Group ${accountGroupNum}",
-				locator1 = "LexiconTable#TABLE_ENTRY_INFO",
-				value1 = "Account Group Description ${accountGroupNum}");
-		}
-	}
-
-	@description = "This test asserts that an account name will automatically truncate and will stop adding more characters as you type after it reaches the character limit of 100."
-	@priority = 4
-	test AccountNameCannotExceed100Characters {
-		task ("When a user types an account name with more than 100 characters") {
+	test AccountNameCannotExceed250Characters {
+		task ("When a user types an account name with more than 250 characters") {
 			Account.openAccountsAdmin();
 
 			LexiconEntry.gotoAdd();
 
-			PortletEntry.inputName(name = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet");
+			Type.sendKeys(
+				locator1 = "TextInput#NAME",
+				value1 = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet");
 		}
 
-		task ("Then only the first 100 characters are typed in. No more than 100 characters can be added") {
+		task ("Then only the first 250 characters are typed in. No more than 250 characters can be added") {
 			AssertTextEquals(
 				locator1 = "TextInput#NAME",
-				value1 = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor s");
+				value1 = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem i");
 
 			AssertTextNotEquals(
 				locator1 = "TextInput#NAME",
-				value1 = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet");
+				value1 = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet");
 
 			Button.clickSave();
 
 			Account.openAccountsAdmin();
 
-			LexiconEntry.viewNoEntry(rowEntry = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet");
+			AssertTextEquals(
+				key_rowEntry = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem i",
+				locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME",
+				value1 = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem i");
+
+			LexiconEntry.viewNoEntry(rowEntry = "Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet Lorem ipsum dolor sit amet");
 		}
 	}
 
@@ -345,7 +302,7 @@ definition {
 				key_title = "Set Default Billing Address",
 				locator1 = "IFrame#MODAL_ANY");
 
-			ManagementBar.viewNoSubheaderInFilterAndOrder(subheadItem = "Filter by Type");
+			AssertElementNotPresent(locator1 = "ManagementBar#FILTER");
 
 			LexiconEntry.viewEntryName(rowEntry = "Liferay, Inc.");
 
@@ -361,59 +318,11 @@ definition {
 				key_title = "Set Default Shipping Address",
 				locator1 = "IFrame#MODAL_ANY");
 
-			ManagementBar.viewNoSubheaderInFilterAndOrder(subheadItem = "Filter by Type");
+			AssertElementNotPresent(locator1 = "ManagementBar#FILTER");
 
 			LexiconEntry.viewEntryName(rowEntry = "Liferay Dalian Software Co., Ltd.");
 
 			LexiconEntry.viewNoEntry(rowEntry = "Liferay, Inc.");
-		}
-	}
-
-	@description = "This test asserts that an Account Manager can view all accounts that are added by other users in the Accounts Admin portlet, not just the ones he created"
-	@priority = 4
-	test AllAccountsEntriesDisplay {
-		property custom.properties = "jsonws.web.service.paths.excludes=";
-		property portal.acceptance = "true";
-
-		task ("Add several accounts") {
-			for (var accountNum : list "1,2,3") {
-				JSONAccountEntry.addAccountEntry(
-					accountEntryName = "Account Name ${accountNum}",
-					accountEntryType = "Business");
-			}
-		}
-
-		task ("Add a user") {
-			JSONUser.addUser(
-				userEmailAddress = "userea@liferay.com",
-				userFirstName = "userfn",
-				userLastName = "userln",
-				userScreenName = "usersn");
-
-			JSONUser.setFirstPassword(
-				agreeToTermsAndAnswerReminderQuery = "true",
-				requireReset = "false",
-				userEmailAddress = "userea@liferay.com");
-		}
-
-		task ("Assign Administrator role to user") {
-			JSONRole.assignRoleToUser(
-				roleTitle = "Administrator",
-				userEmailAddress = "userea@liferay.com");
-		}
-
-		task ("Sign in as the Administrator") {
-			User.logoutAndLoginPG(
-				userLoginEmailAddress = "userea@liferay.com",
-				userLoginFullName = "userfn userln");
-		}
-
-		task ("Assert all added account entries display") {
-			Account.openAccountsAdmin();
-
-			for (var accountNum : list "1,2,3") {
-				LexiconEntry.viewEntryName(rowEntry = "Account Name ${accountNum}");
-			}
 		}
 	}
 
@@ -493,7 +402,7 @@ definition {
 			SAML.addVirtualInstances(virtualHosts = "www.able.com");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
@@ -676,7 +585,7 @@ definition {
 
 		ClickNoError(
 			key_text = "times-circle",
-			locator1 = "Icon#ANY");
+			locator1 = "ManagementBar#ANY_ICON");
 
 		AssertConfirm(value1 = "Are you sure you want to remove the selected users?");
 
@@ -1011,7 +920,7 @@ definition {
 
 			ClickNoError(
 				key_text = "times-circle",
-				locator1 = "Icon#ANY");
+				locator1 = "ManagementBar#ANY_ICON");
 
 			AssertConfirm.waitForConfirmation(value1 = "Are you sure you want to remove the selected users?");
 
@@ -1444,50 +1353,6 @@ definition {
 		}
 	}
 
-	@description = "This test adds more than 3 Owned Roles to an account and asserts correct pagination in the Roles list."
-	@priority = 4
-	test CanChangePaginationInRolesList {
-		JSONAccountEntry.addAccountEntry(
-			accountEntryName = "Account with Role",
-			accountEntryType = "Business");
-
-		Account.openAccountsAdmin();
-
-		LexiconEntry.gotoEntry(rowEntry = "Account with Role");
-
-		for (var accountRoleNumber : list "1,2,3,4") {
-			Account.addOwnedAccountRole(accountRoleTitle = "Account Role ${accountRoleNumber}");
-
-			Navigator.gotoBack();
-		}
-
-		Account.openAccountsAdmin();
-
-		LexiconEntry.gotoEntry(rowEntry = "Account with Role");
-
-		Account.gotoAssigneeTab(assigneeTab = "Roles");
-
-		Pagination.changePagination(itemsPerPage = 4);
-
-		for (var accountRoleName : list "Account Administrator,Account Role 1,Account Role 2,Account Role 3") {
-			LexiconEntry.viewEntryName(rowEntry = ${accountRoleName});
-		}
-
-		LexiconEntry.viewNoEntry(rowEntry = "Account Role 4");
-
-		Pagination.viewResults(results = "Showing 1 to 4 of 5 entries.");
-
-		Click(locator1 = "Pagination#NEXT_LINK");
-
-		LexiconEntry.viewEntryName(rowEntry = "Account Role 4");
-
-		for (var accountRoleName : list "Account Administrator,Account Role 1,Account Role 2,Account Role 3") {
-			LexiconEntry.viewNoEntry(rowEntry = ${accountRoleName});
-		}
-
-		Pagination.viewResults(results = "Showing 5 to 5 of 5 entries.");
-	}
-
 	@description = "This test deactivates an active account and asserts account displays in correct filter."
 	@priority = 4
 	test CanDeactivateAccount {
@@ -1539,7 +1404,7 @@ definition {
 
 		ClickNoError(
 			key_text = "hidden",
-			locator1 = "Icon#ANY");
+			locator1 = "ManagementBar#ANY_ICON");
 
 		AssertConfirm.waitForConfirmation(value1 = "Are you sure you want to deactivate this?");
 
@@ -1565,7 +1430,7 @@ definition {
 
 		ClickNoError(
 			key_text = "undo",
-			locator1 = "Icon#ANY");
+			locator1 = "ManagementBar#ANY_ICON");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#EMPTY_INFO",
@@ -1766,7 +1631,7 @@ definition {
 
 		ClickNoError(
 			key_text = "times-circle",
-			locator1 = "Icon#ANY");
+			locator1 = "ManagementBar#ANY_ICON");
 
 		AssertConfirm.waitForConfirmation(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 
@@ -1897,7 +1762,7 @@ definition {
 
 		ClickNoError(
 			key_text = "times-circle",
-			locator1 = "Icon#ANY");
+			locator1 = "ManagementBar#ANY_ICON");
 
 		AssertConfirm.waitForConfirmation(value1 = "Are you sure you want to delete this? It will be deleted immediately.");
 
@@ -1942,10 +1807,7 @@ definition {
 	@description = "This test adds a custom field for an account entry and asserts field can be updated."
 	@priority = 4
 	test CanEditAccountCustomField {
-		ApplicationsMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Custom Fields");
+		CustomFields.openCustomFieldAdmin();
 
 		CustomFields.addCP(
 			customFieldName = "Text Field",
@@ -1992,6 +1854,7 @@ definition {
 				addressCountry = "Cuba",
 				addressName = "Address Entry Name",
 				addressPostalCode = 116023,
+				addressRegion = "Granma",
 				addressStreet1 = "537 Huangpu Road Taide Building,");
 		}
 
@@ -2001,6 +1864,7 @@ definition {
 				addressCountry = "Chile",
 				addressName = "Address Entry Name",
 				addressPostalCode = 123456,
+				addressRegion = "Atacama",
 				addressStreet1 = "Street address one");
 		}
 
@@ -2098,7 +1962,9 @@ definition {
 
 		Navigator.gotoBack();
 
-		ManagementBar.viewFilterAndOrder(menuItem = "Inactive");
+		AssertElementPresent(
+			key_menuItem = "Inactive",
+			locator1 = "ManagementBar#FILTER_AND_ORDER_ACTIVE_ITEM");
 
 		LexiconEntry.viewEntryName(rowEntry = "Update Accounts Name via Name Link");
 
@@ -2366,7 +2232,7 @@ definition {
 
 		task ("When the user creates an account") {
 			Account.createAccount(
-				newPassword = "test",
+				newPassword = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "userea@liferay.com",
 				userFirstName = "userfn",
 				userLastName = "userln",
@@ -2518,7 +2384,7 @@ definition {
 			User.logoutPG();
 
 			User.loginUserPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "useramea@liferay.com");
 
 			Account.openAccountsAdmin();
@@ -2576,7 +2442,7 @@ definition {
 			User.logoutPG();
 
 			User.loginUserPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "useramea@liferay.com");
 
 			Account.openAccountsAdmin();
@@ -2974,7 +2840,7 @@ definition {
 
 		ClickNoError(
 			key_text = "times-circle",
-			locator1 = "Icon#ANY");
+			locator1 = "ManagementBar#ANY_ICON");
 
 		AssertConfirm.waitForConfirmation(value1 = "Are you sure you want to remove the selected users?");
 
@@ -2991,40 +2857,6 @@ definition {
 		}
 
 		LexiconEntry.viewEntryName(rowEntry = "userfn2 userln2");
-	}
-
-	@description = "This test asserts accurate results when searching for assigned account groups of an account"
-	@priority = 4
-	test CanSearchForAccountGroup {
-		task ("Given a business account with assigned account group") {
-			JSONAccountEntry.addAccountEntry(
-				accountEntryName = "Acme Inc",
-				accountEntryType = "Business");
-
-			JSONAccountGroup.addAccountGroup(accountGroupName = "Account Group Name");
-
-			AccountGroups.openAccountGroupsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Account Group Name");
-
-			AccountGroups.addAssignee(
-				accountGroupName = "Account Group Name",
-				assigneeNames = "Acme Inc");
-		}
-
-		task ("When a user searches for an account group in the Account Groups tab of an account") {
-			Account.openAccountsAdmin();
-
-			LexiconEntry.gotoEntry(rowEntry = "Acme Inc");
-
-			Navigator.gotoNavTab(navTab = "Account Groups");
-
-			Search.searchCP(searchTerm = "Account Group Name");
-		}
-
-		task ("Then the account group displays in the results") {
-			LexiconEntry.viewEntryName(rowEntry = "Account Group Name");
-		}
 	}
 
 	@description = "This test asserts accurate results when searching within a filter scope"
@@ -3921,7 +3753,7 @@ definition {
 				virtualHost = "www.able.com");
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "http://www.able.com:8080",
 				userEmailAddress = "test@www.able.com");
 
@@ -3966,6 +3798,167 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-188650 (TC-2). Headless Admin User can list the ACTIVE Users on a certain API page sorted by given name"
+	@priority = 4
+	test HeadlessAdminCanListActiveUsersWithPagingAndSortingByGivenName {
+		task ("Given: Multiple Users are created") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Users",
+				panel = "Control Panel",
+				portlet = "Users and Organizations");
+
+			User.createMultipleUsers(letter = "a,b,c,d,e,f,g,h,i,j,k,l");
+		}
+
+		task ("When: Every other one is deactivated") {
+			User.deactivateMultipleUsers(letter = "b,d,f,h,j,l");
+		}
+
+		task ("Then: The new endpoint lists the User on a required page by the required sorting") {
+			APIExplorer.executeAPIMethodCompact(
+				api = "headless-admin-user",
+				assertValue = "i@liferay.com",
+				direction = "p",
+				method = "getUserAccountsByStatusPage",
+				parameter = "status",
+				parameter_four = "sort",
+				parameter_three = "pageSize",
+				parameter_two = "page",
+				service = "UserAccount",
+				value = "active",
+				value_four = "givenName",
+				value_three = 1,
+				value_two = 5,
+				version = "v1.0");
+		}
+	}
+
+	@description = "This is a use case for LPS-188650 (TC-4). Headless Admin User can list a specific User by email address"
+	@priority = 4
+	test HeadlessAdminCanListASpecificUserByEmailAddress {
+		task ("Given: Multiple Users are created") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Users",
+				panel = "Control Panel",
+				portlet = "Users and Organizations");
+
+			User.createMultipleUsers(letter = "a,b,c,d,e,f,g,h,i,j,k,l");
+		}
+
+		task ("When: Every other one is deactivated") {
+			User.deactivateMultipleUsers(letter = "b,d,f,h,j,l");
+		}
+
+		task ("Then: The new endpoint lists the required User by email address") {
+			APIExplorer.executeAPIMethodCompact(
+				api = "headless-admin-user",
+				assertValue = "f@liferay.com",
+				direction = "p",
+				method = "getUserAccountByEmailAddress",
+				parameter = "emailAddress",
+				service = "UserAccount",
+				value = "f@liferay.com",
+				version = "v1.0");
+		}
+	}
+
+	@description = "This is a use case for LPS-188650 (TC-3). Headless Admin User can list a specific inactive User by name"
+	@priority = 4
+	test HeadlessAdminCanListASpecificUserByName {
+		task ("Given: Multiple Users are created") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Users",
+				panel = "Control Panel",
+				portlet = "Users and Organizations");
+
+			User.createMultipleUsers(letter = "a,b,c,d,e,f,g,h,i,j,k,l");
+		}
+
+		task ("When: Every other one is deactivated") {
+			User.deactivateMultipleUsers(letter = "b,d,f,h,j,l");
+		}
+
+		task ("Then: The new endpoint lists the required User") {
+			APIExplorer.executeAPIMethodCompact(
+				api = "headless-admin-user",
+				assertValue = "l@liferay.com",
+				direction = "p",
+				method = "getUserAccountsByStatusPage",
+				parameter = "status",
+				parameter_two = "search",
+				service = "UserAccount",
+				value = "inactive",
+				value_two = "l",
+				version = "v1.0");
+		}
+	}
+
+	@description = "This is a use case for LPS-188650 (TC-5). Headless Admin User can list a specific User by User ID"
+	@priority = 4
+	test HeadlessAdminCanListASpecificUserByUserID {
+		task ("Given: Multiple Users are created") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Users",
+				panel = "Control Panel",
+				portlet = "Users and Organizations");
+
+			User.createMultipleUsers(letter = "a,b,c,d,e,f,g,h,i,j,k,l");
+		}
+
+		task ("When: Every other one is deactivated") {
+			User.deactivateMultipleUsers(letter = "b,d,f,h,j,l");
+		}
+
+		task ("Then: The new endpoint lists the required User by email address") {
+			var userId = JSONUserSetter.setUserId(userEmailAddress = "g@liferay.com");
+
+			APIExplorer.executeAPIMethodCompact(
+				api = "headless-admin-user",
+				assertValue = "g@liferay.com",
+				direction = "p",
+				method = "getUserAccount",
+				parameter = "userAccountId",
+				service = "UserAccount",
+				value = ${userId},
+				version = "v1.0");
+		}
+	}
+
+	@description = "This is a use case for LPS-188650 (TC-1). Headless Admin User can list the INACTIVE Users on a certain API page sorted by family name"
+	@priority = 4
+	test HeadlessAdminCanListInactiveUsersWithPagingAndSortingByFamilyName {
+		task ("Given: Multiple Users are created") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Users",
+				panel = "Control Panel",
+				portlet = "Users and Organizations");
+
+			User.createMultipleUsers(letter = "a,b,c,d,e,f,g,h,i,j,k,l");
+		}
+
+		task ("When: Every other one is deactivated") {
+			User.deactivateMultipleUsers(letter = "b,d,f,h,j,l");
+		}
+
+		task ("Then: The new endpoint lists the User on a required page by the required sorting") {
+			APIExplorer.executeAPIMethodCompact(
+				api = "headless-admin-user",
+				assertValue = "h@liferay.com",
+				direction = "p",
+				method = "getUserAccountsByStatusPage",
+				parameter = "status",
+				parameter_four = "sort",
+				parameter_three = "pageSize",
+				parameter_two = "page",
+				service = "UserAccount",
+				value = "inactive",
+				value_four = "familyName",
+				value_three = 1,
+				value_two = 4,
+				version = "v1.0");
+		}
+	}
+
 	@description = "This is a use case for LPS-117171. It asserts that Filter By Navigation does not display when assigning a user to a Person Account since domains are not applicable for this type of account."
 	@priority = 4
 	test NoFilterByNavigationForPersonAccount {
@@ -3998,7 +3991,7 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#ASSIGN_USER");
 
-		ManagementBar.viewNoSubheaderInFilterAndOrder(subheaderItem = "Filter by Navigation");
+		AssertElementNotPresent(locator1 = "ManagementBar#FILTER");
 	}
 
 	@description = "This test sets a valid domain for a business account. It adds a user with a same domain and asserts no warning displays."
@@ -4027,7 +4020,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "useramea@liferay.com");
 
 		Account.openAccountsAdmin();
@@ -4082,30 +4075,28 @@ definition {
 	test OnlyGlobalTagCanBeAddedToAccount {
 		JSONAssettag.addTag(
 			groupName = "Guest",
-			tagName = "Guest Tag");
+			tagName = "guest tag");
 
 		JSONAssettag.addTag(
 			groupName = "Global",
-			tagName = "Global Tag Name 1");
+			tagName = "global tag name 1");
 
 		JSONAssettag.addTag(
 			groupName = "Global",
-			tagName = "Global Tag Name 2");
+			tagName = "global tag name 2");
 
 		Account.openAccountsAdmin();
 
 		Account.addBusinessAccountWithTag(
 			accountName = "Account with Tags",
 			addTagMethod = "Select",
-			tagNameList = "Global Tag Name 1,Global Tag Name 2");
+			tagNameList = "global tag name 1,global tag name 2");
 
 		Account.openAccountsAdmin();
 
 		LexiconEntry.gotoEntry(rowEntry = "Account with Tags");
 
-		for (var tagName : list "Global Tag Name 1,Global Tag Name 2") {
-			var tagName = StringUtil.lowerCase(${tagName});
-
+		for (var tagName : list "global tag name 1,global tag name 2") {
 			AssetCategorization.viewTag(tagName = ${tagName});
 		}
 
@@ -4118,7 +4109,7 @@ definition {
 
 		var rowEntry = StringUtil.lowerCase(${rowEntry});
 
-		LexiconEntry.viewNoEntry(rowEntry = StringUtil.lowerCase("Guest Tag"));
+		LexiconEntry.viewNoEntry(rowEntry = StringUtil.lowerCase("guest tag"));
 	}
 
 	@description = "This test adds an Owned or account specific role and ensures this role is not shared across accounts"

@@ -1,4 +1,4 @@
-@component-name = "portal-object"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -26,7 +26,7 @@ definition {
 	@description = "LPS-135390 - Verify it is possible to view and access the Picklist portlet with the Access in Control Panel permission"
 	@priority = 4
 	test CanAccessPicklistWithAccessPermission {
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
@@ -68,7 +68,7 @@ definition {
 	@description = "LPS-135390 - Verify it is possible to add a Picklist with the Add permission"
 	@priority = 4
 	test CanAddPicklistWithAddPermission {
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
@@ -257,9 +257,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -438,9 +440,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -495,7 +499,7 @@ definition {
 	test CannotAddPicklistWithoutAddPermission {
 		property portal.acceptance = "true";
 
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
@@ -623,13 +627,15 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -730,7 +736,7 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
@@ -886,13 +892,15 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -965,13 +973,15 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -1332,13 +1342,15 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject");
 
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -1391,7 +1403,7 @@ definition {
 	test CannotViewPicklistWithoutViewPermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
@@ -1648,9 +1660,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -1731,9 +1745,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -1968,7 +1984,7 @@ definition {
 	@description = "LPS-140342 - Verify it is possible view and edit its own Picklist with only the Add Picklist permission"
 	@priority = 4
 	test CanViewAndEditPicklistWithAddPicklistPermission {
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
@@ -2053,9 +2069,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -2093,7 +2111,7 @@ definition {
 	test CanViewPicklistWithViewPermission {
 		Picklist.addPicklistViaAPI(picklistName = "Picklist Test");
 
-		JSONRole.addRegularRole(roleTitle = "Regular Role");
+		JSONRole.addRegularRole(roleKey = "Regular Role");
 
 		for (var resourceAction : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
 			Permissions.definePermissionViaJSONAPI(
@@ -2165,9 +2183,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionPortletId = ObjectDefinitionAPI._getObjectDefinitionPortletId(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "ACCESS_IN_CONTROL_PANEL",
-			resourceName = "com_liferay_object_web_internal_object_definitions_portlet_ObjectDefinitionsPortlet_${objectId}",
+			resourceName = ${objectDefinitionPortletId},
 			roleTitle = "Regular Role",
 			roleType = "regular");
 
@@ -2380,9 +2400,11 @@ definition {
 			roleTitle = "Guest",
 			roleType = "regular");
 
+		var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW",
-			resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}",
+			resourceName = ${objectDefinitionClassName},
 			roleTitle = "Guest",
 			roleType = "regular");
 
@@ -2595,9 +2617,11 @@ definition {
 
 		var objectId = JSONObject.getObjectId(objectName = "CustomObject");
 
+		var objectDefinitionClassName = ObjectDefinitionAPI._getObjectDefinitionClassNameById(objectDefinitionId = ${objectId});
+
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW",
-			resourceName = "com.liferay.object.model.ObjectDefinition#${objectId}",
+			resourceName = ${objectDefinitionClassName},
 			roleTitle = "Guest",
 			roleType = "regular");
 

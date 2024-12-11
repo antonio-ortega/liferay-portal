@@ -8,6 +8,7 @@ package com.liferay.organizations.internal.object.system;
 import com.liferay.headless.admin.user.dto.v1_0.Organization;
 import com.liferay.headless.admin.user.resource.v1_0.OrganizationResource;
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.field.builder.LongIntegerObjectFieldBuilder;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.system.BaseSystemObjectDefinitionManager;
@@ -19,12 +20,16 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.OrganizationTable;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
@@ -42,7 +47,7 @@ public class OrganizationSystemObjectDefinitionManager
 		throws Exception {
 
 		OrganizationResource organizationResource = _buildOrganizationResource(
-			user);
+			false, user);
 
 		Organization organization = organizationResource.postOrganization(
 			_toOrganization(values));
@@ -102,8 +107,12 @@ public class OrganizationSystemObjectDefinitionManager
 	}
 
 	@Override
-	public Map<Locale, String> getLabelMap() {
-		return createLabelMap("organization");
+	public Map<String, String> getLabelKeys() {
+		return HashMapBuilder.put(
+			"label", "organization"
+		).put(
+			"pluralLabel", "organizations"
+		).build();
 	}
 
 	@Override
@@ -114,6 +123,14 @@ public class OrganizationSystemObjectDefinitionManager
 	@Override
 	public List<ObjectField> getObjectFields() {
 		return Arrays.asList(
+			new LongIntegerObjectFieldBuilder(
+			).labelMap(
+				createLabelMap("parentOrganizationId")
+			).name(
+				"parentOrganizationId"
+			).system(
+				true
+			).build(),
 			new TextObjectFieldBuilder(
 			).labelMap(
 				createLabelMap("comments")
@@ -135,8 +152,16 @@ public class OrganizationSystemObjectDefinitionManager
 	}
 
 	@Override
-	public Map<Locale, String> getPluralLabelMap() {
-		return createLabelMap("organizations");
+	public Page<?> getPage(
+			User user, String search, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception {
+
+		OrganizationResource organizationResource = _buildOrganizationResource(
+			true, user);
+
+		return organizationResource.getOrganizationsPage(
+			null, search, filter, pagination, sorts);
 	}
 
 	@Override
@@ -161,7 +186,7 @@ public class OrganizationSystemObjectDefinitionManager
 
 	@Override
 	public int getVersion() {
-		return 1;
+		return 3;
 	}
 
 	@Override
@@ -172,12 +197,14 @@ public class OrganizationSystemObjectDefinitionManager
 		throw new UnsupportedOperationException();
 	}
 
-	private OrganizationResource _buildOrganizationResource(User user) {
+	private OrganizationResource _buildOrganizationResource(
+		boolean checkPermissions, User user) {
+
 		OrganizationResource.Builder builder =
 			_organizationResourceFactory.create();
 
 		return builder.checkPermissions(
-			false
+			checkPermissions
 		).preferredLocale(
 			user.getLocale()
 		).user(
@@ -188,8 +215,8 @@ public class OrganizationSystemObjectDefinitionManager
 	private Organization _toOrganization(Map<String, Object> values) {
 		return new Organization() {
 			{
-				comment = GetterUtil.getString(values.get("comment"));
-				name = GetterUtil.getString(values.get("name"));
+				setComment(() -> GetterUtil.getString(values.get("comment")));
+				setName(() -> GetterUtil.getString(values.get("name")));
 			}
 		};
 	}

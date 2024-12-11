@@ -84,6 +84,28 @@ public class DeletionSystemEventExporter {
 				deletionSystemEventStagedModelTypes);
 		}
 
+		if (exportedSystemEventIds != null) {
+			for (Long systemEventId : exportedSystemEventIds) {
+				SystemEvent systemEvent =
+					SystemEventLocalServiceUtil.fetchSystemEvent(systemEventId);
+
+				JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
+					systemEvent.getExtraData());
+
+				Object assetTitle = jsonObject.get("assetTitle");
+
+				if (assetTitle == null) {
+					continue;
+				}
+
+				ManifestSummary manifestSummary =
+					portletDataContext.getManifestSummary();
+
+				manifestSummary.addAssetTitle(
+					systemEvent.getClassName(), String.valueOf(assetTitle));
+			}
+		}
+
 		portletDataContext.addZipEntry(
 			ExportImportPathUtil.getRootPath(portletDataContext) +
 				"/deletion-system-events.xml",

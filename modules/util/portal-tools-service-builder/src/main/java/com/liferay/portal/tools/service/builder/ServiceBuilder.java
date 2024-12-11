@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ClearThreadLocalUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -390,11 +391,11 @@ public class ServiceBuilder {
 				while (enumeration.hasMoreElements()) {
 					URL url = enumeration.nextElement();
 
-					InputStream inputStream = url.openStream();
-
-					_readResourceActionModels(
-						implDirName, resourcesDirName, inputStream,
-						resourceActionModels);
+					try (InputStream inputStream = url.openStream()) {
+						_readResourceActionModels(
+							implDirName, resourcesDirName, inputStream,
+							resourceActionModels);
+					}
 				}
 			}
 			else {
@@ -710,6 +711,9 @@ public class ServiceBuilder {
 
 			_mvccEnabled = GetterUtil.getBoolean(
 				rootElement.attributeValue("mvcc-enabled"));
+			_optimizeDBIndexes = GetterUtil.getBoolean(
+				rootElement.attributeValue("optimize-db-indexes"),
+				isVersionGTE_7_4_0());
 			_shortNoSuchExceptionEnabled = GetterUtil.getBoolean(
 				rootElement.attributeValue("short-no-such-exception-enabled"),
 				true);
@@ -1779,6 +1783,32 @@ public class ServiceBuilder {
 		return false;
 	}
 
+	public boolean isCacheFieldPermanent(JavaField javaField) {
+		if (isVersionLTE_7_3_0()) {
+			return false;
+		}
+
+		List<JavaAnnotation> javaAnnotations = javaField.getAnnotations();
+
+		for (JavaAnnotation javaAnnotation : javaAnnotations) {
+			JavaClass type = javaAnnotation.getType();
+
+			String className = type.getFullyQualifiedName();
+
+			if (className.equals(CacheField.class.getName())) {
+				if (GetterUtil.getBoolean(
+						javaAnnotation.getNamedParameter("permanent"))) {
+
+					return true;
+				}
+
+				return false;
+			}
+		}
+
+		throw new IllegalArgumentException(javaField + " is not a cache field");
+	}
+
 	public boolean isCustomMethod(JavaMethod method) {
 		String methodName = method.getName();
 
@@ -2203,6 +2233,35 @@ public class ServiceBuilder {
 	}
 
 	private void _addIndexMetadata(
+		List<IndexMetadata> indexMetadatas, IndexMetadata indexMetadata) {
+
+		Iterator<IndexMetadata> iterator = indexMetadatas.iterator();
+
+		while (iterator.hasNext()) {
+			IndexMetadata currentIndexMetadata = iterator.next();
+
+			Boolean redundant = currentIndexMetadata.redundantTo(indexMetadata);
+
+			if (redundant == null) {
+				continue;
+			}
+
+			if (redundant) {
+				iterator.remove();
+			}
+			else {
+				indexMetadata = null;
+
+				break;
+			}
+		}
+
+		if (indexMetadata != null) {
+			indexMetadatas.add(indexMetadata);
+		}
+	}
+
+	private void _addIndexMetadata(
 		Map<String, List<IndexMetadata>> indexMetadatasMap, String tableName,
 		List<String> pkEntityColumnDBNames, IndexMetadata indexMetadata) {
 
@@ -2249,37 +2308,14 @@ public class ServiceBuilder {
 			}
 		}
 
-		List<IndexMetadata> indexMetadatas = indexMetadatasMap.get(tableName);
+		List<IndexMetadata> indexMetadatas = indexMetadatasMap.computeIfAbsent(
+			tableName, key -> new ArrayList<>());
 
-		if (indexMetadatas == null) {
-			indexMetadatas = new ArrayList<>();
-
-			indexMetadatasMap.put(tableName, indexMetadatas);
-		}
-
-		Iterator<IndexMetadata> iterator = indexMetadatas.iterator();
-
-		while (iterator.hasNext()) {
-			IndexMetadata currentIndexMetadata = iterator.next();
-
-			Boolean redundant = currentIndexMetadata.redundantTo(indexMetadata);
-
-			if (redundant == null) {
-				continue;
-			}
-
-			if (redundant) {
-				iterator.remove();
-			}
-			else {
-				indexMetadata = null;
-
-				break;
-			}
-		}
-
-		if (indexMetadata != null) {
+		if (_optimizeDBIndexes) {
 			indexMetadatas.add(indexMetadata);
+		}
+		else {
+			_addIndexMetadata(indexMetadatas, indexMetadata);
 		}
 	}
 
@@ -2595,8 +2631,9 @@ public class ServiceBuilder {
 			}
 
 			if (entity.hasEntityColumns()) {
-				if (entity.hasExternalReferenceCode() ||
-					entity.hasEntityColumn("externalReferenceCode")) {
+				if ((entity.hasExternalReferenceCode() ||
+					 entity.hasEntityColumn("externalReferenceCode")) &&
+					(entity.getVersionedEntity() == null)) {
 
 					exceptions.add(
 						getDuplicateEntityExternalReferenceCodeException(
@@ -4132,8 +4169,14 @@ public class ServiceBuilder {
 				continue;
 			}
 
+			String tableName = entity.getTable();
+
 			List<IndexMetadata> indexMetadatas = indexMetadatasMap.get(
-				entity.getTable());
+				tableName);
+
+			if ((indexMetadatas != null) && _optimizeDBIndexes) {
+				indexMetadatas.clear();
+			}
 
 			List<EntityFinder> entityFinders = entity.getEntityFinders();
 
@@ -4152,46 +4195,53 @@ public class ServiceBuilder {
 				List<String> dbNames = new ArrayList<>();
 
 				for (EntityColumn entityColumn : entityColumns) {
-					dbNames.add(entityColumn.getDBName());
+					if (entityColumn.isIndexable()) {
+						dbNames.add(entityColumn.getDBName());
+					}
 				}
 
 				if (dbNames.isEmpty()) {
 					continue;
 				}
 
-				if (entity.isChangeTrackingEnabled() &&
+				boolean unique = entityFinder.isUnique();
+
+				if (unique && entity.isChangeTrackingEnabled() &&
 					!dbNames.contains("ctCollectionId")) {
-
-					if (indexMetadatas != null) {
-						Iterator<IndexMetadata> iterator =
-							indexMetadatas.iterator();
-
-						while (iterator.hasNext()) {
-							IndexMetadata indexMetadata = iterator.next();
-
-							if (indexMetadata.isUnique() &&
-								dbNames.equals(
-									Arrays.asList(
-										indexMetadata.getColumnNames()))) {
-
-								iterator.remove();
-
-								break;
-							}
-						}
-					}
 
 					dbNames.add("ctCollectionId");
 				}
 
+				if (_optimizeDBIndexes && !unique) {
+					for (String highCardinalityColumnName :
+							_highCardinalityColumnNames) {
+
+						if (dbNames.contains(highCardinalityColumnName) &&
+							(dbNames.size() > 1)) {
+
+							dbNames.clear();
+
+							dbNames.add(highCardinalityColumnName);
+
+							break;
+						}
+					}
+				}
+
 				IndexMetadata indexMetadata =
 					IndexMetadataFactoryUtil.createIndexMetadata(
-						entityFinder.isUnique(), entity.getTable(),
-						dbNames.toArray(new String[0]));
+						unique, tableName, dbNames.toArray(new String[0]));
 
 				_addIndexMetadata(
 					indexMetadatasMap, indexMetadata.getTableName(),
 					entity.getPKEntityColumnDBNames(), indexMetadata);
+			}
+
+			indexMetadatas = indexMetadatasMap.get(tableName);
+
+			if (_optimizeDBIndexes && (indexMetadatas != null)) {
+				indexMetadatasMap.put(
+					tableName, _optimizeForBTreeIndexes(indexMetadatas));
 			}
 		}
 
@@ -4199,6 +4249,8 @@ public class ServiceBuilder {
 				_entityMappings.entrySet()) {
 
 			EntityMapping entityMapping = entry.getValue();
+
+			indexMetadatasMap.remove(entityMapping.getTableName());
 
 			_getCreateMappingTableIndex(entityMapping, indexMetadatasMap);
 		}
@@ -4913,12 +4965,12 @@ public class ServiceBuilder {
 			return _configuration;
 		}
 
-		_configuration = new Configuration(Configuration.getVersion());
+		_configuration = new Configuration(Configuration.VERSION_2_3_33);
 
 		_configuration.setNumberFormat("computer");
 
 		DefaultObjectWrapperBuilder defaultObjectWrapperBuilder =
-			new DefaultObjectWrapperBuilder(Configuration.getVersion());
+			new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_33);
 
 		_configuration.setObjectWrapper(defaultObjectWrapperBuilder.build());
 
@@ -5591,6 +5643,8 @@ public class ServiceBuilder {
 	private List<JavaMethod> _getMethods(
 		JavaClass javaClass, boolean superclasses) {
 
+		List<JavaMethod> methods = new ArrayList<>();
+
 		List<String> cacheFieldMethods = new ArrayList<>();
 
 		for (JavaField javaField : javaClass.getFields()) {
@@ -5631,8 +5685,6 @@ public class ServiceBuilder {
 				break;
 			}
 		}
-
-		List<JavaMethod> methods = new ArrayList<>();
 
 		for (JavaMethod javaMethod : javaClass.getMethods(superclasses)) {
 			if (!cacheFieldMethods.contains(javaMethod.getName())) {
@@ -6106,6 +6158,38 @@ public class ServiceBuilder {
 			fileName, CharPool.BACK_SLASH, CharPool.SLASH);
 	}
 
+	private List<IndexMetadata> _optimizeForBTreeIndexes(
+		List<IndexMetadata> indexMetadatas) {
+
+		Map<String, IntegerWrapper> frequencyMap = new HashMap<>();
+
+		for (IndexMetadata indexMetadata : indexMetadatas) {
+			for (String columnName : indexMetadata.getColumnNames()) {
+				IntegerWrapper count = frequencyMap.computeIfAbsent(
+					columnName, key -> new IntegerWrapper());
+
+				if (columnName.endsWith("Date")) {
+					count.setValue(0);
+				}
+				else {
+					count.increment();
+				}
+			}
+		}
+
+		for (IndexMetadata indexMetadata : indexMetadatas) {
+			indexMetadata.optimizeColumns(frequencyMap);
+		}
+
+		List<IndexMetadata> optimizedIndexMetadatas = new ArrayList<>();
+
+		for (IndexMetadata indexMetadata : indexMetadatas) {
+			_addIndexMetadata(optimizedIndexMetadatas, indexMetadata);
+		}
+
+		return optimizedIndexMetadatas;
+	}
+
 	private Entity _parseEntity(Element entityElement) throws Exception {
 		String entityName = entityElement.attributeValue("name");
 		String humanName = entityElement.attributeValue("human-name");
@@ -6276,6 +6360,8 @@ public class ServiceBuilder {
 		if (uuid) {
 			Element columnElement = DocumentHelper.createElement("column");
 
+			columnElement.addAttribute(
+				"change-tracking-resolution-type", "STRICT");
 			columnElement.addAttribute("name", "uuid");
 			columnElement.addAttribute("type", "String");
 
@@ -6291,6 +6377,8 @@ public class ServiceBuilder {
 		if (!StringUtil.equals(externalReferenceCode, "none")) {
 			Element columnElement = DocumentHelper.createElement("column");
 
+			columnElement.addAttribute(
+				"change-tracking-resolution-type", "STRICT");
 			columnElement.addAttribute("name", "externalReferenceCode");
 			columnElement.addAttribute("type", "String");
 
@@ -6300,6 +6388,8 @@ public class ServiceBuilder {
 		if (versioned) {
 			Element columnElement = DocumentHelper.createElement("column");
 
+			columnElement.addAttribute(
+				"change-tracking-resolution-type", "STRICT");
 			columnElement.addAttribute("name", "headId");
 			columnElement.addAttribute("type", "long");
 
@@ -6312,6 +6402,8 @@ public class ServiceBuilder {
 		if (localizedEntityElement != null) {
 			Element columnElement = DocumentHelper.createElement("column");
 
+			columnElement.addAttribute(
+				"change-tracking-resolution-type", "STRICT");
 			columnElement.addAttribute("name", "defaultLanguageId");
 			columnElement.addAttribute("type", "String");
 
@@ -6394,15 +6486,26 @@ public class ServiceBuilder {
 			boolean colJsonEnabled = GetterUtil.getBoolean(
 				columnElement.attributeValue("json-enabled"), jsonEnabled);
 
-			String changeTrackingResolutionType = "STRICT";
+			String changeTrackingResolutionType = "merge";
 
 			if (primary) {
-				changeTrackingResolutionType = "PK";
+				changeTrackingResolutionType = "pk";
+			}
+			else if (columnName.equals("classNameId") ||
+					 columnName.equals("classPK") ||
+					 columnName.equals("companyId") ||
+					 columnName.equals("createDate") ||
+					 columnName.equals("creatorUserId") ||
+					 columnName.equals("groupId") ||
+					 columnName.equals("userId") ||
+					 columnName.equals("userName")) {
+
+				changeTrackingResolutionType = "strict";
 			}
 			else if (columnName.equals("modifiedDate") &&
 					 columnType.equals("Date")) {
 
-				changeTrackingResolutionType = "IGNORE";
+				changeTrackingResolutionType = "ignore";
 			}
 
 			changeTrackingResolutionType = StringUtil.toUpperCase(
@@ -6758,6 +6861,8 @@ public class ServiceBuilder {
 					finderColumnElement.attributeValue("arrayable-operator"));
 				boolean finderColArrayablePagination = GetterUtil.getBoolean(
 					finderColumnElement.attributeValue("arrayable-pagination"));
+				boolean finderColIndexable = GetterUtil.getBoolean(
+					finderColumnElement.attributeValue("indexable"), true);
 
 				EntityColumn entityColumn = Entity.getEntityColumn(
 					finderColumnName, entityColumns);
@@ -6773,6 +6878,7 @@ public class ServiceBuilder {
 				entityColumn.setArrayableOperator(finderColArrayableOperator);
 				entityColumn.setArrayablePagination(
 					finderColArrayablePagination);
+				entityColumn.setIndexable(finderColIndexable);
 
 				entityColumn.validate();
 
@@ -7054,6 +7160,11 @@ public class ServiceBuilder {
 		Element newLocalizedEntityElement = DocumentHelper.createElement(
 			"entity");
 
+		if (entity.isChangeTrackingEnabled()) {
+			newLocalizedEntityElement.addAttribute(
+				"change-tracking-enabled", "true");
+		}
+
 		if (Validator.isNotNull(entity.getDataSource())) {
 			newLocalizedEntityElement.addAttribute(
 				"data-source", entity.getDataSource());
@@ -7180,6 +7291,10 @@ public class ServiceBuilder {
 				"column");
 
 			newLocalizedColumnElement.addAttribute("name", columnName);
+			newLocalizedColumnElement.addAttribute(
+				"change-tracking-resolution-type",
+				localizedColumnElement.attributeValue(
+					"change-tracking-resolution-type"));
 			newLocalizedColumnElement.addAttribute("db-name", columnDBName);
 			newLocalizedColumnElement.addAttribute("type", "String");
 		}
@@ -7453,7 +7568,7 @@ public class ServiceBuilder {
 		for (EntityFinder entityFinder : entity.getEntityFinders()) {
 			finderName = entityFinder.getName();
 
-			if (finderName.equals("HeadId")) {
+			if (finderName.equals("HeadId") || finderName.startsWith("ERC")) {
 				continue;
 			}
 
@@ -7980,8 +8095,46 @@ public class ServiceBuilder {
 
 		content = header + "\n\n" + content;
 
+		String fileName = _normalize(file.toString());
+
+		int startIndex = 0;
+
+		int index = fileName.indexOf("/java/");
+
+		if (index > 0) {
+			startIndex = index + 6;
+		}
+		else {
+			index = fileName.indexOf("/src/");
+
+			if (index > 0) {
+				startIndex = index + 5;
+			}
+			else {
+
+				// Older branches still have integration tests in portal-impl
+
+				index = fileName.indexOf("/test/integration/");
+
+				if (index > 0) {
+					startIndex = index + 18;
+				}
+				else {
+					throw new ServiceBuilderException(
+						"Unable to parse package path from " + fileName);
+				}
+			}
+		}
+
 		ToolsUtil.writeFileRaw(
-			file, JavaParser.parse(file, content, _MAX_LINE_LENGTH, false),
+			file,
+			JavaParser.parse(
+				file,
+				StringUtil.replace(
+					fileName.substring(
+						startIndex, fileName.lastIndexOf(StringPool.SLASH)),
+					CharPool.SLASH, CharPool.PERIOD),
+				content, _MAX_LINE_LENGTH, false),
 			modifiedFileNames);
 	}
 
@@ -8058,6 +8211,8 @@ public class ServiceBuilder {
 		StringBundler.concat(
 			"public .* get.*", Pattern.quote("("), "|public boolean is.*",
 			Pattern.quote("(")));
+	private static final List<String> _highCardinalityColumnNames =
+		Arrays.asList("externalReferenceCode", "uuid_");
 	private static final Pattern _setterPattern = Pattern.compile(
 		"public void set.*" + Pattern.quote("("));
 
@@ -8090,6 +8245,7 @@ public class ServiceBuilder {
 	private final Set<String> _modifiedFileNames = new HashSet<>();
 	private boolean _mvccEnabled;
 	private String _oldServiceOutputPath;
+	private boolean _optimizeDBIndexes;
 	private boolean _osgiModule;
 	private String _outputPath;
 	private String _packagePath;

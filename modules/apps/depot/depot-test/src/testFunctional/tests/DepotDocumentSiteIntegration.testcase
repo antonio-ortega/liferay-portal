@@ -1,4 +1,4 @@
-@component-name = "portal-document-management"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
@@ -9,6 +9,10 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
+		}
 
 		HeadlessSite.addSite(siteName = "Site Name");
 
@@ -37,7 +41,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image can be used through Blogs on a connected site."
-	@priority = 5
+	@priority = 4
 	@refactordone
 	test CanAddImageViaBlogs {
 		DepotNavigator.openDepotAdmin();
@@ -71,7 +75,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image can be used through page creation on a connected site."
-	@priority = 5
+	@priority = 4
 	@refactordone
 	test CanAddImageViaContentPage {
 		JSONDocument.addFileWithUploadedFile(
@@ -108,7 +112,7 @@ definition {
 	}
 
 	@description = "This ensures that a depot image can be used through web content on a connected site."
-	@priority = 5
+	@priority = 4
 	@refactordone
 	test CanAddImageViaWebContent {
 		JSONDocument.addFileWithUploadedFile(
@@ -185,8 +189,6 @@ definition {
 	@description = "This ensures that a document in a connected site can be copied to the depot."
 	@priority = 5
 	test CanCopyDocumentFromConnectedSiteToDepot {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONDepot.connectSite(
 			depotName = "Test Depot Name",
 			groupName = "Site Name");
@@ -213,8 +215,6 @@ definition {
 	@description = "This ensures that a document in a depot can be copied to the connected site."
 	@priority = 5
 	test CanCopyDocumentFromDepotToConnectedSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONDepot.connectSite(
 			depotName = "Test Depot Name",
 			groupName = "Site Name");
@@ -245,8 +245,6 @@ definition {
 	@description = "This ensures that a folder in a connected site can be copied to the depot."
 	@priority = 5
 	test CanCopyFolderFromConnectedSiteToDepot {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONDepot.connectSite(
 			depotName = "Test Depot Name",
 			groupName = "Site Name");
@@ -285,8 +283,6 @@ definition {
 	@description = "This ensures that a folder in a depot can be copied to the connected site."
 	@priority = 5
 	test CanCopyFolderFromDepotToConnectedSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONDepot.connectSite(
 			depotName = "Test Depot Name",
 			groupName = "Site Name");
@@ -330,8 +326,6 @@ definition {
 	@description = "This ensures that a document in a depot can not be copied to an unconnected site."
 	@priority = 4
 	test CannotCopyDocumentFromDepotToUnconnectedSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "DM Document Title",
@@ -355,8 +349,6 @@ definition {
 	@description = "This ensures that a document in a site can not be copied to the unconnected depot."
 	@priority = 4
 	test CannotCopyDocumentFromUnconnectedSiteToDepot {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "DM Document Title",
@@ -380,8 +372,6 @@ definition {
 	@description = "This ensures that a folder in a depot can not be copied to an unconnected site."
 	@priority = 4
 	test CannotCopyFolderFromDepotToUnconnectedSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "DM Folder Name",
@@ -403,8 +393,6 @@ definition {
 	@description = "This ensures that a folder in a site can not be copied to the unconnected depot."
 	@priority = 4
 	test CannotCopyFolderFromUnconnectedSiteToDepot {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONFolder.addFolder(
 			dmFolderDescription = "DM Folder Description",
 			dmFolderName = "DM Folder Name",
@@ -983,7 +971,7 @@ definition {
 		ContentPages.viewFragmentImage(
 			fragmentName = "image",
 			id = "image-square",
-			image = "document_1");
+			image = "Document_1");
 	}
 
 	@description = "This ensures that a depot image in MG widget can be rendered correctly on a connected site after moving it to a folder."
@@ -1311,7 +1299,7 @@ definition {
 
 		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Tags...");
+		ManagementBar.setFilterAndOrder(filterBy = "Tags");
 
 		DMDocument.viewFilterByDetails(
 			noTagNames = "site tag",
@@ -1325,7 +1313,7 @@ definition {
 
 		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Categories...");
+		ManagementBar.setFilterAndOrder(filterBy = "Categories");
 
 		DMDocument.viewFilterByDetails(
 			category = "Depot Category",
@@ -1339,7 +1327,7 @@ definition {
 
 		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Extension...");
+		ManagementBar.setFilterAndOrder(filterBy = "Extension");
 
 		DMDocument.viewFilterByDetails(
 			category = "Text (1 Item)",
@@ -1393,7 +1381,7 @@ definition {
 
 		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Tags...");
+		ManagementBar.setFilterAndOrder(filterBy = "Tags");
 
 		DMDocument.viewFilterByDetails(
 			noTagNames = "site tag",
@@ -1401,7 +1389,7 @@ definition {
 
 		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Categories...");
+		ManagementBar.setFilterAndOrder(filterBy = "Categories");
 
 		DMDocument.viewFilterByDetails(
 			category = "Depot Category",
@@ -1409,7 +1397,7 @@ definition {
 
 		DepotNavigator.openDepotDocumentsAndMediaAdmin(depotName = "Test Depot Name");
 
-		ManagementBar.setFilterAndOrder(filterBy = "Extension...");
+		ManagementBar.setFilterAndOrder(filterBy = "Extension");
 
 		DMDocument.viewFilterByDetails(
 			category = "Text (1 Item)",

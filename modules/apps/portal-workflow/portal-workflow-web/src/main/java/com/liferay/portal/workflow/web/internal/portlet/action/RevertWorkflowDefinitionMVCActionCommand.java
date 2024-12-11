@@ -66,7 +66,7 @@ public class RevertWorkflowDefinitionMVCActionCommand
 			actionRequest, "previousVersion");
 
 		WorkflowDefinition previousWorkflowDefinition =
-			_workflowDefinitionManager.getWorkflowDefinition(
+			_workflowDefinitionManager.liberalGetWorkflowDefinition(
 				themeDisplay.getCompanyId(), previousName, previousVersion);
 
 		actionRequest.setAttribute(
@@ -85,14 +85,14 @@ public class RevertWorkflowDefinitionMVCActionCommand
 
 			workflowDefinition =
 				workflowDefinitionManager.deployWorkflowDefinition(
-					themeDisplay.getCompanyId(), themeDisplay.getUserId(),
+					null, themeDisplay.getCompanyId(), themeDisplay.getUserId(),
 					previousWorkflowDefinition.getTitle(), previousName,
 					content.getBytes());
 		}
 		else {
 			workflowDefinition =
 				workflowDefinitionManager.saveWorkflowDefinition(
-					themeDisplay.getCompanyId(), themeDisplay.getUserId(),
+					null, themeDisplay.getCompanyId(), themeDisplay.getUserId(),
 					previousWorkflowDefinition.getTitle(), previousName,
 					content.getBytes());
 		}

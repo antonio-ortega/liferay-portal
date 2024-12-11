@@ -12,45 +12,45 @@ import LiferayItems from '../../../common/services/liferay/common/interfaces/lif
 import {ResourceName} from '../../../common/services/liferay/object/enum/resourceName';
 import useGet from '../../../common/services/liferay/object/useGet';
 import getDealDates from '../utils/getDealDates';
+import getDealStatus from '../utils/getDealStatus';
 
 export default function useGetListItemsFromDealRegistration(
 	page: number,
 	pageSize: number,
-	filtersTerm: string,
-	sort: string
+	urlParams: URLSearchParams
 ) {
 	const swrResponse = useGet<LiferayItems<DealRegistrationDTO[]>>(
-		`/o/${LiferayAPIs.OBJECT}/${ResourceName.LEADS_SALESFORCE}?${filtersTerm}&page=${page}&pageSize=${pageSize}&sort=${sort}
-			 `
+		urlParams &&
+			`/o/${LiferayAPIs.OBJECT}/${
+				ResourceName.LEADS_SALESFORCE
+			}?${urlParams.toString()}&page=${page}&pageSize=${pageSize}`
 	);
 
 	const listItems = useMemo(
 		() =>
 			swrResponse.data?.items.map((item) => ({
-				[DealRegistrationColumnKey.PARTNER_ACCOUNT_NAME]: item.partnerAccountName
-					? item.partnerAccountName
-					: ' - ',
+				[DealRegistrationColumnKey.PARTNER_ACCOUNT_NAME]:
+					item.partnerAccountName ? item.partnerAccountName : ' - ',
 				[DealRegistrationColumnKey.PARTNER_NAME]:
 					item.partnerFirstName && item.partnerFirstName
 						? `${
 								item.partnerFirstName
 									? item.partnerFirstName
 									: ''
-						  }${
+							}${
 								item.partnerLastName
 									? ' ' + item.partnerLastName
 									: ''
-						  }`
+							}`
 						: ' - ',
-				[DealRegistrationColumnKey.ACCOUNT_NAME]: item.prospectAccountName
-					? item.prospectAccountName
-					: ' - ',
-				...getDealDates(item.dateCreated),
+				[DealRegistrationColumnKey.ACCOUNT_NAME]:
+					item.prospectAccountName ? item.prospectAccountName : ' - ',
+				...getDealDates(item.dateCreated, item.dateCreated),
 
 				[DealRegistrationColumnKey.STATUS]: item.leadStatus
-					? item.leadStatus
+					? getDealStatus(item.leadStatus)
 					: ' - ',
-				...getDealDates(item.dateCreated),
+				...getDealDates(item.dateCreated, item.dateCreated),
 				[DealRegistrationColumnKey.PRIMARY_PROSPECT_NAME]: `${
 					item.primaryProspectFirstName
 						? item.primaryProspectFirstName
@@ -60,51 +60,54 @@ export default function useGetListItemsFromDealRegistration(
 						? ' ' + item.primaryProspectLastName
 						: ''
 				}`,
-				[DealRegistrationColumnKey.PRIMARY_PROSPECT_EMAIL]: item.primaryProspectEmailAddress
-					? item.primaryProspectEmailAddress
-					: ' - ',
-				[DealRegistrationColumnKey.PRIMARY_PROSPECT_PHONE]: item.primaryProspectPhone
-					? item.primaryProspectPhone
-					: ' - ',
-				[DealRegistrationColumnKey.PRIMARY_PROSPECT_BUSINESS_UNIT]: item.primaryProspectBusinessUnit
-					? item.primaryProspectBusinessUnit
-					: ' - ',
-				[DealRegistrationColumnKey.PRIMARY_PROSPECT_DEPARTMENT]: item.primaryProspectDepartment
-					? item.primaryProspectDepartment
-					: ' - ',
-				[DealRegistrationColumnKey.PRIMARY_PROSPECT_JOB_ROLE]: item.primaryProspectJobRole
-					? item.primaryProspectJobRole
-					: ' - ',
+				[DealRegistrationColumnKey.PRIMARY_PROSPECT_EMAIL]:
+					item.primaryProspectEmailAddress
+						? item.primaryProspectEmailAddress
+						: ' - ',
+				[DealRegistrationColumnKey.PRIMARY_PROSPECT_PHONE]:
+					item.primaryProspectPhone
+						? item.primaryProspectPhone
+						: ' - ',
+				[DealRegistrationColumnKey.PRIMARY_PROSPECT_BUSINESS_UNIT]:
+					item.primaryProspectBusinessUnit
+						? item.primaryProspectBusinessUnit
+						: ' - ',
+				[DealRegistrationColumnKey.PRIMARY_PROSPECT_DEPARTMENT]:
+					item.primaryProspectDepartment
+						? item.primaryProspectDepartment
+						: ' - ',
+				[DealRegistrationColumnKey.PRIMARY_PROSPECT_JOB_ROLE]:
+					item.primaryProspectJobRole
+						? item.primaryProspectJobRole
+						: ' - ',
 				[DealRegistrationColumnKey.STATUS_DETAIL]: item.leadStatusDetail
 					? item.leadStatusDetail
 					: ' - ',
 				[DealRegistrationColumnKey.TYPE]: item.leadType
 					? item.leadType
 					: ' - ',
-				[DealRegistrationColumnKey.CURRENCY]: item.currency
-					? item.currency.name
-					: ' - ',
-				[DealRegistrationColumnKey.PROSPECT_ADDRESS]: item.prospectAddress
-					? item.prospectAddress
-					: ' - ',
+				[DealRegistrationColumnKey.PROSPECT_ADDRESS]:
+					item.prospectAddress ? item.prospectAddress : ' - ',
 				[DealRegistrationColumnKey.PROSPECT_CITY]: item.prospectCity
 					? item.prospectCity
 					: ' - ',
-				[DealRegistrationColumnKey.PROSPECT_INDUSTRY]: item.prospectIndustry
-					? item.prospectIndustry
-					: ' - ',
-				[DealRegistrationColumnKey.PROSPECT_COUNTRY]: item.prospectCountryCode
-					? item.prospectCountryCode
-					: ' - ',
-				[DealRegistrationColumnKey.PROSPECT_STATE]: item.prospectStateCode
-					? item.prospectStateCode
-					: ' - ',
-				[DealRegistrationColumnKey.PROSPECT_POSTAL_CODE]: item.prospectPostalCode
-					? item.prospectPostalCode
-					: ' - ',
-				[DealRegistrationColumnKey.ADDITIONAL_CONTACTS]: item.additionalContacts
-					? item.additionalContacts
-					: ' - ',
+				[DealRegistrationColumnKey.PROSPECT_INDUSTRY]:
+					item.prospectIndustry ? item.prospectIndustry : ' - ',
+				[DealRegistrationColumnKey.PROSPECT_COUNTRY]:
+					item.prospectCountryCode ? item.prospectCountryCode : ' - ',
+				[DealRegistrationColumnKey.PROSPECT_STATE]:
+					item.prospectStateCode ? item.prospectStateCode : ' - ',
+				[DealRegistrationColumnKey.PROSPECT_POSTAL_CODE]:
+					item.prospectPostalCode ? item.prospectPostalCode : ' - ',
+				[DealRegistrationColumnKey.ADDITIONAL_CONTACTS]:
+					item.additionalContacts ? item.additionalContacts : ' - ',
+				[DealRegistrationColumnKey.ISCONVERTED]: item.isConverted
+					? item.isConverted
+					: false,
+				[DealRegistrationColumnKey.EXTERNAL_REFERENCE_CODE]:
+					item.externalReferenceCode
+						? item.externalReferenceCode
+						: undefined,
 			})),
 		[swrResponse.data?.items]
 	);

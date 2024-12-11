@@ -5,6 +5,7 @@
 
 package com.liferay.document.library.web.internal.portlet.toolbar.contributor.helper;
 
+import com.liferay.ai.creator.openai.display.context.factory.AICreatorOpenAIMenuItemFactory;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.display.context.DLUIItemKeys;
@@ -306,6 +307,26 @@ public class MenuItemProvider {
 		return urlMenuItem;
 	}
 
+	public MenuItem getAICreatorMenuItem(
+		Folder folder, ThemeDisplay themeDisplay,
+		PortletRequest portletRequest) {
+
+		long folderId = _getFolderId(folder);
+
+		if (!_hasPermission(
+				themeDisplay.getPermissionChecker(),
+				themeDisplay.getScopeGroupId(), folderId,
+				ActionKeys.ADD_DOCUMENT)) {
+
+			return null;
+		}
+
+		return _aiCreatorOpenAIMenuItemFactory.
+			createAICreatorCreateImageMenuItem(
+				_getRepositoryId(folder, themeDisplay), folderId,
+				_getDefaultFileEntryTypeId(folderId), themeDisplay);
+	}
+
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_serviceTrackerMap = ServiceTrackerMapFactory.openMultiValueMap(
@@ -414,7 +435,8 @@ public class MenuItemProvider {
 		try {
 			return _dlFileEntryTypeService.getFolderFileEntryTypes(
 				_siteConnectedGroupGroupProvider.
-					getCurrentAndAncestorSiteAndDepotGroupIds(groupId, true),
+					getCurrentAndAncestorSiteAndDepotGroupIds(
+						groupId, false, true),
 				folderId, inherited);
 		}
 		catch (PortalException portalException) {
@@ -554,6 +576,9 @@ public class MenuItemProvider {
 
 	private static ServiceTrackerMap<String, DLFileEntryTypeIconProvider>
 		_dlFileEntryTypeIconProviderServiceTrackerMap;
+
+	@Reference
+	private AICreatorOpenAIMenuItemFactory _aiCreatorOpenAIMenuItemFactory;
 
 	@Reference
 	private DLFileEntryTypeLocalService _dlFileEntryTypeLocalService;

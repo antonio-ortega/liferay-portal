@@ -23,6 +23,7 @@ import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.PortletPreferencesException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
@@ -59,10 +60,10 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-dynamic-data-lists",
 		"com.liferay.portlet.display-category=category.hidden",
-		"com.liferay.portlet.header-portal-javascript=/o/dynamic-data-mapping-web/js/custom_fields.js",
-		"com.liferay.portlet.header-portal-javascript=/o/dynamic-data-mapping-web/js/main.js",
+		"com.liferay.portlet.header-portal-javascript=/o/dynamic-data-mapping-web/js/legacy/custom_fields.js",
+		"com.liferay.portlet.header-portal-javascript=/o/dynamic-data-mapping-web/js/legacy/main.js",
 		"com.liferay.portlet.header-portlet-css=/css/main.css",
-		"com.liferay.portlet.header-portlet-javascript=/js/main.js",
+		"com.liferay.portlet.header-portlet-javascript=/js/legacy/main.js",
 		"com.liferay.portlet.icon=/icons/dynamic_data_lists.png",
 		"com.liferay.portlet.preferences-owned-by-group=true",
 		"com.liferay.portlet.preferences-unique-per-layout=false",
@@ -99,6 +100,10 @@ public class DDLPortlet extends MVCPortlet {
 	public void render(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws IOException, PortletException {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-196935")) {
+			return;
+		}
 
 		try {
 			setDDLRecordRequestAttribute(renderRequest);

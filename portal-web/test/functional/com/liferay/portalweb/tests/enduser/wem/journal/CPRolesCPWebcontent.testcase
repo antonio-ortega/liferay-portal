@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -403,7 +403,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = StringUtil.toLowerCase("${userEmailAddress}@liferay.com"));
 
-		JSONRole.addRegularRole(roleTitle = ${roleKey});
+		JSONRole.addRegularRole(roleKey = ${roleKey});
 
 		JSONRole.assignRoleToUser(
 			roleTitle = ${roleKey},

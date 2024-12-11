@@ -84,6 +84,60 @@ public class CTEntrySerDes {
 			sb.append(ctEntry.getCtCollectionId());
 		}
 
+		if (ctEntry.getCtCollectionName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"ctCollectionName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(ctEntry.getCtCollectionName()));
+
+			sb.append("\"");
+		}
+
+		if (ctEntry.getCtCollectionStatus() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"ctCollectionStatus\": ");
+
+			sb.append(String.valueOf(ctEntry.getCtCollectionStatus()));
+		}
+
+		if (ctEntry.getCtCollectionStatusDate() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"ctCollectionStatusDate\": ");
+
+			sb.append("\"");
+
+			sb.append(
+				liferayToJSONDateFormat.format(
+					ctEntry.getCtCollectionStatusDate()));
+
+			sb.append("\"");
+		}
+
+		if (ctEntry.getCtCollectionStatusUserName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"ctCollectionStatusUserName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(ctEntry.getCtCollectionStatusUserName()));
+
+			sb.append("\"");
+		}
+
 		if (ctEntry.getDateCreated() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -211,6 +265,20 @@ public class CTEntrySerDes {
 			sb.append(String.valueOf(ctEntry.getStatus()));
 		}
 
+		if (ctEntry.getStatusMessage() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"statusMessage\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(ctEntry.getStatusMessage()));
+
+			sb.append("\"");
+		}
+
 		if (ctEntry.getTitle() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -280,6 +348,43 @@ public class CTEntrySerDes {
 		else {
 			map.put(
 				"ctCollectionId", String.valueOf(ctEntry.getCtCollectionId()));
+		}
+
+		if (ctEntry.getCtCollectionName() == null) {
+			map.put("ctCollectionName", null);
+		}
+		else {
+			map.put(
+				"ctCollectionName",
+				String.valueOf(ctEntry.getCtCollectionName()));
+		}
+
+		if (ctEntry.getCtCollectionStatus() == null) {
+			map.put("ctCollectionStatus", null);
+		}
+		else {
+			map.put(
+				"ctCollectionStatus",
+				String.valueOf(ctEntry.getCtCollectionStatus()));
+		}
+
+		if (ctEntry.getCtCollectionStatusDate() == null) {
+			map.put("ctCollectionStatusDate", null);
+		}
+		else {
+			map.put(
+				"ctCollectionStatusDate",
+				liferayToJSONDateFormat.format(
+					ctEntry.getCtCollectionStatusDate()));
+		}
+
+		if (ctEntry.getCtCollectionStatusUserName() == null) {
+			map.put("ctCollectionStatusUserName", null);
+		}
+		else {
+			map.put(
+				"ctCollectionStatusUserName",
+				String.valueOf(ctEntry.getCtCollectionStatusUserName()));
 		}
 
 		if (ctEntry.getDateCreated() == null) {
@@ -365,6 +470,14 @@ public class CTEntrySerDes {
 			map.put("status", String.valueOf(ctEntry.getStatus()));
 		}
 
+		if (ctEntry.getStatusMessage() == null) {
+			map.put("statusMessage", null);
+		}
+		else {
+			map.put(
+				"statusMessage", String.valueOf(ctEntry.getStatusMessage()));
+		}
+
 		if (ctEntry.getTitle() == null) {
 			map.put("title", null);
 		}
@@ -395,6 +508,81 @@ public class CTEntrySerDes {
 		}
 
 		@Override
+		protected boolean parseMaps(String jsonParserFieldName) {
+			if (Objects.equals(jsonParserFieldName, "actions")) {
+				return true;
+			}
+			else if (Objects.equals(jsonParserFieldName, "changeType")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "ctCollectionId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "ctCollectionName")) {
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "ctCollectionStatus")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "ctCollectionStatusDate")) {
+
+				return false;
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "ctCollectionStatusUserName")) {
+
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "dateModified")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "hideable")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "id")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "modelClassNameId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "modelClassPK")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "ownerId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "ownerName")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "siteId")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "siteName")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "status")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "statusMessage")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "title")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "typeName")) {
+				return false;
+			}
+
+			return false;
+		}
+
+		@Override
 		protected void setField(
 			CTEntry ctEntry, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
@@ -402,7 +590,7 @@ public class CTEntrySerDes {
 			if (Objects.equals(jsonParserFieldName, "actions")) {
 				if (jsonParserFieldValue != null) {
 					ctEntry.setActions(
-						(Map)CTEntrySerDes.toMap((String)jsonParserFieldValue));
+						(Map<String, Map<String, String>>)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "changeType")) {
@@ -414,6 +602,35 @@ public class CTEntrySerDes {
 				if (jsonParserFieldValue != null) {
 					ctEntry.setCtCollectionId(
 						Long.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "ctCollectionName")) {
+				if (jsonParserFieldValue != null) {
+					ctEntry.setCtCollectionName((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "ctCollectionStatus")) {
+
+				if (jsonParserFieldValue != null) {
+					ctEntry.setCtCollectionStatus(
+						StatusSerDes.toDTO((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "ctCollectionStatusDate")) {
+
+				if (jsonParserFieldValue != null) {
+					ctEntry.setCtCollectionStatusDate(
+						toDate((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "ctCollectionStatusUserName")) {
+
+				if (jsonParserFieldValue != null) {
+					ctEntry.setCtCollectionStatusUserName(
+						(String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "dateCreated")) {
@@ -478,6 +695,11 @@ public class CTEntrySerDes {
 						StatusSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "statusMessage")) {
+				if (jsonParserFieldValue != null) {
+					ctEntry.setStatusMessage((String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "title")) {
 				if (jsonParserFieldValue != null) {
 					ctEntry.setTitle((String)jsonParserFieldValue);
@@ -520,36 +742,7 @@ public class CTEntrySerDes {
 
 			Object value = entry.getValue();
 
-			Class<?> valueClass = value.getClass();
-
-			if (value instanceof Map) {
-				sb.append(_toJSON((Map)value));
-			}
-			else if (valueClass.isArray()) {
-				Object[] values = (Object[])value;
-
-				sb.append("[");
-
-				for (int i = 0; i < values.length; i++) {
-					sb.append("\"");
-					sb.append(_escape(values[i]));
-					sb.append("\"");
-
-					if ((i + 1) < values.length) {
-						sb.append(", ");
-					}
-				}
-
-				sb.append("]");
-			}
-			else if (value instanceof String) {
-				sb.append("\"");
-				sb.append(_escape(entry.getValue()));
-				sb.append("\"");
-			}
-			else {
-				sb.append(String.valueOf(entry.getValue()));
-			}
+			sb.append(_toJSON(value));
 
 			if (iterator.hasNext()) {
 				sb.append(", ");
@@ -559,6 +752,38 @@ public class CTEntrySerDes {
 		sb.append("}");
 
 		return sb.toString();
+	}
+
+	private static String _toJSON(Object value) {
+		if (value instanceof Map) {
+			return _toJSON((Map)value);
+		}
+
+		Class<?> clazz = value.getClass();
+
+		if (clazz.isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+
+			Object[] values = (Object[])value;
+
+			for (int i = 0; i < values.length; i++) {
+				sb.append(_toJSON(values[i]));
+
+				if ((i + 1) < values.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+
+			return sb.toString();
+		}
+
+		if (value instanceof String) {
+			return "\"" + _escape(value) + "\"";
+		}
+
+		return String.valueOf(value);
 	}
 
 }

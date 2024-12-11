@@ -89,9 +89,9 @@ public class PortletPreferencesFactoryImpl
 	implements PortletPreferencesFactory {
 
 	public static Map<String, Preference> createPreferencesMap(String xml) {
-		XMLEventReader xmlEventReader = null;
-
 		Map<String, Preference> preferencesMap = new HashMap<>();
+
+		XMLEventReader xmlEventReader = null;
 
 		try {
 			XMLInputFactory xmlInputFactory =
@@ -161,10 +161,10 @@ public class PortletPreferencesFactoryImpl
 			return;
 		}
 
-		PortletPreferences portletSetup = getStrictLayoutPortletSetup(
+		PortletPreferences portletPreferences = getStrictLayoutPortletSetup(
 			layout, portletId);
 
-		if (portletSetup instanceof StrictPortletPreferencesImpl) {
+		if (portletPreferences instanceof StrictPortletPreferencesImpl) {
 			getLayoutPortletSetup(layout, portletId);
 		}
 
@@ -648,12 +648,11 @@ public class PortletPreferencesFactoryImpl
 		for (com.liferay.portal.kernel.model.PortletPreferences
 				portletPreferences : portletPreferencesList) {
 
-			PortletPreferences portletSetup =
+			portletSetupMap.put(
+				portletPreferences.getPlid(),
 				PortletPreferencesLocalServiceUtil.getPreferences(
 					companyId, ownerId, ownerType, portletPreferences.getPlid(),
-					portletId);
-
-			portletSetupMap.put(portletPreferences.getPlid(), portletSetup);
+					portletId));
 		}
 
 		return portletSetupMap;

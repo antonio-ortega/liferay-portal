@@ -9,6 +9,7 @@ import com.liferay.friendly.url.info.item.provider.InfoItemFriendlyURLProvider;
 import com.liferay.friendly.url.info.item.updater.InfoItemFriendlyURLUpdater;
 import com.liferay.info.collection.provider.InfoCollectionProvider;
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
+import com.liferay.info.collection.provider.RepeatableFieldInfoItemCollectionProvider;
 import com.liferay.info.exception.CapabilityVerificationException;
 import com.liferay.info.filter.InfoFilterProvider;
 import com.liferay.info.filter.InfoRequestItemProvider;
@@ -32,6 +33,8 @@ import com.liferay.info.item.provider.InfoItemObjectVariationProvider;
 import com.liferay.info.item.provider.InfoItemPermissionProvider;
 import com.liferay.info.item.provider.InfoItemScopeProvider;
 import com.liferay.info.item.provider.InfoItemStatusProvider;
+import com.liferay.info.item.provider.RelatedInfoItemProvider;
+import com.liferay.info.item.provider.RepeatableFieldsInfoItemFormProvider;
 import com.liferay.info.item.provider.filter.InfoItemServiceFilter;
 import com.liferay.info.item.provider.filter.OptionalPropertyInfoItemServiceFilter;
 import com.liferay.info.item.renderer.InfoItemRenderer;
@@ -284,8 +287,8 @@ public class InfoItemServiceRegistryImpl implements InfoItemServiceRegistry {
 
 	@Deactivate
 	protected void deactivate() {
-		if (_infoItemCapabilityServiceTrackerMap != null) {
-			_infoItemCapabilityServiceTrackerMap.close();
+		if (_serviceTrackerMap != null) {
+			_serviceTrackerMap.close();
 		}
 
 		for (ServiceTrackerMap<?, ?> serviceTrackerMap :
@@ -324,16 +327,15 @@ public class InfoItemServiceRegistryImpl implements InfoItemServiceRegistry {
 	private ServiceTrackerMap<String, InfoItemCapability>
 		_getInfoItemCapabilityServiceTrackerMap() {
 
-		if (_infoItemCapabilityServiceTrackerMap == null) {
-			_infoItemCapabilityServiceTrackerMap =
-				ServiceTrackerMapFactory.openSingleValueMap(
-					_bundleContext, InfoItemCapability.class, null,
-					ServiceReferenceMapperFactory.create(
-						_bundleContext,
-						(service, emitter) -> emitter.emit(service.getKey())));
+		if (_serviceTrackerMap == null) {
+			_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+				_bundleContext, InfoItemCapability.class, null,
+				ServiceReferenceMapperFactory.create(
+					_bundleContext,
+					(service, emitter) -> emitter.emit(service.getKey())));
 		}
 
-		return _infoItemCapabilityServiceTrackerMap;
+		return _serviceTrackerMap;
 	}
 
 	private InfoItemClassDetails _getInfoItemClassDetails(
@@ -410,11 +412,12 @@ public class InfoItemServiceRegistryImpl implements InfoItemServiceRegistry {
 			InfoItemScopeProvider.class, InfoItemStatusProvider.class,
 			InfoListRenderer.class, InfoPermissionProvider.class,
 			InfoRequestItemProvider.class, InfoTextFormatter.class,
-			RelatedInfoItemCollectionProvider.class));
+			RelatedInfoItemCollectionProvider.class,
+			RelatedInfoItemProvider.class,
+			RepeatableFieldInfoItemCollectionProvider.class,
+			RepeatableFieldsInfoItemFormProvider.class));
 
 	private BundleContext _bundleContext;
-	private ServiceTrackerMap<String, InfoItemCapability>
-		_infoItemCapabilityServiceTrackerMap;
 	private final Map
 		<Class<?>,
 		 ServiceTrackerMap
@@ -423,5 +426,6 @@ public class InfoItemServiceRegistryImpl implements InfoItemServiceRegistry {
 					new ConcurrentHashMap<>();
 	private final Map<Class<?>, ServiceTrackerMap<String, ?>>
 		_keyedInfoItemServiceTrackerMap = new ConcurrentHashMap<>();
+	private ServiceTrackerMap<String, InfoItemCapability> _serviceTrackerMap;
 
 }

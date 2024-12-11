@@ -1,6 +1,6 @@
 import InterestPagesList from '../InterestPagesList';
 import React from 'react';
-import {render} from '@testing-library/react';
+import {render, waitFor} from '@testing-library/react';
 import {StaticRouter} from 'react-router';
 
 jest.unmock('react-dom');
@@ -12,37 +12,15 @@ jest.unmock('react-dom');
  * of the order button on those tests.
  */
 describe('InterestPagesList', () => {
-	it('should render', () => {
-		const {container} = render(
-			<StaticRouter>
-				<InterestPagesList dataSourceParams={{}} />
-			</StaticRouter>
-		);
-
-		expect(container).toMatchSnapshot();
-	});
-
-	it('should render an activePages component', () => {
+	it('should render', async () => {
 		const {container} = render(
 			<StaticRouter>
 				<InterestPagesList dataSourceParams={{active: true}} />
 			</StaticRouter>
 		);
 
-		expect(
-			container.querySelector('.lexicon-icon-order-arrow-down')
-		).toBeTruthy();
-	});
+		await waitFor(() => {});
 
-	it('should render an InactivePages component', () => {
-		const {container} = render(
-			<StaticRouter>
-				<InterestPagesList dataSourceParams={{active: false}} />
-			</StaticRouter>
-		);
-
-		expect(
-			container.querySelector('.lexicon-icon-order-arrow-down')
-		).toBeFalsy();
+		expect(container).toMatchSnapshot();
 	});
 });

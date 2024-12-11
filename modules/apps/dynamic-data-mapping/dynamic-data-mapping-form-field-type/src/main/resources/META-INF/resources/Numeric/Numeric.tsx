@@ -14,7 +14,7 @@ import React, {ChangeEventHandler, FocusEventHandler, useMemo} from 'react';
 import {createNumberMask} from 'text-mask-addons';
 import {conformToMask} from 'text-mask-core';
 
-import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import FieldBase from '../FieldBase/ReactFieldBase.es';
 import {ISymbols} from '../NumericInputMask/NumericInputMask';
 import {trimLeftZero} from '../util/numericalOperations';
 
@@ -47,6 +47,10 @@ const adaptiveMask = (rawValue: string, inputMaskFormat: string) => {
 		char === '9' ? /\d/ : char
 	);
 };
+
+export function maxLengthExceeded(value: string, inputMaskFormat?: string) {
+	return !!(inputMaskFormat && value.length > inputMaskFormat.length);
+}
 
 const getMaskedValue = ({
 	dataType,
@@ -156,13 +160,14 @@ const getFormattedValue = ({
 	};
 };
 
-const Numeric: React.FC<IProps> = ({
+const Numeric: React.FC<{children?: React.ReactNode | undefined} & IProps> = ({
 	append,
 	appendType,
 	dataType = 'integer',
 	decimalPlaces,
 	defaultLanguageId,
 	focused,
+	htmlAutocompleteAttribute,
 	id,
 	inputMask,
 	inputMaskFormat,
@@ -187,7 +192,7 @@ const Numeric: React.FC<IProps> = ({
 				settingsContext,
 				'predefinedValue',
 				'localizedSymbols'
-		  )
+			)
 		: initialLocalizedSymbols;
 
 	const symbols = useMemo<ISymbols>(() => {
@@ -231,7 +236,7 @@ const Numeric: React.FC<IProps> = ({
 					inputMaskFormat: String(inputMaskFormat),
 					symbols,
 					value: newValue,
-			  })
+				})
 			: {
 					...getFormattedValue({
 						dataType,
@@ -239,7 +244,7 @@ const Numeric: React.FC<IProps> = ({
 						value: newValue,
 					}),
 					placeholder,
-			  };
+				};
 	}, [
 		dataType,
 		decimalPlaces,
@@ -258,6 +263,10 @@ const Numeric: React.FC<IProps> = ({
 	const handleChange: ChangeEventHandler<HTMLInputElement> = ({
 		target: {value},
 	}) => {
+		if (maxLengthExceeded(value, inputMaskFormat)) {
+			return;
+		}
+
 		value =
 			inputMask && dataType === 'integer'
 				? value
@@ -265,7 +274,7 @@ const Numeric: React.FC<IProps> = ({
 						decimalSymbol: symbols.decimalSymbol,
 						thousandsSeparator: symbols.thousandsSeparator,
 						value,
-				  });
+					});
 
 		// allows user to delete characters from the mask
 
@@ -287,7 +296,7 @@ const Numeric: React.FC<IProps> = ({
 					inputMaskFormat: String(inputMaskFormat),
 					symbols,
 					value,
-			  })
+				})
 			: getFormattedValue({dataType, symbols, value});
 
 		if (masked !== inputValue.masked) {
@@ -317,6 +326,9 @@ const Numeric: React.FC<IProps> = ({
 			>
 				<ClayInput
 					{...accessibleProps}
+					{...(htmlAutocompleteAttribute && {
+						autoComplete: htmlAutocompleteAttribute,
+					})}
 					className={classNames({
 						'ddm-form-field-type__numeric--rtl':
 							Liferay.Language.direction[editingLanguageId] ===
@@ -400,6 +412,7 @@ interface IProps {
 	defaultLanguageId: Locale;
 	errorMessage?: string;
 	focused: boolean;
+	htmlAutocompleteAttribute: string;
 	id: string;
 	inputMask?: boolean;
 	inputMaskFormat?: string;

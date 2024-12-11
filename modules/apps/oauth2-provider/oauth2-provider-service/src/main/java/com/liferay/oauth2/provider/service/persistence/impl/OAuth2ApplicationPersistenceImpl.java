@@ -25,13 +25,19 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.dao.orm.SessionFactory;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.sanitizer.Sanitizer;
+import com.liferay.portal.kernel.sanitizer.SanitizerException;
+import com.liferay.portal.kernel.sanitizer.SanitizerUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PropsKeys;
@@ -647,7 +653,8 @@ public class OAuth2ApplicationPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					OAuth2ApplicationModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_SQL);
@@ -857,7 +864,8 @@ public class OAuth2ApplicationPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					OAuth2ApplicationModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_SQL);
@@ -1654,7 +1662,8 @@ public class OAuth2ApplicationPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					OAuth2ApplicationModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_SQL);
@@ -1871,7 +1880,8 @@ public class OAuth2ApplicationPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					OAuth2ApplicationModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_SQL);
@@ -2615,7 +2625,8 @@ public class OAuth2ApplicationPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					OAuth2ApplicationModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_SQL);
@@ -2813,7 +2824,8 @@ public class OAuth2ApplicationPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					OAuth2ApplicationModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_SQL);
@@ -2977,7 +2989,6 @@ public class OAuth2ApplicationPersistenceImpl
 		"oAuth2Application.companyId = ?";
 
 	private FinderPath _finderPathFetchByC_C;
-	private FinderPath _finderPathCountByC_C;
 
 	/**
 	 * Returns the o auth2 application where companyId = &#63; and clientId = &#63; or throws a <code>NoSuchOAuth2ApplicationException</code> if it could not be found.
@@ -3172,62 +3183,13 @@ public class OAuth2ApplicationPersistenceImpl
 	 */
 	@Override
 	public int countByC_C(long companyId, String clientId) {
-		clientId = Objects.toString(clientId, "");
+		OAuth2Application oAuth2Application = fetchByC_C(companyId, clientId);
 
-		FinderPath finderPath = _finderPathCountByC_C;
-
-		Object[] finderArgs = new Object[] {companyId, clientId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_OAUTH2APPLICATION_WHERE);
-
-			sb.append(_FINDER_COLUMN_C_C_COMPANYID_2);
-
-			boolean bindClientId = false;
-
-			if (clientId.isEmpty()) {
-				sb.append(_FINDER_COLUMN_C_C_CLIENTID_3);
-			}
-			else {
-				bindClientId = true;
-
-				sb.append(_FINDER_COLUMN_C_C_CLIENTID_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(companyId);
-
-				if (bindClientId) {
-					queryPos.add(clientId);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (oAuth2Application == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_C_C_COMPANYID_2 =
@@ -3807,7 +3769,8 @@ public class OAuth2ApplicationPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					OAuth2ApplicationModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_SQL);
@@ -4013,7 +3976,8 @@ public class OAuth2ApplicationPersistenceImpl
 		}
 		else {
 			if (getDB().isSupportsInlineDistinct()) {
-				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_JPQL);
+				sb.append(
+					OAuth2ApplicationModelImpl.ORDER_BY_SQL_INLINE_DISTINCT);
 			}
 			else {
 				sb.append(OAuth2ApplicationModelImpl.ORDER_BY_SQL);
@@ -4194,7 +4158,6 @@ public class OAuth2ApplicationPersistenceImpl
 		"oAuth2Application.clientProfile = ?";
 
 	private FinderPath _finderPathFetchByERC_C;
-	private FinderPath _finderPathCountByERC_C;
 
 	/**
 	 * Returns the o auth2 application where externalReferenceCode = &#63; and companyId = &#63; or throws a <code>NoSuchOAuth2ApplicationException</code> if it could not be found.
@@ -4382,62 +4345,14 @@ public class OAuth2ApplicationPersistenceImpl
 	 */
 	@Override
 	public int countByERC_C(String externalReferenceCode, long companyId) {
-		externalReferenceCode = Objects.toString(externalReferenceCode, "");
+		OAuth2Application oAuth2Application = fetchByERC_C(
+			externalReferenceCode, companyId);
 
-		FinderPath finderPath = _finderPathCountByERC_C;
-
-		Object[] finderArgs = new Object[] {externalReferenceCode, companyId};
-
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(3);
-
-			sb.append(_SQL_COUNT_OAUTH2APPLICATION_WHERE);
-
-			boolean bindExternalReferenceCode = false;
-
-			if (externalReferenceCode.isEmpty()) {
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_3);
-			}
-			else {
-				bindExternalReferenceCode = true;
-
-				sb.append(_FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2);
-			}
-
-			sb.append(_FINDER_COLUMN_ERC_C_COMPANYID_2);
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				if (bindExternalReferenceCode) {
-					queryPos.add(externalReferenceCode);
-				}
-
-				queryPos.add(companyId);
-
-				count = (Long)query.uniqueResult();
-
-				finderCache.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (oAuth2Application == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_ERC_C_EXTERNALREFERENCECODE_2 =
@@ -4573,7 +4488,6 @@ public class OAuth2ApplicationPersistenceImpl
 			oAuth2ApplicationModelImpl.getClientId()
 		};
 
-		finderCache.putResult(_finderPathCountByC_C, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByC_C, args, oAuth2ApplicationModelImpl);
 
@@ -4582,7 +4496,6 @@ public class OAuth2ApplicationPersistenceImpl
 			oAuth2ApplicationModelImpl.getCompanyId()
 		};
 
-		finderCache.putResult(_finderPathCountByERC_C, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByERC_C, args, oAuth2ApplicationModelImpl);
 	}
@@ -4733,6 +4646,40 @@ public class OAuth2ApplicationPersistenceImpl
 				oAuth2Application.getUuid());
 		}
 		else {
+			if (!Objects.equals(
+					oAuth2ApplicationModelImpl.getColumnOriginalValue(
+						"externalReferenceCode"),
+					oAuth2Application.getExternalReferenceCode())) {
+
+				long userId = GetterUtil.getLong(
+					PrincipalThreadLocal.getName());
+
+				if (userId > 0) {
+					long companyId = oAuth2Application.getCompanyId();
+
+					long groupId = 0;
+
+					long classPK = 0;
+
+					if (!isNew) {
+						classPK = oAuth2Application.getPrimaryKey();
+					}
+
+					try {
+						oAuth2Application.setExternalReferenceCode(
+							SanitizerUtil.sanitize(
+								companyId, groupId, userId,
+								OAuth2Application.class.getName(), classPK,
+								ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL,
+								oAuth2Application.getExternalReferenceCode(),
+								null));
+					}
+					catch (SanitizerException sanitizerException) {
+						throw new SystemException(sanitizerException);
+					}
+				}
+			}
+
 			OAuth2Application ercOAuth2Application = fetchByERC_C(
 				oAuth2Application.getExternalReferenceCode(),
 				oAuth2Application.getCompanyId());
@@ -5156,11 +5103,6 @@ public class OAuth2ApplicationPersistenceImpl
 			new String[] {Long.class.getName(), String.class.getName()},
 			new String[] {"companyId", "clientId"}, true);
 
-		_finderPathCountByC_C = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",
-			new String[] {Long.class.getName(), String.class.getName()},
-			new String[] {"companyId", "clientId"}, false);
-
 		_finderPathWithPaginationFindByC_CP = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_CP",
 			new String[] {
@@ -5184,11 +5126,6 @@ public class OAuth2ApplicationPersistenceImpl
 			FINDER_CLASS_NAME_ENTITY, "fetchByERC_C",
 			new String[] {String.class.getName(), Long.class.getName()},
 			new String[] {"externalReferenceCode", "companyId"}, true);
-
-		_finderPathCountByERC_C = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByERC_C",
-			new String[] {String.class.getName(), Long.class.getName()},
-			new String[] {"externalReferenceCode", "companyId"}, false);
 
 		OAuth2ApplicationUtil.setPersistence(this);
 	}

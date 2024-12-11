@@ -14,7 +14,6 @@ import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
@@ -51,39 +50,46 @@ public class ObjectValidationRuleDTOConverter
 			return null;
 		}
 
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.getObjectDefinition(
-				serviceBuilderObjectValidationRule.getObjectDefinitionId());
-
 		return new ObjectValidationRule() {
 			{
-				actions = dtoConverterContext.getActions();
-				active = serviceBuilderObjectValidationRule.isActive();
-				dateCreated =
-					serviceBuilderObjectValidationRule.getCreateDate();
-				dateModified =
-					serviceBuilderObjectValidationRule.getModifiedDate();
-				engine = serviceBuilderObjectValidationRule.getEngine();
-				engineLabel = _language.get(
-					dtoConverterContext.getLocale(),
-					serviceBuilderObjectValidationRule.getEngine());
-				errorLabel = LocalizedMapUtil.getLanguageIdMap(
-					serviceBuilderObjectValidationRule.getErrorLabelMap());
-				externalReferenceCode =
-					serviceBuilderObjectValidationRule.
-						getExternalReferenceCode();
-				id =
-					serviceBuilderObjectValidationRule.
-						getObjectValidationRuleId();
-				name = LocalizedMapUtil.getLanguageIdMap(
-					serviceBuilderObjectValidationRule.getNameMap());
-				objectDefinitionExternalReferenceCode =
-					objectDefinition.getExternalReferenceCode();
-				objectDefinitionId =
-					serviceBuilderObjectValidationRule.getObjectDefinitionId();
-				script = serviceBuilderObjectValidationRule.getScript();
-				system = serviceBuilderObjectValidationRule.getSystem();
+				setActions(dtoConverterContext::getActions);
+				setActive(serviceBuilderObjectValidationRule::isActive);
+				setDateCreated(
+					serviceBuilderObjectValidationRule::getCreateDate);
+				setDateModified(
+					serviceBuilderObjectValidationRule::getModifiedDate);
+				setEngine(serviceBuilderObjectValidationRule::getEngine);
+				setEngineLabel(
+					() -> _language.get(
+						dtoConverterContext.getLocale(),
+						serviceBuilderObjectValidationRule.getEngine()));
+				setErrorLabel(
+					() -> LocalizedMapUtil.getLanguageIdMap(
+						serviceBuilderObjectValidationRule.getErrorLabelMap()));
+				setExternalReferenceCode(
+					() ->
+						serviceBuilderObjectValidationRule.
+							getExternalReferenceCode());
+				setId(
+					() ->
+						serviceBuilderObjectValidationRule.
+							getObjectValidationRuleId());
+				setName(
+					() -> LocalizedMapUtil.getLanguageIdMap(
+						serviceBuilderObjectValidationRule.getNameMap()));
+				setObjectDefinitionExternalReferenceCode(
+					() -> {
+						ObjectDefinition objectDefinition =
+							_objectDefinitionLocalService.getObjectDefinition(
+								serviceBuilderObjectValidationRule.
+									getObjectDefinitionId());
 
+						return objectDefinition.getExternalReferenceCode();
+					});
+				setObjectDefinitionId(
+					() ->
+						serviceBuilderObjectValidationRule.
+							getObjectDefinitionId());
 				setObjectValidationRuleSettings(
 					() -> TransformUtil.transformToArray(
 						serviceBuilderObjectValidationRule.
@@ -95,6 +101,8 @@ public class ObjectValidationRuleDTOConverter
 				setOutputType(
 					() -> ObjectValidationRule.OutputType.create(
 						serviceBuilderObjectValidationRule.getOutputType()));
+				setScript(serviceBuilderObjectValidationRule::getScript);
+				setSystem(serviceBuilderObjectValidationRule::isSystem);
 			}
 		};
 	}
@@ -111,8 +119,7 @@ public class ObjectValidationRuleDTOConverter
 			{
 				setName(
 					() -> {
-						if (FeatureFlagManagerUtil.isEnabled("LPS-187854") &&
-							objectValidationRuleSetting.compareName(
+						if (objectValidationRuleSetting.compareName(
 								ObjectValidationRuleSettingConstants.
 									NAME_COMPOSITE_KEY_OBJECT_FIELD_ID)) {
 
@@ -132,18 +139,9 @@ public class ObjectValidationRuleDTOConverter
 					});
 				setValue(
 					() -> {
-						if (FeatureFlagManagerUtil.isEnabled("LPS-187854") &&
-							!(objectValidationRuleSetting.compareName(
+						if (!(objectValidationRuleSetting.compareName(
 								ObjectValidationRuleSettingConstants.
 									NAME_COMPOSITE_KEY_OBJECT_FIELD_ID) ||
-							  objectValidationRuleSetting.compareName(
-								  ObjectValidationRuleSettingConstants.
-									  NAME_OUTPUT_OBJECT_FIELD_ID))) {
-
-							return objectValidationRuleSetting.getValue();
-						}
-
-						if (!(FeatureFlagManagerUtil.isEnabled("LPS-187854") ||
 							  objectValidationRuleSetting.compareName(
 								  ObjectValidationRuleSettingConstants.
 									  NAME_OUTPUT_OBJECT_FIELD_ID))) {

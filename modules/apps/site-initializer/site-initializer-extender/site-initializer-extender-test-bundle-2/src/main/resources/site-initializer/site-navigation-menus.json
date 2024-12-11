@@ -1,15 +1,22 @@
 [
 	{
+		"externalReferenceCode": "SITENAVIGATIONMENU1",
 		"menuItems": [
 			{
 				"externalReferenceCode": "TESTSITENAVIGATIONMENUITEM1",
 				"friendlyURL": "/test-public-layout",
+				"name_i18n": {
+					"en_US": "Test Layout"
+				},
 				"privateLayout": false,
-				"type": "layout"
+				"type": "layout",
+				"useCustomName": true
 			},
 			{
 				"externalReferenceCode": "TESTSITENAVIGATIONMENUITEM2",
-				"name": "Test URL",
+				"name_i18n": {
+					"en_US": "Test URL"
+				},
 				"type": "url",
 				"url": "https://test.com/",
 				"useNewTab": false
@@ -19,13 +26,17 @@
 				"menuItems": [
 					{
 						"externalReferenceCode": "TESTSITENAVIGATIONMENUITEM4",
-						"name": "Other Test URL",
+						"name_i18n": {
+							"en_US": "Other Test URL"
+						},
 						"type": "url",
 						"url": "https://other.test.com",
 						"useNewTab": false
 					}
 				],
-				"name": "Other Links Update",
+				"name_i18n": {
+					"en_US": "Other Links Update"
+				},
 				"type": "node"
 			},
 			{
@@ -55,6 +66,6 @@
 				"type": "layout"
 			}
 		],
-		"name": "Test Site Navigation Menu"
+		"name": "Test Site Navigation Menu Update"
 	}
 ]

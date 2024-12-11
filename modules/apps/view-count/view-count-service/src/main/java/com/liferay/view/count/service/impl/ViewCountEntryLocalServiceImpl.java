@@ -9,11 +9,13 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceReferenceMapperFa
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.sql.dsl.Table;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.increment.BufferedIncrement;
 import com.liferay.portal.kernel.increment.NumberIncrement;
+import com.liferay.portal.kernel.mass.delete.MassDeleteCacheThreadLocal;
 import com.liferay.portal.kernel.model.ClassName;
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiService;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
@@ -23,6 +25,8 @@ import com.liferay.portal.kernel.spring.aop.Property;
 import com.liferay.portal.kernel.spring.aop.Retry;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.view.count.ViewCountManager;
 import com.liferay.view.count.configuration.ViewCountConfiguration;
@@ -34,6 +38,7 @@ import com.liferay.view.count.service.base.ViewCountEntryLocalServiceBaseImpl;
 import com.liferay.view.count.service.persistence.ViewCountEntryPK;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -60,15 +65,36 @@ public class ViewCountEntryLocalServiceImpl
 	public void deleteViewCount(
 		long companyId, long classNameId, long classPK) {
 
-		ViewCountEntryPK viewCountEntryPK = new ViewCountEntryPK(
-			companyId, classNameId, classPK);
+		Map<Long, List<ViewCountEntry>> partitionViewCountEntries =
+			MassDeleteCacheThreadLocal.getMassDeleteCache(
+				StringBundler.concat(
+					ViewCountEntryLocalServiceImpl.class.getName(),
+					".deleteViewCount#", companyId, classNameId),
+				() -> MapUtil.toPartitionMap(
+					viewCountEntryPersistence.findByC_CN(
+						companyId, classNameId),
+					ViewCountEntry::getClassPK));
 
-		ViewCountEntry viewCountEntry =
-			viewCountEntryPersistence.fetchByPrimaryKey(viewCountEntryPK);
+		if (partitionViewCountEntries == null) {
+			ViewCountEntryPK viewCountEntryPK = new ViewCountEntryPK(
+				companyId, classNameId, classPK);
 
-		if (viewCountEntry != null) {
-			viewCountEntryPersistence.remove(viewCountEntry);
+			ViewCountEntry viewCountEntry =
+				viewCountEntryPersistence.fetchByPrimaryKey(viewCountEntryPK);
+
+			if (viewCountEntry != null) {
+				viewCountEntryPersistence.remove(viewCountEntry);
+			}
+
+			return;
 		}
+
+		List<ViewCountEntry> viewCountEntries =
+			partitionViewCountEntries.remove(classPK);
+
+		ListUtil.isNotEmptyForEach(
+			viewCountEntries,
+			viewCountEntry -> viewCountEntryPersistence.remove(viewCountEntry));
 	}
 
 	@Override
@@ -115,10 +141,12 @@ public class ViewCountEntryLocalServiceImpl
 	public void incrementViewCount(
 		long companyId, long classNameId, long classPK, int increment) {
 
-		if (isViewCountEnabled(classNameId)) {
-			viewCountEntryFinder.incrementViewCount(
-				companyId, classNameId, classPK, increment);
+		if (!isViewCountEnabled(classNameId)) {
+			return;
 		}
+
+		viewCountEntryFinder.incrementViewCount(
+			companyId, classNameId, classPK, increment);
 
 		ClassName className = _classNameLocalService.fetchClassName(
 			classNameId);
@@ -148,11 +176,14 @@ public class ViewCountEntryLocalServiceImpl
 	@Override
 	@Transactional(enabled = false)
 	public boolean isViewCountEnabled(long classNameId) {
-		if (_disabledClassNameIds.contains(classNameId)) {
+		if (!isViewCountEnabled()) {
 			return false;
 		}
 
-		return isViewCountEnabled();
+		ClassName className = _classNameLocalService.fetchByClassNameId(
+			classNameId);
+
+		return !_disabledClassNames.contains(className.getValue());
 	}
 
 	@Activate
@@ -168,6 +199,7 @@ public class ViewCountEntryLocalServiceImpl
 	}
 
 	@Deactivate
+	@Override
 	protected void deactivate() {
 		_serviceTrackerMap.close();
 	}
@@ -178,16 +210,15 @@ public class ViewCountEntryLocalServiceImpl
 			ConfigurableUtil.createConfigurable(
 				ViewCountConfiguration.class, properties);
 
-		Set<Long> disabledClassNameIds = new HashSet<>();
+		Set<String> disabledClassNames = new HashSet<>();
 
 		for (String className : viewCountConfiguration.disabledClassNames()) {
 			if (Validator.isNotNull(className)) {
-				disabledClassNameIds.add(
-					_classNameLocalService.getClassNameId(className));
+				disabledClassNames.add(className);
 			}
 		}
 
-		_disabledClassNameIds = disabledClassNameIds;
+		_disabledClassNames = disabledClassNames;
 
 		_enabled = viewCountConfiguration.enabled();
 	}
@@ -195,7 +226,7 @@ public class ViewCountEntryLocalServiceImpl
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
-	private volatile Set<Long> _disabledClassNameIds;
+	private volatile Set<String> _disabledClassNames;
 	private volatile boolean _enabled;
 	private ServiceTrackerMap<String, ViewCountEntryModelListener>
 		_serviceTrackerMap;

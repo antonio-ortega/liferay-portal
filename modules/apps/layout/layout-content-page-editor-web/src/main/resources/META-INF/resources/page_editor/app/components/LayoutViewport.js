@@ -49,9 +49,8 @@ export default function LayoutViewport() {
 		setLayoutWidth(undefined);
 
 		const onDrag = debounceRAF((event) => {
-			const {maxWidth, minWidth} = config.availableViewportSizes[
-				selectedViewportSize
-			];
+			const {maxWidth, minWidth} =
+				config.availableViewportSizes[selectedViewportSize];
 
 			setLayoutWidth(
 				Math.min(
@@ -59,7 +58,7 @@ export default function LayoutViewport() {
 						initialWidth + (event.clientX - initialX) * 2,
 						minWidth
 					),
-					maxWidth + 1
+					maxWidth
 				)
 			);
 		});
@@ -110,8 +109,10 @@ export default function LayoutViewport() {
 				{
 					'cadmin': selectedViewportSize !== VIEWPORT_SIZES.desktop,
 					'page-editor__layout-viewport__resizing': resizing,
-					'page-editor__layout-viewport--with-item-configuration-open': itemConfigurationOpen,
-					'page-editor__layout-viewport--with-sidebar-open': sidebarOpen,
+					'page-editor__layout-viewport--with-item-configuration-open':
+						itemConfigurationOpen,
+					'page-editor__layout-viewport--with-sidebar-open':
+						sidebarOpen,
 				}
 			)}
 		>

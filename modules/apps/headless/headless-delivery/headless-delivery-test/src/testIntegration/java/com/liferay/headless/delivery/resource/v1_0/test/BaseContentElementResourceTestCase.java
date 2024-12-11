@@ -30,22 +30,24 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.search.test.rule.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -66,8 +68,6 @@ import java.util.Set;
 import javax.annotation.Generated;
 
 import javax.ws.rs.core.MultivaluedHashMap;
-
-import org.apache.commons.lang.time.DateUtils;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -116,11 +116,17 @@ public abstract class BaseContentElementResourceTestCase {
 
 		_contentElementResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		ContentElementResource.Builder builder =
 			ContentElementResource.builder();
 
 		contentElementResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -134,7 +140,32 @@ public abstract class BaseContentElementResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ContentElement contentElement1 = randomContentElement();
+
+		String json = objectMapper.writeValueAsString(contentElement1);
+
+		ContentElement contentElement2 = ContentElementSerDes.toDTO(json);
+
+		Assert.assertTrue(equals(contentElement1, contentElement2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		ContentElement contentElement = randomContentElement();
+
+		String json1 = objectMapper.writeValueAsString(contentElement);
+		String json2 = ContentElementSerDes.toJSON(contentElement);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -149,40 +180,6 @@ public abstract class BaseContentElementResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		ContentElement contentElement1 = randomContentElement();
-
-		String json = objectMapper.writeValueAsString(contentElement1);
-
-		ContentElement contentElement2 = ContentElementSerDes.toDTO(json);
-
-		Assert.assertTrue(equals(contentElement1, contentElement2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		ContentElement contentElement = randomContentElement();
-
-		String json1 = objectMapper.writeValueAsString(contentElement);
-		String json2 = ContentElementSerDes.toJSON(contentElement);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -215,7 +212,7 @@ public abstract class BaseContentElementResourceTestCase {
 			contentElementResource.getAssetLibraryContentElementsPage(
 				assetLibraryId, null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantAssetLibraryId != null) {
 			ContentElement irrelevantContentElement =
@@ -223,13 +220,13 @@ public abstract class BaseContentElementResourceTestCase {
 					irrelevantAssetLibraryId, randomIrrelevantContentElement());
 
 			page = contentElementResource.getAssetLibraryContentElementsPage(
-				irrelevantAssetLibraryId, null, null, null, Pagination.of(1, 2),
-				null);
+				irrelevantAssetLibraryId, null, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantContentElement),
+			assertContains(
+				irrelevantContentElement,
 				(List<ContentElement>)page.getItems());
 			assertValid(
 				page,
@@ -248,11 +245,10 @@ public abstract class BaseContentElementResourceTestCase {
 		page = contentElementResource.getAssetLibraryContentElementsPage(
 			assetLibraryId, null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2),
-			(List<ContentElement>)page.getItems());
+		assertContains(contentElement1, (List<ContentElement>)page.getItems());
+		assertContains(contentElement2, (List<ContentElement>)page.getItems());
 		assertValid(
 			page,
 			testGetAssetLibraryContentElementsPage_getExpectedActions(
@@ -376,6 +372,13 @@ public abstract class BaseContentElementResourceTestCase {
 		Long assetLibraryId =
 			testGetAssetLibraryContentElementsPage_getAssetLibraryId();
 
+		Page<ContentElement> contentElementPage =
+			contentElementResource.getAssetLibraryContentElementsPage(
+				assetLibraryId, null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			contentElementPage.getTotalCount());
+
 		ContentElement contentElement1 =
 			testGetAssetLibraryContentElementsPage_addContentElement(
 				assetLibraryId, randomContentElement());
@@ -388,35 +391,84 @@ public abstract class BaseContentElementResourceTestCase {
 			testGetAssetLibraryContentElementsPage_addContentElement(
 				assetLibraryId, randomContentElement());
 
-		Page<ContentElement> page1 =
-			contentElementResource.getAssetLibraryContentElementsPage(
-				assetLibraryId, null, null, null, Pagination.of(1, 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ContentElement> contentElements1 =
-			(List<ContentElement>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			contentElements1.toString(), 2, contentElements1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ContentElement> page1 =
+				contentElementResource.getAssetLibraryContentElementsPage(
+					assetLibraryId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<ContentElement> page2 =
-			contentElementResource.getAssetLibraryContentElementsPage(
-				assetLibraryId, null, null, null, Pagination.of(2, 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				contentElement1, (List<ContentElement>)page1.getItems());
 
-		List<ContentElement> contentElements2 =
-			(List<ContentElement>)page2.getItems();
+			Page<ContentElement> page2 =
+				contentElementResource.getAssetLibraryContentElementsPage(
+					assetLibraryId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			contentElements2.toString(), 1, contentElements2.size());
+			assertContains(
+				contentElement2, (List<ContentElement>)page2.getItems());
 
-		Page<ContentElement> page3 =
-			contentElementResource.getAssetLibraryContentElementsPage(
-				assetLibraryId, null, null, null, Pagination.of(1, 3), null);
+			Page<ContentElement> page3 =
+				contentElementResource.getAssetLibraryContentElementsPage(
+					assetLibraryId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2, contentElement3),
-			(List<ContentElement>)page3.getItems());
+			assertContains(
+				contentElement3, (List<ContentElement>)page3.getItems());
+		}
+		else {
+			Page<ContentElement> page1 =
+				contentElementResource.getAssetLibraryContentElementsPage(
+					assetLibraryId, null, null, null,
+					Pagination.of(1, totalCount + 2), null);
+
+			List<ContentElement> contentElements1 =
+				(List<ContentElement>)page1.getItems();
+
+			Assert.assertEquals(
+				contentElements1.toString(), totalCount + 2,
+				contentElements1.size());
+
+			Page<ContentElement> page2 =
+				contentElementResource.getAssetLibraryContentElementsPage(
+					assetLibraryId, null, null, null,
+					Pagination.of(2, totalCount + 2), null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ContentElement> contentElements2 =
+				(List<ContentElement>)page2.getItems();
+
+			Assert.assertEquals(
+				contentElements2.toString(), 1, contentElements2.size());
+
+			Page<ContentElement> page3 =
+				contentElementResource.getAssetLibraryContentElementsPage(
+					assetLibraryId, null, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				contentElement1, (List<ContentElement>)page3.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)page3.getItems());
+			assertContains(
+				contentElement3, (List<ContentElement>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -428,7 +480,7 @@ public abstract class BaseContentElementResourceTestCase {
 			(entityField, contentElement1, contentElement2) -> {
 				BeanTestUtil.setProperty(
 					contentElement1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -545,24 +597,32 @@ public abstract class BaseContentElementResourceTestCase {
 			testGetAssetLibraryContentElementsPage_addContentElement(
 				assetLibraryId, contentElement2);
 
+		Page<ContentElement> page =
+			contentElementResource.getAssetLibraryContentElementsPage(
+				assetLibraryId, null, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ContentElement> ascPage =
 				contentElementResource.getAssetLibraryContentElementsPage(
-					assetLibraryId, null, null, null, Pagination.of(1, 2),
+					assetLibraryId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(contentElement1, contentElement2),
-				(List<ContentElement>)ascPage.getItems());
+			assertContains(
+				contentElement1, (List<ContentElement>)ascPage.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)ascPage.getItems());
 
 			Page<ContentElement> descPage =
 				contentElementResource.getAssetLibraryContentElementsPage(
-					assetLibraryId, null, null, null, Pagination.of(1, 2),
+					assetLibraryId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(contentElement2, contentElement1),
-				(List<ContentElement>)descPage.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)descPage.getItems());
+			assertContains(
+				contentElement1, (List<ContentElement>)descPage.getItems());
 		}
 	}
 
@@ -598,7 +658,7 @@ public abstract class BaseContentElementResourceTestCase {
 			contentElementResource.getSiteContentElementsPage(
 				siteId, null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantSiteId != null) {
 			ContentElement irrelevantContentElement =
@@ -606,12 +666,13 @@ public abstract class BaseContentElementResourceTestCase {
 					irrelevantSiteId, randomIrrelevantContentElement());
 
 			page = contentElementResource.getSiteContentElementsPage(
-				irrelevantSiteId, null, null, null, Pagination.of(1, 2), null);
+				irrelevantSiteId, null, null, null,
+				Pagination.of(1, (int)totalCount + 1), null);
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantContentElement),
+			assertContains(
+				irrelevantContentElement,
 				(List<ContentElement>)page.getItems());
 			assertValid(
 				page,
@@ -630,11 +691,10 @@ public abstract class BaseContentElementResourceTestCase {
 		page = contentElementResource.getSiteContentElementsPage(
 			siteId, null, null, null, Pagination.of(1, 10), null);
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2),
-			(List<ContentElement>)page.getItems());
+		assertContains(contentElement1, (List<ContentElement>)page.getItems());
+		assertContains(contentElement2, (List<ContentElement>)page.getItems());
 		assertValid(
 			page, testGetSiteContentElementsPage_getExpectedActions(siteId));
 	}
@@ -749,6 +809,13 @@ public abstract class BaseContentElementResourceTestCase {
 
 		Long siteId = testGetSiteContentElementsPage_getSiteId();
 
+		Page<ContentElement> contentElementPage =
+			contentElementResource.getSiteContentElementsPage(
+				siteId, null, null, null, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			contentElementPage.getTotalCount());
+
 		ContentElement contentElement1 =
 			testGetSiteContentElementsPage_addContentElement(
 				siteId, randomContentElement());
@@ -761,35 +828,84 @@ public abstract class BaseContentElementResourceTestCase {
 			testGetSiteContentElementsPage_addContentElement(
 				siteId, randomContentElement());
 
-		Page<ContentElement> page1 =
-			contentElementResource.getSiteContentElementsPage(
-				siteId, null, null, null, Pagination.of(1, 2), null);
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<ContentElement> contentElements1 =
-			(List<ContentElement>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			contentElements1.toString(), 2, contentElements1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<ContentElement> page1 =
+				contentElementResource.getSiteContentElementsPage(
+					siteId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Page<ContentElement> page2 =
-			contentElementResource.getSiteContentElementsPage(
-				siteId, null, null, null, Pagination.of(2, 2), null);
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				contentElement1, (List<ContentElement>)page1.getItems());
 
-		List<ContentElement> contentElements2 =
-			(List<ContentElement>)page2.getItems();
+			Page<ContentElement> page2 =
+				contentElementResource.getSiteContentElementsPage(
+					siteId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		Assert.assertEquals(
-			contentElements2.toString(), 1, contentElements2.size());
+			assertContains(
+				contentElement2, (List<ContentElement>)page2.getItems());
 
-		Page<ContentElement> page3 =
-			contentElementResource.getSiteContentElementsPage(
-				siteId, null, null, null, Pagination.of(1, 3), null);
+			Page<ContentElement> page3 =
+				contentElementResource.getSiteContentElementsPage(
+					siteId, null, null, null,
+					Pagination.of(
+						(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+						pageSizeLimit),
+					null);
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2, contentElement3),
-			(List<ContentElement>)page3.getItems());
+			assertContains(
+				contentElement3, (List<ContentElement>)page3.getItems());
+		}
+		else {
+			Page<ContentElement> page1 =
+				contentElementResource.getSiteContentElementsPage(
+					siteId, null, null, null, Pagination.of(1, totalCount + 2),
+					null);
+
+			List<ContentElement> contentElements1 =
+				(List<ContentElement>)page1.getItems();
+
+			Assert.assertEquals(
+				contentElements1.toString(), totalCount + 2,
+				contentElements1.size());
+
+			Page<ContentElement> page2 =
+				contentElementResource.getSiteContentElementsPage(
+					siteId, null, null, null, Pagination.of(2, totalCount + 2),
+					null);
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<ContentElement> contentElements2 =
+				(List<ContentElement>)page2.getItems();
+
+			Assert.assertEquals(
+				contentElements2.toString(), 1, contentElements2.size());
+
+			Page<ContentElement> page3 =
+				contentElementResource.getSiteContentElementsPage(
+					siteId, null, null, null,
+					Pagination.of(1, (int)totalCount + 3), null);
+
+			assertContains(
+				contentElement1, (List<ContentElement>)page3.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)page3.getItems());
+			assertContains(
+				contentElement3, (List<ContentElement>)page3.getItems());
+		}
 	}
 
 	@Test
@@ -801,7 +917,7 @@ public abstract class BaseContentElementResourceTestCase {
 			(entityField, contentElement1, contentElement2) -> {
 				BeanTestUtil.setProperty(
 					contentElement1, entityField.getName(),
-					DateUtils.addMinutes(new Date(), -2));
+					new Date(System.currentTimeMillis() - (2 * Time.MINUTE)));
 			});
 	}
 
@@ -915,24 +1031,32 @@ public abstract class BaseContentElementResourceTestCase {
 		contentElement2 = testGetSiteContentElementsPage_addContentElement(
 			siteId, contentElement2);
 
+		Page<ContentElement> page =
+			contentElementResource.getSiteContentElementsPage(
+				siteId, null, null, null, null, null);
+
 		for (EntityField entityField : entityFields) {
 			Page<ContentElement> ascPage =
 				contentElementResource.getSiteContentElementsPage(
-					siteId, null, null, null, Pagination.of(1, 2),
+					siteId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":asc");
 
-			assertEquals(
-				Arrays.asList(contentElement1, contentElement2),
-				(List<ContentElement>)ascPage.getItems());
+			assertContains(
+				contentElement1, (List<ContentElement>)ascPage.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)ascPage.getItems());
 
 			Page<ContentElement> descPage =
 				contentElementResource.getSiteContentElementsPage(
-					siteId, null, null, null, Pagination.of(1, 2),
+					siteId, null, null, null,
+					Pagination.of(1, (int)page.getTotalCount() + 1),
 					entityField.getName() + ":desc");
 
-			assertEquals(
-				Arrays.asList(contentElement2, contentElement1),
-				(List<ContentElement>)descPage.getItems());
+			assertContains(
+				contentElement2, (List<ContentElement>)descPage.getItems());
+			assertContains(
+				contentElement1, (List<ContentElement>)descPage.getItems());
 		}
 	}
 
@@ -971,11 +1095,13 @@ public abstract class BaseContentElementResourceTestCase {
 			new GraphQLField("items", getGraphQLFields()),
 			new GraphQLField("page"), new GraphQLField("totalCount"));
 
+		// No namespace
+
 		JSONObject contentElementsJSONObject = JSONUtil.getValueAsJSONObject(
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/contentElements");
 
-		Assert.assertEquals(0, contentElementsJSONObject.get("totalCount"));
+		long totalCount = contentElementsJSONObject.getLong("totalCount");
 
 		ContentElement contentElement1 =
 			testGraphQLGetSiteContentElementsPage_addContentElement();
@@ -986,10 +1112,38 @@ public abstract class BaseContentElementResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/contentElements");
 
-		Assert.assertEquals(2, contentElementsJSONObject.getLong("totalCount"));
+		Assert.assertEquals(
+			totalCount + 2, contentElementsJSONObject.getLong("totalCount"));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(contentElement1, contentElement2),
+		assertContains(
+			contentElement1,
+			Arrays.asList(
+				ContentElementSerDes.toDTOs(
+					contentElementsJSONObject.getString("items"))));
+		assertContains(
+			contentElement2,
+			Arrays.asList(
+				ContentElementSerDes.toDTOs(
+					contentElementsJSONObject.getString("items"))));
+
+		// Using the namespace headlessDelivery_v1_0
+
+		contentElementsJSONObject = JSONUtil.getValueAsJSONObject(
+			invokeGraphQLQuery(
+				new GraphQLField("headlessDelivery_v1_0", graphQLField)),
+			"JSONObject/data", "JSONObject/headlessDelivery_v1_0",
+			"JSONObject/contentElements");
+
+		Assert.assertEquals(
+			totalCount + 2, contentElementsJSONObject.getLong("totalCount"));
+
+		assertContains(
+			contentElement1,
+			Arrays.asList(
+				ContentElementSerDes.toDTOs(
+					contentElementsJSONObject.getString("items"))));
+		assertContains(
+			contentElement2,
 			Arrays.asList(
 				ContentElementSerDes.toDTOs(
 					contentElementsJSONObject.getString("items"))));
@@ -1334,6 +1488,10 @@ public abstract class BaseContentElementResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1522,7 +1680,8 @@ public abstract class BaseContentElementResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1571,22 +1730,22 @@ public abstract class BaseContentElementResourceTestCase {
 	}
 
 	protected ContentElementResource contentElementResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
 	protected DepotEntry testDepotEntry;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1595,11 +1754,16 @@ public abstract class BaseContentElementResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1631,6 +1795,24 @@ public abstract class BaseContentElementResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1652,16 +1834,6 @@ public abstract class BaseContentElementResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

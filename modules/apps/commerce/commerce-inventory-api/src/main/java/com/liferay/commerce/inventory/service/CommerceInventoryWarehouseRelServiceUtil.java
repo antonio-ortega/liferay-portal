@@ -7,6 +7,7 @@ package com.liferay.commerce.inventory.service;
 
 import com.liferay.commerce.inventory.model.CommerceInventoryWarehouseRel;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -76,6 +77,42 @@ public class CommerceInventoryWarehouseRelServiceUtil {
 			className, classPK, commerceInventoryWarehouseId);
 	}
 
+	public static List<CommerceInventoryWarehouseRel>
+			getAccountEntryCommerceInventoryWarehouseRels(
+				long commerceInventoryWarehouseId, String keywords, int start,
+				int end)
+		throws PortalException {
+
+		return getService().getAccountEntryCommerceInventoryWarehouseRels(
+			commerceInventoryWarehouseId, keywords, start, end);
+	}
+
+	public static int getAccountEntryCommerceInventoryWarehouseRelsCount(
+			long commerceInventoryWarehouseId, String keywords)
+		throws PortalException {
+
+		return getService().getAccountEntryCommerceInventoryWarehouseRelsCount(
+			commerceInventoryWarehouseId, keywords);
+	}
+
+	public static List<CommerceInventoryWarehouseRel>
+			getAccountGroupCommerceInventoryWarehouseRels(
+				long commerceInventoryWarehouseId, String keywords, int start,
+				int end)
+		throws PortalException {
+
+		return getService().getAccountGroupCommerceInventoryWarehouseRels(
+			commerceInventoryWarehouseId, keywords, start, end);
+	}
+
+	public static int getAccountGroupCommerceInventoryWarehouseRelsCount(
+			long commerceInventoryWarehouseId, String keywords)
+		throws PortalException {
+
+		return getService().getAccountGroupCommerceInventoryWarehouseRelsCount(
+			commerceInventoryWarehouseId, keywords);
+	}
+
 	public static CommerceInventoryWarehouseRel
 			getCommerceInventoryWarehouseRel(
 				long commerceInventoryWarehouseRelId)
@@ -104,12 +141,42 @@ public class CommerceInventoryWarehouseRelServiceUtil {
 			commerceInventoryWarehouseId, start, end, orderByComparator);
 	}
 
+	public static List<CommerceInventoryWarehouseRel>
+			getCommerceInventoryWarehouseRels(
+				String className, long commerceInventoryWarehouseId)
+		throws PortalException {
+
+		return getService().getCommerceInventoryWarehouseRels(
+			className, commerceInventoryWarehouseId);
+	}
+
+	public static List<CommerceInventoryWarehouseRel>
+			getCommerceInventoryWarehouseRels(
+				String className, long commerceInventoryWarehouseId, int start,
+				int end,
+				OrderByComparator<CommerceInventoryWarehouseRel>
+					orderByComparator)
+		throws PortalException {
+
+		return getService().getCommerceInventoryWarehouseRels(
+			className, commerceInventoryWarehouseId, start, end,
+			orderByComparator);
+	}
+
 	public static int getCommerceInventoryWarehouseRelsCount(
 			long commerceInventoryWarehouseId)
 		throws PortalException {
 
 		return getService().getCommerceInventoryWarehouseRelsCount(
 			commerceInventoryWarehouseId);
+	}
+
+	public static int getCommerceInventoryWarehouseRelsCount(
+			String className, long commerceInventoryWarehouseId)
+		throws PortalException {
+
+		return getService().getCommerceInventoryWarehouseRelsCount(
+			className, commerceInventoryWarehouseId);
 	}
 
 	public static List<CommerceInventoryWarehouseRel>
@@ -141,15 +208,12 @@ public class CommerceInventoryWarehouseRelServiceUtil {
 	}
 
 	public static CommerceInventoryWarehouseRelService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CommerceInventoryWarehouseRelService service) {
-
-		_service = service;
-	}
-
-	private static volatile CommerceInventoryWarehouseRelService _service;
+	private static final Snapshot<CommerceInventoryWarehouseRelService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceInventoryWarehouseRelServiceUtil.class,
+			CommerceInventoryWarehouseRelService.class);
 
 }

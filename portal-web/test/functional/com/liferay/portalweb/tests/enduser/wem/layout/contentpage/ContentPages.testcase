@@ -1,4 +1,4 @@
-@component-name = "portal-wcm"
+@component-name = "portal-page-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -17,6 +17,10 @@ definition {
 
 		task ("Sign in") {
 			User.firstLoginPG();
+		}
+
+		task ("Enable dynamic and manual selection") {
+			AssetPublisherPortlet.enableDynamicAndManualSelection();
 		}
 
 		task ("Add a site") {
@@ -52,7 +56,7 @@ definition {
 
 				Type(
 					ariaLabel = "Spacer 1",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 					value1 = "-32");
 
 				StyleBooks.clickManagementBar();
@@ -74,8 +78,6 @@ definition {
 
 			task ("Apply the new style book to content page") {
 				PageEditor.gotoTab(tabName = "Page Design Options");
-
-				Navigator.gotoNavTab(navTab = "Style Book");
 
 				StyleBooks.selectStyleBookViaPageDesignOptions(styleBookName = "Test Style Book Name");
 			}
@@ -114,35 +116,57 @@ definition {
 		}
 	}
 
-	@description = "Users can only edit content pages in edit mode."
-	@priority = 5
-	test CannotEditInViewMode {
-		property portal.acceptance = "true";
-
-		task ("Navigate to the content page") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Content Page Name",
+	@description = "This is a test for LPS-153383. The page creator cannot resize editor sidebar to an invalid size."
+	@priority = 4
+	test CannotResizeLeftSidebarPanelBeyoundLimitation {
+		task ("Given a page creator accesses to the page editor") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name",
 				siteName = ${randomSiteName});
 		}
 
-		task ("Assert the page cannot be edited in 'View Mode' by asserting the fragments side bar is not present") {
-			AssertElementNotPresent(locator1 = "PageEditor#FRAGMENT_SIDEBAR_BODY");
+		task ("When the page creator accesses to the left sidebar panel") {
+			AssertVisible(
+				key_sidebarButton = "Fragments and Widgets",
+				locator1 = "PageEditor#FRAGMENT_SIDEBAR_TITLE");
 		}
 
-		task ("Navigate to the content page's 'Edit Mode'") {
-			ContentPages.gotoPageEditor();
-		}
+		task ("Then the page creator cannot resize the left sidebar panel more than 500px or less than 280px") {
+			DragAndDrop.dragAndDrop(
+				locator1 = "PageEditor#SIDEBAR_RESIZER",
+				value1 = "220,0");
 
-		task ("Assert the content page can be edited in 'Edit Mode' by asserting the fragments side bar is present") {
-			AssertVisible(locator1 = "PageEditor#FRAGMENT_SIDEBAR_BODY");
-		}
+			AssertCssValue(
+				locator1 = "Sidebar#PANEL_OPEN",
+				locator2 = "width",
+				value1 = "500px");
 
-		task ("Navigate back to the content page") {
-			PageEditor.clickBack();
-		}
+			DragAndDrop.dragAndDrop(
+				locator1 = "PageEditor#SIDEBAR_RESIZER",
+				value1 = "100,0");
 
-		task ("Assert the page cannot be edited by asserting the fragments side bar is not present") {
-			AssertElementNotPresent(locator1 = "PageEditor#FRAGMENT_SIDEBAR_BODY");
+			AssertCssValue(
+				locator1 = "Sidebar#PANEL_OPEN",
+				locator2 = "width",
+				value1 = "500px");
+
+			DragAndDrop.dragAndDrop(
+				locator1 = "PageEditor#SIDEBAR_RESIZER",
+				value1 = "-220,0");
+
+			AssertCssValue(
+				locator1 = "Sidebar#PANEL_OPEN",
+				locator2 = "width",
+				value1 = "280px");
+
+			DragAndDrop.dragAndDrop(
+				locator1 = "PageEditor#SIDEBAR_RESIZER",
+				value1 = "-100,0");
+
+			AssertCssValue(
+				locator1 = "Sidebar#PANEL_OPEN",
+				locator2 = "width",
+				value1 = "280px");
 		}
 	}
 
@@ -243,129 +267,202 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-106813. Can set permissions for widgets in content page."
-	@priority = 5
-	test ConfigurePermissionsOfAssetPublisher {
-		property portal.acceptance = "true";
-
-		task ("Add an Asset Publisher widget to the content page") {
+	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session on content page in card view."
+	@priority = 3
+	test CouldAddAndRemoveFragmentInCardView {
+		task ("Given go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
+				pageName = "Test Page Name",
 				siteName = ${randomSiteName});
-
-			PageEditor.addWidget(portletName = "Asset Publisher");
 		}
 
-		task ("Configure permissions of Asset Publisher") {
-			MouseOver.mouseOverNotVisible(
-				key_portletName = "Asset Publisher",
-				locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
-
-			Click.waitForMenuToggleJSClick(
-				key_portletName = "Asset Publisher",
-				locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
-
-			AssertVisible(
-				key_menuItem = "Permissions",
-				locator1 = "MenuItem#ANY_MENU_ITEM");
-
-			MenuItem.click(menuItem = "Permissions");
-
-			IFrame.selectPermissionsFrame();
-
-			AssertChecked.assertCheckedNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			Uncheck.uncheckNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			Button.clickSave();
-
-			Alert.viewSuccessMessage();
-
-			IFrame.closeFrame();
+		task ("When switch to card view") {
+			Click(
+				key_switchTo = "card",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_DISPLAY_STYLE_BUTTON");
 		}
 
-		task ("Publish the content page") {
-			PageEditor.publish();
-		}
+		task ("Then assert could add and remove fragment to Favorites session") {
+			MouseOver(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM");
 
-		task ("Assert the ellipsis button of Asset Publisher is unavailable in view mode") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
+			MouseOver(
+				ariaLabel = "Mark Button as Favorite",
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM_BUTTON_WITH_ARIA_LABEL");
+
+			AssertTextEquals(
+				locator1 = "Tooltip#GENERIC_TOOLTIP",
+				value1 = "Mark Button as Favorite");
+
+			Click.clickNoMouseOver(
+				ariaLabel = "Mark Button as Favorite",
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM_BUTTON_WITH_ARIA_LABEL");
+
+			AssertElementPresent(
+				key_collectionName = "Favorites",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM");
+
+			AssertElementPresent(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM");
+
+			AssertElementPresent(
+				index = 1,
+				key_panel = "Favorites",
+				locator1 = "Panel#PANEL_BY_INDEX");
+
+			MouseOver(
+				ariaLabel = "Unmark Button as Favorite",
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM_BUTTON_WITH_ARIA_LABEL");
+
+			AssertTextEquals(
+				locator1 = "Tooltip#GENERIC_TOOLTIP",
+				value1 = "Unmark Button as Favorite");
+
+			Click.clickNoMouseOver(
+				ariaLabel = "Unmark Button as Favorite",
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM_BUTTON_WITH_ARIA_LABEL");
 
 			AssertElementNotPresent(
-				key_portletName = "Asset Publisher",
-				locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
+				key_collectionName = "Favorites",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM");
+
+			AssertElementPresent(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_CARD_ITEM");
 		}
 	}
 
-	@description = "This is a test for LPS-137155. The page creator can configure content page via header ellipsis icon at edit mode."
-	@priority = 3
-	test ConfigureViaHeaderEllipsisIcon {
-		task ("Given a page designer has content page in pages admin") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
-
-			PagesAdmin.viewPageItemPresent(pageName = "Test Content Page Name");
-		}
-
-		task ("When the page designer renames page via header ellipsis icon at edit mode") {
+	@description = "This is a test for LPS-158746. Could add and remove fragment to Favorites session and widget to Highlighted session on content page."
+	@priority = 5
+	test CouldAddAndRemoveFragmentToFavoritesSessionAndWidgetToHighlightedSessionOnReleaseBundle {
+		task ("When go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
+				pageName = "Test Page Name",
 				siteName = ${randomSiteName});
-
-			LexiconEntry.gotoHeaderMenuItem(menuItem = "Configure");
-
-			SelectWindow.selectPopUp(locator1 = "null");
-
-			PortletEntry.inputName(name = "Test Page Name Edited");
-
-			PortletEntry.save();
-
-			Close.closeWindow();
 		}
 
-		task ("Then the page designer can see new page name in pages admin") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+		task ("Then could add and remove fragment to Favorites session and widget to Highlighted session") {
+			task ("Go to add and remove favorite fragment") {
+				MouseOver(
+					key_collectionName = "Basic Components",
+					key_fragmentName = "Button",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
 
-			PagesAdmin.viewPageItemPresent(pageName = "Test Page Name Edited");
-		}
-	}
+				MouseOver(
+					ariaLabel = "Mark Button as Favorite",
+					key_collectionName = "Basic Components",
+					key_fragmentName = "Button",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_BUTTON_WITH_ARIA_LABEL");
 
-	@description = "This is a test for LPS-137155. The page creator can delete content page via header ellipsis icon at edit mode."
-	@priority = 3
-	test DeleteViaHeaderEllipsisIcon {
-		task ("Given a page designer has content page in pages admin") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+				AssertTextEquals(
+					locator1 = "Tooltip#GENERIC_TOOLTIP",
+					value1 = "Mark Button as Favorite");
 
-			PagesAdmin.viewPageItemPresent(pageName = "Test Content Page Name");
-		}
+				Click.clickNoMouseOver(
+					ariaLabel = "Mark Button as Favorite",
+					key_collectionName = "Basic Components",
+					key_fragmentName = "Button",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_BUTTON_WITH_ARIA_LABEL");
 
-		task ("When the page designer deletes the page via header ellipsis icon at edit mode") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
+				AssertElementPresent(
+					key_collectionName = "Favorites",
+					key_fragmentName = "Button",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
 
-			LexiconEntry.gotoHeaderMenuItem(menuItem = "Delete");
+				AssertElementPresent(
+					key_collectionName = "Basic Components",
+					key_fragmentName = "Button",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
 
-			AssertTextEquals(
-				locator1 = "Modal#BODY",
-				value1 = "Are you sure you want to delete the page \"Test Content Page Name\"? It will be removed immediately.");
+				AssertElementPresent(
+					index = 1,
+					key_panel = "Favorites",
+					locator1 = "Panel#PANEL_BY_INDEX");
 
-			Click(
-				key_text = "Delete",
-				locator1 = "Modal#MODAL_FOOTER_BUTTON");
-		}
+				MouseOver(
+					ariaLabel = "Unmark Button as Favorite",
+					key_collectionName = "Basic Components",
+					key_fragmentName = "Button",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_BUTTON_WITH_ARIA_LABEL");
 
-		task ("Then the page designer should not see the page in pages admin") {
-			ControlMenu.viewHeaderTitle(headerTitle = "Pages");
+				AssertTextEquals(
+					locator1 = "Tooltip#GENERIC_TOOLTIP",
+					value1 = "Unmark Button as Favorite");
 
-			AssertTextEquals(
-				locator1 = "Message#EMPTY_INFO_TAGLIB_TITLE",
-				value1 = "No Pages yet.");
+				Click.clickNoMouseOver(
+					ariaLabel = "Unmark Button as Favorite",
+					key_collectionName = "Basic Components",
+					key_fragmentName = "Button",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_BUTTON_WITH_ARIA_LABEL");
+
+				AssertElementNotPresent(
+					key_collectionName = "Favorites",
+					key_fragmentName = "Button",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+
+				AssertElementPresent(
+					key_collectionName = "Basic Components",
+					key_fragmentName = "Button",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+			}
+
+			task ("Go to add and remove favorite widget") {
+				Navigator.gotoNavTab(navTab = "Widgets");
+
+				PageEditor.expandWidgetCategory(categoryName = "Collaboration");
+
+				MouseOver(
+					key_collectionName = "Collaboration",
+					key_fragmentName = "Calendar",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+
+				Click.clickNoMouseOver(
+					ariaLabel = "Mark Calendar as Favorite",
+					key_collectionName = "Collaboration",
+					key_fragmentName = "Calendar",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_BUTTON_WITH_ARIA_LABEL");
+
+				AssertElementPresent(
+					key_collectionName = "Highlighted",
+					key_fragmentName = "Calendar",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+
+				AssertElementPresent(
+					key_collectionName = "Collaboration",
+					key_fragmentName = "Calendar",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+
+				Click.clickNoMouseOver(
+					ariaLabel = "Unmark Calendar as Favorite",
+					key_collectionName = "Collaboration",
+					key_fragmentName = "Calendar",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_BUTTON_WITH_ARIA_LABEL");
+
+				AssertElementNotPresent(
+					key_collectionName = "Highlighted",
+					key_fragmentName = "Calendar",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+
+				AssertElementPresent(
+					key_collectionName = "Collaboration",
+					key_fragmentName = "Calendar",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+			}
 		}
 	}
 
@@ -471,227 +568,6 @@ definition {
 			PagesAdmin.openPageEllipsisMenu(pageName = "Test Content Page Name");
 
 			MenuItem.viewNotPresent(menuItem = "Discard Draft");
-		}
-
-		task ("When the page designer makes some changes on a published content page") {
-			MenuItem.click(menuItem = "Edit");
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading");
-
-			PageEditor.publish();
-
-			PagesAdmin.gotoPageEllipsisMenuItem(
-				menuItem = "Edit",
-				pageName = "Test Content Page Name");
-
-			PageEditor.editFragmentText(
-				fragmentName = "Heading",
-				id = "element-text",
-				text = "New editable fragment text");
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Paragraph",
-				targetFragmentName = "Heading");
-		}
-
-		task ("Then the page designer could discard draft in page editor") {
-			PageEditor.discardDraft();
-
-			PagesAdmin.gotoPageEllipsisMenuItem(
-				menuItem = "Edit",
-				pageName = "Test Content Page Name");
-
-			PageEditor.viewFragmentEditableText(
-				editableText = "Heading Example",
-				fragmentName = "Heading",
-				id = "element-text");
-
-			PageEditor.viewFragmentNotPresent(fragmentName = "Paragraph");
-
-			AssertVisible(
-				key_text = "Publish",
-				locator1 = "Button#ANY_ENABLED");
-
-			AssertVisible(
-				key_text = "Discard Draft",
-				locator1 = "Button#ANY_DISABLED");
-		}
-
-		task ("When the page designer makes some changes in page editor") {
-			PageEditor.editFragmentText(
-				fragmentName = "Heading",
-				id = "element-text",
-				text = "New editable fragment text");
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Paragraph",
-				targetFragmentName = "Heading");
-		}
-
-		task ("Then the page designer could discard draft in the Pages admin") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
-
-			PagesAdmin.discardDraft(pageName = "Test Content Page Name");
-
-			AssertElementNotPresent(
-				index = 1,
-				key_itemName = "Test Content Page Name",
-				locator1 = "PagesAdmin#LIST_GROUP_ITEM_PAGE_STATUS");
-
-			PagesAdmin.gotoPageEllipsisMenuItem(
-				menuItem = "Edit",
-				pageName = "Test Content Page Name");
-
-			PageEditor.viewFragmentEditableText(
-				editableText = "Heading Example",
-				fragmentName = "Heading",
-				id = "element-text");
-
-			PageEditor.viewFragmentNotPresent(fragmentName = "Paragraph");
-
-			AssertVisible(
-				key_text = "Publish",
-				locator1 = "Button#ANY_ENABLED");
-
-			AssertVisible(
-				key_text = "Discard Draft",
-				locator1 = "Button#ANY_DISABLED");
-
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
-
-			WaitForPageLoad();
-
-			PagesAdmin.openPageEllipsisMenu(pageName = "Test Content Page Name");
-
-			MenuItem.viewNotPresent(menuItem = "Discard Draft");
-		}
-	}
-
-	@description = "This is a test for LPS-159751. The page editor should be rendered after reset changes from site template."
-	@priority = 4
-	test EditContentPageAfterResetChangesFromSiteTemplate {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		var siteName = StringUtil.randomString(8);
-
-		var siteURLKey = StringUtil.toLowerCase(${siteName});
-		var siteTemplateName = StringUtil.randomString(8);
-
-		task ("Given a page creator has a site based on a site template") {
-			task ("Add a site template") {
-				JSONSiteTemplate.addSiteTemplate(
-					description = "It is a site template",
-					siteTemplateName = ${siteTemplateName});
-			}
-
-			task ("Add a master template on Site Template") {
-				SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-				LexiconEntry.gotoEntryMenuItem(
-					menuItem = "Manage",
-					rowEntry = ${siteTemplateName});
-
-				ProductMenu.gotoPortlet(
-					category = "Design",
-					portlet = "Page Templates");
-
-				MastersPageTemplatesAdmin.addMasters(masterLayoutName = "Custom Masters Page Template");
-			}
-
-			task ("Add a Button fragment to master template") {
-				PageEditor.addFragment(
-					collectionName = "Basic Components",
-					dropTarget = "Header",
-					fragmentName = "Button",
-					scope = "Master");
-
-				MastersPageTemplates.publishMaster();
-			}
-
-			task ("Select the master page template to Home page") {
-				ProductMenu.gotoPortlet(
-					category = "Site Builder",
-					portlet = "Pages");
-
-				PagesAdmin.gotoPageEllipsisMenuItem(
-					menuItem = "Edit",
-					pageName = "Home");
-
-				PageEditor.gotoTab(tabName = "Page Design Options");
-
-				Navigator.gotoNavTab(navTab = "Master");
-
-				MastersPageTemplates.selectMasterViaPageDesignOptions(masterLayoutName = "Custom Masters Page Template");
-
-				PageEditor.publish();
-			}
-
-			task ("Add a new site based on site template") {
-				HeadlessSite.addSite(
-					siteName = ${siteName},
-					templateName = ${siteTemplateName},
-					templateType = "Site Template");
-			}
-
-			task ("Delete the Button fragment of master template") {
-				ApplicationsMenu.gotoPortlet(
-					category = "Sites",
-					panel = "Control Panel",
-					portlet = "Sites");
-
-				LexiconTable.clickEllipsisItem(
-					item = "Go to Pages",
-					tableEntry = ${siteName});
-
-				SelectWindow.selectPopUp(locator1 = "null");
-
-				ContentPages.gotoPageEditor();
-
-				PageEditor.gotoTab(tabName = "Page Design Options");
-
-				Click(locator1 = "PageEditor#MORE_LINK");
-
-				WaitForPageLoad();
-
-				Click(
-					ariaLabel = "Edit Master",
-					locator1 = "Link#ANY_WITH_ARIA_LABEL");
-
-				PageEditor.removeFragment(fragmentName = "Button");
-			}
-
-			task ("Propagate change to master page template") {
-				MastersPageTemplates.propagateChange();
-			}
-
-			task ("Publish the page") {
-				ContentPagesNavigator.openEditContentPage(
-					pageName = "Home",
-					siteName = ${siteName});
-
-				PageEditor.publish();
-			}
-		}
-
-		task ("When the page creator resets the changes from site template") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Home",
-				siteName = ${siteName});
-
-			WaitForPageLoad();
-
-			SiteTemplates.resetPageChanges();
-		}
-
-		task ("Then the page creator could access the page editor of content page") {
-			ContentPages.gotoPageEditor();
-
-			AssertConsoleTextNotPresent(value1 = "java.lang.NullPointerException");
 		}
 	}
 
@@ -902,7 +778,7 @@ definition {
 		}
 
 		task ("Hide the container") {
-			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
+			PageEditor.hideFragmentViaPageStructure(fragmentName = "Container");
 		}
 
 		task ("View elements are not shown") {
@@ -932,7 +808,7 @@ definition {
 		}
 
 		task ("Hide the container") {
-			PageEditor.hideFragmentViaHeader(fragmentName = "Container");
+			PageEditor.hideFragmentViaPageStructure(fragmentName = "Container");
 		}
 
 		task ("View elements are not shown") {
@@ -966,202 +842,6 @@ definition {
 				editableText = "A paragraph is a self-contained unit of a discourse in writing dealing with a particular point or idea. Paragraphs are usually an expected part of formal writing, used to organize longer prose.",
 				fragmentName = "Paragraph",
 				id = "element-text");
-		}
-	}
-
-	@description = "This is a test for LPS-109169. Topper only visible when the element is selected but not hover."
-	@priority = 5
-	@uitest
-	test HeaderOnlyShownWhenElementSelected {
-		property portal.acceptance = "true";
-
-		task ("Add a Heading fragment and an Asset Publisher portlet to page") {
-			JSONLayout.addPublicLayout(
-				groupName = ${randomSiteName},
-				layoutName = "Test Content Page Name",
-				type = "content");
-
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading");
-
-			PageEditor.addWidget(
-				portletName = "Asset Publisher",
-				targetFragmentName = "Heading");
-		}
-
-		task ("Assert only header of Heading shown when Heading selected") {
-			PageEditor.viewFragmentHeaderNotVisible(fragmentName = "Heading");
-
-			PageEditor.clickConfigurableField(fragmentName = "Heading");
-
-			PageEditor.viewFragmentHeaderVisible(fragmentName = "Heading");
-
-			PageEditor.viewFragmentHeaderNotVisible(fragmentName = "Asset Publisher");
-
-			MouseOver(
-				index = 1,
-				key_fragmentName = "Asset Publisher",
-				locator1 = "Fragment#FRAGMENT_CONTENT");
-
-			PageEditor.viewFragmentHeaderNotVisible(fragmentName = "Asset Publisher");
-		}
-
-		task ("Assert only header of Asset Publisher shown when Asset Publisher selected") {
-			PageEditor.clickConfigurableField(fragmentName = "Asset Publisher");
-
-			PageEditor.viewFragmentHeaderVisible(fragmentName = "Asset Publisher");
-
-			PageEditor.viewFragmentHeaderNotVisible(fragmentName = "Heading");
-
-			MouseOver(
-				index = 1,
-				key_fragmentName = "Heading",
-				locator1 = "Fragment#FRAGMENT_CONTENT");
-
-			PageEditor.viewFragmentHeaderNotVisible(fragmentName = "Heading");
-		}
-	}
-
-	@description = "This is a test for LPS-134844. Fragments hidden in pages templates appear as hidden in pages that use it and visibility can be changed."
-	@priority = 4
-	test HiddenFragmentsInPagesTemplatesAppearHiddenInPages {
-		task ("Add a content page template") {
-			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = ${randomSiteName},
-				layoutPageTemplateCollectionName = "Page Template Collection");
-
-			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = ${randomSiteName},
-				layoutPageTemplateCollectionName = "Page Template Collection",
-				layoutPageTemplateEntryName = "Page Template Name",
-				layoutPageTemplateStatus = "Draft",
-				layoutPageTemplateType = "Content Page Template");
-
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
-
-			Navigator.gotoNavNested(navNested = "Page Template Collection");
-
-			PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "Page Template Name");
-
-			PageEditor.assertFragmentSidebarLoaded();
-		}
-
-		task ("Add two heading fragemtns") {
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading");
-
-			PageEditor.editFragmentText(
-				fragmentName = "Heading",
-				id = "element-text",
-				text = "Heading Example 1");
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				fragmentName = "Heading",
-				targetFragmentName = "Heading");
-
-			PageEditor.editFragmentText(
-				fragmentName = "Heading",
-				id = "element-text",
-				index = 2,
-				text = "Heading Example 2");
-		}
-
-		task ("Hide Heading Example 1") {
-			PageEditor.hideFragmentViaPageStructure(
-				fragmentName = "Heading",
-				index = 1);
-		}
-
-		task ("Publish page template") {
-			PageEditor.publish();
-		}
-
-		task ("Add a page based on content page template") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
-
-			ContentPages.addPage(
-				collectionName = "Page Template Collection",
-				pageName = "Test Page Name",
-				pageTemplateName = "Page Template Name");
-		}
-
-		task ("Assert Heading Example 1 is not shown") {
-			AssertNotVisible(
-				fragmentName = "heading",
-				id = "element-text",
-				index = 1,
-				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
-
-			ContentPages.viewFragmentText(
-				fragmentName = "heading",
-				id = "element-text",
-				position = 2,
-				text = "Heading Example 2");
-		}
-
-		task ("Show Heading Example 1") {
-			PageEditor.unhideFragmentViaPageStructure(
-				fragmentName = "Heading",
-				index = 1);
-		}
-
-		task ("Open the Preview modal") {
-			PageEditor.previewInANewTab();
-		}
-
-		task ("Assert both Heading Example 1 and Heading Example 2 are shown") {
-			for (var n : list "1,2") {
-				ContentPages.viewFragmentText(
-					fragmentName = "heading",
-					id = "element-text",
-					position = ${n},
-					text = "Heading Example ${n}");
-			}
-		}
-	}
-
-	@description = "This is a test for LPS-148426. The page creator can successfully publish a content page with commerce widgets."
-	@priority = 4
-	test PublishPageWithCommerceWidgets {
-		task ("Given a page creator has a content page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-		}
-
-		task ("When the page creator adds commerce widgets to page") {
-			PageEditor.addWidget(portletName = "Checkout");
-
-			for (var widgetName : list "Open Carts,Placed Orders,Wish List Content,Wish Lists") {
-				PageEditor.addWidget(
-					portletName = ${widgetName},
-					targetFragmentName = "Checkout");
-			}
-		}
-
-		task ("The the page creator could publish the content page") {
-			task ("Publish the page") {
-				PageEditor.publish();
-			}
-
-			task ("View commerce widgets are shown at view mode") {
-				ContentPagesNavigator.openViewContentPage(
-					pageName = "Test Content Page Name",
-					siteName = ${randomSiteName});
-
-				for (var widgetName : list "Checkout,WishLists,WishListContent,OrderContent,OpenOrderContent") {
-					AssertElementPresent(
-						key_portletName = ${widgetName},
-						locator1 = "Portlet#SPECIFIC_FRAGMENTS_AND_WIDGETS");
-				}
-			}
 		}
 	}
 
@@ -1211,6 +891,8 @@ definition {
 		task ("Move the fragment") {
 			PageEditor.clickConfigurableField(fragmentName = "Button");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			DragAndDrop.javaScriptDragAndDropToUp(
 				fragmentName = "heading",
 				id = "element-text",
@@ -1234,165 +916,95 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-162302. The page creator can navigate through fragment structure via breadcrumb on page editor."
-	@priority = 4
-	test ViewBreadcrumbOnContentPage {
-		task ("Given the page creator has a content page with custom fragment structure") {
-			task ("Add a Grid fragment to content page") {
-				ContentPagesNavigator.openEditContentPage(
-					pageName = "Test Content Page Name",
-					siteName = ${randomSiteName});
+	@description = "This is a test for LPS-133933. The user can resize the displayed image via image editor on Page Content panel."
+	@priority = 5
+	test ResizeDisplayedImageViaImageEditor {
+		property portal.acceptance = "true";
 
-				PageEditor.addFragment(
-					collectionName = "Layout Elements",
-					fragmentName = "Grid");
-			}
-
-			task ("Add a Container fragment inside first module of Grid") {
-				PageEditor.addElementToColumn(
-					collectionName = "Layout Elements",
-					columnNumber = 1,
-					fragmentName = "Container",
-					navTab = "Fragments");
-			}
-
-			task ("Add a Heading frgament inside Container") {
-				PageEditor.addElementToContainer(
-					collectionName = "Basic Components",
-					fragmentName = "Heading",
-					navTab = "Fragments");
-			}
-		}
-
-		task ("When the page creator selects the element-text of Heading fragment") {
-			PageEditor.gotoEditableFieldEdit(
-				fragmentName = "Heading",
-				id = "element-text");
-		}
-
-		task ("Then the page creator should see the Breadcrumb and element-text as active") {
-			Breadcrumb.seeFullNested();
-
-			Breadcrumb.viewBreadcrumbPath(breadcrumbNameList = "Grid,Container,Heading,element-text");
-
-			Breadcrumb.viewActiveEntry(breadcrumbName = "element-text");
-		}
-
-		task ("When the page creator closes the sidebar and selects the Heading on Breadcrumb") {
-			PageEditor.closeSidebar(tabName = "Browser");
-
-			Click(
-				key_breadcrumbName = "Heading",
-				locator1 = "Breadcrumb#BREADCRUMB_ENTRY");
-		}
-
-		task ("Then the page creator should see the sidebar still closed and the General panel") {
-			AssertElementNotPresent(locator1 = "Sidebar#PANEL_OPEN");
-
-			AssertVisible(
-				key_panel = "Heading Options",
-				locator1 = "Panel#PANEL");
-
-			Breadcrumb.viewActiveEntry(breadcrumbName = "Heading");
-		}
-
-		task ("When the page creator selects the Grid on Breadcrumb") {
-			Click(
-				key_breadcrumbName = "Grid",
-				locator1 = "Breadcrumb#BREADCRUMB_ENTRY");
-		}
-
-		task ("Then the page creator should see the sidebar still closed and the General panel") {
-			AssertElementNotPresent(locator1 = "Sidebar#PANEL_OPEN");
-
-			AssertVisible(
-				key_panel = "Grid Options",
-				locator1 = "Panel#PANEL");
-
-			Breadcrumb.viewActiveEntry(breadcrumbName = "Grid");
-		}
-	}
-
-	@description = "This is a test for LPS-129536. View the configuration settings of widget after execute Clean Up Orphaned Theme Portlet Preferences."
-	@priority = 4
-	test ViewConfigurationSettingsOfWidgetAfterCleanUpOrphanedThemePortletPreferences {
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Add a web content") {
-			JSONWebcontent.addWebContent(
-				content = "Web Content Content",
-				groupName = ${randomSiteName},
-				title = "Web Content Title");
-		}
-
-		task ("Add an Asset Publisher widget to the page") {
+		task ("Add an Image fragment to page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Test Content Page Name",
 				siteName = ${randomSiteName});
 
-			PageEditor.addWidget(portletName = "Asset Publisher");
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Image");
 		}
 
-		task ("Change the display template to Title List") {
-			Portlet.gotoPortletOptions(
-				portletName = "Asset Publisher",
-				portletOption = "Configuration");
-
-			AssetPublisherPortlet.configureDisplayTemplatePG(displayTemplate = "Title List");
-
-			IFrame.closeFrame();
+		task ("Directly select an image in editable field") {
+			PageEditor.editFragmentImage(
+				fileName = "analytics-cloud-hero-image.png",
+				fragmentName = "Image",
+				id = "image-square");
 		}
 
-		task ("View web content displayed at Title List in Asset Publisher at edit mode") {
-			AssertTextEquals.assertText(
-				locator1 = "Relatedassets#ASSET_ROW_ENTRY_TITLE",
-				rowNumber = 1,
-				value1 = "Web Content Title");
+		task ("View the selected image is shown in Image fragment") {
+			PageEditor.viewFragmentEditableImage(
+				id = "image-square",
+				imageDescription = "",
+				imageFileName = "analytics-cloud-hero-image");
+		}
+
+		task ("Take down the naturalWidth and naturalHeight of image") {
+			var naturalWidth = selenium.getAttribute("//img[contains(@data-lfr-editable-id,'image-square') and contains(@src,'analytics-cloud-hero-image')]@naturalWidth");
+			var naturalHeight = selenium.getAttribute("//img[contains(@data-lfr-editable-id,'image-square') and contains(@src,'analytics-cloud-hero-image')]@naturalHeight");
+		}
+
+		task ("Edit the image via the image editor on Page Content panel") {
+			PageEditor.gotoEllipsisMenuItemInPageContentPanel(
+				itemName = "analytics-cloud-hero-image.png",
+				menuItem = "Edit Image");
+
+			ImageEditor.resizeImage(dimension = "16:9");
+
+			ImageEditor.saveChanges();
+		}
+
+		task ("Take down the new naturalWidth and naturalHeight of image") {
+			PageEditor.gotoTab(tabName = "Browser");
+
+			WaitForElementPresent(
+				key_resolutionLabel = "Width",
+				locator1 = "PageEditor#IMAGE_RESOLUTION_LABEL");
+
+			var editedNaturalWidth = selenium.getAttribute("//img[contains(@data-lfr-editable-id,'image-square') and contains(@src,'analytics-cloud-hero-image')]@naturalWidth");
+			var editedNaturalHeight = selenium.getAttribute("//img[contains(@data-lfr-editable-id,'image-square') and contains(@src,'analytics-cloud-hero-image')]@naturalHeight");
+		}
+
+		task ("View the naturalWidth doesn't change") {
+			StringUtil.assertEquals(${naturalWidth}, ${editedNaturalWidth});
+		}
+
+		task ("View the naturalHeight becomes smaller") {
+			TestUtils.isGreaterThan(
+				actual = ${naturalHeight},
+				expected = ${editedNaturalHeight});
 
 			PageEditor.publish();
 		}
 
-		task ("View web content displayed at Title List in Asset Publisher at view mode") {
+		task ("Take down the new naturalWidth and naturalHeight of image at view mode") {
 			ContentPagesNavigator.openViewContentPage(
 				pageName = "Test Content Page Name",
 				siteName = ${randomSiteName});
 
-			AssertTextEquals.assertText(
-				locator1 = "Relatedassets#ASSET_ROW_ENTRY_TITLE",
-				rowNumber = 1,
-				value1 = "Web Content Title");
+			PageEditor.viewFragmentEditableImage(
+				id = "image-square",
+				imageDescription = "",
+				imageFileName = "analytics-cloud-hero-image");
+
+			var editedNaturalWidth = selenium.getAttribute("//img[contains(@data-lfr-editable-id,'image-square') and contains(@src,'analytics-cloud-hero-image')]@naturalWidth");
+			var editedNaturalHeight = selenium.getAttribute("//img[contains(@data-lfr-editable-id,'image-square') and contains(@src,'analytics-cloud-hero-image')]@naturalHeight");
 		}
 
-		task ("Execute Clean Up Orphaned Theme Portlet Preferences in Server Administration") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Server Administration");
-
-			ServerAdministration.executeServerResourcesActions(actionsDescription = "Clean up orphaned theme portlet preferences.");
+		task ("View the naturalWidth doesn't change") {
+			StringUtil.assertEquals(${naturalWidth}, ${editedNaturalWidth});
 		}
 
-		task ("View web content displayed at Title List in Asset Publisher at view mode") {
-			ContentPagesNavigator.openViewContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			AssertTextEquals.assertText(
-				locator1 = "Relatedassets#ASSET_ROW_ENTRY_TITLE",
-				rowNumber = 1,
-				value1 = "Web Content Title");
-		}
-
-		task ("View web content displayed at Title List in Asset Publisher at edit mode") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			AssertTextEquals.assertText(
-				locator1 = "Relatedassets#ASSET_ROW_ENTRY_TITLE",
-				rowNumber = 1,
-				value1 = "Web Content Title");
+		task ("View the naturalHeight becomes smaller") {
+			TestUtils.isGreaterThan(
+				actual = ${naturalHeight},
+				expected = ${editedNaturalHeight});
 		}
 	}
 
@@ -1570,53 +1182,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-145292. The user could view new icons on dropdown menu of page editor."
-	@priority = 4
-	test ViewDropdownIconsInPageEditor {
-		task ("Given a Page designer has a content page with a Collection Display fragment") {
-			JSONAssetlist.addDynamicAssetListEntryWithItemType(
-				groupName = ${randomSiteName},
-				itemSubtype = "All Subtypes",
-				itemType = "Web Content Article",
-				title = "Dynamic Collection");
-
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.addFragment(
-				collectionName = "Content Display",
-				fragmentName = "Collection Display");
-		}
-
-		task ("When the Page designer opens the dropdown menu of Collection Display topper") {
-			PageEditor.clickConfigurableField(fragmentName = "Collection Display");
-
-			Click.waitForMenuToggleJSClick(
-				key_fragmentName = "Collection Display",
-				locator1 = "Fragment#FRAGMENT_HEADER_ELLIPSIS");
-		}
-
-		task ("Then the Page designer can see the new icons on the dropdown menu") {
-			DropdownMenuItem.viewIcon(iconList = "hidden,copy,trash");
-		}
-
-		task ("When the Page designer opens the dropdown menu of Collection after selecting a dynamic collection") {
-			PageEditor.editCollectionDisplay(
-				assetListName = "Dynamic Collection",
-				fragmentName = "Collection Display");
-
-			Click.clickNoWaitForVisible(
-				key_fieldLabel = "Collection",
-				key_text = "ellipsis-v",
-				locator1 = "Icon#ANY_ITEM_SELECTOR");
-		}
-
-		task ("Then the Page designer can see the new icons on the dropdown menu") {
-			DropdownMenuItem.viewIcon(iconList = "pencil,list-ul,plus,password-policies,trash");
-		}
-	}
-
 	@description = "This is a test for LPS-81870. In edit mode the page should still show the elements of the page that are not from the page itself, like the header, footer, or elements defined by the theme."
 	@priority = 5
 	@uitest
@@ -1749,6 +1314,8 @@ definition {
 			for (var fragmentName : list "Heading,Button,Paragraph") {
 				PageEditor.clickConfigurableField(fragmentName = ${fragmentName});
 
+				PageEditor.gotoTab(tabName = "Browser");
+
 				AssertVisible(
 					key_fragmentName = ${fragmentName},
 					locator1 = "Fragment#FRAGMENT_HEADER_ELLIPSIS");
@@ -1756,26 +1323,95 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-167430. Fragment Menu difficult to Display"
+	@description = "This is a test for LPS-158746. The favorite fragment is hidden if it is not allowed on master page."
 	@priority = 3
-	test ViewEllipsisIconWhenHoverOnBodyOfWidget {
-		task ("Given a content page with a Search Results widget") {
+	test ViewFavoriteFragmentIsHiddenWhenItIsNotAllowedOnMasterPage {
+		task ("Given go to edit content page") {
 			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
+				pageName = "Test Page Name",
+				siteName = ${randomSiteName});
+		}
+
+		task ("And choose Button and Card fragment as Favorites") {
+			MouseOver(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+
+			Click.clickNoMouseOver(
+				ariaLabel = "Mark Button as Favorite",
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_BUTTON_WITH_ARIA_LABEL");
+
+			AssertElementPresent(
+				key_collectionName = "Favorites",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+
+			MouseOver(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Card",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+
+			Click.clickNoMouseOver(
+				ariaLabel = "Mark Card as Favorite",
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Card",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT_BUTTON_WITH_ARIA_LABEL");
+
+			AssertElementPresent(
+				key_collectionName = "Favorites",
+				key_fragmentName = "Card",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+		}
+
+		task ("When not allow Button fragment on master page") {
+			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
+				groupName = ${randomSiteName},
+				masterPageTemplateEntryName = "Custom Masters Page Template");
+
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = ${siteURLKey});
+
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+
+			AssertClick(
+				locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
+				value1 = "Configure Allowed Fragments");
+
+			SelectFrame(value1 = "relative=top");
+
+			Uncheck.uncheckToggleSwitch(
+				key_fragmentName = "Button",
+				locator1 = "Checkbox#ALLOWED_FRAGMENT");
+
+			Button.clickSave();
+
+			Button.clickNoError(button = "Publish Master");
+
+			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
+
+			ContentPages.addPage(
+				masterLayoutName = "Custom Masters Page Template",
+				pageName = "Test Page Name 2");
+
+			PageEditor.publish();
+		}
+
+		task ("Then Button fragment is hidden on conetent page") {
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Page Name 2",
 				siteName = ${randomSiteName});
 
-			PageEditor.addWidget(portletName = "Search Results");
-		}
+			AssertElementNotPresent(
+				key_collectionName = "Favorites",
+				key_fragmentName = "Button",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
 
-		task ("When the mouse passes over the fragment") {
-			MouseOver(
-				fragmentName = "Search",
-				index = 1,
-				locator1 = "Fragment#FRAGMENT_BODY");
-		}
-
-		task ("Then you should easily see the ellipsis icon") {
-			AssertVisible(locator1 = "Portlet#OPTIONS_ICON");
+			AssertElementPresent(
+				key_collectionName = "Favorites",
+				key_fragmentName = "Card",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
 		}
 	}
 
@@ -1817,6 +1453,8 @@ definition {
 				locator1 = "Fragment#FRAGMENT_LABEL");
 
 			PageEditor.clickConfigurableField(fragmentName = "Card");
+
+			PageEditor.gotoTab(tabName = "Browser");
 
 			AssertElementNotPresent(
 				key_fragmentName = "Card",
@@ -1867,6 +1505,8 @@ definition {
 
 			PageEditor.clickConfigurableField(fragmentName = "Blogs");
 
+			PageEditor.gotoTab(tabName = "Browser");
+
 			AssertElementNotPresent(
 				key_fragmentName = "Blogs",
 				locator1 = "Fragment#FRAGMENT_HEADER_INSET_STYLE");
@@ -1881,283 +1521,6 @@ definition {
 			AssertElementPresent(
 				key_fragmentName = "Blogs",
 				locator1 = "Fragment#FRAGMENT_HEADER_INSET_STYLE");
-		}
-	}
-
-	@description = "This is for LPS-106813. Widgets inherited from content page template will inherit permissions set in content page template."
-	@priority = 4
-	test ViewPermissionsOfAssetPublisherInheritedFromContentPageTemplate {
-		task ("Add a content page template") {
-			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
-				groupName = ${randomSiteName},
-				layoutPageTemplateCollectionName = "Page Template Collection");
-
-			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = ${randomSiteName},
-				layoutPageTemplateCollectionName = "Page Template Collection",
-				layoutPageTemplateEntryName = "Page Template Name",
-				layoutPageTemplateStatus = "Draft",
-				layoutPageTemplateType = "Content Page Template");
-
-			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = ${siteURLKey});
-
-			Navigator.gotoNavNested(navNested = "Page Template Collection");
-
-			PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "Page Template Name");
-
-			PageEditor.assertFragmentSidebarLoaded();
-		}
-
-		task ("Add an Asset Publisher widget to the content page template") {
-			PageEditor.addWidget(portletName = "Asset Publisher");
-		}
-
-		task ("Configure permissions of Asset Publisher") {
-			MouseOver.mouseOverNotVisible(
-				key_portletName = "Asset Publisher",
-				locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
-
-			Click.waitForMenuToggleJSClick(
-				key_portletName = "Asset Publisher",
-				locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
-
-			MenuItem.click(menuItem = "Permissions");
-
-			IFrame.selectPermissionsFrame();
-
-			AssertChecked.assertCheckedNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			Uncheck.uncheckNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			Button.clickSave();
-
-			Alert.viewSuccessMessage();
-
-			SelectFrameTop();
-
-			Click(locator1 = "Icon#CLOSE");
-
-			PageEditor.publish();
-		}
-
-		task ("Add a page based on content page template") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
-
-			ContentPages.addPage(
-				collectionName = "Page Template Collection",
-				pageName = "Test Page Name",
-				pageTemplateName = "Page Template Name");
-		}
-
-		task ("View inherited permissions of Asset Publisher") {
-			MouseOver.mouseOverNotVisible(
-				key_portletName = "Asset Publisher",
-				locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
-
-			Click.waitForMenuToggleJSClick(
-				key_portletName = "Asset Publisher",
-				locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
-
-			MenuItem.click(menuItem = "Permissions");
-
-			IFrame.selectPermissionsFrame();
-
-			AssertNotChecked.assertNotCheckedNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-		}
-	}
-
-	@description = "This is for LPS-106813. Widgets inherited from custom master will inherit permissions set in custom master."
-	@priority = 4
-	test ViewPermissionsOfAssetPublisherInheritedFromMasterPageTemplate {
-		task ("Add a web content") {
-			JSONWebcontent.addWebContent(
-				content = "WC WebContent Content",
-				groupName = ${randomSiteName},
-				title = "WC WebContent Title");
-		}
-
-		task ("Add a custom master") {
-			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
-				groupName = ${randomSiteName},
-				masterPageTemplateEntryName = "Custom Masters Page Template");
-
-			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = ${siteURLKey});
-		}
-
-		task ("Add an Asset Publisher widget to the master page template") {
-			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
-
-			PageEditor.addWidget(
-				dropTarget = "Header",
-				portletName = "Asset Publisher",
-				scope = "Master");
-		}
-
-		task ("Configure the permissions of Asset Publisher") {
-			MouseOver.mouseOverNotVisible(
-				key_portletName = "Asset Publisher",
-				locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
-
-			Click.waitForMenuToggleJSClick(
-				key_portletName = "Asset Publisher",
-				locator1 = "Portlet#SPECIFIC_BORDERLESS_ELLIPSIS_ICON");
-
-			AssertVisible(
-				key_menuItem = "Permissions",
-				locator1 = "MenuItem#ANY_MENU_ITEM");
-
-			MenuItem.click(menuItem = "Permissions");
-
-			IFrame.selectPermissionsFrame();
-
-			AssertChecked.assertCheckedNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			Uncheck.uncheckNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			AssertNotChecked.assertNotCheckedNotVisible(
-				key_roleTitle = "guest",
-				locator1 = "Permissions#CONFIGURATION_PERMISSIONS_VIEW_CHECKBOX");
-
-			Button.clickSave();
-
-			Alert.viewSuccessMessage();
-
-			SelectFrameTop();
-
-			Click(locator1 = "Icon#CLOSE");
-
-			MastersPageTemplates.publishMaster();
-		}
-
-		task ("Apply the master page template to page") {
-			ContentPagesNavigator.openEditContentPage(
-				pageName = "Test Content Page Name",
-				siteName = ${randomSiteName});
-
-			PageEditor.gotoTab(tabName = "Page Design Options");
-
-			Navigator.gotoNavTab(navTab = "Master");
-
-			MastersPageTemplates.selectMasterViaPageDesignOptions(masterLayoutName = "Custom Masters Page Template");
-
-			AssertVisible(
-				key_assetTitle = "WC WebContent Title",
-				locator1 = "AP#ASSET_ABSTRACT_TITLE");
-
-			PageEditor.publish();
-		}
-
-		task ("Assert the Asset Publisher is invisible to Guest") {
-			PagesAdmin.openPagesAdmin(siteURLKey = ${siteURLKey});
-
-			User.logoutPG();
-
-			Navigator.openSiteURL(siteName = ${randomSiteName});
-
-			AssertElementNotPresent(
-				key_assetTitle = "WC WebContent Title",
-				locator1 = "AP#ASSET_ABSTRACT_TITLE");
-
-			Alert.viewErrorMessage(errorMessage = "You do not have the roles required to access this portlet.");
-		}
-	}
-
-	@description = "This is a test for LPS-162323. The pages propagated from a Site Template should refer to the master page from site."
-	@priority = 4
-	test ViewReferredMasterPageOfPagesPropagatedFromSiteTemplate {
-		var siteName = StringUtil.randomString(8);
-
-		var siteURLKey = StringUtil.toLowerCase(${siteName});
-		var siteTemplateName = StringUtil.randomString(8);
-
-		task ("Given a page creator has a site with a page from a site template") {
-			task ("Add a site template") {
-				JSONSiteTemplate.addSiteTemplate(
-					description = "Site description",
-					siteTemplateName = ${siteTemplateName});
-
-				SiteTemplatesNavigator.openSiteTemplatesAdmin();
-
-				LexiconEntry.gotoEntryMenuItem(
-					menuItem = "Manage",
-					rowEntry = ${siteTemplateName});
-			}
-
-			task ("Add a master page template") {
-				ProductMenu.gotoPortlet(
-					category = "Design",
-					portlet = "Page Templates");
-
-				MastersPageTemplatesAdmin.addMasters(masterLayoutName = "Custom Masters Page Template");
-
-				MastersPageTemplates.publishMaster();
-			}
-
-			task ("Add a page based on master page in the site template") {
-				SiteTemplates.addSitePageViaSiteTemplateCP(
-					masterLayoutName = "Custom Masters Page Template",
-					pageName = "Test Page Name 1",
-					sitePageType = "Content Page",
-					siteTemplateName = ${siteTemplateName});
-
-				PageEditor.publish();
-			}
-
-			task ("Add a site based on site template") {
-				HeadlessSite.addSite(
-					siteName = ${siteName},
-					templateName = ${siteTemplateName},
-					templateType = "Site Template");
-			}
-
-			task ("Add another page based on master page in the site template") {
-				SiteTemplates.addSitePageViaSiteTemplateCP(
-					masterLayoutName = "Custom Masters Page Template",
-					pageName = "Test Page Name 2",
-					sitePageType = "Content Page",
-					siteTemplateName = ${siteTemplateName});
-
-				PageEditor.publish();
-			}
-		}
-
-		task ("When the page creator makes some changes in master page from site") {
-			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = ${siteName});
-
-			MastersPageTemplatesAdmin.gotoMastersEllipsisItem(
-				item = "Edit",
-				masterLayoutName = "Custom Masters Page Template");
-
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				dropTarget = "Header",
-				fragmentName = "Heading",
-				scope = "Master");
-
-			MastersPageTemplates.propagateChange();
-		}
-
-		task ("Then the page creator can see changes on propagated pages") {
-			for (var pageName : list "Test Page Name 1,Test Page Name 2") {
-				ContentPagesNavigator.openViewContentPage(
-					pageName = ${pageName},
-					siteName = ${siteName});
-
-				ContentPages.viewFragmentText(
-					fragmentName = "heading",
-					id = "element-text",
-					text = "Heading Example");
-			}
 		}
 	}
 
@@ -2189,7 +1552,7 @@ definition {
 
 					Type(
 						ariaLabel = "Spacer ${i}",
-						locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+						locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 						value1 = ${tokenValue});
 
 					StyleBooks.clickManagementBar();
@@ -2205,7 +1568,7 @@ definition {
 
 				Type(
 					ariaLabel = "Spacer 3",
-					locator1 = "TextInput#ANY_WITH_AIRA_LABEL",
+					locator1 = "TextInput#ANY_WITH_ARIA_LABEL",
 					value1 = "Auto");
 
 				StyleBooks.clickManagementBar();
@@ -2249,8 +1612,6 @@ definition {
 
 		task ("When the page designer applies the new style book to content page") {
 			PageEditor.gotoTab(tabName = "Page Design Options");
-
-			Navigator.gotoNavTab(navTab = "Style Book");
 
 			StyleBooks.selectStyleBookViaPageDesignOptions(styleBookName = "Test Style Book Name");
 		}

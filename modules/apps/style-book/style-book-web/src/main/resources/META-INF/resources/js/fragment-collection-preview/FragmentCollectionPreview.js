@@ -8,8 +8,6 @@ import React, {useMemo} from 'react';
 
 import {FragmentPreview} from './FragmentPreview';
 
-import '../../css/FragmentCollectionPreview.scss';
-
 const FRAGMENT_COLLECTION_BLOCKLIST = {
 	BASIC_COMPONENT: [
 		'BASIC_COMPONENT-external-video',
@@ -31,7 +29,7 @@ export default function FragmentCollectionPreview({
 		return blocklist
 			? fragments.filter(
 					(fragment) => !blocklist.includes(fragment.fragmentEntryKey)
-			  )
+				)
 			: fragments;
 	}, [fragmentCollectionKey, fragments]);
 

@@ -6,11 +6,11 @@ definition {
 	property custom.properties = "feature.flag.LPS-178642=true";
 	property database.partition.enabled = "true";
 	property database.types = "mysql";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 	property timeout.explicit.wait = "180";
 
 	setUp {
@@ -22,19 +22,19 @@ definition {
 			Page.assertNodePortPG(nodePort = 8080);
 
 			User.logoutPG(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			User.loginPG(
 				nodePort = 9080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			Page.assertNodePortPG(nodePort = 9080);
 
 			User.logoutPG(
 				nodePort = 9080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -58,7 +58,7 @@ definition {
 
 		JSONObject.deleteAllCustomObjects(
 			userEmailAddress = "test@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
@@ -71,8 +71,8 @@ definition {
 	test CanAddAPIApplicationWithCluster {
 		property app.server.bundles.size = "1";
 		property cluster.enabled = "true";
+		property database.types = "mysql, postgresql";
 		property minimum.slave.ram = "24";
-		property portal.acceptance = "true";
 		property remote.elasticsearch.enabled = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -91,12 +91,12 @@ definition {
 				title = "My-app");
 
 			SchemaAPI.relateRequestSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				requestSchemaErc = "testSchema");
+				endpointErc = "My-app_testendpoint",
+				requestSchemaErc = "My-app_testSchema");
 
 			SchemaAPI.relateResponseSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
-				responseSchemaErc = "testSchema");
+				endpointErc = "My-app_testendpoint",
+				responseSchemaErc = "My-app_testSchema");
 		}
 
 		task ("When executing the endpoint on second node") {
@@ -117,7 +117,7 @@ definition {
 		task ("And Then api application present in API Builder of second node") {
 			User.loginPG(
 				nodePort = 9080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			ApplicationsMenu.gotoPortlet(
@@ -136,7 +136,6 @@ definition {
 		property app.server.bundles.size = "1";
 		property cluster.enabled = "true";
 		property minimum.slave.ram = "24";
-		property portal.acceptance = "true";
 		property remote.elasticsearch.enabled = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
@@ -156,14 +155,14 @@ definition {
 				title = "My-app");
 
 			SchemaAPI.relateRequestSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
+				endpointErc = "My-app_testendpoint",
 				portalURL = "http://localhost:9080",
-				requestSchemaErc = "testSchema");
+				requestSchemaErc = "My-app_testSchema");
 
 			SchemaAPI.relateResponseSchemaToEndpointByErc(
-				endpointErc = "testendpoint",
+				endpointErc = "My-app_testendpoint",
 				portalURL = "http://localhost:9080",
-				responseSchemaErc = "testSchema");
+				responseSchemaErc = "My-app_testSchema");
 		}
 
 		task ("When executing the endpoint on the default node") {
@@ -184,7 +183,7 @@ definition {
 		task ("And Then api application present in API Builder of the default node") {
 			User.loginPG(
 				nodePort = 8080,
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 
 			ApplicationsMenu.gotoPortlet(

@@ -49,6 +49,13 @@ public interface CPOptionCategoryService extends BaseService {
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.commerce.product.service.impl.CPOptionCategoryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the cp option category remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CPOptionCategoryServiceUtil} if injection and service tracking are not available.
 	 */
 	public CPOptionCategory addCPOptionCategory(
+			String externalReferenceCode, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, double priority, String key,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public CPOptionCategory addOrUpdateCPOptionCategory(
+			String externalReferenceCode, long cpOptionCategoryId,
 			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
 			double priority, String key, ServiceContext serviceContext)
 		throws PortalException;
@@ -61,7 +68,17 @@ public interface CPOptionCategoryService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPOptionCategory fetchCPOptionCategoryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public CPOptionCategory getCPOptionCategory(long cpOptionCategoryId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public CPOptionCategory getCPOptionCategoryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	/**
@@ -77,8 +94,9 @@ public interface CPOptionCategoryService extends BaseService {
 		throws PortalException;
 
 	public CPOptionCategory updateCPOptionCategory(
-			long cpOptionCategoryId, Map<Locale, String> titleMap,
-			Map<Locale, String> descriptionMap, double priority, String key)
+			String externalReferenceCode, long cpOptionCategoryId,
+			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
+			double priority, String key)
 		throws PortalException;
 
 }

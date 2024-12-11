@@ -7,6 +7,7 @@ package com.liferay.object.service.impl;
 
 import com.liferay.dynamic.data.mapping.expression.CreateExpressionRequest;
 import com.liferay.dynamic.data.mapping.expression.DDMExpressionFactory;
+import com.liferay.notification.constants.NotificationConstants;
 import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.notification.service.NotificationTemplateLocalService;
 import com.liferay.object.action.executor.ObjectActionExecutor;
@@ -17,10 +18,11 @@ import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.exception.DuplicateObjectActionExternalReferenceCodeException;
+import com.liferay.object.exception.LockedObjectActionException;
+import com.liferay.object.exception.ObjectActionActiveException;
 import com.liferay.object.exception.ObjectActionConditionExpressionException;
 import com.liferay.object.exception.ObjectActionErrorMessageException;
 import com.liferay.object.exception.ObjectActionExecutorKeyException;
-import com.liferay.object.exception.ObjectActionLabelException;
 import com.liferay.object.exception.ObjectActionNameException;
 import com.liferay.object.exception.ObjectActionParametersException;
 import com.liferay.object.exception.ObjectActionSystemException;
@@ -35,8 +37,10 @@ import com.liferay.object.scope.ObjectDefinitionScoped;
 import com.liferay.object.scripting.exception.ObjectScriptingException;
 import com.liferay.object.scripting.validator.ObjectScriptingValidator;
 import com.liferay.object.service.ObjectFieldLocalService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.base.ObjectActionLocalServiceBaseImpl;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
+import com.liferay.object.tree.ObjectDefinitionTreeFactory;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
@@ -45,6 +49,7 @@ import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.lock.LockManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.messaging.DestinationNames;
@@ -58,12 +63,15 @@ import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
+import com.liferay.portal.security.script.management.configuration.helper.ScriptManagementConfigurationHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -96,7 +104,7 @@ public class ObjectActionLocalServiceImpl
 		throws PortalException {
 
 		_validateInvokerBundle(
-			"Only allowed bundles can create system object actions", system);
+			"Only allowed bundles can add system object actions", system);
 
 		ObjectDefinition objectDefinition =
 			_objectDefinitionPersistence.findByPrimaryKey(objectDefinitionId);
@@ -106,7 +114,6 @@ public class ObjectActionLocalServiceImpl
 			objectDefinitionId);
 
 		_validateErrorMessage(errorMessageMap, objectActionTriggerKey);
-		_validateLabel(labelMap);
 		_validateName(0, objectDefinitionId, name);
 		_validateObjectActionExecutorKey(
 			objectActionExecutorKey, objectDefinition);
@@ -137,7 +144,10 @@ public class ObjectActionLocalServiceImpl
 		objectAction.setDescription(description);
 		objectAction.setErrorMessageMap(
 			errorMessageMap, LocaleUtil.getSiteDefault());
-		objectAction.setLabelMap(labelMap, LocaleUtil.getSiteDefault());
+		objectAction.setLabelMap(
+			_populateLabelMap(
+				labelMap, name, objectDefinition.getDefaultLocale()),
+			objectDefinition.getDefaultLocale());
 		objectAction.setName(name);
 		objectAction.setObjectActionExecutorKey(objectActionExecutorKey);
 		objectAction.setObjectActionTriggerKey(objectActionTriggerKey);
@@ -153,8 +163,18 @@ public class ObjectActionLocalServiceImpl
 				ObjectActionTriggerConstants.KEY_STANDALONE)) {
 
 			try {
+				if (objectDefinition.isRootDescendantNode()) {
+					objectDefinition =
+						_objectDefinitionPersistence.findByPrimaryKey(
+							objectDefinition.getRootObjectDefinitionId());
+				}
+
 				ObjectDefinitionResourcePermissionUtil.populateResourceActions(
 					objectActionLocalService, objectDefinition,
+					_objectDefinitionPersistence,
+					new ObjectDefinitionTreeFactory(
+						_objectDefinitionPersistence,
+						_objectRelationshipLocalService),
 					_portletLocalService, _resourceActions);
 			}
 			catch (Exception exception) {
@@ -287,6 +307,14 @@ public class ObjectActionLocalServiceImpl
 	}
 
 	@Override
+	public List<ObjectAction> getObjectActions(
+		boolean active, String objectActionExecutorKey) {
+
+		return objectActionPersistence.findByA_OAEK(
+			active, objectActionExecutorKey);
+	}
+
+	@Override
 	public List<ObjectAction> getObjectActions(long objectDefinitionId) {
 		return objectActionPersistence.findByObjectDefinitionId(
 			objectDefinitionId);
@@ -314,12 +342,18 @@ public class ObjectActionLocalServiceImpl
 		ObjectAction objectAction = objectActionPersistence.findByPrimaryKey(
 			objectActionId);
 
+		ObjectDefinition objectDefinition =
+			_objectDefinitionPersistence.findByPrimaryKey(
+				objectAction.getObjectDefinitionId());
+
 		if (objectAction.isSystem() &&
 			!ObjectDefinitionUtil.isInvokerBundleAllowed()) {
 
-			_validateLabel(labelMap);
-
-			objectAction.setLabelMap(labelMap, LocaleUtil.getSiteDefault());
+			objectAction.setLabelMap(
+				_populateLabelMap(
+					labelMap, objectAction.getName(),
+					objectDefinition.getDefaultLocale()),
+				objectDefinition.getDefaultLocale());
 
 			return objectActionPersistence.update(objectAction);
 		}
@@ -327,17 +361,10 @@ public class ObjectActionLocalServiceImpl
 		_validateExternalReferenceCode(
 			externalReferenceCode, objectAction.getObjectActionId(),
 			objectAction.getCompanyId(), objectAction.getObjectDefinitionId());
-
+		_validateActive(active, objectAction, objectDefinition);
 		_validateErrorMessage(errorMessageMap, objectActionTriggerKey);
-		_validateLabel(labelMap);
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionPersistence.findByPrimaryKey(
-				objectAction.getObjectDefinitionId());
-
 		_validateObjectActionExecutorKey(
 			objectActionExecutorKey, objectDefinition);
-
 		_validateParametersUnicodeProperties(
 			objectAction.getCompanyId(), objectAction.getUserId(),
 			conditionExpression, objectActionExecutorKey,
@@ -352,7 +379,15 @@ public class ObjectActionLocalServiceImpl
 		objectAction.setDescription(description);
 		objectAction.setErrorMessageMap(
 			errorMessageMap, LocaleUtil.getSiteDefault());
-		objectAction.setLabelMap(labelMap, LocaleUtil.getSiteDefault());
+
+		if (objectDefinition.isApproved()) {
+			objectAction.setLabelMap(
+				_populateLabelMap(
+					labelMap, objectAction.getName(),
+					objectDefinition.getDefaultLocale()),
+				objectDefinition.getDefaultLocale());
+		}
+
 		objectAction.setObjectActionExecutorKey(objectActionExecutorKey);
 		objectAction.setParameters(parametersUnicodeProperties.toString());
 		objectAction.setStatus(ObjectActionConstants.STATUS_NEVER_RAN);
@@ -366,6 +401,10 @@ public class ObjectActionLocalServiceImpl
 		_validateObjectActionTriggerKey(
 			conditionExpression, objectActionTriggerKey, objectDefinition);
 
+		objectAction.setLabelMap(
+			_populateLabelMap(
+				labelMap, name, objectDefinition.getDefaultLocale()),
+			objectDefinition.getDefaultLocale());
 		objectAction.setName(name);
 		objectAction.setObjectActionTriggerKey(objectActionTriggerKey);
 
@@ -374,15 +413,119 @@ public class ObjectActionLocalServiceImpl
 
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
-	public ObjectAction updateStatus(long objectActionId, int status)
+	public synchronized ObjectAction updateStatus(
+			long objectActionId, int status)
 		throws PortalException {
 
-		ObjectAction objectAction = objectActionPersistence.findByPrimaryKey(
-			objectActionId);
+		boolean locked = LockManagerUtil.isLocked(
+			ObjectAction.class.getName(), objectActionId);
 
-		objectAction.setStatus(status);
+		if (locked) {
+			throw new LockedObjectActionException(
+				String.format(
+					"Unable to update the status of object action %d because " +
+						"it is being updated by another thread",
+					objectActionId));
+		}
 
-		return objectActionPersistence.update(objectAction);
+		try {
+			LockManagerUtil.lock(
+				ObjectAction.class.getName(), String.valueOf(objectActionId),
+				PortalUUIDUtil.generate());
+
+			ObjectAction objectAction =
+				objectActionPersistence.findByPrimaryKey(objectActionId);
+
+			objectAction.setStatus(status);
+
+			return objectActionPersistence.update(objectAction);
+		}
+		finally {
+			LockManagerUtil.unlock(
+				ObjectAction.class.getName(), objectActionId);
+		}
+	}
+
+	private boolean _isUsePreferredLanguageForGuestsSupported(
+			String objectActionExecutorKey, String objectActionTriggerKey,
+			UnicodeProperties parametersUnicodeProperties)
+		throws PortalException {
+
+		if (!Objects.equals(
+				objectActionExecutorKey,
+				ObjectActionExecutorConstants.KEY_NOTIFICATION)) {
+
+			return false;
+		}
+
+		NotificationTemplate notificationTemplate =
+			_notificationTemplateLocalService.getNotificationTemplate(
+				GetterUtil.getLong(
+					parametersUnicodeProperties.get("notificationTemplateId")));
+
+		if (Objects.equals(
+				notificationTemplate.getType(),
+				NotificationConstants.TYPE_EMAIL) &&
+			(Objects.equals(
+				objectActionTriggerKey,
+				ObjectActionTriggerConstants.KEY_ON_AFTER_ADD) ||
+			 Objects.equals(
+				 objectActionTriggerKey,
+				 ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE))) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private Map<Locale, String> _populateLabelMap(
+		Map<Locale, String> labelMap, String name, Locale locale) {
+
+		if ((labelMap == null) || labelMap.isEmpty()) {
+			return HashMapBuilder.put(
+				locale, name
+			).build();
+		}
+
+		if (Validator.isNotNull(labelMap.get(locale))) {
+			return labelMap;
+		}
+
+		if (labelMap.size() == 1) {
+			for (Map.Entry<Locale, String> entry : labelMap.entrySet()) {
+				labelMap.put(locale, entry.getValue());
+			}
+
+			return labelMap;
+		}
+
+		labelMap.put(locale, name);
+
+		return labelMap;
+	}
+
+	private void _validateActive(
+			boolean active, ObjectAction objectAction,
+			ObjectDefinition objectDefinition)
+		throws PortalException {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPS-187142") ||
+			objectDefinition.isRootNode()) {
+
+			return;
+		}
+
+		if (active &&
+			StringUtil.equals(
+				objectAction.getObjectActionTriggerKey(),
+				ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE)) {
+
+			throw new ObjectActionActiveException(
+				"Object action trigger is " +
+					ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE +
+						" but object definition is not a root node");
+		}
 	}
 
 	private void _validateErrorMessage(
@@ -429,17 +572,6 @@ public class ObjectActionLocalServiceImpl
 		}
 
 		throw new ObjectActionSystemException(message);
-	}
-
-	private void _validateLabel(Map<Locale, String> labelMap)
-		throws PortalException {
-
-		Locale locale = LocaleUtil.getSiteDefault();
-
-		if ((labelMap == null) || Validator.isNull(labelMap.get(locale))) {
-			throw new ObjectActionLabelException(
-				"Label is null for locale " + locale.getDisplayName());
-		}
 	}
 
 	private void _validateName(
@@ -489,6 +621,16 @@ public class ObjectActionLocalServiceImpl
 			return;
 		}
 
+		if (Objects.equals(
+				ObjectActionExecutorConstants.KEY_GROOVY,
+				objectActionExecutorKey) &&
+			!_scriptManagementConfigurationHelper.
+				isAllowScriptContentToBeExecutedOrIncluded()) {
+
+			throw new ObjectActionExecutorKeyException(
+				"Groovy script based object actions are not allowed");
+		}
+
 		ObjectActionExecutor objectActionExecutor =
 			_objectActionExecutorRegistry.getObjectActionExecutor(
 				objectDefinition.getCompanyId(), objectActionExecutorKey);
@@ -531,7 +673,8 @@ public class ObjectActionLocalServiceImpl
 			ObjectDefinition objectDefinition)
 		throws PortalException {
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-187142") &&
+		if (FeatureFlagManagerUtil.isEnabled(
+				objectDefinition.getCompanyId(), "LPS-187142") &&
 			StringUtil.equals(
 				objectActionTriggerKey,
 				ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE) &&
@@ -670,8 +813,7 @@ public class ObjectActionLocalServiceImpl
 					ObjectActionExecutorConstants.KEY_ADD_OBJECT_ENTRY) &&
 				 (!objectDefinition.isActive() ||
 				  !objectDefinition.isApproved()) &&
-				 !(objectDefinition.isModifiable() &&
-				   objectDefinition.isSystem()))) {
+				 !objectDefinition.isModifiableAndSystem())) {
 
 				errorMessageKeys.put("objectDefinitionId", "invalid");
 			}
@@ -736,6 +878,17 @@ public class ObjectActionLocalServiceImpl
 								getNotificationTemplateId()));
 				}
 			}
+
+			if (Objects.isNull(
+					parametersUnicodeProperties.get(
+						"usePreferredLanguageForGuests")) &&
+				_isUsePreferredLanguageForGuestsSupported(
+					objectActionExecutorKey, objectActionTriggerKey,
+					parametersUnicodeProperties)) {
+
+				parametersUnicodeProperties.put(
+					"usePreferredLanguageForGuests", "true");
+			}
 		}
 		else if (Objects.equals(
 					objectActionExecutorKey,
@@ -744,6 +897,18 @@ public class ObjectActionLocalServiceImpl
 			if (Validator.isNull(parametersUnicodeProperties.get("url"))) {
 				errorMessageKeys.put("url", "required");
 			}
+		}
+
+		if (!Objects.isNull(
+				parametersUnicodeProperties.get(
+					"usePreferredLanguageForGuests")) &&
+			!_isUsePreferredLanguageForGuestsSupported(
+				objectActionExecutorKey, objectActionTriggerKey,
+				parametersUnicodeProperties)) {
+
+			throw new ObjectActionParametersException(
+				"The parameter \"usePreferredLanguageForGuests\" is invalid " +
+					"for this object action");
 		}
 
 		if (MapUtil.isNotEmpty(errorMessageKeys)) {
@@ -768,7 +933,10 @@ public class ObjectActionLocalServiceImpl
 			ObjectField objectField = _objectFieldLocalService.fetchObjectField(
 				objectDefinitionId, name);
 
-			if (objectField == null) {
+			if ((objectField == null) ||
+				objectField.compareBusinessType(
+					ObjectFieldConstants.BUSINESS_TYPE_AUTO_INCREMENT)) {
+
 				predefinedValuesErrorMessageKeys.put(name, "invalid");
 
 				continue;
@@ -870,6 +1038,9 @@ public class ObjectActionLocalServiceImpl
 	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Reference
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
+
+	@Reference
 	private ObjectScriptingValidator _objectScriptingValidator;
 
 	@Reference
@@ -877,6 +1048,10 @@ public class ObjectActionLocalServiceImpl
 
 	@Reference
 	private ResourceActions _resourceActions;
+
+	@Reference
+	private ScriptManagementConfigurationHelper
+		_scriptManagementConfigurationHelper;
 
 	@Reference
 	private UserLocalService _userLocalService;

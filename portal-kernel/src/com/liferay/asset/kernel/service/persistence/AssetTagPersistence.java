@@ -811,56 +811,6 @@ public interface AssetTagPersistence
 	public int countByName(String[] names);
 
 	/**
-	 * Returns the asset tag where groupId = &#63; and name = &#63; or throws a <code>NoSuchTagException</code> if it could not be found.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @return the matching asset tag
-	 * @throws NoSuchTagException if a matching asset tag could not be found
-	 */
-	public AssetTag findByG_N(long groupId, String name)
-		throws NoSuchTagException;
-
-	/**
-	 * Returns the asset tag where groupId = &#63; and name = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @return the matching asset tag, or <code>null</code> if a matching asset tag could not be found
-	 */
-	public AssetTag fetchByG_N(long groupId, String name);
-
-	/**
-	 * Returns the asset tag where groupId = &#63; and name = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching asset tag, or <code>null</code> if a matching asset tag could not be found
-	 */
-	public AssetTag fetchByG_N(
-		long groupId, String name, boolean useFinderCache);
-
-	/**
-	 * Removes the asset tag where groupId = &#63; and name = &#63; from the database.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @return the asset tag that was removed
-	 */
-	public AssetTag removeByG_N(long groupId, String name)
-		throws NoSuchTagException;
-
-	/**
-	 * Returns the number of asset tags where groupId = &#63; and name = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param name the name
-	 * @return the number of matching asset tags
-	 */
-	public int countByG_N(long groupId, String name);
-
-	/**
 	 * Returns all the asset tags where groupId = &#63; and name LIKE &#63;.
 	 *
 	 * @param groupId the group ID
@@ -1091,6 +1041,56 @@ public interface AssetTagPersistence
 	 * @return the number of matching asset tags
 	 */
 	public int countByG_LikeN(long[] groupIds, String name);
+
+	/**
+	 * Returns the asset tag where externalReferenceCode = &#63; and groupId = &#63; or throws a <code>NoSuchTagException</code> if it could not be found.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the matching asset tag
+	 * @throws NoSuchTagException if a matching asset tag could not be found
+	 */
+	public AssetTag findByERC_G(String externalReferenceCode, long groupId)
+		throws NoSuchTagException;
+
+	/**
+	 * Returns the asset tag where externalReferenceCode = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the matching asset tag, or <code>null</code> if a matching asset tag could not be found
+	 */
+	public AssetTag fetchByERC_G(String externalReferenceCode, long groupId);
+
+	/**
+	 * Returns the asset tag where externalReferenceCode = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching asset tag, or <code>null</code> if a matching asset tag could not be found
+	 */
+	public AssetTag fetchByERC_G(
+		String externalReferenceCode, long groupId, boolean useFinderCache);
+
+	/**
+	 * Removes the asset tag where externalReferenceCode = &#63; and groupId = &#63; from the database.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the asset tag that was removed
+	 */
+	public AssetTag removeByERC_G(String externalReferenceCode, long groupId)
+		throws NoSuchTagException;
+
+	/**
+	 * Returns the number of asset tags where externalReferenceCode = &#63; and groupId = &#63;.
+	 *
+	 * @param externalReferenceCode the external reference code
+	 * @param groupId the group ID
+	 * @return the number of matching asset tags
+	 */
+	public int countByERC_G(String externalReferenceCode, long groupId);
 
 	/**
 	 * Caches the asset tag in the entity cache if it is enabled.

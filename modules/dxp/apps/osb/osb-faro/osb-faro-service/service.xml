@@ -157,6 +157,7 @@
 		<column name="accountName" type="String" />
 		<column name="corpProjectName" type="String" />
 		<column name="corpProjectUuid" type="String" />
+		<column name="dataSourceConnected" type="boolean" />
 		<column name="ipAddresses" type="String" />
 		<column name="incidentReportEmailAddresses" type="String" />
 		<column name="lastAccessTime" type="long" />
@@ -165,6 +166,7 @@
 		<column name="services" type="String" />
 		<column name="state" type="String" />
 		<column name="subscription" type="String" />
+		<column name="subscriptionModifiedTime" type="long" />
 		<column name="timeZoneId" type="String" />
 		<column name="weDeployKey" type="String" />
 
@@ -244,6 +246,9 @@
 
 		<finder name="GroupId" return-type="Collection">
 			<finder-column name="groupId" />
+		</finder>
+		<finder name="LiveUserId" return-type="Collection">
+			<finder-column name="liveUserId" />
 		</finder>
 		<finder name="Key" return-type="FaroUser" unique="true">
 			<finder-column name="key" />

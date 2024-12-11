@@ -11,13 +11,17 @@ import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.info.exception.NoSuchInfoItemException;
+import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemDetails;
+import com.liferay.info.item.InfoItemFieldValues;
 import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.info.item.InfoItemReference;
 import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.item.provider.InfoItemObjectProvider;
+import com.liferay.info.item.provider.InfoItemObjectVariationProvider;
 import com.liferay.info.item.provider.InfoItemPermissionProvider;
 import com.liferay.info.item.provider.filter.InfoItemServiceFilter;
 import com.liferay.info.item.renderer.InfoItemRenderer;
@@ -25,6 +29,7 @@ import com.liferay.info.item.renderer.InfoItemRendererRegistry;
 import com.liferay.info.item.renderer.InfoItemTemplatedRenderer;
 import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -37,6 +42,8 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Tuple;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+
+import java.io.PrintWriter;
 
 import java.util.List;
 import java.util.Locale;
@@ -102,10 +109,6 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		FragmentRendererContext fragmentRendererContext,
 		HttpServletRequest httpServletRequest) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-169923")) {
-			return true;
-		}
-
 		JSONObject jsonObject = _getFieldValueJSONObject(
 			fragmentRendererContext);
 
@@ -168,7 +171,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		if ((infoItemReference == null) &&
 			((jsonObject == null) || (jsonObject.length() == 0))) {
 
-			if (FragmentRendererUtil.isEditMode(httpServletRequest)) {
+			if (fragmentRendererContext.isEditMode()) {
 				FragmentRendererUtil.printPortletMessageInfo(
 					httpServletRequest, httpServletResponse,
 					"the-selected-content-will-be-shown-here");
@@ -193,7 +196,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		}
 
 		if (displayObject == null) {
-			if (FragmentRendererUtil.isEditMode(httpServletRequest)) {
+			if (fragmentRendererContext.isEditMode()) {
 				FragmentRendererUtil.printPortletMessageInfo(
 					httpServletRequest, httpServletResponse,
 					"the-selected-content-is-no-longer-available.-please-" +
@@ -211,7 +214,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			className, displayObject.getClass(), fragmentRendererContext);
 
 		if ((tuple == null) || (tuple.getObject(0) == null)) {
-			if (FragmentRendererUtil.isEditMode(httpServletRequest)) {
+			if (fragmentRendererContext.isEditMode()) {
 				FragmentRendererUtil.printPortletMessageInfo(
 					httpServletRequest, httpServletResponse,
 					"there-are-no-available-renderers-for-the-selected-" +
@@ -222,16 +225,7 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		}
 
 		if (!_hasPermission(httpServletRequest, className, displayObject)) {
-			if (!FeatureFlagManagerUtil.isEnabled("LPS-169923")) {
-				FragmentRendererUtil.printPortletMessageInfo(
-					httpServletRequest, httpServletResponse,
-					"you-do-not-have-permission-to-access-the-requested-" +
-						"resource");
-
-				return;
-			}
-
-			if (FragmentRendererUtil.isEditMode(httpServletRequest)) {
+			if (fragmentRendererContext.isEditMode()) {
 				FragmentRendererUtil.printRestrictedContentMessage(
 					httpServletRequest, httpServletResponse);
 			}
@@ -239,27 +233,113 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 			return;
 		}
 
-		InfoItemRenderer<Object> infoItemRenderer =
-			(InfoItemRenderer<Object>)tuple.getObject(0);
+		long classPK = _getClassPK(infoItemReference, jsonObject);
 
-		if (infoItemRenderer instanceof InfoItemTemplatedRenderer) {
-			InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer =
-				(InfoItemTemplatedRenderer<Object>)infoItemRenderer;
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-39437") ||
+			!fragmentRendererContext.isViewMode() || (classPK <= 0)) {
 
-			if (tuple.getSize() > 1) {
-				infoItemTemplatedRenderer.render(
-					displayObject, (String)tuple.getObject(1),
-					httpServletRequest, httpServletResponse);
-			}
-			else {
-				infoItemTemplatedRenderer.render(
-					displayObject, httpServletRequest, httpServletResponse);
+			_render(
+				displayObject, httpServletRequest, httpServletResponse,
+				(InfoItemRenderer<Object>)tuple.getObject(0), tuple);
+
+			return;
+		}
+
+		try {
+			PrintWriter printWriter = httpServletResponse.getWriter();
+
+			StringBundler sb = new StringBundler(10);
+
+			sb.append("<div data-analytics-asset-action=\"view\" ");
+			sb.append("data-analytics-asset-id=\"");
+			sb.append(classPK);
+			sb.append("\" data-analytics-asset-subtype=\"");
+			sb.append(_getAnalyticsAssetSubtype(className, displayObject));
+			sb.append("\" data-analytics-asset-title=\"");
+			sb.append(
+				_getAnalyticsAssetTitle(
+					className, fragmentRendererContext.getLocale(),
+					displayObject));
+			sb.append("\" data-analytics-asset-type=\"");
+			sb.append(className);
+			sb.append("\">");
+
+			printWriter.write(sb.toString());
+
+			_render(
+				displayObject, httpServletRequest, httpServletResponse,
+				(InfoItemRenderer<Object>)tuple.getObject(0), tuple);
+
+			printWriter.write("</div>");
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
 			}
 		}
-		else {
-			infoItemRenderer.render(
-				displayObject, httpServletRequest, httpServletResponse);
+	}
+
+	private String _getAnalyticsAssetSubtype(String className, Object object) {
+		InfoItemObjectVariationProvider infoItemObjectVariationProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoItemObjectVariationProvider.class, className);
+
+		if (infoItemObjectVariationProvider == null) {
+			return StringPool.BLANK;
 		}
+
+		return infoItemObjectVariationProvider.getInfoItemFormVariationKey(
+			object);
+	}
+
+	private String _getAnalyticsAssetTitle(
+		String className, Locale locale, Object object) {
+
+		InfoItemFieldValuesProvider infoItemFieldValuesProvider =
+			_infoItemServiceRegistry.getFirstInfoItemService(
+				InfoItemFieldValuesProvider.class, className);
+
+		InfoItemFieldValues infoItemFieldValues =
+			infoItemFieldValuesProvider.getInfoItemFieldValues(object);
+
+		if (infoItemFieldValues == null) {
+			return StringPool.BLANK;
+		}
+
+		InfoFieldValue<?> infoFieldValue =
+			infoItemFieldValues.getInfoFieldValue("title");
+
+		if (infoFieldValue == null) {
+			return StringPool.BLANK;
+		}
+
+		return String.valueOf(infoFieldValue.getValue(locale));
+	}
+
+	private long _getClassPK(
+		InfoItemReference infoItemReference, JSONObject jsonObject) {
+
+		if (jsonObject != null) {
+			long classPK = jsonObject.getLong("classPK");
+
+			if (classPK > 0) {
+				return classPK;
+			}
+		}
+
+		if (infoItemReference != null) {
+			InfoItemIdentifier infoItemIdentifier =
+				infoItemReference.getInfoItemIdentifier();
+
+			if (infoItemIdentifier instanceof ClassPKInfoItemIdentifier) {
+				ClassPKInfoItemIdentifier classPKInfoItemIdentifier =
+					(ClassPKInfoItemIdentifier)infoItemIdentifier;
+
+				return classPKInfoItemIdentifier.getClassPK();
+			}
+		}
+
+		return 0;
 	}
 
 	private Object _getDisplayObject(
@@ -459,6 +539,31 @@ public class ContentObjectFragmentRenderer implements FragmentRenderer {
 		}
 
 		return true;
+	}
+
+	private void _render(
+		Object displayObject, HttpServletRequest httpServletRequest,
+		HttpServletResponse httpServletResponse,
+		InfoItemRenderer<Object> infoItemRenderer, Tuple tuple) {
+
+		if (infoItemRenderer instanceof InfoItemTemplatedRenderer) {
+			InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer =
+				(InfoItemTemplatedRenderer<Object>)infoItemRenderer;
+
+			if (tuple.getSize() > 1) {
+				infoItemTemplatedRenderer.render(
+					displayObject, (String)tuple.getObject(1),
+					httpServletRequest, httpServletResponse);
+			}
+			else {
+				infoItemTemplatedRenderer.render(
+					displayObject, httpServletRequest, httpServletResponse);
+			}
+		}
+		else {
+			infoItemRenderer.render(
+				displayObject, httpServletRequest, httpServletResponse);
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

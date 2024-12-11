@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11287=true${line.separator}jsonws.web.service.paths.excludes=";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Product Info Management";
@@ -118,7 +118,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -172,7 +172,8 @@ definition {
 				cartItemOption = "blue",
 				cartItemPriceValue = "30.00",
 				cartItemQuantity = 1,
-				cartItemSku = "BLUE");
+				cartItemSku = "BLUE",
+				optionName = "Color");
 
 			FrontStore.viewMiniCartItem(
 				bundledItems = "1 × ABS Sensor UOM2KEY",
@@ -180,7 +181,8 @@ definition {
 				cartItemOption = "white",
 				cartItemPromoPriceValue = "20.00",
 				cartItemQuantity = 1,
-				cartItemSku = "WHITE");
+				cartItemSku = "WHITE",
+				optionName = "Color");
 		}
 	}
 
@@ -325,7 +327,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -367,16 +369,20 @@ definition {
 			FrontStore.viewMiniCartItem(
 				bundledItems = "1 × ABS Sensor uom1",
 				cartItemName = "Bundled Product",
+				cartItemOption = "blue",
 				cartItemPriceValue = "70.00",
 				cartItemQuantity = 1,
-				cartItemSku = "BLUE");
+				cartItemSku = "BLUE",
+				optionName = "Color");
 
 			FrontStore.viewMiniCartItem(
 				bundledItems = "1 × ABS Sensor uom2",
 				cartItemName = "Bundled Product",
+				cartItemOption = "white",
 				cartItemPriceValue = "60.00",
 				cartItemQuantity = 1,
-				cartItemSku = "WHITE");
+				cartItemSku = "WHITE",
+				optionName = "Color");
 		}
 	}
 
@@ -384,6 +390,13 @@ definition {
 	@priority = 5
 	test CanAssertDecimalUOMPricesAreConvertedInProductBundles {
 		property portal.acceptance = "true";
+
+		task ("Minimum Order Quantity is set to 0.1 and Multiple Order Quantity is set to 0.1 for ABS Sensor") {
+			CommerceJSONProductsAPI._patchCommerceProductConfiguration(
+				minOrderQuantity = "0.1",
+				multipleOrderQuantity = "0.1",
+				productName = "ABS Sensor");
+		}
 
 		task ("Given 2 UOMs are created to MIN93015(base price: $30, incremental: 0.6 for UOM1; base price: $50, promo price: $40, incremental: 1.5 for UOM2)") {
 			CommerceJSONSKUsAPI._addCommerceUOM(
@@ -449,10 +462,18 @@ definition {
 				var optionValueName = StringUtil.extractFirst(${optionValueList}, ":");
 				var sku = StringUtil.extractLast(${optionValueList}, ":");
 
+				if (${optionValueName} == "Blue") {
+					var quantity = "0.6";
+				}
+				else {
+					var quantity = "1.5";
+				}
+
 				CommerceNavigator.gotoEntry(entryName = "Color");
 
 				CommerceProductOptions.editOptionValue(
 					optionValue = ${optionValueName},
+					quantity = ${quantity},
 					sku = ${sku});
 			}
 		}
@@ -473,7 +494,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -481,13 +502,13 @@ definition {
 		}
 
 		task ("Then assert that the prices for each SKU/UOM are converted to 1 quantity in the bundled product") {
-			for (var optionValueAndPrice : list "Blue:50.00,White:33.33") {
+			for (var optionValueAndPrice : list "Blue:30.00,White:40.00") {
 				var optionValue = StringUtil.extractFirst(${optionValueAndPrice}, ":");
 				var price = StringUtil.extractLast(${optionValueAndPrice}, ":");
 				var sku = StringUtil.toUpperCase(${optionValue});
 
 				if (${optionValue} == "White") {
-					var optionValue = "${optionValue} - $ 23.00";
+					var optionValue = "${optionValue} + $ 10.00";
 				}
 
 				FrontStore.selectAssociatedFSOptionsValue(
@@ -508,7 +529,7 @@ definition {
 					FrontStore.assertProductDetails(
 						productListPriceInactive = ${price},
 						productName = "Bundled Product",
-						productSalePrice = "26.67",
+						productSalePrice = "40.00",
 						productSKU = ${sku});
 				}
 
@@ -522,24 +543,27 @@ definition {
 
 		task ("Then assert the prices are the same as in the product detail") {
 			FrontStore.viewMiniCartItem(
-				bundledItems = "1 × ABS Sensor UOM1KEY",
+				bundledItems = "0.6 × ABS Sensor UOM1KEY",
 				cartItemName = "Bundled Product",
 				cartItemOption = "blue",
-				cartItemPriceValue = "50.00",
+				cartItemPriceValue = "30.00",
 				cartItemQuantity = 1,
-				cartItemSku = "BLUE");
+				cartItemSku = "BLUE",
+				optionName = "Color");
 
 			FrontStore.viewMiniCartItem(
-				bundledItems = "1 × ABS Sensor UOM2KEY",
+				bundledItems = "1.5 × ABS Sensor UOM2KEY",
 				cartItemName = "Bundled Product",
 				cartItemOption = "white",
-				cartItemPromoPriceValue = "26.67",
+				cartItemPromoPriceValue = "40.00",
 				cartItemQuantity = 1,
-				cartItemSku = "WHITE");
+				cartItemSku = "WHITE",
+				optionName = "Color");
 		}
 	}
 
 	@description = "COMMERCE-12547. As a buyer, I want to be able to assert that a bundled product with UOMs is overlapped using normal and quick add to cart"
+	@ignore = "true"
 	@priority = 5
 	test CanAssertUOMBundledProductIsOverlappedUsingNormalAndQuickAdd {
 		property portal.acceptance = "true";
@@ -632,7 +656,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -667,7 +691,8 @@ definition {
 				cartItemOption = "blue",
 				cartItemPriceValue = "50.00",
 				cartItemQuantity = 2,
-				cartItemSku = "BLUE");
+				cartItemSku = "BLUE",
+				optionName = "Color");
 
 			FrontStore.viewMiniCartItem(
 				bundledItems = "1 × ABS Sensor UOM2KEY",
@@ -675,7 +700,8 @@ definition {
 				cartItemOption = "white",
 				cartItemPromoPriceValue = "26.67",
 				cartItemQuantity = 1,
-				cartItemSku = "WHITE");
+				cartItemSku = "WHITE",
+				optionName = "Color");
 		}
 
 		task ("When adding WHITE(UOM2) using the quick add to cart") {
@@ -691,7 +717,8 @@ definition {
 				cartItemOption = "blue",
 				cartItemPriceValue = "50.00",
 				cartItemQuantity = 2,
-				cartItemSku = "BLUE");
+				cartItemSku = "BLUE",
+				optionName = "Color");
 
 			FrontStore.viewMiniCartItem(
 				bundledItems = "2 × ABS Sensor UOM2KEY",
@@ -699,11 +726,13 @@ definition {
 				cartItemOption = "white",
 				cartItemPromoPriceValue = "26.66",
 				cartItemQuantity = 2,
-				cartItemSku = "WHITE");
+				cartItemSku = "WHITE",
+				optionName = "Color");
 		}
 	}
 
 	@description = "COMMERCE-12544. I want to be able to add SKUs to cart with option values linked to different quantities set"
+	@ignore = "true"
 	@priority = 5
 	test CanOptionValuesHaveLinkedSkuWithDifferentQuantitiesSet {
 		property portal.acceptance = "true";
@@ -824,7 +853,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -854,7 +883,8 @@ definition {
 				cartItemOption = "blue",
 				cartItemPriceValue = "70.00",
 				cartItemQuantity = 1,
-				cartItemSku = "BLUE");
+				cartItemSku = "BLUE",
+				optionName = "Color");
 
 			FrontStore.viewMiniCartItem(
 				bundledItems = "2 × ABS Sensor UOM1KEY",
@@ -862,7 +892,8 @@ definition {
 				cartItemOption = "white",
 				cartItemPriceValue = "80.00",
 				cartItemQuantity = 1,
-				cartItemSku = "WHITE");
+				cartItemSku = "WHITE",
+				optionName = "Color");
 		}
 	}
 

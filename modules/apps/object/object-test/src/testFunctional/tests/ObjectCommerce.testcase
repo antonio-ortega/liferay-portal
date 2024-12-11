@@ -1,4 +1,4 @@
-@component-name = "portal-object"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -43,22 +43,8 @@ definition {
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject288");
 		}
 
-		task ("Change the Commerce Product Group title field") {
-			ObjectAdmin.openObjectAdmin();
-
-			ObjectPortlet.selectSystemObject(label = "Commerce Product Group");
-
-			CreateObject.selectTitleField(fieldLabel = "Title");
-
-			PortletEntry.save();
-		}
-
 		task ("Create a Commerce Product Group") {
-			Navigator.openURL();
-
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CPCommerceCatalog.newProductsEntry(
 				productCatalog = "Master",
@@ -121,22 +107,8 @@ definition {
 			ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject289");
 		}
 
-		task ("Change the Commerce Product title field") {
-			ObjectAdmin.openObjectAdmin();
-
-			ObjectPortlet.selectSystemObject(label = "Commerce Product");
-
-			CreateObject.selectTitleField(fieldLabel = "Name");
-
-			CreateObject.saveObject();
-		}
-
 		task ("Create a Commerce Product") {
-			Navigator.openURL();
-
-			CommerceNavigator.gotoPortlet(
-				category = "Product Management",
-				portlet = "Products");
+			CommerceProducts.openProductsAdmin();
 
 			CPCommerceCatalog.newProductsEntry(
 				productCatalog = "Master",
@@ -204,9 +176,7 @@ definition {
 
 		ObjectAdmin.publishObjectViaAPI(objectName = "CustomObject145735");
 
-		CommerceNavigator.gotoPortlet(
-			category = "Store Management",
-			portlet = "Channels");
+		CommerceChannels.openChannelsAdmin();
 
 		Click(locator1 = "Button#PLUS");
 
@@ -217,7 +187,7 @@ definition {
 
 		WaitForPageLoad();
 
-		CommerceEntry.gotoMenuTab(menuTab = "Notification Templates");
+		CommerceEntry.gotoMenuTab(menuTab = "Notification Templates DEPRECATED");
 
 		LexiconEntry.gotoAdd();
 

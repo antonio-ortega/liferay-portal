@@ -97,6 +97,11 @@ public interface AccountEntryService extends BaseService {
 	public AccountEntry getAccountEntry(long accountEntryId)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AccountEntry getAccountEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -118,6 +123,14 @@ public interface AccountEntryService extends BaseService {
 			String description, boolean deleteLogo, String[] domains,
 			String emailAddress, byte[] logoBytes, String taxIdNumber,
 			int status, ServiceContext serviceContext)
+		throws PortalException;
+
+	public AccountEntry updateDefaultBillingAddressId(
+			long accountEntryId, long addressId)
+		throws PortalException;
+
+	public AccountEntry updateDefaultShippingAddressId(
+			long accountEntryId, long addressId)
 		throws PortalException;
 
 	public AccountEntry updateDomains(long accountEntryId, String[] domains)

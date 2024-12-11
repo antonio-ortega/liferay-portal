@@ -239,12 +239,6 @@ public class CalendarDisplayContext {
 				dropdownGroupItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "scope"));
 			}
-		).addGroup(
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
-				dropdownGroupItem.setLabel(
-					LanguageUtil.get(httpServletRequest, "order-by"));
-			}
 		).build();
 	}
 
@@ -375,6 +369,17 @@ public class CalendarDisplayContext {
 		return _orderByType;
 	}
 
+	public List<DropdownItem> getOrderItemsDropdownItems() {
+		return DropdownItemListBuilder.add(
+			dropdownItem -> {
+				dropdownItem.setActive(Objects.equals(getOrderByCol(), "name"));
+				dropdownItem.setHref(getPortletURL(), "orderByCol", "name");
+				dropdownItem.setLabel(
+					LanguageUtil.get(_themeDisplay.getRequest(), "name"));
+			}
+		).build();
+	}
+
 	public List<Calendar> getOtherCalendars(User user, long[] calendarIds)
 		throws PortalException {
 
@@ -491,7 +496,7 @@ public class CalendarDisplayContext {
 		}
 
 		calendarResourceSearch.setOrderByComparator(
-			new CalendarResourceNameComparator(orderByAsc));
+			CalendarResourceNameComparator.getInstance(orderByAsc));
 		calendarResourceSearch.setOrderByType(getOrderByType());
 
 		CalendarResourceDisplayTerms displayTerms =
@@ -563,7 +568,7 @@ public class CalendarDisplayContext {
 		}
 
 		_userSearchContainer.setOrderByComparator(
-			new UserScreenNameComparator(orderByAsc));
+			UserScreenNameComparator.getInstance(orderByAsc));
 		_userSearchContainer.setOrderByType(getOrderByType());
 		_userSearchContainer.setResultsAndTotal(
 			() -> UserLocalServiceUtil.search(
@@ -634,17 +639,6 @@ public class CalendarDisplayContext {
 		).buildPortletURL();
 
 		return _iteratorURL;
-	}
-
-	private List<DropdownItem> _getOrderByDropdownItems() {
-		return DropdownItemListBuilder.add(
-			dropdownItem -> {
-				dropdownItem.setActive(Objects.equals(getOrderByCol(), "name"));
-				dropdownItem.setHref(getPortletURL(), "orderByCol", "name");
-				dropdownItem.setLabel(
-					LanguageUtil.get(_themeDisplay.getRequest(), "name"));
-			}
-		).build();
 	}
 
 	private String _getPortletPreference(String name, String defaultValue) {

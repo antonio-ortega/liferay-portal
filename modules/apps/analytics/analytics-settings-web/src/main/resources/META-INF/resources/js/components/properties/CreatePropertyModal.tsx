@@ -20,11 +20,9 @@ interface IModalProps {
 	onSubmit: () => void;
 }
 
-const CreatePropertyModal: React.FC<IModalProps> = ({
-	observer,
-	onCancel,
-	onSubmit,
-}) => {
+const CreatePropertyModal: React.FC<
+	{children?: React.ReactNode | undefined} & IModalProps
+> = ({observer, onCancel, onSubmit}) => {
 	const [propertyName, setPropertyName] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 
@@ -96,9 +94,8 @@ const CreatePropertyModal: React.FC<IModalProps> = ({
 								onClick={async () => {
 									setSubmitting(true);
 
-									const {ok} = await createProperty(
-										propertyName
-									);
+									const {ok} =
+										await createProperty(propertyName);
 
 									setSubmitting(false);
 

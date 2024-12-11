@@ -45,6 +45,7 @@ public class FaroProjectWrapper
 		attributes.put("accountName", getAccountName());
 		attributes.put("corpProjectName", getCorpProjectName());
 		attributes.put("corpProjectUuid", getCorpProjectUuid());
+		attributes.put("dataSourceConnected", isDataSourceConnected());
 		attributes.put("ipAddresses", getIpAddresses());
 		attributes.put(
 			"incidentReportEmailAddresses", getIncidentReportEmailAddresses());
@@ -54,6 +55,8 @@ public class FaroProjectWrapper
 		attributes.put("services", getServices());
 		attributes.put("state", getState());
 		attributes.put("subscription", getSubscription());
+		attributes.put(
+			"subscriptionModifiedTime", getSubscriptionModifiedTime());
 		attributes.put("timeZoneId", getTimeZoneId());
 		attributes.put("weDeployKey", getWeDeployKey());
 
@@ -140,6 +143,13 @@ public class FaroProjectWrapper
 			setCorpProjectUuid(corpProjectUuid);
 		}
 
+		Boolean dataSourceConnected = (Boolean)attributes.get(
+			"dataSourceConnected");
+
+		if (dataSourceConnected != null) {
+			setDataSourceConnected(dataSourceConnected);
+		}
+
 		String ipAddresses = (String)attributes.get("ipAddresses");
 
 		if (ipAddresses != null) {
@@ -188,6 +198,13 @@ public class FaroProjectWrapper
 
 		if (subscription != null) {
 			setSubscription(subscription);
+		}
+
+		Long subscriptionModifiedTime = (Long)attributes.get(
+			"subscriptionModifiedTime");
+
+		if (subscriptionModifiedTime != null) {
+			setSubscriptionModifiedTime(subscriptionModifiedTime);
 		}
 
 		String timeZoneId = (String)attributes.get("timeZoneId");
@@ -266,6 +283,16 @@ public class FaroProjectWrapper
 	@Override
 	public long getCreateTime() {
 		return model.getCreateTime();
+	}
+
+	/**
+	 * Returns the data source connected of this faro project.
+	 *
+	 * @return the data source connected of this faro project
+	 */
+	@Override
+	public boolean getDataSourceConnected() {
+		return model.getDataSourceConnected();
 	}
 
 	/**
@@ -414,6 +441,16 @@ public class FaroProjectWrapper
 	}
 
 	/**
+	 * Returns the subscription modified time of this faro project.
+	 *
+	 * @return the subscription modified time of this faro project
+	 */
+	@Override
+	public long getSubscriptionModifiedTime() {
+		return model.getSubscriptionModifiedTime();
+	}
+
+	/**
 	 * Returns the time zone ID of this faro project.
 	 *
 	 * @return the time zone ID of this faro project
@@ -466,6 +503,16 @@ public class FaroProjectWrapper
 	@Override
 	public boolean isAllowedIPAddress(String ipAddress) {
 		return model.isAllowedIPAddress(ipAddress);
+	}
+
+	/**
+	 * Returns <code>true</code> if this faro project is data source connected.
+	 *
+	 * @return <code>true</code> if this faro project is data source connected; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isDataSourceConnected() {
+		return model.isDataSourceConnected();
 	}
 
 	/**
@@ -546,6 +593,16 @@ public class FaroProjectWrapper
 	@Override
 	public void setCreateTime(long createTime) {
 		model.setCreateTime(createTime);
+	}
+
+	/**
+	 * Sets whether this faro project is data source connected.
+	 *
+	 * @param dataSourceConnected the data source connected of this faro project
+	 */
+	@Override
+	public void setDataSourceConnected(boolean dataSourceConnected) {
+		model.setDataSourceConnected(dataSourceConnected);
 	}
 
 	/**
@@ -688,6 +745,16 @@ public class FaroProjectWrapper
 	@Override
 	public void setSubscription(String subscription) {
 		model.setSubscription(subscription);
+	}
+
+	/**
+	 * Sets the subscription modified time of this faro project.
+	 *
+	 * @param subscriptionModifiedTime the subscription modified time of this faro project
+	 */
+	@Override
+	public void setSubscriptionModifiedTime(long subscriptionModifiedTime) {
+		model.setSubscriptionModifiedTime(subscriptionModifiedTime);
 	}
 
 	/**

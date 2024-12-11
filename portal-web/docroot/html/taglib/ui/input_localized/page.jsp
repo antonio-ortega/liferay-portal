@@ -29,6 +29,7 @@ Map<String, Map<String, String>> languagesTranslationsAriaLabelsMap = new HashMa
 					cssClass='<%= "language-value " + cssClass %>'
 					editorName="<%= editorName %>"
 					name="<%= inputEditorName %>"
+					onBlurMethod='<%= randomNamespace + "onBlurMethod" %>'
 					onChangeMethod='<%= randomNamespace + "onChangeEditor" %>'
 					onInitMethod='<%= randomNamespace + "onInitEditor" %>'
 					placeholder="<%= placeholder %>"
@@ -36,12 +37,34 @@ Map<String, Map<String, String>> languagesTranslationsAriaLabelsMap = new HashMa
 				/>
 
 				<aui:script>
+					var edited = false;
+
+					function <%= namespace + randomNamespace %>onBlurMethod() {
+						if (edited && Liferay.FeatureFlags['LPD-11228']) {
+							Liferay.fire('journal:unlock')
+							edited = false;
+
+							var inputLocalized = Liferay.component('<%= namespace + HtmlUtil.escapeJS(fieldName) %>');
+
+							var label = document.querySelector("label[for='"+inputLocalized.get('namespace')+inputLocalized.get('id')+"']").textContent
+
+							Liferay.fire('journal:storeState', {fieldName: Liferay.Language.get('edit') +
+							' ' + label});
+						}
+					}
+
 					function <%= namespace + randomNamespace %>onChangeEditor() {
+						if (Liferay.FeatureFlags['LPD-11228'] && document.activeElement.name !== 'journal_undo_redo' && document.body !== document.activeElement) {
+							Liferay.fire('journal:lock')
+							edited = true;
+						}
+
 						var inputLocalized = Liferay.component('<%= namespace + HtmlUtil.escapeJS(fieldName) %>');
 
 						var editor = window['<%= namespace + HtmlUtil.escapeJS(inputEditorName) %>'];
 
 						inputLocalized.updateInputLanguage(editor.getHTML());
+
 					}
 
 					function <%= namespace + randomNamespace %>onInitEditor() {
@@ -116,7 +139,7 @@ Map<String, Map<String, String>> languagesTranslationsAriaLabelsMap = new HashMa
 			}
 		%>
 
-			<aui:input dir="<%= curLanguageDir %>" disabled="<%= disabled %>" id="<%= HtmlUtil.escapeAttribute(id + StringPool.UNDERLINE + curLanguageId) %>" name="<%= HtmlUtil.escapeAttribute(fieldNamePrefix + name + StringPool.UNDERLINE + curLanguageId + fieldNameSuffix) %>" type="hidden" value="<%= languageValue %>" />
+			<aui:input data-field-name="<%= HtmlUtil.escapeAttribute(id + fieldSuffix) %>" data-languageid="<%= curLanguageId %>" dir="<%= curLanguageDir %>" disabled="<%= disabled %>" id="<%= HtmlUtil.escapeAttribute(id + StringPool.UNDERLINE + curLanguageId) %>" name="<%= HtmlUtil.escapeAttribute(fieldNamePrefix + name + StringPool.UNDERLINE + curLanguageId + fieldNameSuffix) %>" type="hidden" value="<%= languageValue %>" />
 
 		<%
 		}
@@ -128,7 +151,7 @@ Map<String, Map<String, String>> languagesTranslationsAriaLabelsMap = new HashMa
 		}
 		%>
 
-		<div class="input-group-item input-group-item-shrink input-localized-content">
+		<div class="input-group-item input-group-item-shrink input-localized-content <%= languagesDropdownVisible ? "" : "hide" %>">
 
 			<%
 			String normalizedSelectedLanguageId = StringUtil.replace(selectedLanguageId, '_', '-');

@@ -5,6 +5,9 @@
 
 package com.liferay.portal.kernel.search;
 
+import com.liferay.petra.lang.CentralizedThreadLocal;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.search.facet.Facet;
@@ -14,6 +17,8 @@ import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,13 +27,126 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Julio Camarero
  */
 public class SearchContext implements Serializable {
+
+	public static boolean isBatchMode() {
+		Map.Entry<Set<Future<?>>, List<Callable<Void>>> entry =
+			_batchModeSyncFuturesAndCallablesThreadLocal.get();
+
+		if (entry == null) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public static SafeCloseable openBatchMode() {
+		return openBatchMode(true);
+	}
+
+	public static SafeCloseable openBatchMode(boolean commit) {
+		SafeCloseable safeCloseable =
+			_batchModeSyncFuturesAndCallablesThreadLocal.setWithSafeCloseable(
+				new AbstractMap.SimpleImmutableEntry<>(
+					Collections.newSetFromMap(new ConcurrentHashMap<>()),
+					new ArrayList<>()));
+
+		return () -> {
+			Exception exception1 = null;
+
+			try {
+				Map.Entry<Set<Future<?>>, List<Callable<Void>>> entry =
+					_batchModeSyncFuturesAndCallablesThreadLocal.get();
+
+				for (Future<?> future : entry.getKey()) {
+					try {
+						future.get();
+					}
+					catch (Exception exception2) {
+						if (exception1 != null) {
+							exception2.addSuppressed(exception1);
+						}
+
+						exception1 = exception2;
+					}
+				}
+
+				for (Callable<?> callable : entry.getValue()) {
+					try {
+						callable.call();
+					}
+					catch (Exception exception2) {
+						if (exception1 != null) {
+							exception2.addSuppressed(exception1);
+						}
+
+						exception1 = exception2;
+					}
+				}
+			}
+			finally {
+				safeCloseable.close();
+
+				try {
+					if (commit) {
+						IndexWriterHelperUtil.commit();
+					}
+				}
+				catch (SearchException searchException) {
+					if (exception1 != null) {
+						searchException.addSuppressed(exception1);
+					}
+
+					ReflectionUtil.throwException(searchException);
+				}
+			}
+		};
+	}
+
+	public static void registerBatchModeSyncCallable(Callable<Void> callable) {
+		Map.Entry<Set<Future<?>>, List<Callable<Void>>> entry =
+			_batchModeSyncFuturesAndCallablesThreadLocal.get();
+
+		if (entry == null) {
+			throw new IllegalStateException("Not in batch mode");
+		}
+
+		List<Callable<Void>> batchModeSyncCallables = entry.getValue();
+
+		batchModeSyncCallables.add(callable);
+	}
+
+	public static void registerBatchModeSyncFuture(Future<?> future) {
+		Map.Entry<Set<Future<?>>, List<Callable<Void>>> entry =
+			_batchModeSyncFuturesAndCallablesThreadLocal.get();
+
+		if (entry == null) {
+			throw new IllegalStateException("Not in batch mode");
+		}
+
+		Set<Future<?>> batchModeSyncFutures = entry.getKey();
+
+		batchModeSyncFutures.add(future);
+	}
+
+	public static void unregisterBatchModeSyncFuture(Future<?> future) {
+		Map.Entry<Set<Future<?>>, List<Callable<Void>>> entry =
+			_batchModeSyncFuturesAndCallablesThreadLocal.get();
+
+		if (entry != null) {
+			Set<Future<?>> batchModeSyncFutures = entry.getKey();
+
+			batchModeSyncFutures.remove(future);
+		}
+	}
 
 	public void addFacet(Facet facet) {
 		if (facet == null) {
@@ -60,6 +178,10 @@ public class SearchContext implements Serializable {
 
 	public String[] getAssetTagNames() {
 		return _assetTagNames;
+	}
+
+	public long[] getAssetVocabularyIds() {
+		return _assetVocabularyIds;
 	}
 
 	public Serializable getAttribute(String name) {
@@ -207,6 +329,10 @@ public class SearchContext implements Serializable {
 	}
 
 	public boolean isCommitImmediately() {
+		if (isBatchMode()) {
+			return false;
+		}
+
 		return _commitImmediately;
 	}
 
@@ -258,6 +384,10 @@ public class SearchContext implements Serializable {
 
 	public void setAssetTagNames(String[] assetTagNames) {
 		_assetTagNames = assetTagNames;
+	}
+
+	public void setAssetVocabularyIds(long[] assetVocabularyIds) {
+		_assetVocabularyIds = assetVocabularyIds;
 	}
 
 	public void setAttribute(String name, Serializable value) {
@@ -406,9 +536,17 @@ public class SearchContext implements Serializable {
 		}
 	}
 
+	private static final CentralizedThreadLocal
+		<Map.Entry<Set<Future<?>>, List<Callable<Void>>>>
+			_batchModeSyncFuturesAndCallablesThreadLocal =
+				new CentralizedThreadLocal<>(
+					SearchContext.class.getName() +
+						"._batchModeSyncFuturesThreadLocal");
+
 	private boolean _andSearch;
 	private long[] _assetCategoryIds;
 	private String[] _assetTagNames;
+	private long[] _assetVocabularyIds;
 	private Map<String, Serializable> _attributes;
 	private BooleanClause<Query>[] _booleanClauses;
 	private long[] _categoryIds;

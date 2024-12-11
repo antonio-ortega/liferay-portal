@@ -8,9 +8,11 @@ package com.liferay.site.initializer.extender;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
@@ -39,12 +41,9 @@ public class SiteInitializerUtil {
 
 		String urlPath = url.getPath();
 
-		URL entryURL = bundle.getEntry(
-			urlPath.substring(0, urlPath.lastIndexOf("/") + 1) + fileName);
-
-		try (InputStream inputStream = entryURL.openStream()) {
-			return StringUtil.read(entryURL.openStream());
-		}
+		return URLUtil.toString(
+			bundle.getEntry(
+				urlPath.substring(0, urlPath.lastIndexOf("/") + 1) + fileName));
 	}
 
 	public static String read(
@@ -66,6 +65,27 @@ public class SiteInitializerUtil {
 			return StringUtil.replace(
 				content, "[$", "$]", portalPropertiesStringUtilReplaceValues);
 		}
+	}
+
+	public static String replace(
+		Map<String, String> classNameIdStringUtilReplaceValues,
+		Map<String, String> releaseInfoStringUtilReplaceValues, String s,
+		Map<String, String> stringUtilReplaceValues) {
+
+		HashMap<String, String> aggregatedStringUtilReplaceValues =
+			HashMapBuilder.putAll(
+				classNameIdStringUtilReplaceValues
+			).putAll(
+				releaseInfoStringUtilReplaceValues
+			).putAll(
+				stringUtilReplaceValues
+			).build();
+
+		s = StringUtil.replace(
+			s, "\"[#", "#]\"", aggregatedStringUtilReplaceValues);
+
+		return StringUtil.replace(
+			s, "[$", "$]", aggregatedStringUtilReplaceValues);
 	}
 
 	public static Map<Locale, String> toMap(String values) {

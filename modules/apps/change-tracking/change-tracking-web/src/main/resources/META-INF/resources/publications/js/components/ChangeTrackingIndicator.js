@@ -3,39 +3,67 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown, {Align, ClayDropDownWithItems} from '@clayui/drop-down';
+import {ClayCheckbox, ClaySelectWithOption} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayLayout from '@clayui/layout';
 import ClayList from '@clayui/list';
 import ClayModal, {useModal} from '@clayui/modal';
 import ClayPopover from '@clayui/popover';
 import ClaySticker from '@clayui/sticker';
-import {navigate as navigateUtil, openConfirmModal} from 'frontend-js-web';
-import React, {useState} from 'react';
+import {
+	createPortletURL,
+	fetch,
+	navigate as navigateUtil,
+	openConfirmModal,
+	sub,
+} from 'frontend-js-web';
+import React, {useEffect, useState} from 'react';
 
 import PublicationTimeline from './PublicationTimeline';
 import PublicationsSearchContainer from './PublicationsSearchContainer';
 
+const HIDE_CONTEXT_CHANGE_WARNING_DURATION_OPTIONS = [
+	{label: sub(Liferay.Language.get('x-hour'), 1), value: 1},
+	{label: sub(Liferay.Language.get('x-hours'), 4), value: 4},
+	{
+		label: sub(Liferay.Language.get('x-hours'), 24),
+		value: 24,
+	},
+	{
+		label: Liferay.Language.get('forever'),
+		value: -1,
+	},
+];
+
 export default function ChangeTrackingIndicator({
 	checkoutDropdownItem,
-	conflictIconClass,
-	conflictIconLabel,
-	conflictIconName,
+	contextChangeButtons,
 	createDropdownItem,
+	getConflictInfoURL,
 	getSelectPublicationsURL,
 	iconClass,
 	iconName,
+	namespace,
 	orderByAscending,
 	orderByColumn,
 	preferencesPrefix,
+	previewProductionDropdownItem,
+	returnToPublicationDropdownItem,
 	reviewDropdownItem,
 	saveDisplayPreferenceURL,
 	spritemap,
+	timelineClassNameId,
+	timelineClassPK,
+	timelineDeleteURL,
+	timelineEditURL,
 	timelineIconClass,
 	timelineIconName,
-	timelineItems,
+	timelineItemsURL,
 	title,
+	viewTimelineHistoryURL,
 	warningBody,
 	warningButton,
 	warningHeader,
@@ -48,28 +76,38 @@ export default function ChangeTrackingIndicator({
 	const [column, setColumn] = useState(
 		orderByColumn === COLUMN_NAME ? COLUMN_NAME : COLUMN_MODIFIED_DATE
 	);
+	const [
+		hideContextChangeWarningDuration,
+		setHideContextChangeWarningDuration,
+	] = useState('24');
+	const [openPopover, setOpenPopover] = useState(false);
+	const [popoverCheckbox, setPopoverCheckbox] = useState(false);
 	const [showModal, setShowModal] = useState(false);
 	const [showWarning, setShowWarning] = useState(
 		warningBody || warningHeader
 	);
 
-	const navigate = (url, action) => {
-		AUI().use('liferay-portlet-url', () => {
-			const portletURL = Liferay.PortletURL.createURL(url);
-
-			portletURL.setParameter(
-				'redirect',
-				window.location.pathname + window.location.search
-			);
-
-			if (action) {
-				submitForm(document.hrefFm, portletURL.toString());
-
-				return;
-			}
-
-			navigateUtil(portletURL.toString());
+	const savePortalPreferences = (key, url, value) => {
+		const portletURL = createPortletURL(url, {
+			key,
+			value,
 		});
+
+		fetch(portletURL);
+	};
+
+	const navigate = (url, action) => {
+		const portletURL = createPortletURL(url, {
+			redirect: window.location.pathname + window.location.search,
+		});
+
+		if (action) {
+			submitForm(document.hrefFm, portletURL.toString());
+
+			return;
+		}
+
+		navigateUtil(portletURL);
 	};
 
 	const dropdownItems = [];
@@ -96,11 +134,20 @@ export default function ChangeTrackingIndicator({
 		});
 	}
 
-	dropdownItems.push({
-		label: Liferay.Language.get('select-a-publication'),
-		onClick: () => setShowModal(true),
-		symbolLeft: 'cards2',
-	});
+	if (previewProductionDropdownItem) {
+		dropdownItems.push(previewProductionDropdownItem);
+	}
+
+	if (returnToPublicationDropdownItem) {
+		dropdownItems.push(returnToPublicationDropdownItem);
+	}
+	else {
+		dropdownItems.push({
+			label: Liferay.Language.get('select-a-publication'),
+			onClick: () => setShowModal(true),
+			symbolLeft: 'cards2',
+		});
+	}
 
 	if (createDropdownItem) {
 		dropdownItems.push(createDropdownItem);
@@ -147,6 +194,10 @@ export default function ChangeTrackingIndicator({
 
 	const renderUserPortrait = (entry, userInfo) => {
 		const user = userInfo[entry.userId];
+
+		if (!user) {
+			return <ClaySticker />;
+		}
 
 		return (
 			<ClaySticker
@@ -288,6 +339,7 @@ export default function ChangeTrackingIndicator({
 								items={dropdownItems}
 								trigger={
 									<ClayButtonWithIcon
+										aria-label="actions"
 										displayType="unstyled"
 										small
 										spritemap={spritemap}
@@ -325,6 +377,7 @@ export default function ChangeTrackingIndicator({
 						fetchDataURL={getSelectPublicationsURL}
 						filterEntries={filterEntries}
 						getListItem={getListItem}
+						namespace={namespace}
 						orderByItems={[
 							{
 								label: Liferay.Language.get('modified-date'),
@@ -346,8 +399,80 @@ export default function ChangeTrackingIndicator({
 		);
 	};
 
+	const [fetchData, setFetchData] = useState(null);
+	const [conflictIconClass, setConflictIconClass] = useState(null);
+	const [conflictIconLabel, setConflictIconLabel] = useState(null);
+	const [conflictIconName, setConflictIconName] = useState(null);
+	const [dangerIcon, setDangerIcon] = useState(null);
+	const [warningIcon, setWarningIcon] = useState(null);
+
+	useEffect(() => {
+		if (getConflictInfoURL) {
+			fetch(createPortletURL(getConflictInfoURL))
+				.then((response) => response.json())
+				.then((json) => {
+					if (json) {
+						if (Liferay.FeatureFlags['LPD-20556']) {
+							if (json.danger) {
+								setDangerIcon(json.danger);
+							}
+							if (json.warning) {
+								setWarningIcon(json.warning);
+							}
+						}
+						else {
+							setConflictIconClass(json.conflictIconClass);
+							setConflictIconLabel(json.conflictIconLabel);
+							setConflictIconName(json.conflictIconName);
+						}
+					}
+				})
+				.catch(() => {
+					setFetchData({
+						errorMessage: Liferay.Language.get(
+							'an-unexpected-error-occurred'
+						),
+					});
+				});
+		}
+	}, [getConflictInfoURL]);
+
 	const renderConflictIcon = () => {
-		if (conflictIconClass && conflictIconName) {
+		if (Liferay.FeatureFlags['LPD-20556'] && !!dangerIcon) {
+			return (
+				<ClayPopover
+					alightPosition="bottom"
+					onShowChange={setOpenPopover}
+					show={openPopover}
+					trigger={
+						<ClayButton
+							aria-label="conflict-button"
+							className="change-tracking-conflict-button"
+							onMouseOut={() => setOpenPopover(false)}
+							onMouseOver={() => setOpenPopover(true)}
+						>
+							<ClayIcon
+								className={dangerIcon.conflictIconClass}
+								style={{fontSize: 'medium'}}
+								symbol={dangerIcon.conflictIconName}
+							/>
+						</ClayButton>
+					}
+				>
+					<ClayAlert
+						displayType="danger"
+						spritemap={spritemap}
+						style={{margin: '0px'}}
+						title={
+							Liferay.Language.get('production-conflict') + ': '
+						}
+					>
+						{Liferay.Language.get(dangerIcon.conflictIconLabel)}
+					</ClayAlert>
+				</ClayPopover>
+			);
+		}
+		else if (conflictIconClass && conflictIconName) {
 			return (
 				<ClayIcon
 					className={conflictIconClass}
@@ -363,6 +488,7 @@ export default function ChangeTrackingIndicator({
 			<ClayDropDownWithItems
 				alignmentPosition={Align.BottomCenter}
 				items={dropdownItems}
+				menuElementAttrs={{style: {zIndex: 1021}}}
 				trigger={renderTrigger}
 			/>
 		);
@@ -386,6 +512,14 @@ export default function ChangeTrackingIndicator({
 								displayType="unstyled"
 								onClick={() => {
 									setShowWarning(false);
+
+									if (popoverCheckbox) {
+										savePortalPreferences(
+											'hideContextChangeWarningDuration',
+											saveDisplayPreferenceURL,
+											hideContextChangeWarningDuration
+										);
+									}
 								}}
 								size="xs"
 								symbol="times"
@@ -394,9 +528,19 @@ export default function ChangeTrackingIndicator({
 						</ClayLayout.ContentCol>
 					</ClayLayout.ContentRow>
 				}
-				onShowChange={setShowWarning}
+				onShowChange={(value) => {
+					setShowWarning(value);
+
+					if (popoverCheckbox) {
+						savePortalPreferences(
+							'hideContextChangeWarningDuration',
+							saveDisplayPreferenceURL,
+							hideContextChangeWarningDuration
+						);
+					}
+				}}
 				show={showWarning}
-				size="lg"
+				style={{maxWidth: contextChangeButtons ? '711px' : '421px'}}
 				trigger={renderTrigger}
 			>
 				<ClayLayout.ContainerFluid>
@@ -410,12 +554,123 @@ export default function ChangeTrackingIndicator({
 						</ClayLayout.Col>
 					</ClayLayout.Row>
 
+					{contextChangeButtons && (
+						<>
+							<ClayLayout.Row
+								style={{marginBottom: '8px', marginTop: '16px'}}
+							>
+								<ClayLayout.Col
+									style={{
+										alignItems: 'center',
+										display: 'flex',
+									}}
+								>
+									<ClayCheckbox
+										checked={popoverCheckbox}
+										label={Liferay.Language.get(
+											'do-not-show-this-message-again-in-the-selected-period-of-time'
+										)}
+										onChange={() =>
+											setPopoverCheckbox(!popoverCheckbox)
+										}
+										style={{marginLeft: '10px'}}
+									/>
+
+									<ClaySelectWithOption
+										id="hideContextChangeWarningDuration"
+										onChange={(event) => {
+											setHideContextChangeWarningDuration(
+												event.target.value
+											);
+										}}
+										options={
+											HIDE_CONTEXT_CHANGE_WARNING_DURATION_OPTIONS
+										}
+										sizing="sm"
+										style={{
+											marginLeft: '10px',
+											marginTop: '-16px',
+											width: '120px',
+										}}
+										title="hideContextChangeWarningDuration"
+										value={hideContextChangeWarningDuration}
+									/>
+								</ClayLayout.Col>
+							</ClayLayout.Row>
+						</>
+					)}
+
 					<ClayLayout.Row>
+						{contextChangeButtons && (
+							<>
+								<ClayLayout.Col>
+									<ClayButton
+										displayType="secondary"
+										onClick={() => {
+											setShowWarning(false);
+
+											if (popoverCheckbox) {
+												savePortalPreferences(
+													'hideContextChangeWarningDuration',
+													saveDisplayPreferenceURL,
+													hideContextChangeWarningDuration
+												);
+											}
+										}}
+										size="sm"
+										style={{
+											whiteSpace: 'nowrap',
+											width: 'auto',
+										}}
+									>
+										{Liferay.Language.get(
+											'stay-in-current-publication'
+										)}
+									</ClayButton>
+								</ClayLayout.Col>
+
+								<ClayLayout.Col>
+									<ClayButton
+										displayType="secondary"
+										onClick={() => {
+											setShowModal(true);
+											setShowWarning(false);
+
+											if (popoverCheckbox) {
+												savePortalPreferences(
+													'hideContextChangeWarningDuration',
+													saveDisplayPreferenceURL,
+													hideContextChangeWarningDuration
+												);
+											}
+										}}
+										size="sm"
+										style={{
+											whiteSpace: 'nowrap',
+											width: 'auto',
+										}}
+									>
+										{Liferay.Language.get(
+											'select-a-publication'
+										)}
+									</ClayButton>
+								</ClayLayout.Col>
+							</>
+						)}
+
 						<ClayLayout.Col>
 							{warningButton && checkoutDropdownItem && (
 								<ClayButton
 									displayType="secondary"
 									onClick={() => {
+										if (popoverCheckbox) {
+											savePortalPreferences(
+												'hideContextChangeWarningDuration',
+												saveDisplayPreferenceURL,
+												hideContextChangeWarningDuration
+											);
+										}
+
 										if (
 											!checkoutDropdownItem.confirmationMessage
 										) {
@@ -439,11 +694,9 @@ export default function ChangeTrackingIndicator({
 											});
 										}
 									}}
-									size="xs"
+									size={contextChangeButtons ? 'sm' : 'xs'}
 								>
-									{Liferay.Language.get(
-										'work-on-publication'
-									)}
+									{Liferay.Language.get('work-on-production')}
 								</ClayButton>
 							)}
 						</ClayLayout.Col>
@@ -464,23 +717,43 @@ export default function ChangeTrackingIndicator({
 	);
 
 	const renderTimeline = () => {
-		if (timelineItems) {
+		if (!!viewTimelineHistoryURL && !!timelineItemsURL) {
 			return (
 				<ClayDropDown
 					alignmentPosition={Align.BottomCenter}
+					menuElementAttrs={{style: {maxWidth: '303px'}}}
+					renderMenuOnClick
 					trigger={
 						<ClayButton
 							aria-controls="publication-timeline-dropdown"
+							aria-label="timeline-button"
 							className="change-tracking-timeline-button"
 						>
 							<ClayIcon
-								className={timelineIconClass}
+								className={
+									timelineIconClass +
+									(Liferay.FeatureFlags['LPD-20556'] &&
+									!!warningIcon
+										? ' ' + warningIcon.conflictIconClass
+										: '')
+								}
 								symbol={timelineIconName}
 							/>
 						</ClayButton>
 					}
 				>
-					<PublicationTimeline timelineItems={timelineItems} />
+					<PublicationTimeline
+						namespace={namespace}
+						navigate={navigate}
+						spritemap={spritemap}
+						timelineClassNameId={timelineClassNameId}
+						timelineClassPK={timelineClassPK}
+						timelineDeleteURL={timelineDeleteURL}
+						timelineEditURL={timelineEditURL}
+						timelineItemsURL={timelineItemsURL}
+						viewTimelineHistoryURL={viewTimelineHistoryURL}
+						warningIcon={warningIcon}
+					/>
 				</ClayDropDown>
 			);
 		}
@@ -491,24 +764,34 @@ export default function ChangeTrackingIndicator({
 			{renderModal()}
 
 			<ClayLayout.ContentRow style={{justifyContent: 'center'}}>
-				<ClayLayout.ContentCol>
-					<div
-						className="c-inner"
-						style={{
-							margin: '2px',
-							padding: '1px',
-							width: '16px',
-						}}
-						tabIndex="-1"
-						title={conflictIconLabel}
-					>
-						{renderConflictIcon()}
-					</div>
-				</ClayLayout.ContentCol>
+				{!Liferay.FeatureFlags['LPD-20556'] ? (
+					<ClayLayout.ContentCol>
+						<div
+							className="c-inner"
+							style={{
+								margin: '2px !important',
+								padding: '1px !important',
+								width: '16px !important',
+							}}
+							tabIndex="-1"
+							title={conflictIconLabel}
+						>
+							{renderConflictIcon()}
+						</div>
+					</ClayLayout.ContentCol>
+				) : null}
 
 				<ClayLayout.ContentCol>
 					{showWarning ? renderWarning() : renderDropdown()}
 				</ClayLayout.ContentCol>
+
+				{Liferay.FeatureFlags['LPD-20556'] && !!timelineItemsURL ? (
+					<ClayLayout.ContentCol>
+						<div className="autofit-col row-divider">
+							<div />
+						</div>
+					</ClayLayout.ContentCol>
+				) : null}
 
 				<ClayLayout.ContentCol>
 					<div
@@ -523,6 +806,25 @@ export default function ChangeTrackingIndicator({
 						{renderTimeline()}
 					</div>
 				</ClayLayout.ContentCol>
+
+				{Liferay.FeatureFlags['LPD-20556'] ? (
+					<ClayLayout.ContentCol>
+						<div
+							className="c-inner"
+							data-qa-id={Liferay.Language.get(
+								'production-conflict'
+							)}
+							style={{
+								margin: '2px',
+								padding: '1px',
+								width: '16px !important',
+							}}
+							tabIndex="-1"
+						>
+							{renderConflictIcon()}
+						</div>
+					</ClayLayout.ContentCol>
+				) : null}
 			</ClayLayout.ContentRow>
 		</>
 	);

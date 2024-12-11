@@ -1,19 +1,19 @@
 {
 	"dependencies": {
-		"@clayui/badge": "3.100.0",
-		"@clayui/button": "3.100.0",
-		"@clayui/card": "3.105.0",
-		"@clayui/drop-down": "3.105.0",
-		"@clayui/empty-state": "3.101.0",
-		"@clayui/form": "3.104.0",
-		"@clayui/icon": "3.56.0",
-		"@clayui/label": "3.88.0",
-		"@clayui/layout": "3.93.0",
-		"@clayui/list": "3.105.0",
-		"@clayui/loading-indicator": "3.60.0",
-		"@clayui/pagination": "3.105.0",
-		"@clayui/pagination-bar": "3.105.0",
-		"@clayui/table": "3.56.0",
+		"@clayui/badge": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/card": "3.123.1",
+		"@clayui/drop-down": "3.123.1",
+		"@clayui/empty-state": "3.116.0",
+		"@clayui/form": "3.122.0",
+		"@clayui/icon": "3.111.0",
+		"@clayui/label": "3.111.0",
+		"@clayui/layout": "3.111.0",
+		"@clayui/list": "3.123.1",
+		"@clayui/loading-indicator": "3.111.0",
+		"@clayui/pagination": "3.123.1",
+		"@clayui/pagination-bar": "3.123.1",
+		"@clayui/table": "3.111.0",
 		"@liferay/frontend-js-react-web": "*",
 		"classnames": "2.3.1",
 		"date-fns": "2.29.3",
@@ -25,7 +25,7 @@
 		"moment": "2.29.4",
 		"prop-types": "15.7.2",
 		"qs": "^6.9.6",
-		"react": "16.12.0",
+		"react": "18.2.0",
 		"react-router-dom": "^5.0.1"
 	},
 	"description": "",
@@ -41,10 +41,10 @@
 	"name": "@liferay/digital-signature-web",
 	"private": true,
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "env TZ=utc liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "1.0.55"
+	"version": "1.0.76"
 }

@@ -14,7 +14,9 @@ export interface Config {
 	addFragmentEntryLinksURL: string;
 	addItemURL: string;
 	addPortletURL: string;
+	addRuleURL: string;
 	addSegmentsExperienceURL: string;
+	addStepperFragmentEntryLinkURL: string;
 
 	assetCategoryTreeNodeItemSelectorURL: string;
 
@@ -94,17 +96,23 @@ export interface Config {
 	defaultStyleBookEntryImagePreviewURL: string;
 	defaultStyleBookEntryName: string;
 	deleteFragmentEntryLinkCommentURL: string;
+	deleteRuleURL: string;
 	deleteSegmentsExperienceURL: string;
 	discardDraftURL: string;
+	copyItemsURL: string;
 	duplicateItemURL: string;
 	duplicateSegmentsExperienceURL: string;
 	editFragmentEntryLinkCommentURL: string;
 	editFragmentEntryLinkURL: string;
 	editSegmentsEntryURL: string;
+	formTypes: Array<{
+		className: string;
+		isRestricted: boolean;
+		label: string;
+		subtypes: Array<{label: string; value: string}>;
+		value: string;
+	}>;
 	frontendTokens: {
-		getAvailableImageConfigurationsURL: string;
-		getAvailableListItemRenderersURL: string;
-		getAvailableListRenderersURL: string;
 		[key: string]:
 			| {
 					cssVariable: string;
@@ -115,26 +123,37 @@ export interface Config {
 			  }
 			| string;
 	};
+	getAvailableImageConfigurationsURL: string;
+	getAvailableListItemRenderersURL: string;
+	getAvailableListRenderersURL: string;
 	getAvailableTemplatesURL: string;
-	getCollectionConfigurationURL: string;
 	getCollectionFieldURL: string;
 	getCollectionFiltersURL: string;
 	getCollectionItemCountURL: string;
 	getCollectionMappingFieldsURL: string;
 	getCollectionSupportedFiltersURL: string;
+	getCollectionVariationsURL: string;
 	getCollectionWarningMessageURL: string;
+	getEditCollectionConfigurationURL: string;
 	getExperienceDataURL: string;
+	getFileEntryURL: string;
 	getFormConfigURL: string;
+	getFormFieldsURL: string;
+	getFragmentEntryInputFieldTypesURL: string;
 	getIframeContentCssURL: string;
 	getIframeContentURL: string;
 	getInfoItemActionErrorMessageURL: string;
 	getInfoItemFieldValueURL: string;
+	getInfoItemOneToManyRelationshipsURL: string;
 	getLayoutFriendlyURL: string;
 	getLayoutPageTemplateCollectionsURL: string;
 	getPageContentsURL: string;
 	getPortletsURL: string;
-	getUsers: string;
+	getRolesURL: string;
+	getUsersURL: string;
 	imageSelectorURL: string;
+	imagesPath: string;
+	infoFieldItemSelectorURL: string;
 	infoItemPreviewSelectorURL: string;
 	infoItemSelectorURL: string;
 	isConversionDraft: boolean;
@@ -151,19 +170,18 @@ export interface Config {
 		name: string;
 	}>;
 	masterUsed: boolean;
-	moveItemURL: string;
+	moveItemsURL: string;
+	moveStepperFragmentEntryLinkURL: string;
 	paddingOptions: Array<{
 		label: string;
 		value: string;
 	}>;
-	panels: string[][];
 	pending: boolean;
 	plid: string;
-	pluginsRootPath: string;
 	portletNamespace: string;
 	publishURL: string;
 	redirectURL: string;
-	renderFragmentEntryURL: string;
+	renderFragmentEntriesURL: string;
 	restoreCollectionDisplayConfigURL: string;
 	searchContainerPageMaxDelta: number;
 
@@ -180,7 +198,8 @@ export interface Config {
 
 	selectedSegmentsEntryId: string;
 
-	sidebarPanels: SidebarPanel[] | Record<string, SidebarPanel>;
+	sidebarPanels: SidebarPanel[];
+	sidebarPanelsMap: Record<string, SidebarPanel>;
 
 	singleSegmentsExperienceMode: boolean;
 	siteNavigationMenuItemSelectorURL: string;
@@ -191,23 +210,21 @@ export interface Config {
 		styleBookEntryId: string;
 	}>;
 	stylebookEntryId: string;
-	themeColorCssClasses: string[];
+	themeColorsCssClasses: string[];
 	toolbarId: string;
 
-	toolbarPlugins: Array<{
-		loadingPlaceholder: string;
-		pluginEntryPoint: string;
-		toolbarPluginId: string;
-	}>;
-
+	undoUpdateFormConfigURL: string;
 	unmarkItemsForDeletionURL: string;
 	updateCollectionDisplayConfigURL: string;
 	updateConfigurationValuesURL: string;
 	updateFormItemConfigURL: string;
 	updateFragmentPortletSetsSortURL: string;
+	updateFragmentsHighlightedConfigurationURL: string;
 	updateItemConfigURL: string;
 	updateLayoutPageTemplateDataURL: string;
+	updatePortletsHighlightedConfigurationURL: string;
 	updateRowColumnsURL: string;
+	updateRuleURL: string;
 	updateSegmentsExperiencePriorityURL: string;
 	updateSegmentsExperienceURL: string;
 	videoItemSelectorURL: string;

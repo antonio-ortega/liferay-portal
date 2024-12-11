@@ -25,12 +25,18 @@ public interface WorkflowDefinition extends WorkflowModel {
 
 	public String getContent();
 
+	public String getContentAsXML();
+
 	public default Date getCreateDate() {
 		return null;
 	}
 
 	public default String getDescription() {
 		return "";
+	}
+
+	public default String getExternalReferenceCode() {
+		return null;
 	}
 
 	public InputStream getInputStream();

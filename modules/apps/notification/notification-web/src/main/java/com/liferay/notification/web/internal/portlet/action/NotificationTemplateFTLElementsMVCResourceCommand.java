@@ -13,6 +13,7 @@ import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.notification.constants.NotificationPortletKeys;
+import com.liferay.notification.model.NotificationTemplate;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.petra.string.StringBundler;
@@ -73,19 +74,19 @@ public class NotificationTemplateFTLElementsMVCResourceCommand
 
 		Locale locale = _portal.getLocale(resourceRequest);
 
-		Map<String, TemplateVariableGroup> templateVariableGroupsMap =
-			TemplateContextHelper.getTemplateVariableGroups(
-				_classNameLocalService.getClassNameId(
-					InfoItemFormProvider.class.getName()),
-				0L, TemplateConstants.LANG_TYPE_FTL, locale);
+		_fillTemplateContextTemplateVariables(jsonArray, locale);
 
-		for (TemplateVariableGroup templateVariableGroup :
-				templateVariableGroupsMap.values()) {
+		_fillObjectDefinitionTemplateVariables(
+			jsonArray, locale, objectDefinition, resourceRequest);
 
-			jsonArray.put(
-				_getTemplateVariableGroupJSONObject(
-					false, locale, templateVariableGroup));
-		}
+		JSONPortletResponseUtil.writeJSON(
+			resourceRequest, resourceResponse, jsonArray);
+	}
+
+	private void _fillObjectDefinitionTemplateVariables(
+			JSONArray jsonArray, Locale locale,
+			ObjectDefinition objectDefinition, ResourceRequest resourceRequest)
+		throws Exception {
 
 		InfoItemFormProvider<?> infoItemFormProvider =
 			_infoItemServiceRegistry.getFirstInfoItemService(
@@ -125,9 +126,25 @@ public class NotificationTemplateFTLElementsMVCResourceCommand
 				_getTemplateVariableGroupJSONObject(
 					true, locale, templateVariableGroup));
 		}
+	}
 
-		JSONPortletResponseUtil.writeJSON(
-			resourceRequest, resourceResponse, jsonArray);
+	private void _fillTemplateContextTemplateVariables(
+			JSONArray jsonArray, Locale locale)
+		throws Exception {
+
+		Map<String, TemplateVariableGroup> templateVariableGroupsMap =
+			TemplateContextHelper.getTemplateVariableGroups(
+				_classNameLocalService.getClassNameId(
+					NotificationTemplate.class.getName()),
+				0L, TemplateConstants.LANG_TYPE_FTL, locale);
+
+		for (TemplateVariableGroup templateVariableGroup :
+				templateVariableGroupsMap.values()) {
+
+			jsonArray.put(
+				_getTemplateVariableGroupJSONObject(
+					false, locale, templateVariableGroup));
+		}
 	}
 
 	private JSONObject _getTemplateVariableGroupJSONObject(
@@ -153,6 +170,9 @@ public class NotificationTemplateFTLElementsMVCResourceCommand
 					if (infoField) {
 						content = StringBundler.concat(
 							"${", content, ".getData()}");
+					}
+					else {
+						content = StringBundler.concat("${", content, "}");
 					}
 
 					return content;

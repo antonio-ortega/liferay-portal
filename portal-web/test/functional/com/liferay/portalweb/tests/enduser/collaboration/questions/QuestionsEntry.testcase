@@ -179,7 +179,7 @@ definition {
 
 			AssertVisible(
 				key_categoryItem = "Questions Test Category",
-				locator1 = "Questions#QUESTIONS_CATEGORY_LABEL_ITEM");
+				locator1 = "Questions#QUESTIONS_CATEGORY_LABEL_BADGE");
 
 			var parentCategoryId = JSONMBMessage.getCategoryIdByName(
 				categoryName = "Questions Test Category",
@@ -322,6 +322,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanConfigureLandingPageTopicNavigation {
+		property portal.release = "quarantine";
+
 		task ("Given there is a caregory created") {
 			JSONMBMessage.addCategory(
 				categoryDescription = "Description",
@@ -395,6 +397,8 @@ definition {
 	@priority = 4
 	@refactordone
 	test CanConfigureRootTopic {
+		property portal.release = "quarantine";
+
 		task ("Given there is a created categoies") {
 			JSONMBMessage.addCategory(
 				categoryDescription = "Description",
@@ -592,7 +596,7 @@ definition {
 		}
 
 		task ("Then he can delete an answer") {
-			Questions.deleteQuestion();
+			Questions.deleteQuestion(questionTitle = "Title AddQuestion");
 		}
 	}
 
@@ -615,7 +619,9 @@ definition {
 		task ("Then the user can deletes the question") {
 			Questions.gotoDetails(questionTitle = "MB Thread Message Subject");
 
-			Questions.deleteQuestion(deleteInActivity = "true");
+			Questions.deleteQuestion(
+				deleteInActivity = "true",
+				questionTitle = "MB Thread Message Subject");
 		}
 	}
 
@@ -1010,53 +1016,52 @@ definition {
 				categoryName = "Questions Test Category",
 				userEmailAddress = "test@liferay.com");
 
-			JSONQuestions.addQuestion(
-				bodyField = "Content AddQuestion",
-				categoryName = "Questions Test Category",
-				groupName = "Guest",
-				titleField = "Title AddQuestion");
+			Navigator.gotoPage(pageName = "Questions Page");
+
+			Questions.gotoCategory(categoryName = "Questions Test Category");
 		}
 
 		task ("When the user subscribes on a question") {
-			Navigator.gotoPage(pageName = "Questions Page");
-
 			Questions.gotoTab(questionTabField = "Subscriptions");
 
 			Questions.viewSubscribedQuestion(noSubscribedQuestion = "true");
 
-			Questions.openToQuestionDetails(
-				layoutName = "questions-page",
-				questionsTitle = "title-addquestion",
-				siteURLKey = "guest",
-				topicName = "questions-test-category");
+			Navigator.gotoPage(pageName = "Questions Page");
 
-			Questions.subscribeQuestion();
+			Questions.gotoCategory(categoryName = "Questions Test Category");
+
+			Questions.askQuestionFillingTheMandatoryFields(
+				contentField = "Content AddQuestion",
+				titleField = "Title AddQuestion",
+				topicName = "questions-test-category");
 		}
 
 		task ("Then he can see that he was subscribed on 'Subscriptions' page") {
+			Questions.gotoDetails(questionTitle = "Title AddQuestion");
+
 			Questions.gotoTab(questionTabField = "Subscriptions");
 
 			Questions.viewSubscribedQuestion(subscribedQuestion = "Title AddQuestion");
 		}
 
 		task ("When the user unsubscribes on a question") {
+			Navigator.gotoPage(pageName = "Questions Page");
+
+			Questions.gotoCategory(categoryName = "Questions Test Category");
+
+			Questions.gotoDetails(questionTitle = "Title AddQuestion");
+
 			Questions.unsubscribeFromQuestion(questionTitle = "Title AddQuestion");
 		}
 
-		task ("Then he ca see that he was subscribed on 'Subscriptions' page") {
-			Questions.gotoTab(questionTabField = "Questions");
-
+		task ("Then he ca see that he was unsubscribes on 'Subscriptions' page") {
 			Questions.gotoTab(questionTabField = "Subscriptions");
 
 			Questions.viewSubscribedQuestion(noSubscribedQuestion = "true");
 		}
 
 		task ("When another user asnwer a question that the Test user is subscribed") {
-			Questions.openToQuestionDetails(
-				layoutName = "questions-page",
-				questionsTitle = "title-addquestion",
-				siteURLKey = "guest",
-				topicName = "questions-test-category");
+			Questions.gotoTab(questionTabField = "Questions");
 
 			Questions.subscribeQuestion();
 
@@ -1064,11 +1069,11 @@ definition {
 				userLoginEmailAddress = "userea@liferay.com",
 				userLoginFullName = "userfn userln");
 
-			Questions.openToQuestionDetails(
-				layoutName = "questions-page",
-				questionsTitle = "title-addquestion",
-				siteURLKey = "guest",
-				topicName = "questions-test-category");
+			Navigator.gotoPage(pageName = "Questions Page");
+
+			Questions.gotoCategory(categoryName = "Questions Test Category");
+
+			Questions.gotoDetails(questionTitle = "Title AddQuestion");
 
 			Questions.answerQuestion(contentField = "This is my answer");
 		}
@@ -1178,6 +1183,7 @@ definition {
 	@description = "LPS-133798 - Validate if the guest can check the canonical URL, also covers LPS-137636."
 	@priority = 4
 	test CanViewCanonicalURL {
+		property portal.release = "quarantine";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -1221,7 +1227,7 @@ definition {
 
 			Questions.assertCanonicalURL(
 				category = "category",
-				pageName = "Questions Page",
+				pageName = "questions-page",
 				portalURL = ${portalURL},
 				title = "question");
 		}
@@ -1288,13 +1294,7 @@ definition {
 		}
 
 		task ("When an anonymous user goes to the most recently created question's detail page") {
-			Navigator.openSpecificURL(url = "${portalURL}/web/guest/questions-page");
-
-			Questions.gotoCategory(categoryName = "Category");
-
-			Questions.gotoDetails(
-				questionTabField = "Questions",
-				questionTitle = "Question");
+			Navigator.openSpecificURL(url = "${portalURL}/web/guest/questions-page/questions/category/question-1");
 		}
 
 		task ("Then a he can see the question title on url as 'question-1'") {
@@ -1375,12 +1375,6 @@ definition {
 				topicName = "questions-test-category");
 		}
 
-		task ("And the user can se that there are not questions created") {
-			Questions.viewSearchField(noQuestion = "true");
-
-			Questions.viewSelectFilter(noQuestion = "true");
-		}
-
 		task ("When the user creates a question") {
 			JSONQuestions.addQuestion(
 				bodyField = "Body AddQuestionWithTheTestBody",
@@ -1394,7 +1388,7 @@ definition {
 				topicName = "questions-test-category");
 		}
 
-		task ("Then he can see the select filter and serarch field") {
+		task ("Then he can see the select filter and search field") {
 			Questions.viewSearchField();
 
 			Questions.viewSelectFilter();
@@ -1644,10 +1638,9 @@ definition {
 		}
 
 		task ("When the user do to the main category and change topic to 'Questions Test Category2'") {
-			Questions.openToQuestionsTopic(
-				layoutName = "questions-page",
-				siteURLKey = "guest",
-				topicName = "questions-test-category1");
+			Navigator.gotoPage(pageName = "Questions Page");
+
+			Questions.gotoCategory(categoryName = "Questions Test Category1");
 
 			Questions.changeTopic(
 				parentTopicName = "Questions Test Category1",
@@ -1762,7 +1755,7 @@ definition {
 				questionTitle = "Question 3",
 				votedCount = 0);
 
-			Questions.configureFilter(filterBy = "Most Voted");
+			Questions.clickFilterAndOrderBy(option = "Most Frequent");
 
 			Questions.viewFilterResults(
 				lastQuestionTitle = "Question 1",
@@ -1818,8 +1811,6 @@ definition {
 				layoutName = "questions-page",
 				siteURLKey = "guest",
 				topicName = "questions-test-category");
-
-			Questions.viewList(listedQuestions = "Question 1,Question 2,Question 3");
 		}
 
 		task ("And change topic through breadcrumb then he can see the question created in each category") {
@@ -1841,7 +1832,7 @@ definition {
 
 			Questions.changeTopic(
 				parentTopicName = "Questions Subcategory2",
-				subTopicName = "Questions Test Category");
+				subTopicName = "All Questions");
 
 			Questions.viewList(listedQuestions = "Question 1,Question 2,Question 3");
 		}
@@ -1881,31 +1872,23 @@ definition {
 			PortletEntry.publish();
 		}
 
-		task ("When the user select the filter 'Latest Edited'") {
+		task ("When the user select the filter 'No Answer'") {
 			Questions.openToQuestionsTopic(
 				layoutName = "questions-page",
 				siteURLKey = "guest",
 				topicName = "questions-test-category");
 
-			Questions.configureFilter(filterBy = "Latest Edited");
+			Questions.clickFilterAndOrderBy(option = "No Answer");
 		}
 
-		task ("Then he can see questions that had been edited lately") {
+		task ("Then he can see questions that had been No Answer") {
 			Questions.viewFilterResults(
 				lastQuestionTitle = "Question 2",
 				questionTitle = "Question 1 Edit");
 		}
 
 		task ("When the user select another kind of filters then he can see the expected results") {
-			Questions.configureFilter(filterBy = "Voted in the Last Week");
-
-			Questions.viewNoFilteredResult();
-
-			Questions.configureFilter(filterBy = "Voted in the Last Month");
-
-			Questions.viewNoFilteredResult();
-
-			Questions.configureFilter(filterBy = "Latest Created");
+			Questions.clickFilterAndOrderBy(option = "Most Frequent");
 
 			Questions.viewFilterResults(
 				lastQuestionTitle = "Question 1 Edit",

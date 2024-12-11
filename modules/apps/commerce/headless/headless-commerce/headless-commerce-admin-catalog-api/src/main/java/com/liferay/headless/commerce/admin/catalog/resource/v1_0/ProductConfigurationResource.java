@@ -16,6 +16,10 @@ import com.liferay.portal.odata.filter.ExpressionConvert;
 import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResource;
+import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
+import com.liferay.portal.vulcan.pagination.Page;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +47,60 @@ import org.osgi.annotation.versioning.ProviderType;
 @Generated("")
 @ProviderType
 public interface ProductConfigurationResource {
+
+	public Page<ProductConfiguration>
+			getProductConfigurationListByExternalReferenceCodeProductConfigurationsPage(
+				String externalReferenceCode, String search, Filter filter,
+				Pagination pagination, Sort[] sorts)
+		throws Exception;
+
+	public ProductConfiguration
+			postProductConfigurationListByExternalReferenceCodeProductConfiguration(
+				String externalReferenceCode,
+				ProductConfiguration productConfiguration)
+		throws Exception;
+
+	public Page<ProductConfiguration>
+			getProductConfigurationListIdProductConfigurationsPage(
+				Long id, String search, Filter filter, Pagination pagination,
+				Sort[] sorts)
+		throws Exception;
+
+	public ProductConfiguration
+			postProductConfigurationListIdProductConfiguration(
+				Long id, ProductConfiguration productConfiguration)
+		throws Exception;
+
+	public Response postProductConfigurationListIdProductConfigurationBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteProductConfigurationByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public ProductConfiguration getProductConfigurationByExternalReferenceCode(
+			String externalReferenceCode)
+		throws Exception;
+
+	public ProductConfiguration
+			patchProductConfigurationByExternalReferenceCode(
+				String externalReferenceCode,
+				ProductConfiguration productConfiguration)
+		throws Exception;
+
+	public void deleteProductConfiguration(Long id) throws Exception;
+
+	public Response deleteProductConfigurationBatch(
+			String callbackURL, Object object)
+		throws Exception;
+
+	public ProductConfiguration getProductConfiguration(Long id)
+		throws Exception;
+
+	public ProductConfiguration patchProductConfiguration(
+			Long id, ProductConfiguration productConfiguration)
+		throws Exception;
 
 	public ProductConfiguration getProductByExternalReferenceCodeConfiguration(
 			String externalReferenceCode)
@@ -98,6 +156,14 @@ public interface ProductConfigurationResource {
 	public void setRoleLocalService(RoleLocalService roleLocalService);
 
 	public void setSortParserProvider(SortParserProvider sortParserProvider);
+
+	public void setVulcanBatchEngineExportTaskResource(
+		VulcanBatchEngineExportTaskResource
+			vulcanBatchEngineExportTaskResource);
+
+	public void setVulcanBatchEngineImportTaskResource(
+		VulcanBatchEngineImportTaskResource
+			vulcanBatchEngineImportTaskResource);
 
 	public default Filter toFilter(String filterString) {
 		return toFilter(

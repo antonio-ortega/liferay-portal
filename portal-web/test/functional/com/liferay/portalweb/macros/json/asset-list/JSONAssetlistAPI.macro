@@ -1,6 +1,7 @@
 definition {
 
-	macro _addAssetListEntry {
+	@summary = "Default summary"
+	macro _addAssetListEntry(groupId = null, title = null, type = null) {
 		Variables.assertDefined(parameterList = "${groupId},${title},${type}");
 
 		var portalURL = JSONCompany.getPortalURL();
@@ -9,6 +10,7 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/assetlist.assetlistentry/add-asset-list-entry \
 				-u ${userLoginInfo} \
+				-d externalReferenceCode='' \
 				-d groupId=${groupId} \
 				-d title=${title} \
 				-d type=${type}
@@ -19,7 +21,8 @@ definition {
 		return ${assetListEntryId};
 	}
 
-	macro _addDynamicAssetListEntry {
+	@summary = "Default summary"
+	macro _addDynamicAssetListEntry(itemType = null, groupId = null, itemSubtype = null, title = null) {
 		Variables.assertDefined(parameterList = "${groupId},${itemType},${title}");
 
 		var portalURL = JSONCompany.getPortalURL();
@@ -34,6 +37,7 @@ definition {
 		var curl = '''
 			${portalURL}/api/jsonws/assetlist.assetlistentry/add-dynamic-asset-list-entry \
 				-u ${userLoginInfo} \
+				-d externalReferenceCode='' \
 				-d userId=${userId} \
 				-d groupId=${groupId} \
 				-d title=${title} \
@@ -43,7 +47,8 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro _addManualAssetListEntry {
+	@summary = "Default summary"
+	macro _addManualAssetListEntry(itemType = null, groupId = null, itemSubtype = null, title = null) {
 		Variables.assertDefined(parameterList = "${groupId},${itemType},${title}");
 
 		var assetListEntryId = JSONAssetlistAPI._addAssetListEntry(
@@ -62,7 +67,8 @@ definition {
 			typeSettings = ${typeSettings});
 	}
 
-	macro _updateAssetListEntryTypeSettings {
+	@summary = "Default summary"
+	macro _updateAssetListEntryTypeSettings(assetListEntryId = null, segmentsEntryId = null, typeSettings = null) {
 		Variables.assertDefined(parameterList = "${assetListEntryId},${segmentsEntryId},${typeSettings}");
 
 		var portalURL = JSONCompany.getPortalURL();

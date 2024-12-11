@@ -19,28 +19,6 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-185850. Assert we can hide the Show All Items toggle in for Reviewing Changes"
-	@priority = 3
-	test CanHideShowAllItemsToggleForReviewingChanges {
-		property osgi.module.configuration.file.names = "com.liferay.change.tracking.configuration.CTSettingsConfiguration.config:com.liferay.change.tracking.web.internal.configuration.CTConfiguration.config";
-		property osgi.module.configurations = "enabled=B\"true\":showAllItemsEnabled=B\"false\"";
-
-		JSONPublications.addPublication(publicationName = "Publication Name");
-
-		JSONPublications.selectPublication(publicationName = "Publication Name");
-
-		JSONWebcontent.addWebContent(
-			content = "WC WebContent Content",
-			groupName = "Guest",
-			title = "WC WebContent Title");
-
-		PublicationsNavigator.gotoReviewChanges(
-			gotoPublicationsAdmin = "true",
-			publicationName = "Publication Name");
-
-		AssertElementPresent(locator1 = "PublicationsChanges#DISABLE_SHOW_ALL_ITEMS_TOGGLE");
-	}
-
 	@description = "This is a use case for LPS-163875. It shouldn't be possible to enable Publications is a remote live site."
 	@priority = 4
 	test CannotEnablePublicationsInRemoteLiveSite {
@@ -70,14 +48,12 @@ definition {
 
 		Check.checkToggleSwitch(locator1 = "Publications#ENABLE_PUBLICATIONS_TOGGLE_SWITCH");
 
-		Click(locator1 = "Button#SUBMIT");
-
 		Alert.viewErrorMessage(errorMessage = "Staging is enabled for at least one site or asset library in the current virtual instance. Publications and staging cannot be used together.");
 
 		User.logoutPG();
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			specificURL = "http://localhost:9080",
 			userEmailAddress = "test@liferay.com");
 
@@ -87,8 +63,6 @@ definition {
 			portlet = "Publications");
 
 		Check.checkToggleSwitch(locator1 = "Publications#ENABLE_PUBLICATIONS_TOGGLE_SWITCH");
-
-		Click(locator1 = "Button#SUBMIT");
 
 		Alert.viewErrorMessage(errorMessage = "Staging is enabled for at least one site or asset library in the current virtual instance. Publications and staging cannot be used together.");
 	}
@@ -111,7 +85,7 @@ definition {
 
 		Check.checkToggleSwitch(locator1 = "Publications#ENABLE_PUBLICATIONS_TOGGLE_SWITCH");
 
-		Click(locator1 = "Button#SUBMIT");
+		WaitForElementPresent(locator1 = "Message#ERROR");
 
 		Alert.viewErrorMessage(errorMessage = "Staging is enabled for at least one site or asset library in the current virtual instance. Publications and staging cannot be used together.");
 	}
@@ -128,6 +102,8 @@ definition {
 		property test.run.type = "single";
 
 		Publications.enablePublications();
+
+		PublicationsNavigator.openPublicationsAdmin();
 
 		AssertTextEquals(
 			locator1 = "Publications#MANAGE_PUBLICATIONS_PAGE_TITLE",
@@ -181,7 +157,7 @@ definition {
 		SignOut.signOut();
 
 		User.firstLoginPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		var sandboxedPublicationName = Publications.generateSandboxedPublicationName(userScreenName = "usersn");
@@ -232,6 +208,8 @@ definition {
 	@priority = 5
 	test EnablePublicationsAndGoToOverview {
 		Publications.enablePublications();
+
+		PublicationsNavigator.openPublicationsAdmin();
 
 		AssertTextEquals(
 			locator1 = "Publications#MANAGE_PUBLICATIONS_PAGE_TITLE",

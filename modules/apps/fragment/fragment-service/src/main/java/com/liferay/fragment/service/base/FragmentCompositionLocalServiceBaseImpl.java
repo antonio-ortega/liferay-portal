@@ -14,15 +14,13 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.service.FragmentCompositionLocalService;
-import com.liferay.fragment.service.FragmentCompositionLocalServiceUtil;
 import com.liferay.fragment.service.persistence.FragmentCompositionPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Conjunction;
 import com.liferay.portal.kernel.dao.orm.Criterion;
@@ -56,6 +54,8 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.sql.Connection;
+
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -82,7 +82,7 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>FragmentCompositionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>FragmentCompositionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>FragmentCompositionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.fragment.service.FragmentCompositionLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -280,6 +280,23 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 		String uuid, long groupId) {
 
 		return fragmentCompositionPersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	@Override
+	public FragmentComposition fetchFragmentCompositionByExternalReferenceCode(
+		String externalReferenceCode, long groupId) {
+
+		return fragmentCompositionPersistence.fetchByERC_G(
+			externalReferenceCode, groupId);
+	}
+
+	@Override
+	public FragmentComposition getFragmentCompositionByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		return fragmentCompositionPersistence.findByERC_G(
+			externalReferenceCode, groupId);
 	}
 
 	/**
@@ -614,7 +631,6 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		FragmentCompositionLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -630,9 +646,6 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		fragmentCompositionLocalService =
 			(FragmentCompositionLocalService)aopProxy;
-
-		FragmentCompositionLocalServiceUtil.setService(
-			fragmentCompositionLocalService);
 	}
 
 	/**
@@ -674,19 +687,23 @@ public abstract class FragmentCompositionLocalServiceBaseImpl
 	 * @param sql the sql query
 	 */
 	protected void runSQL(String sql) {
+		DataSource dataSource = fragmentCompositionPersistence.getDataSource();
+
+		DB db = DBManagerUtil.getDB();
+
+		Connection currentConnection = CurrentConnectionUtil.getConnection(
+			dataSource);
+
 		try {
-			DataSource dataSource =
-				fragmentCompositionPersistence.getDataSource();
+			if (currentConnection != null) {
+				db.runSQL(currentConnection, new String[] {sql});
 
-			DB db = DBManagerUtil.getDB();
+				return;
+			}
 
-			sql = db.buildSQL(sql);
-			sql = PortalUtil.transformSQL(sql);
-
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
-				dataSource, sql);
-
-			sqlUpdate.update();
+			try (Connection connection = dataSource.getConnection()) {
+				db.runSQL(connection, new String[] {sql});
+			}
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

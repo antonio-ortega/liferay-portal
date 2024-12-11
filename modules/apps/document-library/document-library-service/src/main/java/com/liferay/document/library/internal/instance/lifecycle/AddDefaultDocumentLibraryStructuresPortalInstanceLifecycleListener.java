@@ -7,7 +7,7 @@ package com.liferay.document.library.internal.instance.lifecycle;
 
 import com.liferay.document.library.configuration.DLConfiguration;
 import com.liferay.document.library.internal.util.DDMFormUtil;
-import com.liferay.document.library.kernel.util.RawMetadataProcessor;
+import com.liferay.document.library.kernel.processor.RawMetadataProcessor;
 import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
@@ -108,7 +108,7 @@ public class AddDefaultDocumentLibraryStructuresPortalInstanceLifecycleListener
 			DDMFormLayout ddmFormLayout = _ddm.getDefaultDDMFormLayout(ddmForm);
 
 			_ddmStructureLocalService.addStructure(
-				guestUserId, group.getGroupId(),
+				null, guestUserId, group.getGroupId(),
 				DDMStructureConstants.DEFAULT_PARENT_STRUCTURE_ID,
 				_portal.getClassNameId(RawMetadataProcessor.class), name,
 				nameMap, descriptionMap, ddmForm, ddmFormLayout,

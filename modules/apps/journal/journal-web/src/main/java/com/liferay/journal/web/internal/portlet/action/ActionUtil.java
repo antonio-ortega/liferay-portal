@@ -5,7 +5,7 @@
 
 package com.liferay.journal.web.internal.portlet.action;
 
-import com.liferay.change.tracking.spi.constants.CTTimelineKeys;
+import com.liferay.change.tracking.spi.history.util.CTTimelineUtil;
 import com.liferay.dynamic.data.mapping.exception.TemplateScriptException;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
@@ -103,6 +103,8 @@ public class ActionUtil {
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
+		JournalArticle article = null;
+
 		String actionName = ParamUtil.getString(
 			httpServletRequest, ActionRequest.ACTION_NAME);
 
@@ -119,8 +121,6 @@ public class ActionUtil {
 		String articleId = ParamUtil.getString(httpServletRequest, "articleId");
 		int status = ParamUtil.getInteger(
 			httpServletRequest, "status", WorkflowConstants.STATUS_ANY);
-
-		JournalArticle article = null;
 
 		if (actionName.equals("/journal/add_article") &&
 			(resourcePrimKey != 0)) {
@@ -170,7 +170,6 @@ public class ActionUtil {
 				article.getDescriptionMap();
 				article.getTitleMap();
 
-				article.setNew(true);
 				article.setId(0);
 				article.setGroupId(groupId);
 				article.setClassNameId(
@@ -178,6 +177,7 @@ public class ActionUtil {
 				article.setClassPK(0);
 				article.setArticleId(null);
 				article.setVersion(0);
+				article.setNew(true);
 			}
 			catch (NoSuchArticleException noSuchArticleException) {
 				if (_log.isDebugEnabled()) {
@@ -188,10 +188,8 @@ public class ActionUtil {
 			}
 		}
 
-		httpServletRequest.setAttribute(
-			CTTimelineKeys.CLASS_NAME, JournalArticle.class.getName());
-		httpServletRequest.setAttribute(
-			CTTimelineKeys.CLASS_PK, article.getPrimaryKey());
+		CTTimelineUtil.setCTTimelineKeys(
+			httpServletRequest, JournalArticle.class, article.getPrimaryKey());
 
 		return article;
 	}
@@ -199,9 +197,9 @@ public class ActionUtil {
 	public static JournalFeed getFeed(HttpServletRequest httpServletRequest)
 		throws Exception {
 
-		String feedId = ParamUtil.getString(httpServletRequest, "feedId");
-
 		JournalFeed feed = null;
+
+		String feedId = ParamUtil.getString(httpServletRequest, "feedId");
 
 		if (Validator.isNotNull(feedId)) {
 			long groupId = ParamUtil.getLong(httpServletRequest, "groupId");

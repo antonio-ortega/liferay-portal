@@ -64,14 +64,15 @@ public class StyleBookEntryVersionModelImpl
 	public static final Object[][] TABLE_COLUMNS = {
 		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
 		{"styleBookEntryVersionId", Types.BIGINT}, {"version", Types.INTEGER},
-		{"uuid_", Types.VARCHAR}, {"styleBookEntryId", Types.BIGINT},
-		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
-		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
-		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
+		{"uuid_", Types.VARCHAR}, {"externalReferenceCode", Types.VARCHAR},
+		{"styleBookEntryId", Types.BIGINT}, {"groupId", Types.BIGINT},
+		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
+		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
+		{"modifiedDate", Types.TIMESTAMP},
 		{"defaultStyleBookEntry", Types.BOOLEAN},
 		{"frontendTokensValues", Types.CLOB}, {"name", Types.VARCHAR},
 		{"previewFileEntryId", Types.BIGINT},
-		{"styleBookEntryKey", Types.VARCHAR}
+		{"styleBookEntryKey", Types.VARCHAR}, {"themeId", Types.VARCHAR}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -83,6 +84,7 @@ public class StyleBookEntryVersionModelImpl
 		TABLE_COLUMNS_MAP.put("styleBookEntryVersionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("version", Types.INTEGER);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("styleBookEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
@@ -95,10 +97,11 @@ public class StyleBookEntryVersionModelImpl
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("previewFileEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("styleBookEntryKey", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("themeId", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table StyleBookEntryVersion (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,styleBookEntryVersionId LONG not null,version INTEGER,uuid_ VARCHAR(75) null,styleBookEntryId LONG,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,defaultStyleBookEntry BOOLEAN,frontendTokensValues TEXT null,name VARCHAR(75) null,previewFileEntryId LONG,styleBookEntryKey VARCHAR(75) null,primary key (styleBookEntryVersionId, ctCollectionId))";
+		"create table StyleBookEntryVersion (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,styleBookEntryVersionId LONG not null,version INTEGER,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,styleBookEntryId LONG,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,defaultStyleBookEntry BOOLEAN,frontendTokensValues TEXT null,name VARCHAR(75) null,previewFileEntryId LONG,styleBookEntryKey VARCHAR(75) null,themeId VARCHAR(255) null,primary key (styleBookEntryVersionId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table StyleBookEntryVersion";
@@ -287,6 +290,9 @@ public class StyleBookEntryVersionModelImpl
 			attributeGetterFunctions.put(
 				"uuid", StyleBookEntryVersion::getUuid);
 			attributeGetterFunctions.put(
+				"externalReferenceCode",
+				StyleBookEntryVersion::getExternalReferenceCode);
+			attributeGetterFunctions.put(
 				"styleBookEntryId", StyleBookEntryVersion::getStyleBookEntryId);
 			attributeGetterFunctions.put(
 				"groupId", StyleBookEntryVersion::getGroupId);
@@ -314,6 +320,8 @@ public class StyleBookEntryVersionModelImpl
 			attributeGetterFunctions.put(
 				"styleBookEntryKey",
 				StyleBookEntryVersion::getStyleBookEntryKey);
+			attributeGetterFunctions.put(
+				"themeId", StyleBookEntryVersion::getThemeId);
 
 			_attributeGetterFunctions = Collections.unmodifiableMap(
 				attributeGetterFunctions);
@@ -353,6 +361,10 @@ public class StyleBookEntryVersionModelImpl
 				"uuid",
 				(BiConsumer<StyleBookEntryVersion, String>)
 					StyleBookEntryVersion::setUuid);
+			attributeSetterBiConsumers.put(
+				"externalReferenceCode",
+				(BiConsumer<StyleBookEntryVersion, String>)
+					StyleBookEntryVersion::setExternalReferenceCode);
 			attributeSetterBiConsumers.put(
 				"styleBookEntryId",
 				(BiConsumer<StyleBookEntryVersion, Long>)
@@ -401,6 +413,10 @@ public class StyleBookEntryVersionModelImpl
 				"styleBookEntryKey",
 				(BiConsumer<StyleBookEntryVersion, String>)
 					StyleBookEntryVersion::setStyleBookEntryKey);
+			attributeSetterBiConsumers.put(
+				"themeId",
+				(BiConsumer<StyleBookEntryVersion, String>)
+					StyleBookEntryVersion::setThemeId);
 
 			_attributeSetterBiConsumers = Collections.unmodifiableMap(
 				(Map)attributeSetterBiConsumers);
@@ -417,6 +433,7 @@ public class StyleBookEntryVersionModelImpl
 	public void populateVersionedModel(StyleBookEntry styleBookEntry) {
 		styleBookEntry.setCtCollectionId(getCtCollectionId());
 		styleBookEntry.setUuid(getUuid());
+		styleBookEntry.setExternalReferenceCode(getExternalReferenceCode());
 		styleBookEntry.setGroupId(getGroupId());
 		styleBookEntry.setCompanyId(getCompanyId());
 		styleBookEntry.setUserId(getUserId());
@@ -428,6 +445,7 @@ public class StyleBookEntryVersionModelImpl
 		styleBookEntry.setName(getName());
 		styleBookEntry.setPreviewFileEntryId(getPreviewFileEntryId());
 		styleBookEntry.setStyleBookEntryKey(getStyleBookEntryKey());
+		styleBookEntry.setThemeId(getThemeId());
 	}
 
 	@Override
@@ -539,6 +557,25 @@ public class StyleBookEntryVersionModelImpl
 	@Deprecated
 	public String getOriginalUuid() {
 		return getColumnOriginalValue("uuid_");
+	}
+
+	@Override
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _externalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_externalReferenceCode = externalReferenceCode;
 	}
 
 	@Override
@@ -813,6 +850,25 @@ public class StyleBookEntryVersionModelImpl
 		return getColumnOriginalValue("styleBookEntryKey");
 	}
 
+	@Override
+	public String getThemeId() {
+		if (_themeId == null) {
+			return "";
+		}
+		else {
+			return _themeId;
+		}
+	}
+
+	@Override
+	public void setThemeId(String themeId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_themeId = themeId;
+	}
+
 	public long getColumnBitmask() {
 		if (_columnBitmask > 0) {
 			return _columnBitmask;
@@ -877,6 +933,8 @@ public class StyleBookEntryVersionModelImpl
 			getStyleBookEntryVersionId());
 		styleBookEntryVersionImpl.setVersion(getVersion());
 		styleBookEntryVersionImpl.setUuid(getUuid());
+		styleBookEntryVersionImpl.setExternalReferenceCode(
+			getExternalReferenceCode());
 		styleBookEntryVersionImpl.setStyleBookEntryId(getStyleBookEntryId());
 		styleBookEntryVersionImpl.setGroupId(getGroupId());
 		styleBookEntryVersionImpl.setCompanyId(getCompanyId());
@@ -892,6 +950,7 @@ public class StyleBookEntryVersionModelImpl
 		styleBookEntryVersionImpl.setPreviewFileEntryId(
 			getPreviewFileEntryId());
 		styleBookEntryVersionImpl.setStyleBookEntryKey(getStyleBookEntryKey());
+		styleBookEntryVersionImpl.setThemeId(getThemeId());
 
 		styleBookEntryVersionImpl.resetOriginalValues();
 
@@ -913,6 +972,8 @@ public class StyleBookEntryVersionModelImpl
 			this.<Integer>getColumnOriginalValue("version"));
 		styleBookEntryVersionImpl.setUuid(
 			this.<String>getColumnOriginalValue("uuid_"));
+		styleBookEntryVersionImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
 		styleBookEntryVersionImpl.setStyleBookEntryId(
 			this.<Long>getColumnOriginalValue("styleBookEntryId"));
 		styleBookEntryVersionImpl.setGroupId(
@@ -937,6 +998,8 @@ public class StyleBookEntryVersionModelImpl
 			this.<Long>getColumnOriginalValue("previewFileEntryId"));
 		styleBookEntryVersionImpl.setStyleBookEntryKey(
 			this.<String>getColumnOriginalValue("styleBookEntryKey"));
+		styleBookEntryVersionImpl.setThemeId(
+			this.<String>getColumnOriginalValue("themeId"));
 
 		return styleBookEntryVersionImpl;
 	}
@@ -1041,6 +1104,18 @@ public class StyleBookEntryVersionModelImpl
 			styleBookEntryVersionCacheModel.uuid = null;
 		}
 
+		styleBookEntryVersionCacheModel.externalReferenceCode =
+			getExternalReferenceCode();
+
+		String externalReferenceCode =
+			styleBookEntryVersionCacheModel.externalReferenceCode;
+
+		if ((externalReferenceCode != null) &&
+			(externalReferenceCode.length() == 0)) {
+
+			styleBookEntryVersionCacheModel.externalReferenceCode = null;
+		}
+
 		styleBookEntryVersionCacheModel.styleBookEntryId =
 			getStyleBookEntryId();
 
@@ -1113,6 +1188,14 @@ public class StyleBookEntryVersionModelImpl
 			styleBookEntryVersionCacheModel.styleBookEntryKey = null;
 		}
 
+		styleBookEntryVersionCacheModel.themeId = getThemeId();
+
+		String themeId = styleBookEntryVersionCacheModel.themeId;
+
+		if ((themeId != null) && (themeId.length() == 0)) {
+			styleBookEntryVersionCacheModel.themeId = null;
+		}
+
 		return styleBookEntryVersionCacheModel;
 	}
 
@@ -1180,6 +1263,7 @@ public class StyleBookEntryVersionModelImpl
 	private long _styleBookEntryVersionId;
 	private int _version;
 	private String _uuid;
+	private String _externalReferenceCode;
 	private long _styleBookEntryId;
 	private long _groupId;
 	private long _companyId;
@@ -1193,6 +1277,7 @@ public class StyleBookEntryVersionModelImpl
 	private String _name;
 	private long _previewFileEntryId;
 	private String _styleBookEntryKey;
+	private String _themeId;
 
 	public <T> T getColumnValue(String columnName) {
 		columnName = _attributeNames.getOrDefault(columnName, columnName);
@@ -1230,6 +1315,8 @@ public class StyleBookEntryVersionModelImpl
 			"styleBookEntryVersionId", _styleBookEntryVersionId);
 		_columnOriginalValues.put("version", _version);
 		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"externalReferenceCode", _externalReferenceCode);
 		_columnOriginalValues.put("styleBookEntryId", _styleBookEntryId);
 		_columnOriginalValues.put("groupId", _groupId);
 		_columnOriginalValues.put("companyId", _companyId);
@@ -1244,6 +1331,7 @@ public class StyleBookEntryVersionModelImpl
 		_columnOriginalValues.put("name", _name);
 		_columnOriginalValues.put("previewFileEntryId", _previewFileEntryId);
 		_columnOriginalValues.put("styleBookEntryKey", _styleBookEntryKey);
+		_columnOriginalValues.put("themeId", _themeId);
 	}
 
 	private static final Map<String, String> _attributeNames;
@@ -1277,29 +1365,33 @@ public class StyleBookEntryVersionModelImpl
 
 		columnBitmasks.put("uuid_", 16L);
 
-		columnBitmasks.put("styleBookEntryId", 32L);
+		columnBitmasks.put("externalReferenceCode", 32L);
 
-		columnBitmasks.put("groupId", 64L);
+		columnBitmasks.put("styleBookEntryId", 64L);
 
-		columnBitmasks.put("companyId", 128L);
+		columnBitmasks.put("groupId", 128L);
 
-		columnBitmasks.put("userId", 256L);
+		columnBitmasks.put("companyId", 256L);
 
-		columnBitmasks.put("userName", 512L);
+		columnBitmasks.put("userId", 512L);
 
-		columnBitmasks.put("createDate", 1024L);
+		columnBitmasks.put("userName", 1024L);
 
-		columnBitmasks.put("modifiedDate", 2048L);
+		columnBitmasks.put("createDate", 2048L);
 
-		columnBitmasks.put("defaultStyleBookEntry", 4096L);
+		columnBitmasks.put("modifiedDate", 4096L);
 
-		columnBitmasks.put("frontendTokensValues", 8192L);
+		columnBitmasks.put("defaultStyleBookEntry", 8192L);
 
-		columnBitmasks.put("name", 16384L);
+		columnBitmasks.put("frontendTokensValues", 16384L);
 
-		columnBitmasks.put("previewFileEntryId", 32768L);
+		columnBitmasks.put("name", 32768L);
 
-		columnBitmasks.put("styleBookEntryKey", 65536L);
+		columnBitmasks.put("previewFileEntryId", 65536L);
+
+		columnBitmasks.put("styleBookEntryKey", 131072L);
+
+		columnBitmasks.put("themeId", 262144L);
 
 		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
 	}

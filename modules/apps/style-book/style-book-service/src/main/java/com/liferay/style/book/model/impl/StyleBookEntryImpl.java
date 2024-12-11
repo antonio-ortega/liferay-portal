@@ -55,6 +55,8 @@ public class StyleBookEntryImpl extends StyleBookEntryBaseImpl {
 			"frontendTokensValuesPath", "frontend-tokens-values.json"
 		).put(
 			"name", getName()
+		).put(
+			"themeId", getThemeId()
 		);
 
 		FileEntry previewFileEntry = _getPreviewFileEntry();
@@ -65,7 +67,8 @@ public class StyleBookEntryImpl extends StyleBookEntryBaseImpl {
 				"thumbnail." + previewFileEntry.getExtension());
 		}
 
-		zipWriter.addEntry(path + "/style-book.json", jsonObject.toString());
+		zipWriter.addEntry(
+			path + "/style-book.json", JSONUtil.toString(jsonObject));
 
 		zipWriter.addEntry(
 			path + "/frontend-tokens-values.json", getFrontendTokensValues());

@@ -8,8 +8,11 @@ import {fetch} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useState} from 'react';
 
+import './account_selector.scss';
+import ServiceProvider from '../../ServiceProvider/index';
 import {
 	CURRENT_ACCOUNT_UPDATED,
+	CURRENT_ORDER_DELETED,
 	CURRENT_ORDER_UPDATED,
 } from '../../utilities/eventsDefinitions';
 import {showErrorNotification} from '../../utilities/notifications';
@@ -19,12 +22,8 @@ import {selectAccount} from './util/index';
 import AccountsListView from './views/AccountsListView';
 import OrdersListView from './views/OrdersListView';
 
-const USER_RESOURCE_ENDPOINT = '/o/headless-admin-user/v1.0/accounts';
-
-const accountsApi = new URL(
-	`${themeDisplay.getPathContext()}${USER_RESOURCE_ENDPOINT}`,
-	themeDisplay.getPortalURL()
-);
+const DeliveryCatalogAPIServiceProvider =
+	ServiceProvider.DeliveryCatalogAPI('v1');
 
 function AccountSelector({
 	accountEntryAllowedTypes,
@@ -51,11 +50,20 @@ function AccountSelector({
 	const [currentUser, setCurrentUser] = useState({});
 
 	useEffect(() => {
+		const accountsApi = new URL(
+			`${themeDisplay.getPathContext()}${DeliveryCatalogAPIServiceProvider.baseURL(
+				commerceChannelId
+			)}`,
+			themeDisplay.getPortalURL()
+		);
+
 		fetch(accountsApi.toString())
 			.then((response) => response.json())
-			.then((response) => setCurrentUser(response))
+			.then((response) => {
+				setCurrentUser(response);
+			})
 			.catch((error) => showErrorNotification(error.message));
-	}, []);
+	}, [commerceChannelId]);
 
 	const changeAccount = (account) => {
 		selectAccount(account.id, setCurrentAccountURL)
@@ -77,7 +85,9 @@ function AccountSelector({
 	const updateOrderModel = useCallback(
 		({order}) => {
 			if (!currentOrder || currentOrder.id !== order.id) {
-				setCurrentOrder((current) => ({...current, ...order}));
+				setCurrentOrder((current) =>
+					order.id === 0 ? {id: order.id} : {...current, ...order}
+				);
 			}
 		},
 		[currentOrder, setCurrentOrder]
@@ -85,8 +95,10 @@ function AccountSelector({
 
 	useEffect(() => {
 		Liferay.on(CURRENT_ORDER_UPDATED, updateOrderModel);
+		Liferay.on(CURRENT_ORDER_DELETED, updateOrderModel);
 
 		return () => {
+			Liferay.detach(CURRENT_ORDER_DELETED, updateOrderModel);
 			Liferay.detach(CURRENT_ORDER_UPDATED, updateOrderModel);
 		};
 	}, [updateOrderModel]);
@@ -108,12 +120,9 @@ function AccountSelector({
 		>
 			{currentView === VIEWS.ACCOUNTS_LIST && (
 				<AccountsListView
-					accountEntryAllowedTypes={
-						accountEntryAllowedTypes
-							? JSON.parse(accountEntryAllowedTypes)
-							: ''
-					}
+					accountEntryAllowedTypes={accountEntryAllowedTypes}
 					changeAccount={changeAccount}
+					commerceChannelId={commerceChannelId}
 					currentAccount={currentAccount}
 					currentUser={currentUser}
 					disabled={!active}
@@ -138,7 +147,7 @@ function AccountSelector({
 }
 
 AccountSelector.propTypes = {
-	accountEntryAllowedTypes: PropTypes.string.isRequired,
+	accountEntryAllowedTypes: PropTypes.array.isRequired,
 	alignmentPosition: PropTypes.number,
 	commerceChannelId: PropTypes.oneOfType([
 		PropTypes.number,

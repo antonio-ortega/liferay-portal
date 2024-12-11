@@ -1,6 +1,6 @@
 Bundle-Name: Liferay Portal Template FreeMarker
 Bundle-SymbolicName: com.liferay.portal.template.freemarker
-Bundle-Version: 7.0.46
+Bundle-Version: 7.0.59
 Import-Package:\
 	!com.sun.javadoc,\
 	!com.sun.org.apache.xml.internal.utils,\
@@ -25,6 +25,14 @@ Import-Package:\
 	!org.slf4j.spi,\
 	\
 	!org.zeroturnaround.javarebel,\
+	\
+	jakarta.el;resolution:=optional,\
+	\
+	jakarta.servlet;resolution:=optional,\
+	jakarta.servlet.http;resolution:=optional,\
+	jakarta.servlet.jsp;resolution:=optional,\
+	jakarta.servlet.jsp.el;resolution:=optional,\
+	jakarta.servlet.jsp.tagext;resolution:=optional,\
 	\
 	org.apache.taglibs.standard;version='[1.2.3,2.0)',\
 	org.apache.taglibs.standard.extra.spath;version='[1.2.3,2.0)',\
@@ -52,3 +60,4 @@ Import-Package:\
 	\
 	*
 -includeresource: @javax.servlet.jsp.jstl-[0-9.]*.jar!/META-INF/*.tld
+-noee: true

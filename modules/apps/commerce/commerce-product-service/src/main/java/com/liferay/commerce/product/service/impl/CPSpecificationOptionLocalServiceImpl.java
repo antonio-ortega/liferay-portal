@@ -13,6 +13,7 @@ import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionSpecificationOptionValue;
 import com.liferay.commerce.product.model.CPSpecificationOption;
 import com.liferay.commerce.product.service.CPDefinitionSpecificationOptionValueLocalService;
+import com.liferay.commerce.product.service.CPSpecificationOptionListTypeDefinitionRelLocalService;
 import com.liferay.commerce.product.service.base.CPSpecificationOptionLocalServiceBaseImpl;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
 import com.liferay.petra.string.CharPool;
@@ -75,9 +76,10 @@ public class CPSpecificationOptionLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPSpecificationOption addCPSpecificationOption(
-			long userId, long cpOptionCategoryId, Map<Locale, String> titleMap,
+			String externalReferenceCode, long userId, long cpOptionCategoryId,
+			long[] listTypeDefinitionIds, Map<Locale, String> titleMap,
 			Map<Locale, String> descriptionMap, boolean facetable, String key,
-			ServiceContext serviceContext)
+			double priority, ServiceContext serviceContext)
 		throws PortalException {
 
 		User user = _userLocalService.getUser(userId);
@@ -93,6 +95,7 @@ public class CPSpecificationOptionLocalServiceImpl
 		CPSpecificationOption cpSpecificationOption =
 			cpSpecificationOptionPersistence.create(cpSpecificationOptionId);
 
+		cpSpecificationOption.setExternalReferenceCode(externalReferenceCode);
 		cpSpecificationOption.setCompanyId(user.getCompanyId());
 		cpSpecificationOption.setUserId(user.getUserId());
 		cpSpecificationOption.setUserName(user.getFullName());
@@ -101,6 +104,7 @@ public class CPSpecificationOptionLocalServiceImpl
 		cpSpecificationOption.setDescriptionMap(descriptionMap);
 		cpSpecificationOption.setFacetable(facetable);
 		cpSpecificationOption.setKey(key);
+		cpSpecificationOption.setPriority(priority);
 		cpSpecificationOption.setExpandoBridgeAttributes(serviceContext);
 
 		cpSpecificationOption = cpSpecificationOptionPersistence.update(
@@ -110,6 +114,19 @@ public class CPSpecificationOptionLocalServiceImpl
 
 		_resourceLocalService.addModelResources(
 			cpSpecificationOption, serviceContext);
+
+		if (listTypeDefinitionIds != null) {
+			for (long listTypeDefinitionId : listTypeDefinitionIds) {
+				if (listTypeDefinitionId <= 0) {
+					continue;
+				}
+
+				_cpSpecificationOptionListTypeDefinitionRelLocalService.
+					addCPSpecificationOptionListTypeDefinitionRel(
+						cpSpecificationOption.getCPSpecificationOptionId(),
+						listTypeDefinitionId);
+			}
+		}
 
 		return cpSpecificationOption;
 	}
@@ -219,32 +236,52 @@ public class CPSpecificationOptionLocalServiceImpl
 	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public CPSpecificationOption updateCPSpecificationOption(
-			long cpSpecificationOptionId, long cpOptionCategoryId,
+			String externalReferenceCode, long cpSpecificationOptionId,
+			long cpOptionCategoryId, long[] listTypeDefinitionIds,
 			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
-			boolean facetable, String key, ServiceContext serviceContext)
+			boolean facetable, String key, double priority,
+			ServiceContext serviceContext)
 		throws PortalException {
 
 		CPSpecificationOption cpSpecificationOption =
 			cpSpecificationOptionPersistence.findByPrimaryKey(
 				cpSpecificationOptionId);
 
-		key = StringUtil.replace(key, CharPool.UNDERLINE, CharPool.DASH);
-
-		key = _friendlyURLNormalizer.normalizeWithPeriodsAndSlashes(key);
+		key = _friendlyURLNormalizer.normalizeWithPeriodsAndSlashes(
+			StringUtil.replace(key, CharPool.UNDERLINE, CharPool.DASH));
 
 		_validate(
 			cpSpecificationOption.getCPSpecificationOptionId(),
 			cpSpecificationOption.getCompanyId(), titleMap, key);
 
+		cpSpecificationOption.setExternalReferenceCode(externalReferenceCode);
 		cpSpecificationOption.setCPOptionCategoryId(cpOptionCategoryId);
 		cpSpecificationOption.setTitleMap(titleMap);
 		cpSpecificationOption.setDescriptionMap(descriptionMap);
 		cpSpecificationOption.setFacetable(facetable);
 		cpSpecificationOption.setKey(key);
+		cpSpecificationOption.setPriority(priority);
 		cpSpecificationOption.setExpandoBridgeAttributes(serviceContext);
 
 		cpSpecificationOption = cpSpecificationOptionPersistence.update(
 			cpSpecificationOption);
+
+		if (listTypeDefinitionIds != null) {
+			_cpSpecificationOptionListTypeDefinitionRelLocalService.
+				deleteCPSpecificationOptionListTypeDefinitionRels(
+					cpSpecificationOption.getCPSpecificationOptionId());
+
+			for (long listTypeDefinitionId : listTypeDefinitionIds) {
+				if (listTypeDefinitionId <= 0) {
+					continue;
+				}
+
+				_cpSpecificationOptionListTypeDefinitionRelLocalService.
+					addCPSpecificationOptionListTypeDefinitionRel(
+						cpSpecificationOption.getCPSpecificationOptionId(),
+						listTypeDefinitionId);
+			}
+		}
 
 		_reindexCPDefinitions1(
 			cpSpecificationOption.getCompanyId(), cpSpecificationOptionId);
@@ -454,6 +491,10 @@ public class CPSpecificationOptionLocalServiceImpl
 	@Reference
 	private CPDefinitionSpecificationOptionValueLocalService
 		_cpDefinitionSpecificationOptionValueLocalService;
+
+	@Reference
+	private CPSpecificationOptionListTypeDefinitionRelLocalService
+		_cpSpecificationOptionListTypeDefinitionRelLocalService;
 
 	@Reference
 	private ExpandoRowLocalService _expandoRowLocalService;

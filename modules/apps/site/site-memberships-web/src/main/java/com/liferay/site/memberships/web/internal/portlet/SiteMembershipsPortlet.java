@@ -67,7 +67,6 @@ import org.osgi.service.component.annotations.Reference;
 	property = {
 		"com.liferay.portlet.add-default-resource=true",
 		"com.liferay.portlet.css-class-wrapper=portlet-communities",
-		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.icon=/icons/site_memberships_admin.png",
 		"com.liferay.portlet.preferences-owned-by-group=true",
 		"com.liferay.portlet.private-request-attributes=false",
@@ -379,14 +378,24 @@ public class SiteMembershipsPortlet extends MVCPortlet {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		Group group = _getGroup(actionRequest, actionResponse);
-
 		long userGroupId = ParamUtil.getLong(actionRequest, "userGroupId");
-
+		Group group = _getGroup(actionRequest, actionResponse);
 		long[] roleIds = ParamUtil.getLongValues(actionRequest, "rowIds");
 
 		_userGroupGroupRoleService.deleteUserGroupGroupRoles(
 			userGroupId, group.getGroupId(), roleIds);
+	}
+
+	public void unassignUserGroupRole(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws Exception {
+
+		long userId = ParamUtil.getLong(actionRequest, "userId");
+		Group group = _getGroup(actionRequest, actionResponse);
+		long[] roleIds = ParamUtil.getLongValues(actionRequest, "rowIds");
+
+		_userGroupRoleService.deleteUserGroupRoles(
+			userId, group.getGroupId(), roleIds);
 	}
 
 	@Override

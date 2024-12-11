@@ -42,6 +42,10 @@ public class Schema {
 		return _description;
 	}
 
+	public Discriminator getDiscriminator() {
+		return _discriminator;
+	}
+
 	public List<String> getEnumValues() {
 		return _enumValues;
 	}
@@ -114,6 +118,10 @@ public class Schema {
 		return _jsonString;
 	}
 
+	public boolean isMergeProperties() {
+		return _mergeProperties;
+	}
+
 	public boolean isReadOnly() {
 		return _readOnly;
 	}
@@ -146,6 +154,10 @@ public class Schema {
 		_description = description;
 	}
 
+	public void setDiscriminator(Discriminator discriminator) {
+		_discriminator = discriminator;
+	}
+
 	public void setEnumValues(List<String> enumValues) {
 		_enumValues = enumValues;
 	}
@@ -176,6 +188,10 @@ public class Schema {
 
 	public void setMaxLength(Integer maxLength) {
 		_maxLength = maxLength;
+	}
+
+	public void setMergeProperties(boolean mergeProperties) {
+		_mergeProperties = mergeProperties;
 	}
 
 	public void setMinimum(Double minimum) {
@@ -230,6 +246,7 @@ public class Schema {
 	private String _default;
 	private boolean _deprecated;
 	private String _description;
+	private Discriminator _discriminator;
 	private List<String> _enumValues;
 	private Object _example;
 	private String _format;
@@ -238,6 +255,7 @@ public class Schema {
 	private boolean _jsonString;
 	private Double _maximum;
 	private Integer _maxLength;
+	private boolean _mergeProperties = true;
 	private Double _minimum;
 	private Integer _minLength;
 	private String _name;

@@ -53,15 +53,16 @@ public class ObjectDefinitionWrapper
 		attributes.put("titleObjectFieldId", getTitleObjectFieldId());
 		attributes.put("accountEntryRestricted", isAccountEntryRestricted());
 		attributes.put("active", isActive());
-		attributes.put("dbTableName", getDBTableName());
-		attributes.put("label", getLabel());
 		attributes.put("className", getClassName());
+		attributes.put("dbTableName", getDBTableName());
 		attributes.put("enableCategorization", isEnableCategorization());
 		attributes.put("enableComments", isEnableComments());
+		attributes.put("enableIndexSearch", isEnableIndexSearch());
 		attributes.put("enableLocalization", isEnableLocalization());
 		attributes.put("enableObjectEntryDraft", isEnableObjectEntryDraft());
 		attributes.put(
 			"enableObjectEntryHistory", isEnableObjectEntryHistory());
+		attributes.put("label", getLabel());
 		attributes.put("modifiable", isModifiable());
 		attributes.put("name", getName());
 		attributes.put("panelAppOrder", getPanelAppOrder());
@@ -184,22 +185,16 @@ public class ObjectDefinitionWrapper
 			setActive(active);
 		}
 
-		String dbTableName = (String)attributes.get("dbTableName");
-
-		if (dbTableName != null) {
-			setDBTableName(dbTableName);
-		}
-
-		String label = (String)attributes.get("label");
-
-		if (label != null) {
-			setLabel(label);
-		}
-
 		String className = (String)attributes.get("className");
 
 		if (className != null) {
 			setClassName(className);
+		}
+
+		String dbTableName = (String)attributes.get("dbTableName");
+
+		if (dbTableName != null) {
+			setDBTableName(dbTableName);
 		}
 
 		Boolean enableCategorization = (Boolean)attributes.get(
@@ -213,6 +208,13 @@ public class ObjectDefinitionWrapper
 
 		if (enableComments != null) {
 			setEnableComments(enableComments);
+		}
+
+		Boolean enableIndexSearch = (Boolean)attributes.get(
+			"enableIndexSearch");
+
+		if (enableIndexSearch != null) {
+			setEnableIndexSearch(enableIndexSearch);
 		}
 
 		Boolean enableLocalization = (Boolean)attributes.get(
@@ -234,6 +236,12 @@ public class ObjectDefinitionWrapper
 
 		if (enableObjectEntryHistory != null) {
 			setEnableObjectEntryHistory(enableObjectEntryHistory);
+		}
+
+		String label = (String)attributes.get("label");
+
+		if (label != null) {
+			setLabel(label);
 		}
 
 		Boolean modifiable = (Boolean)attributes.get("modifiable");
@@ -401,6 +409,11 @@ public class ObjectDefinitionWrapper
 		return model.getDefaultLanguageId();
 	}
 
+	@Override
+	public java.util.Locale getDefaultLocale() {
+		return model.getDefaultLocale();
+	}
+
 	/**
 	 * Returns the description object field ID of this object definition.
 	 *
@@ -434,6 +447,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean getEnableComments() {
 		return model.getEnableComments();
+	}
+
+	/**
+	 * Returns the enable index search of this object definition.
+	 *
+	 * @return the enable index search of this object definition
+	 */
+	@Override
+	public boolean getEnableIndexSearch() {
+		return model.getEnableIndexSearch();
 	}
 
 	/**
@@ -768,6 +791,11 @@ public class ObjectDefinitionWrapper
 		return model.getPortletId();
 	}
 
+	@Override
+	public String getPreviousRESTContextPath() {
+		return model.getPreviousRESTContextPath();
+	}
+
 	/**
 	 * Returns the primary key of this object definition.
 	 *
@@ -786,6 +814,11 @@ public class ObjectDefinitionWrapper
 	@Override
 	public String getRESTContextPath() {
 		return model.getRESTContextPath();
+	}
+
+	@Override
+	public String getRootObjectDefinitionExternalReferenceCode() {
+		return model.getRootObjectDefinitionExternalReferenceCode();
 	}
 
 	/**
@@ -954,6 +987,16 @@ public class ObjectDefinitionWrapper
 	}
 
 	/**
+	 * Returns <code>true</code> if this object definition is enable index search.
+	 *
+	 * @return <code>true</code> if this object definition is enable index search; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isEnableIndexSearch() {
+		return model.isEnableIndexSearch();
+	}
+
+	/**
 	 * Returns <code>true</code> if this object definition is enable localization.
 	 *
 	 * @return <code>true</code> if this object definition is enable localization; <code>false</code> otherwise
@@ -996,6 +1039,11 @@ public class ObjectDefinitionWrapper
 	@Override
 	public boolean isModifiable() {
 		return model.isModifiable();
+	}
+
+	@Override
+	public boolean isModifiableAndSystem() {
+		return model.isModifiableAndSystem();
 	}
 
 	@Override
@@ -1159,6 +1207,16 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setEnableComments(boolean enableComments) {
 		model.setEnableComments(enableComments);
+	}
+
+	/**
+	 * Sets whether this object definition is enable index search.
+	 *
+	 * @param enableIndexSearch the enable index search of this object definition
+	 */
+	@Override
+	public void setEnableIndexSearch(boolean enableIndexSearch) {
+		model.setEnableIndexSearch(enableIndexSearch);
 	}
 
 	/**
@@ -1440,6 +1498,11 @@ public class ObjectDefinitionWrapper
 	@Override
 	public void setPortlet(boolean portlet) {
 		model.setPortlet(portlet);
+	}
+
+	@Override
+	public void setPreviousRESTContextPath(String previousRESTContextPath) {
+		model.setPreviousRESTContextPath(previousRESTContextPath);
 	}
 
 	/**

@@ -10,6 +10,7 @@ import {
 	openToast,
 	saveAndReload,
 } from '@liferay/object-js-components-web';
+import {ILearnResourceContext} from 'frontend-js-components-web';
 import React, {useEffect} from 'react';
 
 import {EditObjectFieldContent} from './EditObjectFieldContent';
@@ -24,13 +25,13 @@ export interface EditObjectFieldProps {
 	forbiddenChars: string[];
 	forbiddenLastChars: string[];
 	forbiddenNames: string[];
-	isApproved: boolean;
 	isDefaultStorageType: boolean;
-	learnResources: ObjectWebLearnResources;
+	isRootDescendantNode: boolean;
+	learnResources: ILearnResourceContext;
 	objectDefinitionExternalReferenceCode: string;
 	objectFieldId: number;
 	readOnly: boolean;
-	workflowStatusJSONArray: LabelValueObject[];
+	workflowStatuses: LabelValueObject[];
 }
 
 export const objectFieldInitialValues: Partial<ObjectField> = {
@@ -59,13 +60,13 @@ export default function EditObjectField({
 	forbiddenChars,
 	forbiddenLastChars,
 	forbiddenNames,
-	isApproved,
 	isDefaultStorageType,
+	isRootDescendantNode,
 	learnResources,
 	objectDefinitionExternalReferenceCode,
 	objectFieldId,
 	readOnly,
-	workflowStatusJSONArray,
+	workflowStatuses,
 }: EditObjectFieldProps) {
 	const onSubmit = async ({id, ...objectField}: ObjectField) => {
 		delete objectField.defaultValue;
@@ -90,30 +91,14 @@ export default function EditObjectField({
 		}
 	};
 
-	const {
-		errors,
-		handleChange,
-		handleSubmit,
-		setValues,
-		values,
-	} = useObjectFieldForm({
-		forbiddenChars,
-		forbiddenLastChars,
-		forbiddenNames,
-		initialValues: objectFieldInitialValues,
-		onSubmit,
-	});
-
-	useEffect(() => {
-		const makeFetch = async () => {
-			const objectFieldResponse = await API.getObjectField(objectFieldId);
-
-			setValues(objectFieldResponse);
-		};
-
-		makeFetch();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [objectFieldId]);
+	const {errors, handleChange, handleSubmit, setValues, values} =
+		useObjectFieldForm({
+			forbiddenChars,
+			forbiddenLastChars,
+			forbiddenNames,
+			initialValues: objectFieldInitialValues,
+			onSubmit,
+		});
 
 	useEffect(() => {
 		if (errors.defaultValue) {
@@ -140,16 +125,17 @@ export default function EditObjectField({
 				errors={errors}
 				filterOperators={filterOperators}
 				handleChange={handleChange}
-				isApproved={isApproved}
 				isDefaultStorageType={isDefaultStorageType}
+				isRootDescendantNode={isRootDescendantNode}
 				learnResources={learnResources}
 				objectDefinitionExternalReferenceCode={
 					objectDefinitionExternalReferenceCode
 				}
+				objectFieldId={objectFieldId}
 				readOnly={readOnly}
 				setValues={setValues}
 				values={values}
-				workflowStatusJSONArray={workflowStatusJSONArray}
+				workflowStatuses={workflowStatuses}
 			/>
 		</SidePanelForm>
 	);

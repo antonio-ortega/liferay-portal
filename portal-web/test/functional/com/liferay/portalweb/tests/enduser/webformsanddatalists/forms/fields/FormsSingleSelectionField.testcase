@@ -1,4 +1,4 @@
-@component-name = "portal-web-forms-and-data-lists"
+@component-name = "portal-bpm"
 definition {
 
 	property osgi.module.configuration.file.names = "com.liferay.frontend.js.loader.modules.extender.internal.configuration.Details.config";
@@ -30,6 +30,50 @@ definition {
 
 			PagesAdmin.tearDownCP();
 		}
+	}
+
+	@description = "LPD-34101 Verify if value of options from a custom form field with property named options are being persisted"
+	@priority = 5
+	test CanAddOptionsToCustomFormFieldWithOptionsProperty {
+		property portal.acceptance = "true";
+
+		var appName = "com.acme.c2p9.impl";
+
+		FileInstall.deployFileOnServer(jarFile = "${appName}.jar");
+
+		WaitForConsoleTextPresent(value1 = "STARTED ${appName}");
+
+		// The pause is needed for the custom form field of LPD-34101 to be present
+
+		Pause(value1 = 10000);
+
+		FormsAdmin.addForm();
+
+		Form.editName(formName = "Form with custom form field");
+
+		Form.gotoAddField(fieldType = "C2P9 Slider");
+
+		FormFields.addSingleSelectionOption(
+			optionName = "Option Edited",
+			optionValue = 1);
+
+		FormFields.clickAddOptionButton();
+
+		FormFields.addSingleSelectionOption(
+			optionName = "New Option",
+			optionValue = 2);
+
+		Form.closeSidebar();
+
+		FormsAdminNavigator.gotoEditField(fieldName = "C2P9 Slider");
+
+		FormFields.viewOptionsRowFieldValueOrFieldReference(
+			fieldValue = "Option Edited",
+			rowNumber = 1);
+
+		FormFields.viewOptionsRowFieldValueOrFieldReference(
+			fieldValue = "New Option",
+			rowNumber = 2);
 	}
 
 	@description = "Verify that a Single Selection Field can be created"
@@ -106,10 +150,14 @@ definition {
 			fieldType = "Single Selection",
 			formPageNumber = 0);
 
+		var singleSelectionFieldName = FormFields.getFieldName();
+
 		Type(
 			key_rowNumber = 1,
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
 			value1 = "Option 1");
+
+		FormFields.clickAddOptionButton();
 
 		Type(
 			key_rowNumber = 2,
@@ -124,20 +172,22 @@ definition {
 			key_selectOption = "Duplicate",
 			locator1 = "FormViewBuilder#SELECT_FIELD_OPTIONS_LIST");
 
+		var duplicatedSingleSelectionFieldName = FormFields.getFieldName();
+
 		FormFields.viewOptionSingleSelection(
-			fieldName = "Single Selection",
+			fieldName = ${singleSelectionFieldName},
 			optionName = "Option 1");
 
 		FormFields.viewOptionSingleSelection(
-			fieldName = "Single Selection",
+			fieldName = ${singleSelectionFieldName},
 			optionName = "Option 2");
 
 		FormFields.viewOptionSingleSelection(
-			fieldName = "Copy of Single Selection",
+			fieldName = ${duplicatedSingleSelectionFieldName},
 			optionName = "Option 1");
 
 		FormFields.viewOptionSingleSelection(
-			fieldName = "Copy of Single Selection",
+			fieldName = ${duplicatedSingleSelectionFieldName},
 			optionName = "Option 2");
 
 		FormViewBuilder.assertHelpTextPresent(
@@ -245,6 +295,8 @@ definition {
 			optionValue = "Option A",
 			rowNumber = 1);
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.editOptionsRow(
 			optionValue = "Option B",
 			rowNumber = 2);
@@ -296,6 +348,8 @@ definition {
 		FormFields.editOptionsRow(
 			optionValue = "Option 1",
 			rowNumber = 1);
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.editOptionsRow(
 			optionValue = "Option 2",
@@ -361,6 +415,8 @@ definition {
 			optionValue = "Option 1",
 			rowNumber = 1);
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.editOptionsRowValueOrFieldReference(
 			optionValue = "Option 2",
 			rowNumber = 2);
@@ -396,6 +452,8 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1");
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.editOptionsRow(
 			optionName = "Option2",
@@ -508,6 +566,8 @@ definition {
 			optionName = "Option 1",
 			optionValue = 1);
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 2",
 			optionValue = 2);
@@ -544,6 +604,8 @@ definition {
 			key_rowNumber = 1,
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
 			value1 = "Option 1");
+
+		FormFields.clickAddOptionButton();
 
 		Type(
 			key_rowNumber = 2,
@@ -586,10 +648,14 @@ definition {
 			optionName = "Option1",
 			optionValue = "Option 1");
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
 			rowNumber = 2);
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.editOptionsRow(
 			optionName = "Option3",
@@ -645,6 +711,8 @@ definition {
 			optionValue = "Option 1",
 			rowNumber = 1);
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.editOptionsRow(
 			optionName = "Option2",
 			optionValue = "Option 2",
@@ -682,6 +750,8 @@ definition {
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 1",
 			optionValue = 1);
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 2",
@@ -722,6 +792,8 @@ definition {
 		FormFields.editOptionsRow(
 			optionName = "Option1",
 			optionValue = "Option 1");
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.editOptionsRow(
 			optionName = "Option2",
@@ -798,6 +870,8 @@ definition {
 			optionName = "Option 1",
 			optionValue = 1);
 
+		FormFields.clickAddOptionButton();
+
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 2",
 			optionValue = 2);
@@ -836,6 +910,8 @@ definition {
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 1",
 			optionValue = 1);
+
+		FormFields.clickAddOptionButton();
 
 		FormFields.addSingleSelectionOption(
 			optionName = "Option 2",

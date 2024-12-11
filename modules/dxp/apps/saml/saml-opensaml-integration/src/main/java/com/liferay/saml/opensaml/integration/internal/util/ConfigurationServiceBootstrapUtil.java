@@ -5,7 +5,12 @@
 
 package com.liferay.saml.opensaml.integration.internal.util;
 
+import com.liferay.petra.concurrent.DefaultNoticeableFuture;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
+import com.liferay.portal.kernel.util.AggregateClassLoader;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 
 import java.lang.reflect.Method;
 
@@ -26,51 +31,17 @@ import org.opensaml.xmlsec.signature.support.Signer;
 public class ConfigurationServiceBootstrapUtil {
 
 	public static <T> T get(Class<T> configurationClass) {
+		_initializationDefaultNoticeableFuture.run();
+
 		return ConfigurationService.get(configurationClass);
 	}
 
 	public static <T> void register(
 		Class<T> configurationClass, T configuration) {
 
-		ConfigurationService.register(configurationClass, configuration);
-	}
-
-	static {
-		Thread currentThread = Thread.currentThread();
-
-		ClassLoader classLoader = currentThread.getContextClassLoader();
-
-		try {
-			currentThread.setContextClassLoader(
-				ConfigurationServiceBootstrapUtil.class.getClassLoader());
-
-			InitializationService.initialize();
-
-			_initializeParserPool();
-
-			Method method = Signer.class.getDeclaredMethod("getSignerProvider");
-
-			method.setAccessible(true);
-
-			method.invoke(null);
-
-			method = SignatureValidator.class.getDeclaredMethod(
-				"getSignatureValidationProvider");
-
-			method.setAccessible(true);
-
-			method.invoke(null);
-
-			if (XMLSecurityConstants.xmlOutputFactory == null) {
-				throw new IllegalStateException();
-			}
-		}
-		catch (Exception exception) {
-			throw new ExceptionInInitializerError(exception);
-		}
-		finally {
-			currentThread.setContextClassLoader(classLoader);
-		}
+		_initializationDefaultNoticeableFuture.addFutureListener(
+			future -> ConfigurationService.register(
+				configurationClass, configuration));
 	}
 
 	private static void _initializeParserPool() throws InitializationException {
@@ -115,5 +86,41 @@ public class ConfigurationServiceBootstrapUtil {
 				exception);
 		}
 	}
+
+	private static final DefaultNoticeableFuture<Void>
+		_initializationDefaultNoticeableFuture = new DefaultNoticeableFuture<>(
+			() -> {
+				try (SafeCloseable safeCloseable =
+						ThreadContextClassLoaderUtil.swap(
+							AggregateClassLoader.getAggregateClassLoader(
+								ConfigurationServiceBootstrapUtil.class.
+									getClassLoader(),
+								PortalClassLoaderUtil.getClassLoader()))) {
+
+					InitializationService.initialize();
+
+					_initializeParserPool();
+
+					Method method = Signer.class.getDeclaredMethod(
+						"getSignerProvider");
+
+					method.setAccessible(true);
+
+					method.invoke(null);
+
+					method = SignatureValidator.class.getDeclaredMethod(
+						"getSignatureValidationProvider");
+
+					method.setAccessible(true);
+
+					method.invoke(null);
+
+					if (XMLSecurityConstants.xmlOutputFactory == null) {
+						throw new IllegalStateException();
+					}
+
+					return null;
+				}
+			});
 
 }

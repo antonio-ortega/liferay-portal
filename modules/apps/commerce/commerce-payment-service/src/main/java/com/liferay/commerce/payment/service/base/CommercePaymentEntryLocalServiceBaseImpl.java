@@ -7,14 +7,12 @@ package com.liferay.commerce.payment.service.base;
 
 import com.liferay.commerce.payment.model.CommercePaymentEntry;
 import com.liferay.commerce.payment.service.CommercePaymentEntryLocalService;
-import com.liferay.commerce.payment.service.CommercePaymentEntryLocalServiceUtil;
 import com.liferay.commerce.payment.service.persistence.CommercePaymentEntryPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBManagerUtil;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdate;
-import com.liferay.portal.kernel.dao.jdbc.SqlUpdateFactoryUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DefaultActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -34,9 +32,10 @@ import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
-import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.sql.Connection;
 
 import java.util.List;
 
@@ -64,7 +63,7 @@ public abstract class CommercePaymentEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CommercePaymentEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CommercePaymentEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CommercePaymentEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.commerce.payment.service.CommercePaymentEntryLocalServiceUtil</code>.
 	 */
 
 	/**
@@ -130,11 +129,13 @@ public abstract class CommercePaymentEntryLocalServiceBaseImpl
 	 *
 	 * @param commercePaymentEntry the commerce payment entry
 	 * @return the commerce payment entry that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@Override
 	public CommercePaymentEntry deleteCommercePaymentEntry(
-		CommercePaymentEntry commercePaymentEntry) {
+			CommercePaymentEntry commercePaymentEntry)
+		throws PortalException {
 
 		return commercePaymentEntryPersistence.remove(commercePaymentEntry);
 	}
@@ -246,6 +247,24 @@ public abstract class CommercePaymentEntryLocalServiceBaseImpl
 
 		return commercePaymentEntryPersistence.fetchByPrimaryKey(
 			commercePaymentEntryId);
+	}
+
+	@Override
+	public CommercePaymentEntry
+		fetchCommercePaymentEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId) {
+
+		return commercePaymentEntryPersistence.fetchByERC_C(
+			externalReferenceCode, companyId);
+	}
+
+	@Override
+	public CommercePaymentEntry getCommercePaymentEntryByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return commercePaymentEntryPersistence.findByERC_C(
+			externalReferenceCode, companyId);
 	}
 
 	/**
@@ -401,7 +420,6 @@ public abstract class CommercePaymentEntryLocalServiceBaseImpl
 
 	@Deactivate
 	protected void deactivate() {
-		CommercePaymentEntryLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -416,9 +434,6 @@ public abstract class CommercePaymentEntryLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		commercePaymentEntryLocalService =
 			(CommercePaymentEntryLocalService)aopProxy;
-
-		CommercePaymentEntryLocalServiceUtil.setService(
-			commercePaymentEntryLocalService);
 	}
 
 	/**
@@ -445,19 +460,23 @@ public abstract class CommercePaymentEntryLocalServiceBaseImpl
 	 * @param sql the sql query
 	 */
 	protected void runSQL(String sql) {
+		DataSource dataSource = commercePaymentEntryPersistence.getDataSource();
+
+		DB db = DBManagerUtil.getDB();
+
+		Connection currentConnection = CurrentConnectionUtil.getConnection(
+			dataSource);
+
 		try {
-			DataSource dataSource =
-				commercePaymentEntryPersistence.getDataSource();
+			if (currentConnection != null) {
+				db.runSQL(currentConnection, new String[] {sql});
 
-			DB db = DBManagerUtil.getDB();
+				return;
+			}
 
-			sql = db.buildSQL(sql);
-			sql = PortalUtil.transformSQL(sql);
-
-			SqlUpdate sqlUpdate = SqlUpdateFactoryUtil.getSqlUpdate(
-				dataSource, sql);
-
-			sqlUpdate.update();
+			try (Connection connection = dataSource.getConnection()) {
+				db.runSQL(connection, new String[] {sql});
+			}
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);

@@ -22,9 +22,9 @@
 		layoutModel = dataFactory.newLayoutModel(groupId, groupId + "_asset_publisher_" + pageCount, "", portletId)
 	/>
 
-	${csvFileWriter.write("assetPublisher", virtualHostModel.hostname + "," + layoutModel.friendlyURL + "\n")}
+	${csvFileWriter.write("assetPublisher", virtualHostModel.hostname + "," + groupModel.friendlyURL + "," + layoutModel.friendlyURL + "\n")}
 
-	<@insertLayout _layoutModel=layoutModel />
+	<@insertLayout _layoutModel = layoutModel />
 
 	<#assign portletPreferencesModels = dataFactory.newAssetPublisherPortletPreferencesModels(layoutModel.plid) />
 

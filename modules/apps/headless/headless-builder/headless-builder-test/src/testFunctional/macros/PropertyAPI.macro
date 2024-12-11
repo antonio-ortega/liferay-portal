@@ -1,6 +1,7 @@
 definition {
 
-	macro _curlAPIProperty {
+	@summary = "Default summary"
+	macro _curlAPIProperty(virtualHost = null) {
 		if (isSet(virtualHost)) {
 			if (!(isSet(port))) {
 				var port = 8080;
@@ -13,24 +14,32 @@ definition {
 		}
 
 		var api = "headless-builder/properties";
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		var curl = '''
 			${portalURL}/o/${api} \
-				-u test@liferay.com:test \
+				-u test@liferay.com:${userPassword} \
 				-H Content-Type: application/json
 		''';
 
 		return ${curl};
 	}
 
-	macro createAPIProperty {
-		Variables.assertDefined(parameterList = "${objectFieldERC},${name},${schemaId}");
+	@summary = "Default summary"
+	macro createAPIProperty(objectFieldERC = null, schemaERC = null, name = null, virtualHost = null) {
+		Variables.assertDefined(parameterList = "${objectFieldERC},${name},${schemaERC}");
 
 		var curl = PropertyAPI._curlAPIProperty(virtualHost = ${virtualHost});
+
+		if (!(isSet(relationshipName))) {
+			var relationshipName = "";
+		}
+
 		var body = '''
 			"name": "${name}",
 			"objectFieldERC": "${objectFieldERC}",
-			"r_apiSchemaToAPIProperties_c_apiSchemaId": "${schemaId}"
+			"objectRelationshipNames": "${relationshipName}",
+			"r_apiSchemaToAPIProperties_l_apiSchemaERC": "${schemaERC}"
 		''';
 
 		var curl = StringUtil.add(${curl}, " -d { ${body} }", "");

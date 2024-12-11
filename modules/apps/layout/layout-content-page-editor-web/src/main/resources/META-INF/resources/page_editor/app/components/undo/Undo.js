@@ -4,15 +4,38 @@
  */
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
-import PropTypes from 'prop-types';
 import React from 'react';
 
+import {
+	useSelectItem,
+	useSelectMultipleItems,
+} from '../../contexts/ControlsContext';
 import {useSelector} from '../../contexts/StoreContext';
 import UndoHistory from './UndoHistory';
+import useUndoRedoActions from './useUndoRedoActions';
 
-export default function Undo({onRedo = () => {}, onUndo = () => {}}) {
+export function useDisabledUndo() {
 	const undoHistory = useSelector((state) => state.undoHistory);
+
+	return !undoHistory || !undoHistory.length;
+}
+
+export function useDisabledRedo() {
 	const redoHistory = useSelector((state) => state.redoHistory);
+
+	return !redoHistory || !redoHistory.length;
+}
+
+export default function Undo() {
+	const disabledRedo = useDisabledRedo();
+	const disabledUndo = useDisabledUndo();
+	const {onRedo, onUndo} = useUndoRedoActions();
+	const selectItem = useSelectItem();
+	const selectMultipleItems = useSelectMultipleItems();
+
+	const selectItems = Liferay.FeatureFlags['LPD-18221']
+		? selectMultipleItems
+		: selectItem;
 
 	return (
 		<>
@@ -20,9 +43,9 @@ export default function Undo({onRedo = () => {}, onUndo = () => {}}) {
 				<ClayButtonWithIcon
 					aria-label={Liferay.Language.get('undo')}
 					className="btn-monospaced"
-					disabled={!undoHistory || !undoHistory.length}
+					disabled={disabledUndo}
 					displayType="secondary"
-					onClick={onUndo}
+					onClick={() => onUndo({selectItems})}
 					size="sm"
 					symbol="undo"
 					title={Liferay.Language.get('undo')}
@@ -31,9 +54,9 @@ export default function Undo({onRedo = () => {}, onUndo = () => {}}) {
 				<ClayButtonWithIcon
 					aria-label={Liferay.Language.get('redo')}
 					className="btn-monospaced"
-					disabled={!redoHistory || !redoHistory.length}
+					disabled={disabledRedo}
 					displayType="secondary"
-					onClick={onRedo}
+					onClick={() => onRedo({selectItems})}
 					size="sm"
 					symbol="redo"
 					title={Liferay.Language.get('redo')}
@@ -46,8 +69,3 @@ export default function Undo({onRedo = () => {}, onUndo = () => {}}) {
 		</>
 	);
 }
-
-Undo.propTypes = {
-	onRedo: PropTypes.func,
-	onUndo: PropTypes.func,
-};

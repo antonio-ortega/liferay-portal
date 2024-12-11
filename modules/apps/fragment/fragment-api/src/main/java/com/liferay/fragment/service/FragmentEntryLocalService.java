@@ -82,10 +82,11 @@ public interface FragmentEntryLocalService
 	public FragmentEntry addFragmentEntry(FragmentEntry fragmentEntry);
 
 	public FragmentEntry addFragmentEntry(
-			long userId, long groupId, long fragmentCollectionId,
-			String fragmentEntryKey, String name, String css, String html,
-			String js, boolean cacheable, String configuration, String icon,
-			long previewFileEntryId, int type, String typeOptions, int status,
+			String externalReferenceCode, long userId, long groupId,
+			long fragmentCollectionId, String fragmentEntryKey, String name,
+			String css, String html, String js, boolean cacheable,
+			String configuration, String icon, long previewFileEntryId,
+			boolean readOnly, int type, String typeOptions, int status,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -156,6 +157,10 @@ public interface FragmentEntryLocalService
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	public FragmentEntry deleteFragmentEntry(long fragmentEntryId)
+		throws PortalException;
+
+	public FragmentEntry deleteFragmentEntry(
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	/**
@@ -460,14 +465,7 @@ public interface FragmentEntryLocalService
 			long userId, long fragmentEntryId, long fragmentCollectionId,
 			String name, String css, String html, String js, boolean cacheable,
 			String configuration, String icon, long previewFileEntryId,
-			int status)
-		throws PortalException;
-
-	public FragmentEntry updateFragmentEntry(
-			long userId, long fragmentEntryId, long fragmentCollectionId,
-			String name, String css, String html, String js, boolean cacheable,
-			String configuration, String icon, long previewFileEntryId,
-			String typeOptions, int status)
+			boolean readOnly, String typeOptions, int status)
 		throws PortalException;
 
 	public FragmentEntry updateFragmentEntry(long fragmentEntryId, String name)

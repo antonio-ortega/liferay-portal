@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.settings.SystemSettingsLocator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
@@ -148,7 +149,10 @@ public class CPOptionDisplayContext {
 					).setWindowState(
 						LiferayWindowState.POP_UP
 					).buildString());
-				dropdownItem.setLabel("add-option-value-template");
+				dropdownItem.setLabel(
+					LanguageUtil.get(
+						cpRequestHelper.getRequest(),
+						"add-option-value-template"));
 				dropdownItem.setTarget("modal");
 			}
 		).build();
@@ -192,6 +196,17 @@ public class CPOptionDisplayContext {
 		return commerceOptionType.hasValues();
 	}
 
+	public boolean isCPOptionSelectDate() {
+		if (Objects.equals(
+				CPConstants.PRODUCT_OPTION_SELECT_DATE_KEY,
+				_cpOption.getCommerceOptionTypeKey())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	protected final CPRequestHelper cpRequestHelper;
 
 	private List<FDSActionDropdownItem> _getFDSActionDropdownItems(
@@ -213,8 +228,8 @@ public class CPOptionDisplayContext {
 		fdsActionDropdownItems.add(
 			new FDSActionDropdownItem(
 				null, "trash", "delete",
-				LanguageUtil.get(cpRequestHelper.getRequest(), "delete"),
-				"delete", "delete", "headless"));
+				LanguageUtil.get(cpRequestHelper.getRequest(), "delete"), null,
+				"delete", null));
 
 		return fdsActionDropdownItems;
 	}

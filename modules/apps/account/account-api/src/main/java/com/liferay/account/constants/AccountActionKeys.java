@@ -36,6 +36,11 @@ public class AccountActionKeys {
 	public static final String MANAGE_SUBORGANIZATIONS_ACCOUNTS =
 		"MANAGE_SUBORGANIZATIONS_ACCOUNTS";
 
+	public static final String UPDATE_ORGANIZATIONS = "UPDATE_ORGANIZATIONS";
+
+	public static final String UPDATE_SUBORGANIZATIONS_ACCOUNTS =
+		"UPDATE_SUBORGANIZATIONS_ACCOUNTS";
+
 	public static final String VIEW_ACCOUNT_GROUPS = "VIEW_ACCOUNT_GROUPS";
 
 	public static final String VIEW_ACCOUNT_ROLES = "VIEW_ACCOUNT_ROLES";

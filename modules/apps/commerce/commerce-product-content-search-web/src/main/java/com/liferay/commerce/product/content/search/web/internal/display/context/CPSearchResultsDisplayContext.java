@@ -14,6 +14,7 @@ import com.liferay.commerce.product.content.render.list.CPContentListRendererReg
 import com.liferay.commerce.product.content.render.list.entry.CPContentListEntryRenderer;
 import com.liferay.commerce.product.content.render.list.entry.CPContentListEntryRendererRegistry;
 import com.liferay.commerce.product.content.search.web.internal.configuration.CPSearchResultsPortletInstanceConfiguration;
+import com.liferay.commerce.product.content.search.web.internal.configuration.CPSortPortletInstanceConfiguration;
 import com.liferay.commerce.product.content.search.web.internal.constants.CPSearchResultsConstants;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
 import com.liferay.commerce.product.display.context.helper.CPRequestHelper;
@@ -25,6 +26,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -76,6 +78,10 @@ public class CPSearchResultsDisplayContext {
 		_cpSearchResultsPortletInstanceConfiguration =
 			ConfigurationProviderUtil.getPortletInstanceConfiguration(
 				CPSearchResultsPortletInstanceConfiguration.class,
+				_cpRequestHelper.getThemeDisplay());
+		_cpSortPortletInstanceConfiguration =
+			ConfigurationProviderUtil.getPortletInstanceConfiguration(
+				CPSortPortletInstanceConfiguration.class,
 				_cpRequestHelper.getThemeDisplay());
 	}
 
@@ -216,19 +222,28 @@ public class CPSearchResultsDisplayContext {
 		return sb.toString();
 	}
 
-	public String getOrderByCol() {
+	public String getOrderByCol() throws PortalException {
 		HttpServletRequest originalHttpServletRequest =
 			PortalUtil.getOriginalServletRequest(_httpServletRequest);
 
 		String portletId = ParamUtil.getString(
 			originalHttpServletRequest, "p_p_id");
 
+		String sortOptionDefault = CPSearchResultsConstants.SORT_OPTION_DEFAULT;
+
+		if (!Validator.isBlank(
+				_cpSortPortletInstanceConfiguration.defaultSort())) {
+
+			sortOptionDefault =
+				_cpSortPortletInstanceConfiguration.defaultSort();
+		}
+
 		String orderByCol = ParamUtil.getString(
 			originalHttpServletRequest,
 			StringBundler.concat(
 				StringPool.UNDERLINE, portletId, StringPool.UNDERLINE,
 				SearchContainer.DEFAULT_ORDER_BY_COL_PARAM),
-			CPSearchResultsConstants.SORT_OPTION_DEFAULT);
+			sortOptionDefault);
 
 		if (ArrayUtil.contains(
 				CPSearchResultsConstants.SORT_OPTIONS, orderByCol)) {
@@ -237,6 +252,11 @@ public class CPSearchResultsDisplayContext {
 		}
 
 		return CPSearchResultsConstants.SORT_OPTION_DEFAULT;
+	}
+
+	public String getOrderByColMessage() throws PortalException {
+		return LanguageUtil.format(
+			_httpServletRequest, "sort-by-colon-x", getOrderByCol(), true);
 	}
 
 	public int getPaginationDelta() {
@@ -264,6 +284,10 @@ public class CPSearchResultsDisplayContext {
 		CommerceContext commerceContext =
 			(CommerceContext)_httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
+
+		if (commerceContext == null) {
+			return false;
+		}
 
 		long commerceChannelId = commerceContext.getCommerceChannelId();
 
@@ -355,6 +379,8 @@ public class CPSearchResultsDisplayContext {
 	private final CPRequestHelper _cpRequestHelper;
 	private final CPSearchResultsPortletInstanceConfiguration
 		_cpSearchResultsPortletInstanceConfiguration;
+	private final CPSortPortletInstanceConfiguration
+		_cpSortPortletInstanceConfiguration;
 	private final CPTypeRegistry _cpTypeRegistry;
 	private long _displayStyleGroupId;
 	private final HttpServletRequest _httpServletRequest;

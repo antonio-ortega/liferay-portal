@@ -64,6 +64,8 @@ if (parentGroupId != GroupConstants.DEFAULT_PARENT_GROUP_ID) {
 
 <c:if test="<%= liveGroup != null %>">
 	<aui:input name="siteId" type="resource" value="<%= String.valueOf(liveGroup.getGroupId()) %>" />
+
+	<aui:input disabled="<%= true %>" name="externalReferenceCode" value="<%= String.valueOf(liveGroup.getExternalReferenceCode()) %>" />
 </c:if>
 
 <c:choose>
@@ -160,24 +162,26 @@ if (parentGroupId != GroupConstants.DEFAULT_PARENT_GROUP_ID) {
 
 	<aui:input inlineLabel="right" label="allow-manual-membership-management" labelCssClass="simple-toggle-switch" name="manualMembership" type="toggle-switch" value="<%= manualMembership %>" />
 
+	<%
+	ItemSelector itemSelector = (ItemSelector)request.getAttribute(ItemSelector.class.getName());
+
+	SiteItemSelectorCriterion siteItemSelectorCriterion = new SiteItemSelectorCriterion();
+
+	siteItemSelectorCriterion.setDesiredItemSelectorReturnTypes(new GroupItemSelectorReturnType());
+	siteItemSelectorCriterion.setExcludedGroupIds(new long[] {siteGroup.getGroupId()});
+	siteItemSelectorCriterion.setIncludeCompany(false);
+	siteItemSelectorCriterion.setIncludeRecentSites(false);
+	%>
+
 	<liferay-frontend:component
 		componentId='<%= liferayPortletResponse.getNamespace() + "details" %>'
 		context='<%=
 			HashMapBuilder.<String, Object>put(
 				"defaultParentGroupId", GroupConstants.DEFAULT_PARENT_GROUP_ID
 			).put(
-				"eventName", liferayPortletResponse.getNamespace() + "selectGroup"
-			).put(
-				"groupId", siteGroup.getGroupId()
-			).put(
-				"portletURL",
-				PortletURLBuilder.create(
-					PortletProviderUtil.getPortletURL(request, Group.class.getName(), PortletProvider.Action.BROWSE)
-				).buildString()
-			).put(
-				"windowState", LiferayWindowState.POP_UP.toString()
+				"portletURL", String.valueOf(itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(request), liferayPortletResponse.getNamespace() + "selectGroup", siteItemSelectorCriterion))
 			).build()
 		%>'
-		module="js/site/Details"
+		module="{Details} from site-admin-web"
 	/>
 </c:if>

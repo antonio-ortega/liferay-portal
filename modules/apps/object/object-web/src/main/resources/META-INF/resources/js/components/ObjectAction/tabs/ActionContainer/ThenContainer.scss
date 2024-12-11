@@ -1,4 +1,6 @@
-@import 'atlas-variables';
+.custom-control {
+	margin-bottom: 0;
+}
 
 .lfr-object__action-builder {
 	&-then {
@@ -7,6 +9,12 @@
 		gap: 1rem;
 		justify-content: center;
 
+		&-container {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+
 		.form-control {
 			width: 100%;
 		}
@@ -14,13 +22,5 @@
 		.custom-control.custom-checkbox {
 			margin: 0;
 		}
-	}
-
-	&-notification-then {
-		width: 320px;
-	}
-
-	&-tooltip-icon {
-		color: $secondary-l1;
 	}
 }

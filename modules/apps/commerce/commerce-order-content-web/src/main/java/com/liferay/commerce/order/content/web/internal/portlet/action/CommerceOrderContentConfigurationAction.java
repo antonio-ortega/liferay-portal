@@ -7,12 +7,14 @@ package com.liferay.commerce.order.content.web.internal.portlet.action;
 
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.constants.CommercePortletKeys;
+import com.liferay.commerce.frontend.helper.CommerceOrderStepTrackerHelper;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.CommerceOrderHttpHelper;
 import com.liferay.commerce.order.content.web.internal.display.context.CommerceOrderContentDisplayContext;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.order.importer.type.CommerceOrderImporterTypeRegistry;
 import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
+import com.liferay.commerce.payment.integration.CommercePaymentIntegrationRegistry;
 import com.liferay.commerce.payment.method.CommercePaymentMethodRegistry;
 import com.liferay.commerce.payment.service.CommercePaymentMethodGroupRelLocalService;
 import com.liferay.commerce.percentage.PercentageFormatter;
@@ -77,7 +79,10 @@ public class CommerceOrderContentConfigurationAction
 						_commerceOrderImporterTypeRegistry,
 						_commerceOrderNoteService,
 						_commerceOrderPriceCalculation, _commerceOrderService,
-						_commerceOrderStatusRegistry, _commerceOrderTypeService,
+						_commerceOrderStatusRegistry,
+						_commerceOrderStepTrackerHelper,
+						_commerceOrderTypeService,
+						_commercePaymentIntegrationRegistry,
 						_commercePaymentMethodGroupRelServiceService,
 						_commercePaymentMethodRegistry,
 						_commerceTermEntryService, _configurationProvider,
@@ -113,6 +118,12 @@ public class CommerceOrderContentConfigurationAction
 			portletPreferences.setValue(
 				"showCommerceOrderCreateTime",
 				getParameter(actionRequest, "showCommerceOrderCreateTime"));
+			portletPreferences.setValue(
+				"showCommerceOrderFullAddress",
+				getParameter(actionRequest, "showCommerceOrderFullAddress"));
+			portletPreferences.setValue(
+				"showCommerceOrderPhoneNumber",
+				getParameter(actionRequest, "showCommerceOrderPhoneNumber"));
 
 			portletPreferences.store();
 		}
@@ -150,7 +161,14 @@ public class CommerceOrderContentConfigurationAction
 	private CommerceOrderStatusRegistry _commerceOrderStatusRegistry;
 
 	@Reference
+	private CommerceOrderStepTrackerHelper _commerceOrderStepTrackerHelper;
+
+	@Reference
 	private CommerceOrderTypeService _commerceOrderTypeService;
+
+	@Reference
+	private CommercePaymentIntegrationRegistry
+		_commercePaymentIntegrationRegistry;
 
 	@Reference
 	private CommercePaymentMethodGroupRelLocalService

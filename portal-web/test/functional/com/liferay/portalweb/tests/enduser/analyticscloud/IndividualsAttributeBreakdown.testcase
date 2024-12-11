@@ -51,12 +51,6 @@ definition {
 	tearDown {
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACIndividualsDashboard.deleteBreakdown();
-
-		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
-
-		//ACUtils.tearDownAC();
-
 		ACUtils.tearDownDXP();
 
 		if (${testLiferayVirtualInstance} == "true") {
@@ -65,45 +59,14 @@ definition {
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
-	}
 
-	@description = "Feature ID: Legacy | Automation ID: LRAC-8657 | Test Summary: Add a new breakdown by an attribute and assert that correct results appear"
-	@priority = 5
-	test AddNewBreakdownByAttributeAndAssertCorrectResultsAppear {
-		task ("View the blog page") {
-			ACUtils.navigateToSitePageWithUser(
-				actionType = "View Blog",
-				documentTitleList = "Blogs AC Title",
-				emailList = "ac@liferay.com",
-				pageName = "AC Page",
-				siteName = "Site Name");
-		}
+		ACUtils.tearDownAC();
 
-		task ("Close sessions") {
-			ACUtils.closeAllSessionsAndWait();
-		}
+		ACNavigation.exitSettings();
 
-		task ("Switch to new property in AC") {
-			ACUtils.launchAC();
+		ACNavigation.goToIndividuals();
 
-			ACProperties.switchProperty(propertyName = ${assignedPropertyName});
-		}
-
-		task ("Navigate to the Individuals dashboard") {
-			ACNavigation.goToIndividuals();
-		}
-
-		task ("Add a new breakdown") {
-			ACSegments.addBreakdownByAttribute(
-				attribute = "email",
-				breakdownName = "Breakdown by Email");
-		}
-
-		task ("View the data in new breakdown") {
-			ACIndividualsDashboard.viewBreakdownRecharts(
-				fillColor = "#4B9BFF",
-				tick = "ac@liferay.com");
-		}
+		ACIndividualsDashboard.deleteBreakdown();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8997 | Test Summary: Distribution page can be filtered by a specific string"

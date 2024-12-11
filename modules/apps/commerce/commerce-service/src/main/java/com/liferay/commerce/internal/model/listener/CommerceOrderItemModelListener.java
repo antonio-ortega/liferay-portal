@@ -11,14 +11,20 @@ import com.liferay.commerce.model.CommerceOrderItem;
 import com.liferay.commerce.order.CommerceOrderThreadLocal;
 import com.liferay.commerce.order.engine.CommerceOrderEngine;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
+import com.liferay.commerce.service.CommerceOrderLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.transaction.Propagation;
+import com.liferay.portal.kernel.transaction.TransactionConfig;
+import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.BigDecimalUtil;
 
 import java.math.BigDecimal;
+
+import java.util.concurrent.Callable;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -32,13 +38,69 @@ public class CommerceOrderItemModelListener
 	extends BaseModelListener<CommerceOrderItem> {
 
 	@Override
+	public void onAfterCreate(CommerceOrderItem commerceOrderItem) {
+		try {
+			CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+
+			if (commerceOrder.isManuallyAdjusted() && commerceOrder.isOpen()) {
+				commerceOrder.setManuallyAdjusted(false);
+			}
+
+			if (!commerceOrder.isShippable() &&
+				commerceOrderItem.isShippable()) {
+
+				commerceOrder.setShippable(true);
+			}
+
+			_commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(portalException);
+			}
+		}
+	}
+
+	@Override
 	public void onAfterRemove(CommerceOrderItem commerceOrderItem) {
 		try {
 			if (CommerceOrderThreadLocal.isDeleteInProcess()) {
 				return;
 			}
 
-			CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+			CommerceOrder commerceOrder = _executeInTransaction(
+				new Callable<CommerceOrder>() {
+
+					@Override
+					public CommerceOrder call() throws Exception {
+						CommerceOrder commerceOrder =
+							commerceOrderItem.getCommerceOrder();
+
+						if (commerceOrder.isManuallyAdjusted() &&
+							commerceOrder.isOpen()) {
+
+							commerceOrder.setManuallyAdjusted(false);
+						}
+
+						boolean shippable = false;
+
+						for (CommerceOrderItem curCommerceOrderItem :
+								commerceOrder.getCommerceOrderItems()) {
+
+							if (curCommerceOrderItem.isShippable()) {
+								shippable = true;
+
+								break;
+							}
+						}
+
+						commerceOrder.setShippable(shippable);
+
+						return _commerceOrderLocalService.updateCommerceOrder(
+							commerceOrder);
+					}
+
+				});
 
 			if (commerceOrder.getOrderStatus() ==
 					CommerceOrderConstants.ORDER_STATUS_PARTIALLY_SHIPPED) {
@@ -61,6 +123,13 @@ public class CommerceOrderItemModelListener
 
 		try {
 			CommerceOrder commerceOrder = commerceOrderItem.getCommerceOrder();
+
+			if (commerceOrder.isManuallyAdjusted() && commerceOrder.isOpen()) {
+				commerceOrder.setManuallyAdjusted(false);
+
+				commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+					commerceOrder);
+			}
 
 			if ((commerceOrder.getOrderStatus() ==
 					CommerceOrderConstants.ORDER_STATUS_PARTIALLY_SHIPPED) ||
@@ -90,12 +159,12 @@ public class CommerceOrderItemModelListener
 					BigDecimal commerceShippedQuantity =
 						customerCommerceOrderItem.getShippedQuantity();
 
-					customerCommerceOrderItem.setShippedQuantity(
+					BigDecimal shippedQuantityBalance =
 						commerceShippedQuantity.subtract(
-							originalShippedQuantity
-						).add(
-							newShippedQuantity
-						));
+							originalShippedQuantity);
+
+					customerCommerceOrderItem.setShippedQuantity(
+						shippedQuantityBalance.add(newShippedQuantity));
 
 					update = true;
 				}
@@ -160,13 +229,32 @@ public class CommerceOrderItemModelListener
 		}
 	}
 
+	private CommerceOrder _executeInTransaction(
+			Callable<CommerceOrder> callable)
+		throws PortalException {
+
+		try {
+			return TransactionInvokerUtil.invoke(_transactionConfig, callable);
+		}
+		catch (Throwable throwable) {
+			throw new PortalException(throwable);
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		CommerceOrderItemModelListener.class);
+
+	private static final TransactionConfig _transactionConfig =
+		TransactionConfig.Factory.create(
+			Propagation.REQUIRED, new Class<?>[] {Exception.class});
 
 	@Reference
 	private CommerceOrderEngine _commerceOrderEngine;
 
 	@Reference
 	private CommerceOrderItemLocalService _commerceOrderItemLocalService;
+
+	@Reference
+	private CommerceOrderLocalService _commerceOrderLocalService;
 
 }

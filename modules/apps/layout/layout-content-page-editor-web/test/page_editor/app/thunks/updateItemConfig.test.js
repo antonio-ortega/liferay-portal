@@ -27,7 +27,7 @@ describe('updateItemConfig', () => {
 		updateItemConfig({
 			config: {},
 			itemConfig: {},
-			itemId: '0',
+			itemIds: ['0'],
 			segmentsExperienceId: '0',
 		})(
 			() => {},
@@ -43,39 +43,24 @@ describe('updateItemConfig', () => {
 		expect(LayoutService.updateItemConfig).toHaveBeenCalled();
 	});
 
-	it('dispatches updateItemConfig and updatePageContents actions', async () => {
+	it('dispatches updateItemConfig action', async () => {
 		LayoutService.updateItemConfig.mockImplementation(() =>
 			Promise.resolve({
 				layoutData: {
 					items: {},
 					version: 1,
 				},
-				pageContents: [
-					{
-						classPK: 'pk',
-						name: 'contents',
-						title: 'title',
-					},
-				],
 			})
 		);
 
 		await runThunk();
 
 		expect(updateItemConfigAction).toHaveBeenCalledWith({
-			itemId: '0',
+			itemIds: ['0'],
 			layoutData: {
 				items: {},
 				version: 1,
 			},
-			overridePreviousConfig: false,
-			pageContents: [
-				{
-					classPK: 'pk',
-					name: 'contents',
-					title: 'title',
-				},
-			],
 		});
 	});
 });

@@ -55,7 +55,7 @@ long cpDefinitionId = cpCatalogEntry.getCPDefinitionId();
 							String stockQuantity = cpContentHelper.getStockQuantity(request);
 							%>
 
-							<span data-qa-id="in-stock-quantity"><%= Validator.isNull(stockQuantity) ? StringPool.BLANK : LanguageUtil.format(request, "x-in-stock", stockQuantity) %></span>
+							<span data-qa-id="inStockQuantity"><%= Validator.isNull(stockQuantity) ? StringPool.BLANK : LanguageUtil.format(request, "x-in-stock", stockQuantity) %></span>
 						</span>
 					</div>
 				</div>
@@ -132,16 +132,16 @@ long cpDefinitionId = cpCatalogEntry.getCPDefinitionId();
 
 			<p class="mt-3 product-description"><%= HtmlUtil.escape(cpCatalogEntry.getShortDescription()) %></p>
 
-			<h4 class="commerce-subscription-info mt-3">
+			<div class="commerce-subscription-info h4 mt-3">
 				<c:if test="<%= cpSku != null %>">
 					<commerce-ui:product-subscription-info
 						CPInstanceId="<%= cpSku.getCPInstanceId() %>"
 					/>
 				</c:if>
 
-				<span data-text-cp-instance-subscription-info></span>
-				<span data-text-cp-instance-delivery-subscription-info></span>
-			</h4>
+				<span class="d-block" data-text-cp-instance-subscription-info></span>
+				<span class="d-block" data-text-cp-instance-delivery-subscription-info></span>
+			</div>
 
 			<div class="product-detail-options">
 				<commerce-ui:option-selector
@@ -232,10 +232,10 @@ List<CPOptionCategory> cpOptionCategories = cpContentHelper.getCPOptionCategorie
 
 String description = cpCatalogEntry.getDescription();
 
+boolean directReplacement = cpContentHelper.isDirectReplacement(cpSku);
 boolean hasCPDefinitionSpecificationOptionValues = cpContentHelper.hasCPDefinitionSpecificationOptionValues(cpDefinitionId);
 boolean hasCPMedia = !cpMedias.isEmpty();
 boolean hasDescription = !Validator.isBlank(description);
-boolean hasDirectReplacement = cpContentHelper.hasDirectReplacement(cpSku);
 
 String navCPMediaId = liferayPortletResponse.getNamespace() + "navCPMedia";
 String navDescriptionId = liferayPortletResponse.getNamespace() + "navDescription";
@@ -245,16 +245,16 @@ String navSpecificationsId = liferayPortletResponse.getNamespace() + "navSpecifi
 
 <div>
 	<react:component
-		module="product_detail/render/js/Tabs"
+		module="{Tabs} from commerce-product-content-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
+				"directReplacement", directReplacement
+			).put(
 				"hasCPDefinitionSpecificationOptionValues", hasCPDefinitionSpecificationOptionValues
 			).put(
 				"hasCPMedia", hasCPMedia
 			).put(
 				"hasDescription", hasDescription
-			).put(
-				"hasReplacements", hasDirectReplacement
 			).put(
 				"namespace", liferayPortletResponse.getNamespace()
 			).put(
@@ -353,11 +353,15 @@ String navSpecificationsId = liferayPortletResponse.getNamespace() + "navSpecifi
 
 					<li class="list-group-item list-group-item-flex">
 						<div class="autofit-col my-auto">
-							<aui:icon cssClass="icon-monospaced" image="document-default" markupView="lexicon" />
+							<span class="icon-monospaced">
+								<clay:icon
+									symbol="document-default"
+								/>
+							</span>
 						</div>
 
 						<div class="autofit-col autofit-col-expand">
-							<h5><%= HtmlUtil.escape(cpMedia.getTitle()) %></h5>
+							<div class="h5"><%= HtmlUtil.escape(cpMedia.getTitle()) %></div>
 
 							<p class="m-0"><%= LanguageUtil.formatStorageSize(cpMedia.getSize(), locale) %></p>
 						</div>
@@ -382,7 +386,7 @@ String navSpecificationsId = liferayPortletResponse.getNamespace() + "navSpecifi
 		</div>
 	</c:if>
 
-	<c:if test="<%= hasDirectReplacement %>">
+	<c:if test="<%= directReplacement %>">
 		<div aria-labelledby="navUnderlineReplacementsTab" class="fade <portlet:namespace />tab-element tab-pane" id="<%= navReplacementsId %>" role="tabpanel" style="display: block; height: 0px; visibility: hidden;">
 			<frontend-data-set:classic-display
 				contextParams='<%=
@@ -401,6 +405,7 @@ String navSpecificationsId = liferayPortletResponse.getNamespace() + "navSpecifi
 				dataProviderKey="<%= CPContentFDSNames.REPLACEMENT_CP_INSTANCES %>"
 				id="<%= CPContentFDSNames.REPLACEMENT_CP_INSTANCES %>"
 				itemsPerPage="<%= 10 %>"
+				propsTransformer="{replacementCPInstancePropsTransformer} from commerce-product-content-web"
 				style="stacked"
 			/>
 		</div>

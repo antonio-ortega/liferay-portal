@@ -8,7 +8,6 @@ import {collectionIsMapped} from '../collectionIsMapped';
 import {formIsMapped} from '../formIsMapped';
 import isItemContainerFlex from '../isItemContainerFlex';
 import isItemEmpty from '../isItemEmpty';
-import checkAllowedChild from './checkAllowedChild';
 import {DRAG_DROP_TARGET_TYPE} from './constants/dragDropTargetType';
 import {ORIENTATIONS} from './constants/orientations';
 import {TARGET_POSITIONS} from './constants/targetPositions';
@@ -25,8 +24,8 @@ export default function defaultComputeHover({
 	dispatch,
 	layoutDataRef,
 	monitor,
-	siblingItem = null,
 	sourceItem,
+	state,
 	targetItem,
 	targetRefs,
 }) {
@@ -44,7 +43,7 @@ export default function defaultComputeHover({
 	// nesting validation
 
 	const orientation = getOrientation(
-		siblingItem || targetItem,
+		targetItem,
 		monitor,
 		targetRefs,
 		layoutDataRef
@@ -54,31 +53,34 @@ export default function defaultComputeHover({
 		targetPositionWithMiddle,
 		targetPositionWithoutMiddle,
 		elevationDepth,
-	] = getItemPosition(
-		siblingItem || targetItem,
-		monitor,
-		targetRefs,
-		orientation
-	);
+	] = getItemPosition(targetItem, monitor, targetRefs, orientation);
 
 	// Drop inside target
 
 	const validDropInsideTarget = (() => {
 		const targetIsColumn =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.column;
+
 		const targetIsCollectionNotMapped =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.collection &&
 			!collectionIsMapped(targetItem);
+
 		const targetIsContainerFlex = isItemContainerFlex(targetItem);
+
 		const targetIsFragment =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.fragment;
+
 		const targetIsFormNotMapped =
 			targetItem.type === LAYOUT_DATA_ITEM_TYPES.form &&
 			!formIsMapped(targetItem);
+
 		const targetIsEmpty = isItemEmpty(
 			layoutDataRef.current.items[targetItem.itemId],
 			layoutDataRef.current
 		);
+
+		const targetIsFormStep =
+			targetItem.type === LAYOUT_DATA_ITEM_TYPES.formStep;
 
 		return (
 			targetPositionWithMiddle === TARGET_POSITIONS.MIDDLE &&
@@ -86,20 +88,25 @@ export default function defaultComputeHover({
 				targetIsColumn ||
 				targetIsContainerFlex ||
 				targetIsCollectionNotMapped ||
-				targetIsFormNotMapped) &&
+				targetIsFormNotMapped ||
+				targetIsFormStep) &&
 			!targetIsFragment
 		);
 	})();
 
 	if (
-		!siblingItem &&
+		stateHasChanged(
+			state,
+			sourceItem,
+			targetItem,
+			targetPositionWithMiddle
+		) &&
 		validDropInsideTarget &&
 		!itemIsAncestor(sourceItem, targetItem, layoutDataRef)
 	) {
 		return dispatch({
-			dropItem: sourceItem,
-			dropTargetItem: targetItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
+			dragSource: sourceItem,
+			dropTarget: targetItem,
 			elevate: null,
 			targetPositionWithMiddle,
 			targetPositionWithoutMiddle,
@@ -107,32 +114,8 @@ export default function defaultComputeHover({
 		});
 	}
 
-	// Valid elevation:
-	// - sourceItem should be child of dropTargetItem
-	// - sourceItem should be sibling of siblingItem
-	// - siblingItem should have flex parent for horizontal elevation
-	//   and no-flex parent for vertical elevation
-	// - sourceItem should not be ancestor of siblingItem
-
-	if (
-		siblingItem &&
-		!shouldBeIgnoredInElevation(parent) &&
-		validElevation(siblingItem, orientation, layoutDataRef) &&
-		!itemIsAncestor(sourceItem, siblingItem, layoutDataRef)
-	) {
-		return dispatch({
-			dropItem: sourceItem,
-			dropTargetItem: siblingItem,
-			droppable: checkAllowedChild(sourceItem, targetItem, layoutDataRef),
-			elevate: true,
-			targetPositionWithMiddle,
-			targetPositionWithoutMiddle,
-			type: DRAG_DROP_TARGET_TYPE.ELEVATE,
-		});
-	}
-
 	// Try to elevate to some valid ancestor
-	// Using dropTargetItem parent as target and dropTargetItem as sibling
+	// Using dropTarget parent as target and dropTarget as sibling
 	// It will try elevate multiple levels if elevationDepth is enough and
 	// there are valid ancestors
 
@@ -174,10 +157,8 @@ export default function defaultComputeHover({
 					!shouldBeIgnoredInElevation(parent)
 				) {
 					if (maximumDepth > 1) {
-						const [
-							grandParent,
-							parentSibling,
-						] = getElevatedTargetItem(parent, maximumDepth - 1);
+						const [grandParent, parentSibling] =
+							getElevatedTargetItem(parent, maximumDepth - 1);
 
 						if (grandParent) {
 							return [grandParent, parentSibling];
@@ -200,15 +181,35 @@ export default function defaultComputeHover({
 		);
 
 		if (elevatedTargetItem && elevatedTargetItem !== targetItem) {
-			return defaultComputeHover({
-				dispatch,
-				layoutDataRef,
-				monitor,
-				siblingItem,
-				sourceItem,
-				targetItem: elevatedTargetItem,
-				targetRefs,
-			});
+
+			// Valid elevation:
+			// - sourceItem should be child of dropTarget
+			// - sourceItem should be sibling of siblingItem
+			// - siblingItem should have flex parent for horizontal elevation
+			//   and no-flex parent for vertical elevation
+			// - sourceItem should not be ancestor of siblingItem
+
+			if (
+				siblingItem &&
+				stateHasChanged(
+					state,
+					sourceItem,
+					siblingItem,
+					targetPositionWithMiddle
+				) &&
+				!shouldBeIgnoredInElevation(parent) &&
+				validElevation(siblingItem, orientation, layoutDataRef) &&
+				!itemIsAncestor(sourceItem, siblingItem, layoutDataRef)
+			) {
+				return dispatch({
+					dragSource: sourceItem,
+					dropTarget: siblingItem,
+					elevate: true,
+					targetPositionWithMiddle,
+					targetPositionWithoutMiddle,
+					type: DRAG_DROP_TARGET_TYPE.ELEVATE,
+				});
+			}
 		}
 	}
 }
@@ -265,15 +266,13 @@ function getItemPosition(item, monitor, targetRefs, orientation) {
 	const totalElevationBorderSize =
 		elevationStepSize * MAXIMUM_ELEVATION_STEPS;
 
-	const [
-		targetPositionWithMiddle,
-		targetPositionWithoutMiddle,
-	] = getDropTargetPosition(
-		clientOffset,
-		totalElevationBorderSize,
-		targetPositions,
-		targetData
-	);
+	const [targetPositionWithMiddle, targetPositionWithoutMiddle] =
+		getDropTargetPosition(
+			clientOffset,
+			totalElevationBorderSize,
+			targetPositions,
+			targetData
+		);
 
 	let elevationDepth = 0;
 
@@ -303,11 +302,11 @@ function shouldBeIgnoredInElevation(item) {
 	// Dropping inside a collection or inside a row is illegal
 	// but in those cases we don't want to inform the user about it,
 	// we just want to ignore those cases and try to elevate in the direct parent.
-	// This is why this case is handled separately in the checkAllowedChild function
 
 	return (
 		item.type === LAYOUT_DATA_ITEM_TYPES.collection ||
-		item.type === LAYOUT_DATA_ITEM_TYPES.row
+		item.type === LAYOUT_DATA_ITEM_TYPES.row ||
+		item.type === LAYOUT_DATA_ITEM_TYPES.formStepContainer
 	);
 }
 
@@ -317,4 +316,18 @@ function validElevation(siblingItem, orientation, layoutDataRef) {
 	return orientation === ORIENTATIONS.horizontal
 		? isItemContainerFlex(targetItemParent)
 		: !isItemContainerFlex(targetItemParent);
+}
+
+function stateHasChanged(state, sourceItem, targetItem, position) {
+	if (
+		state.dragSource?.itemId === sourceItem.itemId &&
+		state.dropTarget?.itemId === targetItem.itemId &&
+		state.dropTarget?.collectionItemIndex ===
+			targetItem.collectionItemIndex &&
+		state.targetPositionWithMiddle === position
+	) {
+		return false;
+	}
+
+	return true;
 }

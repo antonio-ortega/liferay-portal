@@ -109,11 +109,23 @@ public class AccountEntryModelResourcePermission
 			Organization originalOrganization = organization;
 
 			while (organization != null) {
+				if (Objects.equals(
+						actionId, AccountActionKeys.UPDATE_ORGANIZATIONS) &&
+					permissionChecker.hasPermission(
+						organization.getGroupId(), AccountEntry.class.getName(),
+						accountEntryId,
+						AccountActionKeys.MANAGE_ORGANIZATIONS)) {
+
+					return true;
+				}
+
 				boolean organizationMember = ArrayUtil.contains(
 					userOrganizationIds, organization.getOrganizationId());
 
 				if (!Objects.equals(
 						actionId, AccountActionKeys.MANAGE_ORGANIZATIONS) &&
+					!Objects.equals(
+						actionId, AccountActionKeys.UPDATE_ORGANIZATIONS) &&
 					organizationMember &&
 					OrganizationPermissionUtil.contains(
 						permissionChecker, organization.getOrganizationId(),
@@ -131,9 +143,12 @@ public class AccountEntryModelResourcePermission
 				}
 
 				if (!Objects.equals(organization, originalOrganization) &&
-					OrganizationPermissionUtil.contains(
+					(OrganizationPermissionUtil.contains(
 						permissionChecker, organization,
-						AccountActionKeys.MANAGE_SUBORGANIZATIONS_ACCOUNTS) &&
+						AccountActionKeys.MANAGE_SUBORGANIZATIONS_ACCOUNTS) ||
+					 OrganizationPermissionUtil.contains(
+						 permissionChecker, organization,
+						 AccountActionKeys.UPDATE_SUBORGANIZATIONS_ACCOUNTS)) &&
 					((organizationMember &&
 					  Objects.equals(actionId, ActionKeys.VIEW)) ||
 					 permissionChecker.hasPermission(
@@ -152,6 +167,14 @@ public class AccountEntryModelResourcePermission
 
 		if (accountEntry != null) {
 			accountEntryGroupId = accountEntry.getAccountEntryGroupId();
+		}
+
+		if (Objects.equals(actionId, AccountActionKeys.UPDATE_ORGANIZATIONS) &&
+			permissionChecker.hasPermission(
+				accountEntryGroupId, AccountEntry.class.getName(),
+				accountEntryId, AccountActionKeys.MANAGE_ORGANIZATIONS)) {
+
+			return true;
 		}
 
 		return permissionChecker.hasPermission(

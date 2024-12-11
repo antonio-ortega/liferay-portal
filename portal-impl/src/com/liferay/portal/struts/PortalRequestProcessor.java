@@ -15,7 +15,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
-import com.liferay.portal.kernel.model.PasswordPolicy;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTracker;
@@ -82,10 +81,12 @@ public class PortalRequestProcessor {
 		"javax.servlet.include.servlet_path";
 
 	public PortalRequestProcessor(
-		ServletContext servletContext, ModuleConfig moduleConfig) {
+		ModuleConfig moduleConfig, ServletContext servletContext,
+		String servletName) {
 
-		_servletContext = servletContext;
 		_moduleConfig = moduleConfig;
+		_servletContext = servletContext;
+		_servletName = servletName;
 
 		_definitions = (Map<String, Definition>)servletContext.getAttribute(
 			TilesUtil.DEFINITIONS);
@@ -254,31 +255,18 @@ public class PortalRequestProcessor {
 	}
 
 	private String _getLastPath(HttpServletRequest httpServletRequest) {
-		HttpSession httpSession = httpServletRequest.getSession();
+		StringBundler sb = new StringBundler(5);
+
+		String portalURL = PortalUtil.getPortalURL(httpServletRequest);
+
+		sb.append(portalURL);
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Boolean httpsInitial = (Boolean)httpSession.getAttribute(
-			WebKeys.HTTPS_INITIAL);
-
-		String portalURL = null;
-
-		if (PropsValues.COMPANY_SECURITY_AUTH_REQUIRES_HTTPS &&
-			!PropsValues.SESSION_ENABLE_PHISHING_PROTECTION &&
-			(httpsInitial != null) && !httpsInitial.booleanValue()) {
-
-			portalURL = PortalUtil.getPortalURL(httpServletRequest, false);
-		}
-		else {
-			portalURL = PortalUtil.getPortalURL(httpServletRequest);
-		}
-
-		StringBundler sb = new StringBundler(5);
-
-		sb.append(portalURL);
 		sb.append(themeDisplay.getPathMain());
+
 		sb.append(_PATH_PORTAL_LAYOUT);
 
 		if (!PropsValues.AUTH_FORWARD_BY_LAST_PATH) {
@@ -294,6 +282,8 @@ public class PortalRequestProcessor {
 
 			return sb.toString();
 		}
+
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		LastPath lastPath = (LastPath)httpSession.getAttribute(
 			WebKeys.LAST_PATH);
@@ -337,7 +327,8 @@ public class PortalRequestProcessor {
 		}
 
 		StrutsUtil.forward(
-			uri, _servletContext, httpServletRequest, httpServletResponse);
+			httpServletRequest, httpServletResponse, _servletContext,
+			_servletName, null, uri);
 	}
 
 	private boolean _isPortletPath(String path) {
@@ -641,21 +632,7 @@ public class PortalRequestProcessor {
 				// Authenticated users must have a current password
 
 				if (user.isPasswordReset()) {
-					try {
-						PasswordPolicy passwordPolicy =
-							user.getPasswordPolicy();
-
-						if ((passwordPolicy == null) ||
-							passwordPolicy.isChangeable()) {
-
-							return _PATH_PORTAL_UPDATE_PASSWORD;
-						}
-					}
-					catch (Exception exception) {
-						_log.error(exception);
-
-						return _PATH_PORTAL_UPDATE_PASSWORD;
-					}
+					return _PATH_PORTAL_UPDATE_PASSWORD;
 				}
 				else if (path.equals(_PATH_PORTAL_UPDATE_PASSWORD)) {
 					return _PATH_PORTAL_LAYOUT;
@@ -879,6 +856,7 @@ public class PortalRequestProcessor {
 	private final ModuleConfig _moduleConfig;
 	private final Set<String> _publicPaths = new HashSet<>();
 	private final ServletContext _servletContext;
+	private final String _servletName;
 	private final Set<String> _trackerIgnorePaths;
 
 }

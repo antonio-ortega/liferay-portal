@@ -199,12 +199,31 @@ public class LockPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_C() throws Exception {
+		_persistence.countByC_C(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_C(0L, "null");
+
+		_persistence.countByC_C(0L, (String)null);
+	}
+
+	@Test
 	public void testCountByC_K() throws Exception {
 		_persistence.countByC_K("", "");
 
 		_persistence.countByC_K("null", "null");
 
 		_persistence.countByC_K((String)null, (String)null);
+	}
+
+	@Test
+	public void testCountByC_U_C() throws Exception {
+		_persistence.countByC_U_C(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_U_C(0L, 0L, "null");
+
+		_persistence.countByC_U_C(0L, 0L, (String)null);
 	}
 
 	@Test

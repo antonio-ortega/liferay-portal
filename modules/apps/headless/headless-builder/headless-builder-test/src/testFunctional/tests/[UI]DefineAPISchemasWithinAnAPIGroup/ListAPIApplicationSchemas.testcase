@@ -2,10 +2,10 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -15,7 +15,6 @@ definition {
 		task ("Given an API application is created") {
 			ApplicationAPI.createAPIApplication(
 				baseURL = "my-app",
-				status = "unpublished",
 				title = "My-app");
 		}
 	}
@@ -32,7 +31,6 @@ definition {
 
 	@priority = 5
 	test CanClickAddNewSchemaButtons {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -55,13 +53,12 @@ definition {
 
 	@priority = 4
 	test CanFilterSchemaByCreationDateAsLastUpdated {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("And Given I create a schema associate to the API application") {
 			SchemaAPI.createAPISchema(
-				externalReferenceCode = "My-app",
+				apiApplicationERC = "My-app",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "mySchema");
 		}
@@ -88,13 +85,12 @@ definition {
 
 	@priority = 4
 	test CanFilterSchemaByDateBeforeCreationAsLastUpdated {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("And Given I create a schema associate to the API application") {
 			SchemaAPI.createAPISchema(
-				externalReferenceCode = "My-app",
+				apiApplicationERC = "My-app",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "mySchema");
 		}
@@ -120,13 +116,12 @@ definition {
 
 	@priority = 5
 	test CanListExistingSchemaInEditAPIApplication {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("And Given with postAPISchema to create a schema associate to the API application") {
 			SchemaAPI.createAPISchema(
-				externalReferenceCode = "My-app",
+				apiApplicationERC = "My-app",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "mySchema");
 		}
@@ -146,13 +141,12 @@ definition {
 
 	@priority = 4
 	test CanOrderSchemasByLastUpdated {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("And Given with postAPISchema to create two schemas associate to the API application") {
 			SchemaAPI.createNAPISchemas(
-				externalReferenceCode = "My-app",
+				apiApplicationERC = "My-app",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "testSchema",
 				numberOfSchemas = 2);
@@ -177,13 +171,12 @@ definition {
 
 	@priority = 4
 	test CanOrderSchemasByName {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("And Given with postAPISchema to create two schemas associate to the API application") {
 			SchemaAPI.createNAPISchemas(
-				externalReferenceCode = "My-app",
+				apiApplicationERC = "My-app",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "testSchema",
 				numberOfSchemas = 2);
@@ -208,13 +201,12 @@ definition {
 
 	@priority = 4
 	test CanPaginateAPISchemas {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("And Given with postAPISchema to create 11 schemas associate to the API application") {
 			SchemaAPI.createNAPISchemas(
-				externalReferenceCode = "My-app",
+				apiApplicationERC = "My-app",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "testSchema",
 				numberOfSchemas = 11);
@@ -247,13 +239,12 @@ definition {
 
 	@priority = 4
 	test CanSearchAPISchema {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("And Given I create a schema associate to the API application") {
 			SchemaAPI.createAPISchema(
-				externalReferenceCode = "My-app",
+				apiApplicationERC = "My-app",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "testSchema");
 		}
@@ -273,13 +264,12 @@ definition {
 
 	@priority = 5
 	test CanSeeAvailableFieldsAndActions {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("When I create a schema associate to the API application") {
 			SchemaAPI.createAPISchema(
-				externalReferenceCode = "My-app",
+				apiApplicationERC = "My-app",
 				mainObjectDefinitionERC = "L_API_APPLICATION",
 				name = "mySchema");
 		}
@@ -313,7 +303,6 @@ definition {
 
 	@priority = 4
 	test CanSeeNoAPISchemaAndAddSchemaButton {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -325,8 +314,8 @@ definition {
 
 		task ("Then No API Schema Found message and Add New Schema button are visible") {
 			AssertElementPresent(
-				key_entryName = "No API Schema Found",
-				locator1 = "ObjectAdmin#VIEW_ENTRY_NAME_ON_PAGE");
+				key_text = "No API Schema Found",
+				locator1 = "ObjectAdmin#EMPTY_STATE_MESSAGE");
 
 			AssertElementPresent(
 				locator1 = "Button#BUTTON_WITH_VALUE",

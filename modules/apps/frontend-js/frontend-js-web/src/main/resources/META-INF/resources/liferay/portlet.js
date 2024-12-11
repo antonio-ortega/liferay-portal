@@ -4,6 +4,7 @@
  */
 
 /* eslint-disable @liferay/aui/no-node */
+
 /* eslint-disable @liferay/aui/no-one */
 
 (function (A) {
@@ -80,14 +81,16 @@
 									return;
 								}
 
-								script.onload = script.onreadystatechange = null;
+								script.onload = script.onreadystatechange =
+									null;
 								script.onerror = null;
 
 								resolve();
 							};
 
 							script.onerror = () => {
-								script.onload = script.onreadystatechange = null;
+								script.onload = script.onreadystatechange =
+									null;
 								script.onerror = null;
 
 								console.error('Unable to load', path);
@@ -272,9 +275,8 @@
 				let nestedPortletOffset = 0;
 
 				nestedPortlets.some((nestedPortlet) => {
-					const nestedPortletIndex = columnPortlets.indexOf(
-						nestedPortlet
-					);
+					const nestedPortletIndex =
+						columnPortlets.indexOf(nestedPortlet);
 
 					if (
 						nestedPortletIndex !== -1 &&
@@ -452,7 +454,7 @@
 							? error
 							: Liferay.Language.get(
 									'there-was-an-unexpected-error.-please-refresh-the-current-page'
-							  );
+								);
 
 					Liferay.Util.openToast({
 						message,
@@ -578,6 +580,7 @@
 					const handle = portlet.on(events, () => {
 						Util.portletTitleEdit({
 							doAsUserId: themeDisplay.getDoAsUserIdEncoded(),
+
 							// eslint-disable-next-line @liferay/no-abbreviations
 							obj: portlet,
 							plid: themeDisplay.getPlid(),
@@ -662,17 +665,17 @@
 
 					instance.addHTML({
 						data: A.mix(params, data, true),
-						onComplete(portlet, portletId) {
-							portlet.refreshURL = url;
+						onComplete(newPortlet, portletId) {
+							newPortlet.refreshURL = portlet.refreshURL;
 
-							if (portlet) {
-								portlet.attr('data-qa-id', 'app-refreshed');
+							if (newPortlet) {
+								newPortlet.attr('data-qa-id', 'app-refreshed');
 							}
 
 							Liferay.fire(
-								portlet.portletId + ':portletRefreshed',
+								newPortlet.portletId + ':portletRefreshed',
 								{
-									portlet,
+									portlet: newPortlet,
 									portletId,
 								}
 							);
@@ -699,6 +702,8 @@
 
 					portletBody.hide();
 				}
+
+				Liferay.fire('refreshPortlet', {portletId: portlet.portletId});
 			}
 		},
 		['aui-base', 'querystring-parse']

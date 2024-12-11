@@ -19,6 +19,7 @@ import com.liferay.adaptive.media.image.processor.AMImageAttribute;
 import com.liferay.adaptive.media.processor.AMAsyncProcessor;
 import com.liferay.adaptive.media.processor.AMAsyncProcessorLocator;
 import com.liferay.adaptive.media.processor.AMProcessor;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -33,6 +34,7 @@ import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -69,6 +71,12 @@ public class AMImageRequestHandler
 		return adaptiveMedia;
 	}
 
+	@Activate
+	protected void activate() {
+		_pathInterpreter = new PathInterpreter(
+			_amImageConfigurationHelper, _dlAppLocalService);
+	}
+
 	private AdaptiveMedia<AMProcessor<FileVersion>> _createRawAdaptiveMedia(
 		FileVersion fileVersion) {
 
@@ -78,7 +86,7 @@ public class AMImageRequestHandler
 					return fileVersion.getContentStream(false);
 				}
 				catch (PortalException portalException) {
-					throw new AMRuntimeException(portalException);
+					throw new AMRuntimeException.IOException(portalException);
 				}
 			},
 			AMImageAttributeMapping.fromFileVersion(fileVersion), null);
@@ -131,7 +139,7 @@ public class AMImageRequestHandler
 			return adaptiveMedias.get(0);
 		}
 		catch (PortalException portalException) {
-			throw new AMRuntimeException(portalException);
+			throw new AMRuntimeException.IOException(portalException);
 		}
 	}
 
@@ -165,7 +173,7 @@ public class AMImageRequestHandler
 			return _createRawAdaptiveMedia(fileVersion);
 		}
 		catch (PortalException portalException) {
-			throw new AMRuntimeException(portalException);
+			throw new AMRuntimeException.IOException(portalException);
 		}
 	}
 
@@ -286,6 +294,8 @@ public class AMImageRequestHandler
 	private AMImageFinder _amImageFinder;
 
 	@Reference
+	private DLAppLocalService _dlAppLocalService;
+
 	private PathInterpreter _pathInterpreter;
 
 }

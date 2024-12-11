@@ -6,11 +6,12 @@
 package com.liferay.analytics.batch.exportimport.internal.engine;
 
 import com.liferay.analytics.batch.exportimport.internal.dto.v1_0.converter.constants.DTOConverterConstants;
+import com.liferay.analytics.batch.exportimport.internal.engine.util.DTOConverterUtil;
 import com.liferay.analytics.dxp.entity.rest.dto.v1_0.DXPEntity;
+import com.liferay.analytics.settings.rest.manager.AnalyticsSettingsManager;
 import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.pagination.Page;
 import com.liferay.batch.engine.pagination.Pagination;
-import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.model.BaseModel;
@@ -23,6 +24,7 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 
 import java.io.Serializable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -45,43 +47,55 @@ public class OrganizationAnalyticsDXPEntityBatchEngineTaskItemDelegate
 			Map<String, Serializable> parameters, String search)
 		throws Exception {
 
+		if (!_analyticsSettingsManager.syncedContactSettingsEnabled(
+				contextCompany.getCompanyId())) {
+
+			return Page.of(
+				Collections.emptyList(),
+				Pagination.of(pagination.getPage(), pagination.getPageSize()),
+				0);
+		}
+
 		return Page.of(
-			TransformUtil.transform(
+			DTOConverterUtil.toDTOs(
 				_organizationLocalService.<List<Organization>>dslQuery(
 					_createSelectDSLQuery(
-						contextCompany.getCompanyId(), filter, pagination)),
-				organization -> _dxpEntityDTOConverter.toDTO(organization)),
+						contextCompany.getCompanyId(), pagination, parameters)),
+				_dxpEntityDTOConverter),
 			Pagination.of(pagination.getPage(), pagination.getPageSize()),
 			_organizationLocalService.dslQuery(
-				_createCountDSLQuery(contextCompany.getCompanyId(), filter)));
+				_createCountDSLQuery(
+					contextCompany.getCompanyId(), parameters)));
 	}
 
-	private DSLQuery _createCountDSLQuery(long companyId, Filter filter) {
+	private DSLQuery _createCountDSLQuery(
+		long companyId, Map<String, Serializable> parameters) {
+
 		return DSLQueryFactoryUtil.count(
 		).from(
 			OrganizationTable.INSTANCE
 		).where(
-			buildPredicate(
-				OrganizationTable.INSTANCE, companyId,
-				OrganizationTable.INSTANCE.companyId.isNotNull(), filter)
+			buildPredicate(OrganizationTable.INSTANCE, companyId, parameters)
 		);
 	}
 
 	private DSLQuery _createSelectDSLQuery(
-		long companyId, Filter filter, Pagination pagination) {
+		long companyId, Pagination pagination,
+		Map<String, Serializable> parameters) {
 
 		return DSLQueryFactoryUtil.select(
 		).from(
 			OrganizationTable.INSTANCE
 		).where(
-			buildPredicate(
-				OrganizationTable.INSTANCE, companyId,
-				OrganizationTable.INSTANCE.companyId.isNotNull(), filter)
+			buildPredicate(OrganizationTable.INSTANCE, companyId, parameters)
 		).limit(
-			pagination.getPage() * pagination.getPageSize(),
-			(pagination.getPage() + 1) * pagination.getPageSize()
+			(pagination.getPage() - 1) * pagination.getPageSize(),
+			pagination.getPage() * pagination.getPageSize()
 		);
 	}
+
+	@Reference
+	private AnalyticsSettingsManager _analyticsSettingsManager;
 
 	@Reference(target = DTOConverterConstants.DXP_ENTITY_DTO_CONVERTER)
 	private DTOConverter<BaseModel<?>, DXPEntity> _dxpEntityDTOConverter;

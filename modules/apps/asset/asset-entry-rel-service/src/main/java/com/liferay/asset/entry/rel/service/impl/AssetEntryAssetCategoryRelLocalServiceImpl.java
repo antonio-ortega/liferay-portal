@@ -6,20 +6,27 @@
 package com.liferay.asset.entry.rel.service.impl;
 
 import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRel;
+import com.liferay.asset.entry.rel.model.AssetEntryAssetCategoryRelTable;
 import com.liferay.asset.entry.rel.service.base.AssetEntryAssetCategoryRelLocalServiceBaseImpl;
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetEntryTable;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.mass.delete.MassDeleteCacheThreadLocal;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -73,7 +80,7 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 				assetEntryAssetCategoryRel);
 		}
 
-		_reindex(assetEntryId);
+		_reindex(_assetEntryLocalService.fetchEntry(assetEntryId));
 	}
 
 	@Override
@@ -89,18 +96,54 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 				assetEntryAssetCategoryRelPersistence.remove(
 					assetEntryAssetCategoryRel);
 
-				_reindex(assetEntryAssetCategoryRel.getAssetEntryId());
+				_reindex(
+					_assetEntryLocalService.fetchEntry(
+						assetEntryAssetCategoryRel.getAssetEntryId()));
 			});
+	}
+
+	@Override
+	public void deleteAssetEntryAssetCategoryRelByAssetEntry(
+		AssetEntry assetEntry) {
+
+		Map<Long, List<AssetEntryAssetCategoryRel>>
+			partitionAssetEntryAssetCategoryRels =
+				MassDeleteCacheThreadLocal.getMassDeleteCache(
+					AssetEntryAssetCategoryRelLocalServiceImpl.class.getName() +
+						".deleteAssetEntryAssetCategoryRelByAssetEntry",
+					() -> MapUtil.toPartitionMap(
+						assetEntryAssetCategoryRelPersistence.findAll(),
+						AssetEntryAssetCategoryRel::getAssetEntryId));
+
+		if (partitionAssetEntryAssetCategoryRels == null) {
+			assetEntryAssetCategoryRelPersistence.removeByAssetEntryId(
+				assetEntry.getEntryId());
+		}
+		else {
+			List<AssetEntryAssetCategoryRel> assetEntryAssetCategoryRels =
+				partitionAssetEntryAssetCategoryRels.remove(
+					assetEntry.getEntryId());
+
+			ListUtil.isNotEmptyForEach(
+				assetEntryAssetCategoryRels,
+				assetEntryAssetCategoryRel ->
+					assetEntryAssetCategoryRelPersistence.remove(
+						assetEntryAssetCategoryRel));
+		}
+
+		_reindex(assetEntry);
 	}
 
 	@Override
 	public void deleteAssetEntryAssetCategoryRelByAssetEntryId(
 		long assetEntryId) {
 
-		assetEntryAssetCategoryRelPersistence.removeByAssetEntryId(
+		AssetEntry assetEntry = _assetEntryLocalService.fetchAssetEntry(
 			assetEntryId);
 
-		_reindex(assetEntryId);
+		if (assetEntry != null) {
+			deleteAssetEntryAssetCategoryRelByAssetEntry(assetEntry);
+		}
 	}
 
 	@Override
@@ -190,6 +233,28 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 	}
 
 	@Override
+	public int getAssetEntryAssetCategoryRelsCountByClassNameId(
+		long assetCategoryId, long classNameId) {
+
+		DSLQuery dslQuery = DSLQueryFactoryUtil.count(
+		).from(
+			AssetEntryTable.INSTANCE
+		).innerJoinON(
+			AssetEntryAssetCategoryRelTable.INSTANCE,
+			AssetEntryAssetCategoryRelTable.INSTANCE.assetEntryId.eq(
+				AssetEntryTable.INSTANCE.entryId)
+		).where(
+			AssetEntryAssetCategoryRelTable.INSTANCE.assetCategoryId.eq(
+				assetCategoryId
+			).and(
+				AssetEntryTable.INSTANCE.classNameId.eq(classNameId)
+			)
+		);
+
+		return _assetEntryLocalService.dslQueryCount(dslQuery);
+	}
+
+	@Override
 	public long[] getAssetEntryPrimaryKeys(long assetCategoryId) {
 		List<AssetEntryAssetCategoryRel> assetEntryAssetCategoryRels =
 			getAssetEntryAssetCategoryRelsByAssetCategoryId(assetCategoryId);
@@ -199,14 +264,7 @@ public class AssetEntryAssetCategoryRelLocalServiceImpl
 			AssetEntryAssetCategoryRel::getAssetEntryId);
 	}
 
-	private void _reindex(long assetEntryId) {
-		if (assetEntryId <= 0) {
-			return;
-		}
-
-		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
-			assetEntryId);
-
+	private void _reindex(AssetEntry assetEntry) {
 		if (assetEntry == null) {
 			return;
 		}

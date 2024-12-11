@@ -8,14 +8,18 @@ import LayoutService from '../../services/LayoutService';
 import {setIn} from '../../utils/setIn';
 
 function undoAction({action, store}) {
-	const {config, itemId, pageContents} = action;
+	const {config, itemIds} = action;
 	const {layoutData} = store;
 
-	const nextLayoutData = setIn(
-		layoutData,
-		['items', itemId, 'config'],
-		config
-	);
+	let nextLayoutData = layoutData;
+
+	itemIds.forEach((itemId) => {
+		nextLayoutData = setIn(
+			nextLayoutData,
+			['items', itemId, 'config'],
+			config[itemId]
+		);
+	});
 
 	return (dispatch) => {
 		return LayoutService.updateLayoutData({
@@ -25,10 +29,8 @@ function undoAction({action, store}) {
 		}).then(() => {
 			dispatch(
 				updateItemConfig({
-					itemId,
+					itemIds,
 					layoutData: nextLayoutData,
-					overridePreviousConfig: true,
-					pageContents,
 				})
 			);
 		});
@@ -36,15 +38,19 @@ function undoAction({action, store}) {
 }
 
 function getDerivedStateForUndo({action, state}) {
-	const {itemId, pageContents} = action;
+	const {itemIds} = action;
 	const {layoutData} = state;
+	let config = {};
 
-	const item = layoutData.items[itemId];
+	for (const itemId of itemIds) {
+		const item = layoutData.items[itemId];
+
+		config = {...config, [itemId]: item.config};
+	}
 
 	return {
-		config: item.config,
-		itemId,
-		pageContents,
+		config,
+		itemIds,
 	};
 }
 

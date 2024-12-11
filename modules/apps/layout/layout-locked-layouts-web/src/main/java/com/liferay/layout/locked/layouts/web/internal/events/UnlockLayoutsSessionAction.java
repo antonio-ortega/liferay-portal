@@ -9,7 +9,6 @@ import com.liferay.layout.manager.LayoutLockManager;
 import com.liferay.portal.kernel.events.ActionException;
 import com.liferay.portal.kernel.events.LifecycleAction;
 import com.liferay.portal.kernel.events.SessionAction;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -32,10 +31,6 @@ public class UnlockLayoutsSessionAction extends SessionAction {
 
 	@Override
 	public void run(HttpSession httpSession) throws ActionException {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-180328")) {
-			return;
-		}
-
 		long userId = GetterUtil.getLong(
 			httpSession.getAttribute(WebKeys.USER_ID));
 
@@ -49,8 +44,13 @@ public class UnlockLayoutsSessionAction extends SessionAction {
 			return;
 		}
 
-		_layoutLockManager.unlockLayoutsByUserId(
-			user.getCompanyId(), user.getUserId());
+		try {
+			_layoutLockManager.unlockLayoutsByUserId(
+				user.getCompanyId(), user.getUserId());
+		}
+		catch (Exception exception) {
+			throw new ActionException(exception);
+		}
 	}
 
 	@Reference

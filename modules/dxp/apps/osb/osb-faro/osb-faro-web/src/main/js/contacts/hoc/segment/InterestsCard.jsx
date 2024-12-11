@@ -12,6 +12,7 @@ import {
 } from 'contacts/hoc/mappers/interests-query';
 import {graphql} from '@apollo/react-hoc';
 import {PAGES, Routes, setUriQueryValue, toRoute} from 'shared/util/router';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {withTableData} from 'shared/hoc';
 
 const withData = () =>
@@ -29,13 +30,13 @@ const TableWithData = withTableData(withData, {
 				)}
 			</span>
 
-			<a
+			<ClayLink
 				href={URLConstants.SegmentsTopInterestsDocumentationLink}
 				key='DOCUMENTATION'
 				target='_blank'
 			>
 				{Liferay.Language.get('learn-more-about-interests')}
-			</a>
+			</ClayLink>
 		</>
 	),
 	emptyTitle: Liferay.Language.get('there-are-no-interests-found'),
@@ -72,7 +73,11 @@ const TableWithData = withTableData(withData, {
 });
 
 const InterestsCard = ({channelId, groupId, id}) => (
-	<Card className='interests-card-root' minHeight={536}>
+	<Card
+		className='interests-card-root'
+		minHeight={536}
+		reportContainer={ReportContainer.TopInterestsCard}
+	>
 		<Card.Header>
 			<Card.Title>{Liferay.Language.get('top-interests')}</Card.Title>
 		</Card.Header>

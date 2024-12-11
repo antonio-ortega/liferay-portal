@@ -10,8 +10,8 @@ import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkService;
-import com.liferay.fragment.util.FragmentEntryTestUtil;
-import com.liferay.fragment.util.FragmentTestUtil;
+import com.liferay.fragment.test.util.FragmentEntryTestUtil;
+import com.liferay.fragment.test.util.FragmentTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -84,7 +84,7 @@ public class FragmentEntryLinkServicePermissionTest {
 		UserTestUtil.setUser(_user);
 
 		_fragmentEntryLinkService.addFragmentEntryLink(
-			_group.getGroupId(), 0, _fragmentEntry.getFragmentEntryId(),
+			null, _group.getGroupId(), 0, _fragmentEntry.getFragmentEntryId(),
 			_defaultSegmentsExperienceId, _layout.getPlid(), StringPool.BLANK,
 			"<div>test</div>", StringPool.BLANK, "{fieldSets: []}",
 			StringPool.BLANK, StringPool.BLANK, 0, null,
@@ -101,7 +101,7 @@ public class FragmentEntryLinkServicePermissionTest {
 		UserTestUtil.setUser(_user);
 
 		_fragmentEntryLinkService.addFragmentEntryLink(
-			_group.getGroupId(), 0, _fragmentEntry.getFragmentEntryId(),
+			null, _group.getGroupId(), 0, _fragmentEntry.getFragmentEntryId(),
 			_defaultSegmentsExperienceId, _layout.getPlid(),
 			_fragmentEntry.getCss(), _fragmentEntry.getHtml(),
 			_fragmentEntry.getJs(), _fragmentEntry.getConfiguration(),

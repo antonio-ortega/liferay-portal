@@ -1,21 +1,29 @@
-.fragment-type-card {
-	cursor: pointer;
-	flex-basis: 0;
-	flex-grow: 1;
-
-	&:first-child {
-		margin-right: 12px;
+.add-fragment-modal {
+	.modal-content {
+		max-height: 80vh;
 	}
 
-	&:last-child {
-		margin-left: 12px;
-	}
+	.fragment-type-cards {
+		gap: 12px;
 
-	&-basic .card-item-first {
-		background-color: $teal;
-	}
+		.fragment-type-card {
+			flex: 1;
 
-	&-form .card-item-first {
-		background-color: $orange;
+			&-basic .card-item-first {
+				background-color: $teal;
+			}
+
+			&-form .card-item-first {
+				background-color: $orange;
+			}
+
+			.custom-control-label {
+				opacity: 0;
+			}
+
+			.lexicon-icon {
+				fill: $white;
+			}
+		}
 	}
 }

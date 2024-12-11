@@ -163,7 +163,7 @@ public class CommerceChannelDisplayContext
 	public List<WorkflowDefinition> getActiveWorkflowDefinitions()
 		throws PortalException {
 
-		return _workflowDefinitionManager.getActiveWorkflowDefinitions(
+		return _workflowDefinitionManager.liberalGetActiveWorkflowDefinitions(
 			_commerceChannelRequestHelper.getCompanyId(), QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 	}
@@ -524,6 +524,32 @@ public class CommerceChannelDisplayContext
 					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
 
 		return commerceOrderCheckoutConfiguration.hideShippingPriceZero();
+	}
+
+	public boolean isMultishippingEnabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderCheckoutConfiguration commerceOrderCheckoutConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderCheckoutConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderCheckoutConfiguration.multishippingEnabled();
+	}
+
+	public boolean isQuickCheckoutEnabled() throws PortalException {
+		CommerceChannel commerceChannel = getCommerceChannel();
+
+		CommerceOrderCheckoutConfiguration commerceOrderCheckoutConfiguration =
+			_configurationProvider.getConfiguration(
+				CommerceOrderCheckoutConfiguration.class,
+				new GroupServiceSettingsLocator(
+					commerceChannel.getGroupId(),
+					CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+		return commerceOrderCheckoutConfiguration.quickCheckoutEnabled();
 	}
 
 	public boolean isRequestQuoteEnabled() throws PortalException {

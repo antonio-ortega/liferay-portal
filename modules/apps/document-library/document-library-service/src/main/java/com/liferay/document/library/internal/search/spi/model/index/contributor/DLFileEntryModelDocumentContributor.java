@@ -5,12 +5,15 @@
 
 package com.liferay.document.library.internal.search.spi.model.index.contributor;
 
+import com.liferay.change.tracking.model.CTCollection;
+import com.liferay.change.tracking.service.CTCollectionLocalService;
+import com.liferay.document.library.internal.configuration.DLIndexerConfiguration;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
+import com.liferay.document.library.kernel.store.DLStore;
 import com.liferay.document.library.kernel.store.DLStoreRequest;
-import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.document.library.security.io.InputStreamSanitizer;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
@@ -21,6 +24,8 @@ import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -40,9 +45,11 @@ import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextExtractor;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.repository.liferayrepository.model.LiferayFileEntry;
+import com.liferay.portal.search.ml.embedding.text.TextEmbeddingDocumentContributor;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
-import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.util.PropsUtil;
 import com.liferay.trash.TrashHelper;
 
 import java.io.IOException;
@@ -52,14 +59,18 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Michael C. Han
  */
 @Component(
+	configurationPid = "com.liferay.document.library.internal.configuration.DLIndexerConfiguration",
 	property = "indexer.class.name=com.liferay.document.library.kernel.model.DLFileEntry",
 	service = ModelDocumentContributor.class
 )
@@ -84,6 +95,9 @@ public class DLFileEntryModelDocumentContributor
 
 			document.addKeyword(
 				Field.CLASS_TYPE_ID, dlFileEntry.getFileEntryTypeId());
+			document.addText(
+				Field.DEFAULT_LANGUAGE_ID,
+				LocaleUtil.toLanguageId(defaultLocale));
 			document.addText(Field.DESCRIPTION, dlFileEntry.getDescription());
 			document.addText(
 				Field.getLocalizedName(defaultLocale, Field.DESCRIPTION),
@@ -165,6 +179,13 @@ public class DLFileEntryModelDocumentContributor
 		}
 	}
 
+	@Activate
+	@Modified
+	protected void activate(Map<String, Object> properties) {
+		_dlIndexerConfiguration = ConfigurableUtil.createConfigurable(
+			DLIndexerConfiguration.class, properties);
+	}
+
 	private void _addFile(
 		Document document, String fieldName, DLFileEntry dlFileEntry) {
 
@@ -173,6 +194,12 @@ public class DLFileEntryModelDocumentContributor
 
 			if (text != null) {
 				document.addText(fieldName, text);
+
+				_textEmbeddingDocumentContributor.contribute(
+					document, dlFileEntry,
+					StringBundler.concat(
+						dlFileEntry.getTitle(), StringPool.PERIOD,
+						StringPool.SPACE, text));
 			}
 		}
 		catch (IOException | PortalException exception) {
@@ -256,15 +283,28 @@ public class DLFileEntryModelDocumentContributor
 	private String _extractText(DLFileEntry dlFileEntry)
 		throws IOException, PortalException {
 
-		if (DLStoreUtil.hasFile(
-				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
-				dlFileEntry.getName(), _getIndexVersionLabel(dlFileEntry))) {
+		int dlFileIndexingMaxSize = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.DL_FILE_INDEXING_MAX_SIZE));
+		String indexVersionLabel = _getIndexVersionLabel(dlFileEntry);
 
-			return StreamUtil.toString(
-				DLStoreUtil.getFileAsStream(
+		if (_dlIndexerConfiguration.cacheTextExtraction() &&
+			_dlStore.hasFile(
+				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
+				dlFileEntry.getName(), indexVersionLabel)) {
+
+			String string = StreamUtil.toString(
+				_dlStore.getFileAsStream(
 					dlFileEntry.getCompanyId(),
 					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName(),
-					_getIndexVersionLabel(dlFileEntry)));
+					indexVersionLabel));
+
+			if (string.length() <= dlFileIndexingMaxSize) {
+				return string;
+			}
+
+			_dlStore.deleteFile(
+				dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
+				dlFileEntry.getName(), indexVersionLabel);
 		}
 
 		InputStream inputStream = _getInputStream(dlFileEntry);
@@ -274,15 +314,17 @@ public class DLFileEntryModelDocumentContributor
 		}
 
 		String text = _textExtractor.extractText(
-			inputStream, PropsValues.DL_FILE_INDEXING_MAX_SIZE);
+			inputStream, dlFileIndexingMaxSize);
 
-		if (Validator.isNotNull(text)) {
-			DLStoreUtil.addFile(
+		if (_dlIndexerConfiguration.cacheTextExtraction() &&
+			Validator.isNotNull(text) && !_isReadOnlyCtCollection()) {
+
+			_dlStore.addFile(
 				DLStoreRequest.builder(
 					dlFileEntry.getCompanyId(),
 					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName()
 				).versionLabel(
-					_getIndexVersionLabel(dlFileEntry)
+					indexVersionLabel
 				).build(),
 				text.getBytes(StandardCharsets.UTF_8));
 		}
@@ -332,8 +374,28 @@ public class DLFileEntryModelDocumentContributor
 		return true;
 	}
 
+	private boolean _isReadOnlyCtCollection() throws PortalException {
+		if (CTCollectionThreadLocal.isProductionMode()) {
+			return false;
+		}
+
+		CTCollection ctCollection = _ctCollectionLocalService.getCTCollection(
+			CTCollectionThreadLocal.getCTCollectionId());
+
+		if ((ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) &&
+			(ctCollection.getStatus() != WorkflowConstants.STATUS_PENDING)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		DLFileEntryModelDocumentContributor.class);
+
+	@Reference
+	private CTCollectionLocalService _ctCollectionLocalService;
 
 	@Reference
 	private DDMIndexer _ddmIndexer;
@@ -347,6 +409,11 @@ public class DLFileEntryModelDocumentContributor
 	@Reference
 	private DLFileEntryMetadataLocalService _dlFileEntryMetadataLocalService;
 
+	private volatile DLIndexerConfiguration _dlIndexerConfiguration;
+
+	@Reference
+	private DLStore _dlStore;
+
 	@Reference
 	private InputStreamSanitizer _inputStreamSanitizer;
 
@@ -358,6 +425,9 @@ public class DLFileEntryModelDocumentContributor
 
 	@Reference
 	private RelatedEntryIndexerRegistry _relatedEntryIndexerRegistry;
+
+	@Reference
+	private TextEmbeddingDocumentContributor _textEmbeddingDocumentContributor;
 
 	@Reference
 	private TextExtractor _textExtractor;

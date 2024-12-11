@@ -28,7 +28,7 @@ export function parseActions(node) {
 export function parseAssignments(node) {
 	const assignments = {};
 	const autoCreateValues = [];
-	const roleKeys = [];
+	const roleNames = [];
 	const roleTypes = [];
 	const users = [];
 	const typeUser = Object.keys(node.assignments[0])[0];
@@ -47,7 +47,7 @@ export function parseAssignments(node) {
 		else if (itemKeys.includes('role-type')) {
 			assignments.assignmentType = ['roleType'];
 			autoCreateValues.push(item['auto-create']);
-			roleKeys.push(item.name);
+			roleNames.push(item.name);
 			roleTypes.push(item['role-type']);
 		}
 		else if (itemKeys.includes('script')) {
@@ -86,7 +86,7 @@ export function parseAssignments(node) {
 
 	if (assignments.assignmentType[0] === 'roleType') {
 		assignments.autoCreate = autoCreateValues[0];
-		assignments.roleKey = roleKeys[0];
+		assignments.roleName = roleNames[0];
 		assignments.roleType = roleTypes[0];
 	}
 
@@ -103,11 +103,24 @@ export function parseReassignments(node) {
 				item['resource-actions'][0]['resource-action'];
 		}
 		else if (item['roles']) {
-			if (item['roles'][2]?.['role-type']) {
+			if (item['roles'][0]['role']?.['role-type']) {
 				assignments.assignmentType = ['roleType'];
-				assignments.autoCreate = [item['roles'][0]['auto-create']];
-				assignments.roleKey = [item['roles'][1]['name']];
-				assignments.roleType = [item['roles'][2]['role-type']];
+
+				assignments.autoCreate = [];
+				assignments.roleName = [];
+				assignments.roleType = [];
+
+				for (let index = 0; index < item['roles']?.length; index++) {
+					assignments.autoCreate.push(
+						item['roles'][index]?.['role']?.['auto-create']
+					);
+					assignments.roleName.push(
+						item['roles'][index]?.['role']?.['name']
+					);
+					assignments.roleType.push(
+						item['roles'][index]?.['role']?.['role-type']
+					);
+				}
 			}
 			else {
 				assignments.assignmentType = ['roleId'];
@@ -126,14 +139,34 @@ export function parseReassignments(node) {
 		else if (item['user'] !== undefined) {
 			assignments.assignmentType = ['user'];
 
-			if (item['user'][0]?.['email-address']) {
-				assignments.emailAddress = [item['user'][0]['email-address']];
+			const usersLength = item['user']?.length;
+
+			const emailAddress = [];
+			const screenName = [];
+			const userId = [];
+
+			for (let i = 0; i < usersLength; i++) {
+				if (item['user'][i]?.['email-address']) {
+					emailAddress.push(item['user'][i]?.['email-address']);
+				}
+				else if (item['user'][0]?.['screen-name']) {
+					screenName.push(item['user'][i]?.['screen-name']);
+				}
+				else if (item['user'][0]?.['user-id']) {
+					userId.push(item['user'][i]?.['user-id']);
+				}
 			}
-			else if (item['user'][0]?.['user-id']) {
-				assignments.userId = [item['user'][0]['user-id']];
+
+			if (emailAddress.length) {
+				assignments.emailAddress = emailAddress;
 			}
-			else if (item['user'][0]?.['screen-name']) {
-				assignments.screenName = [item['user'][0]['screen-name']];
+
+			if (screenName.length) {
+				assignments.screenName = screenName;
+			}
+
+			if (userId.length) {
+				assignments.userId = userId;
 			}
 		}
 	});
@@ -194,15 +227,26 @@ export function parseNotifications(node) {
 			notifications.recipients[index] = [];
 		}
 
-		if (item.assignees) {
-			if (item.receptionType) {
+		let receptionType;
+
+		if (item.receptionType) {
+			if (Array.isArray(item.receptionType)) {
+				receptionType =
+					item.receptionType[notifications.recipients[index].length];
+			}
+			else {
+				receptionType = item.receptionType;
+			}
+		}
+
+		if (
+			item.assignees ||
+			(item['recipients'] && 'assignees' in item['recipients'][0])
+		) {
+			if (receptionType) {
 				notifications.recipients[index].push({
 					assignmentType: ['taskAssignees'],
-					receptionType: [
-						item.receptionType[
-							notifications.recipients[index].length
-						],
-					],
+					receptionType: [receptionType],
 				});
 			}
 			else {
@@ -220,15 +264,11 @@ export function parseNotifications(node) {
 					emailAddress.push(item['email-address']);
 				});
 
-				if (item.receptionType) {
+				if (receptionType) {
 					notifications.recipients[index].push({
 						assignmentType: ['user'],
 						emailAddress,
-						receptionType: [
-							item.receptionType[
-								notifications.recipients[index].length
-							],
-						],
+						receptionType: [receptionType],
 					});
 				}
 				else {
@@ -249,11 +289,7 @@ export function parseNotifications(node) {
 				if (item.receptionType) {
 					notifications.recipients[index].push({
 						assignmentType: ['user'],
-						receptionType: [
-							item.receptionType[
-								notifications.recipients[index].length
-							],
-						],
+						receptionType: [receptionType],
 						userId,
 					});
 				}
@@ -272,14 +308,10 @@ export function parseNotifications(node) {
 					screenName.push(item['screen-name']);
 				});
 
-				if (item.receptionType) {
+				if (receptionType) {
 					notifications.recipients[index].push({
 						assignmentType: ['user'],
-						receptionType: [
-							item.receptionType[
-								notifications.recipients[index].length
-							],
-						],
+						receptionType: [receptionType],
 						screenName,
 					});
 				}
@@ -291,54 +323,95 @@ export function parseNotifications(node) {
 				}
 			}
 		}
+		else if (item['recipients'] && item['recipients'][0]?.['user']) {
+			const emailAddress = [];
 
-		if (item['role-type']) {
-			if (item.receptionType) {
+			item['recipients'].forEach((item) => {
+				if (item['user']?.['email-address']) {
+					emailAddress.push(item['user']['email-address']);
+				}
+			});
+
+			if (emailAddress.length) {
+				if (receptionType) {
+					notifications.recipients[index].push({
+						assignmentType: ['user'],
+						emailAddress,
+						receptionType: [receptionType],
+					});
+				}
+				else {
+					notifications.recipients[index].push({
+						assignmentType: ['user'],
+						emailAddress,
+					});
+				}
+			}
+		}
+
+		if (
+			item['role-type'] ||
+			(item['recipients'] &&
+				item['recipients'][0]?.['roles']?.['role-type'])
+		) {
+			const autoCreate =
+				item['auto-create'] ||
+				item['recipients'][0]['roles']['auto-create'];
+			const roleName =
+				item['role-name'] || item['recipients'][0]['roles']['name'];
+			const roleType =
+				item['role-type'] ||
+				item['recipients'][0]['roles']['role-type'];
+
+			if (receptionType) {
 				notifications.recipients[index].push({
 					assignmentType: ['roleType'],
-					autoCreate: item['auto-create'],
-					receptionType: [
-						item.receptionType[
-							notifications.recipients[index].length
-						],
-					],
-					roleKey: item['role-name'],
-					roleType: item['role-type'],
+					autoCreate,
+					receptionType: [receptionType],
+					roleName,
+					roleType,
 				});
 			}
 			else {
 				notifications.recipients[index].push({
 					assignmentType: ['roleType'],
-					autoCreate: item['auto-create'],
-					roleKey: item['role-name'],
-					roleType: item['role-type'],
+					autoCreate,
+					roleName,
+					roleType,
 				});
 			}
 		}
 
-		if (item['role-id']) {
-			if (item.receptionType) {
+		if (
+			item['role-id'] ||
+			(item['recipients'] &&
+				(item['recipients'][0]?.['roles']?.['role'] ||
+					item['recipients'][0]?.['roles']?.['role-id']))
+		) {
+			const roleId = item['role-id']
+				? item['role-id'][0]
+				: item['recipients'][0]['roles']['role'] ||
+					item['recipients'][0]['roles']['role-id'];
+
+			if (receptionType) {
 				notifications.recipients[index].push({
 					assignmentType: ['roleId'],
-					receptionType: [
-						item.receptionType[
-							notifications.recipients[index].length
-						],
-					],
-					roleId: item['role-id'][0],
+					receptionType: [receptionType],
+					roleId,
 				});
 			}
 			else {
 				notifications.recipients[index].push({
 					assignmentType: ['roleId'],
-					roleId: item['role-id'][0],
+					roleId,
 				});
 			}
 		}
 
 		if (
 			item['scripted-recipient'] ||
-			(item['recipients'] && item['recipients'][0]['scripted-recipient'])
+			(item['recipients'] &&
+				item['recipients'][0]?.['scripted-recipient'])
 		) {
 			const scriptedRecipient = item['scripted-recipient']
 				? item['scripted-recipient'][0]
@@ -347,10 +420,10 @@ export function parseNotifications(node) {
 			const script = scriptedRecipient.script;
 			const scriptLanguage = scriptedRecipient['script-language'];
 
-			if (item.receptionType) {
+			if (receptionType) {
 				notifications.recipients[index].push({
 					assignmentType: ['scriptedRecipient'],
-					receptionType: [item.receptionType],
+					receptionType: [receptionType],
 					script: [script],
 					scriptLanguage: scriptLanguage || [DEFAULT_LANGUAGE],
 				});
@@ -419,14 +492,14 @@ export function parseTimers(node) {
 			node.taskTimers[index]['reassignments']
 				? parseReassignments({
 						assignments: node.taskTimers[index]['reassignments'],
-				  })
+					})
 				: {}
 		);
 		taskTimers.timerActions.push(
 			node.taskTimers[index]['timer-action']
 				? parseActions({
 						actions: node.taskTimers[index]['timer-action'],
-				  })
+					})
 				: {}
 		);
 		taskTimers.timerNotifications.push(
@@ -435,7 +508,7 @@ export function parseTimers(node) {
 						nodeName: 'timer-notification',
 						notifications:
 							node.taskTimers[index]['timer-notification'],
-				  })
+					})
 				: {}
 		);
 		taskTimers.name = parseProperty(taskTimers, item, 'name');

@@ -13,17 +13,24 @@ import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.product.exception.NoSuchCProductException;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionOptionValueRel;
+import com.liferay.commerce.product.model.CPOption;
+import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceChannel;
 import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
 import com.liferay.commerce.product.service.CPDefinitionOptionValueRelLocalService;
+import com.liferay.commerce.product.service.CPOptionLocalService;
+import com.liferay.commerce.product.service.CProductLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.util.CommerceAccountHelper;
+import com.liferay.headless.commerce.core.util.ServiceContextHelper;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.ProductOptionValue;
+import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.SkuOption;
 import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.constants.DTOConverterConstants;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductOptionValueResource;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -49,44 +56,89 @@ public class ProductOptionValueResourceImpl
 
 	@Override
 	public Page<ProductOptionValue>
+			getChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionByExternalReferenceCodeProductOptionExternalReferenceCodeProductOptionValuesPage(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode,
+				String productOptionExternalReferenceCode, Long accountId,
+				Long productOptionValueId, Long skuId, Pagination pagination)
+		throws Exception {
+
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.
+				getCommerceChannelByExternalReferenceCode(
+					channelExternalReferenceCode,
+					contextCompany.getCompanyId());
+
+		CProduct cProduct =
+			_cProductLocalService.getCProductByExternalReferenceCode(
+				productExternalReferenceCode, contextCompany.getCompanyId());
+
+		CPOption cpOption =
+			_cpOptionLocalService.getCPOptionByExternalReferenceCode(
+				productOptionExternalReferenceCode,
+				contextCompany.getCompanyId());
+
+		return getChannelProductProductOptionProductOptionValuesPage(
+			commerceChannel.getCommerceChannelId(), cProduct.getCProductId(),
+			cpOption.getCPOptionId(), accountId, productOptionValueId, skuId,
+			pagination);
+	}
+
+	@Override
+	public Page<ProductOptionValue>
 			getChannelProductProductOptionProductOptionValuesPage(
 				Long channelId, Long productId, Long productOptionId,
 				Long accountId, Long productOptionValueId, Long skuId,
 				Pagination pagination)
 		throws Exception {
 
-		CPDefinition cpDefinition =
-			_cpDefinitionLocalService.fetchCPDefinitionByCProductId(productId);
+		return _getProductOptionValuePage(
+			channelId, productId, productOptionId, accountId,
+			productOptionValueId, skuId, pagination, null);
+	}
 
-		if (cpDefinition == null) {
-			throw new NoSuchCProductException();
-		}
+	@Override
+	public Page<ProductOptionValue>
+			postChannelByExternalReferenceCodeChannelExternalReferenceCodeProductByExternalReferenceCodeProductExternalReferenceCodeProductOptionByExternalReferenceCodeProductOptionExternalReferenceCodeProductOptionValuesPage(
+				String channelExternalReferenceCode,
+				String productExternalReferenceCode,
+				String productOptionExternalReferenceCode, Long accountId,
+				Long productOptionValueId, Long skuId, Pagination pagination,
+				SkuOption[] skuOptions)
+		throws Exception {
 
 		CommerceChannel commerceChannel =
-			_commerceChannelLocalService.getCommerceChannel(channelId);
+			_commerceChannelLocalService.
+				getCommerceChannelByExternalReferenceCode(
+					channelExternalReferenceCode,
+					contextCompany.getCompanyId());
 
-		_commerceProductViewPermission.check(
-			PermissionThreadLocal.getPermissionChecker(),
-			_getAccountEntryId(accountId, commerceChannel),
-			commerceChannel.getGroupId(), cpDefinition.getCPDefinitionId());
+		CProduct cProduct =
+			_cProductLocalService.getCProductByExternalReferenceCode(
+				productExternalReferenceCode, contextCompany.getCompanyId());
 
-		List<CPDefinitionOptionValueRel> cpDefinitionOptionValueRels =
-			_cpDefinitionOptionValueRelLocalService.
-				getCPDefinitionOptionValueRels(
-					productOptionId, pagination.getStartPosition(),
-					pagination.getEndPosition());
+		CPOption cpOption =
+			_cpOptionLocalService.getCPOptionByExternalReferenceCode(
+				productOptionExternalReferenceCode,
+				contextCompany.getCompanyId());
 
-		int totalItems =
-			_cpDefinitionOptionValueRelLocalService.
-				getCPDefinitionOptionValueRelsCount(productOptionId);
+		return postChannelProductProductOptionProductOptionValuesPage(
+			commerceChannel.getCommerceChannelId(), cProduct.getCProductId(),
+			cpOption.getCPOptionId(), accountId, productOptionValueId, skuId,
+			pagination, skuOptions);
+	}
 
-		return Page.of(
-			_toProductOptionValues(
-				_commerceContextFactory.create(
-					contextCompany.getCompanyId(), commerceChannel.getGroupId(),
-					contextUser.getUserId(), 0, accountId),
-				cpDefinitionOptionValueRels, productOptionValueId, skuId),
-			pagination, totalItems);
+	@Override
+	public Page<ProductOptionValue>
+			postChannelProductProductOptionProductOptionValuesPage(
+				Long channelId, Long productId, Long productOptionId,
+				Long accountId, Long productOptionValueId, Long skuId,
+				Pagination pagination, SkuOption[] skuOptions)
+		throws Exception {
+
+		return _getProductOptionValuePage(
+			channelId, productId, productOptionId, accountId,
+			productOptionValueId, skuId, pagination, skuOptions);
 	}
 
 	private Long _getAccountEntryId(
@@ -121,10 +173,51 @@ public class ProductOptionValueResourceImpl
 		return accountId;
 	}
 
+	private Page<ProductOptionValue> _getProductOptionValuePage(
+			Long channelId, Long productId, Long productOptionId,
+			Long accountId, Long productOptionValueId, Long skuId,
+			Pagination pagination, SkuOption[] skuOptions)
+		throws Exception {
+
+		CPDefinition cpDefinition =
+			_cpDefinitionLocalService.fetchCPDefinitionByCProductId(productId);
+
+		if (cpDefinition == null) {
+			throw new NoSuchCProductException();
+		}
+
+		CommerceChannel commerceChannel =
+			_commerceChannelLocalService.getCommerceChannel(channelId);
+
+		accountId = _getAccountEntryId(accountId, commerceChannel);
+
+		_commerceProductViewPermission.check(
+			PermissionThreadLocal.getPermissionChecker(), accountId,
+			commerceChannel.getGroupId(), cpDefinition.getCPDefinitionId());
+
+		ServiceContextThreadLocal.pushServiceContext(
+			_serviceContextHelper.getServiceContext(
+				commerceChannel.getGroupId()));
+
+		return Page.of(
+			_toProductOptionValues(
+				_commerceContextFactory.create(
+					contextCompany.getCompanyId(), commerceChannel.getGroupId(),
+					contextUser.getUserId(), 0, accountId),
+				_cpDefinitionOptionValueRelLocalService.
+					getCPDefinitionOptionValueRels(
+						productOptionId, pagination.getStartPosition(),
+						pagination.getEndPosition()),
+				productOptionValueId, skuId, skuOptions),
+			pagination,
+			_cpDefinitionOptionValueRelLocalService.
+				getCPDefinitionOptionValueRelsCount(productOptionId));
+	}
+
 	private List<ProductOptionValue> _toProductOptionValues(
 			CommerceContext commerceContext,
 			List<CPDefinitionOptionValueRel> cpDefinitionOptionValueRels,
-			Long productOptionValueId, Long skuId)
+			Long productOptionValueId, Long skuId, SkuOption[] skuOptions)
 		throws Exception {
 
 		List<ProductOptionValue> productOptionValues = new ArrayList<>();
@@ -143,6 +236,7 @@ public class ProductOptionValueResourceImpl
 			defaultDTOConverterContext.setAttribute(
 				"productOptionValueId", productOptionValueId);
 			defaultDTOConverterContext.setAttribute("skuId", skuId);
+			defaultDTOConverterContext.setAttribute("skuOptions", skuOptions);
 
 			productOptionValues.add(
 				_productOptionValueDTOConverter.toDTO(
@@ -174,10 +268,19 @@ public class ProductOptionValueResourceImpl
 	private CPDefinitionOptionValueRelLocalService
 		_cpDefinitionOptionValueRelLocalService;
 
+	@Reference
+	private CPOptionLocalService _cpOptionLocalService;
+
+	@Reference
+	private CProductLocalService _cProductLocalService;
+
 	@Reference(
 		target = DTOConverterConstants.PRODUCT_OPTION_VALUE_DTO_CONVERTER
 	)
 	private DTOConverter<CPDefinitionOptionValueRel, ProductOptionValue>
 		_productOptionValueDTOConverter;
+
+	@Reference
+	private ServiceContextHelper _serviceContextHelper;
 
 }

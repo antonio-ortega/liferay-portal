@@ -5,6 +5,7 @@
 
 package com.liferay.osb.faro.engine.client.http.client;
 
+import com.liferay.osb.faro.engine.client.constants.OSBAsahHeaderConstants;
 import com.liferay.osb.faro.engine.client.util.TokenUtil;
 import com.liferay.osb.faro.model.FaroProject;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -47,12 +48,12 @@ public class AuthenticationClientHttpRequestInterceptor
 			HttpHeaders httpHeaders = httpRequest.getHeaders();
 
 			httpHeaders.add(
-				_ASAH_PROJECT_ID_HEADER, _faroProject.getProjectId());
+				OSBAsahHeaderConstants.PROJECT_ID, _faroProject.getProjectId());
 
 			String originalURL = HttpRequestUtil.getOriginalURL(httpRequest);
 
 			httpHeaders.add(
-				_ASAH_SECURITY_SIGNATURE_HEADER,
+				OSBAsahHeaderConstants.FARO_BACKEND_SECURITY_SIGNATURE,
 				DigestUtils.sha256Hex(
 					TokenUtil.getOSBAsahSecurityToken() + originalURL));
 		}
@@ -62,11 +63,6 @@ public class AuthenticationClientHttpRequestInterceptor
 
 		return clientHttpRequestExecution.execute(httpRequest, bytes);
 	}
-
-	private static final String _ASAH_PROJECT_ID_HEADER = "OSB-Asah-Project-ID";
-
-	private static final String _ASAH_SECURITY_SIGNATURE_HEADER =
-		"OSB-Asah-Faro-Backend-Security-Signature";
 
 	private final FaroProject _faroProject;
 
@@ -103,7 +99,7 @@ public class AuthenticationClientHttpRequestInterceptor
 
 		private static String _getScheme(HttpRequest httpRequest) {
 			String forwardedProtocol = _getHttpHeaderValue(
-				httpRequest.getHeaders(), "X-Forwarded-Proto");
+				httpRequest.getHeaders(), "X-Liferay-Origin-Forwarded-Proto");
 
 			if (forwardedProtocol != null) {
 				return forwardedProtocol;
@@ -116,7 +112,7 @@ public class AuthenticationClientHttpRequestInterceptor
 
 		private static String _getServerName(HttpRequest httpRequest) {
 			String forwardedHost = _getHttpHeaderValue(
-				httpRequest.getHeaders(), "X-Forwarded-Host");
+				httpRequest.getHeaders(), "X-Liferay-Origin-Forwarded-Host");
 
 			if (forwardedHost != null) {
 				return forwardedHost;
@@ -131,7 +127,7 @@ public class AuthenticationClientHttpRequestInterceptor
 			int serverPort = 0;
 
 			String forwardedPort = _getHttpHeaderValue(
-				httpRequest.getHeaders(), "X-Forwarded-Port");
+				httpRequest.getHeaders(), "X-Liferay-Origin-Forwarded-Port");
 
 			if (forwardedPort != null) {
 				serverPort = GetterUtil.getInteger(forwardedPort);

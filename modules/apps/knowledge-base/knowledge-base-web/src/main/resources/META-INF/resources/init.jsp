@@ -22,6 +22,7 @@ taglib uri="http://liferay.com/tld/rss" prefix="liferay-rss" %><%@
 taglib uri="http://liferay.com/tld/site-navigation" prefix="liferay-site-navigation" %><%@
 taglib uri="http://liferay.com/tld/social-bookmarks" prefix="liferay-social-bookmarks" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
+taglib uri="http://liferay.com/tld/trash" prefix="liferay-trash" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/user" prefix="liferay-user" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
@@ -56,6 +57,7 @@ page import="com.liferay.knowledge.base.constants.KBPortletKeys" %><%@
 page import="com.liferay.knowledge.base.exception.DuplicateKBFolderNameException" %><%@
 page import="com.liferay.knowledge.base.exception.InvalidKBFolderNameException" %><%@
 page import="com.liferay.knowledge.base.exception.KBArticleContentException" %><%@
+page import="com.liferay.knowledge.base.exception.KBArticleDisplayDateException" %><%@
 page import="com.liferay.knowledge.base.exception.KBArticleExpirationDateException" %><%@
 page import="com.liferay.knowledge.base.exception.KBArticleImportException" %><%@
 page import="com.liferay.knowledge.base.exception.KBArticlePriorityException" %><%@
@@ -67,6 +69,7 @@ page import="com.liferay.knowledge.base.exception.KBArticleUrlTitleException" %>
 page import="com.liferay.knowledge.base.exception.KBCommentContentException" %><%@
 page import="com.liferay.knowledge.base.exception.KBTemplateContentException" %><%@
 page import="com.liferay.knowledge.base.exception.KBTemplateTitleException" %><%@
+page import="com.liferay.knowledge.base.exception.LockedKBArticleException" %><%@
 page import="com.liferay.knowledge.base.exception.NoSuchArticleException" %><%@
 page import="com.liferay.knowledge.base.exception.NoSuchCommentException" %><%@
 page import="com.liferay.knowledge.base.exception.NoSuchTemplateException" %><%@
@@ -116,7 +119,6 @@ page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
 page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
 page import="com.liferay.portal.kernel.dao.search.RowChecker" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
-page import="com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.ModelHintsUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
@@ -129,6 +131,8 @@ page import="com.liferay.portal.kernel.portletfilerepository.PortletFileReposito
 page import="com.liferay.portal.kernel.repository.model.FileEntry" %><%@
 page import="com.liferay.portal.kernel.service.ClassNameLocalServiceUtil" %><%@
 page import="com.liferay.portal.kernel.servlet.HttpHeaders" %><%@
+page import="com.liferay.portal.kernel.servlet.MultiSessionErrors" %><%@
+page import="com.liferay.portal.kernel.servlet.MultiSessionMessages" %><%@
 page import="com.liferay.portal.kernel.servlet.SessionMessages" %><%@
 page import="com.liferay.portal.kernel.settings.GroupServiceSettingsLocator" %><%@
 page import="com.liferay.portal.kernel.upload.UploadRequestSizeException" %><%@
@@ -141,7 +145,6 @@ page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlParserUtil" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
-page import="com.liferay.portal.kernel.util.LinkedHashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@
 page import="com.liferay.portal.kernel.util.OrderByComparator" %><%@
 page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
@@ -175,6 +178,8 @@ page import="javax.portlet.WindowState" %>
 <liferay-frontend:defineObjects />
 
 <liferay-theme:defineObjects />
+
+<liferay-trash:defineObjects />
 
 <portlet:defineObjects />
 

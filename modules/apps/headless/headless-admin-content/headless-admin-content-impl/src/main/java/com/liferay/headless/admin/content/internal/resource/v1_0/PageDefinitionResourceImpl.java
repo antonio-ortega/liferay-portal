@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.security.permission.resource.PortletResourcePer
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
@@ -50,7 +51,6 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 
 import javax.ws.rs.NotAuthorizedException;
@@ -108,7 +108,7 @@ public class PageDefinitionResourceImpl extends BasePageDefinitionResourceImpl {
 			contextHttpServletRequest);
 
 		Layout layout = _layoutLocalService.addLayout(
-			contextUser.getUserId(), siteId, false,
+			null, contextUser.getUserId(), siteId, false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			_portal.getClassNameId(PageDefinition.class), 0, nameMap, nameMap,
 			Collections.emptyMap(), Collections.emptyMap(),
@@ -138,12 +138,16 @@ public class PageDefinitionResourceImpl extends BasePageDefinitionResourceImpl {
 
 		ObjectWriter objectWriter = objectMapper.writer(filterProvider);
 
+		serviceContext.setRequest(contextHttpServletRequest);
+
+		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
 		try {
 			_layoutsImporter.importPageElement(
 				layout, layoutStructure, layoutStructure.getMainItemId(),
 				objectWriter.writeValueAsString(
 					pageDefinition.getPageElement()),
-				0);
+				0, true);
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -156,6 +160,9 @@ public class PageDefinitionResourceImpl extends BasePageDefinitionResourceImpl {
 			).entity(
 				"Unable to post page definition preview"
 			).build();
+		}
+		finally {
+			ServiceContextThreadLocal.popServiceContext();
 		}
 
 		contextHttpServletRequest = DynamicServletRequest.addQueryString(
@@ -178,18 +185,11 @@ public class PageDefinitionResourceImpl extends BasePageDefinitionResourceImpl {
 
 		LayoutSet layoutSet = layout.getLayoutSet();
 
-		ServletContext servletContext = ServletContextPool.get(
-			StringPool.BLANK);
-
-		if (contextHttpServletRequest.getAttribute(WebKeys.CTX) == null) {
-			contextHttpServletRequest.setAttribute(WebKeys.CTX, servletContext);
-		}
-
 		Document document = Jsoup.parse(
 			ThemeUtil.include(
-				servletContext, contextHttpServletRequest,
-				contextHttpServletResponse, "portal_normal.ftl",
-				layoutSet.getTheme(), false));
+				ServletContextPool.get(StringPool.BLANK),
+				contextHttpServletRequest, contextHttpServletResponse,
+				"portal_normal.ftl", layoutSet.getTheme(), false));
 
 		_layoutLocalService.deleteLayout(layout.getPlid(), serviceContext);
 

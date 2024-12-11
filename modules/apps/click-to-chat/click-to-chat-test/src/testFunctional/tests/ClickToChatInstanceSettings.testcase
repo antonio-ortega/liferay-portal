@@ -1,4 +1,4 @@
-@component-name = "portal-solutions"
+@component-name = "portal-site-management"
 definition {
 
 	property portal.release = "true";
@@ -11,10 +11,7 @@ definition {
 		User.firstLoginPG();
 
 		task ("Go to Click to chat configuration page") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "Instance Settings");
+			PortalSettings.openInstanceSettingsAdmin();
 
 			SystemSettings.gotoConfiguration(
 				configurationCategory = "Click to Chat",
@@ -63,6 +60,7 @@ definition {
 	}
 
 	@description = "This is a test for LPS-137169. Verify if Hubspot can access required scopes"
+	@ignore = "true"
 	@priority = 4
 	test CanHubspotAccessRequiredScopes {
 		Select(

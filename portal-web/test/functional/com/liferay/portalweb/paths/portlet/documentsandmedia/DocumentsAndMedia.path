@@ -61,8 +61,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>SELECT_FOLDER_BUTTON</td>
-	<td>//button[@data-foldername='${key_dmFolderName}']/span[contains(.,'Select')]</td>
+	<td>SELECT_RESOURCE_BUTTON</td>
+	<td>//button[@data-resourcename='${key_dmFolderName}']/span[contains(.,'Select')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -113,7 +113,7 @@
 </tr>
 <tr>
 	<td>ICON_DOCUMENT_ICON_LOCKED</td>
-	<td>//div[contains(@id,'entriesContainer')]//*[contains(@data-title,'${key_dmDocumentTitle}')]//span/*[name()='svg'][@message='locked']</td>
+	<td>//div[contains(@id,'entriesContainer')]//*[contains(@data-title,'${key_dmDocumentTitle}')]//*[name()='svg'][contains(@class,'icon-lock')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -148,7 +148,17 @@
 </tr>
 <tr>
 	<td>ICON_DOCUMENT_WORKFLOW_STATUS</td>
-	<td>//dd[contains(.,'${key_dmDocumentTitle}')]//span[@class='workflow-status']</td>
+	<td>//dd[contains(.,'${key_dmDocumentTitle}')]//span[@class='label-item label-item-expand']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ICON_DOCUMENT_WORKFLOW_STATUS_APPROVED</td>
+	<td>//dd[contains(.,'${key_dmDocumentTitle}')]//span[@class='label label-success']//span[@class='label-item label-item-expand']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ICON_DOCUMENT_WORKFLOW_STATUS_DRAFT</td>
+	<td>//dd[contains(.,'${key_dmDocumentTitle}')]//span[@class='label label-secondary']//span[@class='label-item label-item-expand']</td>
 	<td></td>
 </tr>
 <tr>
@@ -219,7 +229,7 @@
 </tr>
 <tr>
 	<td>DESCRIPTIVE_LIST_DOCUMENT_STATUS</td>
-	<td>//*[contains(@data-title,'${key_dmDocumentTitle}')]//span[contains(@class,'status') and contains(@class,'${key_workflowStatus}')]</td>
+	<td>//*[contains(@data-title,'${key_dmDocumentTitle}')]//span[contains(@class,'status') and contains(.,'${key_workflowStatus}')]</td>
 	<td></td>
 </tr>
 <tr>

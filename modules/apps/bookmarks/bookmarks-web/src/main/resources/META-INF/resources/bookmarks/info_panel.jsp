@@ -16,12 +16,7 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(entries)) {
 
 	folders = new ArrayList<BookmarksFolder>();
 
-	BookmarksFolder folder = (BookmarksFolder)request.getAttribute("view.jsp-folder");
-
-	if (folder != null) {
-		folders.add(folder);
-	}
-	else if (folderId != BookmarksFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
+	if (folderId != BookmarksFolderConstants.DEFAULT_PARENT_FOLDER_ID) {
 		folders.add(BookmarksFolderLocalServiceUtil.getFolder(folderId));
 	}
 	else {
@@ -42,11 +37,11 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(entries)) {
 		<div class="sidebar-header">
 			<div class="autofit-row sidebar-section">
 				<div class="autofit-col autofit-col-expand">
-					<h4 class="component-title"><%= (folder != null) ? HtmlUtil.escape(folder.getName()) : LanguageUtil.get(request, "home") %></h4>
+					<div class="component-title"><%= (folder != null) ? HtmlUtil.escape(folder.getName()) : LanguageUtil.get(request, "home") %></div>
 
-					<h5 class="component-subtitle">
+					<div class="component-subtitle">
 						<liferay-ui:message key="folder" />
-					</h5>
+					</div>
 				</div>
 
 				<div class="autofit-col">
@@ -116,11 +111,11 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(entries)) {
 		<div class="sidebar-header">
 			<div class="autofit-row sidebar-section">
 				<div class="autofit-col autofit-col-expand">
-					<h4 class="component-title"><%= HtmlUtil.escape(entry.getName()) %></h4>
+					<div class="component-title"><%= HtmlUtil.escape(entry.getName()) %></div>
 
-					<h5>
+					<div class="h5">
 						<liferay-ui:message key="entry" />
-					</h5>
+					</div>
 				</div>
 
 				<div class="autofit-col">
@@ -232,7 +227,7 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(entries)) {
 		<div class="sidebar-header">
 			<div class="autofit-row sidebar-section">
 				<div class="autofit-col autofit-col-expand">
-					<h4 class="component-title"><liferay-ui:message arguments="<%= folders.size() + entries.size() %>" key="x-items-are-selected" /></h4>
+					<div class="component-title"><liferay-ui:message arguments="<%= folders.size() + entries.size() %>" key="x-items-are-selected" /></div>
 				</div>
 			</div>
 		</div>
@@ -252,7 +247,7 @@ if (ListUtil.isEmpty(folders) && ListUtil.isEmpty(entries)) {
 		/>
 
 		<div class="sidebar-body">
-			<h5><liferay-ui:message arguments="<%= folders.size() + entries.size() %>" key="x-items-are-selected" /></h5>
+			<div class="h5"><liferay-ui:message arguments="<%= folders.size() + entries.size() %>" key="x-items-are-selected" /></div>
 		</div>
 	</c:otherwise>
 </c:choose>

@@ -1,4 +1,4 @@
-@component-name = "portal-lima"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
@@ -29,8 +29,8 @@ definition {
 	@priority = 5
 	@refactordone
 	test CanAddEntryInAdmin {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property testray.component.names = "WYSIWYG";
@@ -51,7 +51,7 @@ definition {
 	}
 
 	@description = "This test covers LPS-67664. It ensures that a user can order blog entries by display date."
-	@priority = 4
+	@priority = 3
 	test CanOrderByDisplayDate {
 		JSONBlog.addEntry(
 			entryContent = "Blogs Entry Content",
@@ -63,9 +63,9 @@ definition {
 
 		BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
 
-		ManagementBar.setFilterAndOrder(menuItem = "Display Date");
+		ManagementBar.setFilterAndOrder(orderBy = "Display Date");
 
-		Click(locator1 = "ManagementBar#ORDER_ICON_GENERIC");
+		ManagementBar.sortAssets(sortDirection = "Descending");
 
 		Blogs.viewEntryTitle(
 			entryTitle = "Test Title",

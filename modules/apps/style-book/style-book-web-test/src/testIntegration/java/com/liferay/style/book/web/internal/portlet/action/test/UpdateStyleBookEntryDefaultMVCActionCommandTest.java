@@ -75,8 +75,9 @@ public class UpdateStyleBookEntryDefaultMVCActionCommandTest {
 	public void testMarkAsDefaultStyleBookEntry() throws Exception {
 		StyleBookEntry styleBookEntry =
 			_styleBookEntryLocalService.addStyleBookEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
-				RandomTestUtil.randomString(), StringPool.BLANK,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), false,
+				StringPool.BLANK, RandomTestUtil.randomString(),
+				StringPool.BLANK, RandomTestUtil.randomString(),
 				_serviceContext);
 
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
@@ -105,8 +106,9 @@ public class UpdateStyleBookEntryDefaultMVCActionCommandTest {
 	public void testReplaceDefaultStyleBookEntry() throws Exception {
 		StyleBookEntry styleBookEntry1 =
 			_styleBookEntryLocalService.addStyleBookEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
-				RandomTestUtil.randomString(), StringPool.BLANK,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), false,
+				StringPool.BLANK, RandomTestUtil.randomString(),
+				StringPool.BLANK, RandomTestUtil.randomString(),
 				_serviceContext);
 
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
@@ -132,8 +134,9 @@ public class UpdateStyleBookEntryDefaultMVCActionCommandTest {
 
 		StyleBookEntry styleBookEntry2 =
 			_styleBookEntryLocalService.addStyleBookEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
-				RandomTestUtil.randomString(), StringPool.BLANK,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), false,
+				StringPool.BLANK, RandomTestUtil.randomString(),
+				StringPool.BLANK, RandomTestUtil.randomString(),
 				_serviceContext);
 
 		mockLiferayPortletActionRequest = new MockLiferayPortletActionRequest();
@@ -165,8 +168,9 @@ public class UpdateStyleBookEntryDefaultMVCActionCommandTest {
 	public void testUnmarkAsDefaultStyleBookEntry() throws Exception {
 		StyleBookEntry styleBookEntry =
 			_styleBookEntryLocalService.addStyleBookEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
-				RandomTestUtil.randomString(), StringPool.BLANK,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), false,
+				StringPool.BLANK, RandomTestUtil.randomString(),
+				StringPool.BLANK, RandomTestUtil.randomString(),
 				_serviceContext);
 
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =

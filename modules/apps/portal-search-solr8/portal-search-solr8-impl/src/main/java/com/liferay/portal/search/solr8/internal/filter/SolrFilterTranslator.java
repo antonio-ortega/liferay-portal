@@ -5,7 +5,6 @@
 
 package com.liferay.portal.search.solr8.internal.filter;
 
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.DateRangeTermFilter;
 import com.liferay.portal.kernel.search.filter.ExistsFilter;
@@ -22,6 +21,7 @@ import com.liferay.portal.kernel.search.filter.TermFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.search.filter.DateRangeFilter;
 import com.liferay.portal.search.filter.FilterVisitor;
+import com.liferay.portal.search.filter.RangeFilter;
 import com.liferay.portal.search.filter.TermsSetFilter;
 
 import org.apache.lucene.search.Query;
@@ -36,21 +36,11 @@ import org.osgi.service.component.annotations.Reference;
 	property = "search.engine.impl=Solr", service = FilterTranslator.class
 )
 public class SolrFilterTranslator
-	implements FilterTranslator<String>, FilterVisitor<Query> {
+	implements FilterTranslator<Query>, FilterVisitor<Query> {
 
 	@Override
-	public String translate(Filter filter) {
-		String filterString = StringPool.BLANK;
-
-		if (filter != null) {
-			Query luceneQuery = filter.accept(this);
-
-			if (luceneQuery != null) {
-				filterString = luceneQuery.toString();
-			}
-		}
-
-		return filterString;
+	public Query translate(Filter filter) {
+		return filter.accept(this);
 	}
 
 	@Override
@@ -110,6 +100,11 @@ public class SolrFilterTranslator
 	}
 
 	@Override
+	public Query visit(RangeFilter rangeFilter) {
+		return _rangeFilterTranslator.translate(rangeFilter);
+	}
+
+	@Override
 	public Query visit(RangeTermFilter rangeTermFilter) {
 		return _rangeTermFilterTranslator.translate(rangeTermFilter);
 	}
@@ -161,6 +156,9 @@ public class SolrFilterTranslator
 
 	@Reference
 	private QueryFilterTranslator _queryFilterTranslator;
+
+	@Reference
+	private RangeFilterTranslator _rangeFilterTranslator;
 
 	@Reference
 	private RangeTermFilterTranslator _rangeTermFilterTranslator;

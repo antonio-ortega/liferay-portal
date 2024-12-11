@@ -18,11 +18,10 @@ const DEFAULT_DELTA = 10;
 /**
  * A paginated list of virtual instances.
  */
-function InstanceSelector({selected, setSelected, virtualInstances}) {
+function InstanceSelector({onSelectedChange, selected, virtualInstances}) {
 	const [activePage, setActivePage] = useState(1);
-	const [currentVirtualInstances, setCurrentVirtualInstances] = useState(
-		virtualInstances
-	); // The virtual instances currently in view.
+	const [currentVirtualInstances, setCurrentVirtualInstances] =
+		useState(virtualInstances); // The virtual instances currently in view.
 	const [delta, setDelta] = useState(DEFAULT_DELTA);
 	const [searchValue, setSearchValue] = useState('');
 
@@ -35,10 +34,10 @@ function InstanceSelector({selected, setSelected, virtualInstances}) {
 	);
 
 	const _handleRemoveSelect = (id) =>
-		setSelected(selected.filter((item) => id !== item));
+		onSelectedChange(selected.filter((item) => id !== item));
 
 	const _handleToggleSelect = (id) =>
-		setSelected(
+		onSelectedChange(
 			selected.includes(id)
 				? selected.filter((item) => id !== item)
 				: [...selected, id]
@@ -53,7 +52,7 @@ function InstanceSelector({selected, setSelected, virtualInstances}) {
 			(id) => !currentVirtualInstanceIds.includes(id)
 		);
 
-		setSelected(
+		onSelectedChange(
 			currentVirtualInstanceIds.every((id) => selected.includes(id))
 				? clearCurrentFromSelected
 				: [...clearCurrentFromSelected, ...currentVirtualInstanceIds]
@@ -166,7 +165,7 @@ function InstanceSelector({selected, setSelected, virtualInstances}) {
 							<ClayButton
 								className="component-link tbar-link"
 								displayType="unstyled"
-								onClick={() => setSelected([])}
+								onClick={() => onSelectedChange([])}
 							>
 								{Liferay.Language.get('deselect-all')}
 							</ClayButton>
@@ -243,9 +242,8 @@ function InstanceSelector({selected, setSelected, virtualInstances}) {
 								'showing-x-to-x-of-x-entries'
 							),
 							perPageItems: Liferay.Language.get('x-entries'),
-							selectPerPageItems: Liferay.Language.get(
-								'x-entries'
-							),
+							selectPerPageItems:
+								Liferay.Language.get('x-entries'),
 						}}
 						onDeltaChange={setDelta}
 						onPageChange={setActivePage}

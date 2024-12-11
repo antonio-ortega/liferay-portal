@@ -5,6 +5,7 @@
 
 package com.liferay.headless.commerce.delivery.cart.internal.resource.v1_0;
 
+import com.liferay.commerce.exception.NoSuchOrderException;
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.service.CommerceAddressService;
@@ -42,6 +43,56 @@ public class AddressResourceImpl extends BaseAddressResourceImpl {
 		CommerceAddress commerceAddress =
 			_commerceAddressService.getCommerceAddress(
 				commerceOrder.getBillingAddressId());
+
+		return _addressDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				commerceAddress.getCommerceAddressId(),
+				contextAcceptLanguage.getPreferredLocale()));
+	}
+
+	@Override
+	public Address getCartByExternalReferenceCodeBillingAddress(
+			String externalReferenceCode)
+		throws Exception {
+
+		CommerceOrder commerceOrder =
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceOrder == null) {
+			throw new NoSuchOrderException(
+				"Unable to find order with external reference code " +
+					externalReferenceCode);
+		}
+
+		CommerceAddress commerceAddress =
+			_commerceAddressService.getCommerceAddress(
+				commerceOrder.getBillingAddressId());
+
+		return _addressDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				commerceAddress.getCommerceAddressId(),
+				contextAcceptLanguage.getPreferredLocale()));
+	}
+
+	@Override
+	public Address getCartByExternalReferenceCodeShippingAddress(
+			String externalReferenceCode)
+		throws Exception {
+
+		CommerceOrder commerceOrder =
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceOrder == null) {
+			throw new NoSuchOrderException(
+				"Unable to find order with external reference code " +
+					externalReferenceCode);
+		}
+
+		CommerceAddress commerceAddress =
+			_commerceAddressService.getCommerceAddress(
+				commerceOrder.getShippingAddressId());
 
 		return _addressDTOConverter.toDTO(
 			new DefaultDTOConverterContext(

@@ -79,9 +79,8 @@ const Container = React.memo(
 		const style = {};
 
 		if (backgroundImageValue.url) {
-			style[
-				`--lfr-background-image-${item.itemId}`
-			] = `url(${backgroundImageValue.url})`;
+			style[`--lfr-background-image-${item.itemId}`] =
+				`url(${backgroundImageValue.url})`;
 
 			if (backgroundImage?.fileEntryId) {
 				style['--background-image-file-entry-id'] =
@@ -109,6 +108,7 @@ const Container = React.memo(
 							widthType === CONTAINER_WIDTH_TYPES.fixed,
 						[`container-fluid-max-xl`]:
 							widthType === CONTAINER_WIDTH_TYPES.fixed,
+						'custom-height': item.config.styles?.height,
 						'd-flex flex-column':
 							contentDisplay ===
 							CONTENT_DISPLAY_OPTIONS.flexColumn,

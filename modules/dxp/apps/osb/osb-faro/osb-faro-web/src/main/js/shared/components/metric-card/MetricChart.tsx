@@ -1,9 +1,10 @@
 // @ts-nocheck - Fix it at this LRAC-13388
 
 import Checkbox from 'shared/components/Checkbox';
+import ClayLink from '@clayui/link';
 import ComposedChartWithEmptyState from 'shared/components/ComposedChartWithEmptyState';
 import MetricStateRenderer from './MetricStateRenderer';
-import MetricTooltip from './MetricTooltipt';
+import MetricTooltip from './MetricTooltip';
 import React, {useMemo, useState} from 'react';
 import URLConstants from 'shared/util/url-constants';
 import {
@@ -29,6 +30,7 @@ import {formatXAxisDate} from 'shared/util/charts';
 import {getActiveItem, getMetricData, getMetricName} from './util';
 import {ICommonMetricProps, useActions, useData} from './MetricBaseCard';
 import {useMetricQuery} from './hooks';
+import {useRetentionPeriod} from 'shared/hooks/useRetentionPeriod';
 
 export const CHART_DATA_PREVIOUS = 'data_previous';
 export const METRIC_TOOLTIP_LABEL_MAP = {
@@ -114,6 +116,8 @@ export const MetricChart: React.FC<IMetricChartProps> = ({
 		return item.type !== 'bar';
 	});
 
+	const retentionPeriod = useRetentionPeriod();
+
 	return (
 		<>
 			<ResponsiveContainer height={height}>
@@ -186,13 +190,15 @@ export const MetricChart: React.FC<IMetricChartProps> = ({
 					<Tooltip
 						content={props => (
 							<MetricTooltip
+								compareToPrevious={compareToPrevious}
 								data={data}
 								interval={interval}
 								rangeSelectors={rangeSelectors}
+								retentionPeriod={retentionPeriod}
 								{...props}
 							/>
 						)}
-						cursor={!intervals.length ? false : true}
+						cursor={!!intervals.length}
 					/>
 
 					<Legend
@@ -210,9 +216,10 @@ export const MetricChart: React.FC<IMetricChartProps> = ({
 
 								return (
 									<>
-										{`${label}:`}
-
-										<b className='ml-1'>{value}</b>
+										<span className='legend-text-color'>
+											{label}
+											<b className='ml-1'>{value}</b>
+										</span>
 									</>
 								);
 							}
@@ -316,6 +323,8 @@ export const MetricChart: React.FC<IMetricChartProps> = ({
 interface IMetricChartRendererProps extends ICommonMetricProps {}
 
 const MetricChartRenderer: React.FC<IMetricChartRendererProps> = ({
+	emptyDescription,
+	emptyTitle,
 	filters,
 	interval,
 	rangeSelectors
@@ -336,6 +345,8 @@ const MetricChartRenderer: React.FC<IMetricChartRendererProps> = ({
 		<MetricStateRenderer error={error} loading={loading}>
 			<MetricChartWrapper
 				data={data}
+				emptyDescription={emptyDescription}
+				emptyTitle={emptyTitle}
 				interval={interval}
 				metricName={metricName}
 				rangeSelectors={rangeSelectors}
@@ -351,6 +362,24 @@ interface IMetricChartWrapperProps extends Partial<IMetricChartRendererProps> {
 
 const MetricChartWrapper: React.FC<IMetricChartWrapperProps> = ({
 	data,
+	emptyDescription = (
+		<>
+			<span className='mr-1'>
+				{Liferay.Language.get(
+					'check-back-later-to-verify-if-data-has-been-received-from-your-data-sources'
+				)}
+			</span>
+
+			<ClayLink
+				href={URLConstants.SitesDashboardSitesActivities}
+				key='DOCUMENTATION'
+				target='_blank'
+			>
+				{Liferay.Language.get('learn-more-about-site-activity')}
+			</ClayLink>
+		</>
+	),
+	emptyTitle = Liferay.Language.get('there-is-no-data-for-site-activity'),
 	interval,
 	metricName,
 	rangeSelectors
@@ -385,28 +414,8 @@ const MetricChartWrapper: React.FC<IMetricChartWrapperProps> = ({
 	return (
 		<div className='analytics-metrics-chart'>
 			<ComposedChartWithEmptyState
-				emptyDescription={
-					<>
-						<span className='mr-1'>
-							{Liferay.Language.get(
-								'check-back-later-to-verify-if-data-has-been-received-from-your-data-sources'
-							)}
-						</span>
-
-						<a
-							href={URLConstants.SitesDashboardSitesActivities}
-							key='DOCUMENTATION'
-							target='_blank'
-						>
-							{Liferay.Language.get(
-								'learn-more-about-site-activity'
-							)}
-						</a>
-					</>
-				}
-				emptyTitle={Liferay.Language.get(
-					'there-is-no-data-for-site-activity'
-				)}
+				emptyDescription={emptyDescription}
+				emptyTitle={emptyTitle}
 				showEmptyState={!intervals.length}
 			>
 				<MetricChart

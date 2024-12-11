@@ -8,6 +8,7 @@ import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
 import {
+	EXPORT_FILE_FORMAT_SELECTED_EVENT,
 	NULL_TEMPLATE_VALUE,
 	TEMPLATE_CREATED_EVENT,
 	TEMPLATE_SELECTED_EVENT,
@@ -24,8 +25,9 @@ const TemplateSelect = ({
 		initialTemplateOptions
 	);
 	const [selectedTemplateId, setSelectedTemplateId] = useState(() => {
-		const id = initialTemplateOptions.find((option) => option.selected)
-			?.value;
+		const id = initialTemplateOptions.find(
+			(option) => option.selected
+		)?.value;
 
 		return id || NULL_TEMPLATE_VALUE;
 	});
@@ -40,9 +42,17 @@ const TemplateSelect = ({
 			]);
 		}
 
+		function handleExternalTypeChange() {
+			setSelectedTemplateId(NULL_TEMPLATE_VALUE);
+		}
+
+		Liferay.on(EXPORT_FILE_FORMAT_SELECTED_EVENT, handleExternalTypeChange);
 		Liferay.on(TEMPLATE_CREATED_EVENT, handleTemplateCreated);
 
-		return () => Liferay.detach(TEMPLATE_CREATED_EVENT);
+		return () => {
+			Liferay.detach(EXPORT_FILE_FORMAT_SELECTED_EVENT);
+			Liferay.detach(TEMPLATE_CREATED_EVENT);
+		};
 	}, []);
 
 	useEffect(() => {

@@ -92,6 +92,27 @@ public class OperatorOperandCheck extends BaseCheck {
 			return;
 		}
 
+		DetailAST firstChildDetailAST = detailAST.getFirstChild();
+
+		while (true) {
+			if ((firstChildDetailAST.getType() != TokenTypes.METHOD_CALL) &&
+				(firstChildDetailAST.getType() != TokenTypes.DOT)) {
+
+				break;
+			}
+
+			firstChildDetailAST = firstChildDetailAST.getFirstChild();
+		}
+
+		DetailAST parentDetailAST = firstChildDetailAST.getParent();
+
+		if (parentDetailAST.getType() == TokenTypes.DOT) {
+			detailAST = parentDetailAST.getParent();
+		}
+		else {
+			detailAST = parentDetailAST;
+		}
+
 		if (isAtLineEnd(detailAST, getLine(detailAST.getLineNo() - 1))) {
 			log(
 				detailAST, _MSG_IMPROVE_READABILITY, side,
@@ -100,7 +121,7 @@ public class OperatorOperandCheck extends BaseCheck {
 			return;
 		}
 
-		DetailAST firstChildDetailAST = detailAST.getFirstChild();
+		firstChildDetailAST = detailAST.getFirstChild();
 
 		if ((firstChildDetailAST.getType() == TokenTypes.DOT) &&
 			isAtLineEnd(

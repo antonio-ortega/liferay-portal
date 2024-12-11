@@ -35,7 +35,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 							boolean useCustomTitle = GetterUtil.getBoolean(portletPreferences.getValue("portletSetupUseCustomTitle", null));
 
 							if (useCustomTitle) {
-								name = PortletConfigurationUtil.getPortletTitle(portletPreferences, LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale()));
+								name = PortletConfigurationUtil.getPortletTitle(portletDisplay.getPortletName(), portletPreferences, LocaleUtil.toLanguageId(themeDisplay.getSiteDefaultLocale()));
 							}
 							%>
 
@@ -57,5 +57,5 @@ String redirect = ParamUtil.getString(request, "redirect");
 </div>
 
 <liferay-frontend:component
-	module="js/AddConfigurationTemplateEventHandler"
+	module="{AddConfigurationTemplateEventHandler} from portlet-configuration-web"
 />

@@ -9,7 +9,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.source.formatter.parser.JavaClass;
 import com.liferay.source.formatter.parser.JavaClassParser;
@@ -174,6 +174,16 @@ public class ChainingCheck extends BaseCheck {
 			requiredChainingMethodNames = Arrays.asList(
 				"put", "putOnce", "putOpt");
 		}
+		else if (fullyQualifiedClassName.startsWith(
+					"com.liferay.frontend.data.set.view.table.") &&
+				 fullyQualifiedClassName.endsWith("FDSTableSchemaField")) {
+
+			requiredChainingMethodNames = Arrays.asList(
+				"setActionId", "setContentRenderer",
+				"setContentRendererClientExtension",
+				"setContentRendererModuleURL", "setFieldName", "setLabel",
+				"setLocalizeLabel", "setSortable", "setSortingOrder");
+		}
 		else {
 			requiredChainingMethodNames = _getRequiredChainingMethodNames(
 				fullyQualifiedClassName);
@@ -190,23 +200,8 @@ public class ChainingCheck extends BaseCheck {
 			return;
 		}
 
-		DetailAST topLevelMethodCallDetailAST = methodCallDetailAST;
-
-		while (true) {
-			DetailAST parentDetailAST = topLevelMethodCallDetailAST.getParent();
-
-			if (parentDetailAST.getType() != TokenTypes.DOT) {
-				break;
-			}
-
-			parentDetailAST = parentDetailAST.getParent();
-
-			if (parentDetailAST.getType() != TokenTypes.METHOD_CALL) {
-				break;
-			}
-
-			topLevelMethodCallDetailAST = parentDetailAST;
-		}
+		DetailAST topLevelMethodCallDetailAST = getTopLevelMethodCallDetailAST(
+			methodCallDetailAST);
 
 		DetailAST parentDetailAST = topLevelMethodCallDetailAST.getParent();
 
@@ -256,7 +251,8 @@ public class ChainingCheck extends BaseCheck {
 
 		if (classOrVariableName.equals(
 				getClassOrVariableName(nextMethodCallDetailAST)) &&
-			!Objects.equals(getMethodName(nextMethodCallDetailAST), "remove")) {
+			requiredChainingMethodNames.contains(
+				getMethodName(nextMethodCallDetailAST))) {
 
 			log(
 				methodCallDetailAST, _MSG_REQUIRED_CHAINING,
@@ -288,8 +284,7 @@ public class ChainingCheck extends BaseCheck {
 					requiredChainingClassFileName));
 
 			return JavaClassParser.parseJavaClass(
-				requiredChainingClassFileName,
-				StringUtil.read(url.openStream()));
+				requiredChainingClassFileName, URLUtil.toString(url));
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {

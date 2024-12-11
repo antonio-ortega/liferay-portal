@@ -10,14 +10,16 @@ import {useDropzone} from 'react-dropzone';
 
 import LiferayFile from '../../../../../interfaces/liferayFile';
 import MDFClaim from '../../../../../interfaces/mdfClaim';
+import {ResourceName} from '../../../../../services/liferay/object/enum/resourceName';
 import PRMFormik from '../../../../PRMFormik';
 import ListFiles from '../InputMultipleFilesListing/components/ListFiles';
-import PRMFormFieldProps from '../common/interfaces/prmFormFieldProps';
 import PRMFormFieldStateProps from '../common/interfaces/prmFormFieldStateProps';
+import PRMFormMultipleFilesProps from '../common/interfaces/prmFormMultipleFilesProps';
 
 interface IProps {
 	acceptedFilesExtensions: string;
 	onAccept: (liferayFiles: LiferayFile[]) => void;
+	resourceName: ResourceName;
 	value?: LiferayFile[] | Object[];
 }
 
@@ -25,12 +27,14 @@ const InputMultipleFiles = ({
 	acceptedFilesExtensions,
 	description,
 	field,
+	form,
 	label,
 	meta,
 	onAccept,
 	required,
+	resourceName,
 	value,
-}: PRMFormFieldProps &
+}: PRMFormMultipleFilesProps &
 	PRMFormFieldStateProps<LiferayFile[]> &
 	Pick<FormikContextType<MDFClaim>, 'setFieldValue'> &
 	IProps) => {
@@ -38,6 +42,7 @@ const InputMultipleFiles = ({
 		noClick: true,
 		noKeyboard: true,
 		onDrop: (acceptedFiles) => {
+			form?.setFieldTouched(field.name, true);
 			onAccept(acceptedFiles);
 		},
 	});
@@ -99,7 +104,7 @@ const InputMultipleFiles = ({
 					</div>
 				</div>
 
-				{meta.error && !Array.isArray(meta.error) && (
+				{meta.error && !Array.isArray(meta.error) && meta.touched && (
 					<ClayForm.FeedbackGroup>
 						<ClayForm.FeedbackItem>
 							{meta.error}
@@ -114,6 +119,7 @@ const InputMultipleFiles = ({
 					files={value}
 					meta={meta}
 					name={field.name}
+					resourceName={resourceName}
 				/>
 			)}
 		</>

@@ -26,19 +26,20 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.util.PropsValues;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.lang.reflect.Method;
@@ -96,11 +97,17 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 
 		_priceListOrderTypeResource.setContextCompany(testCompany);
 
+		com.liferay.portal.kernel.model.User testCompanyAdminUser =
+			UserTestUtil.getAdminUser(testCompany.getCompanyId());
+
 		PriceListOrderTypeResource.Builder builder =
 			PriceListOrderTypeResource.builder();
 
 		priceListOrderTypeResource = builder.authentication(
-			"test@liferay.com", "test"
+			testCompanyAdminUser.getEmailAddress(),
+			PropsValues.DEFAULT_ADMIN_PASSWORD
+		).endpoint(
+			testCompany.getVirtualHostname(), 8080, "http"
 		).locale(
 			LocaleUtil.getDefault()
 		).build();
@@ -114,7 +121,33 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 
 	@Test
 	public void testClientSerDesToDTO() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		PriceListOrderType priceListOrderType1 = randomPriceListOrderType();
+
+		String json = objectMapper.writeValueAsString(priceListOrderType1);
+
+		PriceListOrderType priceListOrderType2 = PriceListOrderTypeSerDes.toDTO(
+			json);
+
+		Assert.assertTrue(equals(priceListOrderType1, priceListOrderType2));
+	}
+
+	@Test
+	public void testClientSerDesToJSON() throws Exception {
+		ObjectMapper objectMapper = getClientSerDesObjectMapper();
+
+		PriceListOrderType priceListOrderType = randomPriceListOrderType();
+
+		String json1 = objectMapper.writeValueAsString(priceListOrderType);
+		String json2 = PriceListOrderTypeSerDes.toJSON(priceListOrderType);
+
+		Assert.assertEquals(
+			objectMapper.readTree(json1), objectMapper.readTree(json2));
+	}
+
+	protected ObjectMapper getClientSerDesObjectMapper() {
+		return new ObjectMapper() {
 			{
 				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
 				configure(
@@ -129,41 +162,6 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
 			}
 		};
-
-		PriceListOrderType priceListOrderType1 = randomPriceListOrderType();
-
-		String json = objectMapper.writeValueAsString(priceListOrderType1);
-
-		PriceListOrderType priceListOrderType2 = PriceListOrderTypeSerDes.toDTO(
-			json);
-
-		Assert.assertTrue(equals(priceListOrderType1, priceListOrderType2));
-	}
-
-	@Test
-	public void testClientSerDesToJSON() throws Exception {
-		ObjectMapper objectMapper = new ObjectMapper() {
-			{
-				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-				configure(
-					SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-				setDateFormat(new ISO8601DateFormat());
-				setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-				setSerializationInclusion(JsonInclude.Include.NON_NULL);
-				setVisibility(
-					PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-				setVisibility(
-					PropertyAccessor.GETTER, JsonAutoDetect.Visibility.NONE);
-			}
-		};
-
-		PriceListOrderType priceListOrderType = randomPriceListOrderType();
-
-		String json1 = objectMapper.writeValueAsString(priceListOrderType);
-		String json2 = PriceListOrderTypeSerDes.toJSON(priceListOrderType);
-
-		Assert.assertEquals(
-			objectMapper.readTree(json1), objectMapper.readTree(json2));
 	}
 
 	@Test
@@ -211,7 +209,7 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 				getPriceListByExternalReferenceCodePriceListOrderTypesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantExternalReferenceCode != null) {
 			PriceListOrderType irrelevantPriceListOrderType =
@@ -222,12 +220,13 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			page =
 				priceListOrderTypeResource.
 					getPriceListByExternalReferenceCodePriceListOrderTypesPage(
-						irrelevantExternalReferenceCode, Pagination.of(1, 2));
+						irrelevantExternalReferenceCode,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantPriceListOrderType),
+			assertContains(
+				irrelevantPriceListOrderType,
 				(List<PriceListOrderType>)page.getItems());
 			assertValid(
 				page,
@@ -248,11 +247,12 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 				getPriceListByExternalReferenceCodePriceListOrderTypesPage(
 					externalReferenceCode, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(priceListOrderType1, priceListOrderType2),
-			(List<PriceListOrderType>)page.getItems());
+		assertContains(
+			priceListOrderType1, (List<PriceListOrderType>)page.getItems());
+		assertContains(
+			priceListOrderType2, (List<PriceListOrderType>)page.getItems());
 		assertValid(
 			page,
 			testGetPriceListByExternalReferenceCodePriceListOrderTypesPage_getExpectedActions(
@@ -276,6 +276,14 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 		String externalReferenceCode =
 			testGetPriceListByExternalReferenceCodePriceListOrderTypesPage_getExternalReferenceCode();
 
+		Page<PriceListOrderType> priceListOrderTypePage =
+			priceListOrderTypeResource.
+				getPriceListByExternalReferenceCodePriceListOrderTypesPage(
+					externalReferenceCode, null);
+
+		int totalCount = GetterUtil.getInteger(
+			priceListOrderTypePage.getTotalCount());
+
 		PriceListOrderType priceListOrderType1 =
 			testGetPriceListByExternalReferenceCodePriceListOrderTypesPage_addPriceListOrderType(
 				externalReferenceCode, randomPriceListOrderType());
@@ -288,39 +296,94 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			testGetPriceListByExternalReferenceCodePriceListOrderTypesPage_addPriceListOrderType(
 				externalReferenceCode, randomPriceListOrderType());
 
-		Page<PriceListOrderType> page1 =
-			priceListOrderTypeResource.
-				getPriceListByExternalReferenceCodePriceListOrderTypesPage(
-					externalReferenceCode, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceListOrderType> priceListOrderTypes1 =
-			(List<PriceListOrderType>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceListOrderTypes1.toString(), 2, priceListOrderTypes1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceListOrderType> page1 =
+				priceListOrderTypeResource.
+					getPriceListByExternalReferenceCodePriceListOrderTypesPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<PriceListOrderType> page2 =
-			priceListOrderTypeResource.
-				getPriceListByExternalReferenceCodePriceListOrderTypesPage(
-					externalReferenceCode, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				priceListOrderType1,
+				(List<PriceListOrderType>)page1.getItems());
 
-		List<PriceListOrderType> priceListOrderTypes2 =
-			(List<PriceListOrderType>)page2.getItems();
+			Page<PriceListOrderType> page2 =
+				priceListOrderTypeResource.
+					getPriceListByExternalReferenceCodePriceListOrderTypesPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			priceListOrderTypes2.toString(), 1, priceListOrderTypes2.size());
+			assertContains(
+				priceListOrderType2,
+				(List<PriceListOrderType>)page2.getItems());
 
-		Page<PriceListOrderType> page3 =
-			priceListOrderTypeResource.
-				getPriceListByExternalReferenceCodePriceListOrderTypesPage(
-					externalReferenceCode, Pagination.of(1, 3));
+			Page<PriceListOrderType> page3 =
+				priceListOrderTypeResource.
+					getPriceListByExternalReferenceCodePriceListOrderTypesPage(
+						externalReferenceCode,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				priceListOrderType1, priceListOrderType2, priceListOrderType3),
-			(List<PriceListOrderType>)page3.getItems());
+			assertContains(
+				priceListOrderType3,
+				(List<PriceListOrderType>)page3.getItems());
+		}
+		else {
+			Page<PriceListOrderType> page1 =
+				priceListOrderTypeResource.
+					getPriceListByExternalReferenceCodePriceListOrderTypesPage(
+						externalReferenceCode,
+						Pagination.of(1, totalCount + 2));
+
+			List<PriceListOrderType> priceListOrderTypes1 =
+				(List<PriceListOrderType>)page1.getItems();
+
+			Assert.assertEquals(
+				priceListOrderTypes1.toString(), totalCount + 2,
+				priceListOrderTypes1.size());
+
+			Page<PriceListOrderType> page2 =
+				priceListOrderTypeResource.
+					getPriceListByExternalReferenceCodePriceListOrderTypesPage(
+						externalReferenceCode,
+						Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceListOrderType> priceListOrderTypes2 =
+				(List<PriceListOrderType>)page2.getItems();
+
+			Assert.assertEquals(
+				priceListOrderTypes2.toString(), 1,
+				priceListOrderTypes2.size());
+
+			Page<PriceListOrderType> page3 =
+				priceListOrderTypeResource.
+					getPriceListByExternalReferenceCodePriceListOrderTypesPage(
+						externalReferenceCode,
+						Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				priceListOrderType1,
+				(List<PriceListOrderType>)page3.getItems());
+			assertContains(
+				priceListOrderType2,
+				(List<PriceListOrderType>)page3.getItems());
+			assertContains(
+				priceListOrderType3,
+				(List<PriceListOrderType>)page3.getItems());
+		}
 	}
 
 	protected PriceListOrderType
@@ -382,7 +445,7 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			priceListOrderTypeResource.getPriceListIdPriceListOrderTypesPage(
 				id, null, Pagination.of(1, 10));
 
-		Assert.assertEquals(0, page.getTotalCount());
+		long totalCount = page.getTotalCount();
 
 		if (irrelevantId != null) {
 			PriceListOrderType irrelevantPriceListOrderType =
@@ -392,12 +455,13 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			page =
 				priceListOrderTypeResource.
 					getPriceListIdPriceListOrderTypesPage(
-						irrelevantId, null, Pagination.of(1, 2));
+						irrelevantId, null,
+						Pagination.of(1, (int)totalCount + 1));
 
-			Assert.assertEquals(1, page.getTotalCount());
+			Assert.assertEquals(totalCount + 1, page.getTotalCount());
 
-			assertEquals(
-				Arrays.asList(irrelevantPriceListOrderType),
+			assertContains(
+				irrelevantPriceListOrderType,
 				(List<PriceListOrderType>)page.getItems());
 			assertValid(
 				page,
@@ -416,11 +480,12 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 		page = priceListOrderTypeResource.getPriceListIdPriceListOrderTypesPage(
 			id, null, Pagination.of(1, 10));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(priceListOrderType1, priceListOrderType2),
-			(List<PriceListOrderType>)page.getItems());
+		assertContains(
+			priceListOrderType1, (List<PriceListOrderType>)page.getItems());
+		assertContains(
+			priceListOrderType2, (List<PriceListOrderType>)page.getItems());
 		assertValid(
 			page,
 			testGetPriceListIdPriceListOrderTypesPage_getExpectedActions(id));
@@ -442,6 +507,13 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 
 		Long id = testGetPriceListIdPriceListOrderTypesPage_getId();
 
+		Page<PriceListOrderType> priceListOrderTypePage =
+			priceListOrderTypeResource.getPriceListIdPriceListOrderTypesPage(
+				id, null, null);
+
+		int totalCount = GetterUtil.getInteger(
+			priceListOrderTypePage.getTotalCount());
+
 		PriceListOrderType priceListOrderType1 =
 			testGetPriceListIdPriceListOrderTypesPage_addPriceListOrderType(
 				id, randomPriceListOrderType());
@@ -454,36 +526,91 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			testGetPriceListIdPriceListOrderTypesPage_addPriceListOrderType(
 				id, randomPriceListOrderType());
 
-		Page<PriceListOrderType> page1 =
-			priceListOrderTypeResource.getPriceListIdPriceListOrderTypesPage(
-				id, null, Pagination.of(1, 2));
+		// See com.liferay.portal.vulcan.internal.configuration.HeadlessAPICompanyConfiguration#pageSizeLimit
 
-		List<PriceListOrderType> priceListOrderTypes1 =
-			(List<PriceListOrderType>)page1.getItems();
+		int pageSizeLimit = 500;
 
-		Assert.assertEquals(
-			priceListOrderTypes1.toString(), 2, priceListOrderTypes1.size());
+		if (totalCount >= (pageSizeLimit - 2)) {
+			Page<PriceListOrderType> page1 =
+				priceListOrderTypeResource.
+					getPriceListIdPriceListOrderTypesPage(
+						id, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 1.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Page<PriceListOrderType> page2 =
-			priceListOrderTypeResource.getPriceListIdPriceListOrderTypesPage(
-				id, null, Pagination.of(2, 2));
+			Assert.assertEquals(totalCount + 3, page1.getTotalCount());
 
-		Assert.assertEquals(3, page2.getTotalCount());
+			assertContains(
+				priceListOrderType1,
+				(List<PriceListOrderType>)page1.getItems());
 
-		List<PriceListOrderType> priceListOrderTypes2 =
-			(List<PriceListOrderType>)page2.getItems();
+			Page<PriceListOrderType> page2 =
+				priceListOrderTypeResource.
+					getPriceListIdPriceListOrderTypesPage(
+						id, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 2.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		Assert.assertEquals(
-			priceListOrderTypes2.toString(), 1, priceListOrderTypes2.size());
+			assertContains(
+				priceListOrderType2,
+				(List<PriceListOrderType>)page2.getItems());
 
-		Page<PriceListOrderType> page3 =
-			priceListOrderTypeResource.getPriceListIdPriceListOrderTypesPage(
-				id, null, Pagination.of(1, 3));
+			Page<PriceListOrderType> page3 =
+				priceListOrderTypeResource.
+					getPriceListIdPriceListOrderTypesPage(
+						id, null,
+						Pagination.of(
+							(int)Math.ceil((totalCount + 3.0) / pageSizeLimit),
+							pageSizeLimit));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(
-				priceListOrderType1, priceListOrderType2, priceListOrderType3),
-			(List<PriceListOrderType>)page3.getItems());
+			assertContains(
+				priceListOrderType3,
+				(List<PriceListOrderType>)page3.getItems());
+		}
+		else {
+			Page<PriceListOrderType> page1 =
+				priceListOrderTypeResource.
+					getPriceListIdPriceListOrderTypesPage(
+						id, null, Pagination.of(1, totalCount + 2));
+
+			List<PriceListOrderType> priceListOrderTypes1 =
+				(List<PriceListOrderType>)page1.getItems();
+
+			Assert.assertEquals(
+				priceListOrderTypes1.toString(), totalCount + 2,
+				priceListOrderTypes1.size());
+
+			Page<PriceListOrderType> page2 =
+				priceListOrderTypeResource.
+					getPriceListIdPriceListOrderTypesPage(
+						id, null, Pagination.of(2, totalCount + 2));
+
+			Assert.assertEquals(totalCount + 3, page2.getTotalCount());
+
+			List<PriceListOrderType> priceListOrderTypes2 =
+				(List<PriceListOrderType>)page2.getItems();
+
+			Assert.assertEquals(
+				priceListOrderTypes2.toString(), 1,
+				priceListOrderTypes2.size());
+
+			Page<PriceListOrderType> page3 =
+				priceListOrderTypeResource.
+					getPriceListIdPriceListOrderTypesPage(
+						id, null, Pagination.of(1, (int)totalCount + 3));
+
+			assertContains(
+				priceListOrderType1,
+				(List<PriceListOrderType>)page3.getItems());
+			assertContains(
+				priceListOrderType2,
+				(List<PriceListOrderType>)page3.getItems());
+			assertContains(
+				priceListOrderType3,
+				(List<PriceListOrderType>)page3.getItems());
+		}
 	}
 
 	protected PriceListOrderType
@@ -950,6 +1077,10 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
 		throws Exception {
 
+		if (clazz.getClassLoader() == null) {
+			return new java.lang.reflect.Field[0];
+		}
+
 		return TransformUtil.transform(
 			ReflectionUtil.getDeclaredFields(clazz),
 			field -> {
@@ -1156,7 +1287,8 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			"application/json");
 		httpInvoker.httpMethod(HttpInvoker.HttpMethod.POST);
 		httpInvoker.path("http://localhost:8080/o/graphql");
-		httpInvoker.userNameAndPassword("test@liferay.com:test");
+		httpInvoker.userNameAndPassword(
+			"test@liferay.com:" + PropsValues.DEFAULT_ADMIN_PASSWORD);
 
 		HttpInvoker.HttpResponse httpResponse = httpInvoker.invoke();
 
@@ -1214,21 +1346,21 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 	}
 
 	protected PriceListOrderTypeResource priceListOrderTypeResource;
-	protected Group irrelevantGroup;
-	protected Company testCompany;
-	protected Group testGroup;
+	protected com.liferay.portal.kernel.model.Group irrelevantGroup;
+	protected com.liferay.portal.kernel.model.Company testCompany;
+	protected com.liferay.portal.kernel.model.Group testGroup;
 
 	protected static class BeanTestUtil {
 
 		public static void copyProperties(Object source, Object target)
 			throws Exception {
 
-			Class<?> sourceClass = _getSuperClass(source.getClass());
+			Class<?> sourceClass = source.getClass();
 
 			Class<?> targetClass = target.getClass();
 
 			for (java.lang.reflect.Field field :
-					sourceClass.getDeclaredFields()) {
+					_getAllDeclaredFields(sourceClass)) {
 
 				if (field.isSynthetic()) {
 					continue;
@@ -1237,11 +1369,16 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 				Method getMethod = _getMethod(
 					sourceClass, field.getName(), "get");
 
-				Method setMethod = _getMethod(
-					targetClass, field.getName(), "set",
-					getMethod.getReturnType());
+				try {
+					Method setMethod = _getMethod(
+						targetClass, field.getName(), "set",
+						getMethod.getReturnType());
 
-				setMethod.invoke(target, getMethod.invoke(source));
+					setMethod.invoke(target, getMethod.invoke(source));
+				}
+				catch (Exception e) {
+					continue;
+				}
 			}
 		}
 
@@ -1273,6 +1410,24 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			setMethod.invoke(bean, _translateValue(parameterTypes[0], value));
 		}
 
+		private static List<java.lang.reflect.Field> _getAllDeclaredFields(
+			Class<?> clazz) {
+
+			List<java.lang.reflect.Field> fields = new ArrayList<>();
+
+			while ((clazz != null) && (clazz != Object.class)) {
+				for (java.lang.reflect.Field field :
+						clazz.getDeclaredFields()) {
+
+					fields.add(field);
+				}
+
+				clazz = clazz.getSuperclass();
+			}
+
+			return fields;
+		}
+
 		private static Method _getMethod(Class<?> clazz, String name) {
 			for (Method method : clazz.getMethods()) {
 				if (name.equals(method.getName()) &&
@@ -1294,16 +1449,6 @@ public abstract class BasePriceListOrderTypeResourceTestCase {
 			return clazz.getMethod(
 				prefix + StringUtil.upperCaseFirstLetter(fieldName),
 				parameterTypes);
-		}
-
-		private static Class<?> _getSuperClass(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
-
-			if ((superClass == null) || (superClass == Object.class)) {
-				return clazz;
-			}
-
-			return superClass;
 		}
 
 		private static Object _translateValue(

@@ -8,7 +8,7 @@ import ClayForm, {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import {ReactPortal, useEventListener} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {throttle} from 'frontend-js-web';
+import {sub, throttle} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -68,9 +68,8 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 		});
 	}
 
-	const [selectorInputValue, setSelectorInputValue] = useState(
-		selectedTarget
-	);
+	const [selectorInputValue, setSelectorInputValue] =
+		useState(selectedTarget);
 
 	const {errors} = useContext(GlobalStateContext);
 
@@ -184,7 +183,7 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 	return (
 		<DispatchContext.Provider value={dispatch}>
 			<StateContext.Provider value={state}>
-				<h4 className="mb-3 mt-4 sheet-subtitle">
+				<div className="mb-3 mt-4 sheet-subtitle">
 					{Liferay.Language.get('click-goal')}
 
 					{allowEdit && (
@@ -194,7 +193,7 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 							symbol="asterisk"
 						/>
 					)}
-				</h4>
+				</div>
 
 				{allowEdit && (
 					<div className="c-mb-2 text-secondary">
@@ -273,6 +272,10 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 							{allowEdit && selectedTarget && (
 								<ClayInput.GroupInsetItem after>
 									<ClayButtonWithIcon
+										aria-label={sub(
+											Liferay.Language.get('clear-x'),
+											Liferay.Language.get('text')
+										)}
 										data-tooltip-align="bottom-right"
 										disabled={!selectedTarget}
 										displayType="unstyled"
@@ -287,6 +290,9 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 
 						<ClayInput.GroupItem shrink>
 							<ClayButtonWithIcon
+								aria-label={Liferay.Language.get(
+									'show-element'
+								)}
 								data-tooltip-align="bottom-right"
 								disabled={!selectedTarget}
 								displayType="secondary"
@@ -489,8 +495,8 @@ function Overlay({allowEdit, root, targetableElements}) {
 						editingTarget === elementId && allowEdit
 							? 'editing'
 							: selectedTarget === elementId
-							? 'selected'
-							: 'inactive';
+								? 'selected'
+								: 'inactive';
 
 					const selector = `#${element.id}`;
 
@@ -530,9 +536,8 @@ function Target({allowEdit, element, geometry, mode, selector}) {
 
 	const {selectedTarget} = useContext(StateContext);
 
-	const {bottom, height, left, right, top, width} = getElementGeometry(
-		element
-	);
+	const {bottom, height, left, right, top, width} =
+		getElementGeometry(element);
 
 	if (!bottom && !top && !right && !left) {
 		return null;
@@ -588,7 +593,7 @@ function Target({allowEdit, element, geometry, mode, selector}) {
 					mode === 'inactive'
 						? Liferay.Language.get(
 								'click-element-to-set-as-click-target-for-your-goal'
-						  )
+							)
 						: ''
 				}
 			></div>
@@ -633,11 +638,8 @@ function TargetTopper({allowEdit, geometry, isEditing, selector}) {
 
 	useLayoutEffect(() => {
 		if (topperRef.current) {
-			const {
-				height,
-				left,
-				width,
-			} = topperRef.current.getBoundingClientRect();
+			const {height, left, width} =
+				topperRef.current.getBoundingClientRect();
 
 			setTop(-height);
 
@@ -659,7 +661,8 @@ function TargetTopper({allowEdit, geometry, isEditing, selector}) {
 			className={classNames({
 				'd-flex': true,
 				'lfr-segments-experiment-click-goal-target-topper': true,
-				'lfr-segments-experiment-click-goal-target-topper-editing': isEditing,
+				'lfr-segments-experiment-click-goal-target-topper-editing':
+					isEditing,
 				'px-2': true,
 				'small': true,
 				'text-white': true,

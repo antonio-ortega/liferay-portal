@@ -59,11 +59,11 @@ if (Validator.isNotNull(backURL)) {
 			String modifiedDateDescription = LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - createDate.getTime(), true);
 			%>
 
-			<h6 class="text-default">
+			<div class="h6 text-default">
 				<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(backgroundTaskUserName), modifiedDateDescription} %>" key="x-modified-x-ago" />
-			</h6>
+			</div>
 
-			<h5>
+			<div class="h5">
 				<span id="<portlet:namespace />backgroundTaskName<%= String.valueOf(backgroundTask.getBackgroundTaskId()) %>">
 					<%= HtmlUtil.escape(backgroundTaskName) %>
 				</span>
@@ -83,7 +83,7 @@ if (Validator.isNotNull(backURL)) {
 				}
 				%>
 
-			</h5>
+			</div>
 
 			<c:if test="<%= curBackgroundTask.isInProgress() %>">
 
@@ -130,16 +130,18 @@ if (Validator.isNotNull(backURL)) {
 				</c:if>
 			</c:if>
 
-			<h6 class="background-task-status-row background-task-status-<%= BackgroundTaskConstants.getStatusLabel(curBackgroundTask.getStatus()) %> <%= BackgroundTaskConstants.getStatusCssClass(curBackgroundTask.getStatus()) %>">
+			<div class="background-task-status-row background-task-status-<%= BackgroundTaskConstants.getStatusLabel(curBackgroundTask.getStatus()) %> h6 <%= BackgroundTaskConstants.getStatusCssClass(curBackgroundTask.getStatus()) %>">
 				<liferay-ui:message key="<%= curBackgroundTask.getStatusLabel() %>" />
-			</h6>
+			</div>
 
 			<c:if test="<%= Validator.isNotNull(curBackgroundTask.getStatusMessage()) %>">
-				<h6 class="background-task-status-row">
-					<a class="details-link" href="javascript:void(0);" onclick="<portlet:namespace />viewBackgroundTaskDetails(<%= curBackgroundTask.getBackgroundTaskId() %>);">
-						<liferay-ui:message key="see-more-details" />
-					</a>
-				</h6>
+				<div class="background-task-status-row h6">
+					<liferay:csp>
+						<a class="details-link" href="javascript:void(0);" onclick="<portlet:namespace />viewBackgroundTaskDetails(<%= curBackgroundTask.getBackgroundTaskId() %>);">
+							<liferay-ui:message key="see-more-details" />
+						</a>
+					</liferay:csp>
+				</div>
 
 				<div class="background-task-status-message hide" id="<portlet:namespace />backgroundTaskStatusMessage<%= curBackgroundTask.getBackgroundTaskId() %>">
 					<liferay-util:include page="/publish_process_message_task_details.jsp" servletContext="<%= application %>">
@@ -170,7 +172,7 @@ if ((backgroundTask != null) && backgroundTask.isInProgress()) {
 	</liferay-util:include>
 </div>
 
-<script>
+<aui:script>
 	function <portlet:namespace />viewBackgroundTaskDetails(backgroundTaskId) {
 		var title = '';
 
@@ -187,4 +189,4 @@ if ((backgroundTask != null) && backgroundTask.isInProgress()) {
 			title: title,
 		});
 	}
-</script>
+</aui:script>

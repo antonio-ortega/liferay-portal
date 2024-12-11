@@ -1,14 +1,15 @@
 definition {
 
-	macro addAccountGroup {
+	@summary = "Default summary"
+	macro addAccountGroup(accountGroupName = null) {
 		Variables.assertDefined(parameterList = ${accountGroupName});
 
 		if (!(isSet(creatorEmailAddress))) {
-			var creatorEmailAddress = "test@liferay.com";
+			var creatorEmailAddress = JSONUtil2.getAdminUserEmail();
 		}
 
 		if (!(isSet(creatorPassword))) {
-			var creatorPassword = "test";
+			var creatorPassword = JSONUtil2.getAdminUserPassword();
 		}
 
 		if (!(isSet(accountGroupDescription))) {

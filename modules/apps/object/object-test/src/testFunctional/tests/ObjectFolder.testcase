@@ -1,4 +1,4 @@
-@component-name = "portal-object"
+@component-name = "portal-bpm"
 definition {
 
 	property portal.release = "true";
@@ -23,37 +23,52 @@ definition {
 		}
 	}
 
-	@description = "LPS-185675 Verify that when deleting a object folder with object definitions inside, the object definitions will be moved to the uncategorized folder"
-	@priority = 4
-	test ObjectDefinitionsAreMovedAfterFolderDeletion {
-		property custom.properties = "feature.flag.LPS-148856=true";
+	@description = "LPS-185681 - Verify Object definitions can be moved to the current folder when the user is in the model buider view"
+	@priority = 5
+	test CanMoveObjectDefinitionToCurrentFolder {
+		task ("Given two object folders titled Folder A and Folder B") {
+			var folderERC = JSONObjectFolder.addFolder(
+				folderLabel = "Folder A",
+				folderName = "FolderA");
 
-		task ("Given an object folder with object definitions inside") {
 			JSONObjectFolder.addFolder(
-				folderLabel = "Custom Folder 194540",
-				folderName = "CustomFolder194540");
+				folderLabel = "Folder B",
+				folderName = "FolderB");
+		}
 
+		task ("and Given an object definition in Folder A") {
 			ObjectAdmin.addObjectViaAPI(
-				folderName = "CustomFolder194540",
-				labelName = "Custom Object 194540",
-				objectName = "CustomObject194540",
-				pluralLabelName = "Custom Objects 194540");
+				labelName = "Custom Object 185681",
+				objectName = "CustomObject185681",
+				pluralLabelName = "Custom Objects 185681");
+
+			JSONObject.updateObject(
+				configKey = "objectFolderExternalReferenceCode",
+				configValue = ${folderERC},
+				objectName = "CustomObject185681");
 		}
 
-		task ("When the user deletes the object folder") {
-			JSONObjectFolder.deleteObjectFolder(folderName = "CustomFolder194540");
-		}
-
-		task ("Then the object definitions are moved to the uncategorized folder") {
-			ObjectAdmin.openObjectAdmin();
+		task ("When the user navigates to Folder B and moves the object definition to the current folder") {
+			ObjectModelBuilder.openObjectFolderInModelBuilder(objectFolderName = "FolderA");
 
 			Click.javaScriptClick(
-				folderLabel = "Uncategorized",
-				locator1 = "ObjectAdmin#SIDEBAR_ITEM");
+				key_folderLabel = "Folder B",
+				locator1 = "ObjectAdmin#GO_TO_FOLDER");
 
-			AssertVisible(
-				key_itemName = "Custom Object 194540",
-				locator1 = "DataSet#TABLE_CELL");
+			Click.javaScriptClick(
+				key_objectLabel = "Custom Object 185681",
+				locator1 = "ObjectModelBuilder#OBJECT_IN_LEFT_SIDEBAR_KEBAB_MENU");
+
+			Click(
+				key_item = "Move to Current Folder",
+				locator1 = "ManagementBar#ACTIVE_DROPDOWN_ITEM");
+		}
+
+		task ("Then the object definition is moved from Folder A to the current folder, Folder B") {
+			AssertElementPresent(
+				key_folderLabel = "Folder B",
+				key_objectLabel = "Custom Object 185681",
+				locator1 = "ObjectModelBuilder#SELECT_OBJECT_IN_LEFT_SIDEBAR");
 		}
 	}
 

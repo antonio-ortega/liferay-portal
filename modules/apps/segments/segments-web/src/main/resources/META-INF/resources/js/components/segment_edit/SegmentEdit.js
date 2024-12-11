@@ -7,6 +7,7 @@ import ClayAlert from '@clayui/alert';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
+import ClayLocalizedInput from '@clayui/localized-input';
 import classNames from 'classnames';
 import {FieldArray, withFormik} from 'formik';
 import {
@@ -20,6 +21,7 @@ import {
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
+import {useMovementSource} from '../../contexts/KeyboardMovementContext';
 import {
 	applyConjunctionChangeToContributor,
 	applyCriteriaChangeToContributors,
@@ -29,7 +31,8 @@ import {initialContributorShape} from '../../utils/types.es';
 import {sub} from '../../utils/utils';
 import ContributorInputs from '../criteria_builder/ContributorInputs.es';
 import ContributorsBuilder from '../criteria_builder/ContributorsBuilder';
-import LocalizedInput from '../title_editor/LocalizedInput';
+import KeyboardMovementManager from '../keyboard_movement/KeyboardMovementManager';
+import KeyboardMovementPreview from '../keyboard_movement/KeyboardMovementPreview';
 
 function SegmentEdit({
 	availableLocales,
@@ -68,6 +71,15 @@ function SegmentEdit({
 		membersCountLoading: false,
 		validTitle: !!values.name[defaultLanguageId],
 	});
+
+	const [selectedLocale, setSelectedLocale] = useState({
+		label: standardizeLocaleKey(defaultLanguageId),
+		symbol: standardizeLocaleKey(defaultLanguageId).toLowerCase(),
+	});
+
+	const [translations, setTranslations] = useState(
+		formatLocales(values.name, standardizeLocaleKey)
+	);
 
 	const fetchMembersCount = () => {
 		const formElement = document.getElementById(formId);
@@ -112,12 +124,21 @@ function SegmentEdit({
 		});
 	};
 
-	const handleLocalizedInputChange = (event, newValues, invalid) => {
-		setFieldValue('name', newValues);
+	const handleLocalizedInputChange = (translations) => {
+		setFieldValue('name', formatLocales(translations, normalizeLocaleKey));
 
 		setData((prevState) => {
-			return {...prevState, hasChanged: true, validTitle: !invalid};
+			const validTitle =
+				!!translations[standardizeLocaleKey(defaultLanguageId)];
+
+			return {
+				...prevState,
+				hasChanged: true,
+				validTitle,
+			};
 		});
+
+		setTranslations(translations);
 	};
 
 	const handleQueryChange = (criteriaChange, index) => {
@@ -347,124 +368,162 @@ function SegmentEdit({
 		? Liferay.Language.get('enter-view-mode')
 		: Liferay.Language.get('enter-edit-mode');
 
+	const movementSource = useMovementSource();
+
 	return (
-		<div
-			className={classNames('segment-edit-page-root', {
-				'segment-edit-page-root--has-alert': data.hasEmptyValues,
-				'segment-edit-page-root--with-warning': showDisabledSegmentationAlert,
-			})}
-		>
-			<input
-				name={`${portletNamespace}active`}
-				type="hidden"
-				value={values.active}
-			/>
+		<>
+			{movementSource ? (
+				<>
+					<KeyboardMovementManager
+						contributors={data.contributors}
+						onMove={handleQueryChange}
+					/>
+					<KeyboardMovementPreview />
+				</>
+			) : null}
 
-			<div className="form-header">
-				<ClayLayout.ContainerFluid className="form-header-container">
-					<div className="form-header-section-left">
-						<FieldArray
-							name="values.name"
-							render={renderLocalizedInputs}
-						/>
+			<div
+				className={classNames('segment-edit-page-root', {
+					'segment-edit-page-root--has-alert': data.hasEmptyValues,
+					'segment-edit-page-root--with-warning':
+						showDisabledSegmentationAlert,
+				})}
+			>
+				<input
+					name={`${portletNamespace}active`}
+					type="hidden"
+					value={values.active}
+				/>
 
-						<LocalizedInput
-							availableLanguages={availableLocales}
-							defaultLang={defaultLanguageId}
-							initialLanguageId={defaultLanguageId}
-							initialOpen={false}
-							initialValues={values.name}
-							onChange={handleLocalizedInputChange}
-							placeholder={placeholder}
-							portletNamespace={portletNamespace}
-							readOnly={!data.editing}
-						/>
-					</div>
+				<div className="form-header">
+					<ClayLayout.ContainerFluid className="form-header-container">
+						<div className="form-header-section-left">
+							<FieldArray
+								name="values.name"
+								render={renderLocalizedInputs}
+							/>
 
-					{hasUpdatePermission && (
-						<div className="form-header-section-right">
-							<div className="btn-group">
-								<div className="btn-group-item">
-									<ClayButton
-										className="text-capitalize"
-										displayType="secondary"
-										onClick={handleCancelButton}
-										small
-									>
-										{Liferay.Language.get('cancel')}
-									</ClayButton>
-								</div>
+							<div className="clay-localized-input">
+								<ClayLocalizedInput
+									data-testid="localized-input-button"
+									label=""
+									locales={Object.keys(availableLocales)
+										.sort((languageId) =>
+											languageId === defaultLanguageId
+												? -1
+												: 1
+										)
+										.map((initLabel) => {
+											const label =
+												standardizeLocaleKey(initLabel);
 
-								<div className="btn-group-item">
-									<ClayButton
-										className="text-capitalize"
-										disabled={disabledSaveButton}
-										displayType="primary"
-										onClick={(event) =>
-											handleValidate(event)
-										}
-										small={true}
-										type="submit"
-									>
-										{Liferay.Language.get('save')}
-									</ClayButton>
-								</div>
-
-								<div className="btn-group-item">
-									<ClayButtonWithIcon
-										aria-label={editButtonTitle}
-										borderless={true}
-										displayType="secondary"
-										onClick={handleCriteriaEdit}
-										outline={true}
-										role="tab"
-										size="sm"
-										symbol="cog"
-										title={editButtonTitle}
-									/>
-								</div>
+											return {
+												label,
+												symbol: label.toLowerCase(),
+											};
+										})}
+									onSelectedLocaleChange={setSelectedLocale}
+									onTranslationsChange={
+										handleLocalizedInputChange
+									}
+									placeholder={placeholder}
+									readOnly={!data.editing}
+									selectedLocale={selectedLocale}
+									translations={translations}
+								/>
 							</div>
 						</div>
-					)}
-				</ClayLayout.ContainerFluid>
-			</div>
 
-			<div className="form-body">
-				{showDisabledSegmentationAlert && (
-					<ClayAlert
-						className="mx-0"
-						displayType="warning"
-						onClose={() =>
-							setData((prevState) => ({
-								...prevState,
-								isSegmentationDisabledAlertDismissed: true,
-							}))
-						}
-						variant="stripe"
-					>
-						<strong className="lead">
-							{Liferay.Language.get('segmentation-is-disabled')}
-						</strong>
+						{hasUpdatePermission && (
+							<div className="form-header-section-right">
+								<div className="btn-group">
+									<div className="btn-group-item">
+										<ClayButton
+											className="text-capitalize"
+											displayType="secondary"
+											onClick={handleCancelButton}
+											size="sm"
+										>
+											{Liferay.Language.get('cancel')}
+										</ClayButton>
+									</div>
 
-						{segmentsConfigurationURL ? (
-							<ClayLink href={segmentsConfigurationURL}>
-								{Liferay.Language.get(
-									'to-enable,-go-to-instance-settings'
-								)}
-							</ClayLink>
-						) : (
-							Liferay.Language.get(
-								'contact-your-system-administrator-to-enable-it'
-							)
+									<div className="btn-group-item">
+										<ClayButton
+											className="text-capitalize"
+											disabled={disabledSaveButton}
+											displayType="primary"
+											onClick={(event) =>
+												handleValidate(event)
+											}
+											size="sm"
+											type="submit"
+										>
+											{Liferay.Language.get('save')}
+										</ClayButton>
+									</div>
+
+									<div className="btn-group-item">
+										<ClayButtonWithIcon
+											aria-label={editButtonTitle}
+											borderless
+											displayType="secondary"
+											onClick={handleCriteriaEdit}
+											outline
+											role="tab"
+											size="sm"
+											symbol="cog"
+											title={editButtonTitle}
+										/>
+									</div>
+								</div>
+							</div>
 						)}
-					</ClayAlert>
-				)}
+					</ClayLayout.ContainerFluid>
+				</div>
 
-				<FieldArray name="contributors" render={renderContributors} />
+				<div className="form-body">
+					{showDisabledSegmentationAlert && (
+						<ClayAlert
+							className="mx-0"
+							displayType="warning"
+							onClose={() =>
+								setData((prevState) => ({
+									...prevState,
+									isSegmentationDisabledAlertDismissed: true,
+								}))
+							}
+							variant="stripe"
+						>
+							<strong className="lead">
+								{Liferay.Language.get(
+									'segmentation-is-disabled'
+								)}
+							</strong>
 
-				<ContributorInputs contributors={data.contributors} />
+							{segmentsConfigurationURL ? (
+								<ClayLink href={segmentsConfigurationURL}>
+									{Liferay.Language.get(
+										'to-enable,-go-to-instance-settings'
+									)}
+								</ClayLink>
+							) : (
+								Liferay.Language.get(
+									'contact-your-system-administrator-to-enable-it'
+								)
+							)}
+						</ClayAlert>
+					)}
+
+					<FieldArray
+						name="contributors"
+						render={renderContributors}
+					/>
+
+					<ContributorInputs contributors={data.contributors} />
+				</div>
 			</div>
-		</div>
+		</>
 	);
 }
 
@@ -529,6 +588,24 @@ function queryHasEmptyValues(contributors) {
 	);
 
 	return checkForEmptyValuesInItems(items);
+}
+
+function standardizeLocaleKey(key) {
+	return key.replace(/_/g, '-');
+}
+
+function normalizeLocaleKey(key) {
+	return key.replace(/-/g, '_');
+}
+
+function formatLocales(locales, fnFormat) {
+	return Object.keys(locales).reduce((acc, cur) => {
+		const label = fnFormat(cur);
+
+		acc[label] = locales[cur];
+
+		return acc;
+	}, {});
 }
 
 export default withFormik({

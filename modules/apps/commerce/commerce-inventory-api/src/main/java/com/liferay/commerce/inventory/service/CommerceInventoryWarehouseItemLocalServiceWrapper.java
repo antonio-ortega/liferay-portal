@@ -82,9 +82,11 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 	}
 
 	@Override
-	public int countItemsByCompanyId(long companyId, String sku) {
+	public int countItemsByCompanyId(
+		long companyId, String sku, boolean replacePermissionCheck) {
+
 		return _commerceInventoryWarehouseItemLocalService.
-			countItemsByCompanyId(companyId, sku);
+			countItemsByCompanyId(companyId, sku, replacePermissionCheck);
 	}
 
 	/**
@@ -463,11 +465,12 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 		<com.liferay.commerce.inventory.model.CommerceInventoryWarehouseItem>
 			getCommerceInventoryWarehouseItemsByCompanyIdSkuAndUnitOfMeasureKey(
 				long companyId, String sku, String unitOfMeasureKey, int start,
-				int end) {
+				int end, boolean replacePermissionCheck) {
 
 		return _commerceInventoryWarehouseItemLocalService.
 			getCommerceInventoryWarehouseItemsByCompanyIdSkuAndUnitOfMeasureKey(
-				companyId, sku, unitOfMeasureKey, start, end);
+				companyId, sku, unitOfMeasureKey, start, end,
+				replacePermissionCheck);
 	}
 
 	@Override
@@ -504,20 +507,22 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 
 	@Override
 	public int getCommerceInventoryWarehouseItemsCount(
-		long companyId, long groupId, String sku, String unitOfMeasureKey) {
+		long companyId, long accountEntryId, long groupId, String sku,
+		String unitOfMeasureKey) {
 
 		return _commerceInventoryWarehouseItemLocalService.
 			getCommerceInventoryWarehouseItemsCount(
-				companyId, groupId, sku, unitOfMeasureKey);
+				companyId, accountEntryId, groupId, sku, unitOfMeasureKey);
 	}
 
 	@Override
 	public int getCommerceInventoryWarehouseItemsCount(
-		long companyId, String sku, String unitOfMeasureKey) {
+		long companyId, String sku, String unitOfMeasureKey,
+		boolean replacePermissionCheck) {
 
 		return _commerceInventoryWarehouseItemLocalService.
 			getCommerceInventoryWarehouseItemsCount(
-				companyId, sku, unitOfMeasureKey);
+				companyId, sku, unitOfMeasureKey, replacePermissionCheck);
 	}
 
 	@Override
@@ -557,10 +562,12 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.commerce.inventory.model.CIWarehouseItem>
-		getItemsByCompanyId(long companyId, String sku, int start, int end) {
+		getItemsByCompanyId(
+			long companyId, String sku, int start, int end,
+			boolean replacePermissionCheck) {
 
 		return _commerceInventoryWarehouseItemLocalService.getItemsByCompanyId(
-			companyId, sku, start, end);
+			companyId, sku, start, end, replacePermissionCheck);
 	}
 
 	/**
@@ -588,10 +595,11 @@ public class CommerceInventoryWarehouseItemLocalServiceWrapper
 
 	@Override
 	public java.math.BigDecimal getStockQuantity(
-		long companyId, long groupId, String sku, String unitOfMeasureKey) {
+		long companyId, long accountEntryId, long groupId, String sku,
+		String unitOfMeasureKey) {
 
 		return _commerceInventoryWarehouseItemLocalService.getStockQuantity(
-			companyId, groupId, sku, unitOfMeasureKey);
+			companyId, accountEntryId, groupId, sku, unitOfMeasureKey);
 	}
 
 	@Override

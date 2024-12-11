@@ -9,7 +9,10 @@ import React, {useCallback, useEffect, useState} from 'react';
 
 import ServiceProvider from '../../ServiceProvider/index';
 import {
+	CART_RESET,
+	CART_UPDATED,
 	CURRENT_ACCOUNT_UPDATED,
+	CURRENT_ORDER_DELETED,
 	CURRENT_ORDER_UPDATED,
 } from '../../utilities/eventsDefinitions';
 import {showErrorNotification} from '../../utilities/notifications';
@@ -34,6 +37,8 @@ import {
 import {regenerateOrderDetailURL, summaryDataMapper} from './util/index';
 import {DEFAULT_LABELS} from './util/labels';
 import {resolveCartViews} from './util/views';
+
+import './mini_cart.scss';
 
 const CartResource = ServiceProvider.DeliveryCartAPI('v1');
 
@@ -68,26 +73,45 @@ function MiniCart({
 	const closeCart = () => {
 		setIsOpen(false);
 
+		if (toggleable) {
+			document.body.classList.remove('overflow-hidden');
+		}
+
 		if (editedItem) {
 			setEditedItem(null);
 		}
 	};
-	const openCart = () => setIsOpen(true);
+	const openCart = () => {
+		if (toggleable) {
+			document.body.classList.add('overflow-hidden');
+		}
+
+		setIsOpen(true);
+	};
 
 	const [replacementSKUList, setReplacementSKUList] = useState([]);
 
 	const resetCartState = useCallback(
-		({accountId = 0}) =>
-			setCartState({
-				accountId,
-				id: 0,
-				summary: {itemsQuantity: 0},
-			}),
-		[setCartState]
+		({accountId = 0, id = 0}) => {
+			const isAccountChanged = cartState.accountId !== accountId;
+			const isCartEmptied = cartState.id === id;
+			const isOrderDeleted =
+				id === 0 && cartState.accountId === accountId;
+
+			if (isAccountChanged || isCartEmptied || isOrderDeleted) {
+				setCartState({
+					accountId,
+					channel: {channel},
+					id,
+					summary: {itemsQuantity: 0},
+				});
+			}
+		},
+		[cartState.accountId, cartState.id, channel, setCartState]
 	);
 
 	const updateCartModel = useCallback(
-		async ({order}) => {
+		async ({order, updatedFromCart = true}) => {
 			try {
 				const updatedCart = order.orderUUID
 					? order
@@ -105,7 +129,7 @@ function MiniCart({
 							? regenerateOrderDetailURL(
 									updatedCart.orderUUID,
 									currentURLs.siteDefaultURL
-							  )
+								)
 							: new URL(orderDetailURL),
 					};
 
@@ -118,6 +142,10 @@ function MiniCart({
 					return latestCartState;
 				});
 
+				Liferay.fire(CART_UPDATED, {
+					order: updatedCart,
+					updatedFromCart,
+				});
 				onAddToCart(latestActionURLs, latestCartState);
 			}
 			catch (error) {
@@ -134,7 +162,7 @@ function MiniCart({
 						cartState.cartItems.filter(
 							({replacedSku: replacedSKU}) => Boolean(replacedSKU)
 						)
-				  )
+					)
 				: null,
 		[cartState.cartItems]
 	);
@@ -162,10 +190,14 @@ function MiniCart({
 	}, [orderId, updateCartModel]);
 
 	useEffect(() => {
+		Liferay.on(CART_RESET, resetCartState);
 		Liferay.on(CURRENT_ACCOUNT_UPDATED, resetCartState);
+		Liferay.on(CURRENT_ORDER_DELETED, resetCartState);
 
 		return () => {
+			Liferay.detach(CART_RESET, resetCartState);
 			Liferay.detach(CURRENT_ACCOUNT_UPDATED, resetCartState);
+			Liferay.detach(CURRENT_ORDER_DELETED, resetCartState);
 		};
 	}, [resetCartState]);
 
@@ -206,7 +238,7 @@ function MiniCart({
 						<>
 							<div
 								className="mini-cart-overlay"
-								onClick={() => setIsOpen(false)}
+								onClick={() => closeCart()}
 							/>
 
 							<CartViews.Opener />

@@ -11,8 +11,13 @@ import com.liferay.object.admin.rest.dto.v1_0.ObjectField;
 import com.liferay.object.admin.rest.dto.v1_0.ObjectFieldSetting;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectFieldSettingUtil;
 import com.liferay.object.admin.rest.dto.v1_0.util.ObjectStateFlowUtil;
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
+import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectRelationship;
+import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
+import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectStateFlowLocalService;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -48,43 +53,41 @@ public class ObjectFieldDTOConverter
 			return null;
 		}
 
+		ObjectRelationship objectRelationship = null;
+
+		if (objectField.compareBusinessType(
+				ObjectFieldConstants.BUSINESS_TYPE_RELATIONSHIP)) {
+
+			objectRelationship =
+				_objectRelationshipLocalService.
+					fetchObjectRelationshipByObjectFieldId2(
+						objectField.getObjectFieldId());
+		}
+
+		ObjectRelationship finalObjectRelationship = objectRelationship;
+
 		return new ObjectField() {
 			{
-				actions = dtoConverterContext.getActions();
-				businessType = ObjectField.BusinessType.create(
-					objectField.getBusinessType());
-				DBType = ObjectField.DBType.create(objectField.getDBType());
-				defaultValue =
-					com.liferay.object.field.setting.util.
-						ObjectFieldSettingUtil.getDefaultValueAsString(
-							null, objectField.getObjectFieldId(),
-							_objectFieldSettingLocalService, null);
-				externalReferenceCode = objectField.getExternalReferenceCode();
-				id = objectField.getObjectFieldId();
-				indexed = objectField.getIndexed();
-				indexedAsKeyword = objectField.getIndexedAsKeyword();
-				indexedLanguageId = objectField.getIndexedLanguageId();
-				label = LocalizedMapUtil.getLanguageIdMap(
-					objectField.getLabelMap());
-				listTypeDefinitionId = objectField.getListTypeDefinitionId();
-				localized = objectField.getLocalized();
-				name = objectField.getName();
-				objectFieldSettings = TransformUtil.transformToArray(
-					objectField.getObjectFieldSettings(),
-					objectFieldSetting -> _toObjectFieldSetting(
-						objectFieldSetting),
-					ObjectFieldSetting.class);
-				readOnly = ObjectField.ReadOnly.create(
-					objectField.getReadOnly());
-				readOnlyConditionExpression =
-					objectField.getReadOnlyConditionExpression();
-				relationshipType = ObjectField.RelationshipType.create(
-					objectField.getRelationshipType());
-				required = objectField.isRequired();
-				state = objectField.isState();
-				system = objectField.getSystem();
-				type = ObjectField.Type.create(objectField.getDBType());
-
+				setActions(dtoConverterContext::getActions);
+				setBusinessType(
+					() -> ObjectField.BusinessType.create(
+						objectField.getBusinessType()));
+				setDBType(
+					() -> ObjectField.DBType.create(objectField.getDBType()));
+				setDefaultValue(
+					() ->
+						com.liferay.object.field.setting.util.
+							ObjectFieldSettingUtil.getDefaultValueAsString(
+								null, objectField,
+								_objectFieldSettingLocalService, null));
+				setExternalReferenceCode(objectField::getExternalReferenceCode);
+				setId(objectField::getObjectFieldId);
+				setIndexed(objectField::isIndexed);
+				setIndexedAsKeyword(objectField::isIndexedAsKeyword);
+				setIndexedLanguageId(objectField::getIndexedLanguageId);
+				setLabel(
+					() -> LocalizedMapUtil.getLanguageIdMap(
+						objectField.getLabelMap()));
 				setListTypeDefinitionExternalReferenceCode(
 					() -> {
 						if (objectField.getListTypeDefinitionId() == 0) {
@@ -98,6 +101,54 @@ public class ObjectFieldDTOConverter
 
 						return listTypeDefinition.getExternalReferenceCode();
 					});
+				setListTypeDefinitionId(objectField::getListTypeDefinitionId);
+				setLocalized(objectField::isLocalized);
+				setName(objectField::getName);
+				setObjectDefinitionExternalReferenceCode1(
+					() -> {
+						if (finalObjectRelationship == null) {
+							return null;
+						}
+
+						ObjectDefinition objectDefinition =
+							_objectDefinitionLocalService.fetchObjectDefinition(
+								finalObjectRelationship.
+									getObjectDefinitionId1());
+
+						return objectDefinition.getExternalReferenceCode();
+					});
+				setObjectFieldSettings(
+					() -> TransformUtil.transformToArray(
+						objectField.getObjectFieldSettings(),
+						objectFieldSetting -> _toObjectFieldSetting(
+							objectFieldSetting),
+						ObjectFieldSetting.class));
+				setObjectRelationshipExternalReferenceCode(
+					() -> {
+						if (finalObjectRelationship == null) {
+							return null;
+						}
+
+						return finalObjectRelationship.
+							getExternalReferenceCode();
+					});
+				setReadOnly(
+					() -> ObjectField.ReadOnly.create(
+						objectField.getReadOnly()));
+				setReadOnlyConditionExpression(
+					objectField::getReadOnlyConditionExpression);
+				setRelationshipType(
+					() -> ObjectField.RelationshipType.create(
+						objectField.getRelationshipType()));
+				setRequired(objectField::isRequired);
+				setState(objectField::isState);
+				setSystem(objectField::isSystem);
+				setType(() -> ObjectField.Type.create(objectField.getDBType()));
+				setUnique(
+					() ->
+						com.liferay.object.field.setting.util.
+							ObjectFieldSettingUtil.isUnique(
+								objectField.getObjectFieldSettings()));
 			}
 		};
 	}
@@ -112,8 +163,7 @@ public class ObjectFieldDTOConverter
 
 		return new ObjectFieldSetting() {
 			{
-				name = serviceBuilderObjectFieldSetting.getName();
-
+				setName(serviceBuilderObjectFieldSetting::getName);
 				setValue(
 					() -> {
 						if (serviceBuilderObjectFieldSetting.compareName(
@@ -138,7 +188,13 @@ public class ObjectFieldDTOConverter
 	private ListTypeDefinitionLocalService _listTypeDefinitionLocalService;
 
 	@Reference
+	private ObjectDefinitionLocalService _objectDefinitionLocalService;
+
+	@Reference
 	private ObjectFieldSettingLocalService _objectFieldSettingLocalService;
+
+	@Reference
+	private ObjectRelationshipLocalService _objectRelationshipLocalService;
 
 	@Reference
 	private ObjectStateFlowLocalService _objectStateFlowLocalService;

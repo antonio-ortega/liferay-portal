@@ -12,6 +12,8 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.search.collapse.Collapse;
+import com.liferay.portal.search.collapse.InnerCollapse;
 import com.liferay.portal.search.elasticsearch7.internal.groupby.GroupByTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.highlight.HighlightTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.highlight.HighlighterTranslator;
@@ -32,8 +34,10 @@ import java.util.Map;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.core.TimeValue;
+import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 
 import org.osgi.service.component.annotations.Component;
@@ -54,6 +58,8 @@ public class SearchSearchRequestAssemblerImpl
 		_commonSearchSourceBuilderAssembler.assemble(
 			searchSourceBuilder, searchSearchRequest, searchRequest);
 
+		_setCollapse(searchSourceBuilder, searchSearchRequest);
+		_setFetchFields(searchSourceBuilder, searchSearchRequest);
 		_setFetchSource(searchSourceBuilder, searchSearchRequest);
 		_setGroupBy(searchSourceBuilder, searchSearchRequest);
 		_setGroupByRequests(searchSourceBuilder, searchSearchRequest);
@@ -82,6 +88,69 @@ public class SearchSearchRequestAssemblerImpl
 		return statsRequestBuilder.build();
 	}
 
+	private void _setCollapse(
+		SearchSourceBuilder searchSourceBuilder,
+		SearchSearchRequest searchSearchRequest) {
+
+		Collapse collapse = searchSearchRequest.getCollapse();
+
+		if ((collapse == null) || (collapse.getField() == null)) {
+			return;
+		}
+
+		CollapseBuilder collapseBuilder = new CollapseBuilder(
+			collapse.getField());
+
+		ListUtil.isNotEmptyForEach(
+			collapse.getInnerHits(),
+			innerHit -> {
+				InnerHitBuilder innerHitBuilder = new InnerHitBuilder(
+					innerHit.getName());
+
+				InnerCollapse innerCollapse = innerHit.getInnerCollapse();
+
+				if (innerCollapse != null) {
+					innerHitBuilder.setInnerCollapse(
+						new CollapseBuilder(innerCollapse.getField()));
+				}
+
+				innerHitBuilder.setSize(innerHit.getSize());
+
+				if (ListUtil.isNotEmpty(innerHit.getSorts())) {
+					for (Sort sort : innerHit.getSorts()) {
+						innerHitBuilder.addSort(
+							_sortFieldTranslator.translate(sort));
+					}
+				}
+
+				collapseBuilder.setInnerHits(innerHitBuilder);
+			});
+
+		if (collapse.getMaxConcurrentGroupRequests() != null) {
+			collapseBuilder.setMaxConcurrentGroupRequests(
+				collapse.getMaxConcurrentGroupRequests());
+		}
+
+		searchSourceBuilder.collapse(collapseBuilder);
+	}
+
+	private void _setFetchFields(
+		SearchSourceBuilder searchSourceBuilder,
+		SearchSearchRequest searchSearchRequest) {
+
+		String[] selectedFieldNames =
+			searchSearchRequest.getSelectedFieldNames();
+
+		if (ArrayUtil.isNotEmpty(selectedFieldNames)) {
+			for (String selectedFieldName : selectedFieldNames) {
+				searchSourceBuilder.fetchField(selectedFieldName);
+			}
+		}
+		else {
+			searchSourceBuilder.fetchField(StringPool.STAR);
+		}
+	}
+
 	private void _setFetchSource(
 		SearchSourceBuilder searchSourceBuilder,
 		SearchSearchRequest searchSearchRequest) {
@@ -101,6 +170,9 @@ public class SearchSearchRequestAssemblerImpl
 			searchSourceBuilder.fetchSource(
 				searchSearchRequest.getFetchSourceIncludes(),
 				searchSearchRequest.getFetchSourceExcludes());
+		}
+		else {
+			searchSourceBuilder.fetchSource(false);
 		}
 	}
 
@@ -237,16 +309,13 @@ public class SearchSearchRequestAssemblerImpl
 		SearchSourceBuilder searchSourceBuilder,
 		SearchSearchRequest searchSearchRequest) {
 
-		String[] selectedFieldNames =
-			searchSearchRequest.getSelectedFieldNames();
+		String[] storedFields = searchSearchRequest.getStoredFields();
 
-		if (!ArrayUtil.isEmpty(selectedFieldNames)) {
-			searchSourceBuilder.storedFields(
-				ListUtil.fromArray(selectedFieldNames));
+		if (ArrayUtil.isEmpty(storedFields)) {
+			return;
 		}
-		else {
-			searchSourceBuilder.storedField(StringPool.STAR);
-		}
+
+		searchSourceBuilder.storedFields(ListUtil.fromArray(storedFields));
 	}
 
 	private void _setTrackScores(

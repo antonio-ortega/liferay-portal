@@ -77,6 +77,7 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.search.experiences.blueprint.search.request.enhancer.SXPBlueprintSearchRequestEnhancer;
+import com.liferay.search.experiences.internal.blueprint.test.util.SXPBlueprintSearchResultTestUtil;
 import com.liferay.search.experiences.model.SXPBlueprint;
 import com.liferay.search.experiences.model.SXPElement;
 import com.liferay.search.experiences.rest.dto.v1_0.util.ConfigurationUtil;
@@ -174,15 +175,11 @@ public class SXPBlueprintSearchResultTest {
 					"com.liferay.journal.model.JournalFolder")));
 
 		_journalArticleBuilder.setTitle(
-			"Article coca cola"
+			"Article Coca Cola"
 		).setContent(
-			"cola"
-		).build();
-
-		_journalArticleBuilder.setTitle(
-			"Article pepsi cola"
+			"Cola"
 		).setJournalFolder(
-			"Folder cola"
+			"Cola"
 		).build();
 
 		_updateElementInstancesJSON(
@@ -191,30 +188,31 @@ public class SXPBlueprintSearchResultTest {
 					"boost", 10000
 				).put(
 					"entry_class_name",
-					"com.liferay.journal.model.JournalArticle"
+					"com.liferay.journal.model.JournalFolder"
 				).build()
 			},
 			new String[] {"Boost Asset Type"});
 
-		_keywords = "cola";
+		_keywords = "Coca Cola";
 
-		_assertSearch("[Article coca cola, Article pepsi cola, Folder cola]");
+		_assertSearch("[Cola, Article Coca Cola]");
 
 		_updateElementInstancesJSON(null, null);
 
-		_assertSearch("[Folder cola, Article coca cola, Article pepsi cola]");
+		_assertSearch("[Article Coca Cola, Cola]");
 	}
 
 	@Test
 	public void testBoostContentsForTheCurrentLanguage() throws Exception {
+		LocaleThreadLocal.setDefaultLocale(LocaleUtil.GERMANY);
 		_journalArticleBuilder.setTitle(
-			"cola cola en_US"
+			"cola cola de_DE"
 		).setContent(
 			"cola"
 		).build();
 
 		_journalArticleBuilder.setTitle(
-			"fanta cola en_US"
+			"fanta cola de_DE"
 		).build();
 
 		LocaleThreadLocal.setDefaultLocale(LocaleUtil.SPAIN);
@@ -240,14 +238,16 @@ public class SXPBlueprintSearchResultTest {
 		_keywords = "cola";
 
 		_assertSearch(
-			"[coca cola es_ES, pepsi cola es_ES, cola cola en_US, fanta cola " +
-				"en_US]");
+			"[coca cola es_ES, pepsi cola es_ES, cola cola de_DE, fanta cola " +
+				"de_DE]");
 
-		LocaleThreadLocal.setDefaultLocale(LocaleUtil.US);
+		LocaleThreadLocal.setDefaultLocale(LocaleUtil.GERMANY);
 
 		_assertSearch(
-			"[cola cola en_US, fanta cola en_US, coca cola es_ES, pepsi cola " +
+			"[cola cola de_DE, fanta cola de_DE, coca cola es_ES, pepsi cola " +
 				"es_ES]");
+
+		LocaleThreadLocal.setDefaultLocale(LocaleUtil.US);
 	}
 
 	@Test
@@ -265,12 +265,13 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_ids",
-					new String[] {
-						String.valueOf(_assetCategory.getCategoryId())
-					}
-				).put(
 					"boost", 100
+				).put(
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).build()
 			},
 			new String[] {"Boost Contents in a Category"});
@@ -299,10 +300,13 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
-				).put(
 					"boost", 100
+				).put(
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).put(
 					"keywords", "Article"
 				).build()
@@ -335,15 +339,18 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
-				).put(
 					"boost", 1000
 				).put(
 					"end_date",
 					DateUtil.getDate(
 						new Date(System.currentTimeMillis() + Time.DAY),
 						"yyyyMMdd", LocaleUtil.US)
+				).put(
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).put(
 					"start_date",
 					DateUtil.getDate(
@@ -360,15 +367,18 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
-				).put(
 					"boost", 1000
 				).put(
 					"end_date",
 					DateUtil.getDate(
 						new Date(System.currentTimeMillis() - Time.DAY),
 						"yyyyMMdd", LocaleUtil.US)
+				).put(
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).put(
 					"start_date",
 					DateUtil.getDate(
@@ -404,10 +414,13 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
-				).put(
 					"boost", 1000
+				).put(
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).put(
 					"user_segment_ids", segmentsEntry.getSegmentsEntryId()
 				).build()
@@ -444,10 +457,13 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
-				).put(
 					"boost", 100
+				).put(
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).build()
 			},
 			new String[] {"Boost Contents in a Category for Guest Users"});
@@ -484,10 +500,13 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
-				).put(
 					"boost", 1000
+				).put(
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).put(
 					"time_range", "30d"
 				).build()
@@ -541,10 +560,13 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
-				).put(
 					"boost", 100
+				).put(
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).put(
 					"time_of_day", timeOfDays[0]
 				).build()
@@ -558,10 +580,13 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
-				).put(
 					"boost", 100
+				).put(
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).put(
 					"time_of_day", timeOfDays[1]
 				).build()
@@ -847,7 +872,8 @@ public class SXPBlueprintSearchResultTest {
 	@Test
 	public void testBoostTaggedContents() throws Exception {
 		_assetTag = AssetTagLocalServiceUtil.addTag(
-			_user.getUserId(), _group.getGroupId(), "Boost", _serviceContext);
+			null, _user.getUserId(), _group.getGroupId(), "Boost",
+			_serviceContext);
 
 		_journalArticleBuilder.setTitle(
 			"Article"
@@ -881,7 +907,8 @@ public class SXPBlueprintSearchResultTest {
 	@Test
 	public void testBoostTagsMatch() throws Exception {
 		_assetTag = AssetTagLocalServiceUtil.addTag(
-			_user.getUserId(), _group.getGroupId(), "cola", _serviceContext);
+			null, _user.getUserId(), _group.getGroupId(), "cola",
+			_serviceContext);
 
 		_journalArticleBuilder.setTitle(
 			"coca cola"
@@ -1129,8 +1156,11 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).build()
 			},
 			new String[] {"Hide Contents in a Category"});
@@ -1161,8 +1191,11 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"asset_category_id",
-					String.valueOf(_assetCategory.getCategoryId())
+					"group_asset_category_external_reference_codes",
+					new String[] {
+						_group.getExternalReferenceCode() + "&&" +
+							_assetCategory.getExternalReferenceCode()
+					}
 				).build()
 			},
 			new String[] {"Hide Contents in a Category for Guest Users"});
@@ -1562,8 +1595,11 @@ public class SXPBlueprintSearchResultTest {
 		_updateElementInstancesJSON(
 			new Object[] {
 				HashMapBuilder.<String, Object>put(
-					"scope_group_ids",
-					new Long[] {groupA.getGroupId(), groupB.getGroupId()}
+					"scope_group_external_reference_codes",
+					new String[] {
+						groupA.getExternalReferenceCode(),
+						groupB.getExternalReferenceCode()
+					}
 				).build()
 			},
 			new String[] {"Limit Search to These Sites"});
@@ -2173,7 +2209,7 @@ public class SXPBlueprintSearchResultTest {
 			FileUtil.getBytes(
 				SXPBlueprintSearchResultTest.class,
 				StringUtils.replace(clazzName, ".", "/") + fileName),
-			null, null, _serviceContext);
+			null, null, null, _serviceContext);
 	}
 
 	private Group _addGroup() throws Exception {
@@ -2200,8 +2236,7 @@ public class SXPBlueprintSearchResultTest {
 			Criteria.Conjunction.AND);
 
 		return SegmentsTestUtil.addSegmentsEntry(
-			_group.getGroupId(), CriteriaSerializer.serialize(criteria),
-			User.class.getName());
+			_group.getGroupId(), CriteriaSerializer.serialize(criteria));
 	}
 
 	private void _assertSearch(
@@ -2296,8 +2331,9 @@ public class SXPBlueprintSearchResultTest {
 			Map<String, Field> fields = document.getFields();
 
 			message = StringBundler.concat(
-				message, "\" Score: ", searchHit.getScore(), "Title: \"",
-				fields.get("title_en_US"), StringPool.NEW_LINE);
+				message, "Score: ", searchHit.getScore(), " Title: \"",
+				fields.get("title_en_US"), StringPool.QUOTE,
+				StringPool.NEW_LINE);
 		}
 
 		return message;

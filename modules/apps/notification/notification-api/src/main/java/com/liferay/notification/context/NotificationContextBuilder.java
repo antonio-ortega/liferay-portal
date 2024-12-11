@@ -38,6 +38,12 @@ public class NotificationContextBuilder {
 		return this;
 	}
 
+	public NotificationContextBuilder groupId(long groupId) {
+		_notificationContext.setGroupId(groupId);
+
+		return this;
+	}
+
 	public NotificationContextBuilder notificationTemplate(
 		NotificationTemplate notificationTemplate) {
 
@@ -52,10 +58,27 @@ public class NotificationContextBuilder {
 		return this;
 	}
 
+	public NotificationContextBuilder preferredLanguageId(
+		String preferredLanguageId) {
+
+		_notificationContext.setPreferredLanguageId(preferredLanguageId);
+
+		return this;
+	}
+
 	public NotificationContextBuilder termValues(
 		Map<String, Object> termValues) {
 
 		_notificationContext.setTermValues(termValues);
+
+		return this;
+	}
+
+	public NotificationContextBuilder usePreferredLanguageForGuests(
+		boolean usePreferredLanguageForGuests) {
+
+		_notificationContext.setUsePreferredLanguageForGuests(
+			usePreferredLanguageForGuests);
 
 		return this;
 	}

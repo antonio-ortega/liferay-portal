@@ -1,8 +1,0 @@
-[
-	{
-		"pid": "com.liferay.commerce.configuration.CommerceOrderFieldsConfiguration",
-		"properties": {
-			"accountCartMaxAllowed": 1
-		}
-	}
-]

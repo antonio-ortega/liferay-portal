@@ -52,8 +52,9 @@ public class ProductGroupProductResourceImpl
 		throws Exception {
 
 		CommercePricingClass commercePricingClass =
-			_commercePricingClassService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePricingClassService.
+				fetchCommercePricingClassByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePricingClass == null) {
 			throw new NoSuchPricingClassException(
@@ -69,14 +70,14 @@ public class ProductGroupProductResourceImpl
 						pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commercePricingClassCPDefinitionRelService.
 				getCommercePricingClassCPDefinitionRelsCount(
 					commercePricingClass.getCommercePricingClassId());
 
 		return Page.of(
 			_toProductGroupProducts(commercePricingClassCPDefinitionRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -91,13 +92,13 @@ public class ProductGroupProductResourceImpl
 						id, pagination.getStartPosition(),
 						pagination.getEndPosition(), null);
 
-		int totalItems =
+		int totalCount =
 			_commercePricingClassCPDefinitionRelService.
 				getCommercePricingClassCPDefinitionRelsCount(id);
 
 		return Page.of(
 			_toProductGroupProducts(commercePricingClassCPDefinitionRels),
-			pagination, totalItems);
+			pagination, totalCount);
 	}
 
 	@Override
@@ -108,8 +109,9 @@ public class ProductGroupProductResourceImpl
 		throws Exception {
 
 		CommercePricingClass commercePricingClass =
-			_commercePricingClassService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commercePricingClassService.
+				fetchCommercePricingClassByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commercePricingClass == null) {
 			throw new NoSuchPricingClassException(

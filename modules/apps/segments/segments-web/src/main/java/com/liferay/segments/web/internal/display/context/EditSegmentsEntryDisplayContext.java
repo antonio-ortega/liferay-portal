@@ -44,7 +44,6 @@ import com.liferay.segments.service.SegmentsEntryService;
 import com.liferay.segments.web.internal.security.permission.resource.SegmentsEntryPermission;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -110,16 +109,29 @@ public class EditSegmentsEntryDisplayContext {
 		return LanguageUtil.get(_httpServletRequest, "segments");
 	}
 
-	public Map<String, Object> getData() throws Exception {
+	public Map<String, Object> getData() {
 		if (_data != null) {
 			return _data;
 		}
 
-		_data = HashMapBuilder.<String, Object>put(
-			"context", _getContext()
-		).put(
-			"props", _getProps()
-		).build();
+		HashMapBuilder.HashMapWrapper<String, Object> hashMapWrapper =
+			HashMapBuilder.<String, Object>put("context", _getContext());
+
+		try {
+			hashMapWrapper.put("props", _getProps());
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			hashMapWrapper.put(
+				"error",
+				LanguageUtil.get(
+					_httpServletRequest, "the-segment-is-no-longer-available"));
+		}
+
+		_data = hashMapWrapper.build();
 
 		return _data;
 	}
@@ -190,24 +202,13 @@ public class EditSegmentsEntryDisplayContext {
 		}
 		else {
 			String type = ResourceActionsUtil.getModelResource(
-				locale, getType());
+				locale, User.class.getName());
 
 			_title = LanguageUtil.format(
 				_httpServletRequest, "new-x-segment", type, false);
 		}
 
 		return _title;
-	}
-
-	public String getType() throws PortalException {
-		SegmentsEntry segmentsEntry = _getSegmentsEntry();
-
-		if (segmentsEntry != null) {
-			return segmentsEntry.getType();
-		}
-
-		return ParamUtil.getString(
-			_httpServletRequest, "type", User.class.getName());
 	}
 
 	private Map<String, String> _getAvailableLocales() throws Exception {
@@ -237,13 +238,11 @@ public class EditSegmentsEntryDisplayContext {
 	}
 
 	private JSONArray _getContributorsJSONArray() throws Exception {
-		List<SegmentsCriteriaContributor> segmentsCriteriaContributors =
-			_getSegmentsCriteriaContributors();
-
 		JSONArray contributorsJSONArray = JSONFactoryUtil.createJSONArray();
 
 		for (SegmentsCriteriaContributor segmentsCriteriaContributor :
-				segmentsCriteriaContributors) {
+				_segmentsCriteriaContributorRegistry.
+					getSegmentsCriteriaContributors()) {
 
 			JSONObject jsonObject =
 				segmentsCriteriaContributor.getCriteriaJSONObject(
@@ -342,13 +341,11 @@ public class EditSegmentsEntryDisplayContext {
 	}
 
 	private JSONArray _getPropertyGroupsJSONArray() throws Exception {
-		List<SegmentsCriteriaContributor> segmentsCriteriaContributors =
-			_getSegmentsCriteriaContributors();
-
 		JSONArray jsonContributorsJSONArray = JSONFactoryUtil.createJSONArray();
 
 		for (SegmentsCriteriaContributor segmentsCriteriaContributor :
-				segmentsCriteriaContributors) {
+				_segmentsCriteriaContributorRegistry.
+					getSegmentsCriteriaContributors()) {
 
 			jsonContributorsJSONArray.put(
 				JSONUtil.put(
@@ -422,13 +419,6 @@ public class EditSegmentsEntryDisplayContext {
 		}
 
 		return StringPool.BLANK;
-	}
-
-	private List<SegmentsCriteriaContributor> _getSegmentsCriteriaContributors()
-		throws Exception {
-
-		return _segmentsCriteriaContributorRegistry.
-			getSegmentsCriteriaContributors(getType());
 	}
 
 	private SegmentsEntry _getSegmentsEntry() throws PortalException {

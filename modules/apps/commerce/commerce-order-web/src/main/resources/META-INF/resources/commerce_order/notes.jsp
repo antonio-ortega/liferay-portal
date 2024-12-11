@@ -63,7 +63,10 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 									</aui:a>
 
 									<c:if test="<%= commerceOrderNote.isRestricted() %>">
-										<aui:icon image="lock" markupView="lexicon" message="private" />
+										<clay:icon
+											cssClass="d-block"
+											symbol="lock"
+										/>
 									</c:if>
 								</header>
 
@@ -101,6 +104,7 @@ Format dateTimeFormat = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 									<portlet:renderURL var="editURL">
 										<portlet:param name="mvcRenderCommandName" value="/commerce_order/edit_commerce_order_note" />
 										<portlet:param name="redirect" value="<%= currentURL %>" />
+										<portlet:param name="commerceOrderId" value="<%= String.valueOf(commerceOrderNote.getCommerceOrderId()) %>" />
 										<portlet:param name="commerceOrderNoteId" value="<%= String.valueOf(commerceOrderNote.getCommerceOrderNoteId()) %>" />
 									</portlet:renderURL>
 

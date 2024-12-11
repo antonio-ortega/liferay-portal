@@ -5,40 +5,43 @@
 
 import {UPDATE_FORM_ITEM_CONFIG} from './types';
 
-import type {
-	DeletedLayoutDataItem,
-	LayoutData,
-} from '../../types/layout_data/LayoutData';
+import type {LayoutData} from '../../types/layout_data/LayoutData';
 import type {FragmentEntryLinkMap} from './addFragmentEntryLinks';
 
 export default function updateFormItemConfig({
 	addedFragmentEntryLinks = null,
-	deletedItems = [],
+	addedItemIds = [],
 	isMapping,
-	itemId,
+	itemIds,
 	layoutData,
-	overridePreviousConfig = false,
+	movedItemIds = [],
 	removedFragmentEntryLinkIds = [],
+	removedItemIds = [],
 	restoredFragmentEntryLinkIds = [],
+	triggerItemId,
 }: {
 	addedFragmentEntryLinks?: FragmentEntryLinkMap | null;
-	deletedItems?: DeletedLayoutDataItem[];
+	addedItemIds: string[];
 	isMapping: boolean;
-	itemId: string;
+	itemIds: string[];
 	layoutData: LayoutData;
-	overridePreviousConfig?: boolean;
+	movedItemIds: {itemId: string; parentId: string}[];
 	removedFragmentEntryLinkIds?: string[];
+	removedItemIds?: string[];
 	restoredFragmentEntryLinkIds?: string[];
+	triggerItemId?: string;
 }) {
 	return {
 		addedFragmentEntryLinks,
-		deletedItems,
+		addedItemIds,
 		isMapping,
-		itemId,
+		itemIds,
 		layoutData,
-		overridePreviousConfig,
+		movedItemIds,
 		removedFragmentEntryLinkIds,
+		removedItemIds,
 		restoredFragmentEntryLinkIds,
+		triggerItemId,
 		type: UPDATE_FORM_ITEM_CONFIG,
 	} as const;
 }

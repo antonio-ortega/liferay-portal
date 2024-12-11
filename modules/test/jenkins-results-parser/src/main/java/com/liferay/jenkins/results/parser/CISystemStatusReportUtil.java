@@ -28,6 +28,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.commons.io.FileUtils;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -36,14 +38,72 @@ import org.json.JSONObject;
  */
 public class CISystemStatusReportUtil {
 
+	public static void appendNodeHistoryDataToJavaScriptFile(String filePath)
+		throws IOException {
+
+		StringBuilder sb = new StringBuilder();
+
+		JSONObject jsonObject = null;
+
+		LocalDate localDate = JenkinsResultsParserUtil.getLocalDate(
+			System.currentTimeMillis());
+
+		long durationDays = _getReportDurationDays();
+
+		localDate = localDate.minusDays(durationDays - 1);
+
+		for (String dateString :
+				JenkinsResultsParserUtil.getDateStrings(
+					durationDays, localDate)) {
+
+			File nodeDataFile = new File(
+				_TMP_BASE_DIR, dateString + "/node.json");
+
+			if (!nodeDataFile.exists()) {
+				System.out.println(
+					"Node data not available in: " + nodeDataFile);
+
+				continue;
+			}
+
+			if (jsonObject == null) {
+				jsonObject = JenkinsResultsParserUtil.toJSONObject(
+					"file://" + nodeDataFile.getPath());
+
+				continue;
+			}
+
+			_mergeJSONArraysInJSONObjects(
+				jsonObject,
+				JenkinsResultsParserUtil.toJSONObject(
+					"file://" + nodeDataFile.getPath()),
+				_NODE_METRIC_NAMES);
+		}
+
+		sb.append("\nvar nodeHistoryData = ");
+
+		sb.append(jsonObject);
+
+		sb.append(";");
+
+		JenkinsResultsParserUtil.append(new File(filePath), sb.toString());
+	}
+
+	public static void copyBaseReportFiles(String filePath) throws IOException {
+		FileUtils.copyDirectory(
+			_CI_SYSTEM_STATUS_REPORT_DIR, new File(filePath));
+	}
+
 	public static void writeJenkinsDataJavaScriptFile(String filePath)
 		throws IOException {
 
-		JenkinsCohort jenkinsCohort = new JenkinsCohort(
+		JenkinsCohort jenkinsCohort = JenkinsCohort.getInstance(
 			JenkinsResultsParserUtil.getBuildProperty(
 				"ci.system.status.report.jenkins.cohort"));
 
 		jenkinsCohort.writeDataJavaScriptFile(filePath);
+
+		appendNodeHistoryDataToJavaScriptFile(filePath);
 	}
 
 	public static void writeTestrayDataJavaScriptFile(
@@ -52,9 +112,9 @@ public class CISystemStatusReportUtil {
 
 		List<Callable<File>> callables = new ArrayList<>();
 
-		List<File> jenkinsConsoleGzFiles = _getJenkinsConsoleGzFiles(jobName);
+		List<File> buildReportJSONFiles = _getBuildReportJSONFiles(jobName);
 
-		for (final File jenkinsConsoleGzFile : jenkinsConsoleGzFiles) {
+		for (final File buildReportJSONFile : buildReportJSONFiles) {
 			callables.add(
 				new Callable<File>() {
 
@@ -63,10 +123,14 @@ public class CISystemStatusReportUtil {
 						long start =
 							JenkinsResultsParserUtil.getCurrentTimeMillis();
 
+						JSONObject buildReportJSONObject =
+							JenkinsResultsParserUtil.toJSONObject(
+								"file://" + buildReportJSONFile.getPath());
+
 						try {
 							TopLevelBuildReport topLevelBuildReport =
 								BuildReportFactory.newTopLevelBuildReport(
-									jenkinsConsoleGzFile);
+									buildReportJSONObject);
 
 							if ((topLevelBuildReport == null) ||
 								!Objects.equals(
@@ -88,13 +152,13 @@ public class CISystemStatusReportUtil {
 
 							results.add(new Result(topLevelBuildReport));
 
-							return jenkinsConsoleGzFile;
+							return buildReportJSONFile;
 						}
 						catch (Exception exception) {
 							RuntimeException runtimeException =
 								new RuntimeException(
 									JenkinsResultsParserUtil.getCanonicalPath(
-										jenkinsConsoleGzFile),
+										buildReportJSONFile),
 									exception);
 
 							runtimeException.printStackTrace();
@@ -108,7 +172,7 @@ public class CISystemStatusReportUtil {
 							System.out.println(
 								JenkinsResultsParserUtil.combine(
 									JenkinsResultsParserUtil.getCanonicalPath(
-										jenkinsConsoleGzFile),
+										buildReportJSONFile),
 									" processed in ",
 									JenkinsResultsParserUtil.toDurationString(
 										end - start)));
@@ -119,9 +183,14 @@ public class CISystemStatusReportUtil {
 		}
 
 		ParallelExecutor<File> parallelExecutor = new ParallelExecutor<>(
-			callables, _executorService);
+			callables, _executorService, "writeTestrayDataJavaScriptFile");
 
-		parallelExecutor.execute();
+		try {
+			parallelExecutor.execute();
+		}
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
+		}
 
 		StringBuilder sb = new StringBuilder();
 
@@ -158,6 +227,64 @@ public class CISystemStatusReportUtil {
 		DecimalFormat decimalFormat = new DecimalFormat("###.##%");
 
 		return decimalFormat.format(quotient);
+	}
+
+	private static List<File> _getBuildReportJSONFiles(String jobName) {
+		List<File> buildReportJSONFiles = new ArrayList<>();
+
+		for (String dateString : _dateStrings) {
+			File testrayLogsDateDir = new File(_TESTRAY_LOGS_DIR, dateString);
+
+			if (!testrayLogsDateDir.exists()) {
+				continue;
+			}
+
+			Process process;
+
+			try {
+				process = JenkinsResultsParserUtil.executeBashCommands(
+					true, _TESTRAY_LOGS_DIR, 1000 * 60 * 60,
+					JenkinsResultsParserUtil.combine(
+						"find ", dateString, "/*/",
+						JenkinsResultsParserUtil.escapeForBash(jobName),
+						"/*/build-report.json -mtime -15"));
+			}
+			catch (IOException | TimeoutException exception) {
+				continue;
+			}
+
+			int exitValue = process.exitValue();
+
+			if (exitValue != 0) {
+				continue;
+			}
+
+			String output = null;
+
+			try {
+				output = JenkinsResultsParserUtil.readInputStream(
+					process.getInputStream());
+
+				output = output.replace(
+					"Finished executing Bash commands.\n", "");
+
+				output = output.trim();
+			}
+			catch (IOException ioException) {
+				continue;
+			}
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(output)) {
+				continue;
+			}
+
+			for (String buildReportJSONFilePath : output.split("\n")) {
+				buildReportJSONFiles.add(
+					new File(_TESTRAY_LOGS_DIR, buildReportJSONFilePath));
+			}
+		}
+
+		return buildReportJSONFiles;
 	}
 
 	private static JSONObject _getDownstreamBuildDurationJSONObject() {
@@ -204,64 +331,6 @@ public class CISystemStatusReportUtil {
 		);
 
 		return datesDurationsJSONObject;
-	}
-
-	private static List<File> _getJenkinsConsoleGzFiles(String jobName) {
-		List<File> jenkinsConsoleGzFiles = new ArrayList<>();
-
-		for (String dateString : _dateStrings) {
-			File testrayLogsDateDir = new File(_TESTRAY_LOGS_DIR, dateString);
-
-			if (!testrayLogsDateDir.exists()) {
-				continue;
-			}
-
-			Process process;
-
-			try {
-				process = JenkinsResultsParserUtil.executeBashCommands(
-					true, _TESTRAY_LOGS_DIR, 1000 * 60 * 60,
-					JenkinsResultsParserUtil.combine(
-						"find ", dateString, "/*/",
-						JenkinsResultsParserUtil.escapeForBash(jobName),
-						"/*/jenkins-console.txt.gz"));
-			}
-			catch (IOException | TimeoutException exception) {
-				continue;
-			}
-
-			int exitValue = process.exitValue();
-
-			if (exitValue != 0) {
-				continue;
-			}
-
-			String output = null;
-
-			try {
-				output = JenkinsResultsParserUtil.readInputStream(
-					process.getInputStream());
-
-				output = output.replace(
-					"Finished executing Bash commands.\n", "");
-
-				output = output.trim();
-			}
-			catch (IOException ioException) {
-				continue;
-			}
-
-			if (JenkinsResultsParserUtil.isNullOrEmpty(output)) {
-				continue;
-			}
-
-			for (String jenkinsConsoleGzFilePath : output.split("\n")) {
-				jenkinsConsoleGzFiles.add(
-					new File(_TESTRAY_LOGS_DIR, jenkinsConsoleGzFilePath));
-			}
-		}
-
-		return jenkinsConsoleGzFiles;
 	}
 
 	private static JSONObject _getRelevantSuiteBuildDataJSONObject() {
@@ -318,6 +387,13 @@ public class CISystemStatusReportUtil {
 		);
 
 		return relevantSuiteBuildDataJSONObject;
+	}
+
+	private static long _getReportDurationDays() {
+		String reportDurationDays = _buildProperties.getProperty(
+			"report.duration.days");
+
+		return Long.parseLong(reportDurationDays);
 	}
 
 	private static JSONArray _getSuccessRateDataJSONArray() {
@@ -524,14 +600,33 @@ public class CISystemStatusReportUtil {
 		return jsonObject;
 	}
 
+	private static void _mergeJSONArraysInJSONObjects(
+		JSONObject jsonObject1, JSONObject jsonObject2, String[] keys) {
+
+		for (String key : keys) {
+			JSONArray jsonArray = jsonObject1.getJSONArray(key);
+
+			jsonArray.putAll(jsonObject2.getJSONArray(key));
+		}
+	}
+
+	private static final File _CI_SYSTEM_STATUS_REPORT_DIR;
+
 	private static final int _DAYS_PER_WEEK = 7;
 
+	private static final String[] _NODE_METRIC_NAMES = {
+		"idle_nodes", "occupied_nodes", "offline_nodes", "online_nodes",
+		"queued_builds", "timestamps"
+	};
+
 	private static final File _TESTRAY_LOGS_DIR;
+
+	private static final File _TMP_BASE_DIR;
 
 	private static final Properties _buildProperties;
 	private static final List<String> _dateStrings = new ArrayList<>();
 	private static final ExecutorService _executorService =
-		JenkinsResultsParserUtil.getNewThreadPoolExecutor(25, true);
+		JenkinsResultsParserUtil.getNewThreadPoolExecutor(20, true);
 	private static final HashMap<LocalDate, List<Result>> _results;
 
 	private static class Result {
@@ -617,9 +712,14 @@ public class CISystemStatusReportUtil {
 			}
 		};
 
+		_CI_SYSTEM_STATUS_REPORT_DIR = new File(
+			_buildProperties.getProperty("ci.system.status.report.dir"));
 		_TESTRAY_LOGS_DIR = new File(
-			_buildProperties.getProperty("jenkins.testray.results.dir"),
-			"production/logs");
+			_buildProperties.getProperty(
+				"google.cloud.bucket.local.dir[testray]"));
+		_TMP_BASE_DIR = new File(
+			_buildProperties.getProperty("archive.ci.build.data.tmp.dir"),
+			"nodes");
 	}
 
 }

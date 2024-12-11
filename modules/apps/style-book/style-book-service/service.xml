@@ -3,7 +3,7 @@
 
 <service-builder auto-import-default-references="false" auto-namespace-tables="false" change-tracking-enabled="true" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.style.book">
 	<namespace>StyleBook</namespace>
-	<entity local-service="true" name="StyleBookEntry" remote-service="true" uuid="true" versioned="true">
+	<entity external-reference-code="group" local-service="true" name="StyleBookEntry" remote-service="true" uuid="true" versioned="true">
 
 		<!-- PK fields -->
 
@@ -28,6 +28,7 @@
 		<column name="name" type="String" />
 		<column name="previewFileEntryId" type="long" />
 		<column name="styleBookEntryKey" type="String" />
+		<column name="themeId" type="String" />
 
 		<!-- Order -->
 
@@ -57,5 +58,6 @@
 		<exception>DuplicateStyleBookEntryKey</exception>
 		<exception>StyleBookEntryFile</exception>
 		<exception>StyleBookEntryName</exception>
+		<exception>StyleBookEntryThemeId</exception>
 	</exceptions>
 </service-builder>

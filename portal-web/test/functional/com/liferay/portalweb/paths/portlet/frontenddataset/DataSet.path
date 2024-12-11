@@ -84,6 +84,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>EDIT_DATA_SET_ITEMS</td>
+	<td>//textarea</td>
+	<td></td>
+</tr>
+<tr>
 	<td>EDIT_DATA_SET_VIEW</td>
 	<td>//div[contains(@class,"sheet-section")]//div[contains(@class,"form-group") and contains (.,'${key_type}')]//input[contains(@class,"form-control")]</td>
 	<td></td>
@@ -144,6 +149,21 @@
 <tr>
 	<td>FIELD_COLUMN_NAME</td>
 	<td>//tr//th[contains(.,'${key_type}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>NEW_FIELD_OPTION</td>
+	<td>//span[@class="custom-control-label-text" and contains(text(),'${key_columnName}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ACCOUNT_ORDER_NAME</td>
+	<td>xpath=(//div[contains(@class,'dnd-td') and contains(text(),'${accountName}')])[1]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ENTRY_COLUMN_NAME</td>
+	<td>//div[contains(@class,'dnd-th')]//*[contains(text(),'${key_column}')]</td>
 	<td></td>
 </tr>
 
@@ -306,6 +326,16 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ANY_BUTTON_DISABLED</td>
+	<td>//button[contains(text(),'Save') and @disabled]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>IN_USE_BADGE</td>
+	<td>//button[contains(@class, 'dropdown-item') and contains (text(), '${filterByItem}')]//span[contains(@class, "label-item label-item-expand") and text()="In Use"]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>NEW_FILTER_INVALID_DATE</td>
 	<td>//*[contains(text(), 'Date range is invalid. "From" must be before "to"')]</td>
 	<td></td>
@@ -322,7 +352,7 @@
 </tr>
 <tr>
 	<td>SOURCE_OPTIONS_SELECT</td>
-	<td>//div[label[contains(.,'Source Options')]]/select</td>
+	<td>//div[label[contains(.,'Source Options')]]/select | //select[contains(@name, 'FDSViewsPortlet_SourceOption')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -340,12 +370,37 @@
 	<td>//div[@class="form-group"]//input[contains(@aria-label,'${key_label}')]</td>
 	<td></td>
 </tr>
+<tr>
+	<td>SPECIFIC_CHECKBOX_CHECKED</td>
+	<td>//button[contains(@class,'dropdown-item') and contains(.,'${key_name}')]//input[@type='checkbox' and @checked]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRESELECT_VALUE_INPUT</td>
+	<td>//div[contains(@class,'form-group')]//input[contains(@placeholder,'${key_fieldName}')] | //input[contains(@aria-label, 'Preselected Values')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PRESELECT_VALUE_ITEM</td>
+	<td>//button[contains(@class, 'dropdown-item') and contains(., '${key_value}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SELECT_SORT_OPTION</td>
+	<td>//button[contains(@class,'dropdown-item') and contains(.,'${key_sortOption}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>DATA_SET_FRAGMENT_FILTER</td>
+	<td>//button[contains(@class, 'filter-resume') and contains(., '${key_filterName}')]</td>
+	<td></td>
+</tr>
 
 <!-- DATA SET PAGINATION -->
 
 <tr>
 	<td>FILTER_BY_SELECT</td>
-	<td>//div[label[contains(.,'Filter By')]]/select</td>
+	<td>//div[label[contains(.,'Filter By')]]/..//button[contains(@class,'select')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -355,7 +410,7 @@
 </tr>
 <tr>
 	<td>SELECT_DATASET</td>
-	<td>//table[contains(@class,'table-list')]//tr[contains(@class,'orderable-table-row') and contains(.,'${key_nameField}')]//td[@class="drag-handle-cell"]//button[@aria-label="Drag Item"]</td>
+	<td>//table[contains(@class,'table-list')]//tr[contains(@class,'orderable-table-row') and contains(.,'${key_nameField}')]//td[@class="drag-handle-cell"]//button[contains(@aria-label, 'Drag')]</td>
 	<td></td>
 </tr>
 
@@ -391,6 +446,21 @@
 	<td>//div[@class="panel-group panel-group-flush"]</td>
 	<td></td>
 </tr>
+<tr>
+	<td>DRAG_ROW</td>
+	<td>//table[contains(@class,'table-list')]//tr[@class='orderable-table-row'][${key_rowNumber}]//button[@aria-label="Drag view"]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MANDATORY_FIELD</td>
+	<td>//label[contains(text(),'${key_fieldName}')]/*[contains(text(),'Mandatory')] | //label[contains(text(),'${key_fieldName}')]/*[contains(text(),'Required')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>LOCALIZED_FIELD</td>
+	<td>//div[contains(@class,'input-localized')]//*[text()="${key_field}"]/..//span[contains(text(),'${key_localizedLanguage}')]</td>
+	<td></td>
+</tr>
 
 <!-- DATA SET ACTIONS -->
 
@@ -399,7 +469,46 @@
 	<td>//div[contains(@class,'item-actions')]//*[@title="${key_actionIcon}"]</td>
 	<td></td>
 </tr>
-
+<tr>
+	<td>ICON_IN_DATA_SET_FRAGMENT</td>
+	<td>xpath=(//div[(@class="dnd-tr")]/div[contains(@class,"dnd-td") and contains(string(), "${key_entryName}")]/..//*[contains(@class,'${key_icon}')])[${key_rowNumber}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY_DISABLED</td>
+	<td>//select[@placeholder="${key_placeholderText}"]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VERTICAL_ELLIPSIS_N</td>
+	<td>xpath=(//tr[.//*[normalize-space(text())='${key_text}']]//button[contains(@class,'dropdown-toggle')])[${key_index}]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>PLUS_N</td>
+	<td>xpath=(//a[contains(@class,'btn')][contains(@href,'new') or contains(@href,'redirect') or contains(@href,'mvc') or contains(@href,'javascript')][.//*[name()='svg'][contains(@class,'icon-plus')]][not(contains(@class,'borderless'))] | //button[not(contains(@class,'borderless'))][not(contains(@class,'btn-unstyled'))][*[contains(@class,'icon-plus')]])[2]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>MESSAGE_FIELD</td>
+	<td>//div[contains(@aria-labelledby, "${key_option}")]//label[text()='Message']/..//input</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COLLAPSE_OPEN</td>
+	<td>//span[contains(.,'${key_fieldName}')]/../*[*[name()='svg'][contains(@class,'lexicon-icon-angle-down')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>COLLAPSE_CLOSED</td>
+	<td>//span[contains(.,'${key_fieldName}')]/../*[*[name()='svg'][contains(@class,'lexicon-icon-angle-right')]]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>RADIO_BUTTON_OPTION</td>
+	<td>//span[contains(., '${key_optionName}')]/preceding-sibling::input</td>
+	<td></td>
+</tr>
 </tbody>
 </table>
 </body>

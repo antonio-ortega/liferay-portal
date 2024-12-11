@@ -30,6 +30,16 @@ exports[`Event Analysis Edit should render 1`] = `
                 Home
               </a>
             </li>
+            <li
+              class="breadcrumb-item"
+            >
+              <a
+                class="breadcrumb-text-truncate breadcrumb-link"
+                href="/workspace/456/123/event-analysis"
+              >
+                Event Analysis
+              </a>
+            </li>
           </ol>
         </div>
         <div
@@ -99,7 +109,7 @@ exports[`Event Analysis Edit should render 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#pencil"
+                        href="#pencil"
                       />
                     </svg>
                   </button>
@@ -175,7 +185,7 @@ exports[`Event Analysis Edit should render 1`] = `
                           role="presentation"
                         >
                           <use
-                            xlink:href="#times-circle"
+                            href="#times-circle"
                           />
                         </svg>
                       </button>
@@ -216,7 +226,7 @@ exports[`Event Analysis Edit should render 1`] = `
                             role="presentation"
                           >
                             <use
-                              xlink:href="#drag"
+                              href="#drag"
                             />
                           </svg>
                         </div>
@@ -232,7 +242,7 @@ exports[`Event Analysis Edit should render 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#text"
+                                href="#text"
                               />
                             </svg>
                           </div>
@@ -259,7 +269,7 @@ exports[`Event Analysis Edit should render 1`] = `
                             role="presentation"
                           >
                             <use
-                              xlink:href="#times-circle"
+                              href="#times-circle"
                             />
                           </svg>
                         </button>
@@ -284,7 +294,7 @@ exports[`Event Analysis Edit should render 1`] = `
                             role="presentation"
                           >
                             <use
-                              xlink:href="#drag"
+                              href="#drag"
                             />
                           </svg>
                         </div>
@@ -300,7 +310,7 @@ exports[`Event Analysis Edit should render 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#text"
+                                href="#text"
                               />
                             </svg>
                           </div>
@@ -327,7 +337,7 @@ exports[`Event Analysis Edit should render 1`] = `
                             role="presentation"
                           >
                             <use
-                              xlink:href="#times-circle"
+                              href="#times-circle"
                             />
                           </svg>
                         </button>
@@ -351,7 +361,7 @@ exports[`Event Analysis Edit should render 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#plus"
+                        href="#plus"
                       />
                     </svg>
                   </button>
@@ -393,7 +403,7 @@ exports[`Event Analysis Edit should render 1`] = `
                               role="presentation"
                             >
                               <use
-                                xlink:href="#text"
+                                href="#text"
                               />
                             </svg>
                           </div>
@@ -420,7 +430,7 @@ exports[`Event Analysis Edit should render 1`] = `
                             role="presentation"
                           >
                             <use
-                              xlink:href="#times-circle"
+                              href="#times-circle"
                             />
                           </svg>
                         </button>
@@ -444,7 +454,7 @@ exports[`Event Analysis Edit should render 1`] = `
                       role="presentation"
                     >
                       <use
-                        xlink:href="#plus"
+                        href="#plus"
                       />
                     </svg>
                   </button>
@@ -547,7 +557,7 @@ exports[`Event Analysis Edit should render 1`] = `
                     role="presentation"
                   >
                     <use
-                      xlink:href="#caret-bottom"
+                      href="#caret-bottom"
                     />
                   </svg>
                 </button>
@@ -560,11 +570,11 @@ exports[`Event Analysis Edit should render 1`] = `
             <div
               class="no-results-content"
             >
-              <h4
-                class="no-results-title"
+              <div
+                class="h4 no-results-title"
               >
                 An unexpected error occurred.
-              </h4>
+              </div>
               <button
                 class="button-root btn btn-secondary"
                 type="button"

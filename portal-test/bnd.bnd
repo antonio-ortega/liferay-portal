@@ -1,12 +1,13 @@
 Bundle-Name: ${manifest.bundle.name}
 Bundle-SymbolicName: ${manifest.bundle.symbolic.name}
-Bundle-Version: 23.0.1
+Bundle-Version: 25.0.1
 Export-Package:\
 	com.liferay.portal.kernel.dao.db.test,\
 	com.liferay.portal.kernel.test,\
 	com.liferay.portal.kernel.test.constants,\
 	com.liferay.portal.kernel.test.context,\
 	com.liferay.portal.kernel.test.junit,\
+	com.liferay.portal.kernel.test.performance,\
 	com.liferay.portal.kernel.test.portlet,\
 	com.liferay.portal.kernel.test.randomizerbumpers,\
 	com.liferay.portal.kernel.test.rule,\
@@ -47,7 +48,14 @@ Include-Resource:\
 	@${project.dir}/../lib/development/sling-testing-osgi-mock-core.jar,\
 	@${project.dir}/../lib/development/spring-test.jar
 Require-Capability:\
+	osgi.ee;\
+		filter:="(&(osgi.ee=JavaSE)(version=${ant.build.javac.target}))",\
 	osgi.extender;\
-		filter := "(&(osgi.extender=osgi.configurator)(version>=1.0)(!(version>=2.0)))"
--include ../common.bnd
--removeheaders: Service-Component
+		filter:="(&(osgi.extender=osgi.configurator)(version>=1.0)(!(version>=2.0)))"
+-include ~../common.bnd
+-removeheaders:\
+	Bnd-LastModified,\
+	DSTAMP,\
+	Service-Component,\
+	TODAY,\
+	TSTAMP

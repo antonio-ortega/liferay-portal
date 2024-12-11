@@ -328,6 +328,20 @@ public class LockLocalServiceWrapper
 		return _lockLocalService.getLocks(start, end);
 	}
 
+	@Override
+	public java.util.List<com.liferay.portal.lock.model.Lock> getLocks(
+		long companyId, long userId, String className) {
+
+		return _lockLocalService.getLocks(companyId, userId, className);
+	}
+
+	@Override
+	public java.util.List<com.liferay.portal.lock.model.Lock> getLocks(
+		long companyId, String className) {
+
+		return _lockLocalService.getLocks(companyId, className);
+	}
+
 	/**
 	 * Returns the number of locks.
 	 *

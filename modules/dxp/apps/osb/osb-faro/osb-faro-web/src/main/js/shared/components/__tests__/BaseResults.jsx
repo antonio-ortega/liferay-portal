@@ -1,8 +1,7 @@
 import * as data from 'test/data';
 import BaseResults from '../BaseResults';
-import Promise from 'metal-promise';
 import React from 'react';
-import {cleanup, fireEvent, render} from '@testing-library/react';
+import {cleanup, fireEvent, render, waitFor} from '@testing-library/react';
 import {noop, times} from 'lodash';
 import {SelectionProvider} from 'shared/context/selection';
 import {StaticRouter} from 'react-router';
@@ -24,7 +23,7 @@ const DefaultComponent = props => (
 describe('BaseResults', () => {
 	afterEach(cleanup);
 
-	it('should render', () => {
+	it('should render', async () => {
 		const {container} = render(
 			<DefaultComponent
 				dataSourceFn={() =>
@@ -35,10 +34,12 @@ describe('BaseResults', () => {
 			/>
 		);
 
+		await waitFor(() => {});
+
 		expect(container).toMatchSnapshot();
 	});
 
-	it('should render w/ an error display', () => {
+	it('should render w/ an error display', async () => {
 		const {getByText} = render(
 			<DefaultComponent
 				dataSourceFn={() => Promise.reject({})}
@@ -47,12 +48,12 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		jest.runAllTimers();
+		await waitFor(() => {});
 
-		expect(getByText('An unexpected error occurred.')).toBeInTheDocument;
+		expect(getByText('An unexpected error occurred.')).toBeInTheDocument();
 	});
 
-	it('should render w/a no results display', () => {
+	it('should render w/a no results display', async () => {
 		const {getByText} = render(
 			<DefaultComponent
 				dataSourceFn={() => Promise.resolve({items: [], total: 0})}
@@ -62,7 +63,8 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		jest.runAllTimers();
+		await waitFor(() => {});
+
 		expect(getByText('There are no results found.')).toBeInTheDocument();
 	});
 
@@ -79,13 +81,12 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		jest.runAllTimers();
 		expect(container.querySelector('input.input-root').value).toHaveLength(
 			MAX_LENGTH
 		);
 	});
 
-	it('should not render a subnav if there is a datasourceFn error', () => {
+	it('should not render a subnav if there is a datasourceFn error', async () => {
 		const {queryByText} = render(
 			<DefaultComponent
 				dataSourceFn={() => Promise.reject(new Error())}
@@ -95,11 +96,12 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		jest.runAllTimers();
+		await waitFor(() => {});
+
 		expect(queryByText('subnav content')).toBeNull();
 	});
 
-	it('should render with search disabled when disableSearch is TRUE', () => {
+	it('should render with search disabled when disableSearch is TRUE', async () => {
 		const {container} = render(
 			<DefaultComponent
 				dataSourceFn={() =>
@@ -114,11 +116,12 @@ describe('BaseResults', () => {
 			/>
 		);
 
-		jest.runAllTimers();
+		await waitFor(() => {});
+
 		expect(container.querySelector('.search input').disabled).toBe(true);
 	});
 
-	it('should not include disabled items when calculating whether all the items are checked', () => {
+	it('should not include disabled items when calculating whether all the items are checked', async () => {
 		const {getByTestId} = render(
 			<DefaultComponent
 				checkDisabled={item => item.id === '0'}
@@ -133,11 +136,9 @@ describe('BaseResults', () => {
 
 		const selectAllCheckbox = getByTestId('select-all-checkbox');
 
-		jest.runAllTimers();
+		await waitFor(() => {});
 
 		fireEvent.click(selectAllCheckbox);
-
-		jest.runAllTimers();
 
 		expect(selectAllCheckbox.checked).toBe(true);
 	});

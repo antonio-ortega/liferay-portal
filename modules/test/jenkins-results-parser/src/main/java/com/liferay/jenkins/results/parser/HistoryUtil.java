@@ -7,8 +7,6 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.IOException;
 
-import java.net.URL;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,7 +16,11 @@ import java.util.Map;
 public class HistoryUtil {
 
 	public static JobHistory getJobHistory(Job job) {
-		URL ciHistoryURL = _getCIHistoryURL(job);
+		String ciHistoryURL = _getCIHistoryURL(job);
+
+		if (ciHistoryURL == null) {
+			return null;
+		}
 
 		JobHistory jobHistory = _jobHistories.get(ciHistoryURL);
 
@@ -31,7 +33,7 @@ public class HistoryUtil {
 		return jobHistory;
 	}
 
-	private static URL _getCIHistoryURL(Job job) {
+	private static String _getCIHistoryURL(Job job) {
 		String jobName = job.getJobName();
 
 		String testSuiteName = null;
@@ -57,11 +59,16 @@ public class HistoryUtil {
 		}
 
 		try {
-			return new URL(
-				JenkinsResultsParserUtil.getProperty(
-					JenkinsResultsParserUtil.getBuildProperties(),
-					"ci.history.json.url", jobName, testSuiteName,
-					upstreamBranchName));
+			String ciHistoryJSONURL = JenkinsResultsParserUtil.getProperty(
+				JenkinsResultsParserUtil.getBuildProperties(),
+				"ci.history.json.url", jobName, testSuiteName,
+				upstreamBranchName);
+
+			if (JenkinsResultsParserUtil.isNullOrEmpty(ciHistoryJSONURL)) {
+				return null;
+			}
+
+			return ciHistoryJSONURL;
 		}
 		catch (IOException ioException) {
 			ioException.printStackTrace();
@@ -70,6 +77,7 @@ public class HistoryUtil {
 		return null;
 	}
 
-	private static final Map<URL, JobHistory> _jobHistories = new HashMap<>();
+	private static final Map<String, JobHistory> _jobHistories =
+		new HashMap<>();
 
 }

@@ -29,6 +29,12 @@ public class CollectionStyledLayoutStructureItem
 		super(parentItemId);
 	}
 
+	public CollectionStyledLayoutStructureItem(
+		String itemId, String parentItemId) {
+
+		super(itemId, parentItemId);
+	}
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -441,10 +447,6 @@ public class CollectionStyledLayoutStructureItem
 			setJustify(itemConfigJSONObject.getString("justify"));
 		}
 
-		if (itemConfigJSONObject.has("showAllItems")) {
-			setShowAllItems(itemConfigJSONObject.getBoolean("showAllItems"));
-		}
-
 		if (itemConfigJSONObject.has("listItemStyle")) {
 			setListItemStyle(itemConfigJSONObject.getString("listItemStyle"));
 		}
@@ -472,6 +474,10 @@ public class CollectionStyledLayoutStructureItem
 
 		if (itemConfigJSONObject.has("paginationType")) {
 			setPaginationType(itemConfigJSONObject.getString("paginationType"));
+		}
+
+		if (itemConfigJSONObject.has("showAllItems")) {
+			setShowAllItems(itemConfigJSONObject.getBoolean("showAllItems"));
 		}
 
 		if (itemConfigJSONObject.has("templateKey")) {

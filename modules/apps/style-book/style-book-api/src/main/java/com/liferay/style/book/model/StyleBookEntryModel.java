@@ -7,6 +7,7 @@ package com.liferay.style.book.model;
 
 import com.liferay.portal.kernel.bean.AutoEscape;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.ExternalReferenceCodeModel;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
@@ -31,9 +32,9 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface StyleBookEntryModel
-	extends BaseModel<StyleBookEntry>, CTModel<StyleBookEntry>, GroupedModel,
-			MVCCModel, ShardedModel, StagedAuditedModel,
-			VersionedModel<StyleBookEntryVersion> {
+	extends BaseModel<StyleBookEntry>, CTModel<StyleBookEntry>,
+			ExternalReferenceCodeModel, GroupedModel, MVCCModel, ShardedModel,
+			StagedAuditedModel, VersionedModel<StyleBookEntryVersion> {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -105,6 +106,23 @@ public interface StyleBookEntryModel
 	 */
 	@Override
 	public void setUuid(String uuid);
+
+	/**
+	 * Returns the external reference code of this style book entry.
+	 *
+	 * @return the external reference code of this style book entry
+	 */
+	@AutoEscape
+	@Override
+	public String getExternalReferenceCode();
+
+	/**
+	 * Sets the external reference code of this style book entry.
+	 *
+	 * @param externalReferenceCode the external reference code of this style book entry
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode);
 
 	/**
 	 * Returns the head ID of this style book entry.
@@ -328,6 +346,21 @@ public interface StyleBookEntryModel
 	 * @param styleBookEntryKey the style book entry key of this style book entry
 	 */
 	public void setStyleBookEntryKey(String styleBookEntryKey);
+
+	/**
+	 * Returns the theme ID of this style book entry.
+	 *
+	 * @return the theme ID of this style book entry
+	 */
+	@AutoEscape
+	public String getThemeId();
+
+	/**
+	 * Sets the theme ID of this style book entry.
+	 *
+	 * @param themeId the theme ID of this style book entry
+	 */
+	public void setThemeId(String themeId);
 
 	@Override
 	public StyleBookEntry cloneWithOriginalValues();

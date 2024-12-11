@@ -33,12 +33,7 @@
 
 <#assign
 	finderFieldSQLSuffix = "_SQL"
-	useCache = "useFinderCache"
 />
-
-<#if entity.isChangeTrackingEnabled()>
-	<#assign useCache = "useFinderCache && productionMode" />
-</#if>
 
 package ${packagePath}.service.persistence.impl;
 
@@ -70,9 +65,18 @@ import ${apiPackagePath}.service.persistence.${entity.name}Util;
 	import ${packagePath}.service.persistence.impl.constants.${portletShortName}PersistenceConstants;
 </#if>
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.bean.BeanReference;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
 import com.liferay.portal.kernel.configuration.Configuration;
+
+<#if !serviceBuilder.isVersionGTE_7_1_0()>
+	import com.liferay.portal.kernel.configuration.Filter;
+	import com.liferay.portal.kernel.dao.db.DBManagerUtil;
+	import com.liferay.portal.kernel.dao.db.DBType;
+</#if>
+
 import com.liferay.portal.kernel.dao.orm.ArgumentsResolver;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
@@ -251,6 +255,10 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		<#assign columnBitmaskEnabled = (entity.finderEntityColumns?size &gt; 0) && (entity.finderEntityColumns?size &lt; 64) && !entity.hasEagerBlobColumn() />
 	</#if>
 
+	<#if !serviceBuilder.isVersionGTE_7_1_0()>
+		private int _databaseInMaxParameters;
+	</#if>
+
 	private FinderPath _finderPathWithPaginationFindAll;
 	private FinderPath _finderPathWithoutPaginationFindAll;
 	private FinderPath _finderPathCountAll;
@@ -323,13 +331,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	@Override
 	public void cacheResult(${entity.name} ${entity.variableName}) {
 		<#if entity.isChangeTrackingEnabled()>
-			if (${entity.variableName}.getCtCollectionId() != 0) {
-				<#if serviceBuilder.isVersionLTE_7_2_0()>
-					${entity.variableName}.resetOriginalValues();
-				</#if>
-
-				return;
-			}
+			try (SafeCloseable safeCloseable = CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(${entity.variableName}.getCtCollectionId())) {
 		</#if>
 
 		${entityCache}.putResult(
@@ -362,6 +364,10 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		<#if serviceBuilder.isVersionLTE_7_2_0()>
 			${entity.variableName}.resetOriginalValues();
 		</#if>
+
+		<#if entity.isChangeTrackingEnabled()>
+			}
+		</#if>
 	}
 
 	private int _valueObjectFinderCacheListThreshold;
@@ -384,13 +390,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 		for (${entity.name} ${entity.variableName} : ${entity.pluralVariableName}) {
 			<#if entity.isChangeTrackingEnabled()>
-				if (${entity.variableName}.getCtCollectionId() != 0) {
-					<#if serviceBuilder.isVersionLTE_7_2_0()>
-						${entity.variableName}.resetOriginalValues();
-					</#if>
-
-					continue;
-				}
+				try (SafeCloseable safeCloseable = CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(${entity.variableName}.getCtCollectionId())) {
 			</#if>
 
 			<#if (cacheFields?size > 0)>
@@ -426,6 +426,10 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 						${entity.variableName}.resetOriginalValues();
 					}
 				</#if>
+			</#if>
+
+			<#if entity.isChangeTrackingEnabled()>
+				}
 			</#if>
 		}
 	}
@@ -516,6 +520,10 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 	<#if entity.uniqueEntityFinders?size &gt; 0>
 		protected void cacheUniqueFindersCache(${entity.name}ModelImpl ${entity.variableName}ModelImpl) {
+			<#if entity.isChangeTrackingEnabled()>
+				try (SafeCloseable safeCloseable = CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(${entity.variableName}ModelImpl.getCtCollectionId())) {
+			</#if>
+
 			<#list entity.uniqueEntityFinders as uniqueEntityFinder>
 				<#assign entityColumns = uniqueEntityFinder.entityColumns />
 
@@ -538,17 +546,20 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					</#list>
 				};
 
-				${finderCache}.putResult(_finderPathCountBy${uniqueEntityFinder.name}, args, Long.valueOf(1)
-					<#if serviceBuilder.isVersionLTE_7_3_0()>
-						, false
-					</#if>
-					);
+				<#if serviceBuilder.isVersionLTE_7_3_0()>
+					${finderCache}.putResult(_finderPathCountBy${uniqueEntityFinder.name}, args, Long.valueOf(1), false);
+				</#if>
 				${finderCache}.putResult(_finderPathFetchBy${uniqueEntityFinder.name}, args, ${entity.variableName}ModelImpl
 					<#if serviceBuilder.isVersionLTE_7_3_0()>
 						, false
 					</#if>
 					);
 			</#list>
+
+			<#if entity.isChangeTrackingEnabled()>
+				}
+			</#if>
+
 		}
 
 		<#if serviceBuilder.isVersionLTE_7_2_0()>
@@ -775,7 +786,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	public ${entity.name} updateImpl(${apiPackagePath}.model.${entity.name} ${entity.variableName}) {
 		boolean isNew = ${entity.variableName}.isNew();
 
-		<#if entity.isHierarchicalTree() || (entity.collectionEntityFinders?size != 0) || (entity.uniqueEntityFinders?size &gt; 0) || entity.hasEntityColumn("createDate", "Date") || entity.hasEntityColumn("modifiedDate", "Date")>
+		<#if entity.isHierarchicalTree() || (entity.collectionEntityFinders?size != 0) || (entity.uniqueEntityFinders?size &gt; 0) || entity.hasEntityColumn("createDate", "Date") || entity.hasEntityColumn("externalReferenceCode") || entity.hasEntityColumn("modifiedDate", "Date")>
 			if (!(${entity.variableName} instanceof ${entity.name}ModelImpl)) {
 				InvocationHandler invocationHandler = null;
 
@@ -799,7 +810,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			}
 		</#if>
 
-		<#if entity.hasExternalReferenceCode() || entity.hasEntityColumn("externalReferenceCode")>
+		<#if entity.hasEntityColumn("externalReferenceCode")>
 			if (Validator.isNull(${entity.variableName}.getExternalReferenceCode())) {
 				<#if entity.hasUuid()>
 					${entity.variableName}.setExternalReferenceCode(${entity.variableName}.getUuid());
@@ -807,11 +818,50 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					${entity.variableName}.setExternalReferenceCode(String.valueOf(${entity.variableName}.getPrimaryKey()));
 				</#if>
 			}
+			else {
+				<#if serviceBuilder.isVersionGTE_7_3_0()>
+					if (!Objects.equals(${entity.variableName}ModelImpl.getColumnOriginalValue("externalReferenceCode"), ${entity.variableName}.getExternalReferenceCode())) {
+				<#else>
+					if (!Objects.equals(${entity.variableName}ModelImpl.getOriginalExternalReferenceCode(), ${entity.variableName}.getExternalReferenceCode())) {
+				</#if>
 
-			<#if serviceBuilder.isVersionGTE_7_3_0() && entity.hasExternalReferenceCode()>
-				else {
+					long userId = GetterUtil.getLong(PrincipalThreadLocal.getName());
+
+					if (userId > 0) {
+						<#if entity.hasEntityColumn("companyId")>
+							long companyId = ${entity.variableName}.getCompanyId();
+						<#else>
+							long companyId = 0;
+						</#if>
+
+						<#if entity.hasEntityColumn("groupId")>
+							long groupId = ${entity.variableName}.getGroupId();
+						<#else>
+							long groupId = 0;
+						</#if>
+
+						long classPK = 0;
+
+						if (!isNew) {
+							classPK = ${entity.variableName}.getPrimaryKey();
+						}
+
+						try {
+							${entity.variableName}.setExternalReferenceCode(SanitizerUtil.sanitize(companyId, groupId, userId, ${apiPackagePath}.model.${entity.name}.class.getName(), classPK, ContentTypes.TEXT_HTML, Sanitizer.MODE_ALL, ${entity.variableName}.getExternalReferenceCode(), null));
+						}
+						catch (SanitizerException sanitizerException) {
+							throw new SystemException(sanitizerException);
+						}
+					}
+				}
+
+				<#if entity.hasExternalReferenceCode()>
 					<#if serviceBuilder.isVersionGTE_7_4_0()>
-						${entity.name} erc${entity.name} = fetchByERC_${entity.externalReferenceCode?cap_first[0..0]}(${entity.variableName}.getExternalReferenceCode(), ${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id());
+						<#if entity.versionEntity??>
+							${entity.name} erc${entity.name} = fetchByERC_${entity.externalReferenceCode?cap_first[0..0]}_Head(${entity.variableName}.getExternalReferenceCode(), ${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id(), ${entity.variableName}.isHead());
+						<#else>
+							${entity.name} erc${entity.name} = fetchByERC_${entity.externalReferenceCode?cap_first[0..0]}(${entity.variableName}.getExternalReferenceCode(), ${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id());
+						</#if>
 					<#else>
 						${entity.name} erc${entity.name} = fetchBy${entity.externalReferenceCode?cap_first[0..0]}_ERC(${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id(), ${entity.variableName}.getExternalReferenceCode());
 					</#if>
@@ -827,8 +877,8 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 								throw new ${duplicateEntityExternalReferenceCode}Exception("Duplicate ${entity.humanName} with external reference code " + ${entity.variableName}.getExternalReferenceCode() + " and ${entity.externalReferenceCode} " + ${entity.variableName}.get${entity.externalReferenceCode?cap_first}Id());
 						}
 					}
-				}
-			</#if>
+				</#if>
+			}
 		</#if>
 
 		<#if entity.hasEntityColumn("createDate", "Date") && entity.hasEntityColumn("modifiedDate", "Date")>
@@ -879,8 +929,6 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			long userId = GetterUtil.getLong(PrincipalThreadLocal.getName());
 
 			if (userId > 0) {
-				<#assign companyId = 0 />
-
 				<#if entity.hasEntityColumn("companyId")>
 					long companyId = ${entity.variableName}.getCompanyId();
 				<#else>
@@ -966,15 +1014,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 			<#if entity.isChangeTrackingEnabled()>
 				if (${ctPersistenceHelper}.isInsert(${entity.variableName})) {
 					if (!isNew) {
-						<#if serviceBuilder.isVersionGTE_7_3_0()>
-							session.evict(${entity.name}Impl.class, ${entity.variableName}.getPrimaryKeyObj());
-						<#else>
-							${entity.name} old${entity.name} = (${entity.name})session.get(${entity.name}Impl.class, ${entity.variableName}.getPrimaryKeyObj());
-
-							if (old${entity.name} != null) {
-								session.evict(old${entity.name});
-							}
-						</#if>
+						session.evict(${entity.name}Impl.class, ${entity.variableName}.getPrimaryKeyObj());
 					}
 			<#else>
 				if (isNew) {
@@ -1016,20 +1056,6 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		finally {
 			closeSession(session);
 		}
-
-		<#if entity.isChangeTrackingEnabled()>
-			if (${entity.variableName}.getCtCollectionId() != 0) {
-				<#if serviceBuilder.isVersionGTE_7_3_0()>
-					if (isNew) {
-						${entity.variableName}.setNew(false);
-					}
-				</#if>
-
-				${entity.variableName}.resetOriginalValues();
-
-				return ${entity.variableName};
-			}
-		</#if>
 
 		<#if serviceBuilder.isVersionGTE_7_3_0()>
 			${entityCache}.putResult(
@@ -1253,15 +1279,17 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		 */
 		@Override
 		public ${entity.name} fetchByPrimaryKey(Serializable primaryKey) {
-			<#if serviceBuilder.isVersionGTE_7_3_0()>
-				if (${ctPersistenceHelper}.isProductionMode(${entity.name}.class, primaryKey)) {
-			<#else>
-				if (${ctPersistenceHelper}.isProductionMode(${entity.name}.class)) {
-			</#if>
-				return super.fetchByPrimaryKey(primaryKey);
+			if (${ctPersistenceHelper}.isProductionMode(${entity.name}.class, primaryKey)) {
+				try (SafeCloseable safeCloseable = CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
+					return super.fetchByPrimaryKey(primaryKey);
+				}
 			}
 
-			${entity.name} ${entity.variableName} = null;
+			${entity.name} ${entity.variableName} = (${entity.name})${entityCache}.getResult(${entity.name}Impl.class, primaryKey);
+
+			if (${entity.variableName} != null) {
+				return ${entity.variableName};
+			}
 
 			Session session = null;
 
@@ -1338,6 +1366,22 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 							Set<Serializable> page = new HashSet<>();
 
 							for (int i = 0; (i < databaseInMaxParameters) && iterator.hasNext(); i++) {
+								page.add(iterator.next());
+							}
+
+							map.putAll(fetchByPrimaryKeys(page));
+						}
+
+						return map;
+					}
+				<#else>
+					if ((_databaseInMaxParameters > 0) && (primaryKeys.size() > _databaseInMaxParameters)) {
+						Iterator<Serializable> iterator = primaryKeys.iterator();
+
+						while (iterator.hasNext()) {
+							Set<Serializable> page = new HashSet<>();
+
+							for (int i = 0; (i < _databaseInMaxParameters) && iterator.hasNext(); i++) {
 								page.add(iterator.next());
 							}
 
@@ -1436,7 +1480,9 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		@Override
 		public Map<Serializable, ${entity.name}> fetchByPrimaryKeys(Set<Serializable> primaryKeys) {
 			if (${ctPersistenceHelper}.isProductionMode(${entity.name}.class)) {
-				return super.fetchByPrimaryKeys(primaryKeys);
+				try (SafeCloseable safeCloseable = CTCollectionThreadLocal.setProductionModeWithSafeCloseable()) {
+					return super.fetchByPrimaryKeys(primaryKeys);
+				}
 			}
 
 			if (primaryKeys.isEmpty()) {
@@ -1456,6 +1502,30 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					map.put(primaryKey, ${entity.variableName});
 				}
 
+				return map;
+			}
+
+			Set<Serializable> uncachedPrimaryKeys = null;
+
+			for (Serializable primaryKey : primaryKeys) {
+				try (SafeCloseable safeCloseable = ${ctPersistenceHelper}.setCTCollectionIdWithSafeCloseable(${entity.name}.class, primaryKey)) {
+
+					${entity.name} ${entity.variableName} = (${entity.name})${entityCache}.getResult(${entity.name}Impl.class, primaryKey);
+
+					if (${entity.variableName} == null) {
+						if (uncachedPrimaryKeys == null) {
+							uncachedPrimaryKeys = new HashSet<>();
+						}
+
+						uncachedPrimaryKeys.add(primaryKey);
+					}
+					else {
+						map.put(primaryKey, ${entity.variableName});
+					}
+				}
+			}
+
+			if (uncachedPrimaryKeys == null) {
 				return map;
 			}
 
@@ -1577,26 +1647,26 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	@Override
 	public List<${entity.name}> findAll(int start, int end, OrderByComparator<${entity.name}> orderByComparator, boolean useFinderCache) {
 		<#if entity.isChangeTrackingEnabled()>
-			boolean productionMode = ${ctPersistenceHelper}.isProductionMode(${entity.name}.class);
+			try (SafeCloseable safeCloseable = ${ctPersistenceHelper}.setCTCollectionIdWithSafeCloseable(${entity.name}.class)) {
 		</#if>
 
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) && (orderByComparator == null)) {
-			if (${useCache}) {
+			if (useFinderCache) {
 				finderPath = _finderPathWithoutPaginationFindAll;
 				finderArgs = FINDER_ARGS_EMPTY;
 			}
 		}
-		else if (${useCache}) {
+		else if (useFinderCache) {
 			finderPath = _finderPathWithPaginationFindAll;
 			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<${entity.name}> list = null;
 
-		if (${useCache}) {
+		if (useFinderCache) {
 			list = (List<${entity.name}>)${finderCache}.getResult(finderPath, finderArgs, this);
 		}
 
@@ -1630,13 +1700,13 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 				cacheResult(list);
 
-				if (${useCache}) {
+				if (useFinderCache) {
 					${finderCache}.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
 				<#if serviceBuilder.isVersionLTE_7_2_0()>
-					if (${useCache}) {
+					if (useFinderCache) {
 						${finderCache}.removeResult(finderPath, finderArgs);
 					}
 				</#if>
@@ -1649,6 +1719,10 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		}
 
 		return list;
+
+		<#if entity.isChangeTrackingEnabled()>
+			}
+		</#if>
 	}
 
 	/**
@@ -1670,16 +1744,10 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 	@Override
 	public int countAll() {
 		<#if entity.isChangeTrackingEnabled()>
-			boolean productionMode = ${ctPersistenceHelper}.isProductionMode(${entity.name}.class);
-
-			Long count = null;
-
-			if (productionMode) {
-				count = (Long)${finderCache}.getResult(_finderPathCountAll, FINDER_ARGS_EMPTY, this);
-			}
-		<#else>
-			Long count = (Long)${finderCache}.getResult(_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			try (SafeCloseable safeCloseable = ${ctPersistenceHelper}.setCTCollectionIdWithSafeCloseable(${entity.name}.class)) {
 		</#if>
+
+		Long count = (Long)${finderCache}.getResult(_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
 			Session session = null;
@@ -1691,23 +1759,11 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 
 				count = (Long)query.uniqueResult();
 
-				<#if entity.isChangeTrackingEnabled()>
-					if (productionMode) {
-						${finderCache}.putResult(_finderPathCountAll, FINDER_ARGS_EMPTY, count);
-					}
-				<#else>
-					${finderCache}.putResult(_finderPathCountAll, FINDER_ARGS_EMPTY, count);
-				</#if>
+				${finderCache}.putResult(_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
 				<#if serviceBuilder.isVersionLTE_7_2_0()>
-					<#if entity.isChangeTrackingEnabled()>
-						if (productionMode) {
-							${finderCache}.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-						}
-					<#else>
-						${finderCache}.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-					</#if>
+					${finderCache}.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
 				</#if>
 
 				throw processException(exception);
@@ -1718,6 +1774,10 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		}
 
 		return count.intValue();
+
+		<#if entity.isChangeTrackingEnabled()>
+			}
+		</#if>
 	}
 
 	<#list entity.entityColumns as entityColumn>
@@ -2808,7 +2868,7 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 					);
 			</#if>
 
-			<#if !entityFinder.hasCustomComparator()>
+			<#if !entityFinder.hasCustomComparator() && (entityFinder.isCollection() || serviceBuilder.isVersionLTE_7_3_0())>
 				_finderPathCountBy${entityFinder.name} =
 					<#if serviceBuilder.isVersionGTE_7_4_0()>
 						new FinderPath(
@@ -2932,6 +2992,15 @@ public class ${entity.name}PersistenceImpl extends BasePersistenceImpl<${entity.
 		<#if serviceBuilder.isVersionLTE_7_2_0()>
 			private boolean _columnBitmaskEnabled;
 		</#if>
+	<#elseif !serviceBuilder.isVersionGTE_7_1_0()>
+		@Override
+		public void setSessionFactory(SessionFactory sessionFactory) {
+			super.setSessionFactory(sessionFactory);
+
+			DBType dbType = DBManagerUtil.getDBType(sessionFactory.getDialect());
+
+			_databaseInMaxParameters = GetterUtil.getInteger(PropsUtil.get("database.in.max.parameters", new Filter(dbType.getName())));
+		}
 	</#if>
 
 	<#if osgiModule>

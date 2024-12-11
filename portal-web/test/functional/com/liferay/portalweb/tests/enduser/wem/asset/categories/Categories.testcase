@@ -1,7 +1,9 @@
-@component-name = "portal-categories"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.component.names = "Categories";
@@ -88,66 +90,6 @@ definition {
 				propertiesKeyField = "Category Property",
 				propertiesValueField = "Category Property",
 				propertyNumber = 0,
-				vocabularyName = "Vocabulary Name");
-		}
-	}
-
-	@description = "Add a category with Guest view permission."
-	@priority = 4
-	test AddCategoryWithGuestViewPermission {
-		task ("Add a category") {
-			JSONCategory.addCategory(
-				groupName = "Test Site Name",
-				title = "Category Name",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("View the category with Guest view permission") {
-			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
-
-			Category.viewCategoryViewableByCP(
-				categoryName = "Category Name",
-				viewableBy = "Anyone (Guest Role)",
-				vocabularyName = "Vocabulary Name");
-		}
-	}
-
-	@description = "Add a category with Owner view permission."
-	@priority = 4
-	test AddCategoryWithOwnerViewPermission {
-		task ("Add a category") {
-			JSONCategory.addCategory(
-				groupName = "Test Site Name",
-				title = "Category Name",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("View the category with Owner view permission") {
-			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
-
-			Category.viewCategoryViewableByCP(
-				categoryName = "Category Name",
-				viewableBy = "Owner",
-				vocabularyName = "Vocabulary Name");
-		}
-	}
-
-	@description = "Add a category with Site Member view permission."
-	@priority = 4
-	test AddCategoryWithSiteMemberViewPermission {
-		task ("Add a category") {
-			JSONCategory.addCategory(
-				groupName = "Test Site Name",
-				title = "Category Name",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("View the category with Site Member view permission") {
-			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
-
-			Category.viewCategoryViewableByCP(
-				categoryName = "Category Name",
-				viewableBy = "Site Members",
 				vocabularyName = "Vocabulary Name");
 		}
 	}
@@ -298,6 +240,8 @@ definition {
 	@description = "Add a vocabulary for Wiki Page."
 	@priority = 3
 	test AddVocabularyForWikiPage {
+		WikiPortlet.enableWiki();
+
 		task ("Add a vocabulary for Wiki Page") {
 			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
 
@@ -459,75 +403,6 @@ definition {
 			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
 
 			Vocabulary.addVocabularyWithNullTitle();
-		}
-	}
-
-	@description = "This is a use case for LPS-107730. Can not store 256 character in name field, key field and value field of category."
-	@priority = 4
-	test CannotType256CharactersInNameFieldKeyFieldAndValueField {
-		var actualText = "The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256";
-		var inputText = "The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256.The number of characters is 256.";
-		var modifiedText = "The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255";
-
-		task ("Can not store 256 characters in name field of category") {
-			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
-
-			Navigator.gotoNavNested(navNested = "Vocabulary Name");
-
-			LexiconEntry.gotoAdd();
-
-			PortletEntry.inputTitle(title = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "TextInput#TITLE",
-				value1 = ${inputText});
-
-			Button.clickSave();
-
-			AssertTextEquals(
-				key_alertMessage = "Please enter no more than 255 characters.",
-				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE",
-				value1 = "Please enter no more than 255 characters.");
-
-			PortletEntry.inputTitle(title = ${modifiedText});
-
-			AssertTextEquals(
-				locator1 = "TextInput#TITLE",
-				value1 = ${modifiedText});
-
-			PortletEntry.save();
-		}
-
-		task ("Can not store 256 characters in key field and value field of category") {
-			LexiconEntry.gotoEntryMenuItem(
-				menuItem = "Edit",
-				rowEntry = ${modifiedText});
-
-			Navigator.gotoNavUnderline(navUnderline = "Properties");
-
-			Type.sendKeys(
-				locator1 = "CategoriesEditCategory#PROPERTIES_KEY_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextNotEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_KEY_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_KEY_FIELD_1",
-				value1 = ${actualText});
-
-			Type.sendKeys(
-				locator1 = "CategoriesEditCategory#PROPERTIES_VALUE_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextNotEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_VALUE_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_VALUE_FIELD_1",
-				value1 = ${actualText});
 		}
 	}
 
@@ -745,140 +620,6 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-107730. Can input 254 characters to name field, key field and value field of category."
-	@priority = 4
-	test Type254CharactersIntoNameFieldKeyFieldAndValueField {
-		var inputText = "The number of characters is 254.The number of characters is 254.The number of characters is 254.The number of characters is 254.The number of characters is 254.The number of characters is 254.The number of characters is 254.The number of characters is 25";
-
-		task ("Assert input 254 characters to name field of category") {
-			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
-
-			Navigator.gotoNavNested(navNested = "Vocabulary Name");
-
-			LexiconEntry.gotoAdd();
-
-			PortletEntry.inputTitle(title = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "TextInput#TITLE",
-				value1 = ${inputText});
-
-			PortletEntry.save();
-
-			AssertVisible(
-				key_tableEntry = ${inputText},
-				locator1 = "LexiconTable#TABLE_ENTRY");
-		}
-
-		task ("Assert input 254 characters to key field and value field of category") {
-			LexiconEntry.gotoEntryMenuItem(
-				menuItem = "Edit",
-				rowEntry = ${inputText});
-
-			Navigator.gotoNavUnderline(navUnderline = "Properties");
-
-			Type(
-				locator1 = "CategoriesEditCategory#PROPERTIES_KEY_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_KEY_FIELD_1",
-				value1 = ${inputText});
-
-			Type(
-				locator1 = "CategoriesEditCategory#PROPERTIES_VALUE_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_VALUE_FIELD_1",
-				value1 = ${inputText});
-
-			PortletEntry.save();
-
-			LexiconEntry.gotoEntryMenuItem(
-				menuItem = "Edit",
-				rowEntry = ${inputText});
-
-			Navigator.gotoNavUnderline(navUnderline = "Properties");
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_KEY_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_VALUE_FIELD_1",
-				value1 = ${inputText});
-		}
-	}
-
-	@description = "This is a use case for LPS-107730. Can input 255 characters to name field, key field and value field of category."
-	@priority = 5
-	test Type255CharactersIntoNameFieldKeyFieldAndValueField {
-		property portal.acceptance = "true";
-
-		var inputText = "The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255.The number of characters is 255";
-
-		task ("Assert input 255 characters to name field of category") {
-			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
-
-			Navigator.gotoNavNested(navNested = "Vocabulary Name");
-
-			LexiconEntry.gotoAdd();
-
-			PortletEntry.inputTitle(title = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "TextInput#TITLE",
-				value1 = ${inputText});
-
-			PortletEntry.save();
-
-			AssertVisible(
-				key_tableEntry = ${inputText},
-				locator1 = "LexiconTable#TABLE_ENTRY");
-		}
-
-		task ("Assert input 255 characters to key field and value field of category") {
-			LexiconEntry.gotoEntryMenuItem(
-				menuItem = "Edit",
-				rowEntry = ${inputText});
-
-			Navigator.gotoNavUnderline(navUnderline = "Properties");
-
-			Type(
-				locator1 = "CategoriesEditCategory#PROPERTIES_KEY_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_KEY_FIELD_1",
-				value1 = ${inputText});
-
-			Type(
-				locator1 = "CategoriesEditCategory#PROPERTIES_VALUE_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_VALUE_FIELD_1",
-				value1 = ${inputText});
-
-			PortletEntry.save();
-
-			LexiconEntry.gotoEntryMenuItem(
-				menuItem = "Edit",
-				rowEntry = ${inputText});
-
-			Navigator.gotoNavUnderline(navUnderline = "Properties");
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_KEY_FIELD_1",
-				value1 = ${inputText});
-
-			AssertTextEquals(
-				locator1 = "CategoriesEditCategory#PROPERTIES_VALUE_FIELD_1",
-				value1 = ${inputText});
-		}
-	}
-
 	@description = "View the breadcrumb with Flattened Tree."
 	@priority = 3
 	test ViewBreadcrumbWithFlattenedTree {
@@ -896,7 +637,9 @@ definition {
 				configurationName = "Asset Categories Web",
 				configurationScope = "System Scope");
 
-			SystemSettings.configureDisplayStyle(displayStyle = "Flattened Tree");
+			SystemSettings.configureDisplayStyle(
+				displayStyle = "Flattened Tree",
+				fieldName = "Category Navigation Display Style");
 		}
 
 		task ("Add a category") {
@@ -926,55 +669,6 @@ definition {
 			Category.viewPath(
 				categoryName = "Subcategory Name",
 				path = "Vocabulary Name > Category Name > Subcategory Name");
-		}
-	}
-
-	@description = "This is a test for LPS-145292. The user could view new icons on dropdown menu of categories admin."
-	@priority = 4
-	test ViewDropdownMenuIconsInCategoriesAdmin {
-		task ("Given a Categories creator has a category within a vocabulary") {
-			JSONCategory.addCategory(
-				groupName = "Test Site Name",
-				title = "Category Name",
-				vocabularyName = "Vocabulary Name");
-		}
-
-		task ("When the Categories creator opens the dropdown menu of Vocabularies") {
-			Category.openCategoriesAdmin(siteURLKey = "test-site-name");
-
-			Click.waitForMenuToggleJSClick(locator1 = "NavNested#NAV_NESTED_ELLIPSIS");
-		}
-
-		task ("Then the Categories creator can see the new icon on the dropdown menu") {
-			DropdownMenuItem.viewIcon(iconList = "trash");
-		}
-
-		task ("When the Categories creator opens the dropdown menu of new vocabulary") {
-			Click.waitForMenuToggleJSClick(
-				key_headerName = "Vocabulary Name",
-				locator1 = "Portlet#H2_HEADER_VERTICAL_ELLIPSIS");
-		}
-
-		task ("Then the Categories creator can see the new icons on the dropdown menu") {
-			DropdownMenuItem.viewIcon(iconList = "pencil,password-policies,trash");
-		}
-
-		task ("When the Categories creator opens the dropdown menu of category") {
-			LexiconEntry.openEntryMenu(rowEntry = "Category Name");
-		}
-
-		task ("Then the Categories creator can see the new icons on the dropdown menu") {
-			DropdownMenuItem.viewIcon(iconList = "pencil,move-folder,password-policies,trash");
-		}
-
-		task ("When the Categories creator opens the dropdown menu of management toolbar after selecting the category") {
-			ManagementBar.clickSelectAllCheckbox();
-
-			Click(locator1 = "ManagementBar#MORE_ACTIONS_ELLIPSIS");
-		}
-
-		task ("Then the Categories creator can see the new icons on the dropdown menu") {
-			DropdownMenuItem.viewIcon(iconList = "page,trash");
 		}
 	}
 

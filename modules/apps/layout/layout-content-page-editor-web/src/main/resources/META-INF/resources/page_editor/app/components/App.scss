@@ -27,6 +27,8 @@
 
 @import 'fragment_content/FragmentContent';
 
+@import 'keyboard_movement/KeyboardMovementPreview';
+
 @import 'layout_data_items/CollectionPagination';
 @import 'layout_data_items/FormWithControls';
 @import 'layout_data_items/RowWithControls';
@@ -57,3 +59,9 @@
 @import '../../plugins/page_content/components/Plugin';
 @import '../../plugins/page_design_options/components/Plugin';
 @import '../../plugins/page_rules/components/Plugin';
+
+html#{$cadmin-selector}
+	.page-editor__small-resolution
+	.cadmin.control-menu-container {
+	position: static;
+}

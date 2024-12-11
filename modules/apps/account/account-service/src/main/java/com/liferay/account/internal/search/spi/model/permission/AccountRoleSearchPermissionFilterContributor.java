@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.search.filter.TermsFilter;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
-import com.liferay.portal.search.spi.model.permission.SearchPermissionFilterContributor;
+import com.liferay.portal.search.spi.model.permission.contributor.SearchPermissionFilterContributor;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -108,8 +108,8 @@ public class AccountRoleSearchPermissionFilterContributor
 					});
 
 			try (SafeCloseable safeCloseable =
-					AccountRolePermissionThreadLocal.setWithSafeCloseable(
-						accountEntryId)) {
+					AccountRolePermissionThreadLocal.
+						setAccountEntryIdWithSafeCloseable(accountEntryId)) {
 
 				for (AccountRole accountRole : accountRoles) {
 					if (!accountRoleIds.contains(accountRole.getRoleId()) &&

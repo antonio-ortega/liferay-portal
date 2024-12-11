@@ -9,8 +9,6 @@
 	<div class="lfr-upload-container" id="<portlet:namespace />fileUpload"></div>
 </div>
 
-<span id="<portlet:namespace />selectedFileNameContainer"></span>
-
 <div class="hide" id="<portlet:namespace />metadataExplanationContainer"></div>
 
 <div class="hide selected" id="<portlet:namespace />selectedFileNameMetadataContainer"></div>
@@ -32,7 +30,7 @@
 	</div>
 </c:if>
 
-<aui:script use="liferay-portlet-url,liferay-upload">
+<aui:script use="liferay-upload">
 	var uploader = new Liferay.Upload({
 		boundingBox: '#<portlet:namespace />fileUpload',
 

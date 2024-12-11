@@ -1,7 +1,7 @@
 @default = "refresh"
 definition {
 
-	function pauseRefresh {
+	function pauseRefresh() {
 		WaitForSPARefresh();
 
 		selenium.pause(5000);
@@ -10,29 +10,39 @@ definition {
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
-		selenium.assertJavaScriptErrors();
+		selenium.assertJavaScriptErrors("true");
 
 		selenium.assertLiferayErrors();
 	}
 
-	function refresh {
+	function refresh() {
 		WaitForSPARefresh();
 
 		selenium.refresh();
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
-		selenium.assertJavaScriptErrors();
+		selenium.assertJavaScriptErrors("true");
 
 		selenium.assertLiferayErrors();
 	}
 
-	function refreshNoSPARefresh {
+	function refreshNoLiferayLog() {
+		WaitForSPARefresh();
+
+		selenium.refresh();
+
+		selenium.assertJavaScriptErrors("true");
+
+		selenium.assertLiferayErrors();
+	}
+
+	function refreshNoSPARefresh() {
 		selenium.refresh();
 
 		WaitForLiferayEvent.initializeLiferayEventLog();
 
-		selenium.assertJavaScriptErrors();
+		selenium.assertJavaScriptErrors("true");
 
 		selenium.assertLiferayErrors();
 	}

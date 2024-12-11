@@ -7,6 +7,8 @@ package com.liferay.portal.spring.hibernate;
 
 import com.liferay.petra.io.Deserializer;
 import com.liferay.petra.io.Serializer;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.lang.ThreadContextClassLoaderUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.portal.internal.change.tracking.hibernate.CTSQLInterceptor;
@@ -93,10 +95,6 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 		Properties properties = PropsUtil.getProperties();
 
 		properties.remove("hibernate.cache.region.factory_class");
-
-		if (DBManagerUtil.getDBType(dialect) == DBType.SYBASE) {
-			properties.setProperty(PropsKeys.HIBERNATE_JDBC_BATCH_SIZE, "0");
-		}
 
 		properties.setProperty(
 			"hibernate.allow_update_outside_transaction", "true");
@@ -278,7 +276,11 @@ public class PortalHibernateConfiguration extends LocalSessionFactoryBean {
 			return;
 		}
 
-		configuration.addXmlMapping(_loadBinding(configuration, url));
+		try (SafeCloseable safeCloseable = ThreadContextClassLoaderUtil.swap(
+				PortalHibernateConfiguration.class.getClassLoader())) {
+
+			configuration.addXmlMapping(_loadBinding(configuration, url));
+		}
 	}
 
 	private File _getCacheFile(URL url) {

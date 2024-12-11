@@ -6,16 +6,22 @@
 import classNames from 'classnames';
 import React, {useContext} from 'react';
 
+import useSetRef from '../../../common/hooks/useSetRef';
 import {CollectionItemContext} from '../../contexts/CollectionItemContext';
 import getLayoutDataItemTopperUniqueClassName from '../../utils/getLayoutDataItemTopperUniqueClassName';
 import TopperEmpty from '../topper/TopperEmpty';
 
 const CollectionItemWithControls = React.forwardRef(({children, item}, ref) => {
-	const {collectionItem} = useContext(CollectionItemContext);
+	const {collectionConfig, collectionItem} = useContext(
+		CollectionItemContext
+	);
 	const title =
 		collectionItem.title ||
 		collectionItem.name ||
-		collectionItem.defaultTitle;
+		collectionItem.defaultTitle ||
+		collectionConfig?.collection?.title;
+
+	const [setRef, itemElement] = useSetRef(ref);
 
 	return (
 		<div
@@ -25,15 +31,17 @@ const CollectionItemWithControls = React.forwardRef(({children, item}, ref) => {
 			})}
 		>
 			<TopperEmpty
+				activable={false}
 				className={getLayoutDataItemTopperUniqueClassName(item.itemId)}
 				item={item}
+				itemElement={itemElement}
 			>
 				{React.Children.count(children) === 0 ? (
 					<div
 						className={classNames('page-editor__collection-item', {
 							empty: !children.length,
 						})}
-						ref={ref}
+						ref={setRef}
 					>
 						<div className="page-editor__collection-item__border">
 							<p className="page-editor__collection-item__title">
@@ -45,7 +53,7 @@ const CollectionItemWithControls = React.forwardRef(({children, item}, ref) => {
 						</div>
 					</div>
 				) : (
-					<div ref={ref}>{children}</div>
+					<div ref={setRef}>{children}</div>
 				)}
 			</TopperEmpty>
 		</div>

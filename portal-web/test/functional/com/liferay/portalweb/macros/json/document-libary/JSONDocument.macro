@@ -1,12 +1,14 @@
 definition {
 
-	macro addComment {
+	@summary = "Default summary"
+	macro addComment(dmDocumentTitle = null, groupName = null, baseURL = null, commentBody = null, folderId = null) {
 		var fileEntryId = JSONDocument.getFileEntryId(
 			dmDocumentTitle = ${dmDocumentTitle},
 			folderId = ${folderId},
 			groupName = ${groupName},
 			portalURL = ${baseURL});
 		var portalURL = JSONCompany.getPortalURL();
+		var userPassword = PropsUtil.get("default.admin.password");
 
 		if (!(isSet(parentCommentId))) {
 			var parentCommentId = 0;
@@ -15,9 +17,10 @@ definition {
 		var curl = '''
 			${portalURL}/o/headless-delivery/v1.0/documents/${fileEntryId}/comments \
 				-H 'Content-Type: application/json' \
-				-u 'test@liferay.com:test'
+				-u 'test@liferay.com:${userPassword}'
 				-d '{
-					"creator": {},
+					"creator": {
+					},
 					"parentCommentId": "${parentCommentId}",
 					"text": "${commentBody}"
 				}'
@@ -32,7 +35,8 @@ definition {
 		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	macro addFile {
+	@summary = "Default summary"
+	macro addFile(workflowAction = null, dmDocumentTitle = null, groupName = null, assetCategoryIds = null, assetTagNames = null, folderName = null) {
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (!(isSet(repositoryId))) {
@@ -96,7 +100,8 @@ definition {
 		var messageId = JSONCurlUtil.post(${curl});
 	}
 
-	macro addFileWithUploadedFile {
+	@summary = "Default summary"
+	macro addFileWithUploadedFile(fileName = null, dmDocumentDescription = null, mimeType = null, dmDocumentTitle = null, assetTagNames = null, increaseMinutes = null, workflowAction = null, parentFolderName = null, groupName = null, assetCategoryIds = null, folderName = null) {
 		Variables.assertDefined(parameterList = "${mimeType},${sourceFileName}");
 
 		var portalURL = JSONCompany.getPortalURL();
@@ -141,6 +146,15 @@ definition {
 			var sourceFileName = ${fileName};
 		}
 
+		if (!(isSet(displayDate))) {
+			var displayDate = DateUtil.getFormattedCurrentDate("yyyy-MM-dd HH:mm");
+		}
+		else {
+			var displayDate = DateUtil.getDateOffsetByMinutes(${increaseMinutes}, "yyyy-MM-dd HH:mm");
+
+			echo("## * displayDate: ${displayDate}");
+		}
+
 		if (!(isSet(expirationDate))) {
 			var expirationDate = "2099-01-25 01:00";
 		}
@@ -168,7 +182,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		var serviceContext = JSONDocumentSetter.setServiceContext(
@@ -192,6 +206,7 @@ definition {
 					-F urlTitle=${dmFriendlyURL} \
 					-F description=${description} \
 					-F changeLog= \
+					-F <CURL_DATA[displayDate=${displayDate}]CURL_DATA> \
 					-F <CURL_DATA[expirationDate=${expirationDate}]CURL_DATA> \
 					-F <CURL_DATA[reviewDate=${reviewDate}]CURL_DATA> \
 					-F file=@${filePath} \
@@ -227,7 +242,8 @@ definition {
 		return ${fileEntryId};
 	}
 
-	macro addMultipleFilesWithUploadedFile {
+	@summary = "Default summary"
+	macro addMultipleFilesWithUploadedFile(groupName = null, documentFileNames = null, folderName = null) {
 		var list1 = ListUtil.newListFromString(${documentFileNames});
 
 		var size = ListUtil.size(${list1});
@@ -268,12 +284,12 @@ definition {
 		}
 	}
 
-	macro addShortcut {
+	@summary = "Default summary"
+	macro addShortcut(sourceGroupName = null, sourceParentFolderNames = null, targetFolderName = null, targetGroupName = null, dmDocumentTitle = null, baseURL = null, sourceFolderName = null, sourceParentFolderName = null, targetParentFolderName = null) {
 		Variables.assertDefined(parameterList = "${targetGroupName},${sourceGroupName},${dmDocumentTitle}");
 
 		var portalURL = JSONCompany.getPortalURL();
 		var targetRepositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${targetGroupName});
-		var sourceRepositoryId = JSONGroupAPI._getSiteIdByGroupKey(groupName = ${sourceGroupName});
 
 		if (isSet(sourceFolderName)) {
 			Variables.assertDefined(parameterList = ${sourceFolderName});
@@ -323,13 +339,18 @@ definition {
 			var targetFolderId = 0;
 		}
 
+		var externalReferenceCode = StringUtil.randomString(12);
 		var userLoginInfo = JSONUtil2.formatJSONUser();
+		var targetGroupId = JSONGroupAPI._getGroupIdByName(
+			groupName = ${targetGroupName},
+			site = "true");
 
 		var curl = '''
 			${portalURL}/api/jsonws/dlfileshortcut/add-file-shortcut  \
 				-u ${userLoginInfo} \
-				-d groupId=${targetRepositoryId} \
-				-d repositoryId=${sourceRepositoryId} \
+				-d externalReferenceCode=${externalReferenceCode} \
+				-d groupId=${targetGroupId} \
+				-d repositoryId=${targetRepositoryId} \
 				-d folderId=${targetFolderId} \
 				-d toFileEntryId=${fileEntryId}
 		''';
@@ -337,12 +358,14 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro checkInFile {
-		Variables.assertDefined(parameterList = "${groupName},${dmDocumentTitle}");
+	@summary = "Default summary"
+	macro checkInFile(dmDocumentTitle = null, groupName = null) {
+		Variables.assertDefined(parameterList = ${dmDocumentTitle});
 
 		var portalURL = JSONCompany.getPortalURL();
 		var fileEntryId = JSONDocument.getFileEntryId(
 			dmDocumentTitle = ${dmDocumentTitle},
+			groupId = ${groupId},
 			groupName = ${groupName});
 		var userLoginInfo = JSONUtil2.formatJSONUser();
 
@@ -356,12 +379,14 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro checkOutFile {
-		Variables.assertDefined(parameterList = "${groupName},${dmDocumentTitle}");
+	@summary = "Default summary"
+	macro checkOutFile(dmDocumentTitle = null, groupName = null) {
+		Variables.assertDefined(parameterList = ${dmDocumentTitle});
 
 		var portalURL = JSONCompany.getPortalURL();
 		var fileEntryId = JSONDocument.getFileEntryId(
 			dmDocumentTitle = ${dmDocumentTitle},
+			groupId = ${groupId},
 			groupName = ${groupName});
 		var userLoginInfo = JSONUtil2.formatJSONUser();
 
@@ -374,7 +399,8 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro deleteFile {
+	@summary = "Default summary"
+	macro deleteFile(dmDocumentTitle = null, groupName = null, folderName = null) {
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (!(isSet(site))) {
@@ -407,7 +433,8 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro getFileEntryId {
+	@summary = "Default summary"
+	macro getFileEntryId(dmDocumentTitle = null, groupName = null) {
 		if (!(isSet(portalURL))) {
 			var portalURL = JSONCompany.getPortalURL();
 		}
@@ -416,10 +443,12 @@ definition {
 			var site = "true";
 		}
 
-		var groupId = JSONGroupAPI._getGroupIdByName(
-			groupName = ${groupName},
-			portalURL = ${portalURL},
-			site = ${site});
+		if (!(isSet(groupId))) {
+			var groupId = JSONGroupAPI._getGroupIdByName(
+				groupName = ${groupName},
+				portalURL = ${portalURL},
+				site = ${site});
+		}
 
 		if (!(isSet(folderId))) {
 			var folderId = 0;
@@ -442,7 +471,8 @@ definition {
 		echo("## * File Entry ID: ${fileEntryId}");
 	}
 
-	macro getFileEntryTypeId {
+	@summary = "Default summary"
+	macro getFileEntryTypeId(dmDocumentTitle = null, groupName = null, fileEntryTypeId = null) {
 		if (!(isSet(portalURL))) {
 			var portalURL = JSONCompany.getPortalURL();
 		}
@@ -472,7 +502,8 @@ definition {
 		echo("## * File Entry ID: ${fileEntryTypeId}");
 	}
 
-	macro getFileEntryUUID {
+	@summary = "Default summary"
+	macro getFileEntryUUID(dmDocumentTitle = null, groupName = null) {
 		if (!(isSet(portalURL))) {
 			var portalURL = JSONCompany.getPortalURL();
 		}
@@ -505,7 +536,8 @@ definition {
 		return ${fileEntryUuid};
 	}
 
-	macro getFileEntryVersionId {
+	@summary = "Default summary"
+	macro getFileEntryVersionId(dmDocumentTitle = null, groupName = null, baseURL = null, dmDocumentVersion = null, folderId = null) {
 		if (!(isSet(portalURL))) {
 			var portalURL = JSONCompany.getPortalURL();
 		}
@@ -536,7 +568,8 @@ definition {
 		return ${fileVersionId};
 	}
 
-	macro getLatestVersionURL {
+	@summary = "Default summary"
+	macro getLatestVersionURL(dmDocumentTitle = null, groupName = null) {
 		Variables.assertDefined(parameterList = "${dmDocumentTitle},${groupName}");
 
 		var portalURL = JSONCompany.getPortalURL();
@@ -550,7 +583,8 @@ definition {
 		return "${portalURL}/documents/d/${siteURLKey}/${fileName}";
 	}
 
-	macro moveFileEntryToFolder {
+	@summary = "Default summary"
+	macro moveFileEntryToFolder(dmDocumentTitle = null, groupName = null, baseURL = null, site = null, folderName = null, folderId = null) {
 		var fileEntryId = JSONDocument.getFileEntryId(
 			dmDocumentTitle = ${dmDocumentTitle},
 			folderId = ${folderId},
@@ -573,7 +607,8 @@ definition {
 		com.liferay.poshi.runner.util.JSONCurlUtil.post(${curl});
 	}
 
-	macro moveToRecycleBin {
+	@summary = "Default summary"
+	macro moveToRecycleBin(dmDocumentTitle = null, groupName = null, baseURL = null, site = null, stagingDepotName = null, parentFolderId = null, folderName = null) {
 		var portalURL = JSONCompany.getPortalURL();
 
 		if (isSet(folderName)) {
@@ -611,7 +646,8 @@ definition {
 		JSONCurlUtil.post(${curl});
 	}
 
-	macro subscribeToFolder {
+	@summary = "Default summary"
+	macro subscribeToFolder(groupName = null, dmFolderName = null) {
 		var folderId = JSONDocumentAPI._getFolderIdByFolderName(
 			groupName = ${groupName},
 			name = ${dmFolderName});
@@ -634,7 +670,7 @@ definition {
 		}
 
 		if (!(isSet(userPassword))) {
-			var userPassword = "test";
+			var userPassword = PropsUtil.get("default.admin.password");
 		}
 
 		var curl = '''

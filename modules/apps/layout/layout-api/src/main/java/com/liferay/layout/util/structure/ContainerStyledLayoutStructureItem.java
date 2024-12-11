@@ -28,6 +28,14 @@ public class ContainerStyledLayoutStructureItem
 		_linkJSONObject = JSONFactoryUtil.createJSONObject();
 	}
 
+	public ContainerStyledLayoutStructureItem(
+		String itemId, String parentItemId) {
+
+		super(itemId, parentItemId);
+
+		_linkJSONObject = JSONFactoryUtil.createJSONObject();
+	}
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -254,7 +262,11 @@ public class ContainerStyledLayoutStructureItem
 		}
 
 		if (itemConfigJSONObject.has("htmlTag")) {
-			setHtmlTag(itemConfigJSONObject.getString("htmlTag"));
+			String htmlTag = itemConfigJSONObject.getString("htmlTag");
+
+			if (!Objects.equals(htmlTag, "main")) {
+				setHtmlTag(htmlTag);
+			}
 		}
 
 		if (itemConfigJSONObject.has("justify")) {

@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -91,6 +92,24 @@ public class CPDefinitionOptionRelLocalServiceUtil {
 			cpDefinitionId, cpOptionId, nameMap, descriptionMap,
 			commerceOptionTypeKey, priority, facetable, required,
 			skuContributor, importOptionValue, priceType, serviceContext);
+	}
+
+	public static CPDefinitionOptionRel addCPDefinitionOptionRel(
+			long cpDefinitionId, long cpOptionId,
+			Map<java.util.Locale, String> nameMap,
+			Map<java.util.Locale, String> descriptionMap,
+			String commerceOptionTypeKey, String infoItemServiceKey,
+			double priority, boolean definedExternally, boolean facetable,
+			boolean required, boolean skuContributor, boolean importOptionValue,
+			String priceType, String typeSettings,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws PortalException {
+
+		return getService().addCPDefinitionOptionRel(
+			cpDefinitionId, cpOptionId, nameMap, descriptionMap,
+			commerceOptionTypeKey, infoItemServiceKey, priority,
+			definedExternally, facetable, required, skuContributor,
+			importOptionValue, priceType, typeSettings, serviceContext);
 	}
 
 	public static CPDefinitionOptionRel addCPDefinitionOptionRel(
@@ -473,6 +492,16 @@ public class CPDefinitionOptionRelLocalServiceUtil {
 			cpDefinitionId, skuContributor);
 	}
 
+	public static List<CPDefinitionOptionRel> getCPOptionCPDefinitionOptionRels(
+		long cpOptionId) {
+
+		return getService().getCPOptionCPDefinitionOptionRels(cpOptionId);
+	}
+
+	public static int getCPOptionCPDefinitionOptionRelsCount(long cpOptionId) {
+		return getService().getCPOptionCPDefinitionOptionRelsCount(cpOptionId);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
 		getExportActionableDynamicQuery(
 			com.liferay.exportimport.kernel.lar.PortletDataContext
@@ -603,13 +632,12 @@ public class CPDefinitionOptionRelLocalServiceUtil {
 	}
 
 	public static CPDefinitionOptionRelLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CPDefinitionOptionRelLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CPDefinitionOptionRelLocalService _service;
+	private static final Snapshot<CPDefinitionOptionRelLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CPDefinitionOptionRelLocalServiceUtil.class,
+			CPDefinitionOptionRelLocalService.class);
 
 }

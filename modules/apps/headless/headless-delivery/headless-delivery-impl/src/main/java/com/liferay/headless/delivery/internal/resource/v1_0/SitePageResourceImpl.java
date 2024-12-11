@@ -33,7 +33,6 @@ import com.liferay.headless.delivery.internal.odata.entity.v1_0.SitePageEntityMo
 import com.liferay.headless.delivery.resource.v1_0.SitePageResource;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.importer.LayoutsImporter;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
@@ -44,7 +43,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.events.ServicePreAction;
 import com.liferay.portal.events.ThemeServicePreAction;
-import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -123,7 +121,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -143,7 +140,6 @@ import org.osgi.service.component.annotations.ServiceScope;
 	properties = "OSGI-INF/liferay/rest/v1_0/site-page.properties",
 	scope = ServiceScope.PROTOTYPE, service = SitePageResource.class
 )
-@CTAware
 public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 	@Override
@@ -237,9 +233,11 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 						LayoutConstants.TYPE_CONTENT,
 						LayoutConstants.TYPE_EMBEDDED,
 						LayoutConstants.TYPE_LINK_TO_LAYOUT,
+						LayoutConstants.TYPE_NODE,
 						LayoutConstants.TYPE_FULL_PAGE_APPLICATION,
 						LayoutConstants.TYPE_PANEL,
-						LayoutConstants.TYPE_PORTLET, LayoutConstants.TYPE_URL
+						LayoutConstants.TYPE_PORTLET, LayoutConstants.TYPE_URL,
+						LayoutConstants.TYPE_UTILITY
 					});
 				searchContext.setAttribute(
 					"privateLayout", Boolean.FALSE.toString());
@@ -307,7 +305,7 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 			if (layout == null) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Could not find parent site page");
+					_log.warn("Unable to get parent layout");
 				}
 			}
 			else {
@@ -372,6 +370,21 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 							siteMapInclude);
 					}
 
+					Boolean includeChildSitePages =
+						siteMapSettings.getIncludeChildSitePages();
+
+					if (includeChildSitePages != null) {
+						String siteMapIncludeChildLayouts = "false";
+
+						if (includeChildSitePages) {
+							siteMapIncludeChildLayouts = "true";
+						}
+
+						typeSettingsUnicodeProperties.setProperty(
+							"sitemap-include-child-layouts",
+							siteMapIncludeChildLayouts);
+					}
+
 					Double pagePriority = siteMapSettings.getPagePriority();
 
 					if (pagePriority != null) {
@@ -419,8 +432,9 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 		ServiceContext serviceContext = _createServiceContext(siteId, sitePage);
 
 		Layout layout = _layoutService.addLayout(
-			siteId, false, parentLayoutId, nameMap, titleMap, descriptionMap,
-			keywordsMap, robotsMap, LayoutConstants.TYPE_CONTENT,
+			null, siteId, false, parentLayoutId, nameMap, titleMap,
+			descriptionMap, keywordsMap, robotsMap,
+			LayoutConstants.TYPE_CONTENT,
 			typeSettingsUnicodeProperties.toString(), hidden, friendlyUrlMap, 0,
 			serviceContext);
 
@@ -435,8 +449,15 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 			Settings settings = pageDefinition.getSettings();
 
 			if (settings != null) {
-				layout = _layoutsImporter.importLayoutSettings(
-					contextUser.getUserId(), layout, settings.toString());
+				ServiceContextThreadLocal.pushServiceContext(serviceContext);
+
+				try {
+					layout = _layoutsImporter.importLayoutSettings(
+						contextUser.getUserId(), layout, settings.toString());
+				}
+				finally {
+					ServiceContextThreadLocal.popServiceContext();
+				}
 			}
 		}
 
@@ -476,7 +497,7 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 			assetTagNames = sitePage.getKeywords();
 		}
 
-		return ServiceContextBuilder.create(
+		ServiceContext serviceContext = ServiceContextBuilder.create(
 			groupId, contextHttpServletRequest, null
 		).assetCategoryIds(
 			assetCategoryIds
@@ -488,6 +509,10 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 				sitePage.getCustomFields(),
 				contextAcceptLanguage.getPreferredLocale())
 		).build();
+
+		serviceContext.setUserId(contextUser.getUserId());
+
+		return serviceContext;
 	}
 
 	private Map<String, Map<String, String>> _getBasicActions(Layout layout) {
@@ -705,7 +730,7 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 		long[] segmentsEntryIds = _segmentsEntryRetriever.getSegmentsEntryIds(
 			layout.getGroupId(), contextUser.getUserId(),
-			_requestContextMapper.map(contextHttpServletRequest));
+			_requestContextMapper.map(contextHttpServletRequest), new long[0]);
 
 		long[] segmentsExperienceIds =
 			_segmentsExperienceRequestProcessorRegistry.
@@ -756,7 +781,7 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 		try {
 			_layoutsImporter.importPageElement(
 				layout, layoutStructure, layoutStructure.getMainItemId(),
-				pageElement.toString(), 0);
+				pageElement.toString(), 0, true);
 		}
 		finally {
 			ServiceContextThreadLocal.popServiceContext();
@@ -852,13 +877,6 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 		contextHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(layout));
 
-		ServletContext servletContext = ServletContextPool.get(
-			StringPool.BLANK);
-
-		if (contextHttpServletRequest.getAttribute(WebKeys.CTX) == null) {
-			contextHttpServletRequest.setAttribute(WebKeys.CTX, servletContext);
-		}
-
 		layout.includeLayoutContent(
 			contextHttpServletRequest, contextHttpServletResponse);
 
@@ -870,9 +888,9 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 		Document document = Jsoup.parse(
 			ThemeUtil.include(
-				servletContext, contextHttpServletRequest,
-				contextHttpServletResponse, "portal_normal.ftl",
-				layoutSet.getTheme(), false));
+				ServletContextPool.get(StringPool.BLANK),
+				contextHttpServletRequest, contextHttpServletResponse,
+				"portal_normal.ftl", layoutSet.getTheme(), false));
 
 		Element bodyElement = document.body();
 
@@ -923,7 +941,8 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 	private Layout _updateDraftLayout(Layout layout) throws Exception {
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		draftLayout = _layoutCopyHelper.copyLayoutContent(layout, draftLayout);
+		draftLayout = _layoutLocalService.copyLayoutContent(
+			layout, draftLayout);
 
 		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
 
@@ -1092,9 +1111,6 @@ public class SitePageResourceImpl extends BaseSitePageResourceImpl {
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

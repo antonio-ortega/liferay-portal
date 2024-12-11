@@ -6,7 +6,6 @@
 package com.liferay.change.tracking.internal.security.auto.login;
 
 import com.liferay.change.tracking.constants.CTPortletKeys;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManager;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Ticket;
@@ -38,10 +37,6 @@ public class CTOnDemandUserAutoLogin extends BaseAutoLogin {
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
 		throws Exception {
-
-		if (!_featureFlagManager.isEnabled("LPS-187436")) {
-			return null;
-		}
 
 		String portletId = ParamUtil.getString(httpServletRequest, "p_p_id");
 
@@ -105,9 +100,6 @@ public class CTOnDemandUserAutoLogin extends BaseAutoLogin {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		CTOnDemandUserAutoLogin.class);
-
-	@Reference
-	private FeatureFlagManager _featureFlagManager;
 
 	@Reference
 	private TicketLocalService _ticketLocalService;

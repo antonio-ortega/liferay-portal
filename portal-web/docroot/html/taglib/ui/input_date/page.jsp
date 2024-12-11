@@ -175,8 +175,8 @@ else {
 
 	<aui:input label="<%= dateTogglerCheckboxLabel %>" name="<%= randomNamespace + dateTogglerCheckboxName %>" type="checkbox" value="<%= disabled %>" />
 
-	<script>
-		(function() {
+	<aui:script>
+		(function () {
 			var form = document.<%= namespace + formName %>;
 
 			var checkbox = document.getElementById('<%= namespace + randomNamespace + dateTogglerCheckboxName %>');
@@ -184,7 +184,7 @@ else {
 			if (checkbox) {
 				checkbox.addEventListener(
 					'click',
-					function() {
+					function () {
 						var checked = checkbox.checked;
 
 						if (!form) {
@@ -234,13 +234,13 @@ else {
 				);
 			}
 		})();
-	</script>
+	</aui:script>
 </c:if>
 
 <aui:script use='<%= "aui-datepicker" + (BrowserSnifferUtil.isMobile(request) ? "-native" : StringPool.BLANK) %>'>
 	Liferay.component(
 		'<%= nameId %>DatePicker',
-		function() {
+		function () {
 			var keysPressed = {};
 
 			var onKeyDown = function (domEvent) {
@@ -307,7 +307,7 @@ else {
 							container.one('#<%= nameId %>').attr('disabled', newVal);
 							container.one('#<%= yearParamId %>').attr('disabled', newVal);
 						},
-						enterKey: function() {
+						enterKey: function () {
 							var instance = this;
 
 							var inputVal = instance.get('activeInput').val();
@@ -444,7 +444,7 @@ else {
 				}
 			);
 
-			datePicker.getDate = function() {
+			datePicker.getDate = function () {
 				var instance = this;
 
 				var container = instance.get('container');
@@ -490,7 +490,7 @@ else {
 
 			datePicker.after(
 				'selectionChange',
-				function() {
+				function () {
 					var input = A.one('#<%= nameId %>');
 
 					if (input) {
@@ -509,7 +509,7 @@ else {
 
 			Liferay.once(
 				'screenLoad',
-				function() {
+				function () {
 					datePicker.destroy();
 				}
 			);

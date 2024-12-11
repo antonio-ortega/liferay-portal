@@ -5,6 +5,7 @@
 
 package com.liferay.commerce.product.content.web.internal.helper;
 
+import com.liferay.account.model.AccountEntry;
 import com.liferay.adaptive.media.image.html.AMImageHTMLTagFactory;
 import com.liferay.commerce.constants.CPDefinitionInventoryConstants;
 import com.liferay.commerce.constants.CommerceWebKeys;
@@ -426,7 +427,7 @@ public class CPContentHelperImpl implements CPContentHelper {
 
 	@Override
 	public List<CPMedia> getImages(
-			long cpDefinitionId, ThemeDisplay themeDisplay)
+			long cpDefinitionId, boolean gallery, ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		CPDefinition cpDefinition = _cpDefinitionLocalService.getCPDefinition(
@@ -436,7 +437,7 @@ public class CPContentHelperImpl implements CPContentHelper {
 			_amImageHTMLTagFactory,
 			_portal.getClassNameId(CPDefinition.class.getName()),
 			cpDefinition.getCPDefinitionId(), _commerceCatalogDefaultImage,
-			_commerceMediaResolver, _cpAttachmentFileEntryLocalService,
+			_commerceMediaResolver, _cpAttachmentFileEntryLocalService, gallery,
 			cpDefinition.getGroupId(), themeDisplay);
 	}
 
@@ -459,7 +460,8 @@ public class CPContentHelperImpl implements CPContentHelper {
 			_commerceInventoryReplenishmentItemLocalService.
 				fetchCommerceInventoryReplenishmentItem(
 					companyId, sku, unitOfMeasureKey,
-					new CommerceInventoryReplenishmentItemAvailabilityDateComparator());
+					CommerceInventoryReplenishmentItemAvailabilityDateComparator.
+						getInstance(true));
 
 		if (commerceInventoryReplenishmentItem == null) {
 			return StringPool.BLANK;
@@ -507,8 +509,11 @@ public class CPContentHelperImpl implements CPContentHelper {
 			(CommerceContext)httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
+
 		CPInstance firstAvailableReplacementCPInstance =
 			_cpInstanceHelper.fetchFirstAvailableReplacementCPInstance(
+				accountEntry.getAccountEntryId(),
 				commerceContext.getCommerceChannelGroupId(),
 				cpSku.getCPInstanceId());
 
@@ -630,31 +635,6 @@ public class CPContentHelperImpl implements CPContentHelper {
 	}
 
 	@Override
-	public boolean hasDirectReplacement(CPSku cpSku) throws Exception {
-		if (cpSku == null) {
-			return false;
-		}
-
-		CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
-			cpSku.getCPInstanceId());
-
-		if ((cpInstance == null) || !cpInstance.isDiscontinued()) {
-			return false;
-		}
-
-		CPInstance replacementCPInstance =
-			_cpInstanceHelper.fetchReplacementCPInstance(
-				cpInstance.getReplacementCProductId(),
-				cpInstance.getReplacementCPInstanceUuid());
-
-		if (replacementCPInstance != null) {
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
 	public boolean hasMultipleCPSkus(CPCatalogEntry cpCatalogEntry) {
 		List<CPInstance> cpDefinitionInstances =
 			_cpInstanceLocalService.getCPDefinitionInstances(
@@ -693,12 +673,41 @@ public class CPContentHelperImpl implements CPContentHelper {
 			(CommerceContext)httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
+		AccountEntry accountEntry = commerceContext.getAccountEntry();
+
 		CPInstance firstAvailableReplacementCPInstance =
 			_cpInstanceHelper.fetchFirstAvailableReplacementCPInstance(
+				accountEntry.getAccountEntryId(),
 				commerceContext.getCommerceChannelGroupId(),
 				cpSku.getCPInstanceId());
 
 		if (firstAvailableReplacementCPInstance != null) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isDirectReplacement(CPSku cpSku) throws Exception {
+		if ((cpSku == null) || cpSku.isDiscontinued()) {
+			return false;
+		}
+
+		CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
+			cpSku.getCPInstanceId());
+
+		if ((cpInstance == null) || cpInstance.isDiscontinued()) {
+			return false;
+		}
+
+		CPDefinition cpDefinition = cpInstance.getCPDefinition();
+
+		List<CPInstance> cpInstances = _cpInstanceLocalService.getCPInstances(
+			cpInstance.getCPInstanceUuid(), cpDefinition.getCProductId(),
+			WorkflowConstants.STATUS_APPROVED);
+
+		if (!cpInstances.isEmpty()) {
 			return true;
 		}
 

@@ -15,41 +15,41 @@ import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.service.BatchEngineImportTaskLocalService;
 import com.liferay.batch.engine.unit.BatchEngineUnit;
 import com.liferay.batch.engine.unit.BatchEngineUnitConfiguration;
+import com.liferay.batch.engine.unit.BatchEngineUnitMetaInfo;
 import com.liferay.batch.engine.unit.BatchEngineUnitProcessor;
 import com.liferay.batch.engine.unit.BatchEngineUnitThreadLocal;
 import com.liferay.batch.engine.unit.BundleBatchEngineUnit;
-import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.File;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegateAdaptorFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -71,31 +71,46 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 	public CompletableFuture<Void> processBatchEngineUnits(
 		Collection<BatchEngineUnit> batchEngineUnits) {
 
-		List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
+		CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+
+		completableFuture.complete(null);
 
 		for (BatchEngineUnit batchEngineUnit : batchEngineUnits) {
 			try {
-				BatchEngineUnitConfiguration batchEngineUnitConfiguration =
-					batchEngineUnit.getBatchEngineUnitConfiguration();
+				BatchEngineUnitMetaInfo batchEngineUnitMetaInfo =
+					batchEngineUnit.getBatchEngineUnitMetaInfo();
 
-				String featureFlagKey = _getFeatureFlagKey(
-					batchEngineUnitConfiguration);
+				String featureFlag = batchEngineUnitMetaInfo.getFeatureFlag();
 
-				if (_isFeatureFlagDisabled(featureFlagKey)) {
+				if (_isFeatureFlagDisabled(featureFlag)) {
 					_featureFlagBatchEngineUnitProcessor.
 						registerBatchEngineUnit(
-							batchEngineUnitConfiguration.getCompanyId(),
-							featureFlagKey,
-							() -> _processBatchEngineUnit(batchEngineUnit));
+							batchEngineUnitMetaInfo.getCompanyId(), featureFlag,
+							() -> {
+								CompletableFuture<Void> localCompletableFuture =
+									new CompletableFuture<>();
+
+								Runnable runnable = _processBatchEngineUnit(
+									batchEngineUnit, localCompletableFuture);
+
+								runnable.run();
+
+								return localCompletableFuture;
+							});
 
 					continue;
 				}
 
-				CompletableFuture<Void> completableFuture =
-					_processBatchEngineUnit(batchEngineUnit);
+				CompletableFuture<Void> nextCompletableFuture =
+					new CompletableFuture<>();
 
-				if (completableFuture != null) {
-					completableFutures.add(completableFuture);
+				Runnable runnable = _processBatchEngineUnit(
+					batchEngineUnit, nextCompletableFuture);
+
+				if (runnable != null) {
+					completableFuture.thenRun(runnable);
+
+					completableFuture = nextCompletableFuture;
 				}
 
 				if (_log.isInfoEnabled()) {
@@ -113,8 +128,7 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 			}
 		}
 
-		return CompletableFuture.allOf(
-			completableFutures.toArray(new CompletableFuture[0]));
+		return completableFuture;
 	}
 
 	@Activate
@@ -122,13 +136,12 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 		_bundleContext = bundleContext;
 	}
 
-	private CompletableFuture<Void> _execute(
+	private Runnable _execute(
 			BatchEngineUnit batchEngineUnit,
 			BatchEngineUnitConfiguration batchEngineUnitConfiguration,
-			byte[] content, String contentType)
+			byte[] content, String contentType,
+			CompletableFuture<Void> completableFuture)
 		throws Exception {
-
-		CompletableFuture<Void> completableFuture = new CompletableFuture<>();
 
 		ServiceTracker<Object, Object> serviceTracker =
 			new ServiceTracker<Object, Object>(
@@ -156,38 +169,28 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 					Object service = _bundleContext.getService(
 						serviceReference);
 
-					ExecutorService executorService =
-						_portalExecutorManager.getPortalExecutor(
-							BatchEngineUnitProcessorImpl.class.getName());
+					try {
+						_execute(
+							batchEngineUnit, batchEngineUnitConfiguration,
+							content, contentType, service, this);
+					}
+					catch (Exception exception) {
+						if (_log.isWarnEnabled()) {
+							_log.warn(exception);
+						}
+					}
+					finally {
+						completableFuture.complete(null);
+					}
 
-					executorService.submit(
-						() -> {
-							try {
-								_execute(
-									batchEngineUnit,
-									batchEngineUnitConfiguration, content,
-									contentType, service, this);
-							}
-							catch (Exception exception) {
-								if (_log.isWarnEnabled()) {
-									_log.warn(exception);
-								}
-							}
-							finally {
-								completableFuture.complete(null);
-							}
-
-							_bundleContext.ungetService(serviceReference);
-						});
+					_bundleContext.ungetService(serviceReference);
 
 					return null;
 				}
 
 			};
 
-		serviceTracker.open();
-
-		return completableFuture;
+		return serviceTracker::open;
 	}
 
 	private void _execute(
@@ -196,6 +199,17 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 			byte[] content, String contentType, Object service,
 			ServiceTracker<Object, Object> serviceTracker)
 		throws Exception {
+
+		int importStrategy =
+			BatchEngineImportTaskConstants.IMPORT_STRATEGY_ON_ERROR_FAIL;
+
+		Map<String, Serializable> parameters =
+			batchEngineUnitConfiguration.getParameters();
+
+		if (Validator.isNotNull(parameters.get("importStrategy"))) {
+			importStrategy = BatchEngineImportTaskConstants.getImportStrategy(
+				(String)parameters.get("importStrategy"));
+		}
 
 		BatchEngineTaskItemDelegate<?> batchEngineTaskItemDelegate =
 			_batchEngineTaskItemDelegateProvider.toBatchEngineTaskItemDelegate(
@@ -210,9 +224,8 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 				StringUtil.toUpperCase(contentType),
 				BatchEngineTaskExecuteStatus.INITIAL.name(),
 				batchEngineUnitConfiguration.getFieldNameMappingMap(),
-				BatchEngineImportTaskConstants.IMPORT_STRATEGY_ON_ERROR_FAIL,
-				BatchEngineTaskOperation.CREATE.name(),
-				batchEngineUnitConfiguration.getParameters(),
+				importStrategy, BatchEngineTaskOperation.CREATE.name(),
+				parameters,
 				batchEngineUnitConfiguration.getTaskItemDelegateName(),
 				batchEngineTaskItemDelegate);
 
@@ -239,6 +252,22 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 		serviceTracker.close();
 	}
 
+	private long _getAdminUserId(long companyId) throws PortalException {
+		Role role = _roleLocalService.getRole(
+			companyId, RoleConstants.ADMINISTRATOR);
+
+		long[] userIds = _userLocalService.getRoleUserIds(role.getRoleId());
+
+		if (userIds.length == 0) {
+			throw new NoSuchUserException(
+				StringBundler.concat(
+					"No user exists in company ", companyId, " with role ",
+					role.getName()));
+		}
+
+		return userIds[0];
+	}
+
 	private Bundle _getBundle(BatchEngineUnit batchEngineUnit) {
 		if (!(batchEngineUnit instanceof BundleBatchEngineUnit)) {
 			return null;
@@ -248,19 +277,6 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 			(BundleBatchEngineUnit)batchEngineUnit;
 
 		return bundleBatchEngineUnit.getBundle();
-	}
-
-	private String _getFeatureFlagKey(
-		BatchEngineUnitConfiguration batchEngineUnitConfiguration) {
-
-		Map<String, Serializable> parameters =
-			batchEngineUnitConfiguration.getParameters();
-
-		if (parameters == null) {
-			return null;
-		}
-
-		return (String)parameters.get("featureFlag");
 	}
 
 	private String _getObjectEntryClassName(
@@ -338,8 +354,9 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 		return false;
 	}
 
-	private CompletableFuture<Void> _processBatchEngineUnit(
-			BatchEngineUnit batchEngineUnit)
+	private Runnable _processBatchEngineUnit(
+			BatchEngineUnit batchEngineUnit,
+			CompletableFuture<Void> completableFuture)
 		throws Exception {
 
 		BatchEngineUnitConfiguration batchEngineUnitConfiguration = null;
@@ -382,8 +399,8 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 		}
 
 		return _execute(
-			batchEngineUnit, batchEngineUnitConfiguration, content,
-			contentType);
+			batchEngineUnit, batchEngineUnitConfiguration, content, contentType,
+			completableFuture);
 	}
 
 	private BatchEngineUnitConfiguration _updateBatchEngineUnitConfiguration(
@@ -420,9 +437,8 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 
 			try {
 				batchEngineUnitConfiguration.setUserId(
-					_userLocalService.getUserIdByScreenName(
-						batchEngineUnitConfiguration.getCompanyId(),
-						PropsUtil.get(PropsKeys.DEFAULT_ADMIN_SCREEN_NAME)));
+					_getAdminUserId(
+						batchEngineUnitConfiguration.getCompanyId()));
 			}
 			catch (PortalException portalException) {
 				_log.error("Unable to get default user ID", portalException);
@@ -459,13 +475,9 @@ public class BatchEngineUnitProcessorImpl implements BatchEngineUnitProcessor {
 	private File _file;
 
 	@Reference
-	private PortalExecutorManager _portalExecutorManager;
+	private RoleLocalService _roleLocalService;
 
 	@Reference
 	private UserLocalService _userLocalService;
-
-	@Reference
-	private VulcanBatchEngineTaskItemDelegateAdaptorFactory
-		_vulcanBatchEngineTaskItemDelegateAdaptorFactory;
 
 }

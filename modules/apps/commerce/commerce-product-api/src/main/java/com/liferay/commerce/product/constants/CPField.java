@@ -13,6 +13,8 @@ public class CPField {
 	public static final String ACCOUNT_GROUP_FILTER_ENABLED =
 		"accountGroupFilterEnabled";
 
+	public static final String ACTIVE = "active";
+
 	public static final String ASSET_CATEGORY_NAMES = "assetCategoryNames";
 
 	public static final String BASE_PRICE = "basePrice";
@@ -30,6 +32,8 @@ public class CPField {
 
 	public static final String CHANNEL_NAMES = "channelNames";
 
+	public static final String CODE = "code";
+
 	public static final String COMMERCE_CATALOG_GROUP_ID =
 		"commerceCatalogGroupId";
 
@@ -41,6 +45,12 @@ public class CPField {
 
 	public static final String COMMERCE_OPTION_TYPE_KEY =
 		"commerceOptionTypeKey";
+
+	public static final String CP_CONFIGURATION_LIST_ID =
+		"CPConfigurationListId";
+
+	public static final String CP_CONFIGURATION_LIST_IDS =
+		"CPConfigurationListIds";
 
 	public static final String CP_DEFINITION_ID = "CPDefinitionId";
 
@@ -74,6 +84,12 @@ public class CPField {
 	public static final String FACETABLE = "facetable";
 
 	public static final String FILE_ENTRY_ID = "fileEntryId";
+
+	public static final String GALLERY_ENABLED = "galleryEnabled";
+
+	public static final String GTIN = "gtin";
+
+	public static final String GTINS = "gtins";
 
 	public static final String HAS_CHILD_CP_DEFINITIONS =
 		"hasChildCPDefinitions";
@@ -109,6 +125,14 @@ public class CPField {
 		"relatedEntityClassNameId";
 
 	public static final String RELATED_ENTITY_CLASS_PK = "relatedEntityClassPK";
+
+	public static final String REPLACEMENT_CP_INSTANCE_UUID =
+		"replacementCPInstanceUuid";
+
+	public static final String REPLACEMENT_CPRODUCT_ID =
+		"replacementCProductId";
+
+	public static final String SHIPPABLE = "shippable";
 
 	public static final String SHORT_DESCRIPTION = "shortDescription";
 

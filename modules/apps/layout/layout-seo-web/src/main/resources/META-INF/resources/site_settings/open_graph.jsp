@@ -12,7 +12,7 @@ OpenGraphSettingsDisplayContext openGraphSettingsDisplayContext = (OpenGraphSett
 %>
 
 <liferay-util:html-top>
-	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
+	<aui:link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathProxy() + application.getContextPath() + "/css/main.css") %>' rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
 <aui:field-wrapper cssClass="form-group">
@@ -22,9 +22,9 @@ OpenGraphSettingsDisplayContext openGraphSettingsDisplayContext = (OpenGraphSett
 </aui:field-wrapper>
 
 <div class="open-graph-settings <%= openGraphSettingsDisplayContext.isOpenGraphEnabled() ? "" : "disabled" %>" id="<portlet:namespace />openGraphSettings">
-	<h4 class="sheet-subtitle">
+	<div class="sheet-subtitle">
 		<liferay-ui:message key="open-graph-image" />
-	</h4>
+	</div>
 
 	<p class="small text-secondary">
 		<liferay-ui:message key="open-graph-image-description" />
@@ -95,6 +95,6 @@ OpenGraphSettingsDisplayContext openGraphSettingsDisplayContext = (OpenGraphSett
 			"uploadOpenGraphImageURL", openGraphSettingsDisplayContext.getItemSelectorURL()
 		).build()
 	%>'
-	module="js/seo/openGraphSettings.es"
+	module="{openGraphSettings} from layout-seo-web"
 	servletContext="<%= application %>"
 />

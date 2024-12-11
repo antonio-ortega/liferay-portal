@@ -4,12 +4,14 @@
  */
 
 import '@testing-library/jest-dom/extend-expect';
-import {render, screen} from '@testing-library/react';
+import {fireEvent, render, screen} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
 
 import {FormWithControls} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/layout_data_items';
 import ContainerWithControls from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/layout_data_items/ContainerWithControls';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/layoutDataItemTypes';
+import {openInfoFieldSelector} from '../../../../../src/main/resources/META-INF/resources/page_editor/common/openInfoFieldSelector';
 import StoreMother from '../../../../../src/main/resources/META-INF/resources/page_editor/test_utils/StoreMother';
 
 jest.mock(
@@ -18,6 +20,13 @@ jest.mock(
 		jest.fn(({children}) => (
 			<div className="ContainerWithControls">{children}</div>
 		))
+);
+
+jest.mock(
+	'../../../../../src/main/resources/META-INF/resources/page_editor/common/openInfoFieldSelector',
+	() => ({
+		openInfoFieldSelector: jest.fn(() => {}),
+	})
 );
 
 jest.mock(
@@ -47,6 +56,12 @@ jest.mock(
 					],
 					value: '22222',
 				},
+				{
+					className: '33333-className',
+					label: 'Form Type 3',
+					subtypes: [],
+					value: '33333',
+				},
 			],
 		},
 	})
@@ -55,14 +70,6 @@ jest.mock(
 const DEFAULT_CONFIG = {classNameId: '0'};
 
 describe('FormWithControls', () => {
-	beforeAll(() => {
-		Liferay.FeatureFlags['LPS-169923'] = true;
-	});
-
-	afterAll(() => {
-		Liferay.FeatureFlags['LPS-169923'] = false;
-	});
-
 	it('renders a container inside a form', () => {
 		const {container} = render(
 			<StoreMother.Component>
@@ -117,7 +124,9 @@ describe('FormWithControls', () => {
 			</StoreMother.Component>
 		);
 
-		expect(screen.getByText('place-fragments-here')).toBeInTheDocument();
+		expect(
+			screen.getByText('drag-and-drop-fragments-or-widgets-here')
+		).toBeInTheDocument();
 	});
 
 	it('renders children inside container', () => {
@@ -234,8 +243,8 @@ describe('FormWithControls', () => {
 					item={{
 						children: [],
 						config: {
-							classNameId: '33333',
-							classTypeId: '33333',
+							classNameId: '44444',
+							classTypeId: '44444',
 						},
 						itemId: 'form',
 						type: LAYOUT_DATA_ITEM_TYPES.form,
@@ -249,5 +258,34 @@ describe('FormWithControls', () => {
 				'this-content-is-currently-unavailable-or-has-been-deleted.-users-cannot-see-this-fragment'
 			)
 		).toBeInTheDocument();
+	});
+
+	it('opens field selection modal with correct type when mapping the form', () => {
+		render(
+			<StoreMother.Component>
+				<FormWithControls
+					item={{
+						children: [],
+						config: {
+							classNameId: '0',
+							classTypeId: '0',
+						},
+						itemId: 'form',
+						type: LAYOUT_DATA_ITEM_TYPES.form,
+					}}
+				/>
+			</StoreMother.Component>
+		);
+
+		const select = screen.getByLabelText('content-type');
+
+		userEvent.selectOptions(select, '33333');
+		fireEvent.change(select);
+
+		expect(openInfoFieldSelector).toBeCalledWith(
+			expect.objectContaining({
+				itemType: '33333-className',
+			})
+		);
 	});
 });

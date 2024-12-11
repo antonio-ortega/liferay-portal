@@ -54,7 +54,6 @@ public class VariableNameCheck extends BaseCheck {
 			_checkTypo(detailAST, name);
 		}
 
-		_checkCaps(detailAST, name);
 		_checkIsVariableName(detailAST, name);
 
 		DetailAST typeDetailAST = detailAST.findFirstToken(TokenTypes.TYPE);
@@ -65,16 +64,17 @@ public class VariableNameCheck extends BaseCheck {
 			return;
 		}
 
-		if (firstChildDetailAST.getType() != TokenTypes.DOT) {
-			String typeName = getTypeName(typeDetailAST, false);
+		String typeName = getTypeName(typeDetailAST, false);
 
-			if (!typeName.contains("[")) {
+		if (!typeName.contains("[")) {
+			if (firstChildDetailAST.getType() != TokenTypes.DOT) {
 				_checkCountVariableName(detailAST, name, typeName);
-				_checkExceptionVariableName(detailAST, name, typeName);
 				_checkInstanceVariableName(detailAST, name, typeName);
 				_checkTypeName(detailAST, name, typeName);
 				_checkTypo(detailAST, name, typeName, true);
 			}
+
+			_checkExceptionVariableName(detailAST, name, typeName);
 		}
 
 		DetailAST parentDetailAST = getParentWithTokenType(
@@ -177,35 +177,6 @@ public class VariableNameCheck extends BaseCheck {
 	}
 
 	protected static final String MSG_RENAME_VARIABLE = "variable.rename";
-
-	private void _checkCaps(DetailAST detailAST, String name) {
-		for (String[] array : _ALL_CAPS_STRINGS) {
-			String s = array[1];
-
-			int x = -1;
-
-			while (true) {
-				x = name.indexOf(s, x + 1);
-
-				if (x == -1) {
-					break;
-				}
-
-				int y = x + s.length();
-
-				if ((y != name.length()) &&
-					!Character.isUpperCase(name.charAt(y))) {
-
-					continue;
-				}
-
-				String newName =
-					name.substring(0, x) + array[0] + name.substring(y);
-
-				log(detailAST, MSG_RENAME_VARIABLE, name, newName);
-			}
-		}
-	}
 
 	private void _checkClassNameVariable(
 		DetailAST detailAST, String variableName) {
@@ -384,23 +355,38 @@ public class VariableNameCheck extends BaseCheck {
 	private void _checkExceptionVariableName(
 		DetailAST detailAST, String name, String typeName) {
 
+		if (!StringUtil.endsWith(getAbsolutePath(), "ExceptionMapper.java")) {
+			return;
+		}
+
 		DetailAST parentDetailAST = detailAST.getParent();
 
 		if ((parentDetailAST.getType() == TokenTypes.LITERAL_CATCH) ||
-			(detailAST.getType() != TokenTypes.PARAMETER_DEF) ||
-			!typeName.endsWith("Exception")) {
+			(detailAST.getType() != TokenTypes.PARAMETER_DEF)) {
 
 			return;
 		}
 
-		String absolutePath = getAbsolutePath();
+		String[] names = StringUtil.split(typeName, StringPool.PERIOD);
 
-		if (absolutePath.endsWith("ExceptionMapper.java")) {
-			String expectedName = getExpectedVariableName(typeName);
+		if (names.length > 2) {
+			return;
+		}
 
-			if (!name.equals(expectedName)) {
-				log(detailAST, MSG_RENAME_VARIABLE, name, expectedName);
-			}
+		typeName = names[0];
+
+		if (!StringUtil.endsWith(typeName, "Exception")) {
+			return;
+		}
+
+		if (names.length == 2) {
+			typeName = names[1];
+		}
+
+		String expectedVariableName = getExpectedVariableName(typeName);
+
+		if (!name.equals(expectedVariableName)) {
+			log(detailAST, MSG_RENAME_VARIABLE, name, expectedVariableName);
 		}
 	}
 
@@ -499,7 +485,8 @@ public class VariableNameCheck extends BaseCheck {
 		DetailAST detailAST, String variableName, String typeName,
 		String expectedVariableName) {
 
-		if (!detailAST.branchContains(TokenTypes.LITERAL_PRIVATE) ||
+		if (StringUtil.equals(variableName, "_" + expectedVariableName) ||
+			!detailAST.branchContains(TokenTypes.LITERAL_PRIVATE) ||
 			detailAST.branchContains(TokenTypes.LITERAL_STATIC)) {
 
 			return;
@@ -508,13 +495,6 @@ public class VariableNameCheck extends BaseCheck {
 		DetailAST parentDetailAST = detailAST.getParent();
 
 		if (parentDetailAST.getType() != TokenTypes.OBJBLOCK) {
-			return;
-		}
-
-		List<String> enforceShortTypeNames = getAttributeValues(
-			_ENFORCE_SHORT_TYPE_NAMES_KEY);
-
-		if (!enforceShortTypeNames.contains(typeName)) {
 			return;
 		}
 
@@ -559,6 +539,16 @@ public class VariableNameCheck extends BaseCheck {
 			 !variableName.matches("(o|obj|(.*Obj))[0-9]*"))) {
 
 			return;
+		}
+
+		List<String> enforceShortTypeNames = getAttributeValues(
+			_ENFORCE_SHORT_TYPE_NAMES_KEY);
+
+		if (enforceShortTypeNames.contains(typeName)) {
+			String expectedVariableName = getExpectedVariableName(typeName);
+
+			_checkShortTypeNames(
+				detailAST, variableName, typeName, expectedVariableName);
 		}
 
 		if (variableName.matches("(?i).*" + typeName + "[0-9]*")) {
@@ -642,9 +632,6 @@ public class VariableNameCheck extends BaseCheck {
 				return;
 			}
 		}
-
-		_checkShortTypeNames(
-			detailAST, variableName, typeName, expectedVariableName);
 	}
 
 	private void _checkTypo(DetailAST detailAST, String variableName) {
@@ -719,21 +706,21 @@ public class VariableNameCheck extends BaseCheck {
 		String trimmedTypeName = StringUtil.replaceLast(
 			typeName, typeNameTrailingDigits, StringPool.BLANK);
 
-		String expectedName = getExpectedVariableName(trimmedTypeName);
+		String expectedVariableName = getExpectedVariableName(trimmedTypeName);
 
-		if (StringUtil.equals(trimmedName, expectedName)) {
+		if (StringUtil.equals(trimmedName, expectedVariableName)) {
 			return;
 		}
 
 		if (StringUtil.equalsIgnoreCase(trimmedName, trimmedTypeName)) {
-			for (int i = expectedName.length() - 1; i >= 0; i--) {
+			for (int i = expectedVariableName.length() - 1; i >= 0; i--) {
 				char c1 = trimmedName.charAt(i);
 
-				if (c1 == expectedName.charAt(i)) {
+				if (c1 == expectedVariableName.charAt(i)) {
 					continue;
 				}
 
-				if (i < (expectedName.length() - 1)) {
+				if (i < (expectedVariableName.length() - 1)) {
 					char c2 = trimmedName.charAt(i + 1);
 
 					if (Character.isUpperCase(c1) &&
@@ -747,7 +734,8 @@ public class VariableNameCheck extends BaseCheck {
 			log(
 				detailAST, _MSG_TYPO_VARIABLE, variableName,
 				StringBundler.concat(
-					leadingUnderline, expectedName, nameTrailingDigits));
+					leadingUnderline, expectedVariableName,
+					nameTrailingDigits));
 
 			return;
 		}
@@ -975,10 +963,6 @@ public class VariableNameCheck extends BaseCheck {
 
 		return false;
 	}
-
-	private static final String[][] _ALL_CAPS_STRINGS = {
-		{"DDL", "Ddl"}, {"DDM", "Ddm"}, {"DL", "Dl"}, {"PK", "Pk"}
-	};
 
 	private static final String _ALLOWED_VARIABLE_NAMES_KEY =
 		"allowedVariableNames";

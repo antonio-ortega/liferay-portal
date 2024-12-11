@@ -9,8 +9,8 @@ import com.liferay.commerce.constants.CommerceOrderActionKeys;
 import com.liferay.commerce.constants.CommerceOrderConstants;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.order.status.CommerceOrderStatus;
-import com.liferay.commerce.order.status.CommerceOrderStatusRegistry;
 import com.liferay.commerce.service.CommerceOrderLocalService;
+import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -48,10 +48,16 @@ public class QuoteProcessedCommerceOrderStatusImpl
 
 		commerceOrder.setOrderStatus(KEY);
 
-		commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
-			commerceOrder);
+		if (secure) {
+			commerceOrder = _commerceOrderService.updateCommerceOrder(
+				commerceOrder);
+		}
+		else {
+			commerceOrder = _commerceOrderLocalService.updateCommerceOrder(
+				commerceOrder);
+		}
 
-		return _commerceOrderLocalService.updateCommerceOrder(commerceOrder);
+		return commerceOrder;
 	}
 
 	@Override
@@ -113,8 +119,11 @@ public class QuoteProcessedCommerceOrderStatusImpl
 	)
 	private volatile CommerceOrderLocalService _commerceOrderLocalService;
 
-	@Reference
-	private CommerceOrderStatusRegistry _commerceOrderStatusRegistry;
+	@Reference(
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile CommerceOrderService _commerceOrderService;
 
 	@Reference
 	private Language _language;

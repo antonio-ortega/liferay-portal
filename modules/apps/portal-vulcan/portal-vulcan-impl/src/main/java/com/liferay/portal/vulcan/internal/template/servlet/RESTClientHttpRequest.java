@@ -7,10 +7,13 @@ package com.liferay.portal.vulcan.internal.template.servlet;
 
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.HttpMethods;
+import com.liferay.portal.kernel.servlet.PortalSessionThreadLocal;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.vulcan.internal.constants.VulcanConstants;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -45,7 +47,22 @@ import javax.servlet.http.Part;
  */
 public class RESTClientHttpRequest implements HttpServletRequest {
 
-	public RESTClientHttpRequest(HttpServletRequest httpServletRequest) {
+	public RESTClientHttpRequest(
+		Map<String, Object> contextObjects,
+		HttpServletRequest httpServletRequest, String pathInfo) {
+
+		_attributes = HashMapBuilder.<String, Object>put(
+			RESTClientHttpRequest.class.getName(), true
+		).put(
+			WebKeys.USER,
+			() -> {
+				if (contextObjects.containsKey("user")) {
+					return contextObjects.get("user");
+				}
+
+				return null;
+			}
+		).build();
 		_headers = HashMapBuilder.put(
 			HttpHeaders.ACCEPT, ContentTypes.APPLICATION_JSON
 		).put(
@@ -55,8 +72,35 @@ public class RESTClientHttpRequest implements HttpServletRequest {
 
 				return locale.toLanguageTag();
 			}
+		).put(
+			"X-CSRF-Token",
+			() -> {
+				HttpSession httpSession =
+					PortalSessionThreadLocal.getHttpSession();
+
+				if (httpSession == null) {
+					return null;
+				}
+
+				String csrfToken = (String)httpSession.getAttribute(
+					WebKeys.AUTHENTICATION_TOKEN + "#CSRF");
+
+				if (csrfToken == null) {
+					return null;
+				}
+
+				httpSession = httpServletRequest.getSession(false);
+
+				if (httpSession != null) {
+					httpSession.setAttribute(
+						WebKeys.AUTHENTICATION_TOKEN + "#CSRF", csrfToken);
+				}
+
+				return csrfToken;
+			}
 		).build();
 		_httpServletRequest = httpServletRequest;
+		_pathInfo = pathInfo;
 	}
 
 	@Override
@@ -77,8 +121,19 @@ public class RESTClientHttpRequest implements HttpServletRequest {
 
 	@Override
 	public Object getAttribute(String name) {
-		return _attributes.getOrDefault(
-			name, _httpServletRequest.getAttribute(name));
+		Object attributeValue = _attributes.get(name);
+
+		if (attributeValue != null) {
+			return attributeValue;
+		}
+
+		if (VulcanConstants.TRANSACTION_CLEAN_UP_MESSAGE_OBSERVER.equals(
+				name)) {
+
+			return null;
+		}
+
+		return _httpServletRequest.getAttribute(name);
 	}
 
 	@Override
@@ -127,7 +182,7 @@ public class RESTClientHttpRequest implements HttpServletRequest {
 	}
 
 	public DispatcherType getDispatcherType() {
-		return _httpServletRequest.getDispatcherType();
+		return DispatcherType.FORWARD;
 	}
 
 	@Override
@@ -223,7 +278,7 @@ public class RESTClientHttpRequest implements HttpServletRequest {
 
 	@Override
 	public String getPathInfo() {
-		return _httpServletRequest.getPathInfo();
+		return _pathInfo;
 	}
 
 	@Override
@@ -318,7 +373,7 @@ public class RESTClientHttpRequest implements HttpServletRequest {
 
 	@Override
 	public HttpSession getSession() {
-		return _httpServletRequest.getSession();
+		return getSession(false);
 	}
 
 	@Override
@@ -417,8 +472,9 @@ public class RESTClientHttpRequest implements HttpServletRequest {
 		return _httpServletRequest.upgrade(handlerClass);
 	}
 
-	private final Map<String, Object> _attributes = new HashMap<>();
+	private final Map<String, Object> _attributes;
 	private final Map<String, String> _headers;
 	private final HttpServletRequest _httpServletRequest;
+	private final String _pathInfo;
 
 }

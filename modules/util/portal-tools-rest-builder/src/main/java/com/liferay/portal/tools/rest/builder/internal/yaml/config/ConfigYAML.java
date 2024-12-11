@@ -62,6 +62,10 @@ public class ConfigYAML {
 		return _testDir;
 	}
 
+	public boolean isChangeTrackingEnabled() {
+		return _changeTrackingEnabled;
+	}
+
 	public boolean isForceClientVersionDescription() {
 		return _forceClientVersionDescription;
 	}
@@ -78,8 +82,16 @@ public class ConfigYAML {
 		return _forcePredictableSchemaPropertyName;
 	}
 
+	public boolean isGenerateActionProviders() {
+		return _generateActionProviders;
+	}
+
 	public boolean isGenerateBatch() {
 		return _generateBatch;
+	}
+
+	public boolean isGenerateClientJS() {
+		return _generateClientJS;
 	}
 
 	public boolean isGenerateGraphQL() {
@@ -116,6 +128,10 @@ public class ConfigYAML {
 
 	public void setAuthor(String author) {
 		_author = author;
+	}
+
+	public void setChangeTrackingEnabled(boolean changeTrackingEnabled) {
+		_changeTrackingEnabled = changeTrackingEnabled;
 	}
 
 	public void setClientDir(String clientDir) {
@@ -156,8 +172,16 @@ public class ConfigYAML {
 			forcePredictableSchemaPropertyName;
 	}
 
+	public void setGenerateActionProviders(boolean generateActionProviders) {
+		_generateActionProviders = generateActionProviders;
+	}
+
 	public void setGenerateBatch(boolean generateBatch) {
 		_generateBatch = generateBatch;
+	}
+
+	public void setGenerateClientJS(boolean generateClientJS) {
+		_generateClientJS = generateClientJS;
 	}
 
 	public void setGenerateGraphQL(boolean generateGraphQL) {
@@ -208,6 +232,7 @@ public class ConfigYAML {
 	private String _apiPackagePath;
 	private Application _application;
 	private String _author;
+	private boolean _changeTrackingEnabled;
 	private String _clientDir;
 	private String _clientMavenGroupId;
 	private int _compatibilityVersion = 1;
@@ -215,7 +240,9 @@ public class ConfigYAML {
 	private boolean _forcePredictableContentApplicationXML = true;
 	private boolean _forcePredictableOperationId;
 	private boolean _forcePredictableSchemaPropertyName = true;
+	private boolean _generateActionProviders;
 	private boolean _generateBatch = true;
+	private boolean _generateClientJS;
 	private boolean _generateGraphQL = true;
 	private boolean _generateOpenAPI = true;
 	private boolean _generateREST = true;

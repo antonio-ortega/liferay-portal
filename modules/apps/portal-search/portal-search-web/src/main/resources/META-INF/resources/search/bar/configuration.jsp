@@ -115,7 +115,7 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 						<span aria-hidden="true" class="loading-animation loading-animation-sm mt-4"></span>
 
 						<react:component
-							module="js/components/search_bar_configuration_suggestions/index"
+							module="{SearchBarConfigurationSuggestions} from portal-search-web"
 							props='<%=
 								HashMapBuilder.<String, Object>put(
 									"initialSuggestionsContributorConfiguration", suggestionsContributorConfiguration
@@ -124,7 +124,7 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 								).put(
 									"isSearchExperiencesSupported", searchBarPortletDisplayContext.isSearchExperiencesSupported()
 								).put(
-									"learnMessages", LearnMessageUtil.getJSONObject("portal-search-web")
+									"learnResources", LearnMessageUtil.getReactDataJSONObject("portal-search-web")
 								).put(
 									"namespace", liferayPortletResponse.getNamespace()
 								).put(
@@ -144,6 +144,10 @@ String suggestionsContributorConfiguration = StringBundler.concat(StringPool.OPE
 			<aui:input disabled="<%= searchBarPortletDisplayContext.isDisplayWarningIgnoredConfiguration() %>" helpMessage="use-advanced-search-syntax-help" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_USE_ADVANCED_SEARCH_SYNTAX) %>" type="checkbox" value="<%= searchBarPortletPreferences.isUseAdvancedSearchSyntax() %>" />
 
 			<aui:input disabled="<%= searchBarPortletDisplayContext.isDisplayWarningIgnoredConfiguration() %>" helpMessage="show-results-from-staged-sites-help" label="show-results-from-staged-sites" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_SHOW_STAGED_RESULTS) %>" type="checkbox" value="<%= searchBarPortletPreferences.isShowStagedResults() %>" />
+
+			<c:if test="<%= searchBarPortletDisplayContext.isDisplayIncludeAttachments() %>">
+				<aui:input disabled="<%= searchBarPortletDisplayContext.isDisplayWarningIgnoredConfiguration() %>" helpMessage="include-attachments-in-search-help" label="include-attachments-in-search" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_INCLUDE_ATTACHMENTS) %>" type="checkbox" value="<%= searchBarPortletPreferences.isIncludeAttachments() %>" />
+			</c:if>
 
 			<aui:input helpMessage="enter-the-key-of-an-alternate-search-this-widget-is-participating-on-if-not-set-widget-participates-on-default-search" label="federated-search-key" name="<%= PortletPreferencesJspUtil.getInputName(SearchBarPortletPreferences.PREFERENCE_KEY_FEDERATED_SEARCH_KEY) %>" type="text" value="<%= searchBarPortletPreferences.getFederatedSearchKey() %>" />
 		</liferay-frontend:fieldset>

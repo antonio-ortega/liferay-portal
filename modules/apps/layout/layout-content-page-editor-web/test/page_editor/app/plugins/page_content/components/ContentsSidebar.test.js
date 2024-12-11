@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {State} from '@liferay/frontend-js-state-web';
 import {render, screen} from '@testing-library/react';
 import React from 'react';
 
 import '@testing-library/jest-dom/extend-expect';
+import {checkAccessibility} from '@liferay/layout-js-components-web';
 
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/editableFragmentEntryProcessor';
 import {StoreContextProvider} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
+import {pageContentsAtom} from '../../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/usePageContents';
 import ContentsSidebar from '../../../../../../src/main/resources/META-INF/resources/page_editor/plugins/page_content/components/ContentsSidebar';
 
 jest.mock(
@@ -118,28 +121,46 @@ const renderPageContent = ({
 	pageContents = PAGE_CONTENTS,
 	languageId = 'en_US',
 	segmentsExperienceId = '0',
-} = {}) =>
-	render(
+} = {}) => {
+	State.writeAtom(pageContentsAtom, {
+		data: pageContents,
+		status: 'saved',
+	});
+
+	return render(
 		<StoreContextProvider
 			initialState={{
 				fragmentEntryLinks,
 				languageId,
 				layoutData: DEFAULT_LAYOUT_DATA,
-				pageContents,
 				permissions: {UPDATE: true, UPDATE_LAYOUT_CONTENT: true},
 				segmentsExperienceId,
 			}}
 		>
-			<ContentsSidebar></ContentsSidebar>
+			<ContentsSidebar />
 		</StoreContextProvider>
 	);
+};
 
 describe('ContentsSidebar', () => {
+	beforeEach(() => {
+		State.writeAtom(pageContentsAtom, {
+			data: [],
+			status: 'idle',
+		});
+	});
+
 	it('shows the content list', () => {
 		renderPageContent();
 
 		expect(screen.getByText('WC1')).toBeInTheDocument();
 		expect(screen.getByText('WC2')).toBeInTheDocument();
+	});
+
+	it('checks panel accessibility', async () => {
+		const {container} = renderPageContent();
+
+		await checkAccessibility({context: container});
 	});
 
 	it('shows inline text within the content list when the editable type is text', () => {
@@ -191,7 +212,9 @@ describe('ContentsSidebar', () => {
 		});
 
 		expect(
-			screen.getByText('there-is-no-content-on-this-page')
+			screen.getByText(
+				'this-content-cannot-be-displayed-due-to-permission-restrictions'
+			)
 		).toBeInTheDocument();
 	});
 
@@ -228,8 +251,7 @@ describe('ContentsSidebar', () => {
 						[EDITABLE_FRAGMENT_ENTRY_PROCESSOR]: {
 							'element-text': {
 								defaultValue: '\n\tParagraph example\n',
-								en_US:
-									'<span style="background: black;">This is a paragraph&nbsp&nbsp&nbsp<span>',
+								en_US: '<span style="background: black;">This is a paragraph&nbsp&nbsp&nbsp<span>',
 							},
 						},
 					},
@@ -253,8 +275,7 @@ describe('ContentsSidebar', () => {
 						[EDITABLE_FRAGMENT_ENTRY_PROCESSOR]: {
 							'element-text': {
 								defaultValue: '\n\tParagraph example\n',
-								en_US:
-									'<img src="first-image"><img src="second-image">',
+								en_US: '<img src="first-image"><img src="second-image">',
 							},
 						},
 					},
@@ -267,17 +288,15 @@ describe('ContentsSidebar', () => {
 		});
 
 		expect(
-			screen.getByText('there-is-no-content-on-this-page')
+			screen.getByText(
+				'this-content-cannot-be-displayed-due-to-permission-restrictions'
+			)
 		).toBeInTheDocument();
 	});
 
 	it('does not show the inline text belonging to a form without permissions', () => {
-		Liferay.FeatureFlags['LPS-169923'] = true;
-
 		renderPageContent({});
 
 		expect(screen.queryByText('A paragraph')).not.toBeInTheDocument();
-
-		Liferay.FeatureFlags['LPS-169923'] = false;
 	});
 });

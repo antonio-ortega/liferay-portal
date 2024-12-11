@@ -69,7 +69,7 @@ public class CatalogResourceImpl extends BaseCatalogResourceImpl {
 		throws Exception {
 
 		CommerceCatalog commerceCatalog =
-			_commerceCatalogService.fetchByExternalReferenceCode(
+			_commerceCatalogService.fetchCommerceCatalogByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceCatalog == null) {
@@ -97,7 +97,7 @@ public class CatalogResourceImpl extends BaseCatalogResourceImpl {
 		throws Exception {
 
 		CommerceCatalog commerceCatalog =
-			_commerceCatalogService.fetchByExternalReferenceCode(
+			_commerceCatalogService.fetchCommerceCatalogByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceCatalog == null) {
@@ -165,7 +165,7 @@ public class CatalogResourceImpl extends BaseCatalogResourceImpl {
 
 		if (cpDefinition == null) {
 			throw new NoSuchCPDefinitionException(
-				"Unable to find Product with ID: " + id);
+				"Unable to find product with ID " + id);
 		}
 
 		return _toCatalog(cpDefinition.getCommerceCatalog());
@@ -187,7 +187,7 @@ public class CatalogResourceImpl extends BaseCatalogResourceImpl {
 		throws Exception {
 
 		CommerceCatalog commerceCatalog =
-			_commerceCatalogService.fetchByExternalReferenceCode(
+			_commerceCatalogService.fetchCommerceCatalogByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceCatalog == null) {
@@ -206,7 +206,7 @@ public class CatalogResourceImpl extends BaseCatalogResourceImpl {
 	@Override
 	public Catalog postCatalog(Catalog catalog) throws Exception {
 		CommerceCatalog commerceCatalog =
-			_commerceCatalogService.fetchByExternalReferenceCode(
+			_commerceCatalogService.fetchCommerceCatalogByExternalReferenceCode(
 				catalog.getExternalReferenceCode(),
 				contextCompany.getCompanyId());
 
@@ -233,6 +233,37 @@ public class CatalogResourceImpl extends BaseCatalogResourceImpl {
 				GetterUtil.get(
 					catalog.getDefaultLanguageId(),
 					commerceCatalog.getCatalogDefaultLanguageId()));
+		}
+
+		return _toCatalog(commerceCatalog);
+	}
+
+	@Override
+	public Catalog putCatalogByExternalReferenceCode(
+			String externalReferenceCode, Catalog catalog)
+		throws Exception {
+
+		CommerceCatalog commerceCatalog =
+			_commerceCatalogService.fetchCommerceCatalogByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceCatalog == null) {
+			commerceCatalog = _commerceCatalogService.addCommerceCatalog(
+				catalog.getExternalReferenceCode(),
+				GetterUtil.get(
+					catalog.getAccountId(),
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT),
+				catalog.getName(), catalog.getCurrencyCode(),
+				catalog.getDefaultLanguageId(),
+				_serviceContextHelper.getServiceContext());
+		}
+		else {
+			commerceCatalog = _commerceCatalogService.updateCommerceCatalog(
+				commerceCatalog.getCommerceCatalogId(),
+				GetterUtil.getLong(catalog.getAccountId()),
+				GetterUtil.getString(catalog.getName()),
+				GetterUtil.getString(catalog.getCurrencyCode()),
+				GetterUtil.getString(catalog.getDefaultLanguageId()));
 		}
 
 		return _toCatalog(commerceCatalog);

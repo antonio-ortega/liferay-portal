@@ -16,11 +16,13 @@ long excludedCategoryId = ParamUtil.getLong(request, "excludedMBCategoryId");
 
 MBCategoryDisplay categoryDisplay = new MBCategoryDisplay(scopeGroupId, categoryId);
 
+String categoryExternalReferenceCode = "";
 String categoryName = null;
 
 MBBreadcrumbUtil.addPortletBreadcrumbEntries(category, request, renderResponse);
 
 if (category != null) {
+	categoryExternalReferenceCode = category.getExternalReferenceCode();
 	categoryName = category.getName();
 }
 else {
@@ -31,7 +33,7 @@ else {
 <clay:container-fluid>
 	<aui:form method="post" name="selectCategoryFm">
 		<liferay-site-navigation:breadcrumb
-			breadcrumbEntries="<%= BreadcrumbEntriesUtil.getBreadcrumbEntries(request, true, false, false, false, true) %>"
+			breadcrumbEntries="<%= BreadcrumbEntriesUtil.getBreadcrumbEntries(request, false, false, false, false, true) %>"
 		/>
 
 		<liferay-ui:search-container
@@ -102,9 +104,11 @@ else {
 						cssClass="selector-button"
 						data='<%=
 							HashMapBuilder.<String, Object>put(
-								"categoryId", curCategory.getCategoryId()
+								"resourceexternalreferencecode", curCategory.getExternalReferenceCode()
 							).put(
-								"name", curCategory.getName()
+								"resourceid", curCategory.getCategoryId()
+							).put(
+								"resourcename", curCategory.getName()
 							).build()
 						%>'
 						value="select"
@@ -117,9 +121,11 @@ else {
 					cssClass="selector-button"
 					data='<%=
 						HashMapBuilder.<String, Object>put(
-							"categoryId", categoryId
+							"resourceexternalreferencecode", categoryExternalReferenceCode
 						).put(
-							"name", categoryName
+							"resourceid", categoryId
+						).put(
+							"resourcename", categoryName
 						).build()
 					%>'
 					value="select-this-category"

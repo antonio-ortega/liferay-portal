@@ -145,15 +145,7 @@ public class LayoutActionDropdownItemsProvider {
 				dropdownGroupItem.setDropdownItems(
 					DropdownItemListBuilder.add(
 						() -> _isShowConvertToPageTemplateAction(layout),
-						dropdownItem -> {
-							dropdownItem.putData(
-								"action", "convertToPageTemplate");
-							dropdownItem.setIcon("page-template");
-							dropdownItem.setLabel(
-								LanguageUtil.get(
-									_httpServletRequest,
-									"convert-to-page-template"));
-						}
+						_getConvertToPageTemplateActionUnsafeConsumer(layout)
 					).addContext(
 						_getCopyLayoutWithPermissionsActionUnsafeConsumer(
 							layout)
@@ -234,6 +226,9 @@ public class LayoutActionDropdownItemsProvider {
 						return portletDisplay.getId();
 					}
 				).setParameter(
+					"backURLTitle",
+					LanguageUtil.get(_themeDisplay.getLocale(), "pages")
+				).setParameter(
 					"segmentsExperienceId",
 					SegmentsExperienceLocalServiceUtil.
 						fetchDefaultSegmentsExperienceId(layout.getPlid())
@@ -274,6 +269,26 @@ public class LayoutActionDropdownItemsProvider {
 			dropdownItem.setLabel(
 				LanguageUtil.get(
 					_httpServletRequest, "convert-to-content-page..."));
+		};
+	}
+
+	private UnsafeConsumer<DropdownItem, Exception>
+		_getConvertToPageTemplateActionUnsafeConsumer(Layout layout) {
+
+		return dropdownItem -> {
+			if (_layoutActionsHelper.isShowCopyLayoutAction(
+					layout, _layoutsAdminDisplayContext.getSelGroup())) {
+
+				dropdownItem.putData("action", "convertToPageTemplate");
+			}
+			else {
+				dropdownItem.setDisabled(true);
+			}
+
+			dropdownItem.setIcon("page-template");
+			dropdownItem.setLabel(
+				LanguageUtil.get(
+					_httpServletRequest, "convert-to-page-template"));
 		};
 	}
 
@@ -484,6 +499,9 @@ public class LayoutActionDropdownItemsProvider {
 
 						return portletDisplay.getId();
 					}
+				).setParameter(
+					"backURLTitle",
+					LanguageUtil.get(_themeDisplay.getLocale(), "pages")
 				).buildString());
 			dropdownItem.setIcon("upload");
 			dropdownItem.setLabel(
@@ -515,6 +533,9 @@ public class LayoutActionDropdownItemsProvider {
 
 						return portletDisplay.getId();
 					}
+				).setParameter(
+					"backURLTitle",
+					LanguageUtil.get(_themeDisplay.getLocale(), "pages")
 				).buildString());
 			dropdownItem.setIcon("download");
 			dropdownItem.setLabel(
@@ -537,8 +558,8 @@ public class LayoutActionDropdownItemsProvider {
 	private String _getOrphanPortletsURL(Layout layout) {
 		return PortletURLBuilder.createRenderURL(
 			_liferayPortletResponse
-		).setMVCPath(
-			"/orphan_portlets.jsp"
+		).setMVCRenderCommandName(
+			"/layout_admin/view_orphan_portlets"
 		).setBackURL(
 			_getBackURL()
 		).setParameter(
@@ -703,7 +724,7 @@ public class LayoutActionDropdownItemsProvider {
 	}
 
 	private boolean _isShowConvertToPageTemplateAction(Layout layout) {
-		if (_isEditable(layout) &&
+		if (layout.isTypeContent() &&
 			LayoutPageTemplatePermission.contains(
 				_themeDisplay.getPermissionChecker(), layout.getGroupId(),
 				LayoutPageTemplateActionKeys.

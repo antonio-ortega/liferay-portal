@@ -12,6 +12,8 @@ import com.liferay.headless.commerce.admin.order.client.pagination.Pagination;
 import com.liferay.headless.commerce.admin.order.client.problem.Problem;
 import com.liferay.headless.commerce.admin.order.client.serdes.v1_0.OrderSerDes;
 
+import java.net.URL;
+
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -79,13 +81,21 @@ public interface OrderResource {
 			String externalReferenceCode)
 		throws Exception;
 
-	public void patchOrderByExternalReferenceCode(
+	public Order patchOrderByExternalReferenceCode(
 			String externalReferenceCode, Order order)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			patchOrderByExternalReferenceCodeHttpResponse(
 				String externalReferenceCode, Order order)
+		throws Exception;
+
+	public Order putOrderByExternalReferenceCode(
+			String externalReferenceCode, Order order)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse putOrderByExternalReferenceCodeHttpResponse(
+			String externalReferenceCode, Order order)
 		throws Exception;
 
 	public void deleteOrder(Long id) throws Exception;
@@ -105,7 +115,7 @@ public interface OrderResource {
 	public HttpInvoker.HttpResponse getOrderHttpResponse(Long id)
 		throws Exception;
 
-	public void patchOrder(Long id, Order order) throws Exception;
+	public Order patchOrder(Long id, Order order) throws Exception;
 
 	public HttpInvoker.HttpResponse patchOrderHttpResponse(Long id, Order order)
 		throws Exception;
@@ -161,6 +171,10 @@ public interface OrderResource {
 			_scheme = scheme;
 
 			return this;
+		}
+
+		public Builder endpoint(URL url) {
+			return endpoint(url.getHost(), url.getPort(), url.getProtocol());
 		}
 
 		public Builder header(String key, String value) {
@@ -858,7 +872,7 @@ public interface OrderResource {
 			return httpInvoker.invoke();
 		}
 
-		public void patchOrderByExternalReferenceCode(
+		public Order patchOrderByExternalReferenceCode(
 				String externalReferenceCode, Order order)
 			throws Exception {
 
@@ -912,6 +926,17 @@ public interface OrderResource {
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
 			}
+
+			try {
+				return OrderSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
 		}
 
 		public HttpInvoker.HttpResponse
@@ -941,6 +966,114 @@ public interface OrderResource {
 			}
 
 			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port + _builder._contextPath +
+						"/o/headless-commerce-admin-order/v1.0/orders/by-externalReferenceCode/{externalReferenceCode}");
+
+			httpInvoker.path("externalReferenceCode", externalReferenceCode);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
+		public Order putOrderByExternalReferenceCode(
+				String externalReferenceCode, Order order)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse =
+				putOrderByExternalReferenceCodeHttpResponse(
+					externalReferenceCode, order);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				Problem.ProblemException problemException = null;
+
+				if (Objects.equals(
+						httpResponse.getContentType(), "application/json")) {
+
+					problemException = new Problem.ProblemException(
+						Problem.toDTO(content));
+				}
+				else {
+					_logger.log(
+						Level.WARNING,
+						"Unable to process content type: " +
+							httpResponse.getContentType());
+
+					Problem problem = new Problem();
+
+					problem.setStatus(
+						String.valueOf(httpResponse.getStatusCode()));
+
+					problemException = new Problem.ProblemException(problem);
+				}
+
+				throw problemException;
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return OrderSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse
+				putOrderByExternalReferenceCodeHttpResponse(
+					String externalReferenceCode, Order order)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(order.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PUT);
 
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
@@ -1239,7 +1372,7 @@ public interface OrderResource {
 			return httpInvoker.invoke();
 		}
 
-		public void patchOrder(Long id, Order order) throws Exception {
+		public Order patchOrder(Long id, Order order) throws Exception {
 			HttpInvoker.HttpResponse httpResponse = patchOrderHttpResponse(
 				id, order);
 
@@ -1288,6 +1421,17 @@ public interface OrderResource {
 				_logger.fine(
 					"HTTP response status code: " +
 						httpResponse.getStatusCode());
+			}
+
+			try {
+				return OrderSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
 			}
 		}
 

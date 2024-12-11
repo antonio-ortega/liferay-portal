@@ -5,7 +5,7 @@
 
 package com.liferay.dynamic.data.mapping.service.impl;
 
-import com.liferay.dynamic.data.mapping.internal.search.helper.DDMSearchHelper;
+import com.liferay.dynamic.data.mapping.internal.search.util.DDMSearchUtil;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.security.permission.DDMPermissionSupport;
 import com.liferay.dynamic.data.mapping.service.base.DDMTemplateServiceBaseImpl;
@@ -57,6 +57,7 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	/**
 	 * Adds a template.
 	 *
+	 * @param  externalReferenceCode the template's external reference code
 	 * @param  groupId the primary key of the group
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
@@ -80,8 +81,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 */
 	@Override
 	public DDMTemplate addTemplate(
-			long groupId, long classNameId, long classPK,
-			long resourceClassNameId, Map<Locale, String> nameMap,
+			String externalReferenceCode, long groupId, long classNameId,
+			long classPK, long resourceClassNameId, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, String type, String mode,
 			String language, String script, ServiceContext serviceContext)
 		throws PortalException {
@@ -90,14 +91,15 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 			getPermissionChecker(), groupId, classNameId, resourceClassNameId);
 
 		return ddmTemplateLocalService.addTemplate(
-			getUserId(), groupId, classNameId, classPK, resourceClassNameId,
-			null, nameMap, descriptionMap, type, mode, language, script, false,
-			false, null, null, serviceContext);
+			externalReferenceCode, getUserId(), groupId, classNameId, classPK,
+			resourceClassNameId, null, nameMap, descriptionMap, type, mode,
+			language, script, false, false, null, null, serviceContext);
 	}
 
 	/**
 	 * Adds a template with additional parameters.
 	 *
+	 * @param  externalReferenceCode the template's external reference code
 	 * @param  groupId the primary key of the group
 	 * @param  classNameId the primary key of the class name for template's
 	 *         related model
@@ -129,8 +131,8 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 	 */
 	@Override
 	public DDMTemplate addTemplate(
-			long groupId, long classNameId, long classPK,
-			long resourceClassNameId, String templateKey,
+			String externalReferenceCode, long groupId, long classNameId,
+			long classPK, long resourceClassNameId, String templateKey,
 			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
 			String type, String mode, String language, String script,
 			boolean cacheable, boolean smallImage, String smallImageURL,
@@ -141,10 +143,10 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 			getPermissionChecker(), groupId, classNameId, resourceClassNameId);
 
 		return ddmTemplateLocalService.addTemplate(
-			getUserId(), groupId, classNameId, classPK, resourceClassNameId,
-			templateKey, nameMap, descriptionMap, type, mode, language, script,
-			cacheable, smallImage, smallImageURL, smallImageFile,
-			serviceContext);
+			externalReferenceCode, getUserId(), groupId, classNameId, classPK,
+			resourceClassNameId, templateKey, nameMap, descriptionMap, type,
+			mode, language, script, cacheable, smallImage, smallImageURL,
+			smallImageFile, serviceContext);
 	}
 
 	/**
@@ -245,6 +247,21 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 		ddmTemplateLocalService.deleteTemplate(templateId);
 	}
 
+	@Override
+	public DDMTemplate deleteTemplate(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		DDMTemplate ddmTemplate = ddmTemplatePersistence.findByERC_G(
+			externalReferenceCode, groupId);
+
+		_ddmTemplateModelResourcePermission.check(
+			getPermissionChecker(), ddmTemplate.getTemplateId(),
+			ActionKeys.DELETE);
+
+		return ddmTemplateLocalService.deleteTemplate(ddmTemplate);
+	}
+
 	/**
 	 * Returns the template matching the group and template key.
 	 *
@@ -337,6 +354,21 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 		DDMTemplate ddmTemplate = ddmTemplateLocalService.getTemplate(
 			groupId, classNameId, templateKey, includeAncestorTemplates);
+
+		_ddmTemplateModelResourcePermission.check(
+			getPermissionChecker(), ddmTemplate, ActionKeys.VIEW);
+
+		return ddmTemplate;
+	}
+
+	@Override
+	public DDMTemplate getTemplateByExternalReferenceCode(
+			String externalReferenceCode, long groupId)
+		throws PortalException {
+
+		DDMTemplate ddmTemplate =
+			ddmTemplateLocalService.getDDMTemplateByExternalReferenceCode(
+				externalReferenceCode, groupId);
 
 		_ddmTemplateModelResourcePermission.check(
 			getPermissionChecker(), ddmTemplate, ActionKeys.VIEW);
@@ -578,12 +610,13 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 		try {
 			SearchContext searchContext =
-				_ddmSearchHelper.buildTemplateSearchContext(
-					companyId, groupId, getUserId(), classNameId, classPK,
-					resourceClassNameId, keywords, keywords, type, mode, null,
-					status, start, end, orderByComparator);
+				DDMSearchUtil.buildTemplateSearchContext(
+					_ddmPermissionSupport, companyId, groupId, getUserId(),
+					classNameId, classPK, resourceClassNameId, keywords,
+					keywords, type, mode, null, status, start, end,
+					orderByComparator);
 
-			return _ddmSearchHelper.doSearch(
+			return DDMSearchUtil.doSearch(
 				searchContext, DDMTemplate.class,
 				ddmTemplatePersistence::findByPrimaryKey);
 		}
@@ -647,12 +680,13 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 		try {
 			SearchContext searchContext =
-				_ddmSearchHelper.buildTemplateSearchContext(
-					companyId, groupId, getUserId(), classNameId, classPK,
-					resourceClassNameId, name, description, type, mode,
-					language, status, start, end, orderByComparator);
+				DDMSearchUtil.buildTemplateSearchContext(
+					_ddmPermissionSupport, companyId, groupId, getUserId(),
+					classNameId, classPK, resourceClassNameId, name,
+					description, type, mode, language, status, start, end,
+					orderByComparator);
 
-			return _ddmSearchHelper.doSearch(
+			return DDMSearchUtil.doSearch(
 				searchContext, DDMTemplate.class,
 				ddmTemplatePersistence::findByPrimaryKey);
 		}
@@ -710,12 +744,13 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 		try {
 			SearchContext searchContext =
-				_ddmSearchHelper.buildTemplateSearchContext(
-					companyId, groupIds, getUserId(), classNameIds, classPKs,
-					resourceClassNameId, keywords, keywords, type, mode, null,
-					status, start, end, orderByComparator);
+				DDMSearchUtil.buildTemplateSearchContext(
+					_ddmPermissionSupport, companyId, groupIds, getUserId(),
+					classNameIds, classPKs, resourceClassNameId, keywords,
+					keywords, type, mode, null, status, start, end,
+					orderByComparator);
 
-			return _ddmSearchHelper.doSearch(
+			return DDMSearchUtil.doSearch(
 				searchContext, DDMTemplate.class,
 				ddmTemplateLocalService::fetchTemplate);
 		}
@@ -779,12 +814,13 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 		try {
 			SearchContext searchContext =
-				_ddmSearchHelper.buildTemplateSearchContext(
-					companyId, groupIds, getUserId(), classNameIds, classPKs,
-					resourceClassNameId, name, description, type, mode,
-					language, status, start, end, orderByComparator);
+				DDMSearchUtil.buildTemplateSearchContext(
+					_ddmPermissionSupport, companyId, groupIds, getUserId(),
+					classNameIds, classPKs, resourceClassNameId, name,
+					description, type, mode, language, status, start, end,
+					orderByComparator);
 
-			return _ddmSearchHelper.doSearch(
+			return DDMSearchUtil.doSearch(
 				searchContext, DDMTemplate.class,
 				ddmTemplatePersistence::findByPrimaryKey);
 		}
@@ -827,12 +863,13 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 		try {
 			SearchContext searchContext =
-				_ddmSearchHelper.buildTemplateSearchContext(
-					companyId, groupId, getUserId(), classNameId, classPK,
-					resourceClassNameId, keywords, keywords, type, mode, null,
-					status, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+				DDMSearchUtil.buildTemplateSearchContext(
+					_ddmPermissionSupport, companyId, groupId, getUserId(),
+					classNameId, classPK, resourceClassNameId, keywords,
+					keywords, type, mode, null, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null);
 
-			return _ddmSearchHelper.doSearchCount(
+			return DDMSearchUtil.doSearchCount(
 				searchContext, DDMTemplate.class);
 		}
 		catch (PrincipalException principalException) {
@@ -879,12 +916,13 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 		try {
 			SearchContext searchContext =
-				_ddmSearchHelper.buildTemplateSearchContext(
-					companyId, groupId, getUserId(), classNameId, classPK,
-					resourceClassNameId, name, description, type, mode, null,
-					status, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+				DDMSearchUtil.buildTemplateSearchContext(
+					_ddmPermissionSupport, companyId, groupId, getUserId(),
+					classNameId, classPK, resourceClassNameId, name,
+					description, type, mode, null, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null);
 
-			return _ddmSearchHelper.doSearchCount(
+			return DDMSearchUtil.doSearchCount(
 				searchContext, DDMTemplate.class);
 		}
 		catch (PrincipalException principalException) {
@@ -926,12 +964,13 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 		try {
 			SearchContext searchContext =
-				_ddmSearchHelper.buildTemplateSearchContext(
-					companyId, groupIds, getUserId(), classNameIds, classPKs,
-					resourceClassNameId, keywords, keywords, type, mode, null,
-					status, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+				DDMSearchUtil.buildTemplateSearchContext(
+					_ddmPermissionSupport, companyId, groupIds, getUserId(),
+					classNameIds, classPKs, resourceClassNameId, keywords,
+					keywords, type, mode, null, status, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null);
 
-			return _ddmSearchHelper.doSearchCount(
+			return DDMSearchUtil.doSearchCount(
 				searchContext, DDMTemplate.class);
 		}
 		catch (PrincipalException principalException) {
@@ -978,13 +1017,13 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 		try {
 			SearchContext searchContext =
-				_ddmSearchHelper.buildTemplateSearchContext(
-					companyId, groupIds, getUserId(), classNameIds, classPKs,
-					resourceClassNameId, name, description, type, mode,
-					language, status, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-					null);
+				DDMSearchUtil.buildTemplateSearchContext(
+					_ddmPermissionSupport, companyId, groupIds, getUserId(),
+					classNameIds, classPKs, resourceClassNameId, name,
+					description, type, mode, language, status,
+					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
-			return _ddmSearchHelper.doSearchCount(
+			return DDMSearchUtil.doSearchCount(
 				searchContext, DDMTemplate.class);
 		}
 		catch (PrincipalException principalException) {
@@ -1089,9 +1128,6 @@ public class DDMTemplateServiceImpl extends DDMTemplateServiceBaseImpl {
 
 	@Reference
 	private DDMPermissionSupport _ddmPermissionSupport;
-
-	@Reference
-	private DDMSearchHelper _ddmSearchHelper;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMTemplate)"

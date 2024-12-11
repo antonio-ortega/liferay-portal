@@ -7,9 +7,7 @@ package com.liferay.portal.service.persistence.impl;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
-import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
-import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
@@ -175,7 +173,7 @@ public class PortalPreferenceValuePersistenceImpl
 		List<PortalPreferenceValue> list = null;
 
 		if (useFinderCache) {
-			list = (List<PortalPreferenceValue>)FinderCacheUtil.getResult(
+			list = (List<PortalPreferenceValue>)dummyFinderCache.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
@@ -233,7 +231,7 @@ public class PortalPreferenceValuePersistenceImpl
 				cacheResult(list);
 
 				if (useFinderCache) {
-					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+					dummyFinderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
@@ -549,7 +547,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 		Object[] finderArgs = new Object[] {portalPreferencesId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
+		Long count = (Long)dummyFinderCache.getResult(
 			finderPath, finderArgs, this);
 
 		if (count == null) {
@@ -574,7 +572,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				dummyFinderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
 				throw processException(exception);
@@ -699,7 +697,7 @@ public class PortalPreferenceValuePersistenceImpl
 		List<PortalPreferenceValue> list = null;
 
 		if (useFinderCache) {
-			list = (List<PortalPreferenceValue>)FinderCacheUtil.getResult(
+			list = (List<PortalPreferenceValue>)dummyFinderCache.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
@@ -774,7 +772,7 @@ public class PortalPreferenceValuePersistenceImpl
 				cacheResult(list);
 
 				if (useFinderCache) {
-					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+					dummyFinderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
@@ -1122,7 +1120,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 		Object[] finderArgs = new Object[] {portalPreferencesId, namespace};
 
-		Long count = (Long)FinderCacheUtil.getResult(
+		Long count = (Long)dummyFinderCache.getResult(
 			finderPath, finderArgs, this);
 
 		if (count == null) {
@@ -1162,7 +1160,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				dummyFinderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
 				throw processException(exception);
@@ -1300,7 +1298,7 @@ public class PortalPreferenceValuePersistenceImpl
 		List<PortalPreferenceValue> list = null;
 
 		if (useFinderCache) {
-			list = (List<PortalPreferenceValue>)FinderCacheUtil.getResult(
+			list = (List<PortalPreferenceValue>)dummyFinderCache.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
@@ -1391,7 +1389,7 @@ public class PortalPreferenceValuePersistenceImpl
 				cacheResult(list);
 
 				if (useFinderCache) {
-					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+					dummyFinderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
@@ -1775,7 +1773,7 @@ public class PortalPreferenceValuePersistenceImpl
 			portalPreferencesId, key, namespace
 		};
 
-		Long count = (Long)FinderCacheUtil.getResult(
+		Long count = (Long)dummyFinderCache.getResult(
 			finderPath, finderArgs, this);
 
 		if (count == null) {
@@ -1830,7 +1828,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				dummyFinderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
 				throw processException(exception);
@@ -1859,7 +1857,6 @@ public class PortalPreferenceValuePersistenceImpl
 		"(portalPreferenceValue.namespace IS NULL OR portalPreferenceValue.namespace = '')";
 
 	private FinderPath _finderPathFetchByP_I_K_N;
-	private FinderPath _finderPathCountByP_I_K_N;
 
 	/**
 	 * Returns the portal preference value where portalPreferencesId = &#63; and index = &#63; and key = &#63; and namespace = &#63; or throws a <code>NoSuchPreferenceValueException</code> if it could not be found.
@@ -1953,7 +1950,7 @@ public class PortalPreferenceValuePersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = FinderCacheUtil.getResult(
+			result = dummyFinderCache.getResult(
 				_finderPathFetchByP_I_K_N, finderArgs, this);
 		}
 
@@ -2030,7 +2027,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 				if (list.isEmpty()) {
 					if (useFinderCache) {
-						FinderCacheUtil.putResult(
+						dummyFinderCache.putResult(
 							_finderPathFetchByP_I_K_N, finderArgs, list);
 					}
 				}
@@ -2091,85 +2088,14 @@ public class PortalPreferenceValuePersistenceImpl
 	public int countByP_I_K_N(
 		long portalPreferencesId, int index, String key, String namespace) {
 
-		key = Objects.toString(key, "");
-		namespace = Objects.toString(namespace, "");
+		PortalPreferenceValue portalPreferenceValue = fetchByP_I_K_N(
+			portalPreferencesId, index, key, namespace);
 
-		FinderPath finderPath = _finderPathCountByP_I_K_N;
-
-		Object[] finderArgs = new Object[] {
-			portalPreferencesId, index, key, namespace
-		};
-
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
-
-		if (count == null) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(_SQL_COUNT_PORTALPREFERENCEVALUE_WHERE);
-
-			sb.append(_FINDER_COLUMN_P_I_K_N_PORTALPREFERENCESID_2);
-
-			sb.append(_FINDER_COLUMN_P_I_K_N_INDEX_2);
-
-			boolean bindKey = false;
-
-			if (key.isEmpty()) {
-				sb.append(_FINDER_COLUMN_P_I_K_N_KEY_3);
-			}
-			else {
-				bindKey = true;
-
-				sb.append(_FINDER_COLUMN_P_I_K_N_KEY_2);
-			}
-
-			boolean bindNamespace = false;
-
-			if (namespace.isEmpty()) {
-				sb.append(_FINDER_COLUMN_P_I_K_N_NAMESPACE_3);
-			}
-			else {
-				bindNamespace = true;
-
-				sb.append(_FINDER_COLUMN_P_I_K_N_NAMESPACE_2);
-			}
-
-			String sql = sb.toString();
-
-			Session session = null;
-
-			try {
-				session = openSession();
-
-				Query query = session.createQuery(sql);
-
-				QueryPos queryPos = QueryPos.getInstance(query);
-
-				queryPos.add(portalPreferencesId);
-
-				queryPos.add(index);
-
-				if (bindKey) {
-					queryPos.add(key);
-				}
-
-				if (bindNamespace) {
-					queryPos.add(namespace);
-				}
-
-				count = (Long)query.uniqueResult();
-
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
-			}
-			catch (Exception exception) {
-				throw processException(exception);
-			}
-			finally {
-				closeSession(session);
-			}
+		if (portalPreferenceValue == null) {
+			return 0;
 		}
 
-		return count.intValue();
+		return 1;
 	}
 
 	private static final String _FINDER_COLUMN_P_I_K_N_PORTALPREFERENCESID_2 =
@@ -2316,7 +2242,7 @@ public class PortalPreferenceValuePersistenceImpl
 		List<PortalPreferenceValue> list = null;
 
 		if (useFinderCache) {
-			list = (List<PortalPreferenceValue>)FinderCacheUtil.getResult(
+			list = (List<PortalPreferenceValue>)dummyFinderCache.getResult(
 				finderPath, finderArgs, this);
 
 			if ((list != null) && !list.isEmpty()) {
@@ -2424,7 +2350,7 @@ public class PortalPreferenceValuePersistenceImpl
 				cacheResult(list);
 
 				if (useFinderCache) {
-					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+					dummyFinderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
@@ -2847,7 +2773,7 @@ public class PortalPreferenceValuePersistenceImpl
 			portalPreferencesId, key, namespace, smallValue
 		};
 
-		Long count = (Long)FinderCacheUtil.getResult(
+		Long count = (Long)dummyFinderCache.getResult(
 			finderPath, finderArgs, this);
 
 		if (count == null) {
@@ -2917,7 +2843,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(finderPath, finderArgs, count);
+				dummyFinderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
 				throw processException(exception);
@@ -2974,11 +2900,11 @@ public class PortalPreferenceValuePersistenceImpl
 	 */
 	@Override
 	public void cacheResult(PortalPreferenceValue portalPreferenceValue) {
-		EntityCacheUtil.putResult(
+		dummyEntityCache.putResult(
 			PortalPreferenceValueImpl.class,
 			portalPreferenceValue.getPrimaryKey(), portalPreferenceValue);
 
-		FinderCacheUtil.putResult(
+		dummyFinderCache.putResult(
 			_finderPathFetchByP_I_K_N,
 			new Object[] {
 				portalPreferenceValue.getPortalPreferencesId(),
@@ -3011,7 +2937,7 @@ public class PortalPreferenceValuePersistenceImpl
 		for (PortalPreferenceValue portalPreferenceValue :
 				portalPreferenceValues) {
 
-			if (EntityCacheUtil.getResult(
+			if (dummyEntityCache.getResult(
 					PortalPreferenceValueImpl.class,
 					portalPreferenceValue.getPrimaryKey()) == null) {
 
@@ -3029,9 +2955,9 @@ public class PortalPreferenceValuePersistenceImpl
 	 */
 	@Override
 	public void clearCache() {
-		EntityCacheUtil.clearCache(PortalPreferenceValueImpl.class);
+		dummyEntityCache.clearCache(PortalPreferenceValueImpl.class);
 
-		FinderCacheUtil.clearCache(PortalPreferenceValueImpl.class);
+		dummyFinderCache.clearCache(PortalPreferenceValueImpl.class);
 	}
 
 	/**
@@ -3043,7 +2969,7 @@ public class PortalPreferenceValuePersistenceImpl
 	 */
 	@Override
 	public void clearCache(PortalPreferenceValue portalPreferenceValue) {
-		EntityCacheUtil.removeResult(
+		dummyEntityCache.removeResult(
 			PortalPreferenceValueImpl.class, portalPreferenceValue);
 	}
 
@@ -3052,17 +2978,17 @@ public class PortalPreferenceValuePersistenceImpl
 		for (PortalPreferenceValue portalPreferenceValue :
 				portalPreferenceValues) {
 
-			EntityCacheUtil.removeResult(
+			dummyEntityCache.removeResult(
 				PortalPreferenceValueImpl.class, portalPreferenceValue);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(PortalPreferenceValueImpl.class);
+		dummyFinderCache.clearCache(PortalPreferenceValueImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			EntityCacheUtil.removeResult(
+			dummyEntityCache.removeResult(
 				PortalPreferenceValueImpl.class, primaryKey);
 		}
 	}
@@ -3077,9 +3003,7 @@ public class PortalPreferenceValuePersistenceImpl
 			portalPreferenceValueModelImpl.getNamespace()
 		};
 
-		FinderCacheUtil.putResult(
-			_finderPathCountByP_I_K_N, args, Long.valueOf(1));
-		FinderCacheUtil.putResult(
+		dummyFinderCache.putResult(
 			_finderPathFetchByP_I_K_N, args, portalPreferenceValueModelImpl);
 	}
 
@@ -3239,7 +3163,7 @@ public class PortalPreferenceValuePersistenceImpl
 			closeSession(session);
 		}
 
-		EntityCacheUtil.putResult(
+		dummyEntityCache.putResult(
 			PortalPreferenceValueImpl.class, portalPreferenceValueModelImpl,
 			false, true);
 
@@ -3391,7 +3315,7 @@ public class PortalPreferenceValuePersistenceImpl
 		List<PortalPreferenceValue> list = null;
 
 		if (useFinderCache) {
-			list = (List<PortalPreferenceValue>)FinderCacheUtil.getResult(
+			list = (List<PortalPreferenceValue>)dummyFinderCache.getResult(
 				finderPath, finderArgs, this);
 		}
 
@@ -3429,7 +3353,7 @@ public class PortalPreferenceValuePersistenceImpl
 				cacheResult(list);
 
 				if (useFinderCache) {
-					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+					dummyFinderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
@@ -3461,7 +3385,7 @@ public class PortalPreferenceValuePersistenceImpl
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)FinderCacheUtil.getResult(
+		Long count = (Long)dummyFinderCache.getResult(
 			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
 
 		if (count == null) {
@@ -3475,7 +3399,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				FinderCacheUtil.putResult(
+				dummyFinderCache.putResult(
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
@@ -3496,7 +3420,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 	@Override
 	protected EntityCache getEntityCache() {
-		return EntityCacheUtil.getEntityCache();
+		return dummyEntityCache;
 	}
 
 	@Override
@@ -3604,15 +3528,6 @@ public class PortalPreferenceValuePersistenceImpl
 			new String[] {"portalPreferencesId", "index_", "key_", "namespace"},
 			true);
 
-		_finderPathCountByP_I_K_N = new FinderPath(
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByP_I_K_N",
-			new String[] {
-				Long.class.getName(), Integer.class.getName(),
-				String.class.getName(), String.class.getName()
-			},
-			new String[] {"portalPreferencesId", "index_", "key_", "namespace"},
-			false);
-
 		_finderPathWithPaginationFindByP_K_N_SV = new FinderPath(
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByP_K_N_SV",
 			new String[] {
@@ -3654,7 +3569,7 @@ public class PortalPreferenceValuePersistenceImpl
 	public void destroy() {
 		PortalPreferenceValueUtil.setPersistence(null);
 
-		EntityCacheUtil.removeCache(PortalPreferenceValueImpl.class.getName());
+		dummyEntityCache.removeCache(PortalPreferenceValueImpl.class.getName());
 	}
 
 	private static final String _SQL_SELECT_PORTALPREFERENCEVALUE =
@@ -3686,7 +3601,7 @@ public class PortalPreferenceValuePersistenceImpl
 
 	@Override
 	protected FinderCache getFinderCache() {
-		return FinderCacheUtil.getFinderCache();
+		return dummyFinderCache;
 	}
 
 }

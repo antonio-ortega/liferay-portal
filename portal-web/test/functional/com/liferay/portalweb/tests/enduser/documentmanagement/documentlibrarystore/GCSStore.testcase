@@ -1,5 +1,4 @@
-@component-name = "portal-document-library-store"
-@ignore = "true"
+@component-name = "portal-core-infra"
 definition {
 
 	property gcs.store.enabled = "true";

@@ -8,35 +8,41 @@ import React from 'react';
 
 interface ObjectManagementToolbarProps {
 	backURL: string;
-	externalReferenceCode: string;
 	hasPublishObjectPermission: boolean;
 	hasUpdateObjectDefinitionPermission: boolean;
 	isApproved: boolean;
 	isRootDescendantNode: boolean;
+	isRootNode: boolean;
 	label: string;
+	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	onSubmit: (draft: boolean) => void;
 	portletNamespace: string;
 	screenNavigationCategoryKey: string;
-	setValues: (values: Partial<ObjectDefinition>) => void;
 	system: boolean;
 }
 
 export default function ObjectManagementToolbar({
 	backURL,
-	externalReferenceCode,
 	hasPublishObjectPermission,
 	hasUpdateObjectDefinitionPermission,
 	isApproved,
 	isRootDescendantNode,
+	isRootNode,
 	label,
+	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	onSubmit,
 	portletNamespace,
 	screenNavigationCategoryKey,
-	setValues,
 	system,
 }: ObjectManagementToolbarProps) {
+	const inheritanceLabel = isRootDescendantNode
+		? Liferay.Language.get('inherited')
+		: isRootNode
+			? Liferay.Language.get('root-object')
+			: Liferay.Language.get('standard');
+
 	return (
 		<ManagementToolbar
 			backURL={backURL}
@@ -49,21 +55,24 @@ export default function ObjectManagementToolbar({
 			className="border-bottom"
 			enableBoxShadow={false}
 			entityId={objectDefinitionId}
-			externalReferenceCode={externalReferenceCode}
-			externalReferenceCodeSaveURL={`/o/object-admin/v1.0/object-definitions/${objectDefinitionId}`}
 			hasPublishPermission={hasPublishObjectPermission}
 			hasUpdatePermission={hasUpdateObjectDefinitionPermission}
 			helpMessage={Liferay.Language.get(
 				'unique-key-for-referencing-the-object-definition'
 			)}
+			inheritanceClassName={
+				isRootDescendantNode || isRootNode
+					? 'label-inverse-info'
+					: 'label-inverse-secondary'
+			}
+			inheritanceLabel={inheritanceLabel}
 			isApproved={isApproved}
 			isRootDescendantNode={isRootDescendantNode}
 			label={label}
-			onExternalReferenceCodeChange={(externalReferenceCode: string) => {
-				setValues({
-					externalReferenceCode,
-				});
-			}}
+			objectDefinitionExternalReferenceCode={
+				objectDefinitionExternalReferenceCode
+			}
+			objectDefinitionExternalReferenceCodeSaveURL={`/o/object-admin/v1.0/object-definitions/${objectDefinitionId}`}
 			onGetEntity={() => API.getObjectDefinitionById(objectDefinitionId)}
 			onSubmit={onSubmit}
 			portletNamespace={portletNamespace}

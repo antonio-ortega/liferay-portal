@@ -7,10 +7,8 @@ import {FormikHelpers, setNestedObjectValues} from 'formik';
 import {useState} from 'react';
 
 import PRMFormik from '../../common/components/PRMFormik';
-import {PRMPageRoute} from '../../common/enums/prmPageRoute';
 import useLiferayNavigate from '../../common/hooks/useLiferayNavigate';
 import DealRegistration from '../../common/interfaces/dealRegistration';
-import {Liferay} from '../../common/services/liferay';
 import {Status} from '../../common/utils/constants/status';
 import isObjectEmpty from '../../common/utils/isObjectEmpty';
 import {StepType} from './enums/stepType';
@@ -41,6 +39,7 @@ const initialFormValues: DealRegistration = {
 		jobRole: {},
 		lastName: '',
 		phone: '',
+		title: '',
 	},
 	projectCategories: [],
 	projectNeed: [],
@@ -64,11 +63,7 @@ const DealRegistrationForm = () => {
 	const [step, setStep] = useState<StepType>(StepType.GENERAL);
 	const siteURL = useLiferayNavigate();
 
-	const onCancel = () => {
-		Liferay.Util.navigate(
-			`${siteURL}/${PRMPageRoute.DEAL_REGISTRATION_LISTING}`
-		);
-	};
+	const onCancel = () => history.back();
 
 	const onContinue = async (
 		formikHelpers: Omit<FormikHelpers<DealRegistration>, 'setFieldValue'>,

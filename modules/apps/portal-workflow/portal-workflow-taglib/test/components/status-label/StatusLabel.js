@@ -7,7 +7,7 @@ import '@testing-library/jest-dom/extend-expect';
 import {act, cleanup, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
-import StatusLabel from '../../../src/main/resources/META-INF/resources/workflow_status/js/components/status-label/StatusLabel';
+import StatusLabel from '../../../src/main/resources/META-INF/resources/js/components/status-label/StatusLabel';
 
 describe('The WorkflowStatus should', () => {
 	const INITIAL_PROPS = {
@@ -50,9 +50,8 @@ describe('The WorkflowStatus should', () => {
 			fireEvent.click(link);
 		});
 
-		const instanceTrackerModal = document.querySelector(
-			'.modal-full-screen'
-		);
+		const instanceTrackerModal =
+			document.querySelector('.modal-full-screen');
 
 		expect(instanceTrackerModal).toBeInTheDocument();
 	});

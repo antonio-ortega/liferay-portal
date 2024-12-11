@@ -28,15 +28,19 @@ public interface CommerceOrderHttpHelper {
 			ActionRequest actionRequest, long commerceOrderId)
 		throws PortalException;
 
-	public PortletURL getCommerceCartPortletURL(
+	public CommerceOrder fetchCommerceOrderByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException;
+
+	public String getCommerceCartPortletURL(
 			HttpServletRequest httpServletRequest)
 		throws PortalException;
 
-	public PortletURL getCommerceCartPortletURL(
+	public String getCommerceCartPortletURL(
 			HttpServletRequest httpServletRequest, CommerceOrder commerceOrder)
 		throws PortalException;
 
-	public PortletURL getCommerceCartPortletURL(
+	public String getCommerceCartPortletURL(
 			long groupId, HttpServletRequest httpServletRequest,
 			CommerceOrder commerceOrder)
 		throws PortalException;
@@ -57,6 +61,9 @@ public interface CommerceOrderHttpHelper {
 
 	public boolean isGuestCheckoutEnabled(HttpServletRequest httpServletRequest)
 		throws PortalException;
+
+	public boolean isMultishippingEnabled(
+		HttpServletRequest httpServletRequest);
 
 	public void setCurrentCommerceOrder(
 			HttpServletRequest httpServletRequest, CommerceOrder commerceOrder)

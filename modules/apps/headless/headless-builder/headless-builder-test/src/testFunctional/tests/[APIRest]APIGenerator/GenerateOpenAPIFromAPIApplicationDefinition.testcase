@@ -2,10 +2,10 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
@@ -24,8 +24,7 @@ definition {
 	}
 
 	@priority = 5
-	test CanGenerateOpenApiFromApiApplicationDefinition {
-		property portal.acceptance = "true";
+	test CanGenerateOpenAPIFromAPIApplicationDefinition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -38,7 +37,6 @@ definition {
 				relatedEndpoint = "true",
 				relatedSchema = "true",
 				schemaName = "testSchema",
-				status = "unpublished",
 				title = "My-app");
 
 			var endpointId = JSONUtil.getWithJSONPath(${response}, "$.apiApplicationToAPIEndpoints[*].id");
@@ -65,7 +63,7 @@ definition {
 			APIExplorer.navigateToOpenAPI(customObjectPlural = "my-app");
 		}
 
-		task ("Then I am redirected to the OpenApi page with endpoints and schemas details") {
+		task ("Then I am redirected to the OpenAPI page with endpoints and schemas details") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "OpenAPI#API_METHOD",
 				method = "getTestendpointPage",
@@ -83,8 +81,7 @@ definition {
 	}
 
 	@priority = 4
-	test CanHideApiApplicationOnRestApplicationsListByUnbublishing {
-		property portal.acceptance = "true";
+	test CanHideAPIApplicationOnRestApplicationsListByUnbublishing {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -120,8 +117,7 @@ definition {
 	}
 
 	@priority = 4
-	test CannotSeeUnpublishedApiApplicationListedAsRestApplication {
-		property portal.acceptance = "true";
+	test CannotSeeUnpublishedAPIApplicationListedAsRestApplication {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -134,7 +130,6 @@ definition {
 				relatedEndpoint = "true",
 				relatedSchema = "true",
 				schemaName = "testSchema",
-				status = "unpublished",
 				title = "My-app");
 
 			var endpointId = JSONUtil.getWithJSONPath(${response}, "$.apiApplicationToAPIEndpoints[*].id");
@@ -159,8 +154,7 @@ definition {
 	}
 
 	@priority = 4
-	test CanSeePublishedApiApplicationListedAsRestApplication {
-		property portal.acceptance = "true";
+	test CanSeePublishedAPIApplicationListedAsRestApplication {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -173,7 +167,6 @@ definition {
 				relatedEndpoint = "true",
 				relatedSchema = "true",
 				schemaName = "testSchema",
-				status = "unpublished",
 				title = "My-app");
 
 			var endpointId = JSONUtil.getWithJSONPath(${response}, "$.apiApplicationToAPIEndpoints[*].id");

@@ -25,6 +25,7 @@ import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
+import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -48,6 +49,11 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @CTAware
+@OSGiBeanProperties(
+	property = {
+		"model.class.name=com.liferay.document.library.kernel.model.DLFileEntryMetadata"
+	}
+)
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -127,6 +133,10 @@ public interface DLFileEntryMetadataLocalService
 		throws PortalException;
 
 	public void deleteFileEntryMetadata(long fileEntryId)
+		throws PortalException;
+
+	public void deleteFileEntryMetadataByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	public void deleteFileVersionFileEntryMetadata(long fileVersionId)
@@ -215,6 +225,10 @@ public interface DLFileEntryMetadataLocalService
 	public DLFileEntryMetadata fetchDLFileEntryMetadata(
 		long fileEntryMetadataId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntryMetadata fetchDLFileEntryMetadataByExternalReferenceCode(
+		String externalReferenceCode, long companyId);
+
 	/**
 	 * Returns the document library file entry metadata with the matching UUID and company.
 	 *
@@ -245,6 +259,11 @@ public interface DLFileEntryMetadataLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileEntryMetadata getDLFileEntryMetadata(long fileEntryMetadataId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntryMetadata getDLFileEntryMetadataByExternalReferenceCode(
+			String externalReferenceCode, long companyId)
 		throws PortalException;
 
 	/**
@@ -338,13 +357,15 @@ public interface DLFileEntryMetadataLocalService
 		DLFileEntryMetadata dlFileEntryMetadata);
 
 	public void updateFileEntryMetadata(
-			long companyId, List<DDMStructure> ddmStructures, long fileEntryId,
+			String externalReferenceCode, long companyId,
+			List<DDMStructure> ddmStructures, long fileEntryId,
 			long fileVersionId, Map<String, DDMFormValues> ddmFormValuesMap,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public void updateFileEntryMetadata(
-			long fileEntryTypeId, long fileEntryId, long fileVersionId,
+			String externalReferenceCode, long fileEntryTypeId,
+			long fileEntryId, long fileVersionId,
 			Map<String, DDMFormValues> ddmFormValuesMap,
 			ServiceContext serviceContext)
 		throws PortalException;

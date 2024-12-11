@@ -35,10 +35,8 @@
 			</liferay-frontend:edit-form-footer>
 		</liferay-frontend:edit-form>
 
-		<aui:script require="frontend-js-web/index as frontendJsWeb">
-			var {delegate} = frontendJsWeb;
-
-			delegate(
+		<aui:script sandbox="<%= true %>">
+			Liferay.Util.delegate(
 				document.getElementById('<portlet:namespace />fm'),
 				'change',
 				'input[type=checkbox]',
@@ -60,12 +58,12 @@
 						if (!input.disabled) {
 							input.classList.remove('disabled');
 
-							if (input.labels.length > 0) {
+							if (input.labels && input.labels.length > 0) {
 								input.labels[0].classList.remove('disabled');
 							}
 						}
 						else {
-							if (input.labels.length > 0) {
+							if (input.labels && input.labels.length > 0) {
 								input.labels[0].classList.add('disabled');
 							}
 						}

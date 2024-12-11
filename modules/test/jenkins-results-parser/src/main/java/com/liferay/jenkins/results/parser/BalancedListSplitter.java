@@ -43,7 +43,7 @@ public abstract class BalancedListSplitter<T> {
 
 		int minNumberOfLists = (int)(totalWeight / _maxListWeight);
 
-		if ((totalWeight % _maxListWeight) > 0) {
+		if ((totalWeight % _maxListWeight) >= 0) {
 			minNumberOfLists++;
 		}
 
@@ -85,6 +85,10 @@ public abstract class BalancedListSplitter<T> {
 		}
 
 		return lists;
+	}
+
+	protected long getMaxListWeight() {
+		return _maxListWeight;
 	}
 
 	protected class ListItem implements Comparable<ListItem> {

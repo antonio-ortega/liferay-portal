@@ -1,6 +1,6 @@
 dependencies {
-	compileOnly group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.13.4"
-	compileOnly group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.13.4.2"
+	compileOnly group: "com.fasterxml.jackson.core", name: "jackson-core", version: "2.16.1"
+	compileOnly group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.16.1"
 	compileOnly group: "com.google.code.findbugs", name: "annotations", version: "3.0.1"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.impl", version: "default"
 	compileOnly group: "com.liferay.portal", name: "com.liferay.portal.kernel", version: "default"
@@ -26,5 +26,6 @@ dependencies {
 	compileOnly project(":apps:site:site-api")
 	compileOnly project(":apps:static:osgi:osgi-util")
 	compileOnly project(":core:petra:petra-function")
+	compileOnly project(":core:petra:petra-sql-dsl-api")
 	compileOnly project(":core:petra:petra-string")
 }

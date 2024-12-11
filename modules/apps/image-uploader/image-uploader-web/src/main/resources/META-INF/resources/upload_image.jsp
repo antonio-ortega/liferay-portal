@@ -9,6 +9,7 @@
 
 <%
 int aspectRatio = ParamUtil.getInteger(request, "aspectRatio");
+long ctCollectionId = ParamUtil.getLong(request, "ctCollectionId", CTCollectionThreadLocal.getCTCollectionId());
 String currentImageURL = ParamUtil.getString(request, "currentLogoURL");
 long maxFileSize = UploadImageUtil.getMaxFileSize(renderRequest);
 boolean preserveRatio = ParamUtil.getBoolean(request, "preserveRatio");
@@ -19,6 +20,7 @@ String tempImageFileName = ParamUtil.getString(request, "tempImageFileName");
 <liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/image_uploader/upload_image" var="previewURL">
 	<portlet:param name="mvcRenderCommandName" value="/image_uploader/upload_image" />
 	<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.GET_TEMP %>" />
+	<portlet:param name="ctCollectionId" value="<%= String.valueOf(ctCollectionId) %>" />
 </liferay-portlet:resourceURL>
 
 <c:choose>
@@ -32,8 +34,9 @@ String tempImageFileName = ParamUtil.getString(request, "tempImageFileName");
 
 		<aui:script>
 			<c:if test="<%= fileEntry != null %>">
-				const onChangeLogo = Liferay.Util.getOpener()
-					.<%= HtmlUtil.escapeJS(randomNamespace) %>changeLogo;
+				const onChangeLogo =
+					Liferay.Util.getOpener()
+						.<%= HtmlUtil.escapeJS(randomNamespace) %>changeLogo;
 
 				if (onChangeLogo) {
 					Liferay.Util.getOpener().<%= HtmlUtil.escapeJS(randomNamespace) %>changeLogo(
@@ -50,12 +53,13 @@ String tempImageFileName = ParamUtil.getString(request, "tempImageFileName");
 				}
 			</c:if>
 
-			Liferay.Util.getWindow().hide();
+			Liferay.Util.getOpener().Liferay.fire('closeModal');
 		</aui:script>
 	</c:when>
 	<c:otherwise>
 		<portlet:actionURL name="/image_uploader/upload_image" var="uploadImageURL">
 			<portlet:param name="mvcRenderCommandName" value="/image_uploader/upload_image" />
+			<portlet:param name="ctCollectionId" value="<%= String.valueOf(ctCollectionId) %>" />
 		</portlet:actionURL>
 
 		<aui:form action="<%= uploadImageURL %>" enctype="multipart/form-data" method="post" name="fm">
@@ -134,7 +138,7 @@ String tempImageFileName = ParamUtil.getString(request, "tempImageFileName");
 			</aui:button-row>
 		</aui:form>
 
-		<script>
+		<aui:script>
 			(function () {
 				var uploadImageButton = document.getElementById(
 					'<portlet:namespace />uploadImage'
@@ -150,12 +154,13 @@ String tempImageFileName = ParamUtil.getString(request, "tempImageFileName");
 					});
 				}
 			})();
-		</script>
+		</aui:script>
 
 		<aui:script use="liferay-logo-editor">
 			<portlet:actionURL name="/image_uploader/upload_image" var="addTempImageURL">
 				<portlet:param name="mvcRenderCommandName" value="/image_uploader/upload_image" />
 				<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.ADD_TEMP %>" />
+				<portlet:param name="ctCollectionId" value="<%= String.valueOf(ctCollectionId) %>" />
 				<portlet:param name="aspectRatio" value="<%= String.valueOf(aspectRatio) %>" />
 				<portlet:param name="preserveRatio" value="<%= String.valueOf(preserveRatio) %>" />
 			</portlet:actionURL>

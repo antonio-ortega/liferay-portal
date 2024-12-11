@@ -287,47 +287,47 @@ public class SitesImpl implements Sites {
 			Portlet.PORTLET_ID_ACCESSOR);
 
 		for (String sourcePortletId : sourcePortletIds) {
-			PortletPreferences sourcePreferences =
+			PortletPreferences sourcePortletPreferences =
 				PortletPreferencesFactoryUtil.getPortletSetup(
 					sourceLayout, sourcePortletId, null);
 
 			PortletPreferencesImpl sourcePortletPreferencesImpl =
-				(PortletPreferencesImpl)sourcePreferences;
+				(PortletPreferencesImpl)sourcePortletPreferences;
 
-			PortletPreferences targetPreferences =
+			PortletPreferences targetPortletPreferences =
 				PortletPreferencesFactoryUtil.getPortletSetup(
 					targetLayout, sourcePortletId, null);
 
 			PortletPreferencesImpl targetPortletPreferencesImpl =
-				(PortletPreferencesImpl)targetPreferences;
+				(PortletPreferencesImpl)targetPortletPreferences;
 
 			_portletPreferencesLocalService.updatePreferences(
 				targetPortletPreferencesImpl.getOwnerId(),
 				targetPortletPreferencesImpl.getOwnerType(),
 				targetPortletPreferencesImpl.getPlid(), sourcePortletId,
-				sourcePreferences);
+				sourcePortletPreferences);
 
 			if ((sourcePortletPreferencesImpl.getOwnerId() !=
 					PortletKeys.PREFS_OWNER_ID_DEFAULT) &&
 				(sourcePortletPreferencesImpl.getOwnerType() !=
 					PortletKeys.PREFS_OWNER_TYPE_LAYOUT)) {
 
-				sourcePreferences =
+				sourcePortletPreferences =
 					PortletPreferencesFactoryUtil.getLayoutPortletSetup(
 						sourceLayout, sourcePortletId);
 
-				targetPreferences =
+				targetPortletPreferences =
 					PortletPreferencesFactoryUtil.getLayoutPortletSetup(
 						targetLayout, sourcePortletId);
 
 				targetPortletPreferencesImpl =
-					(PortletPreferencesImpl)targetPreferences;
+					(PortletPreferencesImpl)targetPortletPreferences;
 
 				_portletPreferencesLocalService.updatePreferences(
 					targetPortletPreferencesImpl.getOwnerId(),
 					targetPortletPreferencesImpl.getOwnerType(),
 					targetPortletPreferencesImpl.getPlid(), sourcePortletId,
-					sourcePreferences);
+					sourcePortletPreferences);
 			}
 
 			ServiceContext serviceContext =
@@ -335,8 +335,8 @@ public class SitesImpl implements Sites {
 
 			_updateLayoutScopes(
 				serviceContext.getUserId(), sourceLayout, targetLayout,
-				sourcePreferences, targetPreferences, sourcePortletId,
-				serviceContext.getLanguageId());
+				sourcePortletPreferences, targetPortletPreferences,
+				sourcePortletId, serviceContext.getLanguageId());
 		}
 	}
 
@@ -997,7 +997,7 @@ public class SitesImpl implements Sites {
 				BackgroundTaskExecutorNames.
 					LAYOUT_SET_PROTOTYPE_MERGE_BACKGROUND_TASK_EXECUTOR,
 				false, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-				new BackgroundTaskCreateDateComparator());
+				BackgroundTaskCreateDateComparator.getInstance(false));
 
 		for (BackgroundTask incompleteBackgroundTask :
 				incompleteBackgroundTasks) {
@@ -1050,7 +1050,8 @@ public class SitesImpl implements Sites {
 				groupId,
 				BackgroundTaskExecutorNames.
 					LAYOUT_SET_PROTOTYPE_IMPORT_BACKGROUND_TASK_EXECUTOR,
-				completed, new BackgroundTaskCreateDateComparator(false));
+				completed,
+				BackgroundTaskCreateDateComparator.getInstance(false));
 
 		if (previousBackgroundTask == null) {
 			return false;
@@ -1139,6 +1140,9 @@ public class SitesImpl implements Sites {
 		Map<String, String[]> parameterMap = getLayoutSetPrototypesParameters(
 			importData);
 
+		parameterMap.put(
+			PortletDataHandlerKeys.LAYOUT_SET_PRIVATE_LAYOUT,
+			new String[] {String.valueOf(layoutSet.isPrivateLayout())});
 		parameterMap.put(
 			"anyFailedLayoutModifiedSinceLastMerge",
 			new String[] {
@@ -1306,13 +1310,13 @@ public class SitesImpl implements Sites {
 
 	private void _updateLayoutScopes(
 			long userId, Layout sourceLayout, Layout targetLayout,
-			PortletPreferences sourcePreferences,
-			PortletPreferences targetPreferences, String sourcePortletId,
+			PortletPreferences sourcePortletPreferences,
+			PortletPreferences targetPortletPreferences, String sourcePortletId,
 			String languageId)
 		throws Exception {
 
 		String scopeType = GetterUtil.getString(
-			sourcePreferences.getValue("lfrScopeType", null));
+			sourcePortletPreferences.getValue("lfrScopeType", null));
 
 		if (Validator.isNull(scopeType) || !scopeType.equals("layout")) {
 			return;
@@ -1338,17 +1342,17 @@ public class SitesImpl implements Sites {
 			String.valueOf(sourceLayout.getLayoutId()),
 			targetLayout.getName(languageId));
 
-		targetPreferences.setValue(
+		targetPortletPreferences.setValue(
 			"groupId", String.valueOf(targetLayout.getGroupId()));
-		targetPreferences.setValue("lfrScopeType", "layout");
-		targetPreferences.setValue(
+		targetPortletPreferences.setValue("lfrScopeType", "layout");
+		targetPortletPreferences.setValue(
 			"lfrScopeLayoutUuid", targetLayout.getUuid());
-		targetPreferences.setValue(
+		targetPortletPreferences.setValue(
 			"portletSetupTitle_" + languageId, newPortletTitle);
-		targetPreferences.setValue(
+		targetPortletPreferences.setValue(
 			"portletSetupUseCustomTitle", Boolean.TRUE.toString());
 
-		targetPreferences.store();
+		targetPortletPreferences.store();
 	}
 
 	private static final String _TEMP_DIR =

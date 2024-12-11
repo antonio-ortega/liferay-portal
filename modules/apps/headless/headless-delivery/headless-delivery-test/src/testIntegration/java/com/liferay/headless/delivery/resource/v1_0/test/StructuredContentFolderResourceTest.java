@@ -7,7 +7,6 @@ package com.liferay.headless.delivery.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.delivery.client.dto.v1_0.StructuredContentFolder;
-import com.liferay.headless.delivery.client.http.HttpInvoker;
 import com.liferay.headless.delivery.client.pagination.Page;
 import com.liferay.headless.delivery.client.pagination.Pagination;
 import com.liferay.headless.delivery.client.problem.Problem;
@@ -16,10 +15,12 @@ import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.util.PropsValues;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -55,12 +56,7 @@ public class StructuredContentFolderResourceTest
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				StringBundler.concat(
-					"No JournalFolder exists with the key {",
-					"externalReferenceCode=", externalReferenceCode,
-					", groupId=", testDepotEntry.getGroupId(), "}"),
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 
 		StructuredContentFolder parentStructuredContentFolder1 =
@@ -259,12 +255,7 @@ public class StructuredContentFolderResourceTest
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				StringBundler.concat(
-					"No JournalFolder exists with the key {",
-					"externalReferenceCode=", externalReferenceCode,
-					", groupId=", testDepotEntry.getGroupId(), "}"),
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 
 		long assetLibraryId = RandomTestUtil.randomLong();
@@ -281,9 +272,7 @@ public class StructuredContentFolderResourceTest
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertEquals(
-				"Unable to get a valid asset library with ID " + assetLibraryId,
-				problem.getTitle());
+			Assert.assertNull(problem.getTitle());
 		}
 	}
 
@@ -334,7 +323,7 @@ public class StructuredContentFolderResourceTest
 			StructuredContentFolderResource.builder();
 
 		structuredContentFolderResource = builder.authentication(
-			"test@liferay.com", "test"
+			"test@liferay.com", PropsValues.DEFAULT_ADMIN_PASSWORD
 		).locale(
 			LocaleUtil.getDefault()
 		).parameters(
@@ -382,18 +371,24 @@ public class StructuredContentFolderResourceTest
 		randomStructuredContentFolder.setExternalReferenceCode(
 			postStructuredContentFolder.getExternalReferenceCode());
 
-		HttpInvoker.HttpResponse httpResponse =
+		try {
 			structuredContentFolderResource.
-				postAssetLibraryStructuredContentFolderHttpResponse(
+				postAssetLibraryStructuredContentFolder(
 					testDepotEntry.getDepotEntryId(),
 					randomStructuredContentFolder);
 
-		Assert.assertEquals(
-			StringBundler.concat(
-				"Duplicate journal folder external reference code ",
-				postStructuredContentFolder.getExternalReferenceCode(),
-				" in group ", testDepotEntry.getGroupId()),
-			httpResponse.getContent());
+			Assert.fail();
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
+			Assert.assertEquals(
+				_language.get(
+					LocaleUtil.getDefault(),
+					"this-external-reference-code-is-already-in-use"),
+				problem.getTitle());
+		}
 	}
 
 	@Override
@@ -698,5 +693,8 @@ public class StructuredContentFolderResourceTest
 			}
 		};
 	}
+
+	@Inject
+	private Language _language;
 
 }

@@ -30,7 +30,7 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 		<div class="row">
 			<div class="col-lg-6 d-flex flex-column">
 				<div class="card flex-fill">
-					<h4 class="card-header"><liferay-ui:message key="import-settings" /></h4>
+					<div class="card-header h4"><liferay-ui:message key="import-settings" /></div>
 
 					<div class="card-body">
 						<liferay-frontend:edit-form-body>
@@ -46,11 +46,21 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 								<clay:col
 									md="6"
 								>
-									<clay:select
-										id='<%= liferayPortletResponse.getNamespace() + "internalClassNameKey" %>'
-										label='<%= LanguageUtil.get(request, "entity-type") %>'
-										name="internalClassNameKey"
-										options="<%= editBatchPlannerPlanDisplayContext.getInternalClassNameKeySelectOptions() %>"
+									<react:component
+										module="{ImportEntityType} from batch-planner-web"
+										props='<%=
+											HashMapBuilder.<String, Object>put(
+												"__reactDOMFlushSync", true
+											).put(
+												"internalClassNameKeyId", liferayPortletResponse.getNamespace() + "internalClassNameKey"
+											).put(
+												"internalClassNameKeyInitialOptions", editBatchPlannerPlanDisplayContext.getInternalClassNameKeySelectOptions()
+											).put(
+												"internalClassNameKeyLabel", LanguageUtil.get(request, "entity-type")
+											).put(
+												"internalClassNameKeyName", liferayPortletResponse.getNamespace() + "internalClassNameKey"
+											).build()
+										%>'
 									/>
 								</clay:col>
 							</clay:row>
@@ -58,7 +68,12 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 							<clay:row>
 								<clay:col>
 									<react:component
-										module="js/components/Scope"
+										module="{Scope} from batch-planner-web"
+										props='<%=
+											HashMapBuilder.<String, Object>put(
+												"__reactDOMFlushSync", true
+											).build()
+										%>'
 									/>
 								</clay:col>
 							</clay:row>
@@ -68,12 +83,14 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 								displayType="info"
 								id='<%= liferayPortletResponse.getNamespace() + "downloadTemplateAlert" %>'
 								title="download-a-sample-file-for-this-entity"
+								__reactDOMFlushSync="<%= true %>"
 							>
 								<clay:link
 									cssClass="link-primary single-link"
 									href="#"
 									id='<%= liferayPortletResponse.getNamespace() + "downloadBatchPlannerPlanTemplate" %>'
 									label="download"
+									__reactDOMFlushSync="<%= true %>"
 								/>
 
 								<liferay-frontend:component
@@ -84,21 +101,20 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 											"type", "batchPlannerTemplate"
 										).build()
 									%>'
-									module="js/DownloadHelper"
+									module="{DownloadHelper} from batch-planner-web"
 								/>
 							</clay:alert>
 
-							<c:if test='<%= FeatureFlagManagerUtil.isEnabled("LPS-173135") %>'>
-								<div class="mt-2">
-									<clay:checkbox
-										checked="<%= false %>"
-										disabled="<%= true %>"
-										id='<%= liferayPortletResponse.getNamespace() + "detectCategoryNames" %>'
-										label='<%= LanguageUtil.get(request, "detect-category-names-from-CSV-file") %>'
-										name='<%= liferayPortletResponse.getNamespace() + "detectCategoryNames" %>'
-									/>
-								</div>
-							</c:if>
+							<div class="d-none mt-2">
+								<clay:checkbox
+									checked="<%= false %>"
+									disabled="<%= true %>"
+									id='<%= liferayPortletResponse.getNamespace() + "detectCategoryNames" %>'
+									label='<%= LanguageUtil.get(request, "detect-category-names-from-CSV-file") %>'
+									name='<%= liferayPortletResponse.getNamespace() + "detectCategoryNames" %>'
+									__reactDOMFlushSync="<%= true %>"
+								/>
+							</div>
 
 							<div class="mt-2">
 								<clay:checkbox
@@ -106,13 +122,19 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 									id='<%= liferayPortletResponse.getNamespace() + "onErrorFail" %>'
 									label='<%= LanguageUtil.get(request, "stop-the-import-on-error") %>'
 									name='<%= liferayPortletResponse.getNamespace() + "onErrorFail" %>'
+									__reactDOMFlushSync="<%= true %>"
 								/>
 							</div>
 
 							<clay:row>
 								<clay:col>
 									<react:component
-										module="js/components/Strategies"
+										module="{Strategies} from batch-planner-web"
+										props='<%=
+											HashMapBuilder.<String, Object>put(
+												"__reactDOMFlushSync", true
+											).build()
+										%>'
 									/>
 								</clay:col>
 							</clay:row>
@@ -123,7 +145,7 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 
 			<div class="col-lg-6 d-flex flex-column">
 				<div class="card flex-fill">
-					<h4 class="card-header"><liferay-ui:message key="file-settings" /></h4>
+					<div class="card-header h4"><liferay-ui:message key="file-settings" /></div>
 
 					<div class="card-body">
 						<liferay-frontend:edit-form-body>
@@ -147,7 +169,12 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 
 							<div id="<portlet:namespace />fileUpload">
 								<react:component
-									module="js/components/FileUpload"
+									module="{FileUpload} from batch-planner-web"
+									props='<%=
+										HashMapBuilder.<String, Object>put(
+											"__reactDOMFlushSync", true
+										).build()
+									%>'
 								/>
 							</div>
 						</liferay-frontend:edit-form-body>
@@ -158,9 +185,11 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 
 		<span>
 			<react:component
-				module="js/import/ImportForm"
+				module="{ImportForm} from batch-planner-web"
 				props='<%=
 					HashMapBuilder.<String, Object>put(
+						"__reactDOMFlushSync", true
+					).put(
 						"formDataQuerySelector", "#" + liferayPortletResponse.getNamespace() + "fm"
 					).put(
 						"formImportURL",
@@ -203,9 +232,9 @@ renderResponse.setTitle(editable ? LanguageUtil.get(request, "edit-template") : 
 			"templatesOptions", editBatchPlannerPlanDisplayContext.getTemplateSelectOptions()
 		).build()
 	%>'
-	module="js/edit_batch_planner_plan"
+	module="{editBatchPlannerPlan} from batch-planner-web"
 />
 
 <liferay-frontend:component
-	module="js/show_upload_input"
+	module="{showUploadInput} from batch-planner-web"
 />

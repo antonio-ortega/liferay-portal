@@ -107,10 +107,17 @@ exports[`AccessTokenList should render 1`] = `
         >
           Access this workspace's data via API using an access token. A full list of endpoints is available in the 
           <a
+            class=""
             href="https://learn.liferay.com/analytics-cloud/latest/en/apis.html"
+            rel="noreferrer noopener"
             target="_blank"
           >
             documentation
+            <span
+              class="sr-only"
+            >
+              (Opens a new window)
+            </span>
           </a>
           .
         </div>
@@ -132,14 +139,16 @@ exports[`AccessTokenList should render 1`] = `
             <div
               class="align-items-start d-flex flex-column justify-content-between"
             >
-              <h4
-                class="mb-4"
+              <div
+                class="h4 mb-4"
               >
                 Token Information
-              </h4>
-              <h5>
+              </div>
+              <div
+                class="h5"
+              >
                 Root Endpoint:
-              </h5>
+              </div>
               <span
                 class="text-secondary"
               >
@@ -207,7 +216,6 @@ exports[`AccessTokenList should render 1`] = `
                         aria-label="Click to Copy"
                         class="button-root btn btn-secondary"
                         data-clipboard-text="1234ABC"
-                        data-tooltip-response="Copied"
                         title="Click to Copy"
                         type="button"
                       >
@@ -216,7 +224,7 @@ exports[`AccessTokenList should render 1`] = `
                           role="presentation"
                         >
                           <use
-                            xlink:href="#copy"
+                            href="#copy"
                           />
                         </svg>
                       </button>
@@ -324,7 +332,6 @@ exports[`AccessTokenList should show the generated token in a list and the "Gene
               aria-label="Click to Copy"
               class="button-root btn btn-secondary"
               data-clipboard-text="1234ABC"
-              data-tooltip-response="Copied"
               title="Click to Copy"
               type="button"
             >
@@ -333,7 +340,7 @@ exports[`AccessTokenList should show the generated token in a list and the "Gene
                 role="presentation"
               >
                 <use
-                  xlink:href="#copy"
+                  href="#copy"
                 />
               </svg>
             </button>

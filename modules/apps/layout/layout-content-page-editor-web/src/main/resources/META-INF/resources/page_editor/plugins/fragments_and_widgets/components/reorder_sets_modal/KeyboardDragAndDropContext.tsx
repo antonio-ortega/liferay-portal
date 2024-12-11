@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ScreenReaderAnnouncer} from '@liferay/layout-js-components-web';
 import {sub} from 'frontend-js-web';
 import React, {
 	Dispatch,
@@ -18,7 +19,6 @@ import React, {
 	useRef,
 	useState,
 } from 'react';
-import {flushSync} from 'react-dom';
 
 import {
 	DRAG_OVER_POSITIONS,
@@ -57,10 +57,8 @@ export function KeyboardDragAndDropContextProvider({
 	children,
 	itemList,
 }: PropsWithChildren<{itemList: Item[]}>) {
-	const [
-		dragOverPosition,
-		setDragOverPosition,
-	] = useState<DragOverPosition | null>(null);
+	const [dragOverPosition, setDragOverPosition] =
+		useState<DragOverPosition | null>(null);
 	const itemElementMap: Context['itemElementMap'] = useMemo(
 		() => new Map(),
 		[]
@@ -72,26 +70,17 @@ export function KeyboardDragAndDropContextProvider({
 	const itemListElementRef = useRef<HTMLDivElement | null>(null);
 	const [sourceItem, setSourceItem] = useState<Item | null>(null);
 	const [targetItem, setTargetItem] = useState<Item | null>(null);
-	const [text, setText] = useState('');
 
 	const itemListRef = useRef(itemList);
 	itemListRef.current = itemList;
 
-	const clearMessageTimeoutRef = useRef<NodeJS.Timeout>();
+	const screenReaderAnnouncerRef = useRef<any>();
 
-	const sendMessage = useCallback((message: string) => {
-		setText(message);
+	const sendMessage = useCallback((message: any) => {
+		const ref = screenReaderAnnouncerRef;
 
-		if (clearMessageTimeoutRef.current) {
-			clearTimeout(clearMessageTimeoutRef.current);
-
-			clearMessageTimeoutRef.current = undefined;
-		}
-
-		if (message) {
-			clearMessageTimeoutRef.current = setTimeout(() => {
-				setText('');
-			}, 1000);
+		if (ref.current) {
+			ref.current?.sendMessage(message);
 		}
 	}, []);
 
@@ -119,7 +108,11 @@ export function KeyboardDragAndDropContextProvider({
 			return;
 		}
 
-		targetElement.scrollIntoView({
+		// Current jest dom does not have "scrollIntoView" implemented for
+		// HTMLElement. We need to check if "scrollIntoView" exists until
+		// we update jest or we do not have it in our unit tests.
+
+		targetElement.scrollIntoView?.({
 			behavior: 'smooth',
 			block: 'center',
 		});
@@ -170,9 +163,10 @@ export function KeyboardDragAndDropContextProvider({
 
 	return (
 		<KeyboardDragAndDropContext.Provider value={contextValue}>
-			<span aria-live="assertive" className="sr-only">
-				{text}
-			</span>
+			<ScreenReaderAnnouncer
+				aria-live="assertive"
+				ref={screenReaderAnnouncerRef}
+			/>
 
 			<div
 				aria-orientation="vertical"
@@ -180,7 +174,7 @@ export function KeyboardDragAndDropContextProvider({
 				onKeyDown={onKeyDown}
 				ref={itemListElementRef}
 				role="list"
-				tabIndex={Liferay.FeatureFlags['LPS-196420'] ? 0 : -1}
+				tabIndex={0}
 			>
 				{children}
 			</div>
@@ -282,11 +276,28 @@ export function useKeyboardDragItem(
 				const targetItemIndex = itemList.indexOf(targetItem);
 
 				if (position === DRAG_OVER_POSITIONS.bottom) {
+					sendMessage(
+						sub(Liferay.Language.get('targeting-x-of-x'), [
+							DRAG_OVER_POSITIONS_LABELS[DRAG_OVER_POSITIONS.top],
+							targetItem.name,
+						])
+					);
+
 					setDragOverPosition(DRAG_OVER_POSITIONS.top);
 				}
 				else if (targetItemIndex > 0) {
+					const nextTargetItem =
+						itemListRef.current[targetItemIndex - 1];
+
+					sendMessage(
+						sub(Liferay.Language.get('targeting-x-of-x'), [
+							DRAG_OVER_POSITIONS_LABELS[DRAG_OVER_POSITIONS.top],
+							nextTargetItem.name,
+						])
+					);
+
 					setDragOverPosition(DRAG_OVER_POSITIONS.top);
-					setTargetItem(itemListRef.current[targetItemIndex - 1]);
+					setTargetItem(nextTargetItem);
 				}
 			}
 			else if (event.key === 'ArrowDown' && targetItem) {
@@ -295,10 +306,29 @@ export function useKeyboardDragItem(
 				const targetItemIndex = itemList.indexOf(targetItem);
 
 				if (targetItemIndex < itemList.length - 1) {
+					const nextTargetItem =
+						itemListRef.current[targetItemIndex + 1];
+
+					sendMessage(
+						sub(Liferay.Language.get('targeting-x-of-x'), [
+							DRAG_OVER_POSITIONS_LABELS[DRAG_OVER_POSITIONS.top],
+							nextTargetItem.name,
+						])
+					);
+
 					setDragOverPosition(DRAG_OVER_POSITIONS.top);
-					setTargetItem(itemListRef.current[targetItemIndex + 1]);
+					setTargetItem(nextTargetItem);
 				}
 				else if (position === DRAG_OVER_POSITIONS.top) {
+					sendMessage(
+						sub(Liferay.Language.get('targeting-x-of-x'), [
+							DRAG_OVER_POSITIONS_LABELS[
+								DRAG_OVER_POSITIONS.bottom
+							],
+							targetItem.name,
+						])
+					);
+
 					setDragOverPosition(DRAG_OVER_POSITIONS.bottom);
 				}
 			}
@@ -318,15 +348,13 @@ export function useKeyboardDragItem(
 						return;
 					}
 
-					flushSync(() => {
-						sendMessage(
-							sub(Liferay.Language.get('x-placed-on-x-of-x'), [
-								item.name,
-								DRAG_OVER_POSITIONS_LABELS[position],
-								targetItem.name,
-							])
-						);
-					});
+					sendMessage(
+						sub(Liferay.Language.get('x-placed-on-x-of-x'), [
+							item.name,
+							DRAG_OVER_POSITIONS_LABELS[position],
+							targetItem.name,
+						])
+					);
 
 					onDropItem(item.id, targetIndex, position);
 					setDragOverPosition(null);
@@ -334,16 +362,14 @@ export function useKeyboardDragItem(
 					setTargetItem(null);
 				}
 				else {
-					flushSync(() => {
-						sendMessage(
-							sub(
-								Liferay.Language.get(
-									'use-up-and-down-arrows-to-move-the-set-and-press-enter-to-place-it-in-desired-position.-currently-targeting-x-of-x'
-								),
-								[DRAG_OVER_POSITIONS_LABELS.top, item.name]
-							)
-						);
-					});
+					sendMessage(
+						sub(
+							Liferay.Language.get(
+								'use-up-and-down-arrows-to-move-the-set-and-press-enter-to-place-it-in-desired-position.-currently-targeting-x-of-x'
+							),
+							[DRAG_OVER_POSITIONS_LABELS.top, item.name]
+						)
+					);
 
 					setDragOverPosition(DRAG_OVER_POSITIONS.top);
 					setSourceItem(item);
@@ -375,17 +401,6 @@ export function useKeyboardDragItem(
 		setSourceItem,
 		setTargetItem,
 	]);
-
-	useEffect(() => {
-		if (dragOverPosition && sourceItem && targetItem) {
-			sendMessage(
-				sub(Liferay.Language.get('targeting-x-of-x'), [
-					DRAG_OVER_POSITIONS_LABELS[dragOverPosition],
-					targetItem.name,
-				])
-			);
-		}
-	}, [dragOverPosition, sendMessage, sourceItem, targetItem]);
 
 	return {
 		dragOverPosition: targetItem === item ? dragOverPosition : null,

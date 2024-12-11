@@ -164,24 +164,34 @@ public class DLReferencesExportImportContentProcessor
 					pathArray[2],
 					FriendlyURLResolverConstants.URL_SEPARATOR_Y_FILE_ENTRY)) {
 
-				map.put(
-					"friendlyURL",
-					new String[] {
-						StringUtils.substringBefore(
-							HttpComponentsUtil.decodeURL(pathArray[4]),
-							StringPool.POUND)
-					});
-				map.put("groupName", new String[] {pathArray[3]});
+				if (pathArray.length >= 5) {
+					map.put(
+						"friendlyURL",
+						new String[] {
+							StringUtils.substringBefore(
+								HttpComponentsUtil.decodeURL(pathArray[4]),
+								StringPool.POUND)
+						});
+				}
+
+				if (pathArray.length >= 4) {
+					map.put("groupName", new String[] {pathArray[3]});
+				}
 			}
 			else if (Objects.equals(pathArray[2], "portlet_file_entry")) {
-				map.put("groupId", new String[] {pathArray[3]});
-				map.put(
-					"title",
-					new String[] {
-						StringUtils.substringBefore(
-							HttpComponentsUtil.decodeURL(pathArray[4]),
-							StringPool.POUND)
-					});
+				if (pathArray.length >= 4) {
+					map.put("groupId", new String[] {pathArray[3]});
+				}
+
+				if (pathArray.length >= 5) {
+					map.put(
+						"title",
+						new String[] {
+							StringUtils.substringBefore(
+								HttpComponentsUtil.decodeURL(pathArray[4]),
+								StringPool.POUND)
+						});
+				}
 			}
 			else {
 				map.put("groupId", new String[] {pathArray[2]});
@@ -366,7 +376,8 @@ public class DLReferencesExportImportContentProcessor
 		if (((beginPos == 0) && (endPos == content.length())) ||
 			_isCreoleReference(content, beginPos) ||
 			_isHTMLReference(content, beginPos) ||
-			_isJSONReference(content, beginPos)) {
+			_isJSONReference(content, beginPos) ||
+			_isStyleReference(content, beginPos)) {
 
 			return false;
 		}
@@ -445,7 +456,8 @@ public class DLReferencesExportImportContentProcessor
 				(((curBeginPos == 0) && (endPos == content.length())) ||
 				 _isCreoleReference(content, curBeginPos) ||
 				 _isHTMLReference(content, curBeginPos) ||
-				 _isJSONReference(content, curBeginPos))) {
+				 _isJSONReference(content, curBeginPos) ||
+				 _isStyleReference(content, curBeginPos))) {
 
 				return false;
 			}
@@ -502,6 +514,26 @@ public class DLReferencesExportImportContentProcessor
 		}
 
 		return true;
+	}
+
+	private boolean _isStyleReference(String content, int beginPos) {
+		beginPos = _skipWhiteSpacePos(content, beginPos);
+
+		if (content.regionMatches(beginPos - 1, StringPool.APOSTROPHE, 0, 1) ||
+			content.regionMatches(beginPos - 1, StringPool.QUOTE, 0, 1)) {
+
+			beginPos = beginPos - 1;
+		}
+
+		beginPos = _skipWhiteSpacePos(content, beginPos);
+
+		String url = "url(";
+
+		if (content.regionMatches(true, beginPos - url.length(), url, 0, 2)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private boolean _isValidateDLReferences() {
@@ -813,10 +845,10 @@ public class DLReferencesExportImportContentProcessor
 					"[$dl-reference=" + path + "$,$include-uuid=true$]";
 
 				if (content.startsWith("[#dl-reference=", endPos)) {
-					if (content.contains("include-friendly-url=true")) {
-						int friendlyURLPosition = content.indexOf(
-							"#,#include-friendly-url=true", beginPos);
+					int friendlyURLPosition = content.indexOf(
+						"#,#include-friendly-url=true", beginPos);
 
+					if (friendlyURLPosition != -1) {
 						endPos = friendlyURLPosition + 2;
 					}
 					else {
@@ -858,6 +890,18 @@ public class DLReferencesExportImportContentProcessor
 
 		return _fileEntryFriendlyURLResolver.resolveFriendlyURL(
 			group.getGroupId(), friendlyURL);
+	}
+
+	private int _skipWhiteSpacePos(String content, int beginPos) {
+		while (content.regionMatches(beginPos - 1, StringPool.NEW_LINE, 0, 1) ||
+			   content.regionMatches(beginPos - 1, StringPool.RETURN, 0, 1) ||
+			   content.regionMatches(beginPos - 1, StringPool.SPACE, 0, 1) ||
+			   content.regionMatches(beginPos - 1, StringPool.TAB, 0, 1)) {
+
+			beginPos = beginPos - 1;
+		}
+
+		return beginPos;
 	}
 
 	private void _validateDLReferences(long groupId, String content)
@@ -903,7 +947,7 @@ public class DLReferencesExportImportContentProcessor
 								getName(),
 							new NoSuchFileEntryException());
 
-				exportImportContentValidationException.setDlReferenceParameters(
+				exportImportContentValidationException.setDLReferenceParameters(
 					dlReferenceParameters);
 
 				ObjectValuePair<String, Integer>
@@ -911,7 +955,7 @@ public class DLReferencesExportImportContentProcessor
 						_getDLReferenceEndPosObjectValuePair(
 							content, beginPos, endPos);
 
-				exportImportContentValidationException.setDlReference(
+				exportImportContentValidationException.setDLReference(
 					dlReferenceEndPosObjectValuePair.getKey());
 
 				exportImportContentValidationException.setType(

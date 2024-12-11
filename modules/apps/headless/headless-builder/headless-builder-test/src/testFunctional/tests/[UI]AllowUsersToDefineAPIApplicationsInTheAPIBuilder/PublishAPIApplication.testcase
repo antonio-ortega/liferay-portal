@@ -2,17 +2,15 @@
 definition {
 
 	property custom.properties = "feature.flag.LPS-178642=true";
+	property portal.acceptance = "quarantine";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Object";
-	property testray.main.component.name = "Headless Builder";
+	property testray.main.component.name = "API Builder";
 
 	setUp {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
-
-		SearchAdministration.executeReindex();
 
 		task ("Given create an API application through Control Panel > Object > API Builder") {
 			APIBuilderUI.createAPIApplication(
@@ -33,7 +31,6 @@ definition {
 
 	@priority = 3
 	test CanBackToAPIBuilderAfterCancel {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -54,7 +51,6 @@ definition {
 
 	@priority = 4
 	test CanGetPublishedStatusInResponse {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -76,41 +72,7 @@ definition {
 	}
 
 	@priority = 4
-	test CanGetUpdatedTitleInResponseAfterPublish {
-		property portal.acceptance = "true";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Given I publish an API application") {
-			APIBuilderUI.publishApplication(key_title = "App-test");
-		}
-
-		task ("And Given I edit the title and publish the api application again") {
-			APIBuilderUI.goToEditAPIApplicationPage(key_title = "App-test");
-
-			Type(
-				locator1 = "APIBuilder#ENTER_TITLE",
-				value1 = "App-test-1");
-
-			Click(locator1 = "APIBuilder#PUBLISH_BUTTON");
-		}
-
-		task ("When with getAPIApplicationsPage to retrieve the api application") {
-			var response = ApplicationAPI.getAPIApplications();
-		}
-
-		task ("Then I can get the update title in response") {
-			var actualValue = JSONUtil.getWithJSONPath(${response}, "$.items..title");
-
-			TestUtils.assertEquals(
-				actual = ${actualValue},
-				expected = "App-test-1");
-		}
-	}
-
-	@priority = 4
 	test CanPromptCancelChangesDialog {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -137,7 +99,6 @@ definition {
 
 	@priority = 4
 	test CanPublishAPIApplication {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -155,7 +116,6 @@ definition {
 
 	@priority = 4
 	test CanPublishAPIApplicationWithChangePublicationStatus {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -173,7 +133,6 @@ definition {
 
 	@priority = 4
 	test CanUpdateTitleAfterRePublish {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -207,7 +166,6 @@ definition {
 
 	@priority = 3
 	test GetAvailableButtonsAfterPublish {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -224,7 +182,6 @@ definition {
 
 	@priority = 3
 	test GetAvailableButtonsBeforePublish {
-		property portal.acceptance = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 

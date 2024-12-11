@@ -50,7 +50,7 @@ public class DefaultMentionsUserFinder implements MentionsUserFinder {
 				LinkedHashMapBuilder.<String, Object>put(
 					"wildcardMode", WildcardMode.TRAILING
 				).build(),
-				0, _MAX_USERS, new UserScreenNameComparator());
+				0, _MAX_USERS, UserScreenNameComparator.getInstance(false));
 		}
 
 		User user = _userLocalService.getUser(userId);
@@ -102,7 +102,7 @@ public class DefaultMentionsUserFinder implements MentionsUserFinder {
 				isSocialInteractionsSitesEnabled()) {
 
 			return _userLocalService.searchBySocial(
-				companyId, groupIds, query, 0, _MAX_USERS);
+				companyId, groupIds, null, query, 0, _MAX_USERS);
 		}
 
 		if (socialInteractionsConfiguration.

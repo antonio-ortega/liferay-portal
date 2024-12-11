@@ -29,7 +29,7 @@
 												String selectedRange = MapUtil.getString(parameterMap, "range", defaultRange);
 												%>
 
-												<div class="range-options">
+												<div class="c-p-4 range-options">
 													<liferay-staging:radio
 														checked="<%= selectedRange.equals(ExportImportDateUtil.RANGE_ALL) %>"
 														disabled="<%= disableInputs %>"
@@ -41,7 +41,7 @@
 												</div>
 
 												<c:if test="<%= !type.equals(Constants.EXPORT) %>">
-													<div class="range-options">
+													<div class="c-p-4 range-options">
 														<liferay-staging:radio
 															checked="<%= selectedRange.equals(ExportImportDateUtil.RANGE_FROM_LAST_PUBLISH_DATE) %>"
 															disabled="<%= disableInputs %>"
@@ -53,7 +53,7 @@
 													</div>
 												</c:if>
 
-												<div class="range-options">
+												<div class="c-p-4 range-options">
 													<liferay-staging:radio
 														checked="<%= selectedRange.equals(ExportImportDateUtil.RANGE_DATE_RANGE) %>"
 														disabled="<%= disableInputs %>"
@@ -65,18 +65,19 @@
 													/>
 												</div>
 
-												<div class="range-options">
+												<div class="c-p-4 range-options">
 													<liferay-staging:radio
 														checked="<%= selectedRange.equals(ExportImportDateUtil.RANGE_LAST) %>"
 														disabled="<%= disableInputs %>"
 														id="rangeLast"
 														label='<%= LanguageUtil.get(request, "last") + StringPool.TRIPLE_PERIOD %>'
 														name="range"
+														popover="export-last-range-help"
 														value="<%= ExportImportDateUtil.RANGE_LAST %>"
 													/>
 												</div>
 
-												<div class="range-options <%= disableInputs ? "hide" : StringPool.BLANK %>">
+												<div class="range-options c-p-4 <%= disableInputs ? "hide" : StringPool.BLANK %>">
 													<clay:icon
 														symbol="reload"
 													/>
@@ -104,7 +105,21 @@
 											}
 											%>
 
+											<ul class="hide list-unstyled" id="<portlet:namespace />warningSection">
+												<clay:alert
+													displayType="warning"
+													message="publishing-all-content-or-using-wide-date-range-will-take-some-time"
+													symbol="page"
+												/>
+											</ul>
+
 											<ul class="date-range-options hide list-unstyled" id="<portlet:namespace />startEndDate">
+												<clay:alert
+													displayType="warning"
+													message="publishing-all-content-or-using-wide-date-range-will-take-some-time"
+													symbol="page"
+												/>
+
 												<li class="d-flex flex-wrap">
 													<liferay-ui:input-date
 														cssClass="form-group form-group-inline"

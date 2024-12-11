@@ -45,19 +45,19 @@ SelectRolesDisplayContext selectRolesDisplayContext = new SelectRolesDisplayCont
 					<liferay-ui:search-container-column-text
 						colspan="<%= 2 %>"
 					>
-						<h5>
+						<div class="h5">
 							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:void(0);">
 								<%= HtmlUtil.escape(role.getTitle(locale)) %>
 							</aui:a>
-						</h5>
+						</div>
 
-						<h6 class="text-default">
+						<div class="h6 text-default">
 							<span><%= HtmlUtil.escape(role.getDescription(locale)) %></span>
-						</h6>
+						</div>
 
-						<h6 class="text-default">
+						<div class="h6 text-default">
 							<liferay-ui:message key="<%= role.getTypeLabel() %>" />
-						</h6>
+						</div>
 					</liferay-ui:search-container-column-text>
 				</c:when>
 				<c:when test='<%= Objects.equals(selectRolesDisplayContext.getDisplayStyle(), "list") %>'>

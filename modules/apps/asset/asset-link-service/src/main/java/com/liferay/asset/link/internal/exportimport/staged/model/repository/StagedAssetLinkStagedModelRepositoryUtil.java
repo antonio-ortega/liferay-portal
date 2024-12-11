@@ -14,9 +14,9 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.adapter.ModelAdapterUtil;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.model.adapter.util.ModelAdapterUtil;
 
 import java.util.List;
 
@@ -50,12 +50,12 @@ public class StagedAssetLinkStagedModelRepositoryUtil {
 		List<AssetLink> assetLinks = assetLinkLocalService.dynamicQuery(
 			dynamicQuery);
 
-		if (ListUtil.isNotEmpty(assetLinks)) {
-			return ModelAdapterUtil.adapt(
-				assetLinks.get(0), AssetLink.class, StagedAssetLink.class);
+		if (ListUtil.isEmpty(assetLinks)) {
+			return null;
 		}
 
-		return null;
+		return ModelAdapterUtil.adapt(
+			assetLinks.get(0), AssetLink.class, StagedAssetLink.class);
 	}
 
 	private static DynamicQuery _getAssetLinkDynamicQuery(

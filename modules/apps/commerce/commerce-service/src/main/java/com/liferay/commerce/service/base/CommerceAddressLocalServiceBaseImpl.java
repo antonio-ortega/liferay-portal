@@ -7,7 +7,6 @@ package com.liferay.commerce.service.base;
 
 import com.liferay.commerce.model.CommerceAddress;
 import com.liferay.commerce.service.CommerceAddressLocalService;
-import com.liferay.commerce.service.CommerceAddressLocalServiceUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -26,8 +25,10 @@ import org.osgi.service.component.annotations.Reference;
  *
  * @author Alessio Antonio Rendina
  * @see com.liferay.commerce.service.impl.CommerceAddressLocalServiceImpl
+ * @deprecated As of Cavanaugh (7.4.x)
  * @generated
  */
+@Deprecated
 public abstract class CommerceAddressLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
 	implements AopService, CommerceAddressLocalService,
@@ -36,11 +37,10 @@ public abstract class CommerceAddressLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CommerceAddressLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CommerceAddressLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CommerceAddressLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.commerce.service.CommerceAddressLocalServiceUtil</code>.
 	 */
 	@Deactivate
 	protected void deactivate() {
-		CommerceAddressLocalServiceUtil.setService(null);
 	}
 
 	@Override
@@ -53,8 +53,6 @@ public abstract class CommerceAddressLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		commerceAddressLocalService = (CommerceAddressLocalService)aopProxy;
-
-		CommerceAddressLocalServiceUtil.setService(commerceAddressLocalService);
 	}
 
 	/**

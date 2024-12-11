@@ -1,9 +1,22 @@
 {
+	"dependencies": {
+		"@clayui/button": "3.116.0",
+		"@clayui/core": "3.123.0",
+		"@clayui/form": "3.122.0",
+		"@clayui/icon": "3.111.0",
+		"@clayui/list": "3.123.1",
+		"@clayui/modal": "3.122.0",
+		"@clayui/table": "3.111.0",
+		"@clayui/tooltip": "3.119.0",
+		"frontend-js-web": "*",
+		"react": "18.2.0"
+	},
+	"main": "invite_members/js/InviteMembers.js",
 	"name": "invitation-invite-members-web",
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
-	"version": "5.0.31"
+	"version": "5.0.50"
 }

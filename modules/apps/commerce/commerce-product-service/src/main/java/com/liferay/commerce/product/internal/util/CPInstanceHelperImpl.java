@@ -6,9 +6,15 @@
 package com.liferay.commerce.product.internal.util;
 
 import com.liferay.adaptive.media.image.html.AMImageHTMLTagFactory;
+import com.liferay.commerce.context.CommerceContextThreadLocal;
+import com.liferay.commerce.currency.model.CommerceMoney;
 import com.liferay.commerce.inventory.CPDefinitionInventoryEngine;
 import com.liferay.commerce.media.CommerceMediaProvider;
 import com.liferay.commerce.media.CommerceMediaResolver;
+import com.liferay.commerce.price.CommerceProductPrice;
+import com.liferay.commerce.price.CommerceProductPriceCalculation;
+import com.liferay.commerce.price.list.service.CommercePriceEntryLocalService;
+import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.product.availability.CPAvailabilityChecker;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPSku;
@@ -40,11 +46,15 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.util.KeyValuePair;
 import com.liferay.portal.kernel.util.Validator;
+
+import java.math.BigDecimal;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -104,8 +114,52 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 	}
 
 	@Override
+	public BigDecimal fetchCPInstanceUnitPrice(CPInstance cpInstance) {
+		try {
+			CommerceProductPrice commerceProductPrice =
+				_commerceProductPriceCalculation.getCommerceProductPrice(
+					cpInstance.getCPInstanceId(), BigDecimal.ONE,
+					StringPool.BLANK, CommerceContextThreadLocal.get());
+
+			CommerceMoney unitPriceCommerceMoney =
+				commerceProductPrice.getUnitPrice();
+
+			if (!unitPriceCommerceMoney.isEmpty()) {
+				return unitPriceCommerceMoney.getPrice();
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return null;
+	}
+
+	@Override
+	public BigDecimal fetchCPInstanceUnitPromoPrice(CPInstance cpInstance) {
+		try {
+			CommerceProductPrice commerceProductPrice =
+				_commerceProductPriceCalculation.getCommerceProductPrice(
+					cpInstance.getCPInstanceId(), BigDecimal.ONE,
+					StringPool.BLANK, CommerceContextThreadLocal.get());
+
+			CommerceMoney unitPromoPriceCommerceMoney =
+				commerceProductPrice.getUnitPromoPrice();
+
+			if (!unitPromoPriceCommerceMoney.isEmpty()) {
+				return unitPromoPriceCommerceMoney.getPrice();
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return null;
+	}
+
+	@Override
 	public CPInstance fetchFirstAvailableReplacementCPInstance(
-			long commerceChannelGroupId, long cpInstanceId)
+			long accountEntryId, long commerceChannelGroupId, long cpInstanceId)
 		throws PortalException {
 
 		CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
@@ -113,14 +167,15 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 
 		if ((cpInstance == null) || !cpInstance.isDiscontinued() ||
 			_cpAvailabilityChecker.check(
-				commerceChannelGroupId, cpInstance, StringPool.BLANK,
+				accountEntryId, commerceChannelGroupId, cpInstance,
+				StringPool.BLANK,
 				_cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance))) {
 
 			return null;
 		}
 
 		return _fetchFirstAvailableReplacementCPInstance(
-			commerceChannelGroupId,
+			accountEntryId, commerceChannelGroupId,
 			_cpInstanceLocalService.fetchCProductInstance(
 				cpInstance.getReplacementCProductId(),
 				cpInstance.getReplacementCPInstanceUuid()));
@@ -200,7 +255,7 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 			commerceChannelGroupId, cpDefinitionId);
 
 		return _cpAttachmentFileEntryLocalService.getCPAttachmentFileEntries(
-			cpDefinitionId, serializedFormFieldValues, type, start, end);
+			cpDefinitionId, true, serializedFormFieldValues, type, start, end);
 	}
 
 	@Override
@@ -276,16 +331,36 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject jsonObject = jsonArray.getJSONObject(i);
 
+			String key = jsonObject.getString("key");
+
+			if (Validator.isNull(key)) {
+				key = jsonObject.getString("skuOptionKey");
+			}
+
 			CPDefinitionOptionRel cpDefinitionOptionRel =
 				_cpDefinitionOptionRelLocalService.
-					fetchCPDefinitionOptionRelByKey(
-						cpDefinitionId, jsonObject.getString("key"));
+					fetchCPDefinitionOptionRelByKey(cpDefinitionId, key);
 
 			if (cpDefinitionOptionRel == null) {
 				continue;
 			}
 
 			JSONArray valueJSONArray = jsonObject.getJSONArray("value");
+
+			if (valueJSONArray == null) {
+				Object skuOptionValueKey = jsonObject.get("skuOptionValueKey");
+
+				if (skuOptionValueKey == null) {
+					continue;
+				}
+
+				if (JSONUtil.isJSONArray(skuOptionValueKey.toString())) {
+					valueJSONArray = (JSONArray)skuOptionValueKey;
+				}
+				else {
+					valueJSONArray = JSONUtil.put(skuOptionValueKey);
+				}
+			}
 
 			for (int j = 0; j < valueJSONArray.length(); j++) {
 				CPDefinitionOptionValueRel cpDefinitionOptionValueRel =
@@ -324,9 +399,9 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 			commerceAccountId, companyId, cpInstanceId);
 
 		String originalImgTag = StringBundler.concat(
-			"<img class=\"aspect-ratio-bg-cover aspect-ratio-item ",
-			"aspect-ratio-item-center-middle aspect-ratio-item-fluid ",
-			"card-type-asset-icon\" src=\"",
+			"<img alt=\"thumbnail\" class=\"aspect-ratio-bg-cover ",
+			"aspect-ratio-item aspect-ratio-item-center-middle ",
+			"aspect-ratio-item-fluid card-type-asset-icon\" src=\"",
 			getCPInstanceThumbnailSrc(commerceAccountId, cpInstanceId),
 			"\" />");
 
@@ -356,7 +431,7 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 
 		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
 			_cpAttachmentFileEntryLocalService.getCPAttachmentFileEntries(
-				cpInstance.getCPDefinitionId(), jsonArray.toString(),
+				cpInstance.getCPDefinitionId(), null, jsonArray.toString(),
 				CPAttachmentFileEntryConstants.TYPE_IMAGE, 0, 1);
 
 		if (cpAttachmentFileEntries.isEmpty()) {
@@ -456,7 +531,7 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 
 		Collections.sort(
 			cpDefinitionOptionValueRels,
-			new CPDefinitionOptionValueRelPriorityComparator(true));
+			CPDefinitionOptionValueRelPriorityComparator.getInstance(true));
 
 		return cpDefinitionOptionValueRels;
 	}
@@ -498,7 +573,7 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 
 		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
 			_cpAttachmentFileEntryLocalService.getCPAttachmentFileEntries(
-				cpInstance.getCPDefinitionId(), jsonArray.toString(),
+				cpInstance.getCPDefinitionId(), null, jsonArray.toString(),
 				CPAttachmentFileEntryConstants.TYPE_IMAGE, 0, 1);
 
 		if (cpAttachmentFileEntries.isEmpty()) {
@@ -552,7 +627,7 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 
 		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
 			_cpAttachmentFileEntryLocalService.getCPAttachmentFileEntries(
-				cpInstance.getCPDefinitionId(), jsonArray.toString(),
+				cpInstance.getCPDefinitionId(), null, jsonArray.toString(),
 				CPAttachmentFileEntryConstants.TYPE_IMAGE, 0, 1);
 
 		if (cpAttachmentFileEntries.isEmpty()) {
@@ -587,7 +662,9 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 			return null;
 		}
 
-		return new CPSkuImpl(cpInstance);
+		return new CPSkuImpl(
+			cpInstance, fetchCPInstanceUnitPrice(cpInstance),
+			fetchCPInstanceUnitPromoPrice(cpInstance));
 	}
 
 	@Override
@@ -818,19 +895,21 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 	}
 
 	private CPInstance _fetchFirstAvailableReplacementCPInstance(
-			long commerceChannelGroupId, CPInstance cpInstance)
+			long accountEntryId, long commerceChannelGroupId,
+			CPInstance cpInstance)
 		throws PortalException {
 
 		if ((cpInstance == null) || !cpInstance.isDiscontinued() ||
 			_cpAvailabilityChecker.check(
-				commerceChannelGroupId, cpInstance, StringPool.BLANK,
+				accountEntryId, commerceChannelGroupId, cpInstance,
+				StringPool.BLANK,
 				_cpDefinitionInventoryEngine.getMinOrderQuantity(cpInstance))) {
 
 			return cpInstance;
 		}
 
 		return _fetchFirstAvailableReplacementCPInstance(
-			commerceChannelGroupId,
+			accountEntryId, commerceChannelGroupId,
 			_cpInstanceLocalService.fetchCProductInstance(
 				cpInstance.getReplacementCProductId(),
 				cpInstance.getReplacementCPInstanceUuid()));
@@ -838,6 +917,7 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 
 	private long _getTopId(Map<Long, Integer> idIdHits) {
 		long topId = 0;
+
 		int topIdHits = 0;
 
 		for (Map.Entry<Long, Integer> idIdHitsEntry : idIdHits.entrySet()) {
@@ -871,6 +951,9 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 		return true;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		CPInstanceHelperImpl.class);
+
 	@Reference
 	private AMImageHTMLTagFactory _amImageHTMLTagFactory;
 
@@ -879,6 +962,15 @@ public class CPInstanceHelperImpl implements CPInstanceHelper {
 
 	@Reference
 	private CommerceMediaResolver _commerceMediaResolver;
+
+	@Reference
+	private CommercePriceEntryLocalService _commercePriceEntryLocalService;
+
+	@Reference
+	private CommercePriceListLocalService _commercePriceListLocalService;
+
+	@Reference
+	private CommerceProductPriceCalculation _commerceProductPriceCalculation;
 
 	@Reference
 	private CommerceProductViewPermission _commerceProductViewPermission;

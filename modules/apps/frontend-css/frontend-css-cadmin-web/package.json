@@ -1,8 +1,9 @@
 {
 	"name": "@liferay/frontend-css-cadmin-web",
 	"scripts": {
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
-	"version": "1.0.26"
+	"version": "1.0.40"
 }

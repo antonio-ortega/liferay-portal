@@ -148,21 +148,6 @@ public class CommerceOrderValidatorRegistryImpl
 
 		commerceOrderValidatorResults.addAll(validate(locale, commerceOrder));
 
-		List<CommerceOrderItem> commerceOrderItems =
-			commerceOrder.getCommerceOrderItems();
-
-		for (CommerceOrderItem commerceOrderItem : commerceOrderItems) {
-			List<CommerceOrderValidatorResult>
-				itemCommerceOrderValidatorResults = validate(
-					locale, commerceOrderItem);
-
-			for (CommerceOrderValidatorResult commerceOrderValidatorResult :
-					itemCommerceOrderValidatorResults) {
-
-				commerceOrderValidatorResults.add(commerceOrderValidatorResult);
-			}
-		}
-
 		return commerceOrderValidatorResults.isEmpty();
 	}
 
@@ -188,13 +173,20 @@ public class CommerceOrderValidatorRegistryImpl
 			}
 		}
 
+		for (CommerceOrderItem commerceOrderItem :
+				commerceOrder.getCommerceOrderItems()) {
+
+			commerceOrderValidatorResults.addAll(
+				validate(locale, commerceOrderItem));
+		}
+
 		return commerceOrderValidatorResults;
 	}
 
 	@Override
 	public List<CommerceOrderValidatorResult> validate(
 			Locale locale, CommerceOrder commerceOrder, CPInstance cpInstance,
-			BigDecimal quantity)
+			String json, BigDecimal quantity, boolean child)
 		throws PortalException {
 
 		List<CommerceOrderValidatorResult> commerceOrderValidatorResults =
@@ -208,7 +200,7 @@ public class CommerceOrderValidatorRegistryImpl
 
 			CommerceOrderValidatorResult commerceOrderValidatorResult =
 				commerceOrderValidator.validate(
-					locale, commerceOrder, cpInstance, quantity);
+					locale, commerceOrder, cpInstance, json, quantity, child);
 
 			if (!commerceOrderValidatorResult.isValid()) {
 				commerceOrderValidatorResults.add(commerceOrderValidatorResult);

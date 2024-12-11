@@ -1,4 +1,5 @@
 /* eslint-disable lines-around-comment */
+
 /**
  * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
@@ -199,12 +200,9 @@ interface ITableContextProps {
 	initialPagination?: TPagination;
 }
 
-const TableContext: React.FC<ITableContextProps> = ({
-	children,
-	initialFilter,
-	initialKeywords,
-	initialPagination,
-}) => {
+const TableContext: React.FC<
+	{children?: React.ReactNode | undefined} & ITableContextProps
+> = ({children, initialFilter, initialKeywords, initialPagination}) => {
 	const [state, dispatch] = useReducer<React.Reducer<TState, TAction>>(
 		reducer,
 		{

@@ -11,19 +11,23 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
-import com.liferay.portal.db.partition.DBPartitionUtil;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.dao.db.DB;
 import com.liferay.portal.kernel.dao.db.DBInspector;
+import com.liferay.portal.kernel.dao.db.DBManagerUtil;
 import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.db.Index;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.dao.db.IndexMetadataFactoryUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.portal.kernel.db.partition.DBPartition;
+import com.liferay.portal.kernel.instance.PortalInstancePool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -45,6 +49,7 @@ import java.sql.Statement;
 import java.sql.Types;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -76,13 +81,17 @@ public abstract class BaseDB implements DB {
 		Map<String, Map<String, Integer>> columnTableSizes = new HashMap<>();
 
 		for (IndexMetadata indexMetadata : indexMetadatas) {
-			String normalizedTabledName = dbInspector.normalizeName(
+			String normalizedTableName = dbInspector.normalizeName(
 				indexMetadata.getTableName(), databaseMetaData);
 
-			if (columnTableSizes.get(normalizedTabledName) == null) {
+			if (_isSkipIndexOperation(connection, normalizedTableName)) {
+				continue;
+			}
+
+			if (columnTableSizes.get(normalizedTableName) == null) {
 				try (ResultSet resultSet = databaseMetaData.getColumns(
 						dbInspector.getCatalog(), dbInspector.getSchema(),
-						normalizedTabledName, null)) {
+						normalizedTableName, null)) {
 
 					Map<String, Integer> columnSizes = new HashMap<>();
 
@@ -102,7 +111,7 @@ public abstract class BaseDB implements DB {
 							resultSet.getInt("COLUMN_SIZE"));
 					}
 
-					columnTableSizes.put(normalizedTabledName, columnSizes);
+					columnTableSizes.put(normalizedTableName, columnSizes);
 				}
 			}
 
@@ -112,7 +121,7 @@ public abstract class BaseDB implements DB {
 
 			for (int i = 0; i < columnNames.length; i++) {
 				columnSizes[i] = MapUtil.getInteger(
-					columnTableSizes.get(normalizedTabledName), columnNames[i],
+					columnTableSizes.get(normalizedTableName), columnNames[i],
 					0);
 			}
 
@@ -122,6 +131,7 @@ public abstract class BaseDB implements DB {
 		}
 	}
 
+	@Override
 	public void alterColumnName(
 			Connection connection, String tableName, String oldColumnName,
 			String newColumnDefinition)
@@ -139,6 +149,7 @@ public abstract class BaseDB implements DB {
 		runSQL(connection, sb.toString());
 	}
 
+	@Override
 	public void alterColumnType(
 			Connection connection, String tableName, String columnName,
 			String newColumnType)
@@ -156,6 +167,7 @@ public abstract class BaseDB implements DB {
 		runSQL(connection, sb.toString());
 	}
 
+	@Override
 	public void alterTableAddColumn(
 			Connection connection, String tableName, String columnName,
 			String columnType)
@@ -173,6 +185,7 @@ public abstract class BaseDB implements DB {
 		runSQL(connection, sb.toString());
 	}
 
+	@Override
 	public void alterTableDropColumn(
 			Connection connection, String tableName, String columnName)
 		throws Exception {
@@ -290,7 +303,7 @@ public abstract class BaseDB implements DB {
 		}
 
 		for (IndexMetadata indexMetadata :
-				getIndexes(connection, tableName, null, false)) {
+				getIndexMetadatas(connection, tableName, null, false)) {
 
 			indexMetadatas.add(
 				new IndexMetadata(
@@ -307,7 +320,11 @@ public abstract class BaseDB implements DB {
 			Connection connection, String tableName, String columnName)
 		throws IOException, SQLException {
 
-		List<IndexMetadata> indexMetadatas = getIndexes(
+		if (_isSkipIndexOperation(connection, tableName)) {
+			return Collections.emptyList();
+		}
+
+		List<IndexMetadata> indexMetadatas = getIndexMetadatas(
 			connection, tableName, columnName, false);
 
 		for (IndexMetadata indexMetadata : indexMetadatas) {
@@ -336,13 +353,126 @@ public abstract class BaseDB implements DB {
 	@Override
 	public List<Index> getIndexes(Connection connection) throws SQLException {
 		return TransformUtil.transform(
-			getIndexes(connection, null, null, false),
+			getIndexMetadatas(connection, null, null, false),
 			index -> new Index(
 				index.getIndexName(), index.getTableName(), index.isUnique()));
 	}
 
 	@Override
-	public ResultSet getIndexResultSet(Connection connection, String tableName)
+	public List<IndexMetadata> getIndexMetadatas(
+			Connection connection, String tableName, String columnName,
+			boolean onlyUnique)
+		throws SQLException {
+
+		if (_isSkipIndexOperation(connection, tableName)) {
+			return Collections.emptyList();
+		}
+
+		List<IndexMetadata> indexMetadatas = new ArrayList<>();
+
+		DatabaseMetaData databaseMetaData = connection.getMetaData();
+
+		DB db = DBManagerUtil.getDB();
+
+		DBInspector dbInspector = new DBInspector(connection);
+
+		String catalog = dbInspector.getCatalog();
+		String schema = dbInspector.getSchema();
+
+		String normalizedTableName = tableName;
+
+		if (normalizedTableName != null) {
+			normalizedTableName = dbInspector.normalizeName(
+				tableName, databaseMetaData);
+		}
+
+		String normalizedColumnName = columnName;
+
+		if (normalizedColumnName != null) {
+			normalizedColumnName = dbInspector.normalizeName(
+				columnName, databaseMetaData);
+		}
+
+		try (ResultSet tableResultSet = databaseMetaData.getTables(
+				catalog, schema, normalizedTableName, new String[] {"TABLE"})) {
+
+			while (tableResultSet.next()) {
+				normalizedTableName = dbInspector.normalizeName(
+					tableResultSet.getString("TABLE_NAME"), databaseMetaData);
+
+				try (ResultSet indexResultSet = db.getIndexResultSet(
+						connection, normalizedTableName, onlyUnique)) {
+
+					boolean unique = false;
+
+					String[] columnNames = new String[0];
+					String previousIndexName = null;
+
+					while (indexResultSet.next()) {
+						String indexName = indexResultSet.getString(
+							"INDEX_NAME");
+
+						if (indexName == null) {
+							continue;
+						}
+
+						String lowerCaseIndexName = StringUtil.toLowerCase(
+							indexName);
+
+						if (!lowerCaseIndexName.startsWith("liferay_") &&
+							!lowerCaseIndexName.startsWith("ix_")) {
+
+							continue;
+						}
+
+						if ((previousIndexName != null) &&
+							!previousIndexName.equals(indexName)) {
+
+							if ((normalizedColumnName == null) ||
+								ArrayUtil.contains(
+									columnNames, normalizedColumnName)) {
+
+								indexMetadatas.add(
+									new IndexMetadata(
+										previousIndexName, normalizedTableName,
+										unique, columnNames));
+							}
+
+							columnNames = new String[0];
+						}
+
+						previousIndexName = indexName;
+
+						unique = !indexResultSet.getBoolean("NON_UNIQUE");
+
+						columnNames = ArrayUtil.append(
+							columnNames,
+							getIndexColumnName(
+								dbInspector.normalizeName(
+									indexResultSet.getString("COLUMN_NAME"),
+									databaseMetaData)));
+					}
+
+					if ((previousIndexName != null) &&
+						((normalizedColumnName == null) ||
+						 ArrayUtil.contains(
+							 columnNames, normalizedColumnName))) {
+
+						indexMetadatas.add(
+							new IndexMetadata(
+								previousIndexName, normalizedTableName, unique,
+								columnNames));
+					}
+				}
+			}
+		}
+
+		return new ArrayList<>(indexMetadatas);
+	}
+
+	@Override
+	public ResultSet getIndexResultSet(
+			Connection connection, String tableName, boolean onlyUnique)
 		throws SQLException {
 
 		DatabaseMetaData databaseMetaData = connection.getMetaData();
@@ -350,8 +480,8 @@ public abstract class BaseDB implements DB {
 		DBInspector dbInspector = new DBInspector(connection);
 
 		return databaseMetaData.getIndexInfo(
-			dbInspector.getCatalog(), dbInspector.getSchema(), tableName, false,
-			false);
+			dbInspector.getCatalog(), dbInspector.getSchema(), tableName,
+			onlyUnique, false);
 	}
 
 	@Override
@@ -368,6 +498,10 @@ public abstract class BaseDB implements DB {
 	public String[] getPrimaryKeyColumnNames(
 			Connection connection, String tableName)
 		throws SQLException {
+
+		if (_isSkipIndexOperation(connection, tableName)) {
+			return new String[0];
+		}
 
 		List<PrimaryKey> primaryKeys = _getPrimaryKeys(connection, tableName);
 
@@ -418,27 +552,32 @@ public abstract class BaseDB implements DB {
 
 	@Override
 	public boolean isSupportsAlterColumnName() {
-		return _SUPPORTS_ALTER_COLUMN_NAME;
+		return true;
 	}
 
 	@Override
 	public boolean isSupportsAlterColumnType() {
-		return _SUPPORTS_ALTER_COLUMN_TYPE;
+		return true;
+	}
+
+	@Override
+	public boolean isSupportsDBPartition() {
+		return false;
 	}
 
 	@Override
 	public boolean isSupportsInlineDistinct() {
-		return _SUPPORTS_INLINE_DISTINCT;
+		return true;
 	}
 
 	@Override
 	public boolean isSupportsQueryingAfterException() {
-		return _SUPPORTS_QUERYING_AFTER_EXCEPTION;
+		return true;
 	}
 
 	@Override
 	public boolean isSupportsScrollableResults() {
-		return _SUPPORTS_SCROLLABLE_RESULTS;
+		return true;
 	}
 
 	@Override
@@ -448,7 +587,7 @@ public abstract class BaseDB implements DB {
 
 	@Override
 	public boolean isSupportsUpdateWithInnerJoin() {
-		return _SUPPORTS_UPDATE_WITH_INNER_JOIN;
+		return true;
 	}
 
 	@Override
@@ -577,7 +716,7 @@ public abstract class BaseDB implements DB {
 	}
 
 	@Override
-	public void runSQLTemplateString(
+	public void runSQLTemplate(
 			Connection connection, String template, boolean failOnError)
 		throws IOException, NamingException, SQLException {
 
@@ -631,7 +770,7 @@ public abstract class BaseDB implements DB {
 
 					include = replaceTemplate(include);
 
-					runSQLTemplateString(include, true);
+					runSQLTemplate(connection, include, true);
 				}
 				else {
 					sb.append(line);
@@ -696,11 +835,11 @@ public abstract class BaseDB implements DB {
 	}
 
 	@Override
-	public void runSQLTemplateString(String template, boolean failOnError)
+	public void runSQLTemplate(String template, boolean failOnError)
 		throws IOException, NamingException, SQLException {
 
 		try (Connection connection = DataAccess.getConnection()) {
-			runSQLTemplateString(connection, template, failOnError);
+			runSQLTemplate(connection, template, failOnError);
 		}
 	}
 
@@ -773,17 +912,20 @@ public abstract class BaseDB implements DB {
 
 	@Override
 	public void updateIndexes(
-			Connection connection, String tablesSQL, String indexesSQL,
+			Connection connection, String tableName, String indexesSQL,
 			boolean dropIndexes)
 		throws Exception {
 
-		List<Index> indexes = getIndexes(connection);
+		if (_isSkipIndexOperation(connection, tableName)) {
+			return;
+		}
 
-		Set<String> validIndexNames = null;
+		List<Index> indexes = _getIndexes(connection, tableName);
+
+		Set<String> validIndexNames;
 
 		if (dropIndexes) {
-			validIndexNames = dropIndexes(
-				connection, tablesSQL, indexesSQL, indexes);
+			validIndexNames = dropIndexes(connection, indexesSQL, indexes);
 		}
 		else {
 			validIndexNames = new HashSet<>();
@@ -1158,12 +1300,11 @@ public abstract class BaseDB implements DB {
 	}
 
 	protected Set<String> dropIndexes(
-			Connection connection, String tablesSQL, String indexesSQL,
-			List<Index> indexes)
+			Connection connection, String indexesSQL, List<Index> indexes)
 		throws IOException, SQLException {
 
-		if (_log.isInfoEnabled()) {
-			_log.info("Dropping stale indexes");
+		if (_log.isDebugEnabled()) {
+			_log.debug("Dropping stale indexes");
 		}
 
 		Set<String> validIndexNames = new HashSet<>();
@@ -1172,7 +1313,6 @@ public abstract class BaseDB implements DB {
 			return validIndexNames;
 		}
 
-		String tablesSQLLowerCase = StringUtil.toLowerCase(tablesSQL);
 		String indexesSQLLowerCase = StringUtil.toLowerCase(indexesSQL);
 
 		String[] lines = StringUtil.splitLines(indexesSQL);
@@ -1198,10 +1338,6 @@ public abstract class BaseDB implements DB {
 			String indexNameLowerCase = StringUtil.toLowerCase(
 				indexNameUpperCase);
 
-			String tableName = index.getTableName();
-
-			String tableNameLowerCase = StringUtil.toLowerCase(tableName);
-
 			validIndexNames.add(indexNameUpperCase);
 
 			if (indexNames.contains(indexNameLowerCase)) {
@@ -1221,16 +1357,12 @@ public abstract class BaseDB implements DB {
 					continue;
 				}
 			}
-			else if (!tablesSQLLowerCase.contains(
-						CREATE_TABLE + tableNameLowerCase + " (")) {
-
-				continue;
-			}
 
 			validIndexNames.remove(indexNameUpperCase);
 
 			String sql = StringBundler.concat(
-				"drop index ", indexNameUpperCase, " on ", tableName);
+				"drop index ", indexNameUpperCase, " on ",
+				index.getTableName());
 
 			if (_log.isInfoEnabled()) {
 				_log.info(sql);
@@ -1257,109 +1389,8 @@ public abstract class BaseDB implements DB {
 			" where 1 = 0");
 	}
 
-	protected List<IndexMetadata> getIndexes(
-			Connection connection, String tableName, String columnName,
-			boolean onlyUnique)
-		throws SQLException {
-
-		List<IndexMetadata> indexMetadatas = new ArrayList<>();
-
-		DatabaseMetaData databaseMetaData = connection.getMetaData();
-
-		DBInspector dbInspector = new DBInspector(connection);
-
-		String catalog = dbInspector.getCatalog();
-		String schema = dbInspector.getSchema();
-
-		String normalizedTableName = tableName;
-
-		if (normalizedTableName != null) {
-			normalizedTableName = dbInspector.normalizeName(
-				tableName, databaseMetaData);
-		}
-
-		String normalizedColumnName = columnName;
-
-		if (normalizedColumnName != null) {
-			normalizedColumnName = dbInspector.normalizeName(
-				columnName, databaseMetaData);
-		}
-
-		try (ResultSet tableResultSet = databaseMetaData.getTables(
-				catalog, schema, normalizedTableName, new String[] {"TABLE"})) {
-
-			while (tableResultSet.next()) {
-				normalizedTableName = dbInspector.normalizeName(
-					tableResultSet.getString("TABLE_NAME"), databaseMetaData);
-
-				try (ResultSet indexResultSet = databaseMetaData.getIndexInfo(
-						catalog, schema, normalizedTableName, onlyUnique,
-						false)) {
-
-					boolean unique = false;
-
-					String[] columnNames = new String[0];
-					String previousIndexName = null;
-
-					while (indexResultSet.next()) {
-						String indexName = indexResultSet.getString(
-							"INDEX_NAME");
-
-						if (indexName == null) {
-							continue;
-						}
-
-						String lowerCaseIndexName = StringUtil.toLowerCase(
-							indexName);
-
-						if (!lowerCaseIndexName.startsWith("liferay_") &&
-							!lowerCaseIndexName.startsWith("ix_")) {
-
-							continue;
-						}
-
-						if ((previousIndexName != null) &&
-							!previousIndexName.equals(indexName)) {
-
-							if ((normalizedColumnName == null) ||
-								ArrayUtil.contains(
-									columnNames, normalizedColumnName)) {
-
-								indexMetadatas.add(
-									new IndexMetadata(
-										previousIndexName, normalizedTableName,
-										unique, columnNames));
-							}
-
-							columnNames = new String[0];
-						}
-
-						previousIndexName = indexName;
-
-						unique = !indexResultSet.getBoolean("NON_UNIQUE");
-
-						columnNames = ArrayUtil.append(
-							columnNames,
-							dbInspector.normalizeName(
-								indexResultSet.getString("COLUMN_NAME"),
-								databaseMetaData));
-					}
-
-					if ((previousIndexName != null) &&
-						((normalizedColumnName == null) ||
-						 ArrayUtil.contains(
-							 columnNames, normalizedColumnName))) {
-
-						indexMetadatas.add(
-							new IndexMetadata(
-								previousIndexName, normalizedTableName, unique,
-								columnNames));
-					}
-				}
-			}
-		}
-
-		return new ArrayList<>(indexMetadatas);
+	protected String getIndexColumnName(String indexColumnName) {
+		return indexColumnName;
 	}
 
 	protected String getRenameTableSQL(
@@ -1382,11 +1413,11 @@ public abstract class BaseDB implements DB {
 	protected abstract String[] getTemplate();
 
 	protected boolean isSupportsDDLRollback() {
-		return _SUPPORTS_DDL_ROLLBACK;
+		return true;
 	}
 
 	protected boolean isSupportsDuplicatedIndexName() {
-		return _SUPPORTS_DUPLICATED_INDEX_NAME;
+		return true;
 	}
 
 	protected String limitColumnLength(String column, int length) {
@@ -1474,8 +1505,8 @@ public abstract class BaseDB implements DB {
 			Set<String> validIndexNames)
 		throws Exception {
 
-		if (_log.isInfoEnabled()) {
-			_log.info("Adding indexes");
+		if (_log.isDebugEnabled()) {
+			_log.debug("Adding indexes");
 		}
 
 		try (UnsyncBufferedReader unsyncBufferedReader =
@@ -1553,6 +1584,15 @@ public abstract class BaseDB implements DB {
 		return sb.toString();
 	}
 
+	private List<Index> _getIndexes(Connection connection, String tableName)
+		throws Exception {
+
+		return TransformUtil.transform(
+			getIndexMetadatas(connection, tableName, null, false),
+			index -> new Index(
+				index.getIndexName(), index.getTableName(), index.isUnique()));
+	}
+
 	private List<PrimaryKey> _getPrimaryKeys(
 			Connection connection, String tableName)
 		throws SQLException {
@@ -1579,21 +1619,20 @@ public abstract class BaseDB implements DB {
 		return primaryKeys;
 	}
 
-	private static final boolean _SUPPORTS_ALTER_COLUMN_NAME = true;
+	private boolean _isSkipIndexOperation(
+		Connection connection, String tableName) {
 
-	private static final boolean _SUPPORTS_ALTER_COLUMN_TYPE = true;
+		if (!DBPartition.isPartitionEnabled() ||
+			(CompanyThreadLocal.getNonsystemCompanyId() ==
+				PortalInstancePool.getDefaultCompanyId())) {
 
-	private static final boolean _SUPPORTS_DDL_ROLLBACK = true;
+			return false;
+		}
 
-	private static final boolean _SUPPORTS_DUPLICATED_INDEX_NAME = true;
+		DBInspector dbInspector = new DBInspector(connection);
 
-	private static final boolean _SUPPORTS_INLINE_DISTINCT = true;
-
-	private static final boolean _SUPPORTS_QUERYING_AFTER_EXCEPTION = true;
-
-	private static final boolean _SUPPORTS_SCROLLABLE_RESULTS = true;
-
-	private static final boolean _SUPPORTS_UPDATE_WITH_INNER_JOIN = true;
+		return dbInspector.isControlTable(tableName);
+	}
 
 	private static final Log _log = LogFactoryUtil.getLog(BaseDB.class);
 

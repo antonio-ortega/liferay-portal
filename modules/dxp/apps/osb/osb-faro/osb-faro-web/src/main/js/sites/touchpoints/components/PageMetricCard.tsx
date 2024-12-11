@@ -15,6 +15,7 @@ import {
 	PageMetricQuery,
 	PageMetricTabsQuery
 } from 'shared/components/metric-card/queries';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {useAssetVariables} from 'shared/components/metric-card/hooks';
 
 const PageMetricCard: React.FC<IGenericMetricBaseCardProps> = props => {
@@ -38,6 +39,7 @@ const PageMetricCard: React.FC<IGenericMetricBaseCardProps> = props => {
 				name: 'page',
 				TabsQuery: PageMetricTabsQuery
 			}}
+			reportContainer={ReportContainer.VisitorsBehaviorCard}
 			variables={variables}
 		/>
 	);

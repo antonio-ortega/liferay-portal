@@ -262,18 +262,19 @@ public interface CommerceOrderModel
 	public void setCommerceAccountId(long commerceAccountId);
 
 	/**
-	 * Returns the commerce currency ID of this commerce order.
+	 * Returns the commerce currency code of this commerce order.
 	 *
-	 * @return the commerce currency ID of this commerce order
+	 * @return the commerce currency code of this commerce order
 	 */
-	public long getCommerceCurrencyId();
+	@AutoEscape
+	public String getCommerceCurrencyCode();
 
 	/**
-	 * Sets the commerce currency ID of this commerce order.
+	 * Sets the commerce currency code of this commerce order.
 	 *
-	 * @param commerceCurrencyId the commerce currency ID of this commerce order
+	 * @param commerceCurrencyCode the commerce currency code of this commerce order
 	 */
-	public void setCommerceCurrencyId(long commerceCurrencyId);
+	public void setCommerceCurrencyCode(String commerceCurrencyCode);
 
 	/**
 	 * Returns the commerce order type ID of this commerce order.
@@ -459,6 +460,21 @@ public interface CommerceOrderModel
 	public void setManuallyAdjusted(boolean manuallyAdjusted);
 
 	/**
+	 * Returns the name of this commerce order.
+	 *
+	 * @return the name of this commerce order
+	 */
+	@AutoEscape
+	public String getName();
+
+	/**
+	 * Sets the name of this commerce order.
+	 *
+	 * @param name the name of this commerce order
+	 */
+	public void setName(String name);
+
+	/**
 	 * Returns the order date of this commerce order.
 	 *
 	 * @return the order date of this commerce order
@@ -575,6 +591,27 @@ public interface CommerceOrderModel
 	 * @param requestedDeliveryDate the requested delivery date of this commerce order
 	 */
 	public void setRequestedDeliveryDate(Date requestedDeliveryDate);
+
+	/**
+	 * Returns the shippable of this commerce order.
+	 *
+	 * @return the shippable of this commerce order
+	 */
+	public boolean getShippable();
+
+	/**
+	 * Returns <code>true</code> if this commerce order is shippable.
+	 *
+	 * @return <code>true</code> if this commerce order is shippable; <code>false</code> otherwise
+	 */
+	public boolean isShippable();
+
+	/**
+	 * Sets whether this commerce order is shippable.
+	 *
+	 * @param shippable the shippable of this commerce order
+	 */
+	public void setShippable(boolean shippable);
 
 	/**
 	 * Returns the shipping amount of this commerce order.

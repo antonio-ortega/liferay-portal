@@ -3,25 +3,19 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {
-	FrontendDataSet,
-
-	// @ts-ignore
-
-} from '@liferay/frontend-data-set-web';
+import {FrontendDataSet} from '@liferay/frontend-data-set-web';
 
 // @ts-ignore
 
 import moment from 'moment/min/moment-with-locales';
-import React from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
-import {
-	IFDSTableProps,
-	defaultDataSetProps,
-	fdsItem,
-	formatActionURL,
-} from '../../utils/fds';
+import {defaultFDSDataSetProps, formatActionURL} from '../../utils/fds';
 import FDSSourceDataRenderer from '../FDSPropsTransformer/FDSSourceDataRenderer';
+import LabelRenderer from '../LabelRenderer';
+import {ModalAddObjectValidation} from './ModalAddObjectValidation';
+
+import type {FDSItem, IFDSTableProps} from '../../utils/fds';
 
 interface ItemData {
 	active: boolean;
@@ -36,32 +30,46 @@ function ObjectFieldActiveDataRenderer({itemData}: {itemData: ItemData}) {
 
 const language = Liferay.ThemeDisplay.getBCP47LanguageId();
 
+interface ValidationsProps extends IFDSTableProps {
+	allowScriptContentToBeExecutedOrIncluded: boolean;
+	objectValidationRuleEngines: LabelKeyObject[];
+}
+
 export default function Validations({
+	allowScriptContentToBeExecutedOrIncluded,
 	apiURL,
 	creationMenu,
 	formName,
 	id,
 	items,
+	objectValidationRuleEngines,
 	style,
 	url,
-}: IFDSTableProps) {
+}: ValidationsProps) {
+	const [showAddObjectRelationshipModal, setShowAddObjectRelationshipModal] =
+		useState(false);
+
+	const objectValidationRuleEnginesItems = useMemo(() => {
+		return objectValidationRuleEngines.map(({key, label}) => ({
+			label,
+			value: key,
+		})) as LabelValueObject[];
+	}, [objectValidationRuleEngines]);
+
 	function ObjectFieldLabelDataRenderer({
 		itemData,
 		openSidePanel,
 		value,
-	}: fdsItem<ItemData>) {
-		const handleEditField = () => {
-			openSidePanel({
-				url: formatActionURL(url, itemData.id),
-			});
-		};
-
+	}: FDSItem<ItemData>) {
 		return (
-			<div className="table-list-title">
-				<a href="#" onClick={handleEditField}>
-					{value}
-				</a>
-			</div>
+			<LabelRenderer
+				onClick={() => {
+					openSidePanel({
+						url: formatActionURL(url, itemData.id),
+					});
+				}}
+				value={value}
+			/>
 		);
 	}
 
@@ -71,8 +79,8 @@ export default function Validations({
 		return moment().format('MMMM D, YYYY, h:mm:ss A');
 	}
 
-	const dataSetProps = {
-		...defaultDataSetProps,
+	const frontendDataSetProps = {
+		...defaultFDSDataSetProps,
 		apiURL,
 		creationMenu,
 		customDataRenderers: {
@@ -144,5 +152,34 @@ export default function Validations({
 		],
 	};
 
-	return <FrontendDataSet {...dataSetProps} />;
+	useEffect(() => {
+		Liferay.on('addObjectValidation', () =>
+			setShowAddObjectRelationshipModal(true)
+		);
+
+		return () => Liferay.detach('addObjectValidation');
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	return (
+		<>
+			<FrontendDataSet {...frontendDataSetProps} />
+
+			{showAddObjectRelationshipModal && (
+				<ModalAddObjectValidation
+					allowScriptContentToBeExecutedOrIncluded={
+						allowScriptContentToBeExecutedOrIncluded
+					}
+					apiURL={apiURL as string}
+					objectValidationRuleEngines={
+						objectValidationRuleEnginesItems
+					}
+					setShowAddObjectRelationshipModal={
+						setShowAddObjectRelationshipModal
+					}
+				/>
+			)}
+		</>
+	);
 }

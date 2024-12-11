@@ -20,6 +20,7 @@ import com.liferay.headless.admin.user.internal.resource.v1_0.SegmentUserResourc
 import com.liferay.headless.admin.user.internal.resource.v1_0.SiteResourceImpl;
 import com.liferay.headless.admin.user.internal.resource.v1_0.SubscriptionResourceImpl;
 import com.liferay.headless.admin.user.internal.resource.v1_0.TicketResourceImpl;
+import com.liferay.headless.admin.user.internal.resource.v1_0.UserAccountFullNameDefinitionResourceImpl;
 import com.liferay.headless.admin.user.internal.resource.v1_0.UserAccountResourceImpl;
 import com.liferay.headless.admin.user.internal.resource.v1_0.UserGroupResourceImpl;
 import com.liferay.headless.admin.user.internal.resource.v1_0.WebUrlResourceImpl;
@@ -36,6 +37,7 @@ import com.liferay.headless.admin.user.resource.v1_0.SegmentUserResource;
 import com.liferay.headless.admin.user.resource.v1_0.SiteResource;
 import com.liferay.headless.admin.user.resource.v1_0.SubscriptionResource;
 import com.liferay.headless.admin.user.resource.v1_0.TicketResource;
+import com.liferay.headless.admin.user.resource.v1_0.UserAccountFullNameDefinitionResource;
 import com.liferay.headless.admin.user.resource.v1_0.UserAccountResource;
 import com.liferay.headless.admin.user.resource.v1_0.UserGroupResource;
 import com.liferay.headless.admin.user.resource.v1_0.WebUrlResource;
@@ -119,6 +121,8 @@ public class ServletDataImpl implements ServletData {
 			_ticketResourceComponentServiceObjects);
 		Query.setUserAccountResourceComponentServiceObjects(
 			_userAccountResourceComponentServiceObjects);
+		Query.setUserAccountFullNameDefinitionResourceComponentServiceObjects(
+			_userAccountFullNameDefinitionResourceComponentServiceObjects);
 		Query.setUserGroupResourceComponentServiceObjects(
 			_userGroupResourceComponentServiceObjects);
 		Query.setWebUrlResourceComponentServiceObjects(
@@ -159,6 +163,11 @@ public class ServletDataImpl implements ServletData {
 		_resourceMethodObjectValuePairs =
 			new HashMap<String, ObjectValuePair<Class<?>, String>>() {
 				{
+					put(
+						"mutation#createAccountGroupAccountsPageExportBatch",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"postAccountGroupAccountsPageExportBatch"));
 					put(
 						"mutation#createAccountsPageExportBatch",
 						new ObjectValuePair<>(
@@ -207,6 +216,26 @@ public class ServletDataImpl implements ServletData {
 						"mutation#updateAccountBatch",
 						new ObjectValuePair<>(
 							AccountResourceImpl.class, "putAccountBatch"));
+					put(
+						"mutation#deleteOrganizationByExternalReferenceCodeAccounts",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"deleteOrganizationByExternalReferenceCodeAccounts"));
+					put(
+						"mutation#createOrganizationByExternalReferenceCodeAccounts",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"postOrganizationByExternalReferenceCodeAccounts"));
+					put(
+						"mutation#deleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"deleteOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode"));
+					put(
+						"mutation#createOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"postOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountByExternalReferenceCode"));
 					put(
 						"mutation#patchOrganizationMoveAccounts",
 						new ObjectValuePair<>(
@@ -312,6 +341,16 @@ public class ServletDataImpl implements ServletData {
 							AccountGroupResourceImpl.class,
 							"postAccountAccountGroupsPageExportBatch"));
 					put(
+						"mutation#deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode",
+						new ObjectValuePair<>(
+							AccountRoleResourceImpl.class,
+							"deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode"));
+					put(
+						"mutation#createAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode",
+						new ObjectValuePair<>(
+							AccountRoleResourceImpl.class,
+							"postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByExternalReferenceCode"));
+					put(
 						"mutation#deleteAccountByExternalReferenceCodeAccountRoleUserAccountByExternalReferenceCode",
 						new ObjectValuePair<>(
 							AccountRoleResourceImpl.class,
@@ -326,6 +365,16 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							AccountRoleResourceImpl.class,
 							"postAccountAccountRoleByExternalReferenceCode"));
+					put(
+						"mutation#deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress",
+						new ObjectValuePair<>(
+							AccountRoleResourceImpl.class,
+							"deleteAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress"));
+					put(
+						"mutation#createAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress",
+						new ObjectValuePair<>(
+							AccountRoleResourceImpl.class,
+							"postAccountByExternalReferenceCodeAccountRoleByExternalReferenceCodeUserAccountByEmailAddress"));
 					put(
 						"mutation#deleteAccountByExternalReferenceCodeAccountRoleUserAccountByEmailAddress",
 						new ObjectValuePair<>(
@@ -361,6 +410,36 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							AccountRoleResourceImpl.class,
 							"postAccountAccountRoleUserAccountAssociation"));
+					put(
+						"mutation#createAccountEmailAddressesPageExportBatch",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"postAccountEmailAddressesPageExportBatch"));
+					put(
+						"mutation#deleteEmailAddressByExternalReferenceCode",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"deleteEmailAddressByExternalReferenceCode"));
+					put(
+						"mutation#patchEmailAddressByExternalReferenceCode",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"patchEmailAddressByExternalReferenceCode"));
+					put(
+						"mutation#deleteEmailAddress",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"deleteEmailAddress"));
+					put(
+						"mutation#deleteEmailAddressBatch",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"deleteEmailAddressBatch"));
+					put(
+						"mutation#patchEmailAddress",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"patchEmailAddress"));
 					put(
 						"mutation#createOrganizationEmailAddressesPageExportBatch",
 						new ObjectValuePair<>(
@@ -427,6 +506,26 @@ public class ServletDataImpl implements ServletData {
 							OrganizationResourceImpl.class,
 							"putOrganizationByExternalReferenceCode"));
 					put(
+						"mutation#deleteOrganizationByExternalReferenceCodeUserAccountsByEmailAddress",
+						new ObjectValuePair<>(
+							OrganizationResourceImpl.class,
+							"deleteOrganizationByExternalReferenceCodeUserAccountsByEmailAddress"));
+					put(
+						"mutation#createOrganizationByExternalReferenceCodeUserAccountsByEmailAddress",
+						new ObjectValuePair<>(
+							OrganizationResourceImpl.class,
+							"postOrganizationByExternalReferenceCodeUserAccountsByEmailAddress"));
+					put(
+						"mutation#deleteOrganizationByExternalReferenceCodeUserAccountByEmailAddress",
+						new ObjectValuePair<>(
+							OrganizationResourceImpl.class,
+							"deleteOrganizationByExternalReferenceCodeUserAccountByEmailAddress"));
+					put(
+						"mutation#createOrganizationByExternalReferenceCodeUserAccountByEmailAddress",
+						new ObjectValuePair<>(
+							OrganizationResourceImpl.class,
+							"postOrganizationByExternalReferenceCodeUserAccountByEmailAddress"));
+					put(
 						"mutation#deleteOrganization",
 						new ObjectValuePair<>(
 							OrganizationResourceImpl.class,
@@ -471,10 +570,37 @@ public class ServletDataImpl implements ServletData {
 							OrganizationResourceImpl.class,
 							"postUserAccountByEmailAddress"));
 					put(
+						"mutation#createAccountPhonesPageExportBatch",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"postAccountPhonesPageExportBatch"));
+					put(
 						"mutation#createOrganizationPhonesPageExportBatch",
 						new ObjectValuePair<>(
 							PhoneResourceImpl.class,
 							"postOrganizationPhonesPageExportBatch"));
+					put(
+						"mutation#deletePhoneByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"deletePhoneByExternalReferenceCode"));
+					put(
+						"mutation#patchPhoneByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"patchPhoneByExternalReferenceCode"));
+					put(
+						"mutation#deletePhone",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class, "deletePhone"));
+					put(
+						"mutation#deletePhoneBatch",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class, "deletePhoneBatch"));
+					put(
+						"mutation#patchPhone",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class, "patchPhone"));
 					put(
 						"mutation#createUserAccountPhonesPageExportBatch",
 						new ObjectValuePair<>(
@@ -500,6 +626,21 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							PostalAddressResourceImpl.class,
 							"postOrganizationPostalAddressesPageExportBatch"));
+					put(
+						"mutation#deletePostalAddressByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"deletePostalAddressByExternalReferenceCode"));
+					put(
+						"mutation#patchPostalAddressByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"patchPostalAddressByExternalReferenceCode"));
+					put(
+						"mutation#updatePostalAddressByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"putPostalAddressByExternalReferenceCode"));
 					put(
 						"mutation#deletePostalAddress",
 						new ObjectValuePair<>(
@@ -535,6 +676,79 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							RoleResourceImpl.class,
 							"postRolesPageExportBatch"));
+					put(
+						"mutation#createRole",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "postRole"));
+					put(
+						"mutation#createRoleBatch",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "postRoleBatch"));
+					put(
+						"mutation#deleteRoleByExternalReferenceCode",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"deleteRoleByExternalReferenceCode"));
+					put(
+						"mutation#patchRoleByExternalReferenceCode",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"patchRoleByExternalReferenceCode"));
+					put(
+						"mutation#updateRoleByExternalReferenceCode",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"putRoleByExternalReferenceCode"));
+					put(
+						"mutation#deleteRoleByExternalReferenceCodeUserAccountAssociation",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"deleteRoleByExternalReferenceCodeUserAccountAssociation"));
+					put(
+						"mutation#createRoleByExternalReferenceCodeUserAccountAssociation",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"postRoleByExternalReferenceCodeUserAccountAssociation"));
+					put(
+						"mutation#deleteOrganizationRoleByExternalReferenceCodeUserAccountAssociation",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"deleteOrganizationRoleByExternalReferenceCodeUserAccountAssociation"));
+					put(
+						"mutation#createOrganizationRoleByExternalReferenceCodeUserAccountAssociation",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"postOrganizationRoleByExternalReferenceCodeUserAccountAssociation"));
+					put(
+						"mutation#deleteSiteRoleByExternalReferenceCodeUserAccountAssociation",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"deleteSiteRoleByExternalReferenceCodeUserAccountAssociation"));
+					put(
+						"mutation#createSiteRoleByExternalReferenceCodeUserAccountAssociation",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"postSiteRoleByExternalReferenceCodeUserAccountAssociation"));
+					put(
+						"mutation#deleteRole",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "deleteRole"));
+					put(
+						"mutation#deleteRoleBatch",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "deleteRoleBatch"));
+					put(
+						"mutation#patchRole",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "patchRole"));
+					put(
+						"mutation#updateRole",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "putRole"));
+					put(
+						"mutation#updateRoleBatch",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "putRoleBatch"));
 					put(
 						"mutation#deleteRoleUserAccountAssociation",
 						new ObjectValuePair<>(
@@ -680,6 +894,11 @@ public class ServletDataImpl implements ServletData {
 							UserAccountResourceImpl.class,
 							"deleteUserAccountByExternalReferenceCode"));
 					put(
+						"mutation#patchUserAccountByExternalReferenceCode",
+						new ObjectValuePair<>(
+							UserAccountResourceImpl.class,
+							"patchUserAccountByExternalReferenceCode"));
+					put(
 						"mutation#updateUserAccountByExternalReferenceCode",
 						new ObjectValuePair<>(
 							UserAccountResourceImpl.class,
@@ -741,6 +960,16 @@ public class ServletDataImpl implements ServletData {
 							UserGroupResourceImpl.class,
 							"putUserGroupByExternalReferenceCode"));
 					put(
+						"mutation#deleteUserGroupByExternalReferenceCodeUsers",
+						new ObjectValuePair<>(
+							UserGroupResourceImpl.class,
+							"deleteUserGroupByExternalReferenceCodeUsers"));
+					put(
+						"mutation#createUserGroupByExternalReferenceCodeUsers",
+						new ObjectValuePair<>(
+							UserGroupResourceImpl.class,
+							"postUserGroupByExternalReferenceCodeUsers"));
+					put(
 						"mutation#deleteUserGroup",
 						new ObjectValuePair<>(
 							UserGroupResourceImpl.class, "deleteUserGroup"));
@@ -771,6 +1000,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							UserGroupResourceImpl.class, "postUserGroupUsers"));
 					put(
+						"mutation#createAccountWebUrlsPageExportBatch",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"postAccountWebUrlsPageExportBatch"));
+					put(
 						"mutation#createOrganizationWebUrlsPageExportBatch",
 						new ObjectValuePair<>(
 							WebUrlResourceImpl.class,
@@ -780,7 +1014,39 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							WebUrlResourceImpl.class,
 							"postUserAccountWebUrlsPageExportBatch"));
+					put(
+						"mutation#deleteWebUrlByExternalReferenceCode",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"deleteWebUrlByExternalReferenceCode"));
+					put(
+						"mutation#patchWebUrlByExternalReferenceCode",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"patchWebUrlByExternalReferenceCode"));
+					put(
+						"mutation#deleteWebUrl",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class, "deleteWebUrl"));
+					put(
+						"mutation#deleteWebUrlBatch",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class, "deleteWebUrlBatch"));
+					put(
+						"mutation#patchWebUrl",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class, "patchWebUrl"));
 
+					put(
+						"query#accountGroupByExternalReferenceCodeAccounts",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"getAccountGroupByExternalReferenceCodeAccountsPage"));
+					put(
+						"query#accountGroupAccounts",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"getAccountGroupAccountsPage"));
 					put(
 						"query#accounts",
 						new ObjectValuePair<>(
@@ -794,6 +1060,16 @@ public class ServletDataImpl implements ServletData {
 						"query#account",
 						new ObjectValuePair<>(
 							AccountResourceImpl.class, "getAccount"));
+					put(
+						"query#organizationByExternalReferenceCodeAccounts",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeAccountsPage"));
+					put(
+						"query#organizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountsByExternalReferenceCode",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeOrganizationExternalReferenceCodeAccountsByExternalReferenceCodePage"));
 					put(
 						"query#organizationAccounts",
 						new ObjectValuePair<>(
@@ -844,14 +1120,39 @@ public class ServletDataImpl implements ServletData {
 							AccountRoleResourceImpl.class,
 							"getAccountAccountRolesPage"));
 					put(
+						"query#accountByExternalReferenceCodeEmailAddresses",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"getAccountByExternalReferenceCodeEmailAddressesPage"));
+					put(
+						"query#accountEmailAddresses",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"getAccountEmailAddressesPage"));
+					put(
+						"query#emailAddressByExternalReferenceCode",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"getEmailAddressByExternalReferenceCode"));
+					put(
 						"query#emailAddress",
 						new ObjectValuePair<>(
 							EmailAddressResourceImpl.class, "getEmailAddress"));
+					put(
+						"query#organizationByExternalReferenceCodeEmailAddresses",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeEmailAddressesPage"));
 					put(
 						"query#organizationEmailAddresses",
 						new ObjectValuePair<>(
 							EmailAddressResourceImpl.class,
 							"getOrganizationEmailAddressesPage"));
+					put(
+						"query#userAccountByExternalReferenceCodeEmailAddresses",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"getUserAccountByExternalReferenceCodeEmailAddressesPage"));
 					put(
 						"query#userAccountEmailAddresses",
 						new ObjectValuePair<>(
@@ -888,6 +1189,11 @@ public class ServletDataImpl implements ServletData {
 							OrganizationResourceImpl.class,
 							"getOrganizationByExternalReferenceCode"));
 					put(
+						"query#organizationByExternalReferenceCodeChildOrganizations",
+						new ObjectValuePair<>(
+							OrganizationResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeChildOrganizationsPage"));
+					put(
 						"query#organization",
 						new ObjectValuePair<>(
 							OrganizationResourceImpl.class, "getOrganization"));
@@ -902,34 +1208,78 @@ public class ServletDataImpl implements ServletData {
 							OrganizationResourceImpl.class,
 							"getOrganizationOrganizationsPage"));
 					put(
+						"query#accountByExternalReferenceCodePhones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getAccountByExternalReferenceCodePhonesPage"));
+					put(
+						"query#accountPhones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class, "getAccountPhonesPage"));
+					put(
+						"query#organizationByExternalReferenceCodePhones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getOrganizationByExternalReferenceCodePhonesPage"));
+					put(
 						"query#organizationPhones",
 						new ObjectValuePair<>(
 							PhoneResourceImpl.class,
 							"getOrganizationPhonesPage"));
 					put(
+						"query#phoneByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getPhoneByExternalReferenceCode"));
+					put(
 						"query#phone",
 						new ObjectValuePair<>(
 							PhoneResourceImpl.class, "getPhone"));
+					put(
+						"query#userAccountByExternalReferenceCodePhones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getUserAccountByExternalReferenceCodePhonesPage"));
 					put(
 						"query#userAccountPhones",
 						new ObjectValuePair<>(
 							PhoneResourceImpl.class,
 							"getUserAccountPhonesPage"));
 					put(
+						"query#accountByExternalReferenceCodePostalAddresses",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"getAccountByExternalReferenceCodePostalAddressesPage"));
+					put(
 						"query#accountPostalAddresses",
 						new ObjectValuePair<>(
 							PostalAddressResourceImpl.class,
 							"getAccountPostalAddressesPage"));
+					put(
+						"query#organizationByExternalReferenceCodePostalAddresses",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"getOrganizationByExternalReferenceCodePostalAddressesPage"));
 					put(
 						"query#organizationPostalAddresses",
 						new ObjectValuePair<>(
 							PostalAddressResourceImpl.class,
 							"getOrganizationPostalAddressesPage"));
 					put(
+						"query#postalAddressByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"getPostalAddressByExternalReferenceCode"));
+					put(
 						"query#postalAddress",
 						new ObjectValuePair<>(
 							PostalAddressResourceImpl.class,
 							"getPostalAddress"));
+					put(
+						"query#userAccountByExternalReferenceCodePostalAddresses",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"getUserAccountByExternalReferenceCodePostalAddressesPage"));
 					put(
 						"query#userAccountPostalAddresses",
 						new ObjectValuePair<>(
@@ -939,6 +1289,11 @@ public class ServletDataImpl implements ServletData {
 						"query#roles",
 						new ObjectValuePair<>(
 							RoleResourceImpl.class, "getRolesPage"));
+					put(
+						"query#roleByExternalReferenceCode",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"getRoleByExternalReferenceCode"));
 					put(
 						"query#role",
 						new ObjectValuePair<>(
@@ -1016,6 +1371,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							UserAccountResourceImpl.class, "getMyUserAccount"));
 					put(
+						"query#organizationByExternalReferenceCodeUserAccounts",
+						new ObjectValuePair<>(
+							UserAccountResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeUserAccountsPage"));
+					put(
 						"query#organizationUserAccounts",
 						new ObjectValuePair<>(
 							UserAccountResourceImpl.class,
@@ -1050,6 +1410,21 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							UserAccountResourceImpl.class, "getUserAccount"));
 					put(
+						"query#userGroupByExternalReferenceCodeUsers",
+						new ObjectValuePair<>(
+							UserAccountResourceImpl.class,
+							"getUserGroupByExternalReferenceCodeUsersPage"));
+					put(
+						"query#userGroupUsers",
+						new ObjectValuePair<>(
+							UserAccountResourceImpl.class,
+							"getUserGroupUsersPage"));
+					put(
+						"query#userAccountFullNameDefinition",
+						new ObjectValuePair<>(
+							UserAccountFullNameDefinitionResourceImpl.class,
+							"getUserAccountFullNameDefinition"));
+					put(
 						"query#userUserGroups",
 						new ObjectValuePair<>(
 							UserGroupResourceImpl.class, "getUserUserGroups"));
@@ -1067,15 +1442,39 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							UserGroupResourceImpl.class, "getUserGroup"));
 					put(
+						"query#accountByExternalReferenceCodeWebUrls",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"getAccountByExternalReferenceCodeWebUrlsPage"));
+					put(
+						"query#accountWebUrls",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class, "getAccountWebUrlsPage"));
+					put(
+						"query#organizationByExternalReferenceCodeWebUrls",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeWebUrlsPage"));
+					put(
 						"query#organizationWebUrls",
 						new ObjectValuePair<>(
 							WebUrlResourceImpl.class,
 							"getOrganizationWebUrlsPage"));
 					put(
+						"query#userAccountByExternalReferenceCodeWebUrls",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"getUserAccountByExternalReferenceCodeWebUrlsPage"));
+					put(
 						"query#userAccountWebUrls",
 						new ObjectValuePair<>(
 							WebUrlResourceImpl.class,
 							"getUserAccountWebUrlsPage"));
+					put(
+						"query#webUrlByExternalReferenceCode",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"getWebUrlByExternalReferenceCode"));
 					put(
 						"query#webUrl",
 						new ObjectValuePair<>(
@@ -1086,16 +1485,6 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							UserAccountResourceImpl.class,
 							"getAccountUserAccountsPage"));
-					put(
-						"query#UserAccount.phones",
-						new ObjectValuePair<>(
-							PhoneResourceImpl.class,
-							"getUserAccountPhonesPage"));
-					put(
-						"query#Account.accountRoles",
-						new ObjectValuePair<>(
-							AccountRoleResourceImpl.class,
-							"getAccountAccountRolesPage"));
 					put(
 						"query#Account.accountRolesByExternalReferenceCode",
 						new ObjectValuePair<>(
@@ -1111,6 +1500,11 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							AccountResourceImpl.class,
 							"getOrganizationAccountsPage"));
+					put(
+						"query#Account.byExternalReferenceCodePhones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getAccountByExternalReferenceCodePhonesPage"));
 					put(
 						"query#Site.userAccountSegments",
 						new ObjectValuePair<>(
@@ -1132,10 +1526,10 @@ public class ServletDataImpl implements ServletData {
 							EmailAddressResourceImpl.class,
 							"getUserAccountEmailAddressesPage"));
 					put(
-						"query#Account.userAccountByExternalReferenceCode",
+						"query#Account.organizationByExternalReferenceCodeUserAccounts",
 						new ObjectValuePair<>(
 							UserAccountResourceImpl.class,
-							"getUserAccountByExternalReferenceCode"));
+							"getOrganizationByExternalReferenceCodeUserAccountsPage"));
 					put(
 						"query#Organization.postalAddresses",
 						new ObjectValuePair<>(
@@ -1147,14 +1541,10 @@ public class ServletDataImpl implements ServletData {
 							OrganizationResourceImpl.class,
 							"getAccountByExternalReferenceCodeOrganizationsPage"));
 					put(
-						"query#Account.organization",
+						"query#AccountGroup.accounts",
 						new ObjectValuePair<>(
-							OrganizationResourceImpl.class,
-							"getAccountOrganization"));
-					put(
-						"query#AccountRole.account",
-						new ObjectValuePair<>(
-							AccountResourceImpl.class, "getAccount"));
+							AccountResourceImpl.class,
+							"getAccountGroupAccountsPage"));
 					put(
 						"query#Organization.organizations",
 						new ObjectValuePair<>(
@@ -1166,24 +1556,15 @@ public class ServletDataImpl implements ServletData {
 							EmailAddressResourceImpl.class,
 							"getOrganizationEmailAddressesPage"));
 					put(
+						"query#Account.byExternalReferenceCodeEmailAddresses",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"getAccountByExternalReferenceCodeEmailAddressesPage"));
+					put(
 						"query#Account.userGroupByExternalReferenceCode",
 						new ObjectValuePair<>(
 							UserGroupResourceImpl.class,
 							"getUserGroupByExternalReferenceCode"));
-					put(
-						"query#Site.userAccounts",
-						new ObjectValuePair<>(
-							UserAccountResourceImpl.class,
-							"getSiteUserAccountsPage"));
-					put(
-						"query#Account.userAccountsByExternalReferenceCode",
-						new ObjectValuePair<>(
-							UserAccountResourceImpl.class,
-							"getAccountUserAccountsByExternalReferenceCodePage"));
-					put(
-						"query#AccountRole.role",
-						new ObjectValuePair<>(
-							RoleResourceImpl.class, "getRole"));
 					put(
 						"query#Account.organizations",
 						new ObjectValuePair<>(
@@ -1200,6 +1581,161 @@ public class ServletDataImpl implements ServletData {
 							UserAccountResourceImpl.class,
 							"getAccountUserAccount"));
 					put(
+						"query#Account.userAccountByExternalReferenceCodePostalAddresses",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"getUserAccountByExternalReferenceCodePostalAddressesPage"));
+					put(
+						"query#Account.groupByExternalReferenceCode",
+						new ObjectValuePair<>(
+							AccountGroupResourceImpl.class,
+							"getAccountGroupByExternalReferenceCode"));
+					put(
+						"query#Account.phones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class, "getAccountPhonesPage"));
+					put(
+						"query#Organization.webUrls",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"getOrganizationWebUrlsPage"));
+					put(
+						"query#Account.organizationByExternalReferenceCodePostalAddresses",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"getOrganizationByExternalReferenceCodePostalAddressesPage"));
+					put(
+						"query#Account.emailAddressByExternalReferenceCode",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"getEmailAddressByExternalReferenceCode"));
+					put(
+						"query#Subscription.site",
+						new ObjectValuePair<>(
+							SiteResourceImpl.class, "getSite"));
+					put(
+						"query#Account.organizationByExternalReferenceCodePhones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getOrganizationByExternalReferenceCodePhonesPage"));
+					put(
+						"query#UserAccount.passwordResetTicket",
+						new ObjectValuePair<>(
+							TicketResourceImpl.class,
+							"getUserAccountPasswordResetTicket"));
+					put(
+						"query#Account.emailAddresses",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"getAccountEmailAddressesPage"));
+					put(
+						"query#Organization.phones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getOrganizationPhonesPage"));
+					put(
+						"query#Account.organizationByExternalReferenceCodeChildOrganizations",
+						new ObjectValuePair<>(
+							OrganizationResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeChildOrganizationsPage"));
+					put(
+						"query#UserAccount.phones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getUserAccountPhonesPage"));
+					put(
+						"query#UserGroup.users",
+						new ObjectValuePair<>(
+							UserAccountResourceImpl.class,
+							"getUserGroupUsersPage"));
+					put(
+						"query#Account.accountRoles",
+						new ObjectValuePair<>(
+							AccountRoleResourceImpl.class,
+							"getAccountAccountRolesPage"));
+					put(
+						"query#Account.userAccountByExternalReferenceCode",
+						new ObjectValuePair<>(
+							UserAccountResourceImpl.class,
+							"getUserAccountByExternalReferenceCode"));
+					put(
+						"query#Account.organization",
+						new ObjectValuePair<>(
+							OrganizationResourceImpl.class,
+							"getAccountOrganization"));
+					put(
+						"query#AccountRole.account",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class, "getAccount"));
+					put(
+						"query#Account.organizationByExternalReferenceCodeEmailAddresses",
+						new ObjectValuePair<>(
+							EmailAddressResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeEmailAddressesPage"));
+					put(
+						"query#Account.postalAddressByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"getPostalAddressByExternalReferenceCode"));
+					put(
+						"query#Account.webUrlByExternalReferenceCode",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"getWebUrlByExternalReferenceCode"));
+					put(
+						"query#Account.userGroupByExternalReferenceCodeUsers",
+						new ObjectValuePair<>(
+							UserAccountResourceImpl.class,
+							"getUserGroupByExternalReferenceCodeUsersPage"));
+					put(
+						"query#Account.roleByExternalReferenceCode",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class,
+							"getRoleByExternalReferenceCode"));
+					put(
+						"query#Account.phoneByExternalReferenceCode",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getPhoneByExternalReferenceCode"));
+					put(
+						"query#Site.userAccounts",
+						new ObjectValuePair<>(
+							UserAccountResourceImpl.class,
+							"getSiteUserAccountsPage"));
+					put(
+						"query#Account.userAccountsByExternalReferenceCode",
+						new ObjectValuePair<>(
+							UserAccountResourceImpl.class,
+							"getAccountUserAccountsByExternalReferenceCodePage"));
+					put(
+						"query#RolePermission.role",
+						new ObjectValuePair<>(
+							RoleResourceImpl.class, "getRole"));
+					put(
+						"query#Account.userAccountByExternalReferenceCodePhones",
+						new ObjectValuePair<>(
+							PhoneResourceImpl.class,
+							"getUserAccountByExternalReferenceCodePhonesPage"));
+					put(
+						"query#Account.organizationByExternalReferenceCodeAccounts",
+						new ObjectValuePair<>(
+							AccountResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeAccountsPage"));
+					put(
+						"query#Account.byExternalReferenceCodePostalAddresses",
+						new ObjectValuePair<>(
+							PostalAddressResourceImpl.class,
+							"getAccountByExternalReferenceCodePostalAddressesPage"));
+					put(
+						"query#Account.organizationByExternalReferenceCodeWebUrls",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class,
+							"getOrganizationByExternalReferenceCodeWebUrlsPage"));
+					put(
+						"query#Account.webUrls",
+						new ObjectValuePair<>(
+							WebUrlResourceImpl.class, "getAccountWebUrlsPage"));
+					put(
 						"query#Account.byExternalReferenceCodeUserAccountByEmailAddressAccountRoles",
 						new ObjectValuePair<>(
 							AccountRoleResourceImpl.class,
@@ -1209,44 +1745,35 @@ public class ServletDataImpl implements ServletData {
 						new ObjectValuePair<>(
 							SegmentResourceImpl.class, "getSiteSegmentsPage"));
 					put(
-						"query#Account.groupByExternalReferenceCode",
-						new ObjectValuePair<>(
-							AccountGroupResourceImpl.class,
-							"getAccountGroupByExternalReferenceCode"));
-					put(
-						"query#Organization.webUrls",
+						"query#Account.byExternalReferenceCodeWebUrls",
 						new ObjectValuePair<>(
 							WebUrlResourceImpl.class,
-							"getOrganizationWebUrlsPage"));
+							"getAccountByExternalReferenceCodeWebUrlsPage"));
 					put(
 						"query#UserAccount.emailVerificationTicket",
 						new ObjectValuePair<>(
 							TicketResourceImpl.class,
 							"getUserAccountEmailVerificationTicket"));
 					put(
-						"query#Subscription.site",
+						"query#Account.userAccountByExternalReferenceCodeEmailAddresses",
 						new ObjectValuePair<>(
-							SiteResourceImpl.class, "getSite"));
+							EmailAddressResourceImpl.class,
+							"getUserAccountByExternalReferenceCodeEmailAddressesPage"));
 					put(
 						"query#UserAccount.webUrls",
 						new ObjectValuePair<>(
 							WebUrlResourceImpl.class,
 							"getUserAccountWebUrlsPage"));
 					put(
-						"query#UserAccount.passwordResetTicket",
+						"query#Account.userAccountByExternalReferenceCodeWebUrls",
 						new ObjectValuePair<>(
-							TicketResourceImpl.class,
-							"getUserAccountPasswordResetTicket"));
+							WebUrlResourceImpl.class,
+							"getUserAccountByExternalReferenceCodeWebUrlsPage"));
 					put(
 						"query#Account.organizationByExternalReferenceCode",
 						new ObjectValuePair<>(
 							OrganizationResourceImpl.class,
 							"getOrganizationByExternalReferenceCode"));
-					put(
-						"query#Organization.phones",
-						new ObjectValuePair<>(
-							PhoneResourceImpl.class,
-							"getOrganizationPhonesPage"));
 					put(
 						"query#UserAccount.userUserGroups",
 						new ObjectValuePair<>(
@@ -1326,5 +1853,9 @@ public class ServletDataImpl implements ServletData {
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
 	private ComponentServiceObjects<TicketResource>
 		_ticketResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<UserAccountFullNameDefinitionResource>
+		_userAccountFullNameDefinitionResourceComponentServiceObjects;
 
 }

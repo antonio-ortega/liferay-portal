@@ -23,7 +23,6 @@ import com.liferay.commerce.price.list.model.CommercePriceEntry;
 import com.liferay.commerce.price.list.model.CommercePriceList;
 import com.liferay.commerce.price.list.service.CommercePriceListLocalService;
 import com.liferay.commerce.price.list.test.util.CommercePriceEntryTestUtil;
-import com.liferay.commerce.product.CommerceProductTestUtil;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.constants.CPInstanceConstants;
 import com.liferay.commerce.product.model.CPDefinition;
@@ -44,6 +43,7 @@ import com.liferay.commerce.product.service.CPOptionLocalServiceUtil;
 import com.liferay.commerce.product.service.CPOptionValueLocalServiceUtil;
 import com.liferay.commerce.product.service.CommerceCatalogLocalServiceUtil;
 import com.liferay.commerce.product.test.util.CPTestUtil;
+import com.liferay.commerce.product.test.util.CommerceProductTestUtil;
 import com.liferay.commerce.product.type.simple.constants.SimpleCPTypeConstants;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.service.CommerceOrderItemLocalService;
@@ -195,8 +195,8 @@ public class CommerceOrderItemLocalServiceTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				_accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		_commerceOrders.add(commerceOrder);
 
@@ -269,8 +269,8 @@ public class CommerceOrderItemLocalServiceTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				_accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		_commerceOrders.add(commerceOrder);
 
@@ -328,8 +328,8 @@ public class CommerceOrderItemLocalServiceTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				_accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		_commerceOrders.add(commerceOrder);
 
@@ -341,6 +341,110 @@ public class CommerceOrderItemLocalServiceTest {
 				_serviceContext);
 
 		_commerceOrderItems.add(commerceOrderItem);
+	}
+
+	@Test
+	public void testAddOrUpdateCommerceOrderItem() throws Exception {
+		frutillaRule.scenario(
+			"Add multiple times a product with options"
+		).given(
+			"An empty order"
+		).when(
+			"I add the same CPinstance with option json"
+		).then(
+			"If the json contains the same option values the products are " +
+				"merged."
+		);
+
+		CPInstance cpInstance = CPTestUtil.addCPInstance(_group.getGroupId());
+
+		_cpInstances.add(cpInstance);
+
+		_commerceInventoryWarehouse =
+			CommerceInventoryTestUtil.addCommerceInventoryWarehouse(
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		_commerceInventoryWarehouseItems.add(
+			CommerceInventoryTestUtil.addCommerceInventoryWarehouseItem(
+				_user.getUserId(), _commerceInventoryWarehouse,
+				BigDecimal.valueOf(100), cpInstance.getSku(),
+				StringPool.BLANK));
+
+		_commerceChannelRel = CommerceTestUtil.addWarehouseCommerceChannelRel(
+			_commerceInventoryWarehouse.getCommerceInventoryWarehouseId(),
+			_commerceChannel.getCommerceChannelId());
+
+		CommerceOrder commerceOrder =
+			_commerceOrderLocalService.addCommerceOrder(
+				_user.getUserId(), _commerceChannel.getGroupId(),
+				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
+
+		_commerceOrders.add(commerceOrder);
+
+		String[] options1 = {
+			"[{\"skuOptionKey\":\"package-quantity\"," +
+				"\"skuOptionValueKey\":\"12\"}]",
+			"[{\"skuOptionKey\":\"package-quantity\",\"value\":\"12\"}]",
+			"[{\"skuOptionKey\":\"package-quantity\",\"value\":\"12\"}]",
+			"[{\"skuOptionKey\":\"package-quantity\",\"value\":\"12\"}," +
+				"{\"skuOptionKey\":\"quantity\",\"value\":\"10\"}]",
+			"[{\"skuOptionKey\":\"package-quantity\",\"value\":\"12\"}]"
+		};
+		String[] options2 = {
+			"[{\"skuOptionKey\":\"package-quantity\"," +
+				"\"skuOptionValueKey\":\"13\"}]",
+			"[{\"skuOptionKey\":\"package-quantity\",\"value\":\"13\"}]",
+			"[{\"skuOptionKey\":\"quantity\",\"value\":\"12\"}]",
+			"[{\"skuOptionKey\":\"quantity\",\"value\":\"12\"}]",
+			"[{\"test\":\"package-quantity\",\"value\":\"12\"}]"
+		};
+
+		for (int i = 0; i < options1.length; i++) {
+			_commerceOrderItemLocalService.addOrUpdateCommerceOrderItem(
+				_user.getUserId(), commerceOrder.getCommerceOrderId(),
+				cpInstance.getCPInstanceId(), options1[i], BigDecimal.ONE, 0,
+				BigDecimal.ZERO, StringPool.BLANK, _commerceContext,
+				_serviceContext);
+
+			List<CommerceOrderItem> commerceOrderItems =
+				commerceOrder.getCommerceOrderItems();
+
+			Assert.assertEquals(
+				options1[i] + options2[i], 1, commerceOrderItems.size());
+
+			_commerceOrderItemLocalService.addOrUpdateCommerceOrderItem(
+				_user.getUserId(), commerceOrder.getCommerceOrderId(),
+				cpInstance.getCPInstanceId(), options1[i], BigDecimal.ONE, 0,
+				BigDecimal.ZERO, StringPool.BLANK, _commerceContext,
+				_serviceContext);
+
+			commerceOrderItems = commerceOrder.getCommerceOrderItems();
+
+			Assert.assertEquals(
+				options1[i] + options2[i], 1, commerceOrderItems.size());
+
+			CommerceOrderItem commerceOrderItem = commerceOrderItems.get(0);
+
+			Assert.assertTrue(
+				options1[i] + options2[i],
+				BigDecimalUtil.eq(
+					BigDecimal.valueOf(2), commerceOrderItem.getQuantity()));
+
+			_commerceOrderItemLocalService.addOrUpdateCommerceOrderItem(
+				_user.getUserId(), commerceOrder.getCommerceOrderId(),
+				cpInstance.getCPInstanceId(), options2[i], BigDecimal.ONE, 0,
+				BigDecimal.ZERO, StringPool.BLANK, _commerceContext,
+				_serviceContext);
+
+			commerceOrderItems = commerceOrder.getCommerceOrderItems();
+
+			Assert.assertEquals(
+				options1[i] + options2[i], 2, commerceOrderItems.size());
+
+			_commerceOrderItemLocalService.deleteCommerceOrderItems(
+				_user.getUserId(), commerceOrder.getCommerceOrderId());
+		}
 	}
 
 	@Test
@@ -480,8 +584,8 @@ public class CommerceOrderItemLocalServiceTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				_accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		_commerceOrders.add(commerceOrder);
 
@@ -564,14 +668,21 @@ public class CommerceOrderItemLocalServiceTest {
 		Assert.assertTrue(
 			BigDecimalUtil.eq(quantity, bundleOrderItem.getQuantity()));
 
-		Assert.assertEquals(option2Price, bundleOrderItem.getFinalPrice());
+		BigDecimal bundleOrderItemFinalPrice = bundleOrderItem.getFinalPrice();
+
+		Assert.assertEquals(
+			option2Price,
+			BigDecimalUtil.stripTrailingZeros(bundleOrderItemFinalPrice));
 
 		CommerceOrder retrievedOrder =
 			_commerceOrderLocalService.getCommerceOrder(
 				commerceOrder.getCommerceOrderId());
 
+		BigDecimal retrievedOrderTotal = retrievedOrder.getTotal();
+
 		Assert.assertEquals(
-			bundleOrderItem.getFinalPrice(), retrievedOrder.getTotal());
+			BigDecimalUtil.stripTrailingZeros(bundleOrderItemFinalPrice),
+			BigDecimalUtil.stripTrailingZeros(retrievedOrderTotal));
 	}
 
 	@Test
@@ -1025,8 +1136,8 @@ public class CommerceOrderItemLocalServiceTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				_accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		_commerceOrders.add(commerceOrder);
 
@@ -1249,8 +1360,8 @@ public class CommerceOrderItemLocalServiceTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				_accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		_commerceOrders.add(commerceOrder);
 
@@ -1326,8 +1437,8 @@ public class CommerceOrderItemLocalServiceTest {
 		CommerceOrder commerceOrder =
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
-				_accountEntry.getAccountEntryId(),
-				_commerceCurrency.getCommerceCurrencyId(), 0);
+				_accountEntry.getAccountEntryId(), _commerceCurrency.getCode(),
+				0);
 
 		_commerceOrders.add(commerceOrder);
 

@@ -770,16 +770,19 @@ public class PortalUtil {
 	}
 
 	public static String getEmailFromAddress(
-		PortletPreferences preferences, long companyId, String defaultValue) {
+		PortletPreferences portletPreferences, long companyId,
+		String defaultValue) {
 
 		return _portal.getEmailFromAddress(
-			preferences, companyId, defaultValue);
+			portletPreferences, companyId, defaultValue);
 	}
 
 	public static String getEmailFromName(
-		PortletPreferences preferences, long companyId, String defaultValue) {
+		PortletPreferences portletPreferences, long companyId,
+		String defaultValue) {
 
-		return _portal.getEmailFromName(preferences, companyId, defaultValue);
+		return _portal.getEmailFromName(
+			portletPreferences, companyId, defaultValue);
 	}
 
 	public static String getForwardedHost(
@@ -1028,14 +1031,6 @@ public class PortalUtil {
 
 	public static Locale getLocale(PortletRequest portletRequest) {
 		return _portal.getLocale(portletRequest);
-	}
-
-	public static String getLocalizedFriendlyURL(
-		HttpServletRequest httpServletRequest, Layout layout, Locale locale,
-		Locale originalLocale) {
-
-		return _portal.getLocalizedFriendlyURL(
-			httpServletRequest, layout, locale, originalLocale);
 	}
 
 	public static String getMailId(
@@ -1599,10 +1594,6 @@ public class PortalUtil {
 		throws PortalException {
 
 		return _portal.getWidgetURL(portlet, themeDisplay);
-	}
-
-	public static void initCustomSQL() {
-		_portal.initCustomSQL();
 	}
 
 	public static User initUser(HttpServletRequest httpServletRequest)

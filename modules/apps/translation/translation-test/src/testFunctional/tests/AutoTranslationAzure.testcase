@@ -135,7 +135,7 @@ definition {
 		Translations.viewTargetFields(
 			webContentContent = "Contenido del WC",
 			webContentDescription = "",
-			webContentTitle = "Título WC");
+			webContentTitle = "Título del WC");
 
 		PortletEntry.publish();
 
@@ -149,7 +149,7 @@ definition {
 		Translations.viewTargetFields(
 			webContentContent = "Contenido del WC",
 			webContentDescription = "",
-			webContentTitle = "Título WC");
+			webContentTitle = "Título del WC");
 	}
 
 	@description = "This ensures that the web content title and content filed can be translated independently"
@@ -175,14 +175,14 @@ definition {
 		Translations.translateSpecificField(fieldName = "Content");
 
 		Translations.viewTargetFields(
-			webContentContent = "これはウェブ記事の内容です",
+			webContentContent = "これはWeb記事の内容です",
 			webContentDescription = "WC description",
 			webContentTitle = "This is the title of a web article");
 
 		Translations.translateSpecificField(fieldName = "Title");
 
 		Translations.viewTargetFields(
-			webContentContent = "これはウェブ記事の内容です",
+			webContentContent = "これはWeb記事の内容です",
 			webContentDescription = "WC description",
 			webContentTitle = "これはウェブ記事のタイトルです");
 
@@ -196,7 +196,7 @@ definition {
 			webContentTitle = "This is the title of a web article");
 
 		Translations.viewTargetFields(
-			webContentContent = "これはウェブ記事の内容です",
+			webContentContent = "これはWeb記事の内容です",
 			webContentDescription = "WC description",
 			webContentTitle = "これはウェブ記事のタイトルです");
 	}

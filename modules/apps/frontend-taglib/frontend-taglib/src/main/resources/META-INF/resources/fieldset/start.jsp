@@ -25,16 +25,33 @@ else if (collapsible) {
 			<liferay-util:buffer
 				var="header"
 			>
-				<liferay-ui:message key="<%= label %>" localizeKey="<%= localizeLabel %>" />
+				<div class="d-flex">
+					<liferay-ui:message key="<%= label %>" localizeKey="<%= localizeLabel %>" />
 
-				<c:if test="<%= Validator.isNotNull(helpMessage) %>">
-					<liferay-ui:icon-help message="<%= helpMessage %>" />
-				</c:if>
+					<c:if test="<%= Validator.isNotNull(helpMessage) %>">
+						<clay:icon
+							aria-label="<%= helpMessage %>"
+							cssClass="lfr-portal-tooltip"
+							symbol="question-circle-full"
+							title="<%= helpMessage %>"
+						/>
+					</c:if>
+
+					<c:if test="<%= deprecated %>">
+						<liferay-frontend:feature-indicator
+							type="deprecated"
+						/>
+					</c:if>
+				</div>
 			</liferay-util:buffer>
 
 			<c:choose>
 				<c:when test="<%= collapsible %>">
-					<a aria-controls="<%= id %>Content" aria-expanded="<%= !collapsed %>" class="collapse-icon <%= collapsed ? "collapsed" : StringPool.BLANK %> sheet-subtitle" data-toggle="liferay-collapse" href="#<%= id %>Content" id="<%= id %>Toggle" role="tab">
+					<legend class="sr-only">
+						<%= header %>
+					</legend>
+
+					<a aria-controls="<%= id %>Content" aria-expanded="<%= !collapsed %>" class="collapse-icon <%= collapsed ? "collapsed" : StringPool.BLANK %> sheet-subtitle" data-toggle="liferay-collapse" href="#<%= id %>Content" role="button">
 						<span>
 							<%= header %>
 						</span>
@@ -58,5 +75,5 @@ else if (collapsible) {
 		</c:otherwise>
 	</c:choose>
 
-	<div aria-labelledby="<%= id %>Toggle" class="<%= !collapsed ? "show" : StringPool.BLANK %> <%= collapsible ? "panel-collapse collapse" : StringPool.BLANK %> <%= column ? "row" : StringPool.BLANK %>" id="<%= id %>Content" role="tabpanel">
+	<div class="<%= !collapsed ? "show" : StringPool.BLANK %> <%= collapsible ? "panel-collapse collapse" : StringPool.BLANK %> <%= column ? "row" : StringPool.BLANK %>" id="<%= id %>Content" role="presentation">
 		<div class="<%= collapsible ? "panel-body" : StringPool.BLANK %>">

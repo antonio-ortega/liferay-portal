@@ -44,8 +44,9 @@ public class OrderNoteResourceImpl extends BaseOrderNoteResourceImpl {
 		throws Exception {
 
 		CommerceOrderNote commerceOrderNote =
-			_commerceOrderNoteService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceOrderNoteService.
+				fetchCommerceOrderNoteByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrderNote == null) {
 			throw new NoSuchOrderNoteException(
@@ -64,7 +65,7 @@ public class OrderNoteResourceImpl extends BaseOrderNoteResourceImpl {
 		throws Exception {
 
 		CommerceOrder commerceOrder =
-			_commerceOrderService.fetchByExternalReferenceCode(
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {
@@ -78,11 +79,11 @@ public class OrderNoteResourceImpl extends BaseOrderNoteResourceImpl {
 				commerceOrder.getCommerceOrderId(),
 				pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems = _commerceOrderNoteService.getCommerceOrderNotesCount(
+		int totalCount = _commerceOrderNoteService.getCommerceOrderNotesCount(
 			commerceOrder.getCommerceOrderId());
 
 		return Page.of(
-			_toOrderNotes(commerceOrderNotes), pagination, totalItems);
+			_toOrderNotes(commerceOrderNotes), pagination, totalCount);
 	}
 
 	@Override
@@ -94,11 +95,11 @@ public class OrderNoteResourceImpl extends BaseOrderNoteResourceImpl {
 			_commerceOrderNoteService.getCommerceOrderNotes(
 				id, pagination.getStartPosition(), pagination.getEndPosition());
 
-		int totalItems = _commerceOrderNoteService.getCommerceOrderNotesCount(
+		int totalCount = _commerceOrderNoteService.getCommerceOrderNotesCount(
 			id);
 
 		return Page.of(
-			_toOrderNotes(commerceOrderNotes), pagination, totalItems);
+			_toOrderNotes(commerceOrderNotes), pagination, totalCount);
 	}
 
 	@Override
@@ -115,8 +116,9 @@ public class OrderNoteResourceImpl extends BaseOrderNoteResourceImpl {
 		throws Exception {
 
 		CommerceOrderNote commerceOrderNote =
-			_commerceOrderNoteService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceOrderNoteService.
+				fetchCommerceOrderNoteByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrderNote == null) {
 			throw new NoSuchOrderNoteException(
@@ -148,8 +150,9 @@ public class OrderNoteResourceImpl extends BaseOrderNoteResourceImpl {
 		throws Exception {
 
 		CommerceOrderNote commerceOrderNote =
-			_commerceOrderNoteService.fetchByExternalReferenceCode(
-				externalReferenceCode, contextCompany.getCompanyId());
+			_commerceOrderNoteService.
+				fetchCommerceOrderNoteByExternalReferenceCode(
+					externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrderNote == null) {
 			throw new NoSuchOrderNoteException(
@@ -170,7 +173,7 @@ public class OrderNoteResourceImpl extends BaseOrderNoteResourceImpl {
 		throws Exception {
 
 		CommerceOrder commerceOrder =
-			_commerceOrderService.fetchByExternalReferenceCode(
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
 				externalReferenceCode, contextCompany.getCompanyId());
 
 		if (commerceOrder == null) {

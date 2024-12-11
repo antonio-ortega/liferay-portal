@@ -37,34 +37,8 @@ describe('utils', () => {
 
 	describe('getSupportedOperatorsFromType', () => {
 		it('returns an array of supported operators', () => {
-			const operators = [
-				{
-					label: Liferay.Language.get('equals'),
-					name: 'eq',
-				},
-				{
-					label: Liferay.Language.get('greater-than-or-equals'),
-					name: 'ge',
-				},
-				{
-					label: Liferay.Language.get('greater-than'),
-					name: 'gt',
-				},
-				{
-					label: Liferay.Language.get('not-equals'),
-					name: 'not-eq',
-				},
-			];
-
-			const propertyTypes = {
-				boolean: ['eq', 'not-eq'],
-			};
-
-			const supportedOperators = Utils.getSupportedOperatorsFromType(
-				operators,
-				propertyTypes,
-				'boolean'
-			);
+			const supportedOperators =
+				Utils.getSupportedOperatorsFromType('boolean');
 
 			expect(supportedOperators).toEqual([
 				{

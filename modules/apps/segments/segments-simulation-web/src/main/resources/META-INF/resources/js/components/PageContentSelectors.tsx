@@ -9,7 +9,7 @@ import {
 	ExperienceSelector,
 	SegmentExperience,
 } from '@liferay/layout-js-components-web';
-import {fetch, sub} from 'frontend-js-web';
+import {sub} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
 import SegmentEntry from '../../types/SegmentEntry';
@@ -17,14 +17,12 @@ import PreviewSelector from './PreviewSelector';
 import SegmentSelector from './SegmentSelector';
 
 interface Props {
-	deactivateSimulationURL: string;
 	namespace: string;
 	portletNamespace: string;
 	segmentationEnabled: boolean;
 	segmentsCompanyConfigurationURL: string;
 	segmentsEntries: SegmentEntry[];
 	segmentsExperiences: SegmentExperience[];
-	simulateSegmentsEntriesURL: string;
 }
 
 const DEFAULT_PREVIEW_OPTION = {
@@ -40,13 +38,11 @@ const PREVIEW_OPTIONS = [
 ];
 
 function PageContentSelectors({
-	deactivateSimulationURL,
 	namespace,
 	segmentationEnabled,
 	segmentsCompanyConfigurationURL,
 	segmentsEntries,
 	segmentsExperiences,
-	simulateSegmentsEntriesURL,
 }: Props) {
 	const [alertVisible, setAlertVisible] = useState(!segmentationEnabled);
 	const [selectedPreviewOption, setSelectedPreviewOption] = useState(
@@ -55,59 +51,40 @@ function PageContentSelectors({
 	const [selectedSegmentEntry, setSelectedSegmentEntry] = useState(
 		segmentsEntries?.[0]
 	);
-	const [
-		selectedSegmentsExperience,
-		setSelectedSegmentsExperience,
-	] = useState(segmentsExperiences?.[0]);
+	const [selectedSegmentsExperience, setSelectedSegmentsExperience] =
+		useState(segmentsExperiences?.[0]);
 
 	const formRef = useRef(null);
 	const firstRenderRef = useRef(true);
 
-	const fetchDeactivateSimulation = useCallback(() => {
-		if (formRef.current) {
-			fetch(deactivateSimulationURL, {
-				body: new FormData(formRef.current),
-				method: 'POST',
-			});
-		}
-	}, [deactivateSimulationURL]);
+	const simulateSegmentsEntries = useCallback(
+		(segmentsEntryId: any) => {
+			const iframe = document.querySelector('iframe');
 
-	const simulateSegmentsEntries = useCallback(() => {
-		if (formRef.current) {
-			Liferay.componentReady('SimulationPreview').then(
-				(simulationPreview) => {
-					simulationPreview.setMessage(
-						sub(
-							Liferay.Language.get(
-								'showing-content-for-the-segment-x'
-							),
-							selectedSegmentEntry.name
-						)
-					);
-				}
-			);
+			if (iframe) {
+				Liferay.componentReady('SimulationPreview').then(
+					(simulationPreview) => {
+						simulationPreview.setMessage(
+							sub(
+								Liferay.Language.get(
+									'showing-content-for-the-segment-x'
+								),
+								selectedSegmentEntry?.name
+							)
+						);
+					}
+				);
+				const url = new URL(iframe.src);
 
-			fetch(simulateSegmentsEntriesURL, {
-				body: new FormData(
-					formRef.current ? formRef.current : undefined
-				),
-				method: 'POST',
-			}).then(() => {
-				const iframe = document.querySelector('iframe');
+				url.searchParams.set('segmentsEntryId', segmentsEntryId);
+				iframe.src = url.toString();
+			}
+		},
+		[selectedSegmentEntry]
+	);
 
-				if (iframe) {
-
-					// LPS-191073 Reload the iframe content by updating its src because
-					// iframe.contentWindow.location.reload() does not always work correctly
-
-					iframe.src += '';
-				}
-			});
-		}
-	}, [selectedSegmentEntry, simulateSegmentsEntriesURL]);
-
-	const simulateSegmentsExperiment = useCallback(
-		(experience) => {
+	const simulateSegmentsExperience = useCallback(
+		(experience: any) => {
 			const iframe = document.querySelector('iframe');
 
 			if (iframe) {
@@ -141,26 +118,22 @@ function PageContentSelectors({
 			return;
 		}
 
-		// @ts-ignore
+		const sidenavInstance =
 
-		const sidenavInstance = Liferay.SideNavigation.initialize(
-			simulationToggle
-		);
+			// @ts-ignore
 
-		sidenavInstance.on('closed.lexicon.sidenav', () => {
-			fetchDeactivateSimulation();
-		});
+			Liferay.SideNavigation.initialize(simulationToggle);
 
 		sidenavInstance.on('open.lexicon.sidenav', () => {
 			if (!firstRenderRef.current) {
-				simulateSegmentsEntries();
+				simulateSegmentsEntries(selectedSegmentEntry?.id);
 			}
 		});
 
 		if (firstRenderRef.current) {
 			if (sidenavInstance && sidenavInstance.visible()) {
 				firstRenderRef.current = false;
-				simulateSegmentsEntries();
+				simulateSegmentsEntries(selectedSegmentEntry?.id);
 			}
 		}
 
@@ -170,21 +143,23 @@ function PageContentSelectors({
 
 			Liferay.SideNavigation.destroy(simulationToggle);
 		};
-	}, [fetchDeactivateSimulation, simulateSegmentsEntries]);
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	});
 
 	useEffect(() => {
 		if (!firstRenderRef.current) {
-			simulateSegmentsEntries();
+			simulateSegmentsEntries(selectedSegmentEntry?.id);
 		}
 	}, [selectedSegmentEntry, simulateSegmentsEntries]);
 
 	useEffect(() => {
 		if (!firstRenderRef.current) {
-			simulateSegmentsExperiment(
+			simulateSegmentsExperience(
 				selectedSegmentsExperience?.segmentsExperienceId
 			);
 		}
-	}, [selectedSegmentsExperience, simulateSegmentsExperiment]);
+	}, [selectedSegmentsExperience, simulateSegmentsExperience]);
 
 	useEffect(() => {
 		if (firstRenderRef.current) {
@@ -203,20 +178,14 @@ function PageContentSelectors({
 			url.searchParams.delete('segmentsExperienceId');
 			iframe.src = url.toString();
 
-			simulateSegmentsEntries();
+			simulateSegmentsEntries(selectedSegmentEntry?.id);
 		}
 		else {
-			fetch(deactivateSimulationURL, {
-				body: new FormData(
-					formRef.current ? formRef.current : undefined
-				),
-				method: 'POST',
-			}).then(() => {
-				simulateSegmentsExperiment(
-					selectedSegmentsExperience?.segmentsExperienceId
-				);
-			});
+			simulateSegmentsExperience(
+				selectedSegmentsExperience?.segmentsExperienceId
+			);
 		}
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [selectedPreviewOption]);
 

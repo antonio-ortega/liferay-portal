@@ -33,6 +33,7 @@ import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,9 +76,14 @@ public abstract class BaseBuild implements Build {
 		}
 
 		ParallelExecutor<Object> parallelExecutor = new ParallelExecutor<>(
-			getArchiveCallables(), getExecutorService());
+			getArchiveCallables(), getExecutorService(), "archive");
 
-		parallelExecutor.execute();
+		try {
+			parallelExecutor.execute();
+		}
+		catch (TimeoutException timeoutException) {
+			throw new RuntimeException(timeoutException);
+		}
 	}
 
 	@Override
@@ -235,6 +241,7 @@ public abstract class BaseBuild implements Build {
 		return gitRepositoryGitDetailsTempMap.get("github.upstream.branch.sha");
 	}
 
+	@Override
 	public String getBatchName(String jobVariant) {
 		jobVariant = jobVariant.replaceAll("(.*)/.*", "$1");
 
@@ -247,10 +254,32 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
+	public BuildDatabase getBuildDatabase() {
+		if (_buildDatabase != null) {
+			return _buildDatabase;
+		}
+
+		TopLevelBuild topLevelBuild = getTopLevelBuild();
+
+		if ((topLevelBuild != null) && (topLevelBuild != this)) {
+			_buildDatabase = topLevelBuild.getBuildDatabase();
+		}
+		else {
+			_buildDatabase = BuildDatabaseUtil.getBuildDatabase(this);
+		}
+
+		return _buildDatabase;
+	}
+
+	@Override
 	public String getBuildDescription() {
 		if ((_buildDescription == null) && (getBuildURL() != null)) {
 			JSONObject descriptionJSONObject = getBuildJSONObject(
 				"description");
+
+			if (descriptionJSONObject == null) {
+				return null;
+			}
 
 			String description = descriptionJSONObject.optString("description");
 
@@ -323,7 +352,13 @@ public abstract class BaseBuild implements Build {
 			return new JSONObject(archiveFileContent);
 		}
 
-		return JenkinsAPIUtil.getAPIJSONObject(getBuildURL(), tree);
+		String buildURL = getBuildURL();
+
+		if (JenkinsResultsParserUtil.isNullOrEmpty(buildURL)) {
+			return null;
+		}
+
+		return JenkinsAPIUtil.getAPIJSONObject(buildURL, tree);
 	}
 
 	@Override
@@ -451,7 +486,7 @@ public abstract class BaseBuild implements Build {
 			invokedTime = currentTime;
 		}
 
-		return startTime - invokedTime;
+		return startTime - invokedTime + getQueuingDuration();
 	}
 
 	@Override
@@ -508,19 +543,38 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public String getFailureMessage() {
-		Element failureMessageElement = getFailureMessageElement();
+		for (FailureMessageGenerator failureMessageGenerator :
+				getFailureMessageGenerators()) {
 
-		if (failureMessageElement == null) {
-			return null;
+			try {
+				String failureMessage = failureMessageGenerator.getMessage(
+					this);
+
+				if (failureMessage != null) {
+					return failureMessage;
+				}
+			}
+			catch (Exception exception) {
+				exception.printStackTrace();
+
+				Class<?> clazz = failureMessageGenerator.getClass();
+
+				String className = clazz.getName();
+
+				StringBuilder sb = new StringBuilder();
+
+				sb.append("Unable to get failure message from " + className);
+				sb.append(className);
+				sb.append("\n");
+				sb.append(getBuildURL());
+
+				NotificationUtil.sendEmail(
+					sb.toString(), "jenkins", "Unable to get failure message",
+					"calum.ragan@liferay.com");
+			}
 		}
 
-		Element codeElement = failureMessageElement.element("code");
-
-		if (codeElement == null) {
-			return null;
-		}
-
-		return codeElement.getText();
+		return null;
 	}
 
 	@Override
@@ -565,6 +619,10 @@ public abstract class BaseBuild implements Build {
 	}
 
 	public Element getGitHubMessageElement(boolean showCommonFailuresCount) {
+		if (_gitHubMessageElement != null) {
+			return _gitHubMessageElement;
+		}
+
 		if (!Objects.equals(getStatus(), "completed") &&
 			(getParentBuild() != null)) {
 
@@ -609,7 +667,9 @@ public abstract class BaseBuild implements Build {
 			messageElement.add(failureMessageElement);
 		}
 
-		return messageElement;
+		_gitHubMessageElement = messageElement;
+
+		return _gitHubMessageElement;
 	}
 
 	@Override
@@ -621,6 +681,8 @@ public abstract class BaseBuild implements Build {
 	public Map<String, String> getInjectedEnvironmentVariablesMap()
 		throws IOException {
 
+		Map<String, String> injectedEnvironmentVariablesMap = new HashMap<>();
+
 		String localBuildURL = JenkinsResultsParserUtil.getLocalURL(
 			getBuildURL());
 
@@ -630,8 +692,6 @@ public abstract class BaseBuild implements Build {
 		JSONObject envMapJSONObject = jsonObject.getJSONObject("envMap");
 
 		Set<String> envMapJSONObjectKeySet = envMapJSONObject.keySet();
-
-		Map<String, String> injectedEnvironmentVariablesMap = new HashMap<>();
 
 		for (String key : envMapJSONObjectKeySet) {
 			injectedEnvironmentVariablesMap.put(
@@ -789,6 +849,10 @@ public abstract class BaseBuild implements Build {
 
 		JSONObject builtOnJSONObject = getBuildJSONObject("builtOn");
 
+		if (builtOnJSONObject == null) {
+			return null;
+		}
+
 		String slaveName = builtOnJSONObject.optString("builtOn");
 
 		if (slaveName.equals("")) {
@@ -855,11 +919,11 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public TestResult getLongestRunningTest() {
+		TestResult longestRunningTest = null;
+
 		List<TestResult> testResults = getTestResults(null);
 
 		long longestTestDuration = 0;
-
-		TestResult longestRunningTest = null;
 
 		for (TestResult testResult : testResults) {
 			long testDuration = testResult.getDuration();
@@ -948,6 +1012,10 @@ public abstract class BaseBuild implements Build {
 		JSONObject buildJSONObject = getBuildJSONObject(
 			"actions[queuingDurationMillis]");
 
+		if (buildJSONObject == null) {
+			return 0;
+		}
+
 		JSONArray actionsJSONArray = buildJSONObject.getJSONArray("actions");
 
 		for (int i = 0; i < actionsJSONArray.length(); i++) {
@@ -982,6 +1050,10 @@ public abstract class BaseBuild implements Build {
 		}
 
 		JSONObject buildJSONObject = getBuildJSONObject("result");
+
+		if (buildJSONObject == null) {
+			return "MISSING";
+		}
 
 		String result = buildJSONObject.optString("result");
 
@@ -1047,14 +1119,16 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public StopWatchRecordsGroup getStopWatchRecordsGroup() {
-		if (!Objects.equals(getStatus(), "completed")) {
-			_stopWatchRecordsGroup = null;
+		if (!(this instanceof TopLevelBuild)) {
+			if (!Objects.equals(getStatus(), "completed")) {
+				_stopWatchRecordsGroup = null;
 
-			return new StopWatchRecordsGroup();
-		}
+				return new StopWatchRecordsGroup();
+			}
 
-		if (_stopWatchRecordsGroup != null) {
-			return _stopWatchRecordsGroup;
+			if (_stopWatchRecordsGroup != null) {
+				return _stopWatchRecordsGroup;
+			}
 		}
 
 		_stopWatchRecordsGroup = new StopWatchRecordsGroup();
@@ -1174,6 +1248,13 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
+	public String getTestrayBuildDateString() {
+		return JenkinsResultsParserUtil.toDateString(
+			new Date(getStartTime()), "yyyy-MM-dd HH:mm:ss",
+			"America/Los_Angeles");
+	}
+
+	@Override
 	public synchronized List<URL> getTestrayS3AttachmentURLs() {
 		if (_testrayS3AttachmentURLs != null) {
 			return _testrayS3AttachmentURLs;
@@ -1220,7 +1301,7 @@ public abstract class BaseBuild implements Build {
 		try {
 			return JenkinsResultsParserUtil.toJSONObject(
 				JenkinsResultsParserUtil.getLocalURL(getBuildURL() + urlSuffix),
-				checkCache);
+				checkCache, 5000);
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(
@@ -1262,6 +1343,12 @@ public abstract class BaseBuild implements Build {
 	@Override
 	public TopLevelBuild getTopLevelBuild() {
 		Build topLevelBuild = this;
+
+		Build parentBuild = topLevelBuild.getParentBuild();
+
+		if (parentBuild instanceof JenkinsTopLevelBuild) {
+			return (TopLevelBuild)parentBuild;
+		}
 
 		while ((topLevelBuild != null) &&
 			   !(topLevelBuild instanceof TopLevelBuild)) {
@@ -1474,7 +1561,19 @@ public abstract class BaseBuild implements Build {
 		_jenkinsMaster = null;
 		_jenkinsSlave = null;
 		_result = null;
-		_statusModifiedTime = 0;
+		_statusModifiedTime = JenkinsResultsParserUtil.getCurrentTimeMillis();
+
+		if (_buildUpdater != null) {
+			_buildUpdater.reset();
+		}
+	}
+
+	@Override
+	public void saveBuildURLInBuildDatabase() {
+		BuildDatabase buildDatabase = getBuildDatabase();
+
+		buildDatabase.putProperty(
+			BUILD_URLS_PROPERTIES_KEY, getJobVariant(), getBuildURL(), false);
 	}
 
 	@Override
@@ -1524,23 +1623,21 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public void setStatus(String status) {
-		if (_isDifferent(status, _status)) {
-			_previousStatus = _status;
+		boolean different = _isDifferent(status, _status);
 
-			_status = status;
+		_previousStatus = _status;
 
-			long previousStatusModifiedTime = _statusModifiedTime;
+		_status = status;
 
-			_statusModifiedTime =
-				JenkinsResultsParserUtil.getCurrentTimeMillis();
+		long previousStatusModifiedTime = _statusModifiedTime;
 
-			_statusDurations.put(
-				_previousStatus,
-				_statusModifiedTime - previousStatusModifiedTime);
+		_statusModifiedTime = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
-			if (isParentBuildRoot()) {
-				System.out.println(getBuildMessage());
-			}
+		_statusDurations.put(
+			_previousStatus, _statusModifiedTime - previousStatusModifiedTime);
+
+		if (different && isParentBuildRoot()) {
+			System.out.println(getBuildMessage());
 		}
 	}
 
@@ -1550,53 +1647,14 @@ public abstract class BaseBuild implements Build {
 			return;
 		}
 
-		String pinnedMessage = "";
-
-		if (!slaveOfflineRule.shutdown) {
-			pinnedMessage = "PINNED\n";
-		}
-
-		JenkinsSlave jenkinsSlave = getJenkinsSlave();
-
-		JenkinsMaster jenkinsMaster = jenkinsSlave.getJenkinsMaster();
-
-		String slaveOfflineRuleString = slaveOfflineRule.toString();
-
-		slaveOfflineRuleString = slaveOfflineRuleString.replace("\\", "\\\\");
-
-		String message = JenkinsResultsParserUtil.combine(
-			pinnedMessage, slaveOfflineRule.getName(), " failure detected at ",
-			getBuildURL(), ". ", jenkinsSlave.getName(),
-			" will be taken offline.\n\n", slaveOfflineRuleString,
-			"\n\n\nOffline Slave URL: https://", jenkinsMaster.getName(),
-			".liferay.com/computer/", jenkinsSlave.getName(), "\n");
-
-		System.out.println(message);
-
-		TopLevelBuild topLevelBuild = getTopLevelBuild();
-
-		if (topLevelBuild != null) {
-			message = JenkinsResultsParserUtil.combine(
-				message, "Top Level Build URL: ", topLevelBuild.getBuildURL());
-		}
-
-		jenkinsSlave.takeSlavesOffline(message);
-
-		String notificationRecipients =
-			slaveOfflineRule.getNotificationRecipients();
-
-		if ((notificationRecipients != null) &&
-			!notificationRecipients.isEmpty()) {
-
-			NotificationUtil.sendEmail(
-				message, "jenkins", "Slave Offline",
-				slaveOfflineRule.notificationRecipients);
-		}
+		slaveOfflineRule.takeSlaveOffline(this);
 	}
 
 	@Override
 	public synchronized void update() {
 		if (skipUpdate()) {
+			System.out.println("Skipping build status: " + getStatus());
+
 			return;
 		}
 
@@ -1785,6 +1843,21 @@ public abstract class BaseBuild implements Build {
 		}
 
 		@Override
+		public String getSenderBranchSHAShort() {
+			String senderBranchSHA = getSenderBranchSHA();
+
+			if (senderBranchSHA == null) {
+				return null;
+			}
+
+			if (senderBranchSHA.length() >= 7) {
+				senderBranchSHA = senderBranchSHA.substring(0, 7);
+			}
+
+			return senderBranchSHA;
+		}
+
+		@Override
 		public RemoteGitRef getSenderRemoteGitRef() {
 			String remoteURL = JenkinsResultsParserUtil.combine(
 				"git@github.com:", getSenderUsername(), "/",
@@ -1916,8 +1989,6 @@ public abstract class BaseBuild implements Build {
 	protected BaseBuild(String url, Build parentBuild) {
 		_parentBuild = parentBuild;
 
-		_buildUpdater = BuildUpdaterFactory.newBuildUpdater(this);
-
 		if (url.contains("buildWithParameters")) {
 			_setInvocationURL(url);
 		}
@@ -1935,6 +2006,8 @@ public abstract class BaseBuild implements Build {
 				_archiveRootDir = new File(getBuildDirPath());
 			}
 		}
+
+		_buildUpdater = BuildUpdaterFactory.newBuildUpdater(this);
 
 		if (fromArchive || isFromCompletedBuild()) {
 			update();
@@ -1960,6 +2033,10 @@ public abstract class BaseBuild implements Build {
 
 	protected boolean archiveFileExists(String urlSuffix) {
 		File archiveFile = getArchiveFile(urlSuffix);
+
+		if (archiveFile == null) {
+			return false;
+		}
 
 		return archiveFile.exists();
 	}
@@ -2017,8 +2094,11 @@ public abstract class BaseBuild implements Build {
 	protected List<Callable<Object>> getArchiveCallables() {
 		List<Callable<Object>> archiveCallables = new ArrayList<>();
 
+		JenkinsMaster jenkinsMaster = getJenkinsMaster();
+
 		archiveCallables.add(
-			new Callable<Object>() {
+			new ParallelExecutor.SequentialCallable<Object>(
+				jenkinsMaster.getName()) {
 
 				@Override
 				public Object call() {
@@ -2029,7 +2109,8 @@ public abstract class BaseBuild implements Build {
 
 			});
 		archiveCallables.add(
-			new Callable<Object>() {
+			new ParallelExecutor.SequentialCallable<Object>(
+				jenkinsMaster.getName()) {
 
 				@Override
 				public Object call() {
@@ -2040,7 +2121,8 @@ public abstract class BaseBuild implements Build {
 
 			});
 		archiveCallables.add(
-			new Callable<Object>() {
+			new ParallelExecutor.SequentialCallable<Object>(
+				jenkinsMaster.getName()) {
 
 				@Override
 				public Object call() {
@@ -2051,7 +2133,8 @@ public abstract class BaseBuild implements Build {
 
 			});
 		archiveCallables.add(
-			new Callable<Object>() {
+			new ParallelExecutor.SequentialCallable<Object>(
+				jenkinsMaster.getName()) {
 
 				@Override
 				public Object call() {
@@ -2066,6 +2149,12 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected File getArchiveFile(String urlSuffix) {
+		JenkinsMaster jenkinsMaster = getJenkinsMaster();
+
+		if (jenkinsMaster == null) {
+			return null;
+		}
+
 		return new File(
 			getArchiveRootDir(), getArchivePath() + "/" + urlSuffix);
 	}
@@ -2077,7 +2166,7 @@ public abstract class BaseBuild implements Build {
 
 		File archiveFile = getArchiveFile(urlSuffix);
 
-		if (!archiveFile.exists()) {
+		if ((archiveFile == null) || !archiveFile.exists()) {
 			return null;
 		}
 
@@ -2174,7 +2263,7 @@ public abstract class BaseBuild implements Build {
 			if (status.equals("missing")) {
 				sb.append(" is missing ");
 				sb.append(getJobURL());
-				sb.append(".");
+				sb.append("/.");
 
 				return sb.toString();
 			}
@@ -2182,7 +2271,7 @@ public abstract class BaseBuild implements Build {
 			if (status.equals("queued")) {
 				sb.append(" is queued at ");
 				sb.append(getJobURL());
-				sb.append(".");
+				sb.append("/.");
 
 				return sb.toString();
 			}
@@ -2228,7 +2317,7 @@ public abstract class BaseBuild implements Build {
 
 				sb.append(" invoked at ");
 				sb.append(jobURL);
-				sb.append(".");
+				sb.append("/.");
 
 				return sb.toString();
 			}
@@ -2701,8 +2790,7 @@ public abstract class BaseBuild implements Build {
 		Map<String, String> tempMap = new HashMap<>();
 
 		if (!fromArchive) {
-			BuildDatabase buildDatabase = BuildDatabaseUtil.getBuildDatabase(
-				this);
+			BuildDatabase buildDatabase = getBuildDatabase();
 
 			Properties properties = buildDatabase.getProperties(tempMapName);
 
@@ -2897,26 +2985,23 @@ public abstract class BaseBuild implements Build {
 			JenkinsResultsParserUtil.redact(replaceBuildURL(content)));
 	}
 
+	protected static final String BUILD_URLS_PROPERTIES_KEY =
+		"build-urls.properties";
+
 	protected static final int PIXELS_WIDTH_INDENT = 35;
-
-	protected static final String URL_BASE_FAILURES_JOB_UPSTREAM =
-		"https://test-1-0.liferay.com/userContent/testResults/";
-
-	protected static final String URL_BASE_TEMP_MAP =
-		"http://cloud-10-0-0-31.lax.liferay.com/osb-jenkins-web/map/";
 
 	protected static final Pattern jobNamePattern = Pattern.compile(
 		"(?<baseJob>[^\\(]+)\\((?<branchName>[^\\)]+)\\)");
 	protected static final Pattern stopWatchPattern = Pattern.compile(
 		JenkinsResultsParserUtil.combine(
-			"\\s*\\[stopwatch\\]\\s*\\[(?<name>[^:]+): ",
+			"\\s*(\\[beanshell\\])?\\s*\\[stopwatch\\]\\s*\\[(?<name>[^:]+): ",
 			"((?<minutes>\\d+):)?((?<seconds>\\d+))?\\.",
 			"(?<milliseconds>\\d+) sec\\]"));
 	protected static final Pattern stopWatchStartTimestampPattern =
 		Pattern.compile(
 			JenkinsResultsParserUtil.combine(
-				"\\s*\\[echo\\] (?<name>.*)\\.start\\.timestamp: ",
-				"(?<timestamp>.*)$"));
+				"\\s*(\\[beanshell\\])?\\s*\\[echo\\] (?<name>.*)" +
+					"\\.start\\.timestamp: (?<timestamp>.*)$"));
 	protected static final SimpleDateFormat stopWatchTimestampSimpleDateFormat =
 		new SimpleDateFormat("MM-dd-yyyy HH:mm:ss:SSS z");
 
@@ -2948,6 +3033,12 @@ public abstract class BaseBuild implements Build {
 			else {
 				readyToArchive = false;
 			}
+		}
+
+		JenkinsMaster jenkinsMaster = getJenkinsMaster();
+
+		if (jenkinsMaster == null) {
+			return;
 		}
 
 		File archiveFile = getArchiveFile(urlSuffix);
@@ -3281,8 +3372,6 @@ public abstract class BaseBuild implements Build {
 
 		addInvocation(invocation);
 
-		setStatus("running");
-
 		String result = buildJSONObject.optString("result");
 
 		if (!JenkinsResultsParserUtil.isNullOrEmpty(result)) {
@@ -3290,6 +3379,9 @@ public abstract class BaseBuild implements Build {
 
 			setResult(result);
 			setStatus("completed");
+		}
+		else {
+			setStatus("running");
 		}
 	}
 
@@ -3389,11 +3481,13 @@ public abstract class BaseBuild implements Build {
 	private final Map<String, BranchInformation> _branchInformationMap =
 		new HashMap<>();
 	private String _branchName;
+	private BuildDatabase _buildDatabase;
 	private String _buildDescription;
 	private Boolean _buildDurationsEnabled;
 	private final BuildUpdater _buildUpdater;
 	private String _buildURL;
 	private Long _duration;
+	private Element _gitHubMessageElement;
 	private final List<Invocation> _invocations = new ArrayList<>();
 	private int _invokedBatchSize;
 	private JenkinsCohort _jenkinsCohort;

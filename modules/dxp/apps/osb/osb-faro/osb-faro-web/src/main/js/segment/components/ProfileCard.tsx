@@ -4,6 +4,7 @@ import ClayIcon from '@clayui/icon';
 import ClayLink from '@clayui/link';
 import React from 'react';
 import {mapGrowthHistory} from 'shared/hoc/mappers/segment';
+import {ReportContainer} from 'shared/components/download-report/DownloadPDFReport';
 import {Routes, toRoute} from 'shared/util/router';
 import {Segment} from 'shared/util/records';
 import {SegmentGrowthChart} from './Growth';
@@ -30,7 +31,10 @@ const SegmentProfileCard: React.FC<ISegmentProfileCardProps> = ({
 	id,
 	segment: {anonymousIndividualCount, knownIndividualCount}
 }) => (
-	<Card className='segment-profile-card-root'>
+	<Card
+		className='segment-profile-card-root'
+		reportContainer={ReportContainer.SegmentMembershipCard}
+	>
 		<Card.Header>
 			<Card.Title>
 				{Liferay.Language.get('segment-membership')}

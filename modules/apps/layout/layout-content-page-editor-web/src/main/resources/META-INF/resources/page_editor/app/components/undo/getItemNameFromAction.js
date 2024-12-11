@@ -16,22 +16,39 @@ import getFragmentItem from '../../utils/getFragmentItem';
  * @return {string|null}
  */
 export function getItemNameFromAction({action, state}) {
+	if (action.ruleId) {
+		const rule =
+			action.layoutData.pageRules.find(
+				(rule) => rule.id === action.ruleId
+			) ||
+			state.layoutData.pageRules.find(
+				(rule) => rule.id === action.ruleId
+			);
+
+		return rule.name;
+	}
+
 	const fragmentEntryLinks = action.fragmentEntryLinks
 		? Object.values(action.fragmentEntryLinks).reduce(
 				(acc, fragmentEntryLink) => {
-					acc[
-						fragmentEntryLink.fragmentEntryLinkId
-					] = fragmentEntryLink;
+					acc[fragmentEntryLink.fragmentEntryLinkId] =
+						fragmentEntryLink;
 
 					return acc;
 				},
 				{}
-		  )
+			)
 		: state.fragmentEntryLinks;
 
+	const itemId = action.triggerItemId || action.itemId || action.itemIds?.[0];
+
+	if (action.itemIds?.length > 1) {
+		return Liferay.Language.get('elements');
+	}
+
 	const item =
-		state.layoutData?.items[action.itemId] ||
-		action.layoutData?.items[action.itemId] ||
+		state.layoutData?.items[itemId] ||
+		action.layoutData?.items[itemId] ||
 		getFragmentItem(state.layoutData, action.fragmentEntryLinkId) ||
 		getFragmentItem(action.layoutData, action.fragmentEntryLinkId);
 
@@ -39,5 +56,8 @@ export function getItemNameFromAction({action, state}) {
 		return null;
 	}
 
-	return selectLayoutDataItemLabel({fragmentEntryLinks}, item);
+	return selectLayoutDataItemLabel(
+		{fragmentEntryLinks, layoutData: state.layoutData},
+		item
+	);
 }

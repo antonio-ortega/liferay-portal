@@ -12,16 +12,17 @@ import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRespons
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.info.field.InfoField;
+import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.field.InfoFieldValue;
 import com.liferay.info.field.type.CategoriesInfoFieldType;
 import com.liferay.info.field.type.DateInfoFieldType;
+import com.liferay.info.field.type.DisplayPageInfoFieldType;
 import com.liferay.info.field.type.HTMLInfoFieldType;
 import com.liferay.info.field.type.ImageInfoFieldType;
 import com.liferay.info.field.type.MultiselectInfoFieldType;
 import com.liferay.info.field.type.NumberInfoFieldType;
 import com.liferay.info.field.type.TagsInfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
-import com.liferay.info.field.type.URLInfoFieldType;
 import com.liferay.info.form.InfoForm;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.InfoItemFieldValues;
@@ -37,6 +38,7 @@ import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -156,7 +158,7 @@ public class JournalArticleInfoItemFormProviderTest {
 		infoField = iterator.next();
 
 		Assert.assertEquals(
-			URLInfoFieldType.INSTANCE, infoField.getInfoFieldType());
+			DisplayPageInfoFieldType.INSTANCE, infoField.getInfoFieldType());
 		Assert.assertEquals("displayPageURL", infoField.getName());
 		Assert.assertFalse(infoField.isLocalizable());
 
@@ -247,6 +249,40 @@ public class JournalArticleInfoItemFormProviderTest {
 			"topic", StringUtil.toLowerCase(infoField.getName()));
 
 		Assert.assertFalse(iterator.hasNext());
+	}
+
+	@Test
+	@TestInfo({"LPS-106776", "LPS-118979"})
+	public void testGetInfoFormInfoFieldSets() throws Exception {
+		InfoItemFormProvider<JournalArticle> infoItemFormProvider =
+			(InfoItemFormProvider<JournalArticle>)
+				_infoItemServiceRegistry.getFirstInfoItemService(
+					InfoItemFormProvider.class, JournalArticle.class.getName());
+
+		JournalArticle journalArticle = _getJournalArticle();
+
+		InfoForm infoForm = infoItemFormProvider.getInfoForm(journalArticle);
+
+		_assertInfoFields(
+			new String[] {
+				"Title", "Description", "Publish Date", "Author Name",
+				"Author Profile Image", "Last Editor Name",
+				"Last Editor Profile Image"
+			},
+			infoForm, "basic-information");
+		_assertInfoFields(
+			new String[] {"All Categories", "Topic", "Tags"}, infoForm,
+			"categorization");
+		_assertInfoFields(
+			new String[] {
+				"Text", "Boolean", "Image", "Integer", "Text Box", "HTML"
+			},
+			infoForm, journalArticle.getDDMStructureKey());
+		_assertInfoFields(new String[] {"Default"}, infoForm, "display-page");
+		_assertInfoFields(
+			new String[] {"Display Date", "Expiration Date"}, infoForm,
+			"schedule");
+		_assertInfoFields(new String[0], infoForm, "templates");
 	}
 
 	@Test
@@ -377,6 +413,27 @@ public class JournalArticleInfoItemFormProviderTest {
 		Assert.assertEquals(
 			"<p><strong>Bold text</strong></p>",
 			htmlInfoFieldValue.getValue(LocaleUtil.getDefault()));
+	}
+
+	private void _assertInfoFields(
+		String[] expectedInfoFieldLabels, InfoForm infoForm, String name) {
+
+		InfoFieldSet infoFieldSet = (InfoFieldSet)infoForm.getInfoFieldSetEntry(
+			name);
+
+		List<InfoField<?>> infoFields = infoFieldSet.getAllInfoFields();
+
+		Assert.assertEquals(
+			infoFields.toString(), expectedInfoFieldLabels.length,
+			infoFields.size());
+
+		for (int i = 0; i < expectedInfoFieldLabels.length; i++) {
+			InfoField<?> infoField = infoFields.get(i);
+
+			Assert.assertEquals(
+				expectedInfoFieldLabels[i],
+				infoField.getLabel(LocaleUtil.getSiteDefault()));
+		}
 	}
 
 	private JournalArticle _getJournalArticle() throws Exception {

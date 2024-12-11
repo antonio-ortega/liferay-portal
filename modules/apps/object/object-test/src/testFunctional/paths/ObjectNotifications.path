@@ -12,17 +12,12 @@
 <tbody>
 	<tr>
 		<td>NOTIFICATION_STATUS</td>
-		<td>//div[@class='dnd-td']//strong[contains(.,'${key_statusName}')]</td>
+		<td>//div[contains(@class,'dnd-td')]//strong[contains(.,'${key_statusName}')]</td>
 		<td></td>
 	</tr>
 	<tr>
 		<td>DELETE_NOTIFICATION_IN_QUEUE</td>
-		<td>//div[@class='dnd-td'][contains(.,'${key_text}')]//following-sibling::div//*[contains(@class, 'icon-trash')]</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>DATA_SOURCE_ATTACHMENTS</td>
-		<td>//div[@tabindex='0']//span[contains(.,'${key_dataSource}')]</td>
+		<td>//div[contains(@class,'dnd-td')][contains(.,'${key_text}')]//following-sibling::div//*[contains(@class, 'icon-trash')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -32,7 +27,7 @@
 	</tr>
 	<tr>
 		<td>FIELD_ATTACHMENTS_OBJECT_SELECT_FIELD</td>
-		<td>//span[@class='custom-control-label']//span[@class="custom-control-label-text"]</td>
+		<td>//span[@class='custom-control-label']//span[@class="custom-control-label-text" and contains(text(),'${key_fieldLabel}')]</td>
 		<td></td>
 	</tr>
 	<tr>
@@ -48,11 +43,6 @@
 	<tr>
 		<td>ENTITY_TERMS</td>
 		<td>//div[contains(@class,'dnd-td') and contains(text(),'${key_termName}')]</td>
-		<td></td>
-	</tr>
-	<tr>
-		<td>RECIPIENT_TYPE</td>
-		<td>//div[contains(@class,'autocomplete-dropdown-menu')]//div[contains(text(),'${key_recipientType}')]</td>
 		<td></td>
 	</tr>
 </tbody>

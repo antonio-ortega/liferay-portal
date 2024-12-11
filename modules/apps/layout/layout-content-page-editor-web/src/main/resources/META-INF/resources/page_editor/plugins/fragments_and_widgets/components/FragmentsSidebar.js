@@ -17,14 +17,10 @@ import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsD
 import {HIGHLIGHTED_COLLECTION_ID} from '../../../app/config/constants/highlightedCollectionId';
 import {LAYOUT_DATA_ITEM_TYPES} from '../../../app/config/constants/layoutDataItemTypes';
 import {config} from '../../../app/config/index';
-import {
-	useDispatch,
-	useSelector,
-	useSelectorRef,
-} from '../../../app/contexts/StoreContext';
-import selectWidgetFragmentEntryLinks from '../../../app/selectors/selectWidgetFragmentEntryLinks';
-import loadWidgets from '../../../app/thunks/loadWidgets';
+import {useSelector} from '../../../app/contexts/StoreContext';
+import {useLoadWidgets} from '../../../app/contexts/WidgetsContext';
 import SidebarPanelHeader from '../../../common/components/SidebarPanelHeader';
+import {TABS_IDS} from '../config/constants/tabsIds';
 import SearchResultsPanel from './SearchResultsPanel';
 import TabsPanel from './TabsPanel';
 import {ReorderSetsModal} from './reorder_sets_modal/ReorderSetsModal';
@@ -79,15 +75,13 @@ const collectionFilter = (collections, searchValue) => {
 		.filter(hasChildren);
 };
 
-const normalizeWidget = (widget) => {
+export function normalizeWidget(widget) {
 	return {
 		data: {
-			instanceable: widget.instanceable,
 			portletId: widget.portletId,
 			portletItemId: widget.portletItemId || null,
-			used: widget.used,
 		},
-		disabled: !widget.instanceable && widget.used,
+		disabled: !widget.instanceable && (widget.used || widget.embedded),
 		highlighted: widget.highlighted,
 		icon: widget.instanceable ? 'square-hole-multi' : 'square-hole',
 		itemId: widget.portletId,
@@ -98,7 +92,7 @@ const normalizeWidget = (widget) => {
 		preview: '',
 		type: LAYOUT_DATA_ITEM_TYPES.fragment,
 	};
-};
+}
 
 const normalizeCollection = (collection) => {
 	const normalizedElement = {
@@ -108,9 +102,8 @@ const normalizeCollection = (collection) => {
 	};
 
 	if (collection.categories?.length) {
-		normalizedElement.collections = collection.categories.map(
-			normalizeCollection
-		);
+		normalizedElement.collections =
+			collection.categories.map(normalizeCollection);
 	}
 
 	return normalizedElement;
@@ -118,6 +111,7 @@ const normalizeCollection = (collection) => {
 
 const normalizeFragmentEntry = (fragmentEntry) => ({
 	data: {
+		fieldTypes: fragmentEntry.fieldTypes,
 		fragmentEntryKey: fragmentEntry.fragmentEntryKey,
 		groupId: fragmentEntry.groupId,
 		type: fragmentEntry.type,
@@ -134,10 +128,8 @@ export default function FragmentsSidebar() {
 	const fragments = useSelector((state) => state.fragments);
 	const widgets = useSelector((state) => state.widgets);
 
-	const dispatch = useDispatch();
-	const widgetFragmentEntryLinksRef = useSelectorRef(
-		selectWidgetFragmentEntryLinks
-	);
+	const loadWidgets = useLoadWidgets();
+
 	const [loadingWidgets, setLoadingWidgets] = useState(false);
 
 	const [activeTabId, setActiveTabId] = useSessionState(
@@ -161,6 +153,7 @@ export default function FragmentsSidebar() {
 						normalizeFragmentEntry(fragmentEntry)
 					),
 					collectionId: collection.fragmentCollectionId,
+					deprecated: collection.deprecated,
 					label: collection.name,
 				})),
 				id: COLLECTION_IDS.fragments,
@@ -170,7 +163,7 @@ export default function FragmentsSidebar() {
 				collections: widgets
 					? widgets.map((collection) =>
 							normalizeCollection(collection)
-					  )
+						)
 					: [],
 				id: COLLECTION_IDS.widgets,
 				label: Liferay.Language.get('widgets'),
@@ -206,21 +199,20 @@ export default function FragmentsSidebar() {
 						tab.collections.flatMap(
 							(collection) => collection.children
 						)
-				  ).length,
+					).length,
 		[filteredTabs, searchValue]
 	);
 
 	useEffect(() => {
-		if (searchValue && !widgets) {
+		if (widgets) {
+			setLoadingWidgets(false);
+		}
+		else if (searchValue || activeTabId === TABS_IDS.widgets) {
 			setLoadingWidgets(true);
 
-			dispatch(
-				loadWidgets({
-					fragmentEntryLinks: widgetFragmentEntryLinksRef.current,
-				})
-			).then(() => setLoadingWidgets(false));
+			loadWidgets();
 		}
-	}, [dispatch, searchValue, widgetFragmentEntryLinksRef, widgets]);
+	}, [activeTabId, loadWidgets, searchValue, widgets]);
 
 	const viewButtonLabel = sub(
 		Liferay.Language.get('switch-to-x-view'),

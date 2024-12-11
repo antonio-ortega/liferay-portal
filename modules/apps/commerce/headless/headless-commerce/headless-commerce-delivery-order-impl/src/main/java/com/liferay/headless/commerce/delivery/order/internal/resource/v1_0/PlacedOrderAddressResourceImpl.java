@@ -33,11 +33,51 @@ import org.osgi.service.component.annotations.ServiceScope;
 public class PlacedOrderAddressResourceImpl
 	extends BasePlacedOrderAddressResourceImpl {
 
+	@Override
+	public PlacedOrderAddress
+			getPlacedOrderByExternalReferenceCodePlacedOrderBillingAddress(
+				String externalReferenceCode)
+		throws Exception {
+
+		CommerceOrder commerceOrder =
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceOrder == null) {
+			throw new NoSuchOrderException(
+				"Unable to find order with external reference code " +
+					externalReferenceCode);
+		}
+
+		return getPlacedOrderPlacedOrderBillingAddress(
+			commerceOrder.getCommerceOrderId());
+	}
+
+	@Override
+	public PlacedOrderAddress
+			getPlacedOrderByExternalReferenceCodePlacedOrderShippingAddress(
+				String externalReferenceCode)
+		throws Exception {
+
+		CommerceOrder commerceOrder =
+			_commerceOrderService.fetchCommerceOrderByExternalReferenceCode(
+				externalReferenceCode, contextCompany.getCompanyId());
+
+		if (commerceOrder == null) {
+			throw new NoSuchOrderException(
+				"Unable to find order with external reference code " +
+					externalReferenceCode);
+		}
+
+		return getPlacedOrderPlacedOrderShippingAddress(
+			commerceOrder.getCommerceOrderId());
+	}
+
 	@NestedField(
 		parentClass = PlacedOrder.class, value = "placedOrderBillingAddress"
 	)
 	@Override
-	public PlacedOrderAddress getPlacedOrderPlacedOrderBillingAddres(
+	public PlacedOrderAddress getPlacedOrderPlacedOrderBillingAddress(
 			Long placedOrderId)
 		throws Exception {
 
@@ -48,13 +88,19 @@ public class PlacedOrderAddressResourceImpl
 			throw new NoSuchOrderException();
 		}
 
+		long commerceAddressId = 0;
+
 		CommerceAddress commerceAddress =
-			_commerceAddressService.getCommerceAddress(
+			_commerceAddressService.fetchCommerceAddress(
 				commerceOrder.getBillingAddressId());
+
+		if (commerceAddress != null) {
+			commerceAddressId = commerceAddress.getCommerceAddressId();
+		}
 
 		return _placedOrderAddressDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
-				_dtoConverterRegistry, commerceAddress.getCommerceAddressId(),
+				_dtoConverterRegistry, commerceAddressId,
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
 				contextUser));
 	}
@@ -63,7 +109,7 @@ public class PlacedOrderAddressResourceImpl
 		parentClass = PlacedOrder.class, value = "placedOrderShippingAddress"
 	)
 	@Override
-	public PlacedOrderAddress getPlacedOrderPlacedOrderShippingAddres(
+	public PlacedOrderAddress getPlacedOrderPlacedOrderShippingAddress(
 			Long placedOrderId)
 		throws Exception {
 

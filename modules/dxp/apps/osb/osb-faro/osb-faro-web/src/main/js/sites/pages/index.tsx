@@ -2,18 +2,20 @@ import * as breadcrumbs from 'shared/util/breadcrumbs';
 import BasePage from 'shared/components/base-page';
 import BundleRouter from 'route-middleware/BundleRouter';
 import ClayLink from '@clayui/link';
+import DownloadCSVReport from 'shared/components/download-report/DownloadCSVReport';
+import DownloadPDFReport from 'shared/components/download-report/DownloadPDFReport';
 import getCN from 'classnames';
 import Loading from 'shared/components/Loading';
 import React, {lazy, Suspense} from 'react';
 import RouteNotFound from 'shared/components/RouteNotFound';
 import StatesRenderer from 'shared/components/states-renderer/StatesRenderer';
 import URLConstants from 'shared/util/url-constants';
-import {Routes, toRoute} from 'shared/util/router';
+import {CSVType} from 'shared/components/download-report/utils';
+import {getMatchedRoute, Routes, toRoute} from 'shared/util/router';
 import {Switch, useParams} from 'react-router-dom';
 import {useChannelContext} from 'shared/context/channel';
+import {useCurrentUser} from 'shared/hooks/useCurrentUser';
 import {useDataSource} from 'shared/hooks/useDataSource';
-import {User} from 'shared/util/records';
-import {withCurrentUser} from 'shared/hoc';
 
 const InterestDetails = lazy(
 	() =>
@@ -27,6 +29,12 @@ const Interests = lazy(
 );
 const Overview = lazy(
 	() => import(/* webpackChunkName: "SitesDashboardOverview" */ './Overview')
+);
+const SearchTermsPage = lazy(
+	() =>
+		import(
+			/* webpackChunkName: "SitesDashboardSearchTerms" */ './SearchTermsPage'
+		)
 );
 const Touchpoints = lazy(
 	() =>
@@ -50,6 +58,11 @@ const NAV_ITEMS = [
 		exact: false,
 		label: Liferay.Language.get('interests'),
 		route: Routes.SITES_INTERESTS
+	},
+	{
+		exact: true,
+		label: Liferay.Language.get('search-terms'),
+		route: Routes.SITES_SEARCH_TERMS
 	}
 ];
 
@@ -64,18 +77,18 @@ type Router = {
 };
 
 interface IDashboardProps extends React.HTMLAttributes<HTMLDivElement> {
-	currentUser: User;
 	router: Router;
 }
 
-export const Dashboard: React.FC<IDashboardProps> = ({currentUser, router}) => {
+export const Dashboard: React.FC<IDashboardProps> = ({router}) => {
 	const {channelId, groupId} = useParams();
 	const dataSourceStates = useDataSource();
 	const {selectedChannel} = useChannelContext();
+	const currentUser = useCurrentUser();
 
 	const authorized = currentUser.isAdmin();
-
 	const selectedChannelName = selectedChannel && selectedChannel.name;
+	const matchedRoute = getMatchedRoute(NAV_ITEMS);
 
 	return (
 		<BasePage
@@ -107,6 +120,31 @@ export const Dashboard: React.FC<IDashboardProps> = ({currentUser, router}) => {
 				/>
 			</BasePage.Header>
 
+			{matchedRoute !== Routes.SITES_INTERESTS &&
+				matchedRoute !== Routes.SITES_SEARCH_TERMS && (
+					<BasePage.SubHeader>
+						<div className='d-flex justify-content-end w-100'>
+							{matchedRoute === Routes.SITES && (
+								<DownloadPDFReport
+									disabled={dataSourceStates.empty}
+									subtitle={selectedChannelName}
+									title={Liferay.Language.get(
+										'sites-dashboard'
+									)}
+								/>
+							)}
+
+							{matchedRoute === Routes.SITES_TOUCHPOINTS && (
+								<DownloadCSVReport
+									disabled={dataSourceStates.empty}
+									type={CSVType.Page}
+									typeLang={Liferay.Language.get('pages')}
+								/>
+							)}
+						</div>
+					</BasePage.SubHeader>
+				)}
+
 			<BasePage.Context.Provider
 				value={{
 					filters: {},
@@ -119,11 +157,15 @@ export const Dashboard: React.FC<IDashboardProps> = ({currentUser, router}) => {
 							<StatesRenderer.Empty
 								description={
 									<>
-										{Liferay.Language.get(
-											'connect-a-data-source-with-sites-data'
-										)}
+										{authorized
+											? Liferay.Language.get(
+													'connect-a-data-source-with-sites-data'
+											  )
+											: Liferay.Language.get(
+													'please-contact-your-workspace-administrator-to-add-data-sources'
+											  )}
 
-										<a
+										<ClayLink
 											className='d-block mb-3'
 											href={
 												URLConstants.DataSourceConnection
@@ -134,7 +176,7 @@ export const Dashboard: React.FC<IDashboardProps> = ({currentUser, router}) => {
 											{Liferay.Language.get(
 												'access-our-documentation-to-learn-more'
 											)}
-										</a>
+										</ClayLink>
 
 										{authorized && (
 											<ClayLink
@@ -194,6 +236,13 @@ export const Dashboard: React.FC<IDashboardProps> = ({currentUser, router}) => {
 										path={Routes.SITES}
 									/>
 
+									<BundleRouter
+										data={SearchTermsPage}
+										destructured={false}
+										exact
+										path={Routes.SITES_SEARCH_TERMS}
+									/>
+
 									<RouteNotFound />
 								</Switch>
 							</StatesRenderer.Success>
@@ -205,4 +254,4 @@ export const Dashboard: React.FC<IDashboardProps> = ({currentUser, router}) => {
 	);
 };
 
-export default withCurrentUser(Dashboard);
+export default Dashboard;

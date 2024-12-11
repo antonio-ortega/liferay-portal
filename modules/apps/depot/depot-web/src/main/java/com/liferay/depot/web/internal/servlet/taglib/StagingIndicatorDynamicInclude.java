@@ -10,8 +10,9 @@ import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.depot.web.internal.util.StagingIndicatorUtil;
 import com.liferay.exportimport.kernel.staging.Staging;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
 import com.liferay.petra.reflect.ReflectionUtil;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -26,7 +27,6 @@ import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.service.permission.PortletPermission;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -40,7 +40,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.template.react.renderer.ComponentDescriptor;
 import com.liferay.portal.template.react.renderer.ReactRenderer;
-import com.liferay.site.util.GroupURLProvider;
+import com.liferay.site.provider.GroupURLProvider;
 import com.liferay.taglib.util.HtmlTopTag;
 
 import java.io.IOException;
@@ -73,7 +73,7 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 
 		try {
 			if (StagingIndicatorUtil.isShowStagingIndicator(
-					httpServletRequest, _portletPermission)) {
+					httpServletRequest)) {
 
 				ThemeDisplay themeDisplay =
 					(ThemeDisplay)httpServletRequest.getAttribute(
@@ -336,7 +336,11 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 							httpServletRequest,
 							_servletContext.getContextPath() +
 								"/dynamic_include/StagingIndicator.css"));
-					writer.write("\" rel=\"stylesheet\" type=\"text/css\" />");
+					writer.write(StringPool.QUOTE);
+					writer.write(
+						ContentSecurityPolicyNonceProviderUtil.getNonce(
+							httpServletRequest));
+					writer.write(" rel=\"stylesheet\" type=\"text/css\" />");
 				}
 				catch (IOException ioException) {
 					ReflectionUtil.throwException(ioException);
@@ -362,12 +366,10 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 		String componentId =
 			_portal.getPortletNamespace(DepotPortletKeys.DEPOT_ADMIN) +
 				"IndicatorComponent";
-		String module =
-			_npmResolver.resolveModuleName("depot-web") +
-				"/dynamic_include/StagingIndicator";
 
 		_reactRenderer.renderReact(
-			new ComponentDescriptor(module, componentId),
+			new ComponentDescriptor(
+				"{StagingIndicator} from depot-web", componentId),
 			_getReactData(httpServletRequest, themeDisplay), httpServletRequest,
 			writer);
 
@@ -390,13 +392,7 @@ public class StagingIndicatorDynamicInclude extends BaseDynamicInclude {
 	private Language _language;
 
 	@Reference
-	private NPMResolver _npmResolver;
-
-	@Reference
 	private Portal _portal;
-
-	@Reference
-	private PortletPermission _portletPermission;
 
 	@Reference
 	private ReactRenderer _reactRenderer;

@@ -5,6 +5,8 @@
 
 package com.liferay.portal.kernel.util;
 
+import com.liferay.portal.kernel.module.service.Snapshot;
+
 /**
  * @author Julio Camarero
  * @author Samuel Kong
@@ -12,27 +14,39 @@ package com.liferay.portal.kernel.util;
 public class FriendlyURLNormalizerUtil {
 
 	public static String normalize(String friendlyURL) {
-		return _friendlyURLNormalizer.normalize(friendlyURL);
+		FriendlyURLNormalizer friendlyURLNormalizer =
+			_friendlyURLNormalizerSnapshot.get();
+
+		return friendlyURLNormalizer.normalize(friendlyURL);
 	}
 
 	public static String normalizeWithEncoding(String friendlyURL) {
-		return _friendlyURLNormalizer.normalizeWithEncoding(friendlyURL);
+		FriendlyURLNormalizer friendlyURLNormalizer =
+			_friendlyURLNormalizerSnapshot.get();
+
+		return friendlyURLNormalizer.normalizeWithEncoding(friendlyURL);
 	}
 
-	public static String normalizeWithPeriodsAndSlashes(String friendlyURL) {
-		return _friendlyURLNormalizer.normalizeWithPeriodsAndSlashes(
+	public static String normalizeWithEncodingPeriodsAndSlashes(
+		String friendlyURL) {
+
+		FriendlyURLNormalizer friendlyURLNormalizer =
+			_friendlyURLNormalizerSnapshot.get();
+
+		return friendlyURLNormalizer.normalizeWithEncodingPeriodsAndSlashes(
 			friendlyURL);
 	}
 
-	public void setFriendlyURLNormalizer(
-		FriendlyURLNormalizer friendlyURLNormalizer) {
+	public static String normalizeWithPeriodsAndSlashes(String friendlyURL) {
+		FriendlyURLNormalizer friendlyURLNormalizer =
+			_friendlyURLNormalizerSnapshot.get();
 
-		_friendlyURLNormalizer = friendlyURLNormalizer;
+		return friendlyURLNormalizer.normalizeWithPeriodsAndSlashes(
+			friendlyURL);
 	}
 
-	private static volatile FriendlyURLNormalizer _friendlyURLNormalizer =
-		ServiceProxyFactory.newServiceTrackedInstance(
-			FriendlyURLNormalizer.class, FriendlyURLNormalizerUtil.class,
-			"_friendlyURLNormalizer", true);
+	private static final Snapshot<FriendlyURLNormalizer>
+		_friendlyURLNormalizerSnapshot = new Snapshot<>(
+			FriendlyURLNormalizerUtil.class, FriendlyURLNormalizer.class);
 
 }

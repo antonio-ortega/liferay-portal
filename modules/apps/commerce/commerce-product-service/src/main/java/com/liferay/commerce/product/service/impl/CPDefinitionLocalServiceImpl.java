@@ -29,7 +29,6 @@ import com.liferay.commerce.product.exception.CPDefinitionMetaKeywordsException;
 import com.liferay.commerce.product.exception.CPDefinitionMetaTitleException;
 import com.liferay.commerce.product.exception.CPDefinitionProductTypeNameException;
 import com.liferay.commerce.product.exception.CPDefinitionSubscriptionLengthException;
-import com.liferay.commerce.product.exception.DuplicateCProductException;
 import com.liferay.commerce.product.model.CPAttachmentFileEntry;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPDefinitionLink;
@@ -92,6 +91,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -128,7 +128,6 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -149,6 +148,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -216,14 +216,9 @@ public class CPDefinitionLocalServiceImpl
 				CPDefinitionExpirationDateException.class);
 		}
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-
 		_validate(
 			groupId, ddmStructureKey, metaTitleMap, metaDescriptionMap,
 			metaKeywordsMap, displayDate, expirationDate, productTypeName);
-		_validateCProduct(externalReferenceCode, user.getCompanyId());
 		_validateSubscriptionLength(subscriptionLength, "length");
 		_validateSubscriptionCycles(
 			maxSubscriptionCycles, "subscriptionCycles");
@@ -242,8 +237,8 @@ public class CPDefinitionLocalServiceImpl
 		CPDefinition cpDefinition = cpDefinitionPersistence.create(
 			cpDefinitionId);
 
-		CProduct cProduct = _cProductLocalService.createCProduct(
-			counterLocalService.increment());
+		CProduct cProduct = _cProductLocalService.addCProduct(
+			externalReferenceCode, groupId, userId, new ServiceContext());
 
 		cpDefinition.setGroupId(groupId);
 		cpDefinition.setCompanyId(user.getCompanyId());
@@ -307,17 +302,6 @@ public class CPDefinitionLocalServiceImpl
 
 		cpDefinition = cpDefinitionPersistence.update(cpDefinition);
 
-		// Commerce product
-
-		cProduct.setExternalReferenceCode(externalReferenceCode);
-		cProduct.setGroupId(groupId);
-		cProduct.setCompanyId(user.getCompanyId());
-		cProduct.setUserId(user.getUserId());
-		cProduct.setUserName(user.getFullName());
-		cProduct.setLatestVersion(1);
-
-		cProduct = _cProductLocalService.updateCProduct(cProduct);
-
 		// Commerce product definition localization
 
 		_addCPDefinitionLocalizedFields(
@@ -350,7 +334,7 @@ public class CPDefinitionLocalServiceImpl
 		Group companyGroup = _groupLocalService.getCompanyGroup(
 			cpDefinition.getCompanyId());
 
-		Map<String, String> newURLTitleMap = new HashMap<>();
+		Map<Locale, String> newURLTitleMap = new HashMap<>();
 
 		if (MapUtil.isEmpty(urlTitleMap)) {
 			newURLTitleMap = _getUniqueUrlTitles(cpDefinition, nameMap);
@@ -362,7 +346,8 @@ public class CPDefinitionLocalServiceImpl
 		_friendlyURLEntryLocalService.addFriendlyURLEntry(
 			companyGroup.getGroupId(),
 			_classNameLocalService.getClassNameId(CProduct.class),
-			cProduct.getCProductId(), newURLTitleMap, serviceContext);
+			cProduct.getCProductId(), _toLanguageIdMap(newURLTitleMap),
+			serviceContext);
 
 		// Asset
 
@@ -458,10 +443,7 @@ public class CPDefinitionLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		if (Validator.isBlank(externalReferenceCode)) {
-			externalReferenceCode = null;
-		}
-		else {
+		if (Validator.isNotNull(externalReferenceCode)) {
 			CProduct cProduct =
 				_cProductLocalService.fetchCProductByExternalReferenceCode(
 					externalReferenceCode, serviceContext.getCompanyId());
@@ -661,13 +643,14 @@ public class CPDefinitionLocalServiceImpl
 		Group companyGroup = _groupLocalService.getCompanyGroup(
 			newCPDefinition.getCompanyId());
 
-		Map<String, String> newURLTitleMap = _getUniqueUrlTitles(
+		Map<Locale, String> newURLTitleMap = _getUniqueUrlTitles(
 			newCPDefinition, newNameMap);
 
 		_friendlyURLEntryLocalService.addFriendlyURLEntry(
 			companyGroup.getGroupId(),
 			_classNameLocalService.getClassNameId(CProduct.class),
-			newCProduct.getCProductId(), newURLTitleMap, serviceContext);
+			newCProduct.getCProductId(), _toLanguageIdMap(newURLTitleMap),
+			serviceContext);
 
 		List<CPAttachmentFileEntry> cpAttachmentFileEntries =
 			_cpAttachmentFileEntryPersistence.findByC_C(
@@ -779,6 +762,8 @@ public class CPDefinitionLocalServiceImpl
 
 			newCPDefinitionSpecificationOptionValue.setUuid(
 				PortalUUIDUtil.generate());
+			newCPDefinitionSpecificationOptionValue.setExternalReferenceCode(
+				null);
 			newCPDefinitionSpecificationOptionValue.
 				setCPDefinitionSpecificationOptionValueId(
 					counterLocalService.increment());
@@ -1158,9 +1143,16 @@ public class CPDefinitionLocalServiceImpl
 
 			newCPDefinitionSpecificationOptionValue.setUuid(
 				PortalUUIDUtil.generate());
+
+			long cpDefinitionSpecificationOptionValueId =
+				counterLocalService.increment();
+
+			newCPDefinitionSpecificationOptionValue.setExternalReferenceCode(
+				String.valueOf(cpDefinitionSpecificationOptionValueId));
 			newCPDefinitionSpecificationOptionValue.
 				setCPDefinitionSpecificationOptionValueId(
-					counterLocalService.increment());
+					cpDefinitionSpecificationOptionValueId);
+
 			newCPDefinitionSpecificationOptionValue.setCPDefinitionId(
 				newCPDefinitionId);
 
@@ -1341,7 +1333,8 @@ public class CPDefinitionLocalServiceImpl
 					cpDefinitionLocalService.getCProductCPDefinitions(
 						cProduct.getCProductId(),
 						WorkflowConstants.STATUS_APPROVED, QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS, new CPDefinitionVersionComparator());
+						QueryUtil.ALL_POS,
+						CPDefinitionVersionComparator.getInstance(false));
 
 				if (ListUtil.isEmpty(cpDefinitions)) {
 					_cProductLocalService.updatePublishedCPDefinitionId(
@@ -2262,15 +2255,6 @@ public class CPDefinitionLocalServiceImpl
 
 		cpDefinition = cpDefinitionPersistence.update(cpDefinition);
 
-		Map<String, String> newUrlTitleMap = new HashMap<>();
-
-		if (MapUtil.isEmpty(urlTitleMap)) {
-			newUrlTitleMap = _getUniqueUrlTitles(cpDefinition, nameMap);
-		}
-		else {
-			newUrlTitleMap = _getUniqueUrlTitles(cpDefinition, urlTitleMap);
-		}
-
 		// Commerce product definition localization
 
 		_updateCPDefinitionLocalizedFields(
@@ -2280,34 +2264,8 @@ public class CPDefinitionLocalServiceImpl
 
 		// Commerce product friendly URL entries
 
-		long classNameId = _classNameLocalService.getClassNameId(
-			CProduct.class);
-
-		long classPK = cpDefinition.getCProductId();
-
-		try {
-			FriendlyURLEntry friendlyURLEntry =
-				_friendlyURLEntryLocalService.getMainFriendlyURLEntry(
-					classNameId, classPK);
-
-			_friendlyURLEntryLocalService.updateFriendlyURLEntry(
-				friendlyURLEntry.getFriendlyURLEntryId(),
-				friendlyURLEntry.getClassNameId(),
-				friendlyURLEntry.getClassPK(),
-				friendlyURLEntry.getDefaultLanguageId(), newUrlTitleMap);
-		}
-		catch (Exception exception) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(exception);
-			}
-
-			Group companyGroup = _groupLocalService.getCompanyGroup(
-				cpDefinition.getCompanyId());
-
-			_friendlyURLEntryLocalService.addFriendlyURLEntry(
-				companyGroup.getGroupId(), classNameId, classPK, newUrlTitleMap,
-				serviceContext);
-		}
+		_addFriendlyURLEntries(
+			cpDefinition, nameMap, urlTitleMap, serviceContext);
 
 		// Asset
 
@@ -2520,24 +2478,26 @@ public class CPDefinitionLocalServiceImpl
 			status = WorkflowConstants.STATUS_SCHEDULED;
 		}
 
-		Date modifiedDate = serviceContext.getModifiedDate(date);
+		Date expirationDate = cpDefinition.getExpirationDate();
 
-		if (status == WorkflowConstants.STATUS_APPROVED) {
-			Date expirationDate = cpDefinition.getExpirationDate();
+		if ((status == WorkflowConstants.STATUS_APPROVED) &&
+			(expirationDate != null) && expirationDate.before(date)) {
 
-			if ((expirationDate != null) && expirationDate.before(date)) {
-				cpDefinition.setExpirationDate(null);
-			}
+			cpDefinition.setStatus(WorkflowConstants.STATUS_EXPIRED);
+
+			status = WorkflowConstants.STATUS_EXPIRED;
 		}
 
-		if (status == WorkflowConstants.STATUS_EXPIRED) {
+		if ((status == WorkflowConstants.STATUS_EXPIRED) &&
+			((expirationDate == null) || expirationDate.after(date))) {
+
 			cpDefinition.setExpirationDate(date);
 		}
 
 		cpDefinition.setStatus(status);
 		cpDefinition.setStatusByUserId(user.getUserId());
 		cpDefinition.setStatusByUserName(user.getFullName());
-		cpDefinition.setStatusDate(modifiedDate);
+		cpDefinition.setStatusDate(serviceContext.getModifiedDate(date));
 
 		cpDefinition = cpDefinitionPersistence.update(cpDefinition);
 
@@ -2664,13 +2624,18 @@ public class CPDefinitionLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
+		CommercePriceEntryLocalService commercePriceEntryLocalService =
+			_commercePriceEntryLocalServiceSnapshot.get();
+
+		CommercePriceListLocalService commercePriceListLocalService =
+			_commercePriceListLocalServiceSnapshot.get();
+
 		CommercePriceList commercePriceList =
-			_commercePriceListLocalService.
-				getCatalogBaseCommercePriceListByType(
-					cpInstance.getGroupId(), type);
+			commercePriceListLocalService.getCatalogBaseCommercePriceListByType(
+				cpInstance.getGroupId(), type);
 
 		CommercePriceEntry commercePriceEntry =
-			_commercePriceEntryLocalService.fetchCommercePriceEntry(
+			commercePriceEntryLocalService.fetchCommercePriceEntry(
 				commercePriceList.getCommercePriceListId(), cpInstanceUuid,
 				StringPool.BLANK);
 
@@ -2680,7 +2645,7 @@ public class CPDefinitionLocalServiceImpl
 
 		CPDefinition cpDefinition = cpInstance.getCPDefinition();
 
-		_commercePriceEntryLocalService.addCommercePriceEntry(
+		commercePriceEntryLocalService.addCommercePriceEntry(
 			null, cpDefinition.getCProductId(), cpInstance.getCPInstanceUuid(),
 			commercePriceList.getCommercePriceListId(),
 			commercePriceEntry.getPrice(),
@@ -2810,6 +2775,36 @@ public class CPDefinitionLocalServiceImpl
 
 		return cpDefinitionLocalizationPersistence.update(
 			cpDefinitionLocalization);
+	}
+
+	private void _addFriendlyURLEntries(
+			CPDefinition cpDefinition, Map<Locale, String> nameMap,
+			Map<Locale, String> urlTitleMap, ServiceContext serviceContext)
+		throws PortalException {
+
+		if ((cpDefinition != null) &&
+			Objects.equals(urlTitleMap, cpDefinition.getUrlTitleMap())) {
+
+			return;
+		}
+
+		Group companyGroup = _groupLocalService.getCompanyGroup(
+			cpDefinition.getCompanyId());
+
+		Map<Locale, String> newUrlTitleMap = new HashMap<>();
+
+		if (MapUtil.isEmpty(urlTitleMap)) {
+			newUrlTitleMap = _getUniqueUrlTitles(cpDefinition, nameMap);
+		}
+		else {
+			newUrlTitleMap = _getUniqueUrlTitles(cpDefinition, urlTitleMap);
+		}
+
+		_friendlyURLEntryLocalService.addFriendlyURLEntry(
+			companyGroup.getGroupId(),
+			_classNameLocalService.getClassNameId(CProduct.class),
+			cpDefinition.getCProductId(), _toLanguageIdMap(newUrlTitleMap),
+			serviceContext);
 	}
 
 	private SearchContext _buildSearchContext(
@@ -2998,17 +2993,14 @@ public class CPDefinitionLocalServiceImpl
 			languageId, "_ATTRIBUTE_", optionKey, "_VALUES_NAMES");
 	}
 
-	private Map<String, String> _getUniqueUrlTitles(
+	private Map<Locale, String> _getUniqueUrlTitles(
 			CPDefinition cpDefinition, Map<Locale, String> urlTitleMap)
 		throws PortalException {
 
-		Map<String, String> newURLTitleMap = new HashMap<>();
+		Map<Locale, String> newURLTitleMap = new HashMap<>();
 
 		Group companyGroup = _groupLocalService.getCompanyGroup(
 			cpDefinition.getCompanyId());
-
-		long classNameId = _classNameLocalService.getClassNameId(
-			CProduct.class);
 
 		for (Map.Entry<Locale, String> titleEntry : urlTitleMap.entrySet()) {
 			String urlTitle = urlTitleMap.get(titleEntry.getKey());
@@ -3017,11 +3009,11 @@ public class CPDefinitionLocalServiceImpl
 				((urlTitle != null) && urlTitle.equals(StringPool.BLANK))) {
 
 				urlTitle = _friendlyURLEntryLocalService.getUniqueUrlTitle(
-					companyGroup.getGroupId(), classNameId,
+					companyGroup.getGroupId(),
+					_classNameLocalService.getClassNameId(CProduct.class),
 					cpDefinition.getCProductId(), titleEntry.getValue(), null);
 
-				newURLTitleMap.put(
-					LocaleUtil.toLanguageId(titleEntry.getKey()), urlTitle);
+				newURLTitleMap.put(titleEntry.getKey(), urlTitle);
 			}
 		}
 
@@ -3109,6 +3101,16 @@ public class CPDefinitionLocalServiceImpl
 			cpDefinition.getCompanyId(), cpDefinition.getGroupId(), userId,
 			CPDefinition.class.getName(), cpDefinition.getCPDefinitionId(),
 			cpDefinition, serviceContext, workflowContext);
+	}
+
+	private Map<String, String> _toLanguageIdMap(Map<Locale, String> map) {
+		Map<String, String> languageIdMap = new HashMap<>();
+
+		map.forEach(
+			(locale, value) -> languageIdMap.put(
+				LocaleUtil.toLanguageId(locale), value));
+
+		return Collections.unmodifiableMap(languageIdMap);
 	}
 
 	private List<CPDefinitionLocalization> _updateCPDefinitionLocalizedFields(
@@ -3202,35 +3204,18 @@ public class CPDefinitionLocalServiceImpl
 			}
 		}
 
-		if ((expirationDate != null) &&
-			(expirationDate.before(new Date()) ||
-			 ((displayDate != null) && expirationDate.before(displayDate)))) {
+		if ((expirationDate != null) && (displayDate != null) &&
+			expirationDate.before(displayDate)) {
 
 			throw new CPDefinitionExpirationDateException(
-				"Expiration date " + expirationDate + " is in the past");
+				"Expiration date " + expirationDate +
+					" is before display date");
 		}
 
 		CPType cpType = _cpTypeRegistry.getCPType(productTypeName);
 
 		if (cpType == null) {
 			throw new CPDefinitionProductTypeNameException();
-		}
-	}
-
-	private void _validateCProduct(String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		if (Validator.isNull(externalReferenceCode)) {
-			return;
-		}
-
-		CProduct cProduct = _cProductPersistence.fetchByERC_C(
-			externalReferenceCode, companyId);
-
-		if (cProduct != null) {
-			throw new DuplicateCProductException(
-				"There is another commerce product with external reference " +
-					"code " + externalReferenceCode);
 		}
 	}
 
@@ -3245,13 +3230,13 @@ public class CPDefinitionLocalServiceImpl
 			_cpSubscriptionTypeRegistry.getCPSubscriptionType(
 				deliverySubscriptionType);
 
-		if (deliveryCPSubscriptionType != null) {
-			return deliveryCPSubscriptionType.
-				getDeliverySubscriptionTypeSettingsUnicodeProperties(
-					deliverySubscriptionTypeSettingsUnicodeProperties);
+		if (deliveryCPSubscriptionType == null) {
+			return null;
 		}
 
-		return null;
+		return deliveryCPSubscriptionType.
+			getDeliverySubscriptionTypeSettingsUnicodeProperties(
+				deliverySubscriptionTypeSettingsUnicodeProperties);
 	}
 
 	private void _validateSubscriptionCycles(
@@ -3297,13 +3282,12 @@ public class CPDefinitionLocalServiceImpl
 		CPSubscriptionType cpSubscriptionType =
 			_cpSubscriptionTypeRegistry.getCPSubscriptionType(subscriptionType);
 
-		if (cpSubscriptionType != null) {
-			return cpSubscriptionType.
-				getSubscriptionTypeSettingsUnicodeProperties(
-					subscriptionTypeSettingsUnicodeProperties);
+		if (cpSubscriptionType == null) {
+			return null;
 		}
 
-		return null;
+		return cpSubscriptionType.getSubscriptionTypeSettingsUnicodeProperties(
+			subscriptionTypeSettingsUnicodeProperties);
 	}
 
 	private static final String[] _SELECTED_FIELD_NAMES = {
@@ -3313,18 +3297,14 @@ public class CPDefinitionLocalServiceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		CPDefinitionLocalServiceImpl.class);
 
-	private static volatile CommercePriceEntryLocalService
-		_commercePriceEntryLocalService =
-			ServiceProxyFactory.newServiceTrackedInstance(
-				CommercePriceEntryLocalService.class,
-				CPDefinitionLocalServiceImpl.class,
-				"_commercePriceEntryLocalService", true);
-	private static volatile CommercePriceListLocalService
-		_commercePriceListLocalService =
-			ServiceProxyFactory.newServiceTrackedInstance(
-				CommercePriceListLocalService.class,
-				CPDefinitionLocalServiceImpl.class,
-				"_commercePriceListLocalService", true);
+	private static final Snapshot<CommercePriceEntryLocalService>
+		_commercePriceEntryLocalServiceSnapshot = new Snapshot<>(
+			CPDefinitionLocalServiceImpl.class,
+			CommercePriceEntryLocalService.class);
+	private static final Snapshot<CommercePriceListLocalService>
+		_commercePriceListLocalServiceSnapshot = new Snapshot<>(
+			CPDefinitionLocalServiceImpl.class,
+			CommercePriceListLocalService.class);
 
 	@Reference
 	private AccountGroupRelLocalService _accountGroupRelLocalService;

@@ -10,6 +10,7 @@ import com.liferay.gradle.plugins.css.builder.CSSBuilderPlugin;
 import com.liferay.gradle.plugins.node.NodePlugin;
 import com.liferay.gradle.plugins.theme.builder.BuildThemeTask;
 import com.liferay.gradle.plugins.theme.builder.ThemeBuilderPlugin;
+import com.liferay.gradle.plugins.workspace.LiferayWorkspaceNodePlugin;
 import com.liferay.gradle.plugins.workspace.WorkspaceExtension;
 import com.liferay.gradle.plugins.workspace.internal.util.GradleUtil;
 
@@ -45,7 +46,8 @@ public class ThemeCSSTypeConfigurer implements ClientExtensionConfigurer {
 		Project project,
 		TaskProvider<Copy> assembleClientExtensionTaskProvider) {
 
-		GradleUtil.applyPlugin(project, NodePlugin.class);
+		LiferayWorkspaceNodePlugin.INSTANCE.apply(project);
+
 		GradleUtil.applyPlugin(project, ThemeBuilderPlugin.class);
 
 		_addDependenciesParentThemes(project);
@@ -128,7 +130,13 @@ public class ThemeCSSTypeConfigurer implements ClientExtensionConfigurer {
 		BuildThemeTask buildThemeTask = (BuildThemeTask)GradleUtil.getTask(
 			project, ThemeBuilderPlugin.BUILD_THEME_TASK_NAME);
 
-		buildThemeTask.setDiffsDir(project.file("src"));
+		File srcDir = project.file("src");
+
+		if (!srcDir.exists()) {
+			srcDir.mkdirs();
+		}
+
+		buildThemeTask.setDiffsDir(srcDir);
 
 		File packageJsonFile = project.file("package.json");
 

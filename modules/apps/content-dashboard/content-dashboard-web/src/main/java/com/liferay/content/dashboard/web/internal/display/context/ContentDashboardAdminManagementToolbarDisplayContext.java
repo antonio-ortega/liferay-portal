@@ -15,6 +15,7 @@ import com.liferay.content.dashboard.item.action.exception.ContentDashboardItemA
 import com.liferay.content.dashboard.item.filter.ContentDashboardItemFilter;
 import com.liferay.content.dashboard.item.filter.provider.ContentDashboardItemFilterProvider;
 import com.liferay.content.dashboard.item.type.ContentDashboardItemSubtype;
+import com.liferay.content.dashboard.web.internal.constants.ContentDashboardConstants;
 import com.liferay.content.dashboard.web.internal.item.filter.ContentDashboardItemFilterProviderRegistry;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
@@ -32,7 +33,9 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -47,19 +50,24 @@ import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
 import javax.portlet.PortletException;
+import javax.portlet.PortletResponse;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -99,6 +107,9 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		_liferayPortletResponse = liferayPortletResponse;
 		_locale = locale;
 		_userLocalService = userLocalService;
+
+		_portletResponse = (PortletResponse)httpServletRequest.getAttribute(
+			JavaConstants.JAVAX_PORTLET_RESPONSE);
 	}
 
 	@Override
@@ -117,10 +128,19 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 			).setParameter(
 				"contentDashboardItemSubtypePayload", (String)null
 			).setParameter(
+				"dateType", (String)null
+			).setParameter(
+				"endDate", (String)null
+			).setParameter(
 				"scopeId", (String)null
+			).setParameter(
+				"startDate", (String)null
 			).setParameter(
 				"status", WorkflowConstants.STATUS_ANY
 			);
+
+		HttpServletRequest httpServletRequest =
+			_liferayPortletRequest.getHttpServletRequest();
 
 		List<ContentDashboardItemFilterProvider>
 			contentDashboardItemFilterProviders =
@@ -132,10 +152,15 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 					contentDashboardItemFilterProvider :
 						contentDashboardItemFilterProviders) {
 
+				if (!contentDashboardItemFilterProvider.isShow(
+						httpServletRequest)) {
+
+					continue;
+				}
+
 				ContentDashboardItemFilter contentDashboardItemFilter =
 					contentDashboardItemFilterProvider.
-						getContentDashboardItemFilter(
-							_liferayPortletRequest.getHttpServletRequest());
+						getContentDashboardItemFilter(httpServletRequest);
 
 				afterParameterStep.setParameter(
 					contentDashboardItemFilter.getParameterName(),
@@ -157,8 +182,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(_getFilterDropdownItems());
 				dropdownGroupItem.setLabel(
-					_language.get(httpServletRequest, "filter-by") +
-						StringPool.TRIPLE_PERIOD);
+					_language.get(httpServletRequest, "filter-by"));
 			}
 		).addGroup(
 			dropdownGroupItem -> {
@@ -177,15 +201,9 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		).addGroup(
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(
-					_getFilterByReviewDateDropdownItems());
+					_getFilterByDateDropdownItems());
 				dropdownGroupItem.setLabel(
-					_language.get(httpServletRequest, "filter-by-review-date"));
-			}
-		).addGroup(
-			() -> !FeatureFlagManagerUtil.isEnabled("LPS-144527"),
-			dropdownGroupItem -> {
-				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
-				dropdownGroupItem.setLabel(getOrderByDropdownItemsLabel());
+					_language.get(httpServletRequest, "filter-by-date"));
 			}
 		).build();
 	}
@@ -242,8 +260,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 			() -> scopeId > 0,
 			labelItem -> {
 				labelItem.putData(
-					"removeLabelURL",
-					_getRemoveLabelURL("scopeId", (String)null));
+					"removeLabelURL", _getRemoveLabelURL("scopeId"));
 				labelItem.setCloseable(true);
 				labelItem.setLabel(
 					_getLabel(
@@ -316,8 +333,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 			() -> status != WorkflowConstants.STATUS_ANY,
 			labelItem -> {
 				labelItem.putData(
-					"removeLabelURL",
-					_getRemoveLabelURL("status", (String)null));
+					"removeLabelURL", _getRemoveLabelURL("status"));
 				labelItem.setCloseable(true);
 				labelItem.setLabel(
 					_getLabel("status", _getStatusLabel(status)));
@@ -328,13 +344,32 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 				_contentDashboardAdminDisplayContext.getReviewDateString()),
 			labelItem -> {
 				labelItem.putData(
-					"removeLabelURL",
-					_getRemoveLabelURL("reviewDate", (String)null));
+					"removeLabelURL", _getRemoveLabelURL("reviewDate"));
 				labelItem.setCloseable(true);
 				labelItem.setLabel(
 					_getLabel(
 						"review-date",
 						_language.get(httpServletRequest, "to-be-reviewed")));
+			});
+
+		labelItemListWrapper.add(
+			() -> _isCustomDateActive(),
+			labelItem -> {
+				labelItem.putData(
+					"removeLabelURL",
+					_getRemoveLabelURL("dateType", "startDate", "endDate"));
+				labelItem.setCloseable(true);
+				labelItem.setLabel(
+					StringBundler.concat(
+						_language.get(
+							httpServletRequest,
+							_contentDashboardAdminDisplayContext.getDateType()),
+						StringPool.COLON, StringPool.SPACE,
+						_contentDashboardAdminDisplayContext.
+							getStartDateString(),
+						StringPool.SPACE, StringPool.DASH, StringPool.SPACE,
+						_contentDashboardAdminDisplayContext.
+							getEndDateString()));
 			});
 
 		Set<String> assetTagIds =
@@ -466,15 +501,23 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 				_contentDashboardItemFilterProviderRegistry.
 					getContentDashboardItemFilterProviders();
 
+		HttpServletRequest httpServletRequest =
+			_liferayPortletRequest.getHttpServletRequest();
+
 		for (ContentDashboardItemFilterProvider
 				contentDashboardItemFilterProvider :
 					contentDashboardItemFilterProviders) {
 
+			if (!contentDashboardItemFilterProvider.isShow(
+					httpServletRequest)) {
+
+				continue;
+			}
+
 			try {
 				ContentDashboardItemFilter contentDashboardItemFilter =
 					contentDashboardItemFilterProvider.
-						getContentDashboardItemFilter(
-							_liferayPortletRequest.getHttpServletRequest());
+						getContentDashboardItemFilter(httpServletRequest);
 
 				List<String> parameterValues =
 					contentDashboardItemFilter.getParameterValues();
@@ -572,15 +615,23 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 	private List<DropdownItem>
 		_getContentDashboardItemFilterProviderDropdownItems() {
 
+		HttpServletRequest httpServletRequest =
+			_liferayPortletRequest.getHttpServletRequest();
+
 		return TransformUtil.transform(
 			_contentDashboardItemFilterProviderRegistry.
 				getContentDashboardItemFilterProviders(),
 			contentDashboardItemFilterProvider -> {
 				try {
+					if (!contentDashboardItemFilterProvider.isShow(
+							httpServletRequest)) {
+
+						return null;
+					}
+
 					ContentDashboardItemFilter contentDashboardItemFilter =
 						contentDashboardItemFilterProvider.
-							getContentDashboardItemFilter(
-								_liferayPortletRequest.getHttpServletRequest());
+							getContentDashboardItemFilter(httpServletRequest);
 
 					if (contentDashboardItemFilter == null) {
 						return null;
@@ -596,6 +647,44 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 
 				return null;
 			});
+	}
+
+	private String _getDateTypesFilterURL(String... parameters) {
+		String url = PortalUtil.getCurrentCompleteURL(httpServletRequest);
+
+		for (String parameter : parameters) {
+			url = HttpComponentsUtil.removeParameter(
+				url, _portletResponse.getNamespace() + parameter);
+		}
+
+		return url;
+	}
+
+	private JSONArray _getDateTypesJSONArray() {
+		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+
+		ContentDashboardConstants.DateType[] dateTypes =
+			ContentDashboardConstants.DateType.values();
+
+		Arrays.sort(
+			dateTypes,
+			Comparator.comparing(
+				dateType -> _language.get(
+					httpServletRequest, dateType.getType())));
+
+		for (ContentDashboardConstants.DateType dateType :
+				Arrays.asList(dateTypes)) {
+
+			jsonArray.put(
+				JSONUtil.put(
+					"label",
+					_language.get(httpServletRequest, dateType.getType())
+				).put(
+					"value", dateType.getType()
+				));
+		}
+
+		return jsonArray;
 	}
 
 	private List<DropdownItem> _getFilterAuthorDropdownItems() {
@@ -660,12 +749,11 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 					return null;
 				}
 			).setLabel(
-				_language.get(httpServletRequest, "author") +
-					StringPool.TRIPLE_PERIOD
+				_language.get(httpServletRequest, "author")
 			).build());
 	}
 
-	private List<DropdownItem> _getFilterByReviewDateDropdownItems() {
+	private List<DropdownItem> _getFilterByDateDropdownItems() {
 		String reviewDate =
 			_contentDashboardAdminDisplayContext.getReviewDateString();
 
@@ -682,6 +770,36 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 					getPortletURL(), "reviewDate", "toBeReviewed");
 				dropdownItem.setLabel(
 					_language.get(httpServletRequest, "to-be-reviewed"));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.putData("action", "customDate");
+				dropdownItem.putData(
+					"props",
+					JSONUtil.toString(
+						JSONUtil.put(
+							"dateTypes", _getDateTypesJSONArray()
+						).put(
+							"filterUrl",
+							_getDateTypesFilterURL(
+								"dateType", "endDate", "startDate")
+						).put(
+							"namespace", _portletResponse.getNamespace()
+						).put(
+							"selectedDateType",
+							_contentDashboardAdminDisplayContext.getDateType()
+						).put(
+							"selectedEndDate",
+							_contentDashboardAdminDisplayContext.
+								getEndDateString()
+						).put(
+							"selectedStartDate",
+							_contentDashboardAdminDisplayContext.
+								getStartDateString()
+						)));
+				dropdownItem.setActive(_isCustomDateActive());
+				dropdownItem.setLabel(
+					_language.get(httpServletRequest, "custom-date"));
 			}
 		).build();
 	}
@@ -706,37 +824,31 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 				ListUtil.isNotEmpty(
 					_contentDashboardAdminDisplayContext.getAssetCategoryIds())
 			).setLabel(
-				_language.get(httpServletRequest, "categories") +
-					StringPool.TRIPLE_PERIOD
+				_language.get(httpServletRequest, "categories")
 			).build(),
-			() -> {
-				String label = _language.get(
-					httpServletRequest, "site-or-asset-library");
-
-				return DropdownItemBuilder.putData(
-					"action", "selectScope"
-				).putData(
-					"dialogTitle",
-					_language.get(
-						httpServletRequest, "select-site-or-asset-library")
-				).putData(
-					"redirectURL",
-					PortletURLBuilder.create(
-						getPortletURL()
-					).setParameter(
-						"scopeId", (String)null
-					).buildString()
-				).putData(
-					"selectScopeURL",
-					String.valueOf(
-						_contentDashboardAdminDisplayContext.
-							getScopeIdItemSelectorURL())
-				).setActive(
-					_contentDashboardAdminDisplayContext.getScopeId() > 0
-				).setLabel(
-					label + StringPool.TRIPLE_PERIOD
-				).build();
-			},
+			() -> DropdownItemBuilder.putData(
+				"action", "selectScope"
+			).putData(
+				"dialogTitle",
+				_language.get(
+					httpServletRequest, "select-site-or-asset-library")
+			).putData(
+				"redirectURL",
+				PortletURLBuilder.create(
+					getPortletURL()
+				).setParameter(
+					"scopeId", (String)null
+				).buildString()
+			).putData(
+				"selectScopeURL",
+				String.valueOf(
+					_contentDashboardAdminDisplayContext.
+						getScopeIdItemSelectorURL())
+			).setActive(
+				_contentDashboardAdminDisplayContext.getScopeId() > 0
+			).setLabel(
+				_language.get(httpServletRequest, "site-or-asset-library")
+			).build(),
 			() -> DropdownItemBuilder.putData(
 				"action", "selectContentDashboardItemSubtype"
 			).putData(
@@ -759,8 +871,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 					_contentDashboardAdminDisplayContext.
 						getContentDashboardItemSubtypes())
 			).setLabel(
-				_language.get(httpServletRequest, "type") +
-					StringPool.TRIPLE_PERIOD
+				_language.get(httpServletRequest, "type")
 			).build(),
 			() -> DropdownItemBuilder.putData(
 				"action", "selectAssetTag"
@@ -779,8 +890,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 				SetUtil.isNotEmpty(
 					_contentDashboardAdminDisplayContext.getAssetTagIds())
 			).setLabel(
-				_language.get(httpServletRequest, "tags") +
-					StringPool.TRIPLE_PERIOD
+				_language.get(httpServletRequest, "tags")
 			).build());
 
 		dropdownItemList.addAll(
@@ -846,6 +956,16 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		).buildString();
 	}
 
+	private String _getRemoveLabelURL(String... names) {
+		PortletURL portletURL = getPortletURL();
+
+		for (String name : names) {
+			portletURL.setParameter(name, (String)null);
+		}
+
+		return portletURL.toString();
+	}
+
 	private String _getRemoveLabelURL(
 			String name,
 			PortletURLBuilder.UnsafeSupplier<Object, Exception>
@@ -856,16 +976,6 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 			PortletURLUtil.clone(currentURLObj, liferayPortletResponse)
 		).setParameter(
 			name, valueUnsafeSupplier
-		).buildString();
-	}
-
-	private String _getRemoveLabelURL(String name, String value)
-		throws PortletException {
-
-		return PortletURLBuilder.create(
-			PortletURLUtil.clone(currentURLObj, liferayPortletResponse)
-		).setParameter(
-			name, value
 		).buildString();
 	}
 
@@ -900,6 +1010,20 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 		return _language.get(httpServletRequest, label);
 	}
 
+	private boolean _isCustomDateActive() {
+		if (Validator.isNotNull(
+				_contentDashboardAdminDisplayContext.getDateType()) &&
+			Validator.isNotNull(
+				_contentDashboardAdminDisplayContext.getEndDateString()) &&
+			Validator.isNotNull(
+				_contentDashboardAdminDisplayContext.getStartDateString())) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		ContentDashboardAdminManagementToolbarDisplayContext.class);
 
@@ -915,6 +1039,7 @@ public class ContentDashboardAdminManagementToolbarDisplayContext
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final Locale _locale;
+	private final PortletResponse _portletResponse;
 	private final UserLocalService _userLocalService;
 
 }

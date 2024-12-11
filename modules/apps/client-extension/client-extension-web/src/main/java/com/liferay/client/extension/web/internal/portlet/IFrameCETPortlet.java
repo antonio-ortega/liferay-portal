@@ -6,13 +6,14 @@
 package com.liferay.client.extension.web.internal.portlet;
 
 import com.liferay.client.extension.type.IFrameCET;
-import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
+import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.servlet.taglib.aui.ScriptData;
 import com.liferay.portal.kernel.servlet.taglib.util.OutputData;
 import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -32,11 +33,12 @@ import javax.portlet.RenderResponse;
 public class IFrameCETPortlet extends BaseCETPortlet<IFrameCET> {
 
 	public IFrameCETPortlet(
-		IFrameCET iFrameCET, NPMResolver npmResolver, String portletId) {
+		IFrameCET iFrameCET, String portletId, Portal portal) {
 
-		super(iFrameCET, npmResolver);
+		super(iFrameCET);
 
 		_portletId = portletId;
+		_portal = portal;
 	}
 
 	@Override
@@ -69,19 +71,7 @@ public class IFrameCETPortlet extends BaseCETPortlet<IFrameCET> {
 
 		OutputData outputData = getOutputData(renderRequest);
 
-		ScriptData scriptData = new ScriptData();
-
-		String moduleName = npmResolver.resolveModuleName(
-			"@liferay/client-extension-web/remote_protocol/bridge");
-
-		scriptData.append(
-			null, "RemoteProtocolBridge.default()",
-			moduleName + " as RemoteProtocolBridge",
-			ScriptData.ModulesType.ES6);
-
 		StringWriter stringWriter = new StringWriter();
-
-		scriptData.writeTo(stringWriter);
 
 		StringBuffer stringBuffer = stringWriter.getBuffer();
 
@@ -93,13 +83,18 @@ public class IFrameCETPortlet extends BaseCETPortlet<IFrameCET> {
 
 		printWriter.print("<iframe src=\"");
 
-		String iFrameURL = cet.getURL();
+		String iFrameURL = StringUtil.replace(
+			cet.getURL(), CharPool.QUOTE, _ENCODED_DOUBLE_QUOTE);
 
 		Properties properties = getProperties(renderRequest);
 
 		for (Map.Entry<Object, Object> entry : properties.entrySet()) {
 			iFrameURL = HttpComponentsUtil.addParameter(
-				iFrameURL, (String)entry.getKey(), (String)entry.getValue());
+				iFrameURL,
+				StringUtil.replace(
+					(String)entry.getKey(), CharPool.QUOTE,
+					_ENCODED_DOUBLE_QUOTE),
+				(String)entry.getValue());
 		}
 
 		printWriter.print(iFrameURL);
@@ -109,6 +104,9 @@ public class IFrameCETPortlet extends BaseCETPortlet<IFrameCET> {
 		printWriter.flush();
 	}
 
+	private static final String _ENCODED_DOUBLE_QUOTE = "%22";
+
+	private final Portal _portal;
 	private final String _portletId;
 
 }

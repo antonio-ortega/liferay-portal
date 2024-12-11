@@ -13,7 +13,7 @@ import com.liferay.commerce.order.content.web.internal.util.CommerceOrderItemUti
 import com.liferay.commerce.price.CommerceOrderItemPrice;
 import com.liferay.commerce.price.CommerceOrderPriceCalculation;
 import com.liferay.commerce.product.model.CPInstance;
-import com.liferay.commerce.product.service.CPInstanceLocalService;
+import com.liferay.commerce.product.service.CPInstanceService;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.product.util.CPInstanceHelper;
 import com.liferay.commerce.util.CommerceUtil;
@@ -74,10 +74,6 @@ public class CommerceOrderItemInfoItemFieldValuesProvider
 
 	private List<InfoFieldValue<Object>> _getCommerceOrderItemInfoFieldValues(
 		CommerceOrderItem commerceOrderItem) {
-
-		ThemeDisplay themeDisplay = _getThemeDisplay();
-
-		Locale locale = themeDisplay.getLocale();
 
 		List<InfoFieldValue<Object>> commerceOrderItemInfoFieldValues =
 			new ArrayList<>();
@@ -158,6 +154,10 @@ public class CommerceOrderItemInfoItemFieldValuesProvider
 		String url = StringPool.BLANK;
 
 		try {
+			ThemeDisplay themeDisplay = _getThemeDisplay();
+
+			Locale locale = themeDisplay.getLocale();
+
 			if (commerceOrderItem.getParentCommerceOrderItemId() == 0) {
 				options = CommerceOrderItemUtil.getOptions(
 					commerceOrderItem, _cpInstanceHelper, locale);
@@ -179,7 +179,7 @@ public class CommerceOrderItemInfoItemFieldValuesProvider
 			unitPrice = CommerceOrderItemUtil.formatUnitPrice(
 				commerceOrderItemPrice, _language, locale);
 
-			CPInstance cpInstance = _cpInstanceLocalService.fetchCPInstance(
+			CPInstance cpInstance = _cpInstanceService.fetchCPInstance(
 				commerceOrderItem.getCPInstanceId());
 
 			if (cpInstance != null) {
@@ -257,7 +257,7 @@ public class CommerceOrderItemInfoItemFieldValuesProvider
 	private CPInstanceHelper _cpInstanceHelper;
 
 	@Reference
-	private CPInstanceLocalService _cpInstanceLocalService;
+	private CPInstanceService _cpInstanceService;
 
 	@Reference
 	private ExpandoInfoItemFieldSetProvider _expandoInfoItemFieldSetProvider;

@@ -42,7 +42,10 @@ declare module Liferay {
 			| 'ja_JP'
 			| 'pt_BR'
 			| 'sv_SE'
-			| 'zh_CN';
+			| 'zh_CN'
+			| 'zh_Hans_CN'
+			| 'zh_Hant_TW'
+			| 'zh_TW';
 
 		type FullyLocalizedValue<T> = {[key in Locale]: T};
 		type LocalizedValue<T> = Partial<FullyLocalizedValue<T>>;
@@ -161,22 +164,26 @@ declare module Liferay {
 		export type Immutable<T> = T extends Builtin
 			? T
 			: T extends Map<infer K, infer V>
-			? ReadonlyMap<Immutable<K>, Immutable<V>>
-			: T extends ReadonlyMap<infer K, infer V>
-			? ReadonlyMap<Immutable<K>, Immutable<V>>
-			: T extends WeakMap<infer K, infer V>
-			? WeakMap<Immutable<K>, Immutable<V>>
-			: T extends Set<infer U>
-			? ReadonlySet<Immutable<U>>
-			: T extends ReadonlySet<infer U>
-			? ReadonlySet<Immutable<U>>
-			: T extends WeakSet<infer U>
-			? WeakSet<Immutable<U>>
-			: T extends Promise<infer U>
-			? Promise<Immutable<U>>
-			: T extends {}
-			? {readonly [K in keyof T]: Immutable<T[K]>}
-			: Readonly<T>;
+				? ReadonlyMap<Immutable<K>, Immutable<V>>
+				: T extends ReadonlyMap<infer K, infer V>
+					? ReadonlyMap<Immutable<K>, Immutable<V>>
+					: T extends WeakMap<infer K, infer V>
+						? WeakMap<Immutable<K>, Immutable<V>>
+						: T extends Set<infer U>
+							? ReadonlySet<Immutable<U>>
+							: T extends ReadonlySet<infer U>
+								? ReadonlySet<Immutable<U>>
+								: T extends WeakSet<infer U>
+									? WeakSet<Immutable<U>>
+									: T extends Promise<infer U>
+										? Promise<Immutable<U>>
+										: T extends {}
+											? {
+													readonly [K in keyof T]: Immutable<
+														T[K]
+													>;
+												}
+											: Readonly<T>;
 
 		const ATOM = 'Liferay.State.ATOM';
 		const SELECTOR = 'Liferay.State.SELECTOR';
@@ -227,10 +234,13 @@ declare module Liferay {
 
 	namespace ThemeDisplay {
 		export function getBCP47LanguageId(): string;
+		export function getCompanyId(): string;
 		export function getDefaultLanguageId(): Language.Locale;
 		export function getLanguageId(): Language.Locale;
+		export function getPathContext(): string;
 		export function getPathThemeImages(): string;
 		export function getPathThemeSpritemap(): string;
+		export function getPortalURL(): string;
 		export function getSiteGroupId(): number;
 		export function isControlPanel(): boolean;
 	}

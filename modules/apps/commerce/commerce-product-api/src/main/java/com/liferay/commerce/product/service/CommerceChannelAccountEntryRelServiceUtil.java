@@ -7,6 +7,7 @@ package com.liferay.commerce.product.service;
 
 import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
@@ -90,6 +91,14 @@ public class CommerceChannelAccountEntryRelServiceUtil {
 
 	public static List<CommerceChannelAccountEntryRel>
 		getCommerceChannelAccountEntryRels(
+			long commerceChannelId, String name, int type, int start, int end) {
+
+		return getService().getCommerceChannelAccountEntryRels(
+			commerceChannelId, name, type, start, end);
+	}
+
+	public static List<CommerceChannelAccountEntryRel>
+		getCommerceChannelAccountEntryRels(
 			String className, long classPK, long commerceChannelId, int type) {
 
 		return getService().getCommerceChannelAccountEntryRels(
@@ -102,6 +111,13 @@ public class CommerceChannelAccountEntryRelServiceUtil {
 
 		return getService().getCommerceChannelAccountEntryRelsCount(
 			accountEntryId, type);
+	}
+
+	public static int getCommerceChannelAccountEntryRelsCount(
+		long commerceChannelId, String name, int type) {
+
+		return getService().getCommerceChannelAccountEntryRelsCount(
+			commerceChannelId, name, type);
 	}
 
 	/**
@@ -125,15 +141,12 @@ public class CommerceChannelAccountEntryRelServiceUtil {
 	}
 
 	public static CommerceChannelAccountEntryRelService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(
-		CommerceChannelAccountEntryRelService service) {
-
-		_service = service;
-	}
-
-	private static volatile CommerceChannelAccountEntryRelService _service;
+	private static final Snapshot<CommerceChannelAccountEntryRelService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceChannelAccountEntryRelServiceUtil.class,
+			CommerceChannelAccountEntryRelService.class);
 
 }

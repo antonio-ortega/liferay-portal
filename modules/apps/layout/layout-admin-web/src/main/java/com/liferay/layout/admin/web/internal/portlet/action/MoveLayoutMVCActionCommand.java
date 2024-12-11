@@ -11,7 +11,6 @@ import com.liferay.layout.admin.web.internal.display.context.LayoutsAdminDisplay
 import com.liferay.layout.admin.web.internal.display.context.MillerColumnsDisplayContext;
 import com.liferay.layout.admin.web.internal.handler.LayoutExceptionRequestHandlerUtil;
 import com.liferay.layout.admin.web.internal.helper.LayoutActionsHelper;
-import com.liferay.layout.helper.LayoutCopyHelper;
 import com.liferay.layout.set.prototype.helper.LayoutSetPrototypeHelper;
 import com.liferay.layout.util.template.LayoutConverterRegistry;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -23,14 +22,13 @@ import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.staging.StagingGroupHelper;
 import com.liferay.translation.security.permission.TranslationPermission;
-import com.liferay.translation.url.provider.TranslationURLProvider;
 
 import java.util.Iterator;
 
@@ -97,25 +95,28 @@ public class MoveLayoutMVCActionCommand extends BaseAddLayoutMVCActionCommand {
 
 			LayoutsAdminDisplayContext layoutsAdminDisplayContext =
 				new LayoutsAdminDisplayContext(
-					_itemSelector, layoutActionsHelper, _layoutCopyHelper,
+					_itemSelector, layoutActionsHelper, _layoutLocalService,
 					_layoutSetPrototypeHelper, liferayPortletRequest,
 					liferayPortletResponse);
 
-			JSONObject jsonObject = JSONUtil.put(
-				"layoutColumns",
-				() -> {
-					MillerColumnsDisplayContext millerColumnsDisplayContext =
-						new MillerColumnsDisplayContext(
-							_layoutSetPrototypeHelper,
-							layoutsAdminDisplayContext, liferayPortletRequest,
-							liferayPortletResponse);
-
-					return millerColumnsDisplayContext.
-						getLayoutColumnsJSONArray();
-				});
-
 			JSONPortletResponseUtil.writeJSON(
-				liferayPortletRequest, liferayPortletResponse, jsonObject);
+				liferayPortletRequest, liferayPortletResponse,
+				JSONUtil.put(
+					"layoutColumns",
+					() -> {
+						MillerColumnsDisplayContext
+							millerColumnsDisplayContext =
+								new MillerColumnsDisplayContext(
+									_layoutSetPrototypeHelper,
+									layoutsAdminDisplayContext,
+									liferayPortletRequest,
+									liferayPortletResponse);
+
+						return millerColumnsDisplayContext.
+							getLayoutColumnsJSONArray();
+					}));
+
+			hideDefaultSuccessMessage(actionRequest);
 		}
 		catch (Exception exception) {
 			hideDefaultErrorMessage(actionRequest);
@@ -135,7 +136,7 @@ public class MoveLayoutMVCActionCommand extends BaseAddLayoutMVCActionCommand {
 	private LayoutConverterRegistry _layoutConverterRegistry;
 
 	@Reference
-	private LayoutCopyHelper _layoutCopyHelper;
+	private LayoutLocalService _layoutLocalService;
 
 	@Reference
 	private LayoutService _layoutService;
@@ -147,12 +148,6 @@ public class MoveLayoutMVCActionCommand extends BaseAddLayoutMVCActionCommand {
 	private Portal _portal;
 
 	@Reference
-	private StagingGroupHelper _stagingGroupHelper;
-
-	@Reference
 	private TranslationPermission _translationPermission;
-
-	@Reference
-	private TranslationURLProvider _translationURLProvider;
 
 }

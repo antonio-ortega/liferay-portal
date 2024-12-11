@@ -28,10 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-
 import java.util.Locale;
 
 import javax.servlet.http.HttpServlet;
@@ -57,17 +53,16 @@ public abstract class BaseBuiltInJSModuleServlet extends HttpServlet {
 
 	@Override
 	public void destroy() {
-		_bundleSymbolicNameServiceTrackerMap.close();
+		_serviceTrackerMap.close();
 	}
 
 	@Override
 	public void init() {
 		Bundle bundle = FrameworkUtil.getBundle(getClass());
 
-		_bundleSymbolicNameServiceTrackerMap =
-			ServiceTrackerMapFactory.openSingleValueMap(
-				bundle.getBundleContext(), ResourceBundleLoader.class,
-				"bundle.symbolic.name");
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundle.getBundleContext(), ResourceBundleLoader.class,
+			"bundle.symbolic.name");
 	}
 
 	protected abstract MimeTypes getMimeTypes();
@@ -114,68 +109,38 @@ public abstract class BaseBuiltInJSModuleServlet extends HttpServlet {
 			String pathInfo)
 		throws IOException {
 
-		JSPackage jsPackage = resourceDescriptor.getJsPackage();
-
 		InputStream inputStream = null;
 
-		if (PropsValues.WORK_DIR_OVERRIDE_ENABLED && pathInfo.endsWith(".js")) {
-			JSBundle jsBundle = jsPackage.getJSBundle();
-
-			File file = new File(
-				_workDirName,
-				StringBundler.concat(
-					jsBundle.getName(), StringPool.DASH, jsBundle.getVersion(),
-					File.separator, resourceDescriptor.getPackagePath()));
-
-			if (file.exists()) {
-				try {
-					URI uri = file.toURI();
-
-					URL url = uri.toURL();
-
-					inputStream = url.openStream();
-				}
-				catch (MalformedURLException malformedURLException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Invalid override URL " + file.toString(),
-							malformedURLException);
-					}
-				}
-			}
-		}
-
 		String extension = FileUtil.getExtension(pathInfo);
+		JSPackage jsPackage = resourceDescriptor.getJsPackage();
 
-		if (inputStream == null) {
-			String moduleName = resourceDescriptor.getPackagePath();
+		String moduleName = resourceDescriptor.getPackagePath();
 
-			if (moduleName != null) {
-				if (extension.equals("map")) {
-					JSModule jsModule = jsPackage.getJSModule(
-						moduleName.substring(0, moduleName.length() - 7));
+		if (moduleName != null) {
+			if (extension.equals("map")) {
+				JSModule jsModule = jsPackage.getJSModule(
+					moduleName.substring(0, moduleName.length() - 7));
 
-					if (jsModule != null) {
-						inputStream = jsModule.getSourceMapInputStream();
-					}
-				}
-				else {
-					if (extension.equals("js")) {
-						moduleName = moduleName.substring(
-							0, moduleName.length() - 3);
-					}
-
-					JSModule jsModule = jsPackage.getJSModule(moduleName);
-
-					if (jsModule != null) {
-						inputStream = jsModule.getInputStream();
-					}
+				if (jsModule != null) {
+					inputStream = jsModule.getSourceMapInputStream();
 				}
 			}
 			else {
-				if (_log.isDebugEnabled()) {
-					_log.debug("Module name is null");
+				if (extension.equals("js")) {
+					moduleName = moduleName.substring(
+						0, moduleName.length() - 3);
 				}
+
+				JSModule jsModule = jsPackage.getJSModule(moduleName);
+
+				if (jsModule != null) {
+					inputStream = jsModule.getInputStream();
+				}
+			}
+		}
+		else {
+			if (_log.isDebugEnabled()) {
+				_log.debug("Module name is null");
 			}
 		}
 
@@ -196,8 +161,7 @@ public abstract class BaseBuiltInJSModuleServlet extends HttpServlet {
 				JSBundle jsBundle = jsPackage.getJSBundle();
 
 				ResourceBundleLoader resourceBundleLoader =
-					_bundleSymbolicNameServiceTrackerMap.getService(
-						jsBundle.getName());
+					_serviceTrackerMap.getService(jsBundle.getName());
 
 				if (resourceBundleLoader != null) {
 					content = LanguageUtil.process(
@@ -244,8 +208,7 @@ public abstract class BaseBuiltInJSModuleServlet extends HttpServlet {
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseBuiltInJSModuleServlet.class);
 
-	private ServiceTrackerMap<String, ResourceBundleLoader>
-		_bundleSymbolicNameServiceTrackerMap;
+	private ServiceTrackerMap<String, ResourceBundleLoader> _serviceTrackerMap;
 	private final String _workDirName;
 
 }

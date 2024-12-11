@@ -1,14 +1,15 @@
 {
 	"dependencies": {
-		"@clayui/pagination": "3.105.0",
+		"@clayui/pagination": "3.123.1",
 		"frontend-js-web": "*",
-		"react": "16.12.0"
+		"react": "18.2.0"
 	},
+	"main": "journal_article/js/index.js",
 	"name": "@liferay/journal-taglib",
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format"
 	},
-	"version": "6.2.6"
+	"version": "6.2.24"
 }

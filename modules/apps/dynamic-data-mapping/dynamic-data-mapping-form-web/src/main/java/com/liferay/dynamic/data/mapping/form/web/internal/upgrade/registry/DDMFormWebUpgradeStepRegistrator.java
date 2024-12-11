@@ -8,8 +8,10 @@ package com.liferay.dynamic.data.mapping.form.web.internal.upgrade.registry;
 import com.liferay.dynamic.data.mapping.form.web.internal.upgrade.v1_0_0.UpgradeDDMFormAdminPortletId;
 import com.liferay.dynamic.data.mapping.form.web.internal.upgrade.v1_0_0.UpgradeDDMFormPortletId;
 import com.liferay.dynamic.data.mapping.form.web.internal.upgrade.v1_0_0.UpgradeDDMFormPortletPreferences;
-import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
-import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.dynamic.data.mapping.form.web.internal.upgrade.v1_0_1.DDMFormPortletPreferencesUpgradeProcess;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
 import org.osgi.service.component.annotations.Component;
@@ -30,12 +32,21 @@ public class DDMFormWebUpgradeStepRegistrator
 			"0.0.1", "1.0.0", new UpgradeDDMFormAdminPortletId(),
 			new UpgradeDDMFormPortletId(),
 			new UpgradeDDMFormPortletPreferences());
+
+		registry.register(
+			"1.0.0", "1.0.1",
+			new DDMFormPortletPreferencesUpgradeProcess(
+				_ddmFormInstanceLocalService, _ddmStructureLocalService,
+				_groupLocalService));
 	}
 
 	@Reference
-	private PortletPreferencesLocalService _portletPreferencesLocalService;
+	private DDMFormInstanceLocalService _ddmFormInstanceLocalService;
 
 	@Reference
-	private ResourcePermissionLocalService _resourcePermissionLocalService;
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 }

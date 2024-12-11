@@ -1,19 +1,32 @@
-# DB Partition Schema Validator Tool
-This tool validates DB Partition schemas to be sure that all of them only contains data associated to the proper companyId
+# Database Partition Schema Validator Tool
 
-## Requirements:
-    - MySQL
-    - Database user with DDL privileges
+This tool validates a partition in a database partitioned environment to ensure
+that they only contain data associated with their proper company ID.
+
+## Requirements
+
+- MySQL or PostgreSQL
+- Database user with read access to all partitions
 
 ## Usage
-    usage: Liferay Portal DB Partition Schema Validator
-    -a,--debug Print all log traces.
-    -d,--db-schema <arg> Default database schema name.
-    -h,--help Print help message.
-    -j,--jdbc-url <arg> JDBC url.
-    -p,--password <arg> Database user password.
-    -s,--schema-prefix <arg> Schema prefix for non-default databases.
-    -u,--user <arg> Database user name.
 
-## Execution example
-    java -jar com.liferay.portal.tools.db.partition.schema.validator.jar -d myDefaultSchema -u myDatabaseUser -p myDabatabasePassword
+```
+java -jar com.liferay.portal.tools.db.partition.schema.validator.jar <parameters>
+```
+
+Parameters:
+
+- `--db-name <arg>` Set the database name.
+- `--db-type <mysql|postgresql>` Set the database type.
+- `--debug` Print all log traces.
+- `--jdbc-url <arg>` Set the JDBC URL.
+- `--password <arg>` Set the database user password.
+- `--schema-prefix <arg>` Set the schema prefix.
+- `--user <arg>` Set the database user name.
+
+## Examples
+
+```
+java -jar com.liferay.portal.tools.db.partition.schema.validator.jar --db-name xyz123 --db-type mysql --password xyz123 --user xyz123
+java -jar com.liferay.portal.tools.db.partition.schema.validator.jar --db-name xyz123 --db-type postgresql --password xyz123 --user xyz123 
+```

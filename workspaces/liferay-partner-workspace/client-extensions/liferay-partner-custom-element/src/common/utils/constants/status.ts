@@ -20,6 +20,10 @@ export const Status = {
 		key: 'claimPaid',
 		name: 'Claim Paid',
 	},
+	COMPLETED: {
+		key: 'completed',
+		name: 'Completed',
+	},
 	DRAFT: {
 		key: 'draft',
 		name: 'Draft',
@@ -45,7 +49,7 @@ export const Status = {
 	},
 	PENDING: {
 		key: 'pendingMarketingReview',
-		name: 'PendingMarketingReview',
+		name: 'Pending Marketing Review',
 	},
 	REJECT: {
 		key: 'rejected',

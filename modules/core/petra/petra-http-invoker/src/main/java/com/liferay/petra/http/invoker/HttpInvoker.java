@@ -15,21 +15,19 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.logging.Logger;
+import java.util.regex.Matcher;
 
 /**
  * @author Brian Wing Shun Chan
@@ -38,8 +36,6 @@ import java.util.logging.Logger;
 public class HttpInvoker {
 
 	public static HttpInvoker newHttpInvoker() {
-		_updateHttpURLConnectionClass();
-
 		return new HttpInvoker();
 	}
 
@@ -133,7 +129,9 @@ public class HttpInvoker {
 	}
 
 	public HttpInvoker path(String name, Object value) {
-		_path = _path.replaceFirst("\\{" + name + "\\}", String.valueOf(value));
+		_path = _path.replaceFirst(
+			"\\{" + name + "\\}",
+			Matcher.quoteReplacement(String.valueOf(value)));
 
 		return this;
 	}
@@ -205,33 +203,36 @@ public class HttpInvoker {
 
 	}
 
-	private static void _updateHttpURLConnectionClass() {
+	protected HttpURLConnection getHttpURLConnection(
+			HttpMethod httpMethod, String urlString)
+		throws IOException {
+
+		URL url = new URL(urlString);
+
+		HttpURLConnection httpURLConnection =
+			(HttpURLConnection)url.openConnection();
+
 		try {
-			Field methodsField = HttpURLConnection.class.getDeclaredField(
-				"methods");
+			HttpURLConnection methodHttpURLConnection = httpURLConnection;
 
-			methodsField.setAccessible(true);
+			if (Objects.equals(url.getProtocol(), "https")) {
+				Class<?> clazz = httpURLConnection.getClass();
 
-			Field modifiersField = Field.class.getDeclaredField("modifiers");
+				Field field = clazz.getDeclaredField("delegate");
 
-			modifiersField.setAccessible(true);
-			modifiersField.setInt(
-				methodsField, methodsField.getModifiers() & ~Modifier.FINAL);
+				field.setAccessible(true);
 
-			Set<String> methodsFieldValue = new LinkedHashSet<>(
-				Arrays.asList((String[])methodsField.get(null)));
-
-			if (methodsFieldValue.contains("PATCH")) {
-				return;
+				methodHttpURLConnection = (HttpURLConnection)field.get(
+					httpURLConnection);
 			}
 
-			methodsFieldValue.add("PATCH");
+			_methodField.set(methodHttpURLConnection, httpMethod.name());
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new IOException(reflectiveOperationException);
+		}
 
-			methodsField.set(null, methodsFieldValue.toArray(new String[0]));
-		}
-		catch (IllegalAccessException | NoSuchFieldException exception) {
-			_logger.warning("Unable to update HttpURLConnection class");
-		}
+		return httpURLConnection;
 	}
 
 	private HttpInvoker() {
@@ -337,12 +338,8 @@ public class HttpInvoker {
 			urlString += queryString;
 		}
 
-		URL url = new URL(urlString);
-
-		HttpURLConnection httpURLConnection =
-			(HttpURLConnection)url.openConnection();
-
-		httpURLConnection.setRequestMethod(_httpMethod.name());
+		HttpURLConnection httpURLConnection = getHttpURLConnection(
+			_httpMethod, urlString);
 
 		if (_encodedUserNameAndPassword != null) {
 			httpURLConnection.setRequestProperty(
@@ -438,8 +435,18 @@ public class HttpInvoker {
 		}
 	}
 
-	private static final Logger _logger = Logger.getLogger(
-		HttpInvoker.class.getName());
+	private static final Field _methodField;
+
+	static {
+		try {
+			_methodField = HttpURLConnection.class.getDeclaredField("method");
+
+			_methodField.setAccessible(true);
+		}
+		catch (Exception exception) {
+			throw new ExceptionInInitializerError(exception);
+		}
+	}
 
 	private String _body;
 	private String _contentType;

@@ -50,6 +50,8 @@ public interface Build {
 
 	public String getBranchName();
 
+	public BuildDatabase getBuildDatabase();
+
 	public String getBuildDescription();
 
 	public String getBuildDirPath();
@@ -149,6 +151,8 @@ public interface Build {
 
 	public List<URL> getTestrayAttachmentURLs();
 
+	public String getTestrayBuildDateString();
+
 	public List<URL> getTestrayS3AttachmentURLs();
 
 	public JSONObject getTestReportJSONObject(boolean checkCache);
@@ -191,6 +195,8 @@ public interface Build {
 
 	public void reset();
 
+	public void saveBuildURLInBuildDatabase();
+
 	public void setArchiveName(String archiveName);
 
 	public void setArchiveRootDir(File archiveRootDir);
@@ -227,6 +233,8 @@ public interface Build {
 
 		public String getSenderBranchSHA();
 
+		public String getSenderBranchSHAShort();
+
 		public RemoteGitRef getSenderRemoteGitRef();
 
 		public String getSenderUsername();
@@ -238,6 +246,15 @@ public interface Build {
 	}
 
 	public class Invocation {
+
+		public Invocation(Build build) {
+			_build = build;
+		}
+
+		public Invocation(Build build, JenkinsMaster jenkinsMaster) {
+			_build = build;
+			_jenkinsMaster = jenkinsMaster;
+		}
 
 		public Invocation(
 			Build build, JenkinsMaster jenkinsMaster, long queueId) {
@@ -270,10 +287,18 @@ public interface Build {
 			_buildURL = buildURL;
 		}
 
+		public void setJenkinsMaster(JenkinsMaster jenkinsMaster) {
+			_jenkinsMaster = jenkinsMaster;
+		}
+
+		public void setQueueId(long queueId) {
+			_queueId = queueId;
+		}
+
 		private final Build _build;
 		private String _buildURL;
-		private final JenkinsMaster _jenkinsMaster;
-		private final long _queueId;
+		private JenkinsMaster _jenkinsMaster;
+		private long _queueId;
 
 	}
 

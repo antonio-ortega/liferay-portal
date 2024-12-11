@@ -8,13 +8,17 @@ package com.liferay.jethr0.job.controller;
 import com.liferay.jethr0.bui1d.BuildEntity;
 import com.liferay.jethr0.bui1d.queue.BuildQueue;
 import com.liferay.jethr0.bui1d.repository.BuildEntityRepository;
-import com.liferay.jethr0.bui1d.repository.BuildParameterEntityRepository;
 import com.liferay.jethr0.bui1d.run.BuildRunEntity;
+import com.liferay.jethr0.event.EventHandler;
+import com.liferay.jethr0.event.liferay.LiferayEventHandlerFactory;
 import com.liferay.jethr0.jenkins.JenkinsQueue;
 import com.liferay.jethr0.job.JobEntity;
 import com.liferay.jethr0.job.queue.JobQueue;
 import com.liferay.jethr0.job.repository.JobEntityRepository;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -39,6 +43,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class JobRestController {
 
+	@PostMapping("/action")
+	public ResponseEntity<String> action(
+		@AuthenticationPrincipal Jwt jwt, @RequestBody String body) {
+
+		try {
+			EventHandler eventHandler =
+				_liferayEventHandlerFactory.newEventHandler(
+					new JSONObject(body));
+
+			return new ResponseEntity<>(eventHandler.process(), HttpStatus.OK);
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
 	@PostMapping("/create")
 	public ResponseEntity<String> createJob(
 		@AuthenticationPrincipal Jwt jwt, @RequestBody String body) {
@@ -48,19 +68,7 @@ public class JobRestController {
 		for (JSONObject initialBuildJSONObject :
 				jobEntity.getInitialBuildJSONObjects()) {
 
-			BuildEntity buildEntity = _buildEntityRepository.create(
-				jobEntity, initialBuildJSONObject);
-
-			JSONArray buildParametersJSONArray =
-				initialBuildJSONObject.optJSONArray("buildParameters");
-
-			for (int i = 0; i < buildParametersJSONArray.length(); i++) {
-				JSONObject buildParameterJSONObject =
-					buildParametersJSONArray.getJSONObject(i);
-
-				_buildParameterEntityRepository.create(
-					buildEntity, buildParameterJSONObject);
-			}
+			_buildEntityRepository.create(jobEntity, initialBuildJSONObject);
 		}
 
 		if (jobEntity.getState() == JobEntity.State.QUEUED) {
@@ -70,6 +78,19 @@ public class JobRestController {
 		}
 
 		return new ResponseEntity<>(jobEntity.toString(), HttpStatus.OK);
+	}
+
+	@PostMapping("/delete/{id}")
+	public ResponseEntity<String> deleteJob(
+		@AuthenticationPrincipal Jwt jwt, @PathVariable("id") int jobEntityId) {
+
+		JobEntity jobEntity = _jobEntityRepository.getById(jobEntityId);
+
+		_jobEntityRepository.remove(jobEntity);
+
+		JSONObject jobJSONObject = jobEntity.getJSONObject();
+
+		return new ResponseEntity<>(jobJSONObject.toString(), HttpStatus.OK);
 	}
 
 	@GetMapping("/{id}")
@@ -83,25 +104,7 @@ public class JobRestController {
 		return new ResponseEntity<>(jobJSONObject.toString(), HttpStatus.OK);
 	}
 
-	@GetMapping("/build/{id}")
-	public ResponseEntity<String> jobBuild(
-		@AuthenticationPrincipal Jwt jwt,
-		@PathVariable("id") int buildEntityId) {
-
-		BuildEntity buildEntity = _buildEntityRepository.getById(buildEntityId);
-
-		JSONObject buildJSONObject = buildEntity.getJSONObject();
-
-		JobEntity jobEntity = buildEntity.getJobEntity();
-
-		if (jobEntity != null) {
-			buildJSONObject.put("job", jobEntity.getJSONObject());
-		}
-
-		return new ResponseEntity<>(buildJSONObject.toString(), HttpStatus.OK);
-	}
-
-	@GetMapping("/builds/{id}")
+	@GetMapping("/{id}/builds")
 	public ResponseEntity<String> jobBuilds(
 		@AuthenticationPrincipal Jwt jwt, @PathVariable("id") int jobEntityId) {
 
@@ -109,17 +112,52 @@ public class JobRestController {
 
 		JSONArray buildsJSONArray = new JSONArray();
 
-		for (BuildEntity buildEntity : jobEntity.getBuildEntities()) {
+		List<BuildEntity> buildEntities = new ArrayList<>(
+			jobEntity.getBuildEntities());
+
+		Collections.sort(
+			buildEntities,
+			new Comparator<BuildEntity>() {
+
+				@Override
+				public int compare(
+					BuildEntity buildEntity1, BuildEntity buildEntity2) {
+
+					if (buildEntity1.isInitialBuild() &&
+						buildEntity2.isInitialBuild()) {
+
+						return _compareBuildNames(buildEntity1, buildEntity2);
+					}
+
+					if (buildEntity1.isInitialBuild()) {
+						return -1;
+					}
+
+					if (buildEntity2.isInitialBuild()) {
+						return 1;
+					}
+
+					return _compareBuildNames(buildEntity1, buildEntity2);
+				}
+
+				private int _compareBuildNames(
+					BuildEntity buildEntity1, BuildEntity buildEntity2) {
+
+					String buildName1 = buildEntity1.getName();
+					String buildName2 = buildEntity2.getName();
+
+					return buildName1.compareTo(buildName2);
+				}
+
+			});
+
+		for (BuildEntity buildEntity : buildEntities) {
 			JSONObject buildJSONObject = buildEntity.getJSONObject();
 
-			List<BuildRunEntity> historyBuildRunEntities =
-				buildEntity.getHistoryBuildRunEntities();
+			BuildRunEntity latestBuildRunEntity =
+				buildEntity.getLatestBuildRunEntity();
 
-			if (!historyBuildRunEntities.isEmpty()) {
-				BuildRunEntity latestBuildRunEntity =
-					historyBuildRunEntities.get(
-						historyBuildRunEntities.size() - 1);
-
+			if (latestBuildRunEntity != null) {
 				buildJSONObject.put(
 					"latestDuration", latestBuildRunEntity.getDuration()
 				).put(
@@ -190,32 +228,32 @@ public class JobRestController {
 	public ResponseEntity<String> jobs(@AuthenticationPrincipal Jwt jwt) {
 		JSONArray jobsJSONArray = new JSONArray();
 
-		for (JobEntity jobEntity :
-				_jobEntityRepository.getByState(JobEntity.State.COMPLETED)) {
+		List<JobEntity> jobEntities = new ArrayList<>(
+			_jobEntityRepository.getAll());
 
+		Collections.sort(
+			jobEntities,
+			new Comparator<JobEntity>() {
+
+				@Override
+				public int compare(JobEntity jobEntity1, JobEntity jobEntity2) {
+					Long jobEntity1Id = jobEntity1.getId();
+					Long jobEntity2Id = jobEntity2.getId();
+
+					return jobEntity2Id.compareTo(jobEntity1Id);
+				}
+
+			});
+
+		for (JobEntity jobEntity : jobEntities) {
 			jobsJSONArray.put(jobEntity.getJSONObject());
 		}
 
 		return new ResponseEntity<>(jobsJSONArray.toString(), HttpStatus.OK);
 	}
 
-	@GetMapping("/types")
-	public ResponseEntity<String> jobTypes(@AuthenticationPrincipal Jwt jwt) {
-		JSONArray jobTypesJSONArray = new JSONArray();
-
-		for (JobEntity.Type type : JobEntity.Type.values()) {
-			jobTypesJSONArray.put(type.getJSONObject());
-		}
-
-		return new ResponseEntity<>(
-			jobTypesJSONArray.toString(), HttpStatus.OK);
-	}
-
 	@Autowired
 	private BuildEntityRepository _buildEntityRepository;
-
-	@Autowired
-	private BuildParameterEntityRepository _buildParameterEntityRepository;
 
 	@Autowired
 	private BuildQueue _buildQueue;
@@ -228,5 +266,8 @@ public class JobRestController {
 
 	@Autowired
 	private JobQueue _jobQueue;
+
+	@Autowired
+	private LiferayEventHandlerFactory _liferayEventHandlerFactory;
 
 }

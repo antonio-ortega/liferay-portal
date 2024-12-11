@@ -8,10 +8,13 @@ package com.liferay.commerce.internal.order;
 import com.liferay.account.constants.AccountConstants;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryService;
+import com.liferay.asset.display.page.util.AssetDisplayPageUtil;
 import com.liferay.commerce.configuration.CommerceOrderCheckoutConfiguration;
 import com.liferay.commerce.constants.CommerceCheckoutWebKeys;
 import com.liferay.commerce.constants.CommerceConstants;
+import com.liferay.commerce.constants.CommerceOrderActionKeys;
 import com.liferay.commerce.constants.CommerceOrderConstants;
+import com.liferay.commerce.constants.CommerceOrderWebKeys;
 import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
@@ -32,21 +35,30 @@ import com.liferay.commerce.service.CommerceOrderService;
 import com.liferay.commerce.util.CommerceAccountHelper;
 import com.liferay.commerce.util.CommerceCheckoutStep;
 import com.liferay.commerce.util.CommerceCheckoutStepRegistry;
+import com.liferay.commerce.util.CommerceOrderInfoItemUtil;
+import com.liferay.friendly.url.provider.FriendlyURLSeparatorProvider;
+import com.liferay.info.item.InfoItemReference;
+import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderRegistry;
 import com.liferay.petra.lang.CentralizedThreadLocal;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.cookies.CookiesManagerUtil;
 import com.liferay.portal.kernel.cookies.constants.CookiesConstants;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.PortletURLFactory;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -55,6 +67,8 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.settings.GroupServiceSettingsLocator;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -95,13 +109,13 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 
 		CommerceOrder commerceOrder = null;
 
-		long commerceCurrencyId = 0;
+		String commerceCurrencyCode = null;
 
 		CommerceCurrency commerceCurrency =
 			commerceContext.getCommerceCurrency();
 
 		if (commerceCurrency != null) {
-			commerceCurrencyId = commerceCurrency.getCommerceCurrencyId();
+			commerceCurrencyCode = commerceCurrency.getCode();
 		}
 
 		AccountEntry accountEntry = commerceContext.getAccountEntry();
@@ -109,7 +123,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		if (accountEntry != null) {
 			commerceOrder = _commerceOrderService.addCommerceOrder(
 				commerceContext.getCommerceChannelGroupId(),
-				accountEntry.getAccountEntryId(), commerceCurrencyId, 0);
+				accountEntry.getAccountEntryId(), commerceCurrencyCode, 0);
 		}
 
 		if (accountEntry == null) {
@@ -154,7 +168,16 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 	}
 
 	@Override
-	public PortletURL getCommerceCartPortletURL(
+	public CommerceOrder fetchCommerceOrderByUuidAndGroupId(
+			String uuid, long groupId)
+		throws PortalException {
+
+		return _commerceOrderLocalService.fetchCommerceOrderByUuidAndGroupId(
+			uuid, groupId);
+	}
+
+	@Override
+	public String getCommerceCartPortletURL(
 			HttpServletRequest httpServletRequest)
 		throws PortalException {
 
@@ -165,7 +188,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 	}
 
 	@Override
-	public PortletURL getCommerceCartPortletURL(
+	public String getCommerceCartPortletURL(
 			HttpServletRequest httpServletRequest, CommerceOrder commerceOrder)
 		throws PortalException {
 
@@ -176,10 +199,32 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 	}
 
 	@Override
-	public PortletURL getCommerceCartPortletURL(
+	public String getCommerceCartPortletURL(
 			long groupId, HttpServletRequest httpServletRequest,
 			CommerceOrder commerceOrder)
 		throws PortalException {
+
+		if ((commerceOrder != null) &&
+			FeatureFlagManagerUtil.isEnabled("LPD-20379")) {
+
+			LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
+				_getLayoutDisplayPageObjectProvider(commerceOrder);
+
+			if ((layoutDisplayPageObjectProvider != null) &&
+				AssetDisplayPageUtil.hasAssetDisplayPage(
+					groupId, layoutDisplayPageObjectProvider.getClassNameId(),
+					layoutDisplayPageObjectProvider.getClassPK(),
+					layoutDisplayPageObjectProvider.getClassTypeId())) {
+
+				String commerceOrderFriendlyURL =
+					CommerceOrderInfoItemUtil.getCommerceOrderFriendlyURL(
+						_friendlyURLSeparatorProviderSnapshot.get(),
+						httpServletRequest);
+
+				return commerceOrderFriendlyURL +
+					commerceOrder.getCommerceOrderId();
+			}
+		}
 
 		long plid = _portal.getPlidFromPortletId(
 			groupId, CommercePortletKeys.COMMERCE_ORDER_CONTENT);
@@ -194,6 +239,9 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 					"mvcRenderCommandName",
 					"/commerce_order_content/view_commerce_order_details");
 				portletURL.setParameter(
+					"backURL",
+					ParamUtil.getString(httpServletRequest, "backURL"));
+				portletURL.setParameter(
 					"commerceOrderUuid",
 					String.valueOf(commerceOrder.getUuid()));
 				portletURL.setParameter(
@@ -201,16 +249,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 					String.valueOf(commerceOrder.getCommerceOrderId()));
 			}
 
-			return portletURL;
-		}
-
-		plid = _portal.getPlidFromPortletId(
-			groupId, CommercePortletKeys.COMMERCE_CART_CONTENT);
-
-		if (plid > 0) {
-			return _getPortletURL(
-				groupId, httpServletRequest,
-				CommercePortletKeys.COMMERCE_CART_CONTENT);
+			return portletURL.toString();
 		}
 
 		plid = _portal.getPlidFromPortletId(
@@ -226,14 +265,30 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 					"mvcRenderCommandName",
 					"/commerce_open_order_content/edit_commerce_order");
 				portletURL.setParameter(
+					"backURL",
+					ParamUtil.getString(httpServletRequest, "backURL"));
+				portletURL.setParameter(
 					"commerceOrderUuid",
 					String.valueOf(commerceOrder.getUuid()));
 			}
 
-			return portletURL;
+			return portletURL.toString();
 		}
 
-		return null;
+		plid = _portal.getPlidFromPortletId(
+			groupId, CommercePortletKeys.COMMERCE_CART_CONTENT);
+
+		if (plid > 0) {
+			return PortletURLBuilder.create(
+				_getPortletURL(
+					groupId, httpServletRequest,
+					CommercePortletKeys.COMMERCE_CART_CONTENT)
+			).setBackURL(
+				ParamUtil.getString(httpServletRequest, "backURL")
+			).buildString();
+		}
+
+		return StringPool.BLANK;
 	}
 
 	@Override
@@ -352,7 +407,6 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 				}
 
 				cookie.setMaxAge(CookiesConstants.MAX_AGE);
-				cookie.setPath(StringPool.SLASH);
 
 				CookiesManagerUtil.addCookie(
 					CookiesConstants.CONSENT_TYPE_NECESSARY, cookie,
@@ -396,6 +450,10 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			(CommerceContext)httpServletRequest.getAttribute(
 				CommerceWebKeys.COMMERCE_CONTEXT);
 
+		if (commerceContext == null) {
+			return null;
+		}
+
 		AccountEntry accountEntry = commerceContext.getAccountEntry();
 
 		if (accountEntry == null) {
@@ -405,6 +463,45 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		CommerceOrder commerceOrder =
 			(CommerceOrder)httpServletRequest.getAttribute(
 				CommerceCheckoutWebKeys.COMMERCE_ORDER);
+
+		if (commerceOrder == null) {
+			HttpServletRequest originalHttpServletRequest =
+				_portal.getOriginalServletRequest(httpServletRequest);
+
+			HttpSession httpSession = originalHttpServletRequest.getSession();
+
+			long groupId = commerceContext.getCommerceChannelGroupId();
+
+			String uuid = (String)httpSession.getAttribute(
+				CommerceOrder.class.getName() + StringPool.POUND + groupId);
+
+			commerceOrder =
+				_commerceOrderLocalService.fetchCommerceOrderByUuidAndGroupId(
+					uuid, groupId);
+		}
+
+		if ((commerceOrder != null) && !commerceOrder.isOpen()) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			CookiesManagerUtil.deleteCookies(
+				CookiesManagerUtil.getDomain(httpServletRequest),
+				httpServletRequest, themeDisplay.getResponse(),
+				CommerceOrder.class.getName() + StringPool.POUND +
+					commerceOrder.getGroupId());
+
+			HttpServletRequest originalHttpServletRequest =
+				_portal.getOriginalServletRequest(httpServletRequest);
+
+			HttpSession httpSession = originalHttpServletRequest.getSession();
+
+			httpSession.removeAttribute(
+				CommerceOrder.class.getName() + StringPool.POUND +
+					commerceOrder.getGroupId());
+
+			commerceOrder = null;
+		}
 
 		if (commerceOrder == null) {
 			commerceOrder = _getCurrentCommerceOrder(
@@ -457,6 +554,44 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 	}
 
 	@Override
+	public boolean isMultishippingEnabled(
+		HttpServletRequest httpServletRequest) {
+
+		try {
+			CommerceOrder commerceOrder =
+				CommerceOrderInfoItemUtil.getCommerceOrder(
+					_commerceOrderService, httpServletRequest);
+
+			if ((commerceOrder == null) ||
+				!_commerceOrderModelResourcePermission.contains(
+					PermissionThreadLocal.getPermissionChecker(), commerceOrder,
+					CommerceOrderActionKeys.
+						MANAGE_COMMERCE_ORDER_MULTISHIPPING)) {
+
+				return false;
+			}
+
+			CommerceOrderCheckoutConfiguration
+				commerceOrderCheckoutConfiguration =
+					_configurationProvider.getConfiguration(
+						CommerceOrderCheckoutConfiguration.class,
+						new GroupServiceSettingsLocator(
+							_commerceChannelLocalService.
+								getCommerceChannelGroupIdBySiteGroupId(
+									_portal.getScopeGroupId(
+										httpServletRequest)),
+							CommerceConstants.SERVICE_NAME_COMMERCE_ORDER));
+
+			return commerceOrderCheckoutConfiguration.multishippingEnabled();
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return false;
+	}
+
+	@Override
 	public void setCurrentCommerceOrder(
 			HttpServletRequest httpServletRequest, CommerceOrder commerceOrder)
 		throws PortalException {
@@ -478,7 +613,7 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 			commerceOrder.getCommerceOrderId(),
 			_getCommerceContext(httpServletRequest));
 
-		if (!themeDisplay.isSignedIn()) {
+		if ((themeDisplay != null) && !themeDisplay.isSignedIn()) {
 			_setGuestCommerceOrder(commerceOrder, themeDisplay);
 
 			return;
@@ -495,6 +630,10 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		httpSession.setAttribute(
 			getCookieName(commerceOrder.getGroupId()), commerceOrder.getUuid());
 	}
+
+	@Reference
+	protected LayoutDisplayPageProviderRegistry
+		layoutDisplayPageProviderRegistry;
 
 	private CommerceOrder _checkGuestOrder(
 			CommerceContext commerceContext, CommerceOrder commerceOrder,
@@ -514,6 +653,15 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		User user = _portal.getUser(httpServletRequest);
 
 		if ((user == null) || user.isGuestUser()) {
+			return commerceOrder;
+		}
+
+		boolean mergeGuestOrder = GetterUtil.getBoolean(
+			httpServletRequest.getAttribute(
+				CommerceOrderWebKeys.MERGE_GUEST_ORDER),
+			true);
+
+		if (!mergeGuestOrder) {
 			return commerceOrder;
 		}
 
@@ -546,6 +694,10 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		if (userCommerceOrder == null) {
 			httpSession.removeAttribute(cookieName);
 
+			commerceOrder =
+				_commerceOrderLocalService.resetCommerceOrderAddresses(
+					commerceOrder.getCommerceOrderId(), true, true);
+
 			return _commerceOrderLocalService.updateAccount(
 				commerceOrder.getCommerceOrderId(), user.getUserId(),
 				accountEntry.getAccountEntryId());
@@ -557,6 +709,8 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		_commerceOrderThreadLocal.set(userCommerceOrder);
 
 		try {
+			httpSession.setAttribute(cookieName, userCommerceOrder.getUuid());
+
 			_commerceOrderLocalService.mergeGuestCommerceOrder(
 				user.getUserId(), commerceOrder.getCommerceOrderId(),
 				userCommerceOrder.getCommerceOrderId(),
@@ -688,6 +842,21 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		return commerceOrder;
 	}
 
+	private LayoutDisplayPageObjectProvider<?>
+		_getLayoutDisplayPageObjectProvider(CommerceOrder commerceOrder) {
+
+		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
+			layoutDisplayPageProviderRegistry.
+				getLayoutDisplayPageProviderByClassName(
+					CommerceOrder.class.getName());
+
+		InfoItemReference infoItemReference = new InfoItemReference(
+			CommerceOrder.class.getName(), commerceOrder.getCommerceOrderId());
+
+		return layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+			infoItemReference);
+	}
+
 	private String _getLocalizedMessage(Locale locale, String key) {
 		if (locale == null) {
 			return key;
@@ -754,7 +923,6 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 		}
 
 		cookie.setMaxAge(CookiesConstants.MAX_AGE);
-		cookie.setPath(StringPool.SLASH);
 
 		CookiesManagerUtil.addCookie(
 			CookiesConstants.CONSENT_TYPE_NECESSARY, cookie,
@@ -787,6 +955,10 @@ public class CommerceOrderHttpHelperImpl implements CommerceOrderHttpHelper {
 	private static final ThreadLocal<CommerceOrder> _commerceOrderThreadLocal =
 		new CentralizedThreadLocal<>(
 			CommerceOrderHttpHelperImpl.class.getName());
+	private static final Snapshot<FriendlyURLSeparatorProvider>
+		_friendlyURLSeparatorProviderSnapshot = new Snapshot<>(
+			CommerceOrderHttpHelperImpl.class,
+			FriendlyURLSeparatorProvider.class);
 
 	@Reference
 	private AccountEntryService _accountEntryService;

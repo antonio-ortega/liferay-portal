@@ -8,8 +8,6 @@ package com.liferay.frontend.data.set.internal.filter;
 import com.liferay.frontend.data.set.filter.BaseClientExtensionFDSFilter;
 import com.liferay.frontend.data.set.filter.FDSFilter;
 import com.liferay.frontend.data.set.filter.FDSFilterContextContributor;
-import com.liferay.portal.kernel.json.JSONFactory;
-import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
 import java.util.Collections;
@@ -17,7 +15,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Iván Zaera Avellón
@@ -44,14 +41,9 @@ public class ClientExtensionFDSFilterContextContributor
 		BaseClientExtensionFDSFilter baseClientExtensionFDSFilter) {
 
 		return HashMapBuilder.<String, Object>put(
-			"moduleURL", baseClientExtensionFDSFilter.getModuleURL()
+			"clientExtensionFilterURL",
+			baseClientExtensionFDSFilter.getModuleURL()
 		).build();
 	}
-
-	@Reference
-	private JSONFactory _jsonFactory;
-
-	@Reference
-	private Language _language;
 
 }

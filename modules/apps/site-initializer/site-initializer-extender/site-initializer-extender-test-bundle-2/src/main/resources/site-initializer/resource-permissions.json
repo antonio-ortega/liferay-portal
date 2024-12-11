@@ -1,6 +1,16 @@
 [
 	{
 		"actionIds": [
+			"DELETE",
+			"UPDATE"
+		],
+		"primKey": "0",
+		"resourceName": "[$OBJECT_DEFINITION_CLASS_NAME:TestObjectDefinition3$]",
+		"roleName": "Test Role 2",
+		"scope": 1
+	},
+	{
+		"actionIds": [
 			"PERMISSIONS",
 			"VIEW_PRICE"
 		],
@@ -17,16 +27,6 @@
 		"resourceName": "com.liferay.commerce.product",
 		"roleName": "Test Role 2",
 		"scope": "2"
-	},
-	{
-		"actionIds": [
-			"DELETE",
-			"UPDATE"
-		],
-		"primKey": "0",
-		"resourceName": "com.liferay.object.model.ObjectDefinition#[$OBJECT_DEFINITION_ID:TestObjectDefinition3$]",
-		"roleName": "Test Role 2",
-		"scope": 1
 	},
 	{
 		"actionIds": [

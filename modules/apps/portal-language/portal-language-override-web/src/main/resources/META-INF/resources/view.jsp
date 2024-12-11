@@ -21,8 +21,8 @@ ViewDisplayContext viewDisplayContext = (ViewDisplayContext)request.getAttribute
 	<clay:dropdown-menu
 		displayType="secondary"
 		dropdownItems="<%= viewDisplayContext.getTranslationLanguageDropdownItems() %>"
-		icon="<%= StringUtil.toLowerCase(TextFormatter.format(viewDisplayContext.getSelectedLanguageId(), TextFormatter.O)) %>"
-		label="<%= TextFormatter.format(viewDisplayContext.getSelectedLanguageId(), TextFormatter.O) %>"
+		icon="<%= HtmlUtil.escape(StringUtil.toLowerCase(TextFormatter.format(viewDisplayContext.getSelectedLanguageId(), TextFormatter.O))) %>"
+		label="<%= HtmlUtil.escape(TextFormatter.format(viewDisplayContext.getSelectedLanguageId(), TextFormatter.O)) %>"
 		small="<%= true %>"
 	/>
 
@@ -54,18 +54,18 @@ ViewDisplayContext viewDisplayContext = (ViewDisplayContext)request.getAttribute
 						colspan="<%= 3 %>"
 						href="<%= editPLOEntryURL %>"
 					>
-						<h5>
+						<div class="h5">
 							<strong><%= languageItemDisplay.getKey() %></strong>
-						</h5>
+						</div>
 
-						<h6 class="text-default">
+						<div class="h6 text-default">
 							<%= HtmlUtil.escape(languageItemDisplay.getValue()) %>
-						</h6>
+						</div>
 
 						<c:if test="<%= languageItemDisplay.isOverride() %>">
-							<h6>
+							<div class="h6">
 								<liferay-ui:message key="languages-with-override" />: <%= languageItemDisplay.getOverrideLanguageIdsString() %>
-							</h6>
+							</div>
 						</c:if>
 					</liferay-ui:search-container-column-text>
 

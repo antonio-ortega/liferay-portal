@@ -13,19 +13,25 @@ import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.context.CommerceContextFactory;
 import com.liferay.commerce.product.catalog.CPCatalogEntry;
 import com.liferay.commerce.product.catalog.CPQuery;
+import com.liferay.commerce.product.constants.CommerceChannelAccountEntryRelConstants;
 import com.liferay.commerce.product.data.source.CPDataSourceResult;
 import com.liferay.commerce.product.exception.NoSuchCProductException;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CommerceChannel;
+import com.liferay.commerce.product.model.CommerceChannelAccountEntryRel;
 import com.liferay.commerce.product.permission.CommerceProductViewPermission;
 import com.liferay.commerce.product.service.CPDefinitionLocalService;
+import com.liferay.commerce.product.service.CommerceChannelAccountEntryRelLocalService;
 import com.liferay.commerce.product.service.CommerceChannelLocalService;
 import com.liferay.commerce.product.util.CPDefinitionHelper;
 import com.liferay.commerce.util.CommerceAccountHelper;
+import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.commerce.delivery.catalog.dto.v1_0.Product;
 import com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.ProductDTOConverterContext;
 import com.liferay.headless.commerce.delivery.catalog.internal.odata.entity.v1_0.ProductEntityModel;
 import com.liferay.headless.commerce.delivery.catalog.resource.v1_0.ProductResource;
+import com.liferay.headless.common.spi.odata.entity.EntityFieldsUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.search.BooleanClause;
@@ -42,8 +48,10 @@ import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.search.generic.MatchAllQuery;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.expando.ExpandoBridgeIndexer;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -51,6 +59,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -88,6 +97,12 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		Long commerceAccountId = _getCommerceAccountId(
 			accountId, commerceChannel);
 
+		if (!_isAccountEntryEligible(
+				commerceAccountId, commerceChannel.getCommerceChannelId())) {
+
+			return null;
+		}
+
 		_commerceProductViewPermission.check(
 			PermissionThreadLocal.getPermissionChecker(), commerceAccountId,
 			commerceChannel.getGroupId(), cpDefinition.getCPDefinitionId());
@@ -105,17 +120,28 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
-		SearchContext searchContext = new SearchContext();
-
 		CommerceChannel commerceChannel =
 			_commerceChannelLocalService.getCommerceChannel(channelId);
 
 		Long commerceAccountId = _getCommerceAccountId(
 			accountId, commerceChannel);
 
+		if (!_isAccountEntryEligible(
+				commerceAccountId, commerceChannel.getCommerceChannelId())) {
+
+			return Page.of(
+				Collections.emptyList(),
+				Pagination.of(pagination.getPage(), pagination.getPageSize()),
+				0);
+		}
+
+		SearchContext searchContext = new SearchContext();
+
 		searchContext.setAttributes(
 			HashMapBuilder.<String, Serializable>put(
 				Field.STATUS, WorkflowConstants.STATUS_APPROVED
+			).put(
+				"accountEntryId", commerceAccountId
 			).put(
 				"commerceAccountGroupIds",
 				_accountGroupLocalService.getAccountGroupIds(commerceAccountId)
@@ -154,7 +180,11 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap) {
-		return _entityModel;
+		return new ProductEntityModel(
+			EntityFieldsUtil.getEntityFields(
+				_portal.getClassNameId(CPDefinition.class.getName()),
+				contextCompany.getCompanyId(), _expandoBridgeIndexer,
+				_expandoColumnLocalService, _expandoTableLocalService));
 	}
 
 	private BooleanClause<Query> _getBooleanClause(
@@ -216,6 +246,28 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		return accountId;
 	}
 
+	private boolean _isAccountEntryEligible(
+		long accountEntryId, long commerceChannelId) {
+
+		CommerceChannelAccountEntryRel commerceChannelAccountEntryRel =
+			_commerceChannelAccountEntryRelLocalService.
+				fetchCommerceChannelAccountEntryRel(
+					accountEntryId, commerceChannelId,
+					CommerceChannelAccountEntryRelConstants.TYPE_ELIGIBILITY);
+
+		int count =
+			_commerceChannelAccountEntryRelLocalService.
+				getCommerceChannelAccountEntryRelsCount(
+					commerceChannelId, null,
+					CommerceChannelAccountEntryRelConstants.TYPE_ELIGIBILITY);
+
+		if ((commerceChannelAccountEntryRel == null) && (count > 0)) {
+			return false;
+		}
+
+		return true;
+	}
+
 	private Product _toProduct(
 			CommerceContext commerceContext, CPDefinition cpDefinition)
 		throws Exception {
@@ -247,8 +299,6 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 		return products;
 	}
 
-	private static final EntityModel _entityModel = new ProductEntityModel();
-
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;
 
@@ -257,6 +307,10 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Reference
 	private CommerceAccountHelper _commerceAccountHelper;
+
+	@Reference
+	private CommerceChannelAccountEntryRelLocalService
+		_commerceChannelAccountEntryRelLocalService;
 
 	@Reference
 	private CommerceChannelLocalService _commerceChannelLocalService;
@@ -272,6 +326,18 @@ public class ProductResourceImpl extends BaseProductResourceImpl {
 
 	@Reference
 	private CPDefinitionLocalService _cpDefinitionLocalService;
+
+	@Reference
+	private ExpandoBridgeIndexer _expandoBridgeIndexer;
+
+	@Reference
+	private ExpandoColumnLocalService _expandoColumnLocalService;
+
+	@Reference
+	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference(
 		target = "(component.name=com.liferay.headless.commerce.delivery.catalog.internal.dto.v1_0.converter.ProductDTOConverter)"

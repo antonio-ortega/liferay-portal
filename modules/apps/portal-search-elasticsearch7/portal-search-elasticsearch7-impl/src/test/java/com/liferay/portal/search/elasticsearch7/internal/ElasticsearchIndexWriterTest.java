@@ -12,6 +12,7 @@ import com.liferay.portal.kernel.search.IndexWriter;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.search.generic.MatchQuery;
+import com.liferay.portal.search.elasticsearch7.internal.indexing.LiferayElasticsearchIndexingFixtureFactory;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
 import com.liferay.portal.search.test.util.indexing.IndexingFixture;
@@ -98,6 +99,21 @@ public class ElasticsearchIndexWriterTest extends BaseIndexingTestCase {
 		document.remove(Field.CONTENT);
 
 		_indexWriter.partiallyUpdateDocument(createSearchContext(), document);
+
+		_assertOnlyOne(Field.CONTENT, "example");
+		_assertOnlyOne(Field.TITLE, "text");
+	}
+
+	@Test
+	public void testPartiallyUpdateDocumentUpsertsMissingDocument()
+		throws SearchException {
+
+		Document document = createDocument(
+			Field.TITLE, "text", Field.CONTENT, "example");
+
+		_indexWriter.partiallyUpdateDocument(createSearchContext(), document);
+
+		_documents.add(document);
 
 		_assertOnlyOne(Field.CONTENT, "example");
 		_assertOnlyOne(Field.TITLE, "text");

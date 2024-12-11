@@ -6,6 +6,7 @@
 package com.liferay.segments.service;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.segments.model.SegmentsExperiment;
 
 import java.util.Map;
@@ -102,22 +103,22 @@ public class SegmentsExperimentServiceUtil {
 
 	public static SegmentsExperiment runSegmentsExperiment(
 			long segmentsExperimentId, double confidenceLevel,
-			Map<Long, Double> segmentsExperienceIdSplitMap)
+			Map<Long, Double> segmentsExperienceIdSplitMap, String type)
 		throws PortalException {
 
 		return getService().runSegmentsExperiment(
-			segmentsExperimentId, confidenceLevel,
-			segmentsExperienceIdSplitMap);
+			segmentsExperimentId, confidenceLevel, segmentsExperienceIdSplitMap,
+			type);
 	}
 
 	public static SegmentsExperiment runSegmentsExperiment(
 			String segmentsExperimentKey, double confidenceLevel,
-			Map<String, Double> segmentsExperienceKeySplitMap)
+			Map<String, Double> segmentsExperienceKeySplitMap, String type)
 		throws PortalException {
 
 		return getService().runSegmentsExperiment(
 			segmentsExperimentKey, confidenceLevel,
-			segmentsExperienceKeySplitMap);
+			segmentsExperienceKeySplitMap, type);
 	}
 
 	public static SegmentsExperiment updateSegmentsExperiment(
@@ -164,13 +165,12 @@ public class SegmentsExperimentServiceUtil {
 	}
 
 	public static SegmentsExperimentService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(SegmentsExperimentService service) {
-		_service = service;
-	}
-
-	private static volatile SegmentsExperimentService _service;
+	private static final Snapshot<SegmentsExperimentService> _serviceSnapshot =
+		new Snapshot<>(
+			SegmentsExperimentServiceUtil.class,
+			SegmentsExperimentService.class);
 
 }

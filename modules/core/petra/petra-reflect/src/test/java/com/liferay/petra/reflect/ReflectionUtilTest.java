@@ -21,6 +21,7 @@ import java.net.URLClassLoader;
 import java.security.Permission;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Assert;
@@ -39,53 +40,9 @@ public class ReflectionUtilTest {
 		new AggregateTestRule(
 			CodeCoverageAssertor.INSTANCE, LiferayUnitTestRule.INSTANCE);
 
+	@NewEnv(type = NewEnv.Type.JVM)
 	@Test
-	public void testArrayClone() throws Exception {
-		Object object = new Object();
-
-		try {
-			ReflectionUtil.arrayClone(object);
-
-			Assert.fail();
-		}
-		catch (IllegalArgumentException illegalArgumentException) {
-			Assert.assertEquals(
-				"Input object is not an array: " + object,
-				illegalArgumentException.getMessage());
-		}
-
-		object = new long[] {1, 2, 3};
-
-		Object clone = ReflectionUtil.arrayClone(object);
-
-		Assert.assertNotSame(object, clone);
-		Assert.assertArrayEquals((long[])object, (long[])clone);
-
-		Field field = ReflectionUtil.getDeclaredField(
-			ReflectionUtil.class, "_cloneMethod");
-
-		field.set(null, null);
-
-		try {
-			ReflectionUtil.arrayClone(object);
-
-			Assert.fail();
-		}
-		catch (NullPointerException nullPointerException) {
-			Assert.assertNull(nullPointerException.getCause());
-		}
-	}
-
-	@Test
-	public void testConstructor() {
-		new ReflectionUtil();
-	}
-
-	@NewEnv(type = NewEnv.Type.CLASSLOADER)
-	@Test
-	public void testExceptionInInitializerError()
-		throws ClassNotFoundException {
-
+	public void testClassInitializationFailure() throws Exception {
 		SecurityException securityException = new SecurityException();
 
 		try (SwappableSecurityManager swappableSecurityManager =
@@ -93,9 +50,10 @@ public class ReflectionUtilTest {
 
 					@Override
 					public void checkPermission(Permission permission) {
-						String name = permission.getName();
+						if (Objects.equals(
+								permission.getName(),
+								"accessDeclaredMembers")) {
 
-						if (name.equals("suppressAccessChecks")) {
 							throw securityException;
 						}
 					}
@@ -114,20 +72,18 @@ public class ReflectionUtilTest {
 	}
 
 	@Test
+	public void testConstructor() {
+		new ReflectionUtil();
+	}
+
+	@Test
 	public void testGetDeclaredField() throws Exception {
 		Field staticField = ReflectionUtil.getDeclaredField(
 			TestClass.class, "_privateStaticFinalObject");
 
 		Assert.assertTrue(staticField.isAccessible());
-		Assert.assertFalse(Modifier.isFinal(staticField.getModifiers()));
 		Assert.assertSame(
 			TestClass._privateStaticFinalObject, staticField.get(null));
-
-		Object object = new Object();
-
-		staticField.set(null, object);
-
-		Assert.assertSame(object, TestClass._privateStaticFinalObject);
 
 		TestClass testClass = new TestClass();
 
@@ -137,10 +93,6 @@ public class ReflectionUtilTest {
 		Assert.assertTrue(field.isAccessible());
 		Assert.assertTrue(Modifier.isFinal(field.getModifiers()));
 		Assert.assertSame(testClass._privateFinalObject, field.get(testClass));
-
-		field.set(testClass, object);
-
-		Assert.assertSame(object, testClass._privateFinalObject);
 	}
 
 	@Test
@@ -149,12 +101,6 @@ public class ReflectionUtilTest {
 
 		for (Field field : fields) {
 			Assert.assertTrue(field.isAccessible());
-
-			int modifier = field.getModifiers();
-
-			if (Modifier.isStatic(modifier)) {
-				Assert.assertFalse(Modifier.isFinal(modifier));
-			}
 
 			String name = field.getName();
 
@@ -176,6 +122,11 @@ public class ReflectionUtilTest {
 
 		Assert.assertTrue(method.isAccessible());
 		Assert.assertSame(TestClass._privateStaticObject, method.invoke(null));
+	}
+
+	@Test
+	public void testGetImplLookup() {
+		Assert.assertNotNull(ReflectionUtil.getImplLookup());
 	}
 
 	@Test
@@ -214,28 +165,6 @@ public class ReflectionUtilTest {
 		catch (Exception exception2) {
 			Assert.assertSame(exception1, exception2);
 		}
-	}
-
-	@Test
-	public void testUnfinalField() throws Exception {
-		Field field = TestClass.class.getDeclaredField(
-			"_privateStaticFinalObject");
-
-		Assert.assertTrue(Modifier.isFinal(field.getModifiers()));
-		Assert.assertTrue(Modifier.isPrivate(field.getModifiers()));
-		Assert.assertTrue(Modifier.isStatic(field.getModifiers()));
-
-		ReflectionUtil.unfinalField(field);
-
-		Assert.assertFalse(Modifier.isFinal(field.getModifiers()));
-		Assert.assertTrue(Modifier.isPrivate(field.getModifiers()));
-		Assert.assertTrue(Modifier.isStatic(field.getModifiers()));
-
-		ReflectionUtil.unfinalField(field);
-
-		Assert.assertFalse(Modifier.isFinal(field.getModifiers()));
-		Assert.assertTrue(Modifier.isPrivate(field.getModifiers()));
-		Assert.assertTrue(Modifier.isStatic(field.getModifiers()));
 	}
 
 	private static class TestClass implements TestInterface {

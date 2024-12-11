@@ -66,13 +66,10 @@ public interface StyleBookEntryLocalService
 	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.style.book.service.impl.StyleBookEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the style book entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link StyleBookEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public StyleBookEntry addStyleBookEntry(
-			long userId, long groupId, String name, String styleBookEntryKey,
+			String externalReferenceCode, long userId, long groupId,
+			boolean defaultStyleBookEntry, String frontendTokensValues,
+			String name, String styleBookEntryKey, String themeId,
 			ServiceContext serviceContext)
-		throws PortalException;
-
-	public StyleBookEntry addStyleBookEntry(
-			long userId, long groupId, String frontendTokensValues, String name,
-			String styleBookEntryKey, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -144,6 +141,10 @@ public interface StyleBookEntryLocalService
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	public StyleBookEntry deleteStyleBookEntry(long styleBookEntryId)
+		throws PortalException;
+
+	public StyleBookEntry deleteStyleBookEntry(
+			String externalReferenceCode, long groupId)
 		throws PortalException;
 
 	/**

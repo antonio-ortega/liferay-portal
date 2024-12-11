@@ -198,14 +198,14 @@ const FilterInformationToolbar = ({
 												'there-is-1-result-for-x'
 											),
 											filterInformationMessage
-									  )
+										)
 									: sub(
 											Liferay.Language.get(
 												'there-are-x-results-for-x'
 											),
 											totalNumberOfItems,
 											filterInformationMessage
-									  )}
+										)}
 							</span>
 						</ClayToolbar.Section>
 
@@ -221,14 +221,9 @@ const FilterInformationToolbar = ({
 										)
 									}
 								>
-									<span
-										className="c-inner ml-0"
-										tabIndex="-1"
-									>
-										{showAll
-											? Liferay.Language.get('show-less')
-											: Liferay.Language.get('show-all')}
-									</span>
+									{showAll
+										? Liferay.Language.get('show-less')
+										: Liferay.Language.get('show-all')}
 								</ClayButton>
 							</ClayToolbar.Section>
 						)}

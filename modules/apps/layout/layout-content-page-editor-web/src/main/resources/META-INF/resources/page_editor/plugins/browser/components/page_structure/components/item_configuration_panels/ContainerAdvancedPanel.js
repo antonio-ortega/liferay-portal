@@ -23,7 +23,6 @@ const HTML_TAGS = [
 	'nav',
 	'section',
 	'article',
-	'main',
 	'aside',
 	'footer',
 ];
@@ -58,7 +57,7 @@ export default function ContainerAdvancedPanel({item}) {
 							dispatch(
 								updateItemConfig({
 									itemConfig,
-									itemId: item.itemId,
+									itemIds: [item.itemId],
 								})
 							);
 						}}
@@ -91,7 +90,7 @@ export default function ContainerAdvancedPanel({item}) {
 									itemConfig: {
 										[name]: value,
 									},
-									itemId: item.itemId,
+									itemIds: [item.itemId],
 								})
 							);
 						}}

@@ -113,7 +113,7 @@ public class DDMTemplateItemSelectorViewDescriptor
 		long[] groupIds =
 			SiteConnectedGroupGroupProviderUtil.
 				getCurrentAndAncestorSiteAndDepotGroupIds(
-					_themeDisplay.getScopeGroupId(), true);
+					_themeDisplay.getScopeGroupId(), false, true);
 
 		ddmTemplateSearchContainer.setResultsAndTotal(
 			() -> DDMTemplateServiceUtil.search(
@@ -139,11 +139,6 @@ public class DDMTemplateItemSelectorViewDescriptor
 				WorkflowConstants.STATUS_ANY));
 
 		return ddmTemplateSearchContainer;
-	}
-
-	@Override
-	public boolean isShowBreadcrumb() {
-		return false;
 	}
 
 	@Override

@@ -8,6 +8,7 @@ package com.liferay.source.formatter.check;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.source.formatter.check.util.SourceUtil;
 
 /**
  * @author Hugo Huijser
@@ -19,7 +20,7 @@ public abstract class BaseLineBreakCheck extends BaseFileCheck {
 
 		String trimmedLine = StringUtil.trimLeading(line);
 
-		String strippedQuotesLine = stripQuotes(trimmedLine);
+		String strippedQuotesLine = SourceUtil.stripQuotes(trimmedLine);
 
 		int strippedQuotesLineOpenParenthesisCount = StringUtil.count(
 			strippedQuotesLine, CharPool.OPEN_PARENTHESIS);
@@ -38,7 +39,8 @@ public abstract class BaseLineBreakCheck extends BaseFileCheck {
 			(getLevel(trimmedLine) > 0)) {
 
 			addMessage(
-				fileName, "There should be a line break after '('", lineNumber);
+				fileName, "There should be a line break after \"(\"",
+				lineNumber);
 		}
 
 		if (line.endsWith(" +") || line.endsWith(" -") || line.endsWith(" *") ||
@@ -51,7 +53,7 @@ public abstract class BaseLineBreakCheck extends BaseFileCheck {
 
 				if ((y == -1) || (x < y)) {
 					addMessage(
-						fileName, "There should be a line break after '='",
+						fileName, "There should be a line break after \"=\"",
 						lineNumber);
 				}
 			}
@@ -63,7 +65,7 @@ public abstract class BaseLineBreakCheck extends BaseFileCheck {
 
 				if ((y == -1) || (x < y)) {
 					addMessage(
-						fileName, "There should be a line break after '->'",
+						fileName, "There should be a line break after \"->\"",
 						lineNumber);
 				}
 			}

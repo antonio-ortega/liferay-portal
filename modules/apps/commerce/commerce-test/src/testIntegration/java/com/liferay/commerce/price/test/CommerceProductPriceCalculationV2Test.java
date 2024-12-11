@@ -27,15 +27,16 @@ import com.liferay.commerce.pricing.constants.CommercePriceModifierConstants;
 import com.liferay.commerce.pricing.model.CommercePriceModifier;
 import com.liferay.commerce.pricing.service.CommercePriceModifierLocalService;
 import com.liferay.commerce.pricing.service.CommercePriceModifierRelLocalService;
-import com.liferay.commerce.product.CommerceProductTestUtil;
 import com.liferay.commerce.product.constants.CPConstants;
 import com.liferay.commerce.product.model.CPDefinition;
 import com.liferay.commerce.product.model.CPInstance;
 import com.liferay.commerce.product.model.CProduct;
 import com.liferay.commerce.product.model.CommerceCatalog;
 import com.liferay.commerce.product.option.CommerceOptionValue;
+import com.liferay.commerce.product.service.CPInstanceUnitOfMeasureLocalService;
 import com.liferay.commerce.product.service.CommerceCatalogLocalService;
 import com.liferay.commerce.product.test.util.CPTestUtil;
+import com.liferay.commerce.product.test.util.CommerceProductTestUtil;
 import com.liferay.commerce.test.util.context.TestCommerceContext;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
@@ -47,6 +48,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.BigDecimalUtil;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.test.rule.Inject;
@@ -1688,6 +1690,82 @@ public class CommerceProductPriceCalculationV2Test {
 	}
 
 	@Test
+	public void testCalculatePriceStaticOptionSKUBundle() throws Exception {
+		CommerceCatalog catalog =
+			_commerceCatalogLocalService.addCommerceCatalog(
+				null, RandomTestUtil.randomString(),
+				_commerceCurrency.getCode(), LocaleUtil.US.getDisplayLanguage(),
+				_serviceContext);
+
+		CommercePriceList commercePriceList =
+			CommercePriceListTestUtil.addCommercePriceList(
+				catalog.getGroupId(), 0.0);
+
+		CPInstance cpInstance = CPTestUtil.addCPInstanceFromCatalog(
+			catalog.getGroupId());
+
+		CPDefinition cpDefinition = cpInstance.getCPDefinition();
+
+		CProduct cProduct = cpDefinition.getCProduct();
+
+		CommercePriceEntryTestUtil.addCommercePriceEntry(
+			StringPool.BLANK, cProduct.getCProductId(),
+			cpInstance.getCPInstanceUuid(),
+			commercePriceList.getCommercePriceListId(), BigDecimal.ZERO);
+
+		List<CommerceOptionValue> commerceOptionValues = new ArrayList<>();
+
+		commerceOptionValues.add(
+			CommerceProductTestUtil.getCommerceOptionValue(
+				cpInstance.getCPInstanceId(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), BigDecimal.valueOf(9),
+				CPConstants.PRODUCT_OPTION_PRICE_TYPE_STATIC, BigDecimal.ONE));
+
+		commerceOptionValues.add(
+			CommerceProductTestUtil.getCommerceOptionValue(
+				cpInstance.getCPInstanceId(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), BigDecimal.valueOf(4),
+				CPConstants.PRODUCT_OPTION_PRICE_TYPE_STATIC, BigDecimal.ONE));
+
+		CommerceContext commerceContext = new TestCommerceContext(
+			_accountEntry, _commerceCurrency, null, _user, _group, null);
+
+		CommerceProductPrice commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				_createCommerceProductPriceRequest(
+					commerceContext, commerceOptionValues,
+					cpInstance.getCPInstanceId(), BigDecimal.ONE, true,
+					StringPool.BLANK));
+
+		CommerceMoney unitPrice = commerceProductPrice.getUnitPrice();
+		CommerceMoney finalPrice = commerceProductPrice.getFinalPrice();
+
+		Assert.assertEquals(
+			BigDecimal.valueOf(13),
+			BigDecimalUtil.stripTrailingZeros(unitPrice.getPrice()));
+		Assert.assertEquals(
+			BigDecimal.valueOf(13),
+			BigDecimalUtil.stripTrailingZeros(finalPrice.getPrice()));
+
+		commerceProductPrice =
+			_commerceProductPriceCalculation.getCommerceProductPrice(
+				_createCommerceProductPriceRequest(
+					commerceContext, commerceOptionValues,
+					cpInstance.getCPInstanceId(), BigDecimal.valueOf(2), true,
+					StringPool.BLANK));
+
+		unitPrice = commerceProductPrice.getUnitPrice();
+		finalPrice = commerceProductPrice.getFinalPrice();
+
+		Assert.assertEquals(
+			BigDecimal.valueOf(13),
+			BigDecimalUtil.stripTrailingZeros(unitPrice.getPrice()));
+		Assert.assertEquals(
+			BigDecimal.valueOf(26),
+			BigDecimalUtil.stripTrailingZeros(finalPrice.getPrice()));
+	}
+
+	@Test
 	public void testCalculatePriceStaticOptionWithSKUWithQuantities()
 		throws Exception {
 
@@ -1868,7 +1946,9 @@ public class CommerceProductPriceCalculationV2Test {
 			commerceProductPrice.getFinalPrice();
 
 		Assert.assertEquals(
-			cpInstancePrice, finalPriceCommerceMoney.getPrice());
+			cpInstancePrice,
+			BigDecimalUtil.stripTrailingZeros(
+				finalPriceCommerceMoney.getPrice()));
 	}
 
 	@Rule
@@ -1945,6 +2025,10 @@ public class CommerceProductPriceCalculationV2Test {
 
 	@Inject
 	private CommerceProductPriceCalculation _commerceProductPriceCalculation;
+
+	@Inject
+	private CPInstanceUnitOfMeasureLocalService
+		_cpInstanceUnitOfMeasureLocalService;
 
 	private Group _group;
 	private ServiceContext _serviceContext;

@@ -29,11 +29,16 @@ public class GitWorkingDirectoryFactory {
 
 		if (gitRepositoryDir == null) {
 			if (gitRepositoryName.equals("liferay-portal") &&
+				!upstreamBranchName.startsWith("faro-v") &&
 				!upstreamBranchName.equals("master")) {
 
 				gitRepositoryName += "-ee";
 
 				gitRepositoryDirName = "liferay-portal-" + upstreamBranchName;
+
+				if (upstreamBranchName.contains("release")) {
+					gitRepositoryDirName = "liferay-portal-ee";
+				}
 			}
 
 			if (gitRepositoryName.startsWith("com-liferay-") &&

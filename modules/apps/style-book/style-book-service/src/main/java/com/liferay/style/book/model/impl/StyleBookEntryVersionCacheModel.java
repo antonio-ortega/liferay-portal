@@ -69,7 +69,7 @@ public class StyleBookEntryVersionCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(39);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -81,6 +81,8 @@ public class StyleBookEntryVersionCacheModel
 		sb.append(version);
 		sb.append(", uuid=");
 		sb.append(uuid);
+		sb.append(", externalReferenceCode=");
+		sb.append(externalReferenceCode);
 		sb.append(", styleBookEntryId=");
 		sb.append(styleBookEntryId);
 		sb.append(", groupId=");
@@ -105,6 +107,8 @@ public class StyleBookEntryVersionCacheModel
 		sb.append(previewFileEntryId);
 		sb.append(", styleBookEntryKey=");
 		sb.append(styleBookEntryKey);
+		sb.append(", themeId=");
+		sb.append(themeId);
 		sb.append("}");
 
 		return sb.toString();
@@ -126,6 +130,14 @@ public class StyleBookEntryVersionCacheModel
 		}
 		else {
 			styleBookEntryVersionImpl.setUuid(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			styleBookEntryVersionImpl.setExternalReferenceCode("");
+		}
+		else {
+			styleBookEntryVersionImpl.setExternalReferenceCode(
+				externalReferenceCode);
 		}
 
 		styleBookEntryVersionImpl.setStyleBookEntryId(styleBookEntryId);
@@ -181,6 +193,13 @@ public class StyleBookEntryVersionCacheModel
 			styleBookEntryVersionImpl.setStyleBookEntryKey(styleBookEntryKey);
 		}
 
+		if (themeId == null) {
+			styleBookEntryVersionImpl.setThemeId("");
+		}
+		else {
+			styleBookEntryVersionImpl.setThemeId(themeId);
+		}
+
 		styleBookEntryVersionImpl.resetOriginalValues();
 
 		return styleBookEntryVersionImpl;
@@ -198,6 +217,7 @@ public class StyleBookEntryVersionCacheModel
 
 		version = objectInput.readInt();
 		uuid = objectInput.readUTF();
+		externalReferenceCode = objectInput.readUTF();
 
 		styleBookEntryId = objectInput.readLong();
 
@@ -216,6 +236,7 @@ public class StyleBookEntryVersionCacheModel
 
 		previewFileEntryId = objectInput.readLong();
 		styleBookEntryKey = objectInput.readUTF();
+		themeId = objectInput.readUTF();
 	}
 
 	@Override
@@ -233,6 +254,13 @@ public class StyleBookEntryVersionCacheModel
 		}
 		else {
 			objectOutput.writeUTF(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(externalReferenceCode);
 		}
 
 		objectOutput.writeLong(styleBookEntryId);
@@ -277,6 +305,13 @@ public class StyleBookEntryVersionCacheModel
 		else {
 			objectOutput.writeUTF(styleBookEntryKey);
 		}
+
+		if (themeId == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(themeId);
+		}
 	}
 
 	public long mvccVersion;
@@ -284,6 +319,7 @@ public class StyleBookEntryVersionCacheModel
 	public long styleBookEntryVersionId;
 	public int version;
 	public String uuid;
+	public String externalReferenceCode;
 	public long styleBookEntryId;
 	public long groupId;
 	public long companyId;
@@ -296,5 +332,6 @@ public class StyleBookEntryVersionCacheModel
 	public String name;
 	public long previewFileEntryId;
 	public String styleBookEntryKey;
+	public String themeId;
 
 }

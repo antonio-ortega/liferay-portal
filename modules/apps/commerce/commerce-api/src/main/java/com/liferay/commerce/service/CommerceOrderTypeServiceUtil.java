@@ -7,6 +7,7 @@ package com.liferay.commerce.service;
 
 import com.liferay.commerce.model.CommerceOrderType;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.util.List;
 import java.util.Map;
@@ -56,19 +57,20 @@ public class CommerceOrderTypeServiceUtil {
 		return getService().deleteCommerceOrderType(commerceOrderTypeId);
 	}
 
-	public static CommerceOrderType fetchByExternalReferenceCode(
-			String externalReferenceCode, long companyId)
-		throws PortalException {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CommerceOrderType fetchCommerceOrderType(
 			long commerceOrderTypeId)
 		throws PortalException {
 
 		return getService().fetchCommerceOrderType(commerceOrderTypeId);
+	}
+
+	public static CommerceOrderType
+			fetchCommerceOrderTypeByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws PortalException {
+
+		return getService().fetchCommerceOrderTypeByExternalReferenceCode(
+			externalReferenceCode, companyId);
 	}
 
 	public static CommerceOrderType getCommerceOrderType(
@@ -134,13 +136,11 @@ public class CommerceOrderTypeServiceUtil {
 	}
 
 	public static CommerceOrderTypeService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceOrderTypeService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceOrderTypeService _service;
+	private static final Snapshot<CommerceOrderTypeService> _serviceSnapshot =
+		new Snapshot<>(
+			CommerceOrderTypeServiceUtil.class, CommerceOrderTypeService.class);
 
 }

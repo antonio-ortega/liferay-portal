@@ -5,6 +5,7 @@
 
 package com.liferay.portal.kernel.test.rule;
 
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.petra.io.unsync.UnsyncPrintWriter;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -28,7 +29,6 @@ import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
-import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistryUtil;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
@@ -39,6 +39,8 @@ import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.PortalClassLoaderUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.service.PersistedModelLocalServiceRegistryUtil;
 
 import java.io.Closeable;
 import java.io.Serializable;
@@ -54,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.Assert;
@@ -521,20 +524,17 @@ public class DataGuardTestRuleUtil {
 		Map<String, PersistedModelLocalService>
 			scrubbedPersistedModelLocalServices = new HashMap<>();
 
-		Map<String, PersistedModelLocalService> persistedModelLocalServices =
-			ReflectionTestUtil.getFieldValue(
-				PersistedModelLocalServiceRegistryUtil.
-					getPersistedModelLocalServiceRegistry(),
-				"_persistedModelLocalServices");
+		ServiceTrackerMap<String, PersistedModelLocalService>
+			serviceTrackerMap = ReflectionTestUtil.getFieldValue(
+				PersistedModelLocalServiceRegistryUtil.class,
+				"_serviceTrackerMap");
 
-		for (Map.Entry<String, PersistedModelLocalService> entry :
-				persistedModelLocalServices.entrySet()) {
+		for (String modeClassName : serviceTrackerMap.keySet()) {
+			if (!_blacklistedModelClassNames.contains(modeClassName) &&
+				(modeClassName.indexOf(CharPool.POUND) == -1)) {
 
-			String className = entry.getKey();
-
-			if (className.indexOf(CharPool.POUND) == -1) {
 				scrubbedPersistedModelLocalServices.put(
-					className, entry.getValue());
+					modeClassName, serviceTrackerMap.getService(modeClassName));
 			}
 		}
 
@@ -644,6 +644,9 @@ public class DataGuardTestRuleUtil {
 			basePersistence, "_sessionFactory", originalSessionFactory);
 	}
 
+	private static final Set<String> _blacklistedModelClassNames =
+		SetUtil.fromArray(
+			"com.liferay.portal.security.audit.storage.model.AuditEvent");
 	private static final ThreadLocal<Map<String, Map<Serializable, String>>>
 		_recordsThreadLocal = new ThreadLocal<>();
 	private static final TransactionConfig _transactionConfig =
@@ -710,7 +713,10 @@ public class DataGuardTestRuleUtil {
 		private void _record(Object object) {
 			BaseModel<?> baseModel = (BaseModel<?>)object;
 
-			if (baseModel.isNew()) {
+			if (baseModel.isNew() &&
+				!_blacklistedModelClassNames.contains(
+					baseModel.getModelClassName())) {
+
 				Map<Serializable, String> map = _records.computeIfAbsent(
 					baseModel.getModelClassName(),
 					className -> new ConcurrentHashMap<>());

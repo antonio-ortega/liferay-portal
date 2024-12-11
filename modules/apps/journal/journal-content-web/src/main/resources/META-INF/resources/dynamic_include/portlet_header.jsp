@@ -7,8 +7,6 @@
 
 <%@ include file="/dynamic_include/init.jsp" %>
 
-<liferay-ui:success key='<%= portletDisplay.getId() + "requestProcessed" %>' message="your-request-completed-successfully" />
-
 <div class="visible-interaction">
 
 	<%
@@ -18,6 +16,6 @@
 	<clay:dropdown-actions
 		aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 		dropdownItems="<%= portletHeaderActionDropdownItemsProvider.getActionDropdownItems() %>"
-		propsTransformer="js/PortletHeaderDefaultPropsTransformer"
+		propsTransformer="{PortletHeaderDefaultPropsTransformer} from journal-content-web"
 	/>
 </div>

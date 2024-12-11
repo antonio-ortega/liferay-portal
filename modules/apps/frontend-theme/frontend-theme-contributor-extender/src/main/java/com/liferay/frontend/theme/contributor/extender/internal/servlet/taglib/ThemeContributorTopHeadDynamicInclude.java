@@ -8,6 +8,8 @@ package com.liferay.frontend.theme.contributor.extender.internal.servlet.taglib;
 import com.liferay.frontend.theme.contributor.extender.internal.BundleWebResources;
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.servlet.PortalWebResourceConstants;
 import com.liferay.portal.kernel.servlet.PortalWebResourcesUtil;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
@@ -216,7 +218,11 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 		long themeLastModified, HttpServletRequest httpServletRequest,
 		String portalURL, PrintWriter printWriter) {
 
-		printWriter.write("<link data-senna-track=\"permanent\" href=\"");
+		printWriter.write("<link");
+		printWriter.write(
+			ContentSecurityPolicyNonceProviderUtil.getNonce(
+				httpServletRequest));
+		printWriter.write(" data-senna-track=\"permanent\" href=\"");
 
 		String staticResourceURL = _portal.getStaticResourceURL(
 			httpServletRequest, _comboContextPath, "minifierType=css",
@@ -233,7 +239,11 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 		long themeLastModified, HttpServletRequest httpServletRequest,
 		String portalURL, PrintWriter printWriter) {
 
-		printWriter.write("<script data-senna-track=\"permanent\" src=\"");
+		printWriter.write("<script");
+		printWriter.write(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
+		printWriter.write(" data-senna-track=\"permanent\" src=\"");
 
 		String staticResourceURL = _portal.getStaticResourceURL(
 			httpServletRequest, _comboContextPath, "minifierType=js",
@@ -258,7 +268,11 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 					StringBundler.concat(
 						portalURL, _portal.getPathProxy(), resourceURL),
 					themeLastModified));
-			printWriter.write("\" rel=\"stylesheet\" type = \"text/css\" />\n");
+			printWriter.write(StringPool.QUOTE);
+			printWriter.write(
+				ContentSecurityPolicyNonceProviderUtil.getNonce(
+					httpServletRequest));
+			printWriter.write(" rel=\"stylesheet\" type = \"text/css\" />\n");
 		}
 	}
 
@@ -267,7 +281,11 @@ public class ThemeContributorTopHeadDynamicInclude implements DynamicInclude {
 		String portalURL, PrintWriter printWriter, List<String> resourceURLs) {
 
 		for (String resourceURL : resourceURLs) {
-			printWriter.write("<script data-senna-track=\"permanent\" src=\"");
+			printWriter.write("<script");
+			printWriter.write(
+				ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+					httpServletRequest));
+			printWriter.write(" data-senna-track=\"permanent\" src=\"");
 			printWriter.write(
 				_portal.getStaticResourceURL(
 					httpServletRequest,

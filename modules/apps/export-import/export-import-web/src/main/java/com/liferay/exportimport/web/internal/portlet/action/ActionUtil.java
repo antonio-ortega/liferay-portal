@@ -56,6 +56,8 @@ public class ActionUtil {
 	public static Group getGroup(HttpServletRequest httpServletRequest)
 		throws Exception {
 
+		Group group = null;
+
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
@@ -63,8 +65,6 @@ public class ActionUtil {
 		String cmd = ParamUtil.getString(httpServletRequest, Constants.CMD);
 
 		long groupId = ParamUtil.getLong(httpServletRequest, "groupId");
-
-		Group group = null;
 
 		if (groupId > 0) {
 			group = GroupLocalServiceUtil.getGroup(groupId);
@@ -129,13 +129,14 @@ public class ActionUtil {
 		HttpServletRequest httpServletRequest =
 			PortalUtil.getHttpServletRequest(renderRequest);
 
-		PortletPreferences portletSetup = getLayoutPortletSetup(
+		PortletPreferences portletPreferences = getLayoutPortletSetup(
 			renderRequest, portlet);
 
 		String title = PortletConfigurationUtil.getPortletTitle(
+			portlet.getPortletId(),
 			_getPortletSetup(
 				httpServletRequest, renderRequest.getPreferences(),
-				portletSetup),
+				portletPreferences),
 			themeDisplay.getLanguageId());
 
 		if (Validator.isNull(title)) {
@@ -217,19 +218,19 @@ public class ActionUtil {
 
 	private static PortletPreferences _getPortletSetup(
 			HttpServletRequest httpServletRequest,
-			PortletPreferences portletConfigPortletSetup,
-			PortletPreferences portletSetup)
+			PortletPreferences portletConfigPortletPreferences,
+			PortletPreferences portletPreferences)
 		throws Exception {
 
 		String portletResource = ParamUtil.getString(
 			httpServletRequest, "portletResource");
 
 		if (Validator.isNull(portletResource)) {
-			return portletConfigPortletSetup;
+			return portletConfigPortletPreferences;
 		}
 
-		if (portletSetup != null) {
-			return portletSetup;
+		if (portletPreferences != null) {
+			return portletPreferences;
 		}
 
 		return PortletPreferencesFactoryUtil.getPortletSetup(

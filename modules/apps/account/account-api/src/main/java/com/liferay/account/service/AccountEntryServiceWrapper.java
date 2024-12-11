@@ -135,6 +135,16 @@ public class AccountEntryServiceWrapper
 		return _accountEntryService.getAccountEntry(accountEntryId);
 	}
 
+	@Override
+	public com.liferay.account.model.AccountEntry
+			getAccountEntryByExternalReferenceCode(
+				String externalReferenceCode, long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountEntryService.getAccountEntryByExternalReferenceCode(
+			externalReferenceCode, companyId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
@@ -177,6 +187,24 @@ public class AccountEntryServiceWrapper
 			accountEntryId, parentAccountEntryId, name, description, deleteLogo,
 			domains, emailAddress, logoBytes, taxIdNumber, status,
 			serviceContext);
+	}
+
+	@Override
+	public com.liferay.account.model.AccountEntry updateDefaultBillingAddressId(
+			long accountEntryId, long addressId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountEntryService.updateDefaultBillingAddressId(
+			accountEntryId, addressId);
+	}
+
+	@Override
+	public com.liferay.account.model.AccountEntry
+			updateDefaultShippingAddressId(long accountEntryId, long addressId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _accountEntryService.updateDefaultShippingAddressId(
+			accountEntryId, addressId);
 	}
 
 	@Override

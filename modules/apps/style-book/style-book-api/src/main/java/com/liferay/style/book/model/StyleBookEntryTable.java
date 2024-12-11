@@ -32,6 +32,10 @@ public class StyleBookEntryTable extends BaseTable<StyleBookEntryTable> {
 			"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<StyleBookEntryTable, String> uuid = createColumn(
 		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<StyleBookEntryTable, String> externalReferenceCode =
+		createColumn(
+			"externalReferenceCode", String.class, Types.VARCHAR,
+			Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryTable, Long> headId = createColumn(
 		"headId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<StyleBookEntryTable, Boolean> head = createColumn(
@@ -69,6 +73,8 @@ public class StyleBookEntryTable extends BaseTable<StyleBookEntryTable> {
 		createColumn(
 			"styleBookEntryKey", String.class, Types.VARCHAR,
 			Column.FLAG_DEFAULT);
+	public final Column<StyleBookEntryTable, String> themeId = createColumn(
+		"themeId", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 
 	private StyleBookEntryTable() {
 		super("StyleBookEntry", StyleBookEntryTable::new);

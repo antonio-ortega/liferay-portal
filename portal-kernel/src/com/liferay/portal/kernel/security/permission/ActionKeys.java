@@ -215,6 +215,8 @@ public class ActionKeys {
 
 	public static final String PREFERENCES = "PREFERENCES";
 
+	public static final String PREVIEW_DRAFT = "PREVIEW_DRAFT";
+
 	public static final String PREVIEW_IN_DEVICE = "PREVIEW_IN_DEVICE";
 
 	public static final String PRINT = "PRINT";
@@ -246,6 +248,9 @@ public class ActionKeys {
 	public static final String UPDATE_LAYOUT_CONTENT = "UPDATE_LAYOUT_CONTENT";
 
 	public static final String UPDATE_LAYOUT_LIMITED = "UPDATE_LAYOUT_LIMITED";
+
+	public static final String UPDATE_SUBORGANIZATIONS =
+		"UPDATE_SUBORGANIZATIONS";
 
 	public static final String UPDATE_THREAD_PRIORITY =
 		"UPDATE_THREAD_PRIORITY";

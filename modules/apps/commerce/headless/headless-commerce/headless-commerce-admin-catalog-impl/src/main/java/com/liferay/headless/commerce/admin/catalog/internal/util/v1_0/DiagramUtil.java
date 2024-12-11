@@ -58,7 +58,7 @@ public class DiagramUtil {
 			cpDefinitionId, GetterUtil.getLong(diagram.getImageId()),
 			GetterUtil.getString(diagram.getColor()),
 			GetterUtil.getDouble(diagram.getRadius()),
-			GetterUtil.getString(diagram.getType()));
+			GetterUtil.getString(diagram.getType(), "diagram.type.default"));
 	}
 
 	public static CSDiagramSetting addOrUpdateCSDiagramSetting(
@@ -140,16 +140,22 @@ public class DiagramUtil {
 			return diagram;
 		}
 
-		CPAttachmentFileEntry cpAttachmentFileEntry =
-			AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
-				cpAttachmentFileEntryService, cpDefinitionOptionRelService,
-				cpDefinitionOptionValueRelService, cpOptionService,
-				uniqueFileNameProvider, diagram.getAttachmentBase64(),
-				classNameId, classPK, CSDiagramSettingsConstants.TYPE_DIAGRAM,
-				_getDiagramServiceContext(
-					companyId, diagram, groupId, locale, serviceContextHelper));
+		diagram.setImageId(
+			() -> {
+				CPAttachmentFileEntry cpAttachmentFileEntry =
+					AttachmentUtil.addOrUpdateCPAttachmentFileEntry(
+						cpAttachmentFileEntryService,
+						cpDefinitionOptionRelService,
+						cpDefinitionOptionValueRelService, cpOptionService,
+						uniqueFileNameProvider, diagram.getAttachmentBase64(),
+						classNameId, classPK,
+						CSDiagramSettingsConstants.TYPE_DIAGRAM,
+						_getDiagramServiceContext(
+							companyId, diagram, groupId, locale,
+							serviceContextHelper));
 
-		diagram.setImageId(cpAttachmentFileEntry.getCPAttachmentFileEntryId());
+				return cpAttachmentFileEntry.getCPAttachmentFileEntryId();
+			});
 
 		return diagram;
 	}

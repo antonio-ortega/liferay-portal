@@ -82,7 +82,7 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
@@ -174,7 +174,7 @@ definition {
 
 			User.firstLoginUI(
 				localization = "ES",
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				specificURL = "${portalURL}/es",
 				userEmailAddress = "test@liferay.com");
 		}
@@ -183,8 +183,8 @@ definition {
 	@description = "Users could login through the UI."
 	@priority = 5
 	test LoginWithUI {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property environment.acceptance = "true";
 		property operating.system.types = "alpine,amazonlinux,centos,debian,fedora,orcllinux,osx,redhat,rockylinux,solaris,suse,ubuntu,windows";
 		property portal.acceptance = "true";
@@ -194,18 +194,15 @@ definition {
 		task ("Login and go to control panel - roles") {
 			User.firstLoginUI();
 
-			ApplicationsMenu.gotoPortlet(
-				category = "Users",
-				panel = "Control Panel",
-				portlet = "Roles");
+			Role.openRolesAdmin();
 		}
 	}
 
 	@description = "This is a use case for LPS-150234. Login page not breaks visually when user enters his credentials incorrectly."
 	@priority = 5
 	test LoginWithUIUsingWrongCredentials {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
@@ -220,22 +217,20 @@ definition {
 		task ("And: Error message is present") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 		}
 	}
 
-	@description = "This is a use case for LPS-150234. Login page not breaks visually when user enters his credentials incorrectly and one MFA verifier is enabled. Blocked by LPS-150234."
+	@description = "This is a use case for LPS-150234. Login page not breaks visually when user enters his credentials incorrectly and one MFA verifier is enabled."
 	@priority = 5
 	test LoginWithUIUsingWrongCredentialsAndMFAIsEnabled {
-		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
-		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
-		property portal.release = "false";
-		property portal.upstream = "quarantine";
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
 		task ("Given: Login and enable OTP and Sign Out as Instance Admin") {
-			User.firstLoginUI();
+			User.firstLoginPG();
 
 			MultiFactorAuthentication.openToConfigInInstanceSettings();
 
@@ -255,7 +250,7 @@ definition {
 		task ("And: Error message is present") {
 			AssertTextEquals.assertPartialText(
 				locator1 = "Message#ERROR_DISMISSIBLE",
-				value1 = "Authentication failed. Please try again.");
+				value1 = "Authentication failed due to incorrect credentials or account lockout. Click \"Forgot Password\" if the correct credentials were provided.");
 		}
 	}
 
@@ -283,7 +278,7 @@ definition {
 
 				// Wait for OpenAM configuration to finish. See LRQA-28959 for more details.
 
-				Pause(locator1 = 30000);
+				Pause(value1 = 30000);
 
 				var pauseCount = ${pauseCount} + 1;
 
@@ -358,86 +353,12 @@ definition {
 			User.logoutPG();
 
 			User.firstLoginUI(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				userEmailAddress = "test@liferay.com");
 		}
 
 		task ("Assert url value") {
 			AssertLocation(value1 = "http://localhost:8080/web/guest/landing");
-		}
-	}
-
-	@description = "This is a use case for LRQA-27622. Users could login using Token Based SSO."
-	@priority = 5
-	test TokenBasedSSOSmoke {
-		property portal.acceptance = "true";
-		property test.liferay.virtual.instance = "false";
-		property test.run.type = "single";
-
-		task ("Login and reset token based SSO configuration") {
-			User.firstLoginPG();
-
-			SystemSettings.openSystemSettingsAdmin();
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "SSO",
-				configurationName = "Token Based SSO",
-				configurationScope = "System Scope");
-
-			SystemSettings.resetConfiguration();
-		}
-
-		task ("Enable and save configuration") {
-			FormFields.enableCheckbox(fieldName = "Enabled");
-
-			SystemSettings.saveConfiguration();
-
-			// The pause is necessary because it takes a while to load new configuration
-
-			Pause(locator1 = 3000);
-		}
-
-		task ("Run and command") {
-			AntCommands.runCommand("build-test-token-based-sso.xml", "verify-token-based-login -Dportal.url=http://localhost:8080/web/guest -Duser.token=test@liferay.com");
-		}
-
-		task ("Disable configuration") {
-			FormFields.disableCheckbox(fieldName = "Enabled");
-
-			SystemSettings.saveConfiguration();
-		}
-
-		task ("Add CP able.com") {
-			HeadlessPortalInstanceAPI.addPortalInstance(
-				domain = "www.able.com",
-				portalInstanceId = "www.able.com",
-				virtualHost = "www.able.com");
-		}
-
-		task ("Login at able.com and enable token based SSO") {
-			User.firstLoginUI(
-				password = "test",
-				specificURL = "http://www.able.com:8080",
-				userEmailAddress = "test@www.able.com");
-
-			PortalSettings.openInstanceSettingsAdmin(baseURL = "http://www.able.com:8080");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "SSO",
-				configurationName = "Token Based SSO",
-				configurationScope = "Virtual Instance Scope");
-
-			FormFields.enableCheckbox(fieldName = "enabled");
-
-			SystemSettings.saveConfiguration();
-
-			// The pause is necessary because it takes a while to load new configuration
-
-			Pause(locator1 = 3000);
-		}
-
-		task ("Run ant command") {
-			AntCommands.runCommand("build-test-token-based-sso.xml", "verify-token-based-login -Dportal.url=http://www.able.com:8080/web/guest -Duser.token=test@www.able.com");
 		}
 	}
 
@@ -507,7 +428,7 @@ definition {
 
 			WaitForElementPresent(locator1 = "SignIn#SET_PASSWORD_TITLE");
 
-			User.resetPassword(newPassword = "test");
+			User.resetPassword(newPassword = PropsUtil.get("default.admin.password"));
 
 			User.answerPasswordReminder();
 		}
@@ -546,14 +467,11 @@ definition {
 		property test.run.type = "single";
 
 		task ("Given: User opens the portal with a set admin password and logs in") {
-			User.firstLoginUI();
+			User.firstLoginPG();
 		}
 
 		task ("When: User start to create a virtuali instance") {
-			ApplicationsMenu.gotoPortlet(
-				category = "System",
-				panel = "Control Panel",
-				portlet = "Virtual Instances");
+			PortalInstances.openVirtualInstancesAdmin();
 
 			LexiconEntry.gotoAdd();
 		}

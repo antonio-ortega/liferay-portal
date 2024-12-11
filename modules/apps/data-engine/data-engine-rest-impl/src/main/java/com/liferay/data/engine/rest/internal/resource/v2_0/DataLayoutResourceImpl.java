@@ -51,7 +51,6 @@ import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
@@ -64,6 +63,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -75,13 +75,11 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import javax.validation.ValidationException;
-
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -140,9 +138,7 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 			Sort[] sorts)
 		throws Exception {
 
-		return _getDataLayouts(
-			dataDefinitionId, keywords,
-			contextAcceptLanguage.getPreferredLocale(), pagination, sorts);
+		return _getDataLayouts(dataDefinitionId, keywords, pagination, sorts);
 	}
 
 	@Override
@@ -207,6 +203,7 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 					DataDefinitionUtil.toDataDefinition(
 						_ddmFormFieldTypeServicesRegistry, ddmStructure,
 						_ddmStructureLayoutLocalService,
+						_ddmStructureLocalService, contextHttpServletRequest,
 						_spiDDMFormRuleConverter),
 					_ddmFormFieldTypeServicesRegistry),
 				_ddmFormFieldTypeServicesRegistry, _ddmFormLayoutSerializer,
@@ -228,10 +225,6 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 
 		DDMStructure ddmStructure = ddmStructureLayout.getDDMStructure();
 
-		DataDefinitionPermissionUtil.check(
-			PermissionThreadLocal.getPermissionChecker(), ddmStructure,
-			ActionKeys.VIEW);
-
 		DDMForm ddmForm = ddmStructure.getDDMForm();
 
 		DDMFormRenderingContext ddmFormRenderingContext =
@@ -249,7 +242,9 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 		ddmFormRenderingContext.setHttpServletResponse(
 			contextHttpServletResponse);
 		ddmFormRenderingContext.setLocale(
-			contextAcceptLanguage.getPreferredLocale());
+			LocaleUtil.fromLanguageId(
+				contextHttpServletRequest.getHeader(
+					HttpHeaders.ACCEPT_LANGUAGE)));
 		ddmFormRenderingContext.setPortletNamespace(
 			dataLayoutRenderingContext.getNamespace());
 		ddmFormRenderingContext.setReadOnly(
@@ -306,6 +301,7 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 						_ddmStructureLocalService.getStructure(
 							ddmStructureLayout.getDDMStructureId()),
 						_ddmStructureLayoutLocalService,
+						_ddmStructureLocalService, contextHttpServletRequest,
 						_spiDDMFormRuleConverter),
 					_ddmFormFieldTypeServicesRegistry),
 				_ddmFormFieldTypeServicesRegistry, _ddmFormLayoutSerializer,
@@ -411,14 +407,9 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 	}
 
 	private Page<DataLayout> _getDataLayouts(
-			long dataDefinitionId, String keywords, Locale locale,
-			Pagination pagination, Sort[] sorts)
+			long dataDefinitionId, String keywords, Pagination pagination,
+			Sort[] sorts)
 		throws Exception {
-
-		if (pagination.getPageSize() > 250) {
-			throw new ValidationException(
-				_language.format(locale, "page-size-is-greater-than-x", 250));
-		}
 
 		if (ArrayUtil.isEmpty(sorts)) {
 			sorts = new Sort[] {
@@ -621,10 +612,10 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 		String sortFieldName = sort.getFieldName();
 
 		if (StringUtil.startsWith(sortFieldName, "createDate")) {
-			return new StructureLayoutCreateDateComparator(ascending);
+			return StructureLayoutCreateDateComparator.getInstance(ascending);
 		}
 		else if (StringUtil.startsWith(sortFieldName, "localized_name")) {
-			return new StructureLayoutNameComparator(ascending);
+			return StructureLayoutNameComparator.getInstance(ascending);
 		}
 
 		return new StructureLayoutModifiedDateComparator(ascending);
@@ -734,9 +725,6 @@ public class DataLayoutResourceImpl extends BaseDataLayoutResourceImpl {
 
 	@Reference
 	private JSONFactory _jsonFactory;
-
-	@Reference
-	private Language _language;
 
 	@Reference
 	private Portal _portal;

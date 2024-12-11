@@ -55,9 +55,9 @@ public class CommerceOrderTable extends BaseTable<CommerceOrderTable> {
 	public final Column<CommerceOrderTable, Long> commerceAccountId =
 		createColumn(
 			"commerceAccountId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
-	public final Column<CommerceOrderTable, Long> commerceCurrencyId =
+	public final Column<CommerceOrderTable, String> commerceCurrencyCode =
 		createColumn(
-			"commerceCurrencyId", Long.class, Types.BIGINT,
+			"commerceCurrencyCode", String.class, Types.VARCHAR,
 			Column.FLAG_DEFAULT);
 	public final Column<CommerceOrderTable, Long> commerceOrderTypeId =
 		createColumn(
@@ -103,6 +103,8 @@ public class CommerceOrderTable extends BaseTable<CommerceOrderTable> {
 		createColumn(
 			"manuallyAdjusted", Boolean.class, Types.BOOLEAN,
 			Column.FLAG_DEFAULT);
+	public final Column<CommerceOrderTable, String> name = createColumn(
+		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<CommerceOrderTable, Date> orderDate = createColumn(
 		"orderDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<CommerceOrderTable, Integer> orderStatus = createColumn(
@@ -128,6 +130,8 @@ public class CommerceOrderTable extends BaseTable<CommerceOrderTable> {
 		createColumn(
 			"requestedDeliveryDate", Date.class, Types.TIMESTAMP,
 			Column.FLAG_DEFAULT);
+	public final Column<CommerceOrderTable, Boolean> shippable = createColumn(
+		"shippable", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
 	public final Column<CommerceOrderTable, BigDecimal> shippingAmount =
 		createColumn(
 			"shippingAmount", BigDecimal.class, Types.DECIMAL,

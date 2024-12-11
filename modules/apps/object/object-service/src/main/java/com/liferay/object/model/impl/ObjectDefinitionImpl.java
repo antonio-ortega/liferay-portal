@@ -6,6 +6,7 @@
 package com.liferay.object.model.impl;
 
 import com.liferay.object.constants.ObjectDefinitionConstants;
+import com.liferay.object.constants.ObjectPortletKeys;
 import com.liferay.object.definition.util.ObjectDefinitionUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectFolder;
@@ -14,10 +15,12 @@ import com.liferay.object.service.ObjectFolderLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -34,6 +37,11 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 		}
 
 		return shortName;
+	}
+
+	@Override
+	public Locale getDefaultLocale() {
+		return LocaleUtil.fromLanguageId(getDefaultLanguageId());
 	}
 
 	@Override
@@ -94,7 +102,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public String getOSGiJaxRsName(String className) {
-		return getName() + className;
+		return StringUtil.toLowerCase(getName()) + className;
 	}
 
 	@Override
@@ -103,8 +111,13 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 			throw new UnsupportedOperationException();
 		}
 
-		return "com_liferay_object_web_internal_object_definitions_portlet_" +
-			"ObjectDefinitionsPortlet_" + getObjectDefinitionId();
+		return ObjectPortletKeys.OBJECT_DEFINITIONS + StringPool.UNDERLINE +
+			StringUtil.split(getClassName(), StringPool.POUND)[1];
+	}
+
+	@Override
+	public String getPreviousRESTContextPath() {
+		return _previousRESTContextPath;
 	}
 
 	@Override
@@ -122,27 +135,58 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 			throw new UnsupportedOperationException();
 		}
 
-		if (isModifiable() && isSystem()) {
-			return ObjectDefinitionUtil.
-				getModifiableSystemObjectDefinitionRESTContextPath(getName());
-		}
-
-		String shortName = TextFormatter.formatPlural(
-			StringUtil.toLowerCase(getShortName()));
-
 		if (!isRootDescendantNode()) {
-			return "/c/" + shortName;
+			if (isModifiableAndSystem()) {
+				return ObjectDefinitionUtil.
+					getModifiableSystemObjectDefinitionRESTContextPath(
+						getName());
+			}
+
+			String lowerCaseShortName = StringUtil.toLowerCase(getShortName());
+
+			return "/c/" + TextFormatter.formatPlural(lowerCaseShortName);
 		}
 
 		ObjectDefinition rootObjectDefinition =
 			ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
 				getRootObjectDefinitionId());
 
+		if (isModifiableAndSystem()) {
+			String rootRESTContextPath =
+				ObjectDefinitionUtil.
+					getModifiableSystemObjectDefinitionRESTContextPath(
+						rootObjectDefinition.getName());
+
+			String restContextPath =
+				ObjectDefinitionUtil.
+					getModifiableSystemObjectDefinitionRESTContextPath(
+						getName());
+
+			restContextPath = restContextPath.substring(
+				restContextPath.lastIndexOf(StringPool.SLASH));
+
+			return rootRESTContextPath + restContextPath;
+		}
+
 		return StringBundler.concat(
 			"/c/",
 			TextFormatter.formatPlural(
 				StringUtil.toLowerCase(rootObjectDefinition.getShortName())),
-			StringPool.SLASH, shortName);
+			StringPool.SLASH,
+			TextFormatter.formatPlural(StringUtil.toLowerCase(getShortName())));
+	}
+
+	@Override
+	public String getRootObjectDefinitionExternalReferenceCode() {
+		ObjectDefinition rootObjectDefinition =
+			ObjectDefinitionLocalServiceUtil.fetchObjectDefinition(
+				getRootObjectDefinitionId());
+
+		if (rootObjectDefinition == null) {
+			return null;
+		}
+
+		return rootObjectDefinition.getExternalReferenceCode();
 	}
 
 	@Override
@@ -171,12 +215,22 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 		return false;
 	}
 
+	@Override
 	public boolean isLinkedToObjectFolder(long objectFolderId) {
 		if (getObjectFolderId() == objectFolderId) {
 			return false;
 		}
 
 		return true;
+	}
+
+	@Override
+	public boolean isModifiableAndSystem() {
+		if (isModifiable() && isSystem()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -190,7 +244,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public boolean isRootDescendantNode() {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+		if (!FeatureFlagManagerUtil.isEnabled(getCompanyId(), "LPS-187142")) {
 			return false;
 		}
 
@@ -203,7 +257,7 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 	@Override
 	public boolean isRootNode() {
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
+		if (!FeatureFlagManagerUtil.isEnabled(getCompanyId(), "LPS-187142")) {
 			return false;
 		}
 
@@ -222,5 +276,12 @@ public class ObjectDefinitionImpl extends ObjectDefinitionBaseImpl {
 
 		return false;
 	}
+
+	@Override
+	public void setPreviousRESTContextPath(String previousRESTContextPath) {
+		_previousRESTContextPath = previousRESTContextPath;
+	}
+
+	private String _previousRESTContextPath;
 
 }

@@ -3,7 +3,13 @@ import BlogMetricCard from 'assets/blog/components/BlogMetricCard';
 import DevicesCard from 'assets/blog/hocs/DevicesCard';
 import LocationsCard from 'assets/blog/hocs/LocationsCard';
 import React from 'react';
-import TouchpointsListCard from 'assets/hocs/TouchpointsListCard';
+import {
+	Accessor,
+	AssetAppearsOnCard,
+	EmptyStateLink,
+	EmptyStateText
+} from 'assets/components/AssetAppearsOnCard';
+import {AssetTypes} from 'shared/util/constants';
 import {MetricName} from 'shared/types/MetricName';
 import {Name} from 'shared/components/audience-report/types';
 
@@ -50,10 +56,11 @@ const Overview = () => (
 
 		<div className='row'>
 			<div className='col-sm-12'>
-				<TouchpointsListCard
-					assetType='BLOG'
-					label={Liferay.Language.get('asset-appears-on')}
-					legacyDropdownRangeKey={false}
+				<AssetAppearsOnCard
+					accessors={[Accessor.ViewsMetric]}
+					assetType={AssetTypes.Blog}
+					emptyStateLink={EmptyStateLink.Blog}
+					emptyStateText={EmptyStateText.Blog}
 				/>
 			</div>
 		</div>

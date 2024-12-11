@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -74,7 +75,7 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 
 		_layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(), 0,
+				null, TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.BASIC, 0,
 				WorkflowConstants.STATUS_APPROVED,
@@ -93,6 +94,7 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 	}
 
 	@Test
+	@TestInfo("LPS-153654")
 	public void testAddContentLayoutCopyFavicon() throws Exception {
 		_mvcActionCommand.processAction(
 			_getMockLiferayPortletActionRequest(),
@@ -114,16 +116,17 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 		return _dlAppLocalService.addFileEntry(
 			null, TestPropsValues.getUserId(), group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			StringUtil.randomString(), ContentTypes.IMAGE_JPEG, bytes, null,
-			null, ServiceContextTestUtil.getServiceContext(group.getGroupId()));
+			StringUtil.randomString(), ContentTypes.IMAGE_PNG, bytes, null,
+			null, null,
+			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 	}
 
 	private byte[] _getBytes(String favicon) throws Exception {
+		byte[] bytes = null;
+
 		URL url = new URL(_getPortalURL() + favicon);
 
 		URLConnection urlConnection = url.openConnection();
-
-		byte[] bytes;
 
 		try (InputStream inputStream = urlConnection.getInputStream()) {
 			bytes = FileUtil.getBytes(inputStream);
@@ -133,7 +136,7 @@ public class AddContentLayoutMVCActionCommandCopyFaviconTest {
 	}
 
 	private byte[] _getExpectedBytes() throws Exception {
-		return FileUtil.getBytes(getClass(), "dependencies/dxp.ico");
+		return FileUtil.getBytes(getClass(), "dependencies/dxp_logo.png");
 	}
 
 	private MockLiferayPortletActionRequest

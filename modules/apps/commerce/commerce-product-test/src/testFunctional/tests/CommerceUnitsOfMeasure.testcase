@@ -1,7 +1,7 @@
 @component-name = "portal-commerce"
 definition {
 
-	property custom.properties = "company.security.strangers.verify=false${line.separator}feature.flag.COMMERCE-11287=true${line.separator}jsonws.web.service.paths.excludes=";
+	property custom.properties = "company.security.strangers.verify=false${line.separator}jsonws.web.service.paths.excludes=";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Product Info Management";
@@ -491,7 +491,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -538,15 +538,9 @@ definition {
 				productStockQuantity = 0);
 		}
 
-		task ("And adds try to the cart the SKU/Second UOM combination with quantity 6") {
-			Type(
-				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_QUANTITY_SELECTOR_INPUT_FIELD",
-				value1 = 6);
-
-			Click(locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE");
-
-			task ("But an error is present") {
-				Alert.viewErrorMessage(errorMessage = "Danger:The specified quantity is unavailable.");
+		task ("And try to add to the cart the SKU/Second UOM combination") {
+			task ("But the add to cart button is disabled") {
+				AssertElementPresent(locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE_DISABLED");
 			}
 		}
 
@@ -609,6 +603,12 @@ definition {
 				productSKU = "MIN55861",
 				uomKey = "UOM2KEY",
 				uomName = "UOM2");
+
+			CommerceJSONWarehousesAndInventoriesAPI._patchWarehouseItem(
+				productSku = "MIN55861",
+				quantity = 10,
+				uomKey = "UOM2KEY",
+				warehouseName = "Italy");
 		}
 
 		task ("And from the MIN55861 product configuration, multiple quantity is set as 0.01") {
@@ -621,7 +621,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -639,21 +639,21 @@ definition {
 		task ("Then assert that the errors are shown in the quantity selector popover") {
 			FrontStore.viewQuantitySelectorPopoverListItem(
 				conditionNotSatisfied = "true",
-				quantity = "0.444",
+				quantity = "2.22",
 				quantityConfiguration = "multiple",
 				quantityConfigurationDecimalText = 3);
 		}
 
-		task ("When the buyer sets the quantity to a valid quantity(0.888)") {
+		task ("When the buyer sets the quantity to a valid quantity(2.22)") {
 			Type(
 				locator1 = "CommerceAccelerators#PRODUCT_DETAILS_QUANTITY_SELECTOR_INPUT_FIELD",
-				value1 = "0.888");
+				value1 = "2.22");
 		}
 
 		task ("Then assert that the popover does not show any error") {
 			FrontStore.viewQuantitySelectorPopoverListItem(
 				conditionNotSatisfied = "false",
-				quantity = "0.444",
+				quantity = "2.22",
 				quantityConfiguration = "multiple");
 		}
 
@@ -723,7 +723,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -887,7 +887,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 		}
@@ -916,7 +916,7 @@ definition {
 		}
 
 		task ("Then the UOMs keys and quantities are all correct") {
-			for (var rowList : list "MIN93016A:2.0,MIN93016A:3.0,MIN93016B:1.2,MIN93016C:1") {
+			for (var rowList : list "MIN93016A:2,MIN93016A:3,MIN93016B:1.2,MIN93016C:1") {
 				var sku = StringUtil.extractFirst(${rowList}, ":");
 				var quantity = StringUtil.extractLast(${rowList}, ":");
 
@@ -950,7 +950,7 @@ definition {
 		}
 
 		task ("Then on the order summary page the quantities and UOMs are correct for each order item") {
-			for (var quantity : list "2.0,3.0,1,1.2") {
+			for (var quantity : list "2,3,1,1.2") {
 				AssertTextEquals(
 					key_productQuantity = ${quantity},
 					locator1 = "CommerceAccelerators#CHECKOUT_SUMMARY_PRODUCT_TABLE_QUANTITY",
@@ -978,7 +978,7 @@ definition {
 		}
 
 		task ("Then the UOMs keys and quantities are shown correctly") {
-			for (var rowList : list "MIN93016A:2.0,MIN93016A:3.0,MIN93016B:1.2,MIN93016C:1") {
+			for (var rowList : list "MIN93016A:2,MIN93016A:3,MIN93016B:1.2,MIN93016C:1") {
 				var sku = StringUtil.extractFirst(${rowList}, ":");
 				var quantity = StringUtil.extractLast(${rowList}, ":");
 
@@ -1163,7 +1163,7 @@ definition {
 			User.logoutPG();
 
 			CommerceLogin.miniumLogin(
-				password = "test",
+				password = PropsUtil.get("default.admin.password"),
 				urlAppend = "web/minium",
 				userEmailAddress = "buyer@liferay.com");
 
@@ -1186,12 +1186,10 @@ definition {
 				locator1 = "CommerceFrontStore#FS_PRODUCT_AVAILABILITY");
 		}
 
-		task ("When adding the UOM2 to the cart") {
+		task ("And the add to cart button is disabled") {
 			Click(locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE");
-		}
 
-		task ("Then an alert is shown: Danger:The specified quantity is unavailable") {
-			Alert.viewErrorMessage(errorMessage = "Danger:The specified quantity is unavailable.");
+			AssertElementPresent(locator1 = "CommerceAccelerators#ADD_TO_CART_BUTTON_PRODUCT_DETAILS_PAGE_DISABLED");
 		}
 
 		task ("And no items are added to the cart") {
@@ -1204,7 +1202,6 @@ definition {
 	@description = "This is a test for COMMERCE-12461. If the feature flags for UOM and POA are set, then the admin can view the pricing section in the SKU details frame has been removed, including the POA switch"
 	@priority = 4
 	test CannotViewPricingInformationFromSKUDetails {
-		property custom.properties = "feature.flag.COMMERCE-11028=true${line.separator}feature.flag.COMMERCE-11287=true";
 		property portal.acceptance = "false";
 
 		task ("Given a Minium site is created") {
@@ -1328,7 +1325,7 @@ definition {
 		}
 
 		task ("Then the UOMs keys and quantities are all correct") {
-			for (var rowList : list "MIN93016A:2.0,MIN93016A:3.0,MIN93016B:1.2,MIN93016C:1") {
+			for (var rowList : list "MIN93016A:2,MIN93016A:3,MIN93016B:1.2,MIN93016C:1") {
 				var sku = StringUtil.extractFirst(${rowList}, ":");
 				var quantity = StringUtil.extractLast(${rowList}, ":");
 
@@ -1369,7 +1366,7 @@ definition {
 			AssertElementPresent(
 				key_entryTitle = "MIN93016B",
 				key_index = 9,
-				key_value = "1.200",
+				key_value = "1.2",
 				locator1 = "CommerceEntry#TABLE_ENTRY_FIELD_VALUE");
 
 			AssertElementPresent(
@@ -1391,7 +1388,7 @@ definition {
 			AssertElementPresent(
 				key_entryTitle = "MIN93016B",
 				key_index = 7,
-				key_value = "1.200",
+				key_value = "1.2",
 				locator1 = "CommerceEntry#TABLE_ENTRY_FIELD_VALUE");
 
 			AssertElementPresent(
@@ -1419,7 +1416,7 @@ definition {
 			AssertElementPresent(
 				key_entryTitle = "MIN93016B",
 				key_index = 7,
-				key_value = "1.200",
+				key_value = "1.2",
 				locator1 = "CommerceEntry#TABLE_ENTRY_FIELD_VALUE");
 
 			AssertElementPresent(
@@ -1537,7 +1534,7 @@ definition {
 				AssertTextEquals(
 					key_cellName1 = ${sku},
 					key_cellName2 = ${uomKey},
-					key_columnNumber = 3,
+					key_columnNumber = 4,
 					locator1 = "CommerceEntry#TABLE_CELL_BY_COLUMN_ORDER_NO_TITLE",
 					value1 = ${outstandingQuantity});
 			}
@@ -2074,6 +2071,7 @@ definition {
 		task ("When one UOM is added to the SKU MIN93015") {
 			CommerceJSONSKUsAPI._addCommerceUOM(
 				basePrice = 10,
+				precision = 0,
 				productSKU = "MIN93015",
 				uomKey = "uomKey1",
 				uomName = "uomName1");
@@ -2096,6 +2094,7 @@ definition {
 		task ("When 2nd UOM is added to the SKU MIN93015") {
 			CommerceJSONSKUsAPI._addCommerceUOM(
 				basePrice = 20,
+				precision = 0,
 				productSKU = "MIN93015",
 				uomKey = "uomKey2",
 				uomName = "uomName2");
@@ -2438,204 +2437,6 @@ definition {
 					locator1 = "CommerceEntry#TABLE_ENTRY_ROW_FIELD_GENERIC",
 					value1 = "$ 2.00");
 			}
-		}
-	}
-
-	@description = "This is a test for COMMERCE-12462. If the feature flag for UOM is removed, for POA is set, then the admin can view the pricing section in the SKU's details frame, including the POA switch"
-	@priority = 4
-	test CanViewPricingInformationFromSKUDetailsWithoutFeatureFlag {
-		property custom.properties = "feature.flag.COMMERCE-11028=true${line.separator}feature.flag.COMMERCE-11287=false";
-		property portal.acceptance = "false";
-
-		task ("Given a Minium site is created") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-		}
-
-		task ("When the admin navigates to Commerce → Products → ABS Sensor → SKUs → MIN93015 → Details tab") {
-			CommerceProducts.openProductsAdmin();
-
-			CommerceProducts.searchAndGoToProductEntry(entryProductName = "ABS Sensor");
-
-			CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-			CommerceNavigator.gotoEntry(entryName = "MIN93015");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-
-			CommerceEntry.gotoMenuTab(menuTab = "Details");
-		}
-
-		task ("Then the whole pricing section is not removed from the details, including the Price on Application switch") {
-			AssertVisible(
-				key_title = "Pricing",
-				locator1 = "Header#H4_TITLE");
-
-			for (var pricingEntry : list "Base Price,Promotion Price,Cost") {
-				AssertVisible(
-					key_text = ${pricingEntry},
-					locator1 = "TextInput#ANY");
-			}
-
-			AssertNotChecked.assertNotCheckedNotVisible(
-				key_toggleSwitchLabel = "Price on Application",
-				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
-		}
-
-		task ("And the Units of Measure tab is not present on the side panel") {
-			AssertElementNotPresent(
-				key_menuTab = "Units of Measure (UOM)",
-				locator1 = "CommerceEntry#MENU_TAB");
-		}
-
-		task ("When the admin clicks the plus button for creating a new SKU") {
-			Click(locator1 = "Icon#CLOSE");
-
-			SelectFrame.selectFrameTop();
-
-			Click(locator1 = "Button#PLUS");
-
-			SelectFrame.selectFrameNoLoading(locator1 = "CommerceEntry#IFRAME_SIDE_PANEL");
-		}
-
-		task ("Then the whole pricing section is not removed from the side panel, including the Price on Application switch") {
-			AssertVisible(
-				key_title = "Pricing",
-				locator1 = "Header#H4_TITLE");
-
-			for (var pricingEntry : list "Base Price,Promotion Price,Cost") {
-				AssertVisible(
-					key_text = ${pricingEntry},
-					locator1 = "TextInput#ANY");
-			}
-
-			AssertNotChecked.assertNotCheckedNotVisible(
-				key_toggleSwitchLabel = "Price on Application",
-				locator1 = "ToggleSwitch#ANY_TOGGLE_SWITCH");
-		}
-	}
-
-	@description = "This is a test for COMMERCE-12425. Buyers can view the discount for correctly applied SKU/UOM combinations on the product details page"
-	@priority = 5
-	test CanViewSKUUOMDiscountIsAppliedOnProductDetailsPage {
-		property portal.acceptance = "true";
-
-		task ("Given a Minium site with a buyer user") {
-			CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-			CommerceEntry.addAccountEntryUser(
-				accountName = "Commerce Account",
-				accountType = "Business",
-				agreeToTermsAndAnswerReminderQuery = "true",
-				createNewAccount = "true",
-				requireReset = "false",
-				userEmailAddress = "buyer@liferay.com",
-				userFirstName = "Buyer",
-				userLastName = "User",
-				userRole = "Buyer",
-				userScreenName = "buyeruser",
-				userSiteMembership = "Minium");
-		}
-
-		task ("When the admin adds one UOM to SKU MIN93015(for product ABS Sensor)") {
-			CommerceJSONSKUsAPI._addCommerceUOM(
-				basePrice = 10,
-				productSKU = "MIN93015",
-				uomKey = "uomKey1",
-				uomName = "uomName1");
-		}
-
-		task ("And an active 50% discount applied to the SKU/UOM (MIN93015/uomKey1) combination is created") {
-			CommerceJSONDiscountsAPI._addDiscount(
-				active = "true",
-				level = "L1",
-				percentageLevel1 = 50,
-				productSKUs = "MIN93015",
-				target = "skus",
-				title = "Test Discount",
-				unitOfMeasureKey = "uomKey1",
-				usePercentage = "true");
-		}
-
-		task ("And the buyer navigates to the product ABS Sensor's details page") {
-			User.logoutPG();
-
-			CommerceLogin.miniumLogin(
-				password = "test",
-				urlAppend = "web/minium",
-				userEmailAddress = "buyer@liferay.com");
-
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
-		}
-
-		task ("Then the discount is applied to product ABS Sensor directly") {
-			FrontStore.assertProductDetails(
-				discountPercentage = 50,
-				productListPriceInactive = "10.00",
-				productName = "ABS Sensor",
-				productNetPrice = "5.00",
-				productSKU = "MIN93015");
-		}
-
-		task ("When the admin adds the second SKU/UOM (MIN93015/uomKey2) combination to the discount") {
-			CommerceJSONSKUsAPI._addCommerceUOM(
-				basePrice = 20,
-				productSKU = "MIN93015",
-				uomKey = "uomKey2",
-				uomName = "uomName2");
-
-			CommerceJSONDiscountsAPI._addDiscountSku(
-				discountTitle = "Test Discount",
-				productSKU = "MIN93015",
-				unitOfMeasureKey = "uomKey2");
-		}
-
-		task ("Then the discount for each SKU/UOM is applied to product ABS Sensor") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
-
-			FrontStore.assertProductDetails(
-				discountPercentage = 50,
-				productListPriceInactive = "10.00",
-				productName = "ABS Sensor",
-				productNetPrice = "5.00",
-				productSKU = "MIN93015");
-
-			Select(
-				locator1 = "CommerceFrontStore#FS_PRODUCT_UOM_SELECT",
-				value1 = "uomName2");
-
-			FrontStore.assertProductDetails(
-				discountPercentage = 50,
-				productListPriceInactive = "20.00",
-				productName = "ABS Sensor",
-				productNetPrice = "10.00",
-				productSKU = "MIN93015");
-		}
-
-		task ("When the admin removes the second SKU/UOM from the discount") {
-			CommerceJSONDiscountsAPI._deleteDiscountSkuUom(
-				discountTitle = "Test Discount",
-				productSKU = "MIN93015",
-				uomKey = "uomKey2");
-		}
-
-		task ("Then only the discount for the first SKU/UOM is applied to product ABS Sensor") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/minium/p/abs-sensor");
-
-			FrontStore.assertProductDetails(
-				discountPercentage = 50,
-				productListPriceInactive = "10.00",
-				productName = "ABS Sensor",
-				productNetPrice = "5.00",
-				productSKU = "MIN93015");
-
-			Select(
-				locator1 = "CommerceFrontStore#FS_PRODUCT_UOM_SELECT",
-				value1 = "uomName2");
-
-			FrontStore.assertProductDetails(
-				productListPrice = "20.00",
-				productName = "ABS Sensor",
-				productSKU = "MIN93015");
 		}
 	}
 

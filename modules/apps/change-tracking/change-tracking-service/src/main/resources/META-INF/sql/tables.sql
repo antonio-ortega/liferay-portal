@@ -38,7 +38,7 @@ create table CTCollectionTemplate (
 	createDate DATE null,
 	modifiedDate DATE null,
 	name VARCHAR(75) null,
-	description VARCHAR(75) null
+	description VARCHAR(200) null
 );
 
 create table CTComment (
@@ -117,4 +117,12 @@ create table CTSchemaVersion (
 	schemaVersionId LONG not null primary key,
 	companyId LONG,
 	schemaContext TEXT null
+);
+
+create table CTScore (
+	mvccVersion LONG default 0 not null,
+	ctScoreId LONG not null primary key,
+	companyId LONG,
+	ctCollectionId LONG,
+	score INTEGER
 );

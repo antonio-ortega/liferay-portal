@@ -1,30 +1,31 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.93.0",
-		"@clayui/button": "3.100.0",
-		"@clayui/form": "3.104.0",
-		"@clayui/icon": "3.56.0",
-		"@clayui/layout": "3.93.0",
-		"@clayui/progress-bar": "3.65.0",
-		"@clayui/tabs": "3.104.0",
-		"@clayui/toolbar": "3.104.0",
+		"@clayui/alert": "3.111.0",
+		"@clayui/button": "3.116.0",
+		"@clayui/form": "3.122.0",
+		"@clayui/icon": "3.111.0",
+		"@clayui/layout": "3.111.0",
+		"@clayui/modal": "3.122.0",
+		"@clayui/progress-bar": "3.111.0",
+		"@clayui/tabs": "3.119.0",
+		"@clayui/toolbar": "3.122.0",
 		"@liferay/frontend-js-react-web": "*",
 		"@liferay/frontend-js-state-web": "*",
 		"classnames": "2.3.1",
 		"cropperjs": "1.5.11",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
-		"react": "16.12.0",
-		"react-dom": "16.12.0",
+		"react": "18.2.0",
+		"react-dom": "18.2.0",
 		"react-dropzone": "11.4.2"
 	},
-	"main": "index.es.js",
+	"main": "js/index.js",
 	"name": "item-selector-taglib",
 	"scripts": {
-		"build": "liferay-npm-scripts build",
-		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix",
-		"test": "liferay-npm-scripts test"
+		"build": "node-scripts build",
+		"checkFormat": "node-scripts format --check",
+		"format": "node-scripts format",
+		"test": "node-scripts test"
 	},
-	"version": "6.0.2"
+	"version": "6.0.23"
 }

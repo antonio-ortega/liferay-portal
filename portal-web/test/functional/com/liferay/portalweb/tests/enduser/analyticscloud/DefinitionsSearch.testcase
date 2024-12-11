@@ -21,8 +21,6 @@ definition {
 	tearDown {
 		var testLiferayVirtualInstance = PropsUtil.get("test.liferay.virtual.instance");
 
-		ACDefinitions.deleteAllSearchQuery();
-
 		ACUtils.tearDownDXP();
 
 		if (${testLiferayVirtualInstance} == "true") {
@@ -32,16 +30,17 @@ definition {
 			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
 
-		// It is not possible to delete properties and data source after LRAC-13389. This functionality should return after LRAC-8040
+		ACDefinitions.deleteAllSearchQuery();
 
-		//ACUtils.tearDownAC();
-
+		ACUtils.tearDownAC();
 	}
 
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8779 | Test Summary: Add search query parameters"
 	@priority = 5
 	test CanAddSearchQueryParameters {
 		ACDefinitions.addSearchQuerySuccessfully(query = "Test Query");
+
+		ACSettings.goToDefinitions();
 
 		ACDefinitions.goToDefinitionType(definitionType = "Search");
 
@@ -53,9 +52,13 @@ definition {
 	test CanDeleteSearchQueryParameters {
 		ACDefinitions.addSearchQuerySuccessfully(query = "Test Query");
 
+		ACSettings.goToDefinitions();
+
 		ACDefinitions.goToDefinitionType(definitionType = "Search");
 
 		ACDefinitions.deleteSearchQuerySuccessfully(query = "Test Query");
+
+		ACSettings.goToDefinitions();
 
 		ACDefinitions.goToDefinitionType(definitionType = "Search");
 
@@ -67,9 +70,13 @@ definition {
 	test CanEditSearchQueryParameters {
 		ACDefinitions.addSearchQuerySuccessfully(query = "Test Query");
 
+		ACSettings.goToDefinitions();
+
 		ACDefinitions.goToDefinitionType(definitionType = "Search");
 
 		ACDefinitions.editSearchQuerySuccessfully(query = "Test Edit");
+
+		ACSettings.goToDefinitions();
 
 		ACDefinitions.goToDefinitionType(definitionType = "Search");
 
@@ -79,9 +86,11 @@ definition {
 	@description = "Feature ID: Legacy | Automation ID: LRAC-8782 | Test Summary: Maximum 5 search query strings"
 	@priority = 4
 	test CantSearchMoreThanFiveSearchQueryStrings {
-		var varList = "Test Query 1,Test Query 2,Test Query 3,Test Query 4,Test Query 5";
+		var queryStringList = "Test Query 1,Test Query 2,Test Query 3,Test Query 4,Test Query 5";
 
-		ACDefinitions.addMultipleSearchQuerySuccessfully(query_list = ${varList});
+		ACDefinitions.addMultipleSearchQuerySuccessfully(queryStringList = ${queryStringList});
+
+		ACSettings.goToDefinitions();
 
 		ACDefinitions.goToDefinitionType(definitionType = "Search");
 
@@ -93,6 +102,8 @@ definition {
 	test ViewKeywordSearchedNewStringParameter {
 		task ("Create a new query string parameter") {
 			ACDefinitions.addSearchQuerySuccessfully(query = "query");
+
+			ACSettings.goToDefinitions();
 
 			ACDefinitions.goToDefinitionType(definitionType = "Search");
 
@@ -129,7 +140,11 @@ definition {
 		}
 
 		task ("Use search bar") {
-			SearchPage.searchWidget(searchTerm = "test parameter");
+			for (var n : list "1,2,3,4") {
+				SearchPage.searchWidget(searchTerm = "test parameter");
+
+				ACUtils.waitForSendingRequest();
+			}
 		}
 
 		task ("Close sessions") {

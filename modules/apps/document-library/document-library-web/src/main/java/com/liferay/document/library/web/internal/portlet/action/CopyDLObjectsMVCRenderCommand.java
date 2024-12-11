@@ -13,6 +13,7 @@ import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFileShortcutLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
+import com.liferay.document.library.web.internal.display.context.CopyDLObjectsDisplayContext;
 import com.liferay.document.library.web.internal.exception.DLObjectSizeLimitExceededException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -57,7 +58,21 @@ public class CopyDLObjectsMVCRenderCommand implements MVCRenderCommand {
 		throws PortletException {
 
 		try {
-			_validateDLObjectsSize(renderRequest);
+			long size = _getDLObjectsSize(
+				ParamUtil.getLongValues(renderRequest, "dlObjectIds"));
+
+			_validateDLObjectsSize(renderRequest, size);
+
+			CopyDLObjectsDisplayContext copyDLObjectsDisplayContext =
+				new CopyDLObjectsDisplayContext(
+					_portal.getHttpServletRequest(renderRequest),
+					_portal.getLiferayPortletResponse(renderResponse), size,
+					(ThemeDisplay)renderRequest.getAttribute(
+						WebKeys.THEME_DISPLAY));
+
+			renderRequest.setAttribute(
+				CopyDLObjectsDisplayContext.class.getName(),
+				copyDLObjectsDisplayContext);
 
 			return "/document_library/copy_dl_objects.jsp";
 		}
@@ -133,14 +148,12 @@ public class CopyDLObjectsMVCRenderCommand implements MVCRenderCommand {
 		}
 	}
 
-	private void _validateDLObjectsSize(PortletRequest portletRequest)
+	private void _validateDLObjectsSize(
+			PortletRequest portletRequest, long size)
 		throws PortalException {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
-
-		long size = _getDLObjectsSize(
-			ParamUtil.getLongValues(portletRequest, "dlObjectIds"));
 
 		if (!DLCopyValidationUtil.isCopyToAllowed(
 				_dlSizeLimitConfigurationProvider.getCompanyMaxSizeToCopy(
@@ -161,7 +174,7 @@ public class CopyDLObjectsMVCRenderCommand implements MVCRenderCommand {
 							themeDisplay.getScopeGroupId()),
 						_dlSizeLimitConfigurationProvider.
 							getSystemMaxSizeToCopy(),
-						size, themeDisplay.getLocale())));
+						size, themeDisplay.getLocale(), false)));
 		}
 	}
 

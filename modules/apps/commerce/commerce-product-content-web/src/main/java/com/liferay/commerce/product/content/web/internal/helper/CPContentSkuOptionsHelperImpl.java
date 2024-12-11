@@ -58,8 +58,8 @@ public class CPContentSkuOptionsHelperImpl
 				commerceContext, _portal.getCompanyId(httpServletRequest),
 				defaultCPInstance.getCPDefinition(),
 				_portal.getLocale(httpServletRequest), BigDecimal.ONE,
-				defaultCPInstance.getCPInstanceId(), StringPool.BLANK, null,
-				_portal.getUser(httpServletRequest)));
+				defaultCPInstance.getCPInstanceId(), null, StringPool.BLANK,
+				null, _portal.getUser(httpServletRequest)));
 
 		SkuOption[] skuOptions = sku.getSkuOptions();
 
@@ -72,6 +72,10 @@ public class CPContentSkuOptionsHelperImpl
 
 			jsonObject.put(
 				"key", skuOption.getSkuOptionKey()
+			).put(
+				"skuOptionName", skuOption.getSkuOptionName()
+			).put(
+				"skuOptionValueNames", skuOption.getSkuOptionValueNames()
 			).put(
 				"value", skuOption.getSkuOptionValueKey()
 			);

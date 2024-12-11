@@ -296,6 +296,11 @@ public class CTCollectionWrapper
 		return model.getSchemaVersionId();
 	}
 
+	@Override
+	public int getScore() {
+		return model.getScore();
+	}
+
 	/**
 	 * Returns the shareable of this ct collection.
 	 *
@@ -379,6 +384,11 @@ public class CTCollectionWrapper
 	@Override
 	public String getUuid() {
 		return model.getUuid();
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return model.isEmpty();
 	}
 
 	@Override

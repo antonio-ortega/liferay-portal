@@ -7,6 +7,7 @@ package com.liferay.source.formatter.processor;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.source.formatter.SourceFormatterArgs;
+import com.liferay.source.formatter.check.JSONUpgradeLiferayThemePackageJSONCheck;
 import com.liferay.source.formatter.check.UpgradeCatchAllCheck;
 
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testJSONUpgradeLiferayThemePackageJSONCheck() throws Exception {
+		JSONUpgradeLiferayThemePackageJSONCheck.setTestMode(true);
+
 		test(
 			"upgrade/json-upgrade-liferay-theme-package-json-check/package." +
 				"testjson");
@@ -39,42 +42,39 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeBNDDeclarativeServicesCheck() throws Exception {
+		test("upgrade/upgrade-declarative-services-check/bnd.testbnd");
+		test("upgrade/upgrade-declarative-services-replace-check/bnd.testbnd");
+	}
+
+	@Test
 	public void testUpgradeBNDIncludeResourceCheck() throws Exception {
 		test("upgrade/upgrade-include-resource-check/bnd.testbnd");
 	}
 
 	@Test
-	public void testUpgradeCatchAllCheck() throws Exception {
-		UpgradeCatchAllCheck.setTestMode(true);
-
-		test(
-			"upgrade/UpgradeCatchAllCheck.testjava",
-			UpgradeCatchAllCheck.getExpectedMessages());
+	public void testUpgradeCatchAllCheckFTL() throws Exception {
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testftl");
 	}
 
 	@Test
-	public void testUpgradeDLUtilCheck() throws Exception {
-		test("upgrade/UpgradeJavaDLUtilCheck.testjava");
-		test("upgrade/UpgradeJSPDLUtilCheck.testjsp");
+	public void testUpgradeCatchAllCheckJava() throws Exception {
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjava");
 	}
 
 	@Test
-	public void testUpgradeGetClassNamesMethodCheck() throws Exception {
-		test("upgrade/UpgradeJavaGetClassNamesMethodCheck.testjava");
-		test("upgrade/UpgradeJSPFGetClassNamesMethodCheck.testjspf");
+	public void testUpgradeCatchAllCheckJSP() throws Exception {
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjsp");
 	}
 
 	@Test
-	public void testUpgradeGetImagePreviewURLMethodCheck() throws Exception {
-		test("upgrade/UpgradeJavaGetImagePreviewURLMethodCheck.testjava");
-		test("upgrade/UpgradeJSPGetImagePreviewURLMethodCheck.testjsp");
+	public void testUpgradeCatchAllCheckJSPF() throws Exception {
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testjspf");
 	}
 
 	@Test
-	public void testUpgradeGetPortletGroupIdMethodCheck() throws Exception {
-		test("upgrade/UpgradeFTLGetPortletGroupIdMethodCheck.testftl");
-		test("upgrade/UpgradeJavaGetPortletGroupIdMethodCheck.testjava");
-		test("upgrade/UpgradeJSPGetPortletGroupIdMethodCheck.testjsp");
+	public void testUpgradeCatchAllCheckSCSS() throws Exception {
+		_testUpgradeCatchAllCheck("upgrade/UpgradeCatchAllCheck.testscss");
 	}
 
 	@Test
@@ -88,56 +88,19 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeJavaAccountPortletKeysCheck() throws Exception {
-		test("upgrade/UpgradeJavaAccountPortletKeysCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaAddAddressMethodCheck() throws Exception {
-		test(
-			"upgrade/UpgradeJavaAddAddressMethodCheck.testjava",
-			StringBundler.concat(
-				"Unable to format method addAddress from AddressLocalService, ",
-				"AddressLocalServiceUtil, AddressService and ",
-				"AddressServiceUtil. Fill the new parameters manually, see ",
-				"LPS-193462"));
-	}
-
-	@Test
-	public void testUpgradeJavaAddCategoryParameterCheck() throws Exception {
-		test(
-			"upgrade/UpgradeJavaAddCategoryParameterCheck.testjava",
-			StringBundler.concat(
-				"Unable to format method addCategory from ",
-				"AssetCategoryLocalService and AssetCategoryLocalServiceUtil. ",
-				"Fill the new parameters manually, see LPS-192320"));
-	}
-
-	@Test
-	public void testUpgradeJavaAddFDSTableSchemaFieldCheck() throws Exception {
-		test("upgrade/UpgradeJavaAddFDSTableSchemaFieldCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaAddFileEntryParameterCheck() throws Exception {
-		test(
-			"upgrade/UpgradeJavaAddFileEntryParameterCheck.testjava",
-			StringBundler.concat(
-				"Unable to format method addFileEntry from DLAppLocalService ",
-				"and DLAppLocalServiceUtil. Fill the new parameters manually, ",
-				"see LPS-194818"));
-	}
-
-	@Test
-	public void testUpgradeJavaAddFolderParameterCheck() throws Exception {
-		test("upgrade/UpgradeJavaAddFolderParameterCheck.testjava");
-	}
-
-	@Test
 	public void testUpgradeJavaAssetEntryAssetCategoriesCheck()
 		throws Exception {
 
 		test("upgrade/UpgradeJavaAssetEntryAssetCategoriesCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaBaseFragmentCollectionContributorExtendedClassesCheck()
+		throws Exception {
+
+		test(
+			"upgrade/UpgradeJavaBaseFragmentCollectionContributor" +
+				"ExtendedClassesCheck.testjava");
 	}
 
 	@Test
@@ -153,37 +116,8 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeJavaCaptchaUtilCheck() throws Exception {
-		test("upgrade/UpgradeJavaCaptchaUtilCheck.testjava");
-	}
-
-	@Test
 	public void testUpgradeJavaCheck() throws Exception {
 		test("upgrade/UpgradeJavaCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaCommerceCountryCheck() throws Exception {
-		test("upgrade/UpgradeJavaCommerceCountryCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaCommerceCountryServiceCheck() throws Exception {
-		test("upgrade/UpgradeJavaCommerceCountryServiceCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaCommerceOrderItemServicesCheck()
-		throws Exception {
-
-		test(
-			"upgrade/UpgradeJavaCommerceOrderItemServicesCheck.testjava",
-			StringBundler.concat(
-				"Unable to format methods addCommerceOrderItem and ",
-				"deleteCommerceOrderItems from CommerceOrderItemLocalService, ",
-				"CommerceOrderItemLocalServiceUtil, CommerceOrderItemService, ",
-				"CommerceOrderItemServiceUtil. Fill the new parameters ",
-				"manually, see LPS-196580"));
 	}
 
 	@Test
@@ -192,29 +126,17 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeJavaCommerceShippingOptionCheck() throws Exception {
-		test("upgrade/UpgradeJavaCommerceShippingOptionCheck.testjava");
+	public void testUpgradeJavaDDMFormValuesSerializerTrackerCheck()
+		throws Exception {
+
+		test("upgrade/UpgradeJavaDDMFormValuesSerializerTrackerCheck.testjava");
 	}
 
 	@Test
-	public void testUpgradeJavaCookieKeysCheck() throws Exception {
-		test("upgrade/UpgradeJavaCookieKeysCheck.testjava");
-	}
+	public void testUpgradeJavaDisplayPageInfoItemCapabilityCheck()
+		throws Exception {
 
-	@Test
-	public void testUpgradeJavaCookieUtilCheck() throws Exception {
-		test("upgrade/UpgradeJavaCookieUtilCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaDLFolderMethodCheck() throws Exception {
-		test(
-			"upgrade/UpgradeJavaDLFolderMethodCheck.testjava",
-			StringBundler.concat(
-				"Unable to format method addFolder from DLFolderService, ",
-				"DLFolderLocalService, DLFolderServiceUtil and ",
-				"DLFolderLocalServiceUtil. Fill the new parameter manually, ",
-				"see LPS-194001."));
+		test("upgrade/UpgradeJavaDisplayPageInfoItemCapabilityCheck.testjava");
 	}
 
 	@Test
@@ -229,31 +151,15 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 
 	@Test
 	public void testUpgradeJavaFDSDataProviderCheck() throws Exception {
-		test("upgrade/UpgradeJavaFDSDataProviderCheck.testjava");
+		test("upgrade/UpgradeJavaCommerceDataSetDataProviderCheck.testjava");
+		test("upgrade/UpgradeJavaClayDataSetDataProviderCheck.testjava");
 	}
 
 	@Test
-	public void testUpgradeJavaFetchAssetCategoryByExternalReferenceCodeCheck()
-		throws Exception {
-
+	public void testUpgradeJavaFinderImplCheck() throws Exception {
 		test(
-			"upgrade/UpgradeJavaFetchAssetCategoryByExternalReference" +
-				"CodeCheck.testjava",
-			StringBundler.concat(
-				"The fetchAssetCategoryByExternalReferenceCode method from ",
-				"AssetCategoryLocalService and AssetCategoryLocalServiceUtil ",
-				"no longer uses companyId as a parameter and has changed the ",
-				"order of its parameters. Fill the new parameters manually, ",
-				"see LPS-194134."));
-	}
-
-	@Test
-	public void testUpgradeJavaFetchCPDefinitionByCProductExternalReferenceCodeCheck()
-		throws Exception {
-
-		test(
-			"upgrade/UpgradeJavaFetchCPDefinitionByCProductExternal" +
-				"ReferenceCodeCheck.testjava");
+			"upgrade/src/service/persistence/impl/UpgradeJavaFinderImplCheck." +
+				"testjava");
 	}
 
 	@Test
@@ -276,9 +182,9 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 			"upgrade/UpgradeJavaGetLayoutDisplayPageObjectProviderCheck." +
 				"testjava",
 			StringBundler.concat(
-				"Could not resolve variable className for new ",
-				"InfoItemReference(). Replace 'TO_BE_REPLACED_FOR_CLASSNAME' ",
-				"with the correct type"));
+				"Unable to resolve variable className for new ",
+				"InfoItemReference(). Replace \"TO_BE_REPLACED_FOR_",
+				"CLASSNAME\" with the correct type"));
 	}
 
 	@Test
@@ -289,29 +195,10 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeJavaGetLeftCategoryIdMethodCheck() throws Exception {
-		test("upgrade/UpgradeJavaGetLeftCategoryIdMethodCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaIndexerCheck() throws Exception {
-		test("upgrade/UpgradeJavaIndexerCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaLanguageUtilCheck() throws Exception {
-		test("upgrade/UpgradeJavaLanguageUtilCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaLayoutServicesCheck() throws Exception {
+	public void testUpgradeJavaLocalServiceImplCheck() throws Exception {
 		test(
-			"upgrade/UpgradeJavaLayoutServicesCheck.testjava",
-			StringBundler.concat(
-				"Unable to format methods addLayout and updateLayout from ",
-				"LayoutService, LayoutLocalService, LayoutServiceUtil and ",
-				"LayoutLocalServiceUtil. Fill the new parameters manually, ",
-				"see LPS-188828 and LPS-190401"));
+			"upgrade/src/service/impl" +
+				"/UpgradeJavaLocalServiceImplCheck.testjava");
 	}
 
 	@Test
@@ -323,13 +210,8 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	public void testUpgradeJavaMultiVMPoolUtilCheck() throws Exception {
 		test(
 			"upgrade/UpgradeJavaMultiVMPoolUtilCheck.testjava",
-			"Could not resolve types for MultiVMPool.getPortalCache(). " +
-				"Replace 'TO_BE_REPLACED' with the correct type");
-	}
-
-	@Test
-	public void testUpgradeJavaPhoneLocalServiceUtilCheck() throws Exception {
-		test("upgrade/UpgradeJavaPhoneLocalServiceUtilCheck.testjava");
+			"Unable to resolve types for MultiVMPool.getPortalCache(). " +
+				"Replace \"TO_BE_REPLACED\" with the correct type");
 	}
 
 	@Test
@@ -345,10 +227,27 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testUpgradeJavaProductDTOConverterReferenceCheck()
+		throws Exception {
+
+		test("upgrade/UpgradeJavaProductDTOConverterReferenceCheck.testjava");
+	}
+
+	@Test
 	public void testUpgradeJavaSchedulerEntryImplConstructorCheck()
 		throws Exception {
 
 		test("upgrade/UpgradeJavaSchedulerEntryImplConstructorCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaScreenContributorClassCheck() throws Exception {
+		test("upgrade/UpgradeJavaScreenContributorClassCheck.testjava");
+	}
+
+	@Test
+	public void testUpgradeJavaServiceImplCheck() throws Exception {
+		test("upgrade/src/service/impl/UpgradeJavaServiceImplCheck.testjava");
 	}
 
 	@Test
@@ -359,54 +258,18 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeJavaServiceTrackerListCheck() throws Exception {
-		test("upgrade/UpgradeJavaServiceTrackerListCheck.testjava");
+	public void testUpgradeJavaSortFieldNameTranslatorCheck() throws Exception {
+		test("upgrade/UpgradeJavaSortFieldNameTranslatorCheck.testjava");
 	}
 
 	@Test
-	public void testUpgradeJavaUpdateCommerceAddressCheck() throws Exception {
-		test("upgrade/UpgradeJavaUpdateCommerceAddressCheck.testjava");
-	}
-
-	@Test
-	public void testUpgradeJavaUpdateFileEntryMethodCheck() throws Exception {
-		test(
-			"upgrade/UpgradeJavaUpdateFileEntryMethodCheck.testjava",
-			StringBundler.concat(
-				"Unable to format method updateFileEntry from ",
-				"DLAppLocalService and DLAppLocalServiceUtil. Fill the new ",
-				"parameters manually, see LPS-194134."));
-	}
-
-	@Test
-	public void testUpgradeJavaUserLocalServiceUtilCheck() throws Exception {
-		test(
-			"upgrade/UpgradeJavaUserLocalServiceUtilCheck.testjava",
-			new String[] {
-				StringBundler.concat(
-					"Unable to format method addUser from UserLocalService, ",
-					"UserLocalServiceUtil, UserService and UserServiceUtil. ",
-					"Fill the new parameter manually, see LPS-192661 and ",
-					"LPS-196617."),
-				StringBundler.concat(
-					"Unable to format method updateStatus from ",
-					"UserLocalService, UserLocalServiceUtil, UserService and ",
-					"UserServiceUtil. The method signature has changed to ",
-					"updateStatus(long userId, int status, ServiceContext ",
-					"serviceContext). Fill the new parameter manually, see ",
-					"LPS-191999.")
-			});
+	public void testUpgradeJavaStorageTypeAwareCheck() throws Exception {
+		test("upgrade/UpgradeJavaStorageTypeAwareCheck.testjava");
 	}
 
 	@Test
 	public void testUpgradeJSPFieldSetGroupCheck() throws Exception {
 		test("upgrade/UpgradeJSPFieldSetGroupCheck.testjsp");
-	}
-
-	@Test
-	public void testUpgradePortletDisplayCheck() throws Exception {
-		test("upgrade/UpgradeJavaPortletDisplayCheck.testjava");
-		test("upgrade/UpgradeJSPPortletDisplayCheck.testjsp");
 	}
 
 	@Test
@@ -420,18 +283,13 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeSCSSImportsCheck() throws Exception {
-		test("upgrade/UpgradeSCSSImportsCheck.testscss");
-	}
-
-	@Test
 	public void testUpgradeSCSSMixinsCheck() throws Exception {
 		test(
 			"upgrade/UpgradeSCSSMixinsCheck.testscss",
 			StringBundler.concat(
-				"Do not use 'media-query' mixing, replace with its equivalent ",
-				"(e.g., media-breakpoint-up, media-breakpoint-only, ",
-				"media-breakpoint-down, etc.), see LPS-194507."));
+				"Do not use \"media-query\" mixing, replace with its ",
+				"equivalent (e.g., media-breakpoint-up, media-breakpoint-",
+				"only, media-breakpoint-down, etc.), see LPS-194507."));
 	}
 
 	@Test
@@ -466,6 +324,16 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		test("upgrade/XMLUpgradeDTDVersionCheck.testxml");
 	}
 
+	@Test
+	public void testXMLUpgradeServiceDeclarativeServicesCheck()
+		throws Exception {
+
+		test("upgrade/upgrade-declarative-services-check/service.testxml");
+		test(
+			"upgrade/upgrade-declarative-services-replace-check" +
+				"/service.testxml");
+	}
+
 	@Override
 	protected SourceFormatterArgs getSourceFormatterArgs() {
 		List<String> checkCategoryNames = new ArrayList<>();
@@ -475,7 +343,9 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		List<String> sourceFormatterProperties = new ArrayList<>();
 
 		sourceFormatterProperties.add(
-			"upgrade.to.version=" + _UPGRADE_TO_VERSION);
+			"upgrade.to.liferay.version=" + _UPGRADE_TO_LIFERAY_VERSION);
+		sourceFormatterProperties.add(
+			"upgrade.to.release.version=" + _UPGRADE_TO_RELEASE_VERSION);
 
 		SourceFormatterArgs sourceFormatterArgs =
 			super.getSourceFormatterArgs();
@@ -488,6 +358,19 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 		return sourceFormatterArgs;
 	}
 
-	private static final String _UPGRADE_TO_VERSION = "7.4.13.u27";
+	private void _testUpgradeCatchAllCheck(String fileName) throws Exception {
+		UpgradeCatchAllCheck.setTestMode(true);
+
+		if (fileName.endsWith(".testjava")) {
+			test(fileName, UpgradeCatchAllCheck.getExpectedMessages());
+		}
+		else {
+			test(fileName);
+		}
+	}
+
+	private static final String _UPGRADE_TO_LIFERAY_VERSION = "7.4.13.u27";
+
+	private static final String _UPGRADE_TO_RELEASE_VERSION = "2024.q1.1";
 
 }

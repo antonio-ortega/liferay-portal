@@ -51,11 +51,18 @@ public class DefaultCommerceOrderValidatorImpl
 	@Override
 	public CommerceOrderValidatorResult validate(
 			Locale locale, CommerceOrder commerceOrder, CPInstance cpInstance,
-			BigDecimal quantity)
+			String json, BigDecimal quantity, boolean child)
 		throws PortalException {
 
 		if (cpInstance == null) {
 			return new CommerceOrderValidatorResult(false);
+		}
+
+		if (!commerceOrder.isOpen()) {
+			return new CommerceOrderValidatorResult(
+				false,
+				_getLocalizedMessage(
+					locale, "this-order-has-already-been-checked-out", null));
 		}
 
 		CPDefinitionInventory cpDefinitionInventory =

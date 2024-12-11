@@ -11,6 +11,7 @@ import com.liferay.batch.engine.BatchEngineTaskExecuteStatus;
 import com.liferay.batch.engine.BatchEngineTaskItemDelegateRegistry;
 import com.liferay.batch.engine.ItemClassRegistry;
 import com.liferay.batch.engine.configuration.BatchEngineTaskCompanyConfiguration;
+import com.liferay.batch.engine.csv.ColumnDescriptorProvider;
 import com.liferay.batch.engine.internal.item.BatchEngineTaskItemDelegateExecutor;
 import com.liferay.batch.engine.internal.item.BatchEngineTaskItemDelegateExecutorFactory;
 import com.liferay.batch.engine.internal.writer.BatchEngineExportTaskItemWriter;
@@ -23,6 +24,7 @@ import com.liferay.petra.io.unsync.UnsyncByteArrayOutputStream;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.dao.jdbc.OutputBlob;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -60,8 +62,10 @@ public class BatchEngineExportTaskExecutorImpl
 
 	@Override
 	public void execute(BatchEngineExportTask batchEngineExportTask) {
-		SafeCloseable safeCloseable = CompanyThreadLocal.setWithSafeCloseable(
-			batchEngineExportTask.getCompanyId());
+		SafeCloseable safeCloseable =
+			CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+				batchEngineExportTask.getCompanyId(),
+				CTCollectionThreadLocal.getCTCollectionId());
 
 		try {
 			batchEngineExportTask.setExecuteStatus(
@@ -208,6 +212,8 @@ public class BatchEngineExportTaskExecutorImpl
 		return batchEngineExportTaskItemWriterBuilder.
 			batchEngineTaskContentType(
 				batchEngineTaskContentType
+			).columnDescriptorProvider(
+				_columnDescriptorProvider
 			).companyId(
 				batchEngineExportTask.getCompanyId()
 			).csvFileColumnDelimiter(
@@ -225,6 +231,8 @@ public class BatchEngineExportTaskExecutorImpl
 					batchEngineTaskContentType, unsyncByteArrayOutputStream)
 			).parameters(
 				parameters
+			).taskItemDelegateName(
+				batchEngineExportTask.getTaskItemDelegateName()
 			).userId(
 				batchEngineExportTask.getUserId()
 			).build();
@@ -259,10 +267,6 @@ public class BatchEngineExportTaskExecutorImpl
 		if (parameters == null) {
 			parameters = new HashMap<>();
 		}
-
-		parameters.computeIfAbsent(
-			"taskItemDelegateName",
-			key -> batchEngineExportTask.getTaskItemDelegateName());
 
 		return parameters;
 	}
@@ -315,6 +319,9 @@ public class BatchEngineExportTaskExecutorImpl
 	@Reference
 	private BatchEngineTaskItemDelegateRegistry
 		_batchEngineTaskItemDelegateRegistry;
+
+	@Reference
+	private ColumnDescriptorProvider _columnDescriptorProvider;
 
 	@Reference
 	private CompanyLocalService _companyLocalService;

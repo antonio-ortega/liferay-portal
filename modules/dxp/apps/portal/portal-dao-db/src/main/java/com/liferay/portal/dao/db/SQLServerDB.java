@@ -140,7 +140,7 @@ public class SQLServerDB extends BaseDB {
 			while (resultSet.next()) {
 				String indexName = resultSet.getString("index_name");
 				String tableName = resultSet.getString("table_name");
-				boolean unique = !resultSet.getBoolean("is_unique");
+				boolean unique = resultSet.getBoolean("is_unique");
 
 				indexes.add(new Index(indexName, tableName, unique));
 			}
@@ -168,7 +168,7 @@ public class SQLServerDB extends BaseDB {
 
 	@Override
 	public boolean isSupportsNewUuidFunction() {
-		return _SUPPORTS_NEW_UUID_FUNCTION;
+		return true;
 	}
 
 	@Override
@@ -414,6 +414,7 @@ public class SQLServerDB extends BaseDB {
 		runSQL(connection, sb.toString());
 	}
 
+	@Override
 	protected String getCopyTableStructureSQL(
 		String tableName, String newTableName) {
 
@@ -422,6 +423,7 @@ public class SQLServerDB extends BaseDB {
 			" where 1 = 0");
 	}
 
+	@Override
 	protected String getRenameTableSQL(
 		String oldTableName, String newTableName) {
 
@@ -450,6 +452,10 @@ public class SQLServerDB extends BaseDB {
 
 	@Override
 	protected String reword(String data) throws IOException {
+		if (Validator.isNull(data)) {
+			return null;
+		}
+
 		try (UnsyncBufferedReader unsyncBufferedReader =
 				new UnsyncBufferedReader(new UnsyncStringReader(data))) {
 
@@ -570,8 +576,6 @@ public class SQLServerDB extends BaseDB {
 		Types.TIMESTAMP, Types.DOUBLE, Types.INTEGER, Types.BIGINT,
 		Types.NVARCHAR, Types.NVARCHAR, Types.NVARCHAR
 	};
-
-	private static final boolean _SUPPORTS_NEW_UUID_FUNCTION = true;
 
 	private static final Pattern _defaultValuePattern = Pattern.compile(
 		"^\\('(.*)'\\)|\\(\\((\\d*)\\)\\)", Pattern.CASE_INSENSITIVE);

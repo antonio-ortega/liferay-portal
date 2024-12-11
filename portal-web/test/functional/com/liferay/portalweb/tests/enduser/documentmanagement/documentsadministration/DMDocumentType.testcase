@@ -1,4 +1,4 @@
-@component-name = "portal-document-management"
+@component-name = "portal-content-management"
 definition {
 
 	property portal.release = "true";
@@ -139,7 +139,7 @@ definition {
 
 		AssertElementPresent(
 			key_fieldFieldLabel = "Image",
-			key_image = "Document_1.jpg",
+			key_image = "document_1-jpg",
 			locator1 = "DocumentsAndMediaDocument#CUSTOM_FIELD_IMAGE_PREVIEW");
 
 		PortletEntry.publish();
@@ -202,7 +202,8 @@ definition {
 	@description = "This ensures that a document with a custom document type in asset library can be copied to the site which connected to the asset library with structures available with document type."
 	@priority = 4
 	test CanCopyFileWithCustomTypeFromDepotToConnectedSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
+		property test.liferay.virtual.instance = "false";
+		property test.run.type = "single";
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
@@ -256,8 +257,6 @@ definition {
 	@description = "This ensures that a folder with a document with a custom document type in global scope can be copied to new site."
 	@priority = 4
 	test CanCopyFileWithGlobalTypeInFolderToOtherSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		HeadlessSite.addSite(siteName = "Site Name 1");
 
 		HeadlessSite.addSite(siteName = "Site Name 2");
@@ -306,8 +305,6 @@ definition {
 	@description = "This ensures that a document with a custom document type in global scope can be copied to a new site with document type."
 	@priority = 4
 	test CanCopyFileWithGlobalTypeToOtherSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		HeadlessSite.addSite(siteName = "Site Name 1");
 
 		HeadlessSite.addSite(siteName = "Site Name 2");
@@ -577,8 +574,6 @@ definition {
 	@description = "This ensures that a document with a custom document type in asset library can be copied to the site which connected to the asset library without structures available with a basic document type."
 	@priority = 4
 	test CanNotCopyFileWithCustomTypeFromDepotWithoutAvailableStructuresToConnectedSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",
 			depotName = "Test Depot Name");
@@ -624,8 +619,6 @@ definition {
 	@description = "This ensures that a document with a custom document type in current site scope can be copied to a new site with a basic document type."
 	@priority = 4
 	test CanNotCopyFileWithLocalTypeToOtherSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		HeadlessSite.addSite(siteName = "Site Name 1");
 
 		HeadlessSite.addSite(siteName = "Site Name 2");
@@ -665,8 +658,6 @@ definition {
 	@description = "This ensures that an error message will appear when copying a document with a custom document type that has a required field in global scope to a new site."
 	@priority = 4
 	test CanNotCopyFileWithRequiredFieldInGlobalTypeToOtherSite {
-		property custom.properties = "feature.flag.LPS-182512=true";
-
 		HeadlessSite.addSite(siteName = "Site Name 1");
 
 		HeadlessSite.addSite(siteName = "Site Name 2");
@@ -881,9 +872,11 @@ definition {
 	}
 
 	@description = "This test covers LPS-127092. It ensures that the translated document type can be localized properly."
-	@priority = 5
+	@priority = 3
 	@refactordone
 	test CanViewLocalizedDocumentType {
+		property portal.release = "quarantine";
+
 		DMNavigator.openDocumentTypesAdmin(siteURLKey = "guest");
 
 		DMDocumentType.add(
@@ -905,6 +898,14 @@ definition {
 		Navigator.ensureLocaleURL(locale = "es");
 
 		DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "DM Document Type Name Spain");
+
+		Click(
+			key_currentLocale = StringUtil.lowerCase("en-US"),
+			locator1 = "Button#TRANSLATIONS_LOCALIZATION");
+
+		Click(
+			key_locale = "es-ES",
+			locator1 = "Translation#DROPDOWN_MENU_ITEM");
 
 		AssertTextEquals(
 			key_fieldFieldLabel = "Imagen",

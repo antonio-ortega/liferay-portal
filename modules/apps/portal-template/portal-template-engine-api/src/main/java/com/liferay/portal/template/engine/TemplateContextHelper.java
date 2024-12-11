@@ -13,9 +13,10 @@ import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerListFactory;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.audit.AuditMessageFactoryUtil;
+import com.liferay.portal.image.ImageToolUtil_IW;
+import com.liferay.portal.kernel.audit.AuditMessageFactory;
 import com.liferay.portal.kernel.audit.AuditRouterUtil;
-import com.liferay.portal.kernel.image.ImageToolUtil;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -43,7 +44,7 @@ import com.liferay.portal.kernel.service.permission.GroupPermissionUtil_IW;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.service.permission.OrganizationPermissionUtil_IW;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil_IW;
-import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
+import com.liferay.portal.kernel.service.permission.PortletPermissionUtil_IW;
 import com.liferay.portal.kernel.service.permission.RolePermissionUtil_IW;
 import com.liferay.portal.kernel.service.permission.UserPermissionUtil_IW;
 import com.liferay.portal.kernel.template.TemplateContextContributor;
@@ -63,7 +64,7 @@ import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ListMergeable;
-import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocaleUtil_IW;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.ParamUtil_IW;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -201,6 +202,13 @@ public class TemplateContextHelper {
 	public void prepare(
 		Map<String, Object> contextObjects,
 		HttpServletRequest httpServletRequest) {
+
+		// Content security policy nonce
+
+		contextObjects.put(
+			"nonceAttribute",
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
 
 		// Request
 
@@ -382,9 +390,7 @@ public class TemplateContextHelper {
 		// Audit message factory
 
 		try {
-			variables.put(
-				"auditMessageFactoryUtil",
-				AuditMessageFactoryUtil.getAuditMessageFactory());
+			variables.put("auditMessageFactoryUtil", new AuditMessageFactory());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -520,7 +526,7 @@ public class TemplateContextHelper {
 		// Image tool util
 
 		try {
-			variables.put("imageToolUtil", ImageToolUtil.getImageTool());
+			variables.put("imageToolUtil", ImageToolUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
@@ -555,11 +561,15 @@ public class TemplateContextHelper {
 		// Locale util
 
 		try {
-			variables.put("localeUtil", LocaleUtil.getInstance());
+			variables.put("localeUtil", LocaleUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);
 		}
+
+		// Content security policy nonce
+
+		variables.put("nonceAttribute", StringPool.BLANK);
 
 		// Param util
 
@@ -717,8 +727,7 @@ public class TemplateContextHelper {
 
 		try {
 			variables.put(
-				"portletPermission",
-				PortletPermissionUtil.getPortletPermission());
+				"portletPermission", PortletPermissionUtil_IW.getInstance());
 		}
 		catch (SecurityException securityException) {
 			_log.error(securityException);

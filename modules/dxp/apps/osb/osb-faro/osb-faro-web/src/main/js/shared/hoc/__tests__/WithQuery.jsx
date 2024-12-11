@@ -1,7 +1,6 @@
-import Promise from 'metal-promise';
 import React from 'react';
 import withQuery from '../WithQuery';
-import {cleanup, render} from '@testing-library/react';
+import {cleanup, render, waitFor} from '@testing-library/react';
 
 jest.unmock('react-dom');
 
@@ -13,7 +12,8 @@ const rejectRequest = jest.fn(() => Promise.reject(mockFailData));
 
 describe('WithQuery', () => {
 	afterEach(cleanup);
-	it('should pass result props to the wrapped component', () => {
+
+	it('should pass result props to the wrapped component', async () => {
 		const WrappedComponent = withQuery(
 			request,
 			val => val
@@ -21,12 +21,12 @@ describe('WithQuery', () => {
 
 		const {queryByText} = render(<WrappedComponent />);
 
-		jest.runAllTimers();
+		await waitFor(() => {});
 
 		expect(queryByText('pass')).toBeTruthy();
 	});
 
-	it('should return an error', () => {
+	it('should return an error', async () => {
 		const WrappedComponent = withQuery(
 			rejectRequest,
 			val => val
@@ -34,12 +34,12 @@ describe('WithQuery', () => {
 
 		const {queryByText} = render(<WrappedComponent />);
 
-		jest.runAllTimers();
+		await waitFor(() => {});
 
 		expect(queryByText('error')).toBeTruthy();
 	});
 
-	it('should return the result mapped to props', () => {
+	it('should return the result mapped to props', async () => {
 		const WrappedComponent = withQuery(
 			request,
 			val => val,
@@ -49,6 +49,8 @@ describe('WithQuery', () => {
 		const {queryByText} = render(<WrappedComponent />);
 
 		jest.runAllTimers();
+
+		await waitFor(() => {});
 
 		expect(queryByText('pass')).toBeTruthy();
 	});

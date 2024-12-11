@@ -8,26 +8,35 @@ import {
 	API,
 	SidePanelForm,
 	SidebarCategory,
-	getLocalizableLabel,
 	openToast,
 	saveAndReload,
+	stringUtils,
 } from '@liferay/object-js-components-web';
+import {ILearnResourceContext} from 'frontend-js-components-web';
 import React, {useEffect, useState} from 'react';
 
-import {BasicInfo} from './BasicInfo';
-import {Conditions} from './Conditions';
+import {BasicInfo, BasicInfoProps} from './BasicInfo';
+import {Conditions, ConditionsProps} from './Conditions';
+import {
+	UniqueCompositeKey,
+	UniqueCompositeKeyProps,
+} from './UniqueCompositeKey';
 import {
 	ObjectValidationErrors,
 	useObjectValidationForm,
 } from './useObjectValidationForm';
 
 interface EditObjectValidationProps {
+	allowScriptContentToBeExecutedOrIncluded: boolean;
+	baseResourceURL: string;
 	creationLanguageId: Liferay.Language.Locale;
-	learnResources: ObjectWebLearnResources;
+	learnResources: ILearnResourceContext;
+	objectDefinitionExternalReferenceCode: string;
 	objectDefinitionId: number;
 	objectValidationRuleElements: SidebarCategory[];
 	objectValidationRuleId: number;
 	readOnly: boolean;
+	scriptManagementConfigurationPortletURL: string;
 }
 
 export interface PartialValidationFields {
@@ -41,16 +50,19 @@ interface ErrorDetails extends Error {
 	detail?: string;
 }
 
+type Tab = {
+	Component: (
+		params: BasicInfoProps | ConditionsProps | UniqueCompositeKeyProps
+	) => JSX.Element;
+	label: string;
+};
+
 const TABS = [
 	{
 		Component: BasicInfo,
 		label: Liferay.Language.get('basic-info'),
 	},
-	{
-		Component: Conditions,
-		label: Liferay.Language.get('conditions'),
-	},
-];
+] as Tab[];
 
 const initialValues: ObjectValidation = {
 	active: false,
@@ -63,18 +75,28 @@ const initialValues: ObjectValidation = {
 };
 
 export default function EditObjectValidation({
+	allowScriptContentToBeExecutedOrIncluded,
+	baseResourceURL,
 	creationLanguageId,
 	learnResources,
+	objectDefinitionExternalReferenceCode,
 	objectDefinitionId,
 	objectValidationRuleElements,
 	objectValidationRuleId,
 	readOnly,
+	scriptManagementConfigurationPortletURL,
 }: EditObjectValidationProps) {
 	const [activeIndex, setActiveIndex] = useState<number>(0);
 	const [errorMessage, setErrorMessage] = useState<ObjectValidationErrors>(
 		{}
 	);
-	const [objectFields, setObjectFields] = useState<ObjectField[]>([]);
+	const [customObjectFields, setCustomObjectFields] = useState<ObjectField[]>(
+		[]
+	);
+	const [selectedPartialValidationField, setSelectedPartialValidationField] =
+		useState<string>();
+	const [showUniqueCompositeKeyAlert, setShowUniqueCompositeKeyAlert] =
+		useState(true);
 
 	const onSubmit = async (objectValidation: ObjectValidation) => {
 		delete objectValidation.lineCount;
@@ -109,13 +131,27 @@ export default function EditObjectValidation({
 		}
 	};
 
-	const {
-		errors,
-		handleChange,
-		handleSubmit,
-		setValues,
-		values,
-	} = useObjectValidationForm({initialValues, onSubmit});
+	const {errors, handleChange, handleSubmit, setValues, values} =
+		useObjectValidationForm({initialValues, onSubmit});
+
+	if (TABS.length < 2) {
+		if (values.engine === 'compositeKey') {
+			TABS.push({
+				Component: UniqueCompositeKey,
+				label: Liferay.Language.get('unique-composite-key'),
+			} as Tab);
+		}
+		else if (values.engine !== '') {
+			TABS.push({
+				Component: Conditions,
+				label: Liferay.Language.get('conditions'),
+			} as Tab);
+		}
+	}
+
+	const disabled = readOnly || !!values?.system;
+	const disabledGroovyValidation =
+		!allowScriptContentToBeExecutedOrIncluded && values.engine === 'groovy';
 
 	useEffect(() => {
 		if (Object.keys(errors).length) {
@@ -130,9 +166,10 @@ export default function EditObjectValidation({
 
 	useEffect(() => {
 		const makeFetch = async () => {
-			const validationResponseJSON = await API.getObjectValidationRuleById<
-				ObjectValidation
-			>(objectValidationRuleId);
+			const validationResponseJSON =
+				await API.getObjectValidationRuleById<ObjectValidation>(
+					objectValidationRuleId
+				);
 
 			const newObjectValidation: ObjectValidation = {
 				...validationResponseJSON,
@@ -142,30 +179,58 @@ export default function EditObjectValidation({
 						: validationResponseJSON.script,
 			};
 
-			const fieldsResponseJSON = await API.getObjectDefinitionObjectFields(
-				objectDefinitionId
-			);
+			const objectFieldsResponseJSON =
+				await API.getObjectDefinitionObjectFields(objectDefinitionId);
 
-			setObjectFields(
-				fieldsResponseJSON.filter((field) => !field.system)
+			setCustomObjectFields(
+				objectFieldsResponseJSON.filter(
+					(objectField) => !objectField.system
+				)
 			);
 			setValues(newObjectValidation);
 		};
 
 		makeFetch();
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [objectDefinitionId, objectValidationRuleId]);
 
-	const disabled = readOnly || !!values?.system;
+	useEffect(() => {
+		if (values.objectValidationRuleSettings?.length) {
+			const [partialValidationField] =
+				values.objectValidationRuleSettings;
+
+			const customObjectField = customObjectFields.find(
+				(currentCustomObjectField) =>
+					currentCustomObjectField.externalReferenceCode ===
+					partialValidationField.value
+			);
+
+			setSelectedPartialValidationField(
+				customObjectField?.externalReferenceCode ?? undefined
+			);
+
+			return;
+		}
+
+		setSelectedPartialValidationField(undefined);
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [values.objectValidationRuleSettings]);
 
 	return (
 		<SidePanelForm
 			onSubmit={handleSubmit}
-			title={getLocalizableLabel(creationLanguageId, values.name)}
+			title={stringUtils.getLocalizableLabel(
+				creationLanguageId,
+				values.name
+			)}
 		>
 			<ClayTabs className="side-panel-iframe__tabs">
 				{TABS.map(({label}, index) =>
-					values.engine?.startsWith('function#') && index === 1 ? (
+					(values.engine?.startsWith('function#') ||
+						values.engine?.startsWith('javaDelegate#')) &&
+					index === 1 ? (
 						<React.Fragment key={index} />
 					) : (
 						<ClayTabs.Item
@@ -184,9 +249,14 @@ export default function EditObjectValidation({
 					activeIndex === index ? (
 						<ClayTabs.TabPane key={index}>
 							<Component
+								baseResourceURL={baseResourceURL}
 								componentLabel={label}
 								creationLanguageId={creationLanguageId}
+								customObjectFields={customObjectFields ?? []}
 								disabled={disabled}
+								disabledGroovyValidation={
+									disabledGroovyValidation
+								}
 								errors={
 									Object.keys(errors).length !== 0
 										? errors
@@ -194,11 +264,25 @@ export default function EditObjectValidation({
 								}
 								handleChange={handleChange}
 								learnResources={learnResources}
-								objectFields={objectFields ?? []}
+								objectDefinitionExternalReferenceCode={
+									objectDefinitionExternalReferenceCode
+								}
 								objectValidationRuleElements={
 									objectValidationRuleElements
 								}
+								scriptManagementConfigurationPortletURL={
+									scriptManagementConfigurationPortletURL
+								}
+								selectedPartialValidationField={
+									selectedPartialValidationField
+								}
+								setShowUniqueCompositeKeyAlert={
+									setShowUniqueCompositeKeyAlert
+								}
 								setValues={setValues}
+								showUniqueCompositeKeyAlert={
+									showUniqueCompositeKeyAlert
+								}
 								values={values}
 							/>
 						</ClayTabs.TabPane>

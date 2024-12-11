@@ -1,10 +1,10 @@
-@component-name = "portal-wcm"
+@component-name = "portal-content-management"
 definition {
 
 	property ci.retries.disabled = "true";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Echo Accessibility";
+	property testray.component.names = "Content Management Accessibility";
 	property testray.main.component.name = "Web Content Administration";
 
 	static var randomSiteName = StringUtil.randomString(8);
@@ -189,8 +189,6 @@ definition {
 	@description = "This is a test for LPS-192836. Check the accessibility when selecting feature image from Document and Media in web content creation."
 	@priority = 3
 	test ViewAccessibilityOfFeaturedImageSection {
-		property custom.properties = "feature.flag.LPS-180855=true";
-
 		var siteName = StringUtil.randomString(8);
 
 		var siteURLKey = StringUtil.toLowerCase(${siteName});

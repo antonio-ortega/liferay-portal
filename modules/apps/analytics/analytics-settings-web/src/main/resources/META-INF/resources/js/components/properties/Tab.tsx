@@ -30,9 +30,10 @@ interface ITabProps {
 	onItemsChange: (ids: number[]) => void;
 	property: TProperty;
 	requestFn: (params: TTableRequestParams) => Promise<any>;
+	type: string;
 }
 
-const Tab: React.FC<ITabProps> = ({
+const Tab: React.FC<{children?: React.ReactNode | undefined} & ITabProps> = ({
 	columns,
 	description,
 	emptyState,
@@ -42,6 +43,7 @@ const Tab: React.FC<ITabProps> = ({
 	onItemsChange,
 	property,
 	requestFn,
+	type,
 }) => (
 	<>
 		{description && (
@@ -75,6 +77,7 @@ const Tab: React.FC<ITabProps> = ({
 			}}
 			onItemsChange={(items) => onItemsChange(getIds(items, initialIds))}
 			requestFn={requestFn}
+			type={type}
 		/>
 	</>
 );

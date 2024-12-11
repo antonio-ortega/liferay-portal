@@ -5,6 +5,8 @@
 
 package com.liferay.portal.spring.extender.internal;
 
+import com.liferay.petra.concurrent.DCLSingleton;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.dao.orm.hibernate.SessionFactoryImpl;
 import com.liferay.portal.dao.orm.hibernate.VerifySessionFactoryWrapper;
@@ -19,13 +21,16 @@ import com.liferay.portal.kernel.util.InfrastructureUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.spring.extender.internal.jdbc.DataSourceUtil;
 import com.liferay.portal.spring.extender.internal.loader.ModuleAggregareClassLoader;
-import com.liferay.portal.spring.extender.internal.release.SchemaCreatorImpl;
+import com.liferay.portal.spring.extender.internal.upgrade.release.SchemaCreatorImpl;
+import com.liferay.portal.spring.hibernate.PortalTransactionManager;
 import com.liferay.portal.spring.hibernate.PortletHibernateConfiguration;
 import com.liferay.portal.spring.hibernate.PortletTransactionManager;
 import com.liferay.portal.spring.transaction.DefaultTransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionManagerFactory;
 import com.liferay.portal.upgrade.release.SchemaCreator;
+
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -51,7 +56,6 @@ import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.util.tracker.BundleTracker;
 import org.osgi.util.tracker.BundleTrackerCustomizer;
 
-import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
@@ -133,7 +137,8 @@ public class LiferayServiceExtender
 				serviceRegistration.unregister();
 			}
 
-			_sessionFactoryImplementor.close();
+			_sessionFactoryImplementorDCLSingleton.destroy(
+				SessionFactoryImplementor::close);
 
 			if (InfrastructureUtil.getDataSource() != _dataSource) {
 				try {
@@ -167,18 +172,30 @@ public class LiferayServiceExtender
 			ClassLoader classLoader = new ModuleAggregareClassLoader(
 				extendeeClassLoader, _extendeeBundle.getSymbolicName());
 
-			PortletHibernateConfiguration portletHibernateConfiguration =
-				new PortletHibernateConfiguration(classLoader, _dataSource);
+			Supplier<SessionFactoryImplementor>
+				sessionFactoryImplementorSupplier =
+					() -> _sessionFactoryImplementorDCLSingleton.getSingleton(
+						() -> {
+							PortletHibernateConfiguration
+								portletHibernateConfiguration =
+									new PortletHibernateConfiguration(
+										classLoader, _dataSource);
 
-			portletHibernateConfiguration.afterPropertiesSet();
+							try {
+								portletHibernateConfiguration.
+									afterPropertiesSet();
+							}
+							catch (IOException ioException) {
+								ReflectionUtil.throwException(ioException);
+							}
 
-			_sessionFactoryImplementor =
-				(SessionFactoryImplementor)
-					portletHibernateConfiguration.getObject();
+							return (SessionFactoryImplementor)
+								portletHibernateConfiguration.getObject();
+						});
 
 			DefaultTransactionExecutor defaultTransactionExecutor =
 				_getTransactionExecutor(
-					_dataSource, _sessionFactoryImplementor);
+					_dataSource, sessionFactoryImplementorSupplier);
 
 			_serviceRegistrations.add(
 				extendeeBundleContext.registerService(
@@ -197,8 +214,8 @@ public class LiferayServiceExtender
 			SessionFactoryImpl sessionFactoryImpl = new SessionFactoryImpl();
 
 			sessionFactoryImpl.setSessionFactoryClassLoader(classLoader);
-			sessionFactoryImpl.setSessionFactoryImplementor(
-				_sessionFactoryImplementor);
+			sessionFactoryImpl.setSessionFactoryImplementorSupplier(
+				sessionFactoryImplementorSupplier);
 
 			SessionFactory sessionFactory =
 				VerifySessionFactoryWrapper.createVerifySessionFactoryWrapper(
@@ -218,20 +235,22 @@ public class LiferayServiceExtender
 
 		private DefaultTransactionExecutor _getTransactionExecutor(
 			DataSource liferayDataSource,
-			SessionFactoryImplementor sessionFactoryImplementor) {
+			Supplier<SessionFactoryImplementor>
+				sessionFactoryImplementorSupplier) {
 
 			PlatformTransactionManager platformTransactionManager = null;
 
 			if (InfrastructureUtil.getDataSource() == liferayDataSource) {
 				platformTransactionManager = new PortletTransactionManager(
-					(HibernateTransactionManager)
+					(PortalTransactionManager)
 						InfrastructureUtil.getTransactionManager(),
-					sessionFactoryImplementor);
+					sessionFactoryImplementorSupplier);
 			}
 			else {
 				platformTransactionManager =
 					TransactionManagerFactory.createTransactionManager(
-						liferayDataSource, sessionFactoryImplementor);
+						liferayDataSource,
+						sessionFactoryImplementorSupplier.get());
 			}
 
 			return new DefaultTransactionExecutor(platformTransactionManager);
@@ -241,7 +260,8 @@ public class LiferayServiceExtender
 		private final Bundle _extendeeBundle;
 		private final List<ServiceRegistration<?>> _serviceRegistrations =
 			new ArrayList<>();
-		private SessionFactoryImplementor _sessionFactoryImplementor;
+		private final DCLSingleton<SessionFactoryImplementor>
+			_sessionFactoryImplementorDCLSingleton = new DCLSingleton<>();
 
 	}
 

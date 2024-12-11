@@ -53,8 +53,8 @@ public class AssetTestUtil {
 		AssetEntry assetEntry = AssetEntryLocalServiceUtil.createAssetEntry(
 			assetEntryId);
 
-		assetEntry.setClassName(className);
 		assetEntry.setGroupId(groupId);
+		assetEntry.setClassName(className);
 		assetEntry.setClassPK(RandomTestUtil.randomLong());
 		assetEntry.setVisible(true);
 		assetEntry.setPublishDate(publishDate);
@@ -103,10 +103,17 @@ public class AssetTestUtil {
 	public static AssetTag addTag(long groupId, String assetTagName)
 		throws PortalException {
 
+		return addTag(null, groupId, assetTagName);
+	}
+
+	public static AssetTag addTag(
+			String externalReferenceCode, long groupId, String assetTagName)
+		throws PortalException {
+
 		long userId = TestPropsValues.getUserId();
 
 		return AssetTagLocalServiceUtil.addTag(
-			userId, groupId, assetTagName,
+			externalReferenceCode, userId, groupId, assetTagName,
 			ServiceContextTestUtil.getServiceContext(groupId, userId));
 	}
 
@@ -120,6 +127,15 @@ public class AssetTestUtil {
 
 	public static AssetVocabulary addVocabulary(
 			long groupId, long classNameId, long classTypePK, boolean required)
+		throws Exception {
+
+		return addVocabulary(
+			groupId, classNameId, classTypePK, false, required);
+	}
+
+	public static AssetVocabulary addVocabulary(
+			long groupId, long classNameId, long classTypePK,
+			boolean depotRequired, boolean required)
 		throws Exception {
 
 		Locale locale = LocaleUtil.getSiteDefault();
@@ -137,7 +153,7 @@ public class AssetTestUtil {
 
 		vocabularySettingsHelper.setClassNameIdsAndClassTypePKs(
 			new long[] {classNameId}, new long[] {classTypePK},
-			new boolean[] {required});
+			new boolean[] {depotRequired}, new boolean[] {required});
 		vocabularySettingsHelper.setMultiValued(true);
 
 		ServiceContext serviceContext =

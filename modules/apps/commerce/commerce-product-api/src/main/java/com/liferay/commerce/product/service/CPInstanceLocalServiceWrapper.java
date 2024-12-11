@@ -350,14 +350,6 @@ public class CPInstanceLocalServiceWrapper
 	}
 
 	@Override
-	public CPInstance fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		return _cpInstanceLocalService.fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
-	@Override
 	public CPInstance fetchCPInstance(long CPInstanceId) {
 		return _cpInstanceLocalService.fetchCPInstance(CPInstanceId);
 	}
@@ -513,6 +505,15 @@ public class CPInstanceLocalServiceWrapper
 		long companyId, String sku) {
 
 		return _cpInstanceLocalService.getCPInstances(companyId, sku);
+	}
+
+	@Override
+	public java.util.List<CPInstance> getCPInstances(
+		String replacementCPInstanceUuid, long replacementCProductId,
+		int status) {
+
+		return _cpInstanceLocalService.getCPInstances(
+			replacementCPInstanceUuid, replacementCProductId, status);
 	}
 
 	/**
@@ -706,10 +707,33 @@ public class CPInstanceLocalServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.search.BaseModelSearchResult<CPInstance>
 			searchCPInstances(
+				long companyId, String cpInstanceUuid, long cProductId,
+				String keywords, int status, int start, int end,
+				com.liferay.portal.kernel.search.Sort sort)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpInstanceLocalService.searchCPInstances(
+			companyId, cpInstanceUuid, cProductId, keywords, status, start, end,
+			sort);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.search.BaseModelSearchResult<CPInstance>
+			searchCPInstances(
 				com.liferay.portal.kernel.search.SearchContext searchContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _cpInstanceLocalService.searchCPInstances(searchContext);
+	}
+
+	@Override
+	public int searchCPInstancesCount(
+			long companyId, String cpInstanceUuid, long cProductId,
+			String keywords, int status)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _cpInstanceLocalService.searchCPInstancesCount(
+			companyId, cpInstanceUuid, cProductId, keywords, status);
 	}
 
 	/**

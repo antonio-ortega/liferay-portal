@@ -7,6 +7,7 @@ package com.liferay.portal.workflow.kaleo.internal.runtime.integration.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -14,11 +15,14 @@ import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
 import com.liferay.portal.kernel.workflow.WorkflowException;
+import com.liferay.portal.security.script.management.test.util.ScriptManagementConfigurationTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.workflow.kaleo.definition.exception.KaleoDefinitionValidationException;
 import com.liferay.portal.workflow.kaleo.definition.util.WorkflowDefinitionContentUtil;
 import com.liferay.portal.workflow.manager.WorkflowDefinitionManager;
 
+import java.io.Closeable;
 import java.io.InputStream;
 
 import org.junit.Assert;
@@ -53,6 +57,27 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 	}
 
 	@Test
+	public void testDeployGroovyWorkflowDefinition() throws Exception {
+		String content = StringUtil.read(
+			getResourceInputStream(
+				"single-approver-site-member-workflow-definition.xml"));
+
+		try (Closeable closeable =
+				ScriptManagementConfigurationTestUtil.saveWithCloseable(
+					false)) {
+
+			AssertUtils.assertFailure(
+				KaleoDefinitionValidationException.NotAllowedScriptLanguage.
+					class,
+				"Groovy is not allowed",
+				() -> _workflowDefinitionManager.deployWorkflowDefinition(
+					null, TestPropsValues.getCompanyId(),
+					TestPropsValues.getUserId(), StringPool.BLANK,
+					"Single Approver", content.getBytes()));
+		}
+	}
+
+	@Test
 	public void testDeployWorkflowDefinitionWithContentAsJSON()
 		throws Exception {
 
@@ -63,8 +88,9 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 		WorkflowDefinition workflowDefinition =
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				StringPool.BLANK, "Single Approver", content.getBytes());
+				null, TestPropsValues.getCompanyId(),
+				TestPropsValues.getUserId(), StringPool.BLANK,
+				"Single Approver", content.getBytes());
 
 		Assert.assertEquals(
 			workflowDefinition.getName(), workflowDefinition.getName());
@@ -80,8 +106,9 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 		WorkflowDefinition workflowDefinition =
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
-				StringPool.BLANK, "Single Approver", content.getBytes());
+				null, TestPropsValues.getCompanyId(),
+				TestPropsValues.getUserId(), StringPool.BLANK,
+				"Single Approver", content.getBytes());
 
 		Assert.assertEquals(
 			workflowDefinition.getName(), workflowDefinition.getName());
@@ -98,9 +125,9 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 
 		WorkflowDefinition deployedWorkflowDefinition =
 			_workflowDefinitionManager.deployWorkflowDefinition(
-				TestPropsValues.getCompanyId(), workflowDefinition.getUserId(),
-				workflowDefinition.getTitle(), workflowDefinition.getName(),
-				content.getBytes());
+				null, TestPropsValues.getCompanyId(),
+				workflowDefinition.getUserId(), workflowDefinition.getTitle(),
+				workflowDefinition.getName(), content.getBytes());
 
 		Assert.assertEquals(
 			workflowDefinition.getName(), deployedWorkflowDefinition.getName());
@@ -517,8 +544,8 @@ public class WorkflowDefinitionManagerTest extends BaseWorkflowManagerTestCase {
 		throws Exception {
 
 		return _workflowDefinitionManager.saveWorkflowDefinition(
-			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(), title,
-			StringUtil.randomId(), bytes);
+			null, TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+			title, StringUtil.randomId(), bytes);
 	}
 
 	@Inject

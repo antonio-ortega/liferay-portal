@@ -13,9 +13,9 @@ import com.liferay.commerce.constants.CommercePortletKeys;
 import com.liferay.commerce.constants.CommerceWebKeys;
 import com.liferay.commerce.context.CommerceContext;
 import com.liferay.commerce.currency.model.CommerceCurrency;
+import com.liferay.commerce.frontend.helper.ProductHelper;
 import com.liferay.commerce.frontend.model.ProductSettingsModel;
 import com.liferay.commerce.frontend.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.commerce.frontend.util.ProductHelper;
 import com.liferay.commerce.inventory.engine.CommerceInventoryEngine;
 import com.liferay.commerce.model.CommerceOrder;
 import com.liferay.commerce.model.CommerceOrderItem;
@@ -35,7 +35,6 @@ import com.liferay.commerce.service.CommerceOrderTypeLocalService;
 import com.liferay.commerce.util.CommerceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -127,7 +126,8 @@ public class AddToCartTag extends IncludeTag {
 
 			if (cpSku != null) {
 				_cpInstanceId = cpSku.getCPInstanceId();
-				_disabled = !cpSku.isPurchasable() || (_commerceAccountId == 0);
+				_published = cpSku.isPublished();
+				_purchasable = cpSku.isPurchasable();
 				sku = cpSku.getSku();
 
 				if (commerceOrder != null) {
@@ -141,15 +141,12 @@ public class AddToCartTag extends IncludeTag {
 					}
 				}
 
-				if (FeatureFlagManagerUtil.isEnabled("COMMERCE-11287")) {
-					List<CPInstanceUnitOfMeasure> cpInstanceUnitOfMeasures =
-						_cpInstanceUnitOfMeasureLocalService.
-							getActiveCPInstanceUnitOfMeasures(_cpInstanceId);
+				List<CPInstanceUnitOfMeasure> cpInstanceUnitOfMeasures =
+					_cpInstanceUnitOfMeasureLocalService.
+						getActiveCPInstanceUnitOfMeasures(_cpInstanceId);
 
-					if (!cpInstanceUnitOfMeasures.isEmpty()) {
-						_cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasures.get(
-							0);
-					}
+				if (!cpInstanceUnitOfMeasures.isEmpty()) {
+					_cpInstanceUnitOfMeasure = cpInstanceUnitOfMeasures.get(0);
 				}
 			}
 
@@ -157,18 +154,11 @@ public class AddToCartTag extends IncludeTag {
 				BigDecimal stockQuantity =
 					_commerceInventoryEngine.getStockQuantity(
 						PortalUtil.getCompanyId(httpServletRequest),
-						_cpCatalogEntry.getGroupId(),
+						_commerceAccountId, _cpCatalogEntry.getGroupId(),
 						commerceContext.getCommerceChannelGroupId(), sku,
 						StringPool.BLANK);
 
 				_stockQuantity = stockQuantity.intValue();
-
-				if (!_disabled) {
-					_disabled =
-						(!_productSettingsModel.isBackOrders() &&
-						 (_stockQuantity <= 0)) ||
-						!cpSku.isPublished() || !cpSku.isPurchasable();
-				}
 
 				if (Validator.isNull(_skuOptions) || _skuOptions.equals("[]")) {
 					JSONArray jsonArray = CPJSONUtil.toJSONArray(
@@ -179,6 +169,9 @@ public class AddToCartTag extends IncludeTag {
 					_skuOptions = jsonArray.toString();
 				}
 			}
+			else {
+				_disabled = true;
+			}
 
 			AccountEntry accountEntry = commerceContext.getAccountEntry();
 
@@ -188,12 +181,20 @@ public class AddToCartTag extends IncludeTag {
 						(ThemeDisplay)httpServletRequest.getAttribute(
 							WebKeys.THEME_DISPLAY);
 
-					_disabled =
-						_disabled ||
-						!_commerceOrderPortletResourcePermission.contains(
-							themeDisplay.getPermissionChecker(),
-							accountEntry.getAccountEntryGroupId(),
-							CommerceOrderActionKeys.ADD_COMMERCE_ORDER);
+					if (_disabled) {
+						_disabled &=
+							!_commerceOrderPortletResourcePermission.contains(
+								themeDisplay.getPermissionChecker(),
+								accountEntry.getAccountEntryGroupId(),
+								CommerceOrderActionKeys.ADD_COMMERCE_ORDER);
+					}
+					else {
+						_disabled =
+							!_commerceOrderPortletResourcePermission.contains(
+								themeDisplay.getPermissionChecker(),
+								accountEntry.getAccountEntryGroupId(),
+								CommerceOrderActionKeys.ADD_COMMERCE_ORDER);
+					}
 				}
 				else {
 					CommerceChannel commerceChannel =
@@ -209,13 +210,22 @@ public class AddToCartTag extends IncludeTag {
 									CommerceConstants.
 										SERVICE_NAME_COMMERCE_ORDER));
 
-					_disabled =
-						_disabled ||
-						(accountEntry.isGuestAccount() &&
-						 (CommerceChannelConstants.SITE_TYPE_B2B ==
-							 commerceContext.getCommerceSiteType()) &&
-						 !commerceOrderCheckoutConfiguration.
-							 guestCheckoutEnabled());
+					if (_disabled) {
+						_disabled &=
+							accountEntry.isGuestAccount() &&
+							(CommerceChannelConstants.SITE_TYPE_B2B ==
+								commerceContext.getCommerceSiteType()) &&
+							!commerceOrderCheckoutConfiguration.
+								guestCheckoutEnabled();
+					}
+					else {
+						_disabled =
+							accountEntry.isGuestAccount() &&
+							(CommerceChannelConstants.SITE_TYPE_B2B ==
+								commerceContext.getCommerceSiteType()) &&
+							!commerceOrderCheckoutConfiguration.
+								guestCheckoutEnabled();
+					}
 				}
 			}
 
@@ -262,6 +272,14 @@ public class AddToCartTag extends IncludeTag {
 		return _namespace;
 	}
 
+	public boolean getPublished() {
+		return _published;
+	}
+
+	public boolean getPurchasable() {
+		return _purchasable;
+	}
+
 	public BigDecimal getQuantity() {
 		return _quantity;
 	}
@@ -284,45 +302,61 @@ public class AddToCartTag extends IncludeTag {
 
 	@Override
 	public void setAttributes(HttpServletRequest httpServletRequest) {
-		setAttributeNamespace(_ATTRIBUTE_NAMESPACE);
-
-		setNamespacedAttribute(httpServletRequest, "alignment", _alignment);
-		setNamespacedAttribute(
-			httpServletRequest, "commerceAccountId", _commerceAccountId);
-		setNamespacedAttribute(
-			httpServletRequest, "commerceChannelGroupId",
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:alignment", _alignment);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:commerceAccountId",
+			_commerceAccountId);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:commerceChannelGroupId",
 			_commerceChannelGroupId);
-		setNamespacedAttribute(
-			httpServletRequest, "commerceChannelId", _commerceChannelId);
-		setNamespacedAttribute(
-			httpServletRequest, "commerceCurrencyCode", _commerceCurrencyCode);
-		setNamespacedAttribute(
-			httpServletRequest, "commerceOrderId", _commerceOrderId);
-		setNamespacedAttribute(
-			httpServletRequest, "cpInstanceId", _cpInstanceId);
-		setNamespacedAttribute(
-			httpServletRequest, "cpInstanceUnitOfMeasure",
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:commerceChannelId",
+			_commerceChannelId);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:commerceCurrencyCode",
+			_commerceCurrencyCode);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:commerceOrderId", _commerceOrderId);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:cpInstanceId", _cpInstanceId);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:cpInstanceUnitOfMeasure",
 			_cpInstanceUnitOfMeasure);
-		setNamespacedAttribute(httpServletRequest, "disabled", _disabled);
-		setNamespacedAttribute(httpServletRequest, "iconOnly", _iconOnly);
-		setNamespacedAttribute(httpServletRequest, "inCart", _inCart);
-		setNamespacedAttribute(httpServletRequest, "inline", _inline);
-		setNamespacedAttribute(httpServletRequest, "namespace", _namespace);
-		setNamespacedAttribute(httpServletRequest, "productId", _productId);
-		setNamespacedAttribute(
-			httpServletRequest, "productSettingsModel", _productSettingsModel);
-		setNamespacedAttribute(httpServletRequest, "size", _size);
-		setNamespacedAttribute(
-			httpServletRequest, "showOrderTypeModal", _showOrderTypeModal);
-		setNamespacedAttribute(
-			httpServletRequest, "showOrderTypeModalURL",
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:disabled", _disabled);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:iconOnly", _iconOnly);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:inCart", _inCart);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:inline", _inline);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:namespace", _namespace);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:productId", _productId);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:productSettingsModel",
+			_productSettingsModel);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:published", _published);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:purchasable", _purchasable);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:showOrderTypeModal",
+			_showOrderTypeModal);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:showOrderTypeModalURL",
 			_showOrderTypeModalURL);
-		setNamespacedAttribute(
-			httpServletRequest, "showUnitOfMeasureSelector",
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:showUnitOfMeasureSelector",
 			_showUnitOfMeasureSelector);
-		setNamespacedAttribute(httpServletRequest, "skuOptions", _skuOptions);
-		setNamespacedAttribute(
-			httpServletRequest, "stockQuantity", _stockQuantity);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:size", _size);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:skuOptions", _skuOptions);
+		httpServletRequest.setAttribute(
+			"liferay-commerce:add-to-cart:stockQuantity", _stockQuantity);
 	}
 
 	public void setCPCatalogEntry(CPCatalogEntry cpCatalogEntry) {
@@ -370,6 +404,14 @@ public class AddToCartTag extends IncludeTag {
 		_cpInstanceUnitOfMeasureLocalService =
 			ServletContextUtil.getCPInstanceUnitOfMeasureLocalService();
 		_productHelper = ServletContextUtil.getProductHelper();
+	}
+
+	public void setPublished(boolean published) {
+		_published = published;
+	}
+
+	public void setPurchasable(boolean purchasable) {
+		_purchasable = purchasable;
 	}
 
 	public void setQuantity(BigDecimal quantity) {
@@ -421,6 +463,8 @@ public class AddToCartTag extends IncludeTag {
 		_productHelper = null;
 		_productId = 0;
 		_productSettingsModel = null;
+		_published = false;
+		_purchasable = false;
 		_quantity = BigDecimal.ZERO;
 		_showOrderTypeModal = false;
 		_showOrderTypeModalURL = null;
@@ -456,9 +500,6 @@ public class AddToCartTag extends IncludeTag {
 		).buildString();
 	}
 
-	private static final String _ATTRIBUTE_NAMESPACE =
-		"liferay-commerce:add-to-cart:";
-
 	private static final String _PAGE = "/add_to_cart/page.jsp";
 
 	private static final Log _log = LogFactoryUtil.getLog(AddToCartTag.class);
@@ -492,6 +533,8 @@ public class AddToCartTag extends IncludeTag {
 	private ProductHelper _productHelper;
 	private long _productId;
 	private ProductSettingsModel _productSettingsModel;
+	private boolean _published;
+	private boolean _purchasable;
 	private BigDecimal _quantity = BigDecimal.ZERO;
 	private boolean _showOrderTypeModal;
 	private String _showOrderTypeModalURL;

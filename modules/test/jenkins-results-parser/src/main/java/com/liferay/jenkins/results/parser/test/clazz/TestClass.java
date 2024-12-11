@@ -18,9 +18,13 @@ import org.json.JSONObject;
  */
 public interface TestClass extends Comparable<TestClass> {
 
+	public void addTestClassMethod(TestClassMethod testClassMethod);
+
 	public long getAverageDuration();
 
 	public long getAverageOverheadDuration();
+
+	public long getAverageTestTaskDuration();
 
 	public JSONObject getJSONObject();
 
@@ -31,6 +35,8 @@ public interface TestClass extends Comparable<TestClass> {
 	public List<TestClassMethod> getTestClassMethods();
 
 	public TestHistory getTestHistory();
+
+	public String getTestTaskName();
 
 	public boolean hasTestClassMethods();
 

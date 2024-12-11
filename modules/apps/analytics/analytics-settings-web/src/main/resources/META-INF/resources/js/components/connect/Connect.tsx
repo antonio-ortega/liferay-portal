@@ -11,7 +11,7 @@ import {useModal} from '@clayui/modal';
 import classNames from 'classnames';
 import React, {useEffect, useState} from 'react';
 
-import {EPageView, Events, useData, useDispatch} from '../../App';
+import {EPageView, Events, useData, useDispatch} from '../..';
 import {fetchConnection} from '../../utils/api';
 import BasePage from '../BasePage';
 import Loading from '../Loading';
@@ -22,7 +22,9 @@ interface IConnectProps {
 	title: string;
 }
 
-const Connect: React.FC<IConnectProps> = ({onConnect, title}) => {
+const Connect: React.FC<
+	{children?: React.ReactNode | undefined} & IConnectProps
+> = ({onConnect, title}) => {
 	const {
 		connected,
 		liferayAnalyticsURL,

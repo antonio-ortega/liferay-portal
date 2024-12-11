@@ -7,6 +7,7 @@ package com.liferay.commerce.term.service;
 
 import com.liferay.commerce.term.model.CommerceTermEntry;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.module.service.Snapshot;
 
 import java.util.List;
 import java.util.Map;
@@ -57,19 +58,20 @@ public class CommerceTermEntryServiceUtil {
 		return getService().deleteCommerceTermEntry(commerceTermEntryId);
 	}
 
-	public static CommerceTermEntry fetchByExternalReferenceCode(
-			long companyId, String externalReferenceCode)
-		throws PortalException {
-
-		return getService().fetchByExternalReferenceCode(
-			companyId, externalReferenceCode);
-	}
-
 	public static CommerceTermEntry fetchCommerceTermEntry(
 			long commerceTermEntryId)
 		throws PortalException {
 
 		return getService().fetchCommerceTermEntry(commerceTermEntryId);
+	}
+
+	public static CommerceTermEntry
+			fetchCommerceTermEntryByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		return getService().fetchCommerceTermEntryByExternalReferenceCode(
+			companyId, externalReferenceCode);
 	}
 
 	public static List<CommerceTermEntry> getCommerceTermEntries(
@@ -135,13 +137,11 @@ public class CommerceTermEntryServiceUtil {
 	}
 
 	public static CommerceTermEntryService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceTermEntryService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceTermEntryService _service;
+	private static final Snapshot<CommerceTermEntryService> _serviceSnapshot =
+		new Snapshot<>(
+			CommerceTermEntryServiceUtil.class, CommerceTermEntryService.class);
 
 }

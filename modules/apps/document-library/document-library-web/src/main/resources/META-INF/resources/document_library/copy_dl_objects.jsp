@@ -8,14 +8,14 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
-CopyDLObjectsDisplayContext copyDLObjectsDisplayContext = new CopyDLObjectsDisplayContext(request, liferayPortletResponse, themeDisplay);
+CopyDLObjectsDisplayContext copyDLObjectsDisplayContext = (CopyDLObjectsDisplayContext)request.getAttribute(CopyDLObjectsDisplayContext.class.getName());
 
 copyDLObjectsDisplayContext.setViewAttributes();
 %>
 
 <div class="c-mt-3 sheet sheet-lg">
 	<react:component
-		module="document_library/js/DLFolderSelector"
+		module="{DLFolderSelector} from document-library-web"
 		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"copyActionURL", copyDLObjectsDisplayContext.getActionURL()
@@ -27,6 +27,8 @@ copyDLObjectsDisplayContext.setViewAttributes();
 				"redirect", copyDLObjectsDisplayContext.getRedirect()
 			).put(
 				"selectionModalURL", copyDLObjectsDisplayContext.getSelectionModalURL()
+			).put(
+				"size", copyDLObjectsDisplayContext.getSize()
 			).put(
 				"sourceRepositoryId", copyDLObjectsDisplayContext.getSourceRepositoryId()
 			).build()

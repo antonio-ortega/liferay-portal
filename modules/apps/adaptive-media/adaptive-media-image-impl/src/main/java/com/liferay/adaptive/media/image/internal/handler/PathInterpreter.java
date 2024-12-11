@@ -10,7 +10,7 @@ import com.liferay.adaptive.media.exception.AMRuntimeException;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationEntry;
 import com.liferay.adaptive.media.image.configuration.AMImageConfigurationHelper;
 import com.liferay.adaptive.media.image.internal.util.Tuple;
-import com.liferay.document.library.kernel.service.DLAppService;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
@@ -20,14 +20,18 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-
 /**
  * @author Adolfo Pérez
  */
-@Component(service = PathInterpreter.class)
 public class PathInterpreter {
+
+	public PathInterpreter(
+		AMImageConfigurationHelper amImageConfigurationHelper,
+		DLAppLocalService dlAppLocalService) {
+
+		_amImageConfigurationHelper = amImageConfigurationHelper;
+		_dlAppLocalService = dlAppLocalService;
+	}
 
 	public Tuple<FileVersion, Map<String, String>> interpretPath(
 		String pathInfo) {
@@ -46,7 +50,7 @@ public class PathInterpreter {
 			long fileEntryId = Long.valueOf(matcher.group(1));
 
 			FileVersion fileVersion = _getFileVersion(
-				_dlAppService.getFileEntry(fileEntryId),
+				_dlAppLocalService.getFileEntry(fileEntryId),
 				_getFileVersionId(matcher));
 
 			AMImageConfigurationEntry amImageConfigurationEntry =
@@ -71,7 +75,7 @@ public class PathInterpreter {
 			return Tuple.of(fileVersion, curProperties);
 		}
 		catch (PortalException portalException) {
-			throw new AMRuntimeException(portalException);
+			throw new AMRuntimeException.IOException(portalException);
 		}
 	}
 
@@ -86,7 +90,7 @@ public class PathInterpreter {
 			return fileEntry.getFileVersion();
 		}
 
-		return _dlAppService.getFileVersion(fileVersionId);
+		return _dlAppLocalService.getFileVersion(fileVersionId);
 	}
 
 	private long _getFileVersionId(Matcher matcher) {
@@ -100,10 +104,7 @@ public class PathInterpreter {
 	private static final Pattern _pattern = Pattern.compile(
 		"/image/(\\d+)(?:/(\\d+))?/([^/]+)/(?:[^/]+)");
 
-	@Reference
-	private AMImageConfigurationHelper _amImageConfigurationHelper;
-
-	@Reference
-	private DLAppService _dlAppService;
+	private final AMImageConfigurationHelper _amImageConfigurationHelper;
+	private final DLAppLocalService _dlAppLocalService;
 
 }

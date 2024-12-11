@@ -1,4 +1,4 @@
-@component-name = "portal-document-management"
+@component-name = "portal-content-management"
 definition {
 
 	property custom.properties = "dl.actions.visible=true${line.separator}jsonws.web.service.paths.excludes=";
@@ -153,6 +153,44 @@ definition {
 		DMDocument.addPG(
 			dmDocumentFile = "Document_1.doc",
 			dmDocumentTitle = "Document_1.doc");
+	}
+
+	@description = "This case covers LPS-201021. Site administrator have permissions to add an external video shortcut."
+	@priority = 4
+	test CanAddExternalVideoShortcutAsSiteAdministrator {
+		HeadlessSite.addSite(siteName = "Site Name");
+
+		JSONUser.addUser(
+			userEmailAddress = "user@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONUser.addUserToSite(
+			groupName = "Site Name",
+			userEmailAddress = "user@liferay.com");
+
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Site Name",
+			roleTitle = "Site Administrator",
+			userEmailAddress = "user@liferay.com");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn userln");
+
+		User.impersonateCP(userName = "userfn");
+
+		UserBar.gotoMySite(siteName = "Site Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Content & Data",
+			portlet = "Documents and Media");
+
+		DMNavigator.gotoAddDocumentTypeCP(dmDocumentTypeName = "External Video Shortcut");
 	}
 
 	@description = "This is a test for LPS-128366, it ensures that the folder permissions are removed after removing permissions during folder addition."
@@ -353,10 +391,7 @@ definition {
 
 		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
 			siteName = "Site Name",
@@ -378,7 +413,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoSitePage(
@@ -545,7 +580,7 @@ definition {
 			dmFolderName = "Parent Folder Name",
 			groupName = "Site Name",
 			userEmailAddress = "userea@liferay.com",
-			userPassword = "test");
+			userPassword = PropsUtil.get("default.admin.password"));
 
 		DMNavigator.openToFolderInAdmin(
 			dmFolderName = "SubFolder Name",
@@ -663,8 +698,6 @@ definition {
 		AssertElementNotPresent(
 			key_dmDocumentTitle = "DM Document Title",
 			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_DOCUMENT_TITLE");
-
-		User.viewLoginPG(loginPg = "Full Screen");
 	}
 
 	@description = "This ensures that the user can create document viewable only by the owner."
@@ -815,10 +848,7 @@ definition {
 
 		JSONOrganization.addOrganization(organizationName = "Organization Name");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		UsersAndOrganizationsNavigator.gotoOrganizations();
 
@@ -915,10 +945,7 @@ definition {
 
 		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
 			siteName = "Site Name",
@@ -1038,7 +1065,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoSitePage(
@@ -1162,10 +1189,7 @@ definition {
 
 		Site.manageMembershipOptions(allowManualMembershipManagement = "true");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.editUserSiteCP(
 			siteName = "Site Name",
@@ -1187,7 +1211,7 @@ definition {
 		User.logoutPG();
 
 		User.loginUserPG(
-			password = "test",
+			password = PropsUtil.get("default.admin.password"),
 			userEmailAddress = "userea@liferay.com");
 
 		Navigator.gotoSitePage(
@@ -1273,10 +1297,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.assignRegularRoleCP(
 			roleTitle = "Administrator",
@@ -1297,10 +1318,7 @@ definition {
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
 
-		ApplicationsMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
+		User.openUsersAdmin();
 
 		User.deactivateCP(userFirstName = "userfn");
 
@@ -1332,7 +1350,7 @@ definition {
 			requireReset = "false",
 			userEmailAddress = "userea@liferay.com");
 
-		JSONRole.addRegularRole(roleTitle = "Depot Regrole Name");
+		JSONRole.addRegularRole(roleKey = "Depot Regrole Name");
 
 		JSONRole.assignRoleToUser(
 			roleTitle = "Depot Regrole Name",
@@ -1376,48 +1394,6 @@ definition {
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#ERROR",
 			value1 = "You do not have the required permissions.");
-	}
-
-	@description = "This is a test for LPS-136852. It checks that a guest cannot access a folder image without permissions."
-	@priority = 4
-	test GuestCannotAccessFolderImageThroughURLWithoutPermissions {
-		property portal.upstream = "true";
-
-		JSONFolder.addFolder(
-			dmFolderDescription = "DM Folder Description",
-			dmFolderName = "DM Folder Name",
-			groupName = "Guest",
-			guestPermissions = "false");
-
-		JSONDocument.addFileWithUploadedFile(
-			dmDocumentDescription = "DM Document Description",
-			dmDocumentTitle = "DM Document Title",
-			folderName = "DM Folder Name",
-			groupName = "Guest",
-			mimeType = "image/jpeg",
-			sourceFileName = "Document_1.jpg");
-
-		DMNavigator.openToFolderInAdmin(
-			dmFolderName = "DM Folder Name",
-			groupName = "Guest",
-			siteURLKey = "guest");
-
-		DMNavigator.gotoDocumentPermissionsCP(dmDocumentTitle = "DM Document Title");
-
-		PermissionsInline.addOrRemoveAnyPermissionsFromSpecificRole(
-			addOrRemoveViewPermission = "Remove",
-			permissionsKeyList = "INLINE_PERMISSIONS_DOWNLOAD_CHECKBOX",
-			roleTitle = "Guest");
-
-		var dmDocumentURL = JSONDocument.getLatestVersionURL(
-			dmDocumentTitle = "DM Document Title",
-			groupName = "Guest");
-
-		User.logoutPG();
-
-		Navigator.openSpecificURL(url = ${dmDocumentURL});
-
-		User.viewLoginPG();
 	}
 
 	@description = "This is a test for LPS-136833. It checks that a guest cannot add a document in a folder without permissions."

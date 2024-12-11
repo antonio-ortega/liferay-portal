@@ -14,7 +14,7 @@ RepositoryBrowserTagDisplayContext repositoryBrowserTagDisplayContext = (Reposit
 <clay:management-toolbar
 	additionalProps="<%= repositoryBrowserTagDisplayContext.getAdditionalProps() %>"
 	managementToolbarDisplayContext="<%= repositoryBrowserTagDisplayContext.getManagementToolbarDisplayContext() %>"
-	propsTransformer="repository_browser/js/RepositoryBrowserManagementToolbarPropsTransformer"
+	propsTransformer="{RepositoryBrowserManagementToolbarPropsTransformer} from document-library-taglib"
 />
 
 <clay:container-fluid>
@@ -70,7 +70,7 @@ RepositoryBrowserTagDisplayContext repositoryBrowserTagDisplayContext = (Reposit
 						</c:choose>
 
 						<span class="text-default">
-							<liferay-ui:message arguments="<%= new String[] {repositoryEntry.getUserName(), repositoryBrowserTagDisplayContext.getRepositoryEntryModifiedDateDescription(repositoryEntry)} %>" key="x-modified-x-ago" />
+							<liferay-ui:message arguments="<%= repositoryBrowserTagDisplayContext.getRepositoryEntryModifiedDateDescription(repositoryEntry) %>" key="modified-x-ago" />
 						</span>
 					</liferay-ui:search-container-column-text>
 
@@ -78,7 +78,7 @@ RepositoryBrowserTagDisplayContext repositoryBrowserTagDisplayContext = (Reposit
 						<clay:dropdown-actions
 							aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 							dropdownItems="<%= repositoryBrowserTagDisplayContext.getActionDropdownItems(repositoryEntry) %>"
-							propsTransformer="repository_browser/js/RepositoryBrowserDropdownPropsTransformer"
+							propsTransformer="{RepositoryBrowserDropdownPropsTransformer} from document-library-taglib"
 						/>
 					</liferay-ui:search-container-column-text>
 				</c:when>
@@ -117,14 +117,14 @@ RepositoryBrowserTagDisplayContext repositoryBrowserTagDisplayContext = (Reposit
 						cssClass="table-cell-expand-smaller table-cell-minw-150"
 						name="modified-date"
 					>
-						<liferay-ui:message arguments="<%= new String[] {repositoryEntry.getUserName(), repositoryBrowserTagDisplayContext.getRepositoryEntryModifiedDateDescription(repositoryEntry)} %>" key="x-modified-x-ago" />
+						<liferay-ui:message arguments="<%= repositoryBrowserTagDisplayContext.getRepositoryEntryModifiedDateDescription(repositoryEntry) %>" key="modified-x-ago" />
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text>
 						<clay:dropdown-actions
 							aria-label='<%= LanguageUtil.get(request, "show-actions") %>'
 							dropdownItems="<%= repositoryBrowserTagDisplayContext.getActionDropdownItems(repositoryEntry) %>"
-							propsTransformer="repository_browser/js/RepositoryBrowserDropdownPropsTransformer"
+							propsTransformer="{RepositoryBrowserDropdownPropsTransformer} from document-library-taglib"
 						/>
 					</liferay-ui:search-container-column-text>
 				</c:otherwise>
@@ -142,11 +142,11 @@ RepositoryBrowserTagDisplayContext repositoryBrowserTagDisplayContext = (Reposit
 <div>
 	<liferay-frontend:component
 		componentId="repositoryBrowserEventHandler"
-		module="repository_browser/js/RepositoryBrowserDropdownDefaultEventHandler"
+		module="{RepositoryBrowserDropdownDefaultEventHandler} from document-library-taglib"
 	/>
 
 	<liferay-frontend:component
 		context="<%= repositoryBrowserTagDisplayContext.getRepositoryBrowserComponentContext() %>"
-		module="repository_browser/js/RepositoryBrowserComponent"
+		module="{RepositoryBrowserComponent} from document-library-taglib"
 	/>
 </div>

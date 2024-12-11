@@ -18,6 +18,8 @@ import com.liferay.portal.search.facet.category.CategoryFacetFactory;
 import com.liferay.portal.search.facet.category.CategoryFacetSearchContributor;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import org.osgi.service.component.annotations.Component;
@@ -72,7 +74,8 @@ public class CategoryFacetSearchContributorImpl
 			Facet facet = _categoryFacetFactory.newInstance(_searchContext);
 
 			facet.setAggregationName(_aggregationName);
-			facet.setFacetConfiguration(buildFacetConfiguration(facet));
+			facet.setFacetConfiguration(
+				buildFacetConfiguration(facet.getFieldName()));
 
 			if (_selectedCategoryIds != null) {
 				String fieldName = facet.getFieldName();
@@ -118,10 +121,10 @@ public class CategoryFacetSearchContributorImpl
 			return this;
 		}
 
-		protected FacetConfiguration buildFacetConfiguration(Facet facet) {
+		protected FacetConfiguration buildFacetConfiguration(String fieldName) {
 			FacetConfiguration facetConfiguration = new FacetConfiguration();
 
-			facetConfiguration.setFieldName(facet.getFieldName());
+			facetConfiguration.setFieldName(fieldName);
 			facetConfiguration.setLabel("any-category");
 			facetConfiguration.setOrder("OrderHitsDesc");
 			facetConfiguration.setStatic(false);
@@ -132,7 +135,7 @@ public class CategoryFacetSearchContributorImpl
 			jsonObject.put(
 				"frequencyThreshold", _frequencyThreshold
 			).put(
-				"include", _getIncludeRegexString(facet.getFieldName())
+				"include", _getIncludeRegexString(fieldName)
 			).put(
 				"maxTerms", _maxTerms
 			);
@@ -167,19 +170,24 @@ public class CategoryFacetSearchContributorImpl
 		}
 
 		private String[] _getSelections(long[] selectedCategoryIds) {
-			String[] selections = new String[selectedCategoryIds.length];
+			List<String> selections = new ArrayList<>();
 
-			for (int i = 0; i < selectedCategoryIds.length; i++) {
+			for (long selectedCategoryId : selectedCategoryIds) {
 				AssetCategory assetCategory =
 					_assetCategoryLocalService.fetchAssetCategory(
-						selectedCategoryIds[i]);
+						selectedCategoryId);
 
-				selections[i] =
-					assetCategory.getVocabularyId() + StringPool.DASH +
-						assetCategory.getCategoryId();
+				if (assetCategory != null) {
+					selections.add(
+						assetCategory.getVocabularyId() + StringPool.DASH +
+							assetCategory.getCategoryId());
+				}
+				else {
+					selections.add(String.valueOf(selectedCategoryId));
+				}
 			}
 
-			return selections;
+			return ArrayUtil.toStringArray(selections);
 		}
 
 		private String _aggregationName;

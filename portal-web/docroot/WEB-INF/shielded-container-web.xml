@@ -9,10 +9,6 @@
 			<param-name>dispatcher</param-name>
 			<param-value>ASYNC</param-value>
 		</init-param>
-		<init-param>
-			<param-name>register-portal-lifecycle</param-name>
-			<param-value>false</param-value>
-		</init-param>
 	</filter>
 	<filter>
 		<filter-name>Invoker Filter - ERROR</filter-name>
@@ -21,10 +17,6 @@
 		<init-param>
 			<param-name>dispatcher</param-name>
 			<param-value>ERROR</param-value>
-		</init-param>
-		<init-param>
-			<param-name>register-portal-lifecycle</param-name>
-			<param-value>false</param-value>
 		</init-param>
 	</filter>
 	<filter>
@@ -35,10 +27,6 @@
 			<param-name>dispatcher</param-name>
 			<param-value>FORWARD</param-value>
 		</init-param>
-		<init-param>
-			<param-name>register-portal-lifecycle</param-name>
-			<param-value>false</param-value>
-		</init-param>
 	</filter>
 	<filter>
 		<filter-name>Invoker Filter - INCLUDE</filter-name>
@@ -48,10 +36,6 @@
 			<param-name>dispatcher</param-name>
 			<param-value>INCLUDE</param-value>
 		</init-param>
-		<init-param>
-			<param-name>register-portal-lifecycle</param-name>
-			<param-value>false</param-value>
-		</init-param>
 	</filter>
 	<filter>
 		<filter-name>Invoker Filter - REQUEST</filter-name>
@@ -60,10 +44,6 @@
 		<init-param>
 			<param-name>dispatcher</param-name>
 			<param-value>REQUEST</param-value>
-		</init-param>
-		<init-param>
-			<param-name>register-portal-lifecycle</param-name>
-			<param-value>false</param-value>
 		</init-param>
 	</filter>
 	<filter-mapping>
@@ -98,6 +78,15 @@
 	<servlet>
 		<servlet-name>Combo Servlet</servlet-name>
 		<servlet-class>com.liferay.portal.servlet.ComboServlet</servlet-class>
+		<async-supported>true</async-supported>
+	</servlet>
+	<servlet>
+		<servlet-name>Favicon Servlet</servlet-name>
+		<servlet-class>com.liferay.portal.servlet.ServletAdapter</servlet-class>
+		<init-param>
+			<param-name>filter</param-name>
+			<param-value>(servlet.type=favicon)</param-value>
+		</init-param>
 		<async-supported>true</async-supported>
 	</servlet>
 	<servlet>
@@ -240,6 +229,10 @@
 		<url-pattern>/combo/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
+		<servlet-name>Favicon Servlet</servlet-name>
+		<url-pattern>/favicon.ico</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
 		<servlet-name>Friendly URL Servlet - Private Group</servlet-name>
 		<url-pattern>/group/*</url-pattern>
 	</servlet-mapping>
@@ -337,7 +330,23 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/de-AT/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/de-CH/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/de-DE/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/de_AT/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/de_CH/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -365,6 +374,10 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/en-CA/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/en-GB/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
@@ -374,6 +387,10 @@
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/en_AU/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/en_CA/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -473,7 +490,15 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/fr-BE/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/fr-CA/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/fr-CH/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -481,7 +506,15 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/fr_BE/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/fr_CA/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/fr_CH/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -553,7 +586,15 @@
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/it-CH/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/it-IT/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/it_CH/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
@@ -642,6 +683,18 @@
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>
 		<url-pattern>/lt_LT/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/mk/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/mk-MK/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>I18n Servlet</servlet-name>
+		<url-pattern>/mk_MK/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>I18n Servlet</servlet-name>

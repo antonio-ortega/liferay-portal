@@ -34,6 +34,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -58,6 +59,24 @@ public class AMImageProcessorTest {
 
 		UserTestUtil.setUser(TestPropsValues.getUser());
 
+		_amImageConfigurationEntries =
+			_amImageConfigurationHelper.getAMImageConfigurationEntries(
+				TestPropsValues.getCompanyId(),
+				amImageConfigurationEntry -> true);
+
+		for (AMImageConfigurationEntry amImageConfigurationEntry :
+				_amImageConfigurationEntries) {
+
+			_amImageConfigurationHelper.forceDeleteAMImageConfigurationEntry(
+				TestPropsValues.getCompanyId(),
+				amImageConfigurationEntry.getUUID());
+		}
+
+		_addTestVariant();
+	}
+
+	@After
+	public void tearDown() throws Exception {
 		Collection<AMImageConfigurationEntry> amImageConfigurationEntries =
 			_amImageConfigurationHelper.getAMImageConfigurationEntries(
 				TestPropsValues.getCompanyId(),
@@ -71,7 +90,20 @@ public class AMImageProcessorTest {
 				amImageConfigurationEntry.getUUID());
 		}
 
-		_addTestVariant();
+		for (AMImageConfigurationEntry amImageConfigurationEntry :
+				_amImageConfigurationEntries) {
+
+			_amImageConfigurationHelper.forceDeleteAMImageConfigurationEntry(
+				TestPropsValues.getCompanyId(),
+				amImageConfigurationEntry.getUUID());
+
+			_amImageConfigurationHelper.addAMImageConfigurationEntry(
+				TestPropsValues.getCompanyId(),
+				amImageConfigurationEntry.getName(),
+				amImageConfigurationEntry.getDescription(),
+				amImageConfigurationEntry.getUUID(),
+				amImageConfigurationEntry.getProperties());
+		}
 	}
 
 	@Test
@@ -183,7 +215,7 @@ public class AMImageProcessorTest {
 			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG,
-			_getImageBytes(), null, null, serviceContext);
+			_getImageBytes(), null, null, null, serviceContext);
 	}
 
 	private FileEntry _addNonimageFileEntry(ServiceContext serviceContext)
@@ -194,7 +226,7 @@ public class AMImageProcessorTest {
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(),
 			ContentTypes.APPLICATION_OCTET_STREAM, _getNonimageBytes(), null,
-			null, serviceContext);
+			null, null, serviceContext);
 	}
 
 	private void _addTestVariant() throws Exception {
@@ -226,6 +258,8 @@ public class AMImageProcessorTest {
 
 		return amImageConfigurationEntries.size();
 	}
+
+	private Collection<AMImageConfigurationEntry> _amImageConfigurationEntries;
 
 	@Inject
 	private AMImageConfigurationHelper _amImageConfigurationHelper;

@@ -5,11 +5,11 @@
 
 package com.liferay.object.web.internal.object.definitions.frontend.taglib.servlet.taglib;
 
-import com.liferay.application.list.PanelCategoryRegistry;
 import com.liferay.frontend.taglib.servlet.taglib.ScreenNavigationEntry;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.rest.manager.v1_0.ObjectEntryManagerRegistry;
 import com.liferay.object.scope.ObjectScopeProviderRegistry;
+import com.liferay.object.service.ObjectFolderLocalService;
 import com.liferay.object.web.internal.object.definitions.constants.ObjectDefinitionsScreenNavigationEntryConstants;
 import com.liferay.object.web.internal.object.definitions.display.context.ObjectDefinitionsDetailsDisplayContext;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
@@ -56,8 +56,8 @@ public class DetailsObjectDefinitionsScreenNavigationEntry
 			new ObjectDefinitionsDetailsDisplayContext(
 				_configurationProvider, httpServletRequest,
 				_objectDefinitionModelResourcePermission,
-				_objectEntryManagerRegistry, _objectScopeProviderRegistry,
-				_panelCategoryRegistry));
+				_objectEntryManagerRegistry, _objectFolderLocalService,
+				_objectScopeProviderRegistry));
 
 		super.render(httpServletRequest, httpServletResponse);
 	}
@@ -75,9 +75,9 @@ public class DetailsObjectDefinitionsScreenNavigationEntry
 	private ObjectEntryManagerRegistry _objectEntryManagerRegistry;
 
 	@Reference
-	private ObjectScopeProviderRegistry _objectScopeProviderRegistry;
+	private ObjectFolderLocalService _objectFolderLocalService;
 
 	@Reference
-	private PanelCategoryRegistry _panelCategoryRegistry;
+	private ObjectScopeProviderRegistry _objectScopeProviderRegistry;
 
 }

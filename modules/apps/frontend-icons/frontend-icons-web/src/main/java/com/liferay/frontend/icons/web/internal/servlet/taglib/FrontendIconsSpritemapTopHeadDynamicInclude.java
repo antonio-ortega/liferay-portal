@@ -6,6 +6,7 @@
 package com.liferay.frontend.icons.web.internal.servlet.taglib;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.content.security.policy.ContentSecurityPolicyNonceProviderUtil;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -34,28 +35,28 @@ public class FrontendIconsSpritemapTopHeadDynamicInclude
 
 		PrintWriter printWriter = httpServletResponse.getWriter();
 
-		StringBundler sb = new StringBundler(5);
+		StringBundler sb = new StringBundler(10);
 
-		sb.append("<script data-senna-track=\"temporary\">");
+		sb.append("<script");
+		sb.append(
+			ContentSecurityPolicyNonceProviderUtil.getNonceAttribute(
+				httpServletRequest));
+		sb.append(" data-senna-track=\"temporary\">");
 		sb.append("var Liferay = window.Liferay || {};");
 		sb.append("Liferay.Icons = Liferay.Icons || {};");
+		sb.append("Liferay.Icons.controlPanelSpritemap = '");
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		sb.append(
-			StringBundler.concat(
-				"Liferay.Icons.controlPanelSpritemap = '",
-				themeDisplay.getPathControlPanelSpritemap(), "';"));
-		sb.append(
-			StringBundler.concat(
-				"Liferay.Icons.spritemap = '",
-				themeDisplay.getPathThemeSpritemap(), "';"));
+		sb.append(themeDisplay.getPathControlPanelSpritemap());
 
-		sb.append("</script>");
+		sb.append("'; Liferay.Icons.spritemap = '");
+		sb.append(themeDisplay.getPathThemeSpritemap());
+		sb.append("';</script>\n");
 
-		printWriter.println(sb);
+		printWriter.write(sb.toString());
 	}
 
 	@Override

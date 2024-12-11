@@ -19,10 +19,12 @@ const GridWithProvider = (props) => (
 );
 
 describe('Grid', () => {
+
 	// eslint-disable-next-line no-console
 	const originalWarn = console.warn;
 
 	beforeAll(() => {
+
 		// eslint-disable-next-line no-console
 		console.warn = (...args) => {
 			if (/DataProvider: Trying/.test(args[0])) {
@@ -33,6 +35,7 @@ describe('Grid', () => {
 	});
 
 	afterAll(() => {
+
 		// eslint-disable-next-line no-console
 		console.warn = originalWarn;
 	});
@@ -109,6 +112,31 @@ describe('Grid', () => {
 		);
 
 		expect(container).toMatchSnapshot();
+	});
+
+	it('renders data-option-reference for rows and columns', () => {
+		const columns = [
+			{reference: 'col1OptionReference'},
+			{reference: 'col2OptionReference'},
+		];
+		const rows = [
+			{reference: 'row1OptionReference'},
+			{reference: 'row2OptionReference'},
+		];
+
+		const {container} = render(
+			<GridWithProvider columns={columns} rows={rows} />
+		);
+
+		columns.forEach((column) => {
+			rows.forEach((row) => {
+				const radioInputElement = container.querySelector(
+					`input[value][type="radio"][data-option-reference-column=${column.reference}][data-option-reference-row=${row.reference}]`
+				);
+
+				expect(radioInputElement).toBeTruthy();
+			});
+		});
 	});
 
 	it('renders rows', () => {

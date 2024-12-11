@@ -199,7 +199,7 @@ for (int i = 0; i < pages.size(); i++) {
 	// User
 
 	if (!curWikiPage.isNew()) {
-		row.addText(HtmlUtil.escape(PortalUtil.getUserName(curWikiPage)), rowURL);
+		row.addText(HtmlUtil.escape(curWikiPage.getUserName()), rowURL);
 	}
 	else {
 		row.addText(StringPool.BLANK);
@@ -264,9 +264,7 @@ for (int i = 0; i < pages.size(); i++) {
 />
 
 <c:if test='<%= navigation.equals("history") %>'>
-	<aui:script require="frontend-js-web/index as frontendJsWeb">
-		var {delegate} = frontendJsWeb;
-
+	<aui:script sandbox="<%= true %>">
 		function <portlet:namespace />initRowsChecked() {
 			var rowIdsNodes = document.querySelectorAll(
 				'input[name=<portlet:namespace />rowIds]'
@@ -357,7 +355,7 @@ for (int i = 0; i < pages.size(); i++) {
 		);
 
 		if (searchContainer) {
-			delegate(
+			Liferay.Util.delegate(
 				searchContainer,
 				'click',
 				'input[name=<portlet:namespace />rowIds]',

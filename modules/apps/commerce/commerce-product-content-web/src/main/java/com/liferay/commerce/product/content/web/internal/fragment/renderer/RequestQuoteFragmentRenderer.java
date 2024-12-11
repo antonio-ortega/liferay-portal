@@ -14,7 +14,6 @@ import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.info.constants.InfoDisplayWebKeys;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -56,15 +55,6 @@ public class RequestQuoteFragmentRenderer implements FragmentRenderer {
 	}
 
 	@Override
-	public boolean isSelectable(HttpServletRequest httpServletRequest) {
-		if (FeatureFlagManagerUtil.isEnabled("COMMERCE-11028")) {
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
 	public void render(
 			FragmentRendererContext fragmentRendererContext,
 			HttpServletRequest httpServletRequest,
@@ -74,7 +64,7 @@ public class RequestQuoteFragmentRenderer implements FragmentRenderer {
 		Object infoItem = httpServletRequest.getAttribute(
 			InfoDisplayWebKeys.INFO_ITEM);
 
-		if ((infoItem == null) || !(infoItem instanceof CPDefinition)) {
+		if (!(infoItem instanceof CPDefinition)) {
 			if (_isEditMode(httpServletRequest)) {
 				_printPortletMessageInfo(
 					httpServletRequest, httpServletResponse);

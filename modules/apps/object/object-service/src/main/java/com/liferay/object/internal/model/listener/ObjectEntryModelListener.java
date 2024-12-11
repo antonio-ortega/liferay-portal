@@ -12,17 +12,12 @@ import com.liferay.list.type.service.ListTypeEntryLocalService;
 import com.liferay.object.action.engine.ObjectActionEngine;
 import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
-import com.liferay.object.definition.tree.Edge;
-import com.liferay.object.definition.tree.Node;
-import com.liferay.object.definition.tree.Tree;
-import com.liferay.object.definition.tree.TreeFactory;
 import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.object.internal.entry.util.ObjectEntryUtil;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldTable;
-import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.model.ObjectRelationshipTable;
 import com.liferay.object.model.ObjectViewFilterColumn;
 import com.liferay.object.model.ObjectViewFilterColumnTable;
@@ -30,7 +25,6 @@ import com.liferay.object.model.listener.RelevantObjectEntryModelListener;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
-import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.service.ObjectValidationRuleLocalService;
 import com.liferay.object.service.ObjectViewFilterColumnLocalService;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
@@ -57,7 +51,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.security.audit.event.generators.constants.EventTypes;
 import com.liferay.portal.security.audit.event.generators.util.Attribute;
@@ -89,9 +82,6 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 
 		_route(EventTypes.ADD, null, objectEntry);
 
-		_executeObjectActions(
-			ObjectActionTriggerConstants.KEY_ON_AFTER_ADD, null, objectEntry);
-
 		_runRelevantObjectEntryModelListeners(
 			objectEntry,
 			relevantObjectEntryModelListener ->
@@ -111,9 +101,50 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 			throw new ModelListenerException(portalException);
 		}
 
-		_executeObjectActions(
-			ObjectActionTriggerConstants.KEY_ON_AFTER_DELETE, objectEntry,
-			objectEntry);
+		try {
+			long userId = PrincipalThreadLocal.getUserId();
+
+			if (userId == 0) {
+				userId = objectEntry.getUserId();
+			}
+
+			User user = _userLocalService.getUser(userId);
+
+			_executeObjectActions(
+				ObjectActionTriggerConstants.KEY_ON_AFTER_DELETE, objectEntry,
+				objectEntry, user);
+
+			if (!FeatureFlagManagerUtil.isEnabled(
+					objectEntry.getCompanyId(), "LPS-187142")) {
+
+				return;
+			}
+
+			ObjectDefinition objectDefinition =
+				_objectDefinitionLocalService.getObjectDefinition(
+					objectEntry.getObjectDefinitionId());
+
+			if (!objectDefinition.isRootDescendantNode() ||
+				!objectDefinition.isRootNode()) {
+
+				return;
+			}
+
+			ObjectEntry rootObjectEntry =
+				_objectEntryLocalService.fetchObjectEntry(
+					objectEntry.getRootObjectEntryId());
+
+			if (rootObjectEntry == null) {
+				return;
+			}
+
+			_executeObjectActions(
+				ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE, null,
+				rootObjectEntry, user);
+		}
+		catch (PortalException portalException) {
+			throw new ModelListenerException(portalException);
+		}
 
 		_runRelevantObjectEntryModelListeners(
 			objectEntry,
@@ -127,10 +158,6 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 		throws ModelListenerException {
 
 		_route(EventTypes.UPDATE, originalObjectEntry, objectEntry);
-
-		_executeObjectActions(
-			ObjectActionTriggerConstants.KEY_ON_AFTER_UPDATE,
-			originalObjectEntry, objectEntry);
 
 		_runRelevantObjectEntryModelListeners(
 			objectEntry,
@@ -198,95 +225,17 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 
 	private void _executeObjectActions(
 			String objectActionTriggerKey, ObjectEntry originalObjectEntry,
-			ObjectEntry objectEntry)
-		throws ModelListenerException {
-
-		try {
-			long userId = PrincipalThreadLocal.getUserId();
-
-			if (userId == 0) {
-				userId = objectEntry.getUserId();
-			}
-
-			User user = _userLocalService.getUser(userId);
-
-			_executeObjectActions(
-				objectActionTriggerKey, originalObjectEntry, objectEntry, user);
-
-			if (!FeatureFlagManagerUtil.isEnabled("LPS-187142")) {
-				return;
-			}
-
-			ObjectDefinition objectDefinition =
-				_objectDefinitionLocalService.getObjectDefinition(
-					objectEntry.getObjectDefinitionId());
-
-			if (!objectDefinition.isRootDescendantNode() &&
-				(!objectDefinition.isRootNode() ||
-				 StringUtil.equals(
-					 objectActionTriggerKey,
-					 ObjectActionTriggerConstants.KEY_ON_AFTER_ADD))) {
-
-				return;
-			}
-
-			Tree tree = _treeFactory.create(
-				objectDefinition.getRootObjectDefinitionId());
-
-			Node node = tree.getNode(objectDefinition.getObjectDefinitionId());
-
-			while (!node.isRoot()) {
-				Edge edge = node.getEdge();
-
-				ObjectRelationship objectRelationship =
-					_objectRelationshipLocalService.fetchObjectRelationship(
-						edge.getObjectRelationshipId());
-
-				if (objectRelationship == null) {
-					return;
-				}
-
-				ObjectField objectField =
-					_objectFieldLocalService.fetchObjectField(
-						objectRelationship.getObjectFieldId2());
-
-				if (objectField == null) {
-					return;
-				}
-
-				objectEntry = _objectEntryLocalService.fetchObjectEntry(
-					MapUtil.getLong(
-						objectEntry.getValues(), objectField.getName()));
-
-				if (objectEntry == null) {
-					return;
-				}
-
-				node = tree.getNode(objectEntry.getObjectDefinitionId());
-			}
-
-			_executeObjectActions(
-				ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE, null,
-				objectEntry, user);
-		}
-		catch (PortalException portalException) {
-			throw new ModelListenerException(portalException);
-		}
-	}
-
-	private void _executeObjectActions(
-			String objectActionTriggerKey, ObjectEntry originalObjectEntry,
 			ObjectEntry objectEntry, User user)
 		throws PortalException {
 
 		_objectActionEngine.executeObjectActions(
 			objectEntry.getModelClassName(), objectEntry.getCompanyId(),
 			objectActionTriggerKey,
-			ObjectEntryUtil.getPayloadJSONObject(
+			() -> ObjectEntryUtil.getPayloadJSONObject(
 				_dtoConverterRegistry, _jsonFactory, objectActionTriggerKey,
 				_objectDefinitionLocalService.getObjectDefinition(
 					objectEntry.getObjectDefinitionId()),
-				objectEntry, originalObjectEntry, user),
+				objectEntry, originalObjectEntry, null, user),
 			user.getUserId());
 	}
 
@@ -555,7 +504,7 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 						_dtoConverterRegistry, _jsonFactory, null,
 						_objectDefinitionLocalService.getObjectDefinition(
 							objectEntry.getObjectDefinitionId()),
-						objectEntry, originalObjectEntry,
+						objectEntry, originalObjectEntry, null,
 						_userLocalService.getUser(userId)),
 					userId);
 			}
@@ -596,9 +545,6 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 	private ObjectFieldLocalService _objectFieldLocalService;
 
 	@Reference
-	private ObjectRelationshipLocalService _objectRelationshipLocalService;
-
-	@Reference
 	private ObjectValidationRuleLocalService _objectValidationRuleLocalService;
 
 	@Reference
@@ -607,9 +553,6 @@ public class ObjectEntryModelListener extends BaseModelListener<ObjectEntry> {
 
 	private ServiceTrackerList<RelevantObjectEntryModelListener>
 		_relevantObjectEntryModelListeners;
-
-	@Reference
-	private TreeFactory _treeFactory;
 
 	@Reference
 	private UserLocalService _userLocalService;

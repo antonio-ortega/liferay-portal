@@ -19,10 +19,28 @@ export function AddObjectFieldsDataToProperties({
 	schemaProperties,
 }: AddObjectFieldsDataToProperties) {
 	const propertiesTreeViewItems = schemaProperties.map(
-		({description, id, name, objectFieldERC, objectRelationshipNames}) => {
-			const objectRelationshipNamesArray = objectRelationshipNames?.split(
-				','
-			);
+		({
+			description,
+			externalReferenceCode,
+			id,
+			name,
+			objectFieldERC,
+			objectRelationshipNames,
+			r_apiPropertyToAPIProperties_l_apiPropertyId,
+			type,
+		}) => {
+			if (type.key === 'record') {
+				return {
+					businessType: type.name,
+					externalReferenceCode,
+					id,
+					name,
+					type: 'trewViewItem',
+				};
+			}
+
+			const objectRelationshipNamesArray =
+				objectRelationshipNames?.split(',');
 
 			const objectRelationshipName =
 				objectRelationshipNamesArray?.[
@@ -56,10 +74,11 @@ export function AddObjectFieldsDataToProperties({
 			const parentObjectDefinition =
 				relatedObjectDefinition ?? mainObjectDefinition;
 
-			const currentObjectField = parentObjectDefinition?.objectFields.find(
-				(objectField) =>
-					objectField.externalReferenceCode === objectFieldERC
-			);
+			const currentObjectField =
+				parentObjectDefinition?.objectFields.find(
+					(objectField) =>
+						objectField.externalReferenceCode === objectFieldERC
+				);
 
 			if (currentObjectField && parentObjectDefinition) {
 				return {
@@ -67,6 +86,7 @@ export function AddObjectFieldsDataToProperties({
 					...((description || description === '') && {
 						description,
 					}),
+					externalReferenceCode,
 					id,
 					name,
 					objectDefinitionName: parentObjectDefinition?.name!,
@@ -76,16 +96,19 @@ export function AddObjectFieldsDataToProperties({
 					...(objectRelationshipNames && {
 						objectRelationshipNames,
 					}),
-					r_apiSchemaToAPIProperties_c_apiSchemaId: apiSchema.id,
+					r_apiPropertyToAPIProperties_l_apiPropertyId,
+					r_apiSchemaToAPIProperties_l_apiSchemaId: apiSchema.id,
 					type: 'trewViewItem',
 				};
 			}
 		}
 	);
 
-	return (propertiesTreeViewItems.length
-		? propertiesTreeViewItems
-		: schemaProperties) as TreeViewItemData[];
+	return (
+		propertiesTreeViewItems.length
+			? propertiesTreeViewItems
+			: schemaProperties
+	) as TreeViewItemData[];
 }
 
 export function hasDataChanged({
@@ -114,18 +137,22 @@ export function hasEndpointDataChanged({
 	const {
 		description,
 		path,
-		r_responseAPISchemaToAPIEndpoints_c_apiSchemaId,
+		r_responseAPISchemaToAPIEndpoints_l_apiSchemaId,
 		scope,
 	} = fetchedEndpointData;
 
 	const {
 		description: uiDescription,
+		parameter: uiParameter,
 		path: uiPath,
-		r_responseAPISchemaToAPIEndpoints_c_apiSchemaId: uiR_responseAPISchemaToAPIEndpoints_c_apiSchemaId,
+		r_responseAPISchemaToAPIEndpoints_l_apiSchemaId:
+			uiR_responseAPISchemaToAPIEndpoints_l_apiSchemaId,
 		scope: uiScope,
 	} = localUIData;
 
-	const descriptionChanged = description !== uiDescription;
+	const descriptionChanged =
+		!(description === uiDescription) &&
+		!(description === '' && uiDescription === undefined);
 
 	const filtersArrayLengthChanged = !!(
 		localUIData.apiEndpointToAPIFilters &&
@@ -141,16 +168,21 @@ export function hasEndpointDataChanged({
 			localUIData.apiEndpointToAPIFilters[0].oDataFilter
 	);
 
-	const pathChanged = path !== beginStringWithForwardSlash(uiPath);
+	const pathChanged = uiParameter
+		? path !==
+			beginStringWithForwardSlash(
+				uiPath + '' + beginStringWithForwardSlash(uiParameter)
+			)
+		: path !== beginStringWithForwardSlash(uiPath);
 
 	const schemaIdChanged =
-		((r_responseAPISchemaToAPIEndpoints_c_apiSchemaId === 0 &&
-			uiR_responseAPISchemaToAPIEndpoints_c_apiSchemaId) ||
-			r_responseAPISchemaToAPIEndpoints_c_apiSchemaId !==
-				uiR_responseAPISchemaToAPIEndpoints_c_apiSchemaId) &&
+		((r_responseAPISchemaToAPIEndpoints_l_apiSchemaId === 0 &&
+			uiR_responseAPISchemaToAPIEndpoints_l_apiSchemaId) ||
+			r_responseAPISchemaToAPIEndpoints_l_apiSchemaId !==
+				uiR_responseAPISchemaToAPIEndpoints_l_apiSchemaId) &&
 		!(
-			r_responseAPISchemaToAPIEndpoints_c_apiSchemaId === 0 &&
-			!uiR_responseAPISchemaToAPIEndpoints_c_apiSchemaId
+			r_responseAPISchemaToAPIEndpoints_l_apiSchemaId === 0 &&
+			!uiR_responseAPISchemaToAPIEndpoints_l_apiSchemaId
 		);
 
 	const scopeKeyChanged = scope.key !== uiScope?.key;

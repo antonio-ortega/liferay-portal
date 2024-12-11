@@ -5,6 +5,9 @@
 
 package com.liferay.portal.tika.internal.metadata;
 
+import com.drew.imaging.png.PngMetadataReader;
+import com.drew.metadata.png.PngDirectory;
+
 import com.liferay.dynamic.data.mapping.kernel.DDMForm;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormField;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldValue;
@@ -39,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
@@ -189,6 +193,14 @@ public class TikaRawMetadataProcessor implements RawMetadataProcessor {
 	private Metadata _extractMetadata(
 		String mimeType, InputStream inputStream) {
 
+		if (Objects.equals(mimeType, ContentTypes.IMAGE_PNG)) {
+			return _getPNGMetadata(inputStream);
+		}
+
+		return _getMetadata(mimeType, inputStream);
+	}
+
+	private Metadata _getMetadata(String mimeType, InputStream inputStream) {
 		Parser parser = new AutoDetectParser(
 			_tikaConfigurationHelper.getTikaConfig());
 
@@ -234,6 +246,40 @@ public class TikaRawMetadataProcessor implements RawMetadataProcessor {
 		}
 	}
 
+	private Metadata _getPNGMetadata(InputStream inputStream) {
+		Metadata metadata = new Metadata();
+
+		try {
+			com.drew.metadata.Metadata inputStreamMetadata =
+				PngMetadataReader.readMetadata(inputStream);
+
+			PngDirectory pngDirectory =
+				inputStreamMetadata.getFirstDirectoryOfType(PngDirectory.class);
+
+			if (pngDirectory == null) {
+				return metadata;
+			}
+
+			if (pngDirectory.containsTag(PngDirectory.TAG_IMAGE_HEIGHT) &&
+				pngDirectory.containsTag(PngDirectory.TAG_IMAGE_WIDTH)) {
+
+				metadata.set(
+					TIFF.IMAGE_LENGTH,
+					pngDirectory.getInt(PngDirectory.TAG_IMAGE_HEIGHT));
+				metadata.set(
+					TIFF.IMAGE_WIDTH,
+					pngDirectory.getInt(PngDirectory.TAG_IMAGE_WIDTH));
+			}
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+		}
+
+		return metadata;
+	}
+
 	private Metadata _postProcessMetadata(String mimeType, Metadata metadata) {
 		if (mimeType.equals(ContentTypes.IMAGE_SVG_XML) && (metadata != null)) {
 			String contentType = metadata.get(HttpHeaders.CONTENT_TYPE);
@@ -242,8 +288,20 @@ public class TikaRawMetadataProcessor implements RawMetadataProcessor {
 				metadata.set(
 					HttpHeaders.CONTENT_TYPE,
 					StringUtil.replace(
-						mimeType, ContentTypes.TEXT_PLAIN,
+						contentType, ContentTypes.TEXT_PLAIN,
 						ContentTypes.IMAGE_SVG_XML));
+			}
+		}
+
+		if (mimeType.endsWith(ContentTypes.APPLICATION_JAVASCRIPT)) {
+			String contentType = metadata.get(HttpHeaders.CONTENT_TYPE);
+
+			if (contentType.startsWith(ContentTypes.TEXT_XMATLAB)) {
+				metadata.set(
+					HttpHeaders.CONTENT_TYPE,
+					StringUtil.replace(
+						contentType, ContentTypes.TEXT_XMATLAB,
+						ContentTypes.APPLICATION_JAVASCRIPT));
 			}
 		}
 

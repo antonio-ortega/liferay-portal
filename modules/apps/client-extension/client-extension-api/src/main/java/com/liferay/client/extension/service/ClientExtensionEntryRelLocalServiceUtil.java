@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -357,6 +358,12 @@ public class ClientExtensionEntryRelLocalServiceUtil {
 			classNameId, classPK, type, start, end);
 	}
 
+	public static List<ClientExtensionEntryRel> getClientExtensionEntryRels(
+		String type) {
+
+		return getService().getClientExtensionEntryRels(type);
+	}
+
 	/**
 	 * Returns all the client extension entry rels matching the UUID and company.
 	 *
@@ -468,13 +475,12 @@ public class ClientExtensionEntryRelLocalServiceUtil {
 	}
 
 	public static ClientExtensionEntryRelLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(ClientExtensionEntryRelLocalService service) {
-		_service = service;
-	}
-
-	private static volatile ClientExtensionEntryRelLocalService _service;
+	private static final Snapshot<ClientExtensionEntryRelLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			ClientExtensionEntryRelLocalServiceUtil.class,
+			ClientExtensionEntryRelLocalService.class);
 
 }

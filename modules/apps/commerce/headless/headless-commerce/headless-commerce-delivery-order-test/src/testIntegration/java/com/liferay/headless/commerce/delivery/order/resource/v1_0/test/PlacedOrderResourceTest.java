@@ -63,7 +63,7 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 			RandomTestUtil.randomString(), "business", 1, _serviceContext);
 
 		_commerceCurrency = _commerceCurrencyLocalService.addCommerceCurrency(
-			_user.getUserId(), RandomTestUtil.randomString(),
+			null, _user.getUserId(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomString(), BigDecimal.ONE, new HashMap<>(), 2,
 			2, "HALF_EVEN", false, RandomTestUtil.nextDouble(), true);
@@ -79,6 +79,15 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 	@Ignore
 	@Override
 	@Test
+	public void testGetPlacedOrderByExternalReferenceCodePaymentURL()
+		throws Exception {
+
+		super.testGetPlacedOrderByExternalReferenceCodePaymentURL();
+	}
+
+	@Ignore
+	@Override
+	@Test
 	public void testGetPlacedOrderPaymentURL() throws Exception {
 		super.testGetPlacedOrderPaymentURL();
 	}
@@ -86,8 +95,15 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 	@Override
 	protected String[] getAdditionalAssertFieldNames() {
 		return new String[] {
-			"accountId", "orderUUID", "paymentMethod", "paymentStatus",
-			"printedNote", "purchaseOrderNumber", "shippingOption"
+			"accountId", "name", "printedNote", "purchaseOrderNumber"
+		};
+	}
+
+	@Override
+	protected String[] getIgnoredEntityFieldNames() {
+		return new String[] {
+			"account", "accountId", "author", "orderDate", "orderId",
+			"orderType"
 		};
 	}
 
@@ -101,9 +117,12 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 					RandomTestUtil.randomString());
 				createDate = RandomTestUtil.nextDate();
 				currencyCode = _commerceCurrency.getCode();
+				externalReferenceCode = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				id = RandomTestUtil.randomLong();
 				lastPriceUpdateDate = RandomTestUtil.nextDate();
 				modifiedDate = RandomTestUtil.nextDate();
+				name = RandomTestUtil.randomString();
 				orderTypeId = 1L;
 				orderUUID = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
@@ -150,12 +169,93 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 	}
 
 	@Override
+	protected PlacedOrder
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
+				String accountExternalReferenceCode,
+				String channelExternalReferenceCode, PlacedOrder placedOrder)
+		throws Exception {
+
+		return _addCommerceOrder(placedOrder);
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_getAccountExternalReferenceCode()
+		throws Exception {
+
+		return _accountEntry.getExternalReferenceCode();
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodeChannelExternalReferenceCodeAccountByExternalReferenceCodeAccountExternalReferenceCodePlacedOrdersPage_getChannelExternalReferenceCode()
+		throws Exception {
+
+		return _commerceChannel.getExternalReferenceCode();
+	}
+
+	@Override
+	protected PlacedOrder
+			testGetChannelByExternalReferenceCodePlacedOrdersPage_addPlacedOrder(
+				String externalReferenceCode, PlacedOrder placedOrder)
+		throws Exception {
+
+		return _addCommerceOrder(placedOrder);
+	}
+
+	@Override
+	protected String
+			testGetChannelByExternalReferenceCodePlacedOrdersPage_getExternalReferenceCode()
+		throws Exception {
+
+		return _commerceChannel.getExternalReferenceCode();
+	}
+
+	@Override
+	protected PlacedOrder testGetChannelPlacedOrdersPage_addPlacedOrder(
+			Long channelId, PlacedOrder placedOrder)
+		throws Exception {
+
+		return _addCommerceOrder(placedOrder);
+	}
+
+	@Override
+	protected Long testGetChannelPlacedOrdersPage_getChannelId()
+		throws Exception {
+
+		return _commerceChannel.getCommerceChannelId();
+	}
+
+	@Override
 	protected PlacedOrder testGetPlacedOrder_addPlacedOrder() throws Exception {
 		return _addCommerceOrder(randomPlacedOrder());
 	}
 
 	@Override
+	protected PlacedOrder
+			testGetPlacedOrderByExternalReferenceCode_addPlacedOrder()
+		throws Exception {
+
+		return _addCommerceOrder(randomPlacedOrder());
+	}
+
+	@Override
 	protected PlacedOrder testGraphQLPlacedOrder_addPlacedOrder()
+		throws Exception {
+
+		return _addCommerceOrder(randomPlacedOrder());
+	}
+
+	@Override
+	protected PlacedOrder testPatchPlacedOrder_addPlacedOrder()
+		throws Exception {
+
+		return _addCommerceOrder(randomPlacedOrder());
+	}
+
+	@Override
+	protected PlacedOrder
+			testPatchPlacedOrderByExternalReferenceCode_addPlacedOrder()
 		throws Exception {
 
 		return _addCommerceOrder(randomPlacedOrder());
@@ -171,13 +271,13 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 			_commerceOrderLocalService.addCommerceOrder(
 				_user.getUserId(), _commerceChannel.getGroupId(),
 				placedOrder.getPlacedOrderBillingAddressId(),
-				placedOrder.getAccountId(),
-				_commerceCurrency.getCommerceCurrencyId(),
+				placedOrder.getAccountId(), _commerceCurrency.getCode(),
 				placedOrder.getOrderTypeId(), 0,
 				placedOrder.getPlacedOrderShippingAddressId(),
-				placedOrder.getPaymentMethod(), orderDateConfig.getMonth(),
-				orderDateConfig.getDay(), orderDateConfig.getYear(),
-				orderDateConfig.getHour(), orderDateConfig.getMinute(),
+				placedOrder.getPaymentMethod(), placedOrder.getName(),
+				orderDateConfig.getMonth(), orderDateConfig.getDay(),
+				orderDateConfig.getYear(), orderDateConfig.getHour(),
+				orderDateConfig.getMinute(),
 				CommerceOrderConstants.ORDER_STATUS_COMPLETED,
 				placedOrder.getPaymentStatus(),
 				placedOrder.getPurchaseOrderNumber(), BigDecimal.ZERO,
@@ -194,9 +294,12 @@ public class PlacedOrderResourceTest extends BasePlacedOrderResourceTestCase {
 				couponCode = commerceOrder.getCouponCode();
 				createDate = commerceOrder.getCreateDate();
 				currencyCode = _commerceCurrency.getCode();
+				externalReferenceCode =
+					commerceOrder.getExternalReferenceCode();
 				id = commerceOrder.getCommerceOrderId();
 				lastPriceUpdateDate = commerceOrder.getLastPriceUpdateDate();
 				modifiedDate = commerceOrder.getModifiedDate();
+				name = commerceOrder.getName();
 				orderUUID = commerceOrder.getUuid();
 				paymentMethod = commerceOrder.getCommercePaymentMethodKey();
 				paymentStatus = commerceOrder.getPaymentStatus();

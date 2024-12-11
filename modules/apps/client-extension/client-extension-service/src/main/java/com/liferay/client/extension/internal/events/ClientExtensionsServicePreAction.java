@@ -11,13 +11,13 @@ import com.liferay.client.extension.service.ClientExtensionEntryRelLocalService;
 import com.liferay.client.extension.type.CET;
 import com.liferay.client.extension.type.ThemeCSSCET;
 import com.liferay.client.extension.type.ThemeFaviconCET;
-import com.liferay.client.extension.type.ThemeJSCET;
 import com.liferay.client.extension.type.ThemeSpritemapCET;
 import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.events.Action;
 import com.liferay.portal.kernel.events.LifecycleAction;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -28,6 +28,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import java.util.List;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,29 +54,7 @@ public class ClientExtensionsServicePreAction extends Action {
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Layout layout = themeDisplay.getLayout();
-
-		if (layout.isTypeControlPanel()) {
-			String mode = ParamUtil.getString(
-				httpServletRequest, "p_l_mode", Constants.VIEW);
-
-			if (!Objects.equals(mode, Constants.PREVIEW)) {
-				return;
-			}
-
-			long selPlid = ParamUtil.getLong(
-				httpServletRequest,
-				StringBundler.concat(
-					StringPool.UNDERLINE,
-					ParamUtil.getString(httpServletRequest, "p_p_id"),
-					"_selPlid"));
-
-			if (selPlid <= 0) {
-				return;
-			}
-
-			layout = _layoutLocalService.fetchLayout(selPlid);
-		}
+		Layout layout = _getLayout(httpServletRequest, themeDisplay);
 
 		if (layout == null) {
 			return;
@@ -86,20 +65,20 @@ public class ClientExtensionsServicePreAction extends Action {
 		ThemeCSSCET themeCSSCET = _getThemeCSSCET(layout);
 
 		if (themeCSSCET != null) {
-			themeDisplay.setClayCSSURL(themeCSSCET.getClayURL());
-			themeDisplay.setMainCSSURL(themeCSSCET.getMainURL());
+			if (_portal.isRightToLeft(httpServletRequest)) {
+				themeDisplay.setClayCSSURL(themeCSSCET.getClayRTLURL());
+				themeDisplay.setMainCSSURL(themeCSSCET.getMainRTLURL());
+			}
+			else {
+				themeDisplay.setClayCSSURL(themeCSSCET.getClayURL());
+				themeDisplay.setMainCSSURL(themeCSSCET.getMainURL());
+			}
 		}
 
 		ThemeSpritemapCET themeSpritemapCET = _getThemeSpritemapCET(layout);
 
 		if (themeSpritemapCET != null) {
 			themeDisplay.setPathThemeSpritemap(themeSpritemapCET.getURL());
-		}
-
-		ThemeJSCET themeJSCET = _getThemeJSCET(layout);
-
-		if (themeJSCET != null) {
-			themeDisplay.setMainJSURL(themeJSCET.getURL());
 		}
 	}
 
@@ -118,6 +97,32 @@ public class ClientExtensionsServicePreAction extends Action {
 			companyId, clientExtensionEntryRel.getCETExternalReferenceCode());
 	}
 
+	private ThemeCSSCET _getControlPanelThemeCSSCET(Layout layout) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				layout.getCompanyId(), "LPD-34650")) {
+
+			return null;
+		}
+
+		List<ClientExtensionEntryRel> clientExtensionEntryRels =
+			_clientExtensionEntryRelLocalService.getClientExtensionEntryRels(
+				_portal.getClassNameId(Layout.class), layout.getPlid(),
+				ClientExtensionEntryConstants.TYPE_THEME_CSS);
+
+		if ((clientExtensionEntryRels == null) ||
+			(clientExtensionEntryRels.size() != 1)) {
+
+			return null;
+		}
+
+		ClientExtensionEntryRel clientExtensionEntryRel =
+			clientExtensionEntryRels.get(0);
+
+		return (ThemeCSSCET)_cetManager.getCET(
+			layout.getCompanyId(),
+			clientExtensionEntryRel.getCETExternalReferenceCode());
+	}
+
 	private String _getFaviconURL(Layout layout) {
 		String faviconURL = _getThemeFaviconCETURL(
 			_portal.getClassNameId(Layout.class), layout.getPlid(),
@@ -133,22 +138,26 @@ public class ClientExtensionsServicePreAction extends Action {
 			return faviconURL;
 		}
 
-		Layout masterLayout = _layoutLocalService.fetchLayout(
-			layout.getMasterLayoutPlid());
+		long masterLayoutPlid = layout.getMasterLayoutPlid();
 
-		if (masterLayout != null) {
-			faviconURL = _getThemeFaviconCETURL(
-				_portal.getClassNameId(Layout.class), masterLayout.getPlid(),
-				layout.getCompanyId());
+		if (masterLayoutPlid > 0) {
+			Layout masterLayout = _layoutLocalService.fetchLayout(
+				masterLayoutPlid);
 
-			if (Validator.isNotNull(faviconURL)) {
-				return faviconURL;
-			}
+			if (masterLayout != null) {
+				faviconURL = _getThemeFaviconCETURL(
+					_portal.getClassNameId(Layout.class),
+					masterLayout.getPlid(), layout.getCompanyId());
 
-			faviconURL = masterLayout.getFaviconURL();
+				if (Validator.isNotNull(faviconURL)) {
+					return faviconURL;
+				}
 
-			if (Validator.isNotNull(faviconURL)) {
-				return faviconURL;
+				faviconURL = masterLayout.getFaviconURL();
+
+				if (Validator.isNotNull(faviconURL)) {
+					return faviconURL;
+				}
 			}
 		}
 
@@ -171,13 +180,46 @@ public class ClientExtensionsServicePreAction extends Action {
 		return null;
 	}
 
+	private Layout _getLayout(
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
+
+		Layout layout = themeDisplay.getLayout();
+
+		if (!layout.isTypeControlPanel()) {
+			return layout;
+		}
+
+		String mode = ParamUtil.getString(
+			httpServletRequest, "p_l_mode", Constants.VIEW);
+
+		if (!Objects.equals(mode, Constants.PREVIEW)) {
+			return layout;
+		}
+
+		long selPlid = ParamUtil.getLong(
+			httpServletRequest,
+			StringBundler.concat(
+				StringPool.UNDERLINE,
+				ParamUtil.getString(httpServletRequest, "p_p_id"), "_selPlid"));
+
+		if (selPlid <= 0) {
+			return layout;
+		}
+
+		return _layoutLocalService.fetchLayout(selPlid);
+	}
+
 	private ThemeCSSCET _getThemeCSSCET(Layout layout) {
+		if (layout.isTypeControlPanel()) {
+			return _getControlPanelThemeCSSCET(layout);
+		}
+
 		CET cet = _getCET(
 			_portal.getClassNameId(Layout.class), layout.getPlid(),
 			layout.getCompanyId(),
 			ClientExtensionEntryConstants.TYPE_THEME_CSS);
 
-		if (cet == null) {
+		if ((cet == null) && (layout.getMasterLayoutPlid() > 0)) {
 			cet = _getCET(
 				_portal.getClassNameId(Layout.class),
 				layout.getMasterLayoutPlid(), layout.getCompanyId(),
@@ -216,41 +258,13 @@ public class ClientExtensionsServicePreAction extends Action {
 		return themeFaviconCET.getURL();
 	}
 
-	private ThemeJSCET _getThemeJSCET(Layout layout) {
-		CET cet = _getCET(
-			_portal.getClassNameId(Layout.class), layout.getPlid(),
-			layout.getCompanyId(), ClientExtensionEntryConstants.TYPE_THEME_JS);
-
-		if (cet == null) {
-			cet = _getCET(
-				_portal.getClassNameId(Layout.class),
-				layout.getMasterLayoutPlid(), layout.getCompanyId(),
-				ClientExtensionEntryConstants.TYPE_THEME_JS);
-		}
-
-		if (cet == null) {
-			LayoutSet layoutSet = layout.getLayoutSet();
-
-			cet = _getCET(
-				_portal.getClassNameId(LayoutSet.class),
-				layoutSet.getLayoutSetId(), layout.getCompanyId(),
-				ClientExtensionEntryConstants.TYPE_THEME_JS);
-		}
-
-		if (cet != null) {
-			return (ThemeJSCET)cet;
-		}
-
-		return null;
-	}
-
 	private ThemeSpritemapCET _getThemeSpritemapCET(Layout layout) {
 		CET cet = _getCET(
 			_portal.getClassNameId(Layout.class), layout.getPlid(),
 			layout.getCompanyId(),
 			ClientExtensionEntryConstants.TYPE_THEME_SPRITEMAP);
 
-		if (cet == null) {
+		if ((cet == null) && (layout.getMasterLayoutPlid() > 0)) {
 			cet = _getCET(
 				_portal.getClassNameId(Layout.class),
 				layout.getMasterLayoutPlid(), layout.getCompanyId(),

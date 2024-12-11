@@ -21,14 +21,16 @@ const isValidEvent = ({applicationId, eventId, eventProps}) => {
 		validateEmptyString('eventPropKey'),
 		validateMaxLength(),
 	]);
-	const validateValue = [
-		validateMaxLength(VALIDATION_PROPERTY_VALUE_MAXIMUM_LENGTH),
-	];
 
-	// Ignore validation by attribute if applicationId is from DXP
+	let validateValue = [];
+
+	// Ignore validations by attribute and string max length if applicationId is from DXP
 
 	if (!DXP_APPLICATION_IDS.includes(applicationId)) {
-		validateValue.push(validateAttributeType);
+		validateValue = [
+			validateAttributeType,
+			validateMaxLength(VALIDATION_PROPERTY_VALUE_MAXIMUM_LENGTH),
+		];
 	}
 
 	const validationsValue = _validate(validateValue);
@@ -91,29 +93,29 @@ const validateIsString = (labelField) => (val) => {
 	return error;
 };
 
-const validateMaxLength = (
-	maxAllowed = VALIDATION_PROPERTY_NAME_MAXIMUM_LENGTH
-) => (str) => {
-	let error = '';
+const validateMaxLength =
+	(maxAllowed = VALIDATION_PROPERTY_NAME_MAXIMUM_LENGTH) =>
+	(str) => {
+		let error = '';
 
-	if (String(str).length > maxAllowed) {
-		error = `${str} exceeds maximum length of ${maxAllowed}`;
-	}
+		if (String(str).length > maxAllowed) {
+			error = `${str} exceeds maximum length of ${maxAllowed}`;
+		}
 
-	return error;
-};
+		return error;
+	};
 
-const validatePropsLength = (
-	maxAllowed = VALIDATION_PROPERTIES_MAXIMUM_LENGTH
-) => ({eventId, eventProps = {}}) => {
-	let error = '';
+const validatePropsLength =
+	(maxAllowed = VALIDATION_PROPERTIES_MAXIMUM_LENGTH) =>
+	({eventId, eventProps = {}}) => {
+		let error = '';
 
-	if (Object.keys(eventProps).length > maxAllowed) {
-		error = `The Event ${eventId} attributes list exceeds maximum length of ${maxAllowed}`;
-	}
+		if (Object.keys(eventProps).length > maxAllowed) {
+			error = `The Event ${eventId} attributes list exceeds maximum length of ${maxAllowed}`;
+		}
 
-	return error;
-};
+		return error;
+	};
 
 const _validate = (validators) => (value) =>
 	validators

@@ -5,7 +5,7 @@
 
 package com.liferay.portal.upgrade.util;
 
-import com.liferay.portal.db.partition.DBPartitionUtil;
+import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.kernel.db.partition.DBPartition;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 
@@ -20,7 +20,7 @@ public class UpgradePartitionedControlTable extends UpgradeProcess {
 
 	@Override
 	protected void doUpgrade() throws Exception {
-		DBPartitionUtil.replaceByTable(connection, _tableName);
+		DBPartitionUtil.replaceByTable(connection, true, _tableName);
 	}
 
 	@Override

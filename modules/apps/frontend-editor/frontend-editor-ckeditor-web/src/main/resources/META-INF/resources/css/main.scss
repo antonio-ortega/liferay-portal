@@ -258,9 +258,17 @@
 	width: 220px;
 }
 
+.cke_panel.cke_combopanel.lfr-maximized {
+	z-index: 10000 !important;
+}
+
 .cke_panel.cke_panel,
 .cke_panel.cke_combopanel {
 	z-index: 100 !important;
+}
+
+.cke_panel.cke_menu_panel {
+	z-index: 10001 !important;
 }
 
 .cke_panel_block {

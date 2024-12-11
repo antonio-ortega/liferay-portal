@@ -99,14 +99,18 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 								<c:if test="<%= canSubscribe %>">
 									<c:choose>
 										<c:when test="<%= subscribed %>">
-											<button aria-label="<liferay-ui:message key="unsubscribe-from-comments" />" class="btn btn-outline-primary btn-sm" onclick="<%= subscriptionOnClick %>" type="button">
-												<liferay-ui:message key="unsubscribe" />
-											</button>
+											<liferay-ui:csp>
+												<button aria-label="<liferay-ui:message key="unsubscribe-from-comments" />" class="btn btn-outline-primary btn-sm" onclick="<%= subscriptionOnClick %>" type="button">
+													<liferay-ui:message key="unsubscribe" />
+												</button>
+											</liferay-ui:csp>
 										</c:when>
 										<c:otherwise>
-											<button aria-label="<liferay-ui:message key="subscribe-to-comments" />" class="btn btn-outline-primary btn-sm" onclick="<%= subscriptionOnClick %>" type="button">
-												<liferay-ui:message key="subscribe" />
-											</button>
+											<liferay-ui:csp>
+												<button aria-label="<liferay-ui:message key="subscribe-to-comments" />" class="btn btn-outline-primary btn-sm" onclick="<%= subscriptionOnClick %>" type="button">
+													<liferay-ui:message key="subscribe" />
+												</button>
+											</liferay-ui:csp>
 										</c:otherwise>
 									</c:choose>
 								</c:if>
@@ -289,12 +293,14 @@ StagingGroupHelper stagingGroupHelper = StagingGroupHelperUtil.getStagingGroupHe
 				).put(
 					"ratingsEnabled", discussionTaglibHelper.isRatingsEnabled()
 				).put(
+					"refreshPageOnReply", discussionTaglibHelper.isRefreshPageOnReply()
+				).put(
 					"subscriptionClassName", discussionTaglibHelper.getSubscriptionClassName()
 				).put(
 					"userId", discussionTaglibHelper.getUserId()
 				).build()
 			%>'
-			module="discussion/js/Comments"
+			module="{Comments} from comment-taglib"
 		/>
 	</c:if>
 </section>

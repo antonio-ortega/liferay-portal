@@ -28,7 +28,7 @@ if (Validator.isNotNull(backURL)) {
 	actionDropdownItems="<%= mySubscriptionsManagementToolbarDisplayContext.getActionDropdownItems() %>"
 	disabled="<%= mySubscriptionsManagementToolbarDisplayContext.isDisabled() %>"
 	itemsTotal="<%= subscriptionsCount %>"
-	propsTransformer="js/MySubscriptionsManagementToolbarPropsTransformer"
+	propsTransformer="{MySubscriptionsManagementToolbarPropsTransformer} from my-subscriptions-web"
 	searchContainerId="subscriptions"
 	selectable="<%= mySubscriptionsManagementToolbarDisplayContext.isSelectable() %>"
 	showSearch="<%= mySubscriptionsManagementToolbarDisplayContext.isShowSearch() %>"
@@ -56,7 +56,7 @@ if (Validator.isNotNull(backURL)) {
 				total="<%= subscriptionsCount %>"
 			>
 				<liferay-ui:search-container-results
-					results="<%= SubscriptionLocalServiceUtil.getUserSubscriptions(user.getUserId(), searchContainer.getStart(), searchContainer.getEnd(), new SubscriptionClassNameIdComparator(true)) %>"
+					results="<%= SubscriptionLocalServiceUtil.getUserSubscriptions(user.getUserId(), searchContainer.getStart(), searchContainer.getEnd(), SubscriptionClassNameIdComparator.getInstance(true)) %>"
 				/>
 
 				<liferay-ui:search-container-row

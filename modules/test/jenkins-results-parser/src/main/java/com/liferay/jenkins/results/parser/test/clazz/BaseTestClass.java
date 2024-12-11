@@ -26,6 +26,11 @@ import org.json.JSONObject;
 public abstract class BaseTestClass implements TestClass {
 
 	@Override
+	public void addTestClassMethod(TestClassMethod testClassMethod) {
+		_testClassMethods.add(testClassMethod);
+	}
+
+	@Override
 	public int compareTo(TestClass testClass) {
 		if (testClass == null) {
 			throw new NullPointerException("Test class is null");
@@ -77,6 +82,20 @@ public abstract class BaseTestClass implements TestClass {
 			batchTestClassGroup.getAverageTestOverheadDuration(getTestName());
 
 		return _averageOverheadDuration;
+	}
+
+	@Override
+	public long getAverageTestTaskDuration() {
+		if (_averageTestTaskDuration != null) {
+			return _averageTestTaskDuration;
+		}
+
+		BatchTestClassGroup batchTestClassGroup = getBatchTestClassGroup();
+
+		_averageTestTaskDuration =
+			batchTestClassGroup.getAverageTestTaskDuration(getTestName());
+
+		return _averageTestTaskDuration;
 	}
 
 	@Override
@@ -148,6 +167,13 @@ public abstract class BaseTestClass implements TestClass {
 	}
 
 	@Override
+	public String getTestTaskName() {
+		BatchTestClassGroup batchTestClassGroup = getBatchTestClassGroup();
+
+		return batchTestClassGroup.getTestTaskName(getTestName());
+	}
+
+	@Override
 	public int hashCode() {
 		JSONObject jsonObject = getJSONObject();
 
@@ -213,10 +239,6 @@ public abstract class BaseTestClass implements TestClass {
 		addTestClassMethod(false, methodName);
 	}
 
-	protected void addTestClassMethod(TestClassMethod testClassMethod) {
-		_testClassMethods.add(testClassMethod);
-	}
-
 	protected BatchTestClassGroup getBatchTestClassGroup() {
 		return _batchTestClassGroup;
 	}
@@ -236,8 +258,35 @@ public abstract class BaseTestClass implements TestClass {
 		return getName();
 	}
 
+	protected File getTestPropertiesBaseDir(File file) {
+		if (file == null) {
+			return null;
+		}
+
+		File canonicalFile = JenkinsResultsParserUtil.getCanonicalFile(file);
+
+		File parentFile = canonicalFile.getParentFile();
+
+		if ((parentFile == null) || !parentFile.exists()) {
+			return file;
+		}
+
+		if (!canonicalFile.isDirectory()) {
+			return getTestPropertiesBaseDir(parentFile);
+		}
+
+		File testPropertiesFile = new File(canonicalFile, "test.properties");
+
+		if (!testPropertiesFile.exists()) {
+			return getTestPropertiesBaseDir(parentFile);
+		}
+
+		return canonicalFile;
+	}
+
 	private Long _averageDuration;
 	private Long _averageOverheadDuration;
+	private Long _averageTestTaskDuration;
 	private final BatchTestClassGroup _batchTestClassGroup;
 	private final File _testClassFile;
 	private final List<TestClassMethod> _testClassMethods = new ArrayList<>();

@@ -10,6 +10,7 @@ import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
@@ -240,13 +241,6 @@ public class CommerceChannelLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static CommerceChannel fetchByExternalReferenceCode(
-		String externalReferenceCode, long companyId) {
-
-		return getService().fetchByExternalReferenceCode(
-			externalReferenceCode, companyId);
-	}
-
 	public static CommerceChannel fetchCommerceChannel(long commerceChannelId) {
 		return getService().fetchCommerceChannel(commerceChannelId);
 	}
@@ -259,8 +253,7 @@ public class CommerceChannelLocalServiceUtil {
 	}
 
 	public static CommerceChannel fetchCommerceChannelByGroupClassPK(
-			long groupId)
-		throws PortalException {
+		long groupId) {
 
 		return getService().fetchCommerceChannelByGroupClassPK(groupId);
 	}
@@ -411,6 +404,14 @@ public class CommerceChannelLocalServiceUtil {
 		return getService().getCommerceChannelsCount(companyId, keywords);
 	}
 
+	public static List<CommerceChannel> getEligibleCommerceChannels(
+			long accountEntryId, String name, int start, int end)
+		throws PortalException {
+
+		return getService().getEligibleCommerceChannels(
+			accountEntryId, name, start, end);
+	}
+
 	public static com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery
 		getExportActionableDynamicQuery(
 			com.liferay.exportimport.kernel.lar.PortletDataContext
@@ -505,13 +506,12 @@ public class CommerceChannelLocalServiceUtil {
 	}
 
 	public static CommerceChannelLocalService getService() {
-		return _service;
+		return _serviceSnapshot.get();
 	}
 
-	public static void setService(CommerceChannelLocalService service) {
-		_service = service;
-	}
-
-	private static volatile CommerceChannelLocalService _service;
+	private static final Snapshot<CommerceChannelLocalService>
+		_serviceSnapshot = new Snapshot<>(
+			CommerceChannelLocalServiceUtil.class,
+			CommerceChannelLocalService.class);
 
 }

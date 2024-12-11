@@ -1,0 +1,10 @@
+{
+	"properties": {
+		"objectFolderExternalReferenceCode": {
+			"type": "keyword"
+		},
+		"rootObjectDefinitionExternalReferenceCode": {
+			"type": "keyword"
+		}
+	}
+}

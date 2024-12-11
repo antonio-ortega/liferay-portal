@@ -9,6 +9,7 @@ import com.liferay.portal.kernel.exception.UserPasswordException;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import org.osgi.service.component.annotations.Component;
@@ -30,9 +31,12 @@ public class UserAccountPasswordMustMatchCurrentPasswordExceptionMapper
 
 	@Override
 	protected Problem getProblem(
-		UserPasswordException.MustMatchCurrentPassword userPasswordException) {
+		UserPasswordException.MustMatchCurrentPassword
+			mustMatchCurrentPassword) {
 
-		return new Problem(userPasswordException);
+		return new Problem(
+			Response.Status.BAD_REQUEST,
+			"The user account password is invalid");
 	}
 
 }

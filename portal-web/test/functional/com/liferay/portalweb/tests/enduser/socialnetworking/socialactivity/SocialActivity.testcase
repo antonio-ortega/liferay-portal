@@ -1,7 +1,9 @@
-@component-name = "portal-social-networking"
+@component-name = "portal-content-management"
 definition {
 
-	property portal.release = "true";
+	property custom.properties = "feature.flag.LPD-35013=false";
+	property osgi.modules.includes = "wiki";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Social Networking";
 
@@ -9,6 +11,8 @@ definition {
 		TestCase.setUpPortalInstance();
 
 		User.firstLoginPG();
+
+		WikiPortlet.enableWiki();
 	}
 
 	tearDown {
@@ -27,7 +31,7 @@ definition {
 	}
 
 	@description = "It ensures that the user statistics are counted when social tracking is enabled."
-	@priority = 5
+	@priority = 3
 	@refactorneeded
 	test CountUserStatisticsAfterEnablingSocialTracking {
 		property test.liferay.virtual.instance = "false";
@@ -84,7 +88,7 @@ definition {
 	}
 
 	@description = "It ensures that the user statistics are not counted when social tracking is disabled."
-	@priority = 5
+	@priority = 3
 	@refactorneeded
 	test DisableSocialTracking {
 		property test.liferay.virtual.instance = "false";
@@ -149,7 +153,7 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-50602"
-	@priority = 5
+	@priority = 3
 	@refactorneeded
 	test ViewDraftWikiPageViaActivities {
 		JSONLayout.addPublicLayout(
@@ -200,7 +204,7 @@ definition {
 			locator1 = "Portlet#BODY",
 			value1 = "Test wrote a new wiki page, Wiki Page Title.");
 
-		AssertTextNotEquals.assertNotPartialText(
+		AssertTextNotEquals.assertNotPartialMatch(
 			key_portletName = "Activities",
 			locator1 = "Portlet#BODY",
 			value1 = "Test updated a wiki page, Wiki Page Title.");

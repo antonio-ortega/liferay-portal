@@ -69,7 +69,11 @@ public interface OrderResource {
 	public Order getOrderByExternalReferenceCode(String externalReferenceCode)
 		throws Exception;
 
-	public Response patchOrderByExternalReferenceCode(
+	public Order patchOrderByExternalReferenceCode(
+			String externalReferenceCode, Order order)
+		throws Exception;
+
+	public Order putOrderByExternalReferenceCode(
 			String externalReferenceCode, Order order)
 		throws Exception;
 
@@ -80,7 +84,7 @@ public interface OrderResource {
 
 	public Order getOrder(Long id) throws Exception;
 
-	public Response patchOrder(Long id, Order order) throws Exception;
+	public Order patchOrder(Long id, Order order) throws Exception;
 
 	public default void setContextAcceptLanguage(
 		AcceptLanguage contextAcceptLanguage) {
