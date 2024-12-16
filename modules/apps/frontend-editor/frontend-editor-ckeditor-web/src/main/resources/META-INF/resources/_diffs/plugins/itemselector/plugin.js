@@ -252,14 +252,31 @@
 				const imageSrc = instance._getItemSrc(editor, selectedItem);
 
 				if (imageSrc) {
+					let editorContent = editor.window.$.AlloyEditor
+						? document.getElementById(`${editor.name}Container`)
+						: document.getElementById(`cke_${editor.name}`);
+
 					if (typeof callback === 'function') {
 						callback(imageSrc, selectedItem);
-					}
-					else {
-						const editorContent = document.getElementById(
-							`${editor.id}_contents`
+
+						if (!editor.window.$.AlloyEditor) {
+							editorContent =
+								editorContent.querySelector(
+									'iframe'
+								).contentDocument;
+						}
+
+						const imgElement = editorContent.querySelector(
+							`img[src='${imageSrc.url}']`
 						);
 
+						imgElement.onload = function () {
+							if (this.width === 0) {
+								this.setAttribute('width', '150px');
+							}
+						};
+					}
+					else {
 						const editorContentHeight =
 							editorContent.getBoundingClientRect().height;
 
@@ -271,6 +288,8 @@
 							if (imgElement.height > editorContentHeight) {
 								imgElement.height = editorContentHeight;
 							}
+
+							this.setAttribute('width', this.width);
 
 							let elementOuterHtml = imgElement.outerHTML;
 
