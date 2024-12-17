@@ -51,6 +51,29 @@
 			}
 		},
 
+		_checkImageWidth(editor, editorContent, imageSrc) {
+			if (imageSrc.url) {
+				imageSrc = imageSrc.url;
+			}
+
+			if (!editor.window.$.AlloyEditor && !editorContent.id.endsWith('BalloonEditor')) {
+				editorContent =
+					editorContent.querySelector(
+						'iframe'
+					).contentDocument;
+			}
+
+			const imgElement = editorContent.querySelector(
+				`img[src='${imageSrc}']`
+			);
+
+			imgElement.onload = function () {
+				if (this.width === 0) {
+					this.setAttribute('width', '150px');
+				}
+			};
+		},
+
 		_commitAudioValue(value, node) {
 			const instance = this;
 
@@ -259,22 +282,7 @@
 					if (typeof callback === 'function') {
 						callback(imageSrc, selectedItem);
 
-						if (!editor.window.$.AlloyEditor) {
-							editorContent =
-								editorContent.querySelector(
-									'iframe'
-								).contentDocument;
-						}
-
-						const imgElement = editorContent.querySelector(
-							`img[src='${imageSrc.url}']`
-						);
-
-						imgElement.onload = function () {
-							if (this.width === 0) {
-								this.setAttribute('width', '150px');
-							}
-						};
+						instance._checkImageWidth(editor, editorContent, imageSrc);
 					}
 					else {
 						const editorContentHeight =
@@ -289,8 +297,6 @@
 								imgElement.height = editorContentHeight;
 							}
 
-							this.setAttribute('width', this.width);
-
 							let elementOuterHtml = imgElement.outerHTML;
 
 							if (instance._isEmptySelection(editor)) {
@@ -300,6 +306,8 @@
 							editor.insertHtml(elementOuterHtml);
 
 							editor.focus();
+
+							instance._checkImageWidth(editor, editorContent, imageSrc);
 						};
 					}
 				}
