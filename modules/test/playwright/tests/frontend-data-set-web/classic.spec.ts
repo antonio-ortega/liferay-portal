@@ -19,14 +19,10 @@ const test = mergeTests(
 	loginTest()
 );
 
-let fdsSamplePageURL: string;
-
 test.beforeEach(async ({fdsSamplePage, page, site}) => {
 	const locale = 'es';
 
-	const {url} = await fdsSamplePage.setupFDSSampleWidget({site, locale});
-
-	fdsSamplePageURL = url;
+	await fdsSamplePage.setupFDSSampleWidget({locale, site});
 
 	await fdsSamplePage.selectTab('Classic');
 
