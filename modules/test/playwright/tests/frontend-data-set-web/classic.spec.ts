@@ -22,7 +22,7 @@ const test = mergeTests(
 let fdsSamplePageURL: string;
 
 test.beforeEach(async ({fdsSamplePage, page, site}) => {
-    const locale = 'es';
+	const locale = 'es';
 
 	const {url} = await fdsSamplePage.setupFDSSampleWidget({site, locale});
 
@@ -30,22 +30,17 @@ test.beforeEach(async ({fdsSamplePage, page, site}) => {
 
 	await fdsSamplePage.selectTab('Classic');
 
-	await expect(
-		page.getByText('test@liferay.com')
-	).toBeVisible();
+	await expect(page.getByText('test@liferay.com')).toBeVisible();
 });
 
 test(
 	'Assert the details shown in the FDS table',
 	{tag: '@LPS-162792'},
 	async ({fdsSamplePage}) => {
-
 		await test.step('Check headers are localized in Spanish', async () => {
-            expect(
-				await fdsSamplePage.table.headerCells
-					.allInnerTexts()
+			expect(
+				await fdsSamplePage.table.headerCells.allInnerTexts()
 			).toEqual(['Nombre', 'Apellido', 'Dirección de correo', '']);
 		});
-
 	}
 );
