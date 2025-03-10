@@ -479,6 +479,10 @@ test('Check behavior of item actions', async ({fdsSamplePage, page}) => {
 	});
 
 	await test.step('Async resource not found action opens an unexpected error alert toast', async () => {
+		await expect(
+			page.getByText('Error:An unexpected error occurred.')
+		).not.toBeVisible();
+
 		await fdsSamplePage.clickItemAction(asyncResourceNotFound);
 
 		await expect(
@@ -487,6 +491,10 @@ test('Check behavior of item actions', async ({fdsSamplePage, page}) => {
 	});
 
 	await test.step('Async success action opens a success alert toast', async () => {
+		await expect(
+			page.getByText('Error:An unexpected error occurred.')
+		).not.toBeVisible();
+
 		await fdsSamplePage.clickItemAction(asyncSuccess);
 
 		await expect(
