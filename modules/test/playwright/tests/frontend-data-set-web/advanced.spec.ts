@@ -498,7 +498,10 @@ test('Check behavior of item actions', async ({fdsSamplePage, page}) => {
 
 		await fdsSamplePage.clickItemAction(asyncSuccess);
 
-		await waitForAlert(page, 'Success:Your request completed successfully.');
+		await waitForAlert(
+			page,
+			'Success:Your request completed successfully.'
+		);
 	});
 });
 
