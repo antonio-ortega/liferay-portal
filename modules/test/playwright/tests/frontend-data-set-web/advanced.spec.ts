@@ -490,6 +490,10 @@ test('Check behavior of item actions', async ({fdsSamplePage, page}) => {
 	await test.step('Async success action opens a success alert toast', async () => {
 		await fdsSamplePage.clickItemAction(asyncSuccess);
 
+		await expect(
+			page.getByText('This is a description for sample 1.')
+		).toBeVisible();
+
 		await waitForAlert(page);
 	});
 });
