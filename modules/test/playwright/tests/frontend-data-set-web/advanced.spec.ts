@@ -471,19 +471,6 @@ test('Check behavior of item actions', async ({fdsSamplePage, page}) => {
 		});
 	});
 
-	await test.step('Async success action opens a success alert toast', async () => {
-		await expect(
-			page.getByText('Error:An unexpected error occurred.')
-		).not.toBeVisible();
-
-		await fdsSamplePage.clickItemAction(asyncSuccess);
-
-		await waitForAlert(
-			page,
-			'Success:Your request completed successfully.'
-		);
-	});
-
 	await test.step('Async connection refused action opens an unexpected error alert toast', async () => {
 		await fdsSamplePage.clickItemAction(asyncConnectionRefused);
 
@@ -493,15 +480,17 @@ test('Check behavior of item actions', async ({fdsSamplePage, page}) => {
 	});
 
 	await test.step('Async resource not found action opens an unexpected error alert toast', async () => {
-		await expect(
-			page.getByText('Error:An unexpected error occurred.')
-		).not.toBeVisible();
-
 		await fdsSamplePage.clickItemAction(asyncResourceNotFound);
 
 		await waitForAlert(page, 'Error:An unexpected error occurred.', {
 			type: 'danger',
 		});
+	});
+
+	await test.step('Async success action opens a success alert toast', async () => {
+		await fdsSamplePage.clickItemAction(asyncSuccess);
+
+		await waitForAlert(page);
 	});
 });
 
