@@ -17,6 +17,20 @@ import {getUrlPath} from './util/utils';
 const initSPA = function (config) {
 	const app = new App(config);
 
+	const checkExcludedTargetPortlets = (uri) => {
+		const id = uri.searchParams.get('p_p_id');
+
+		if (!id || !config.excludedTargetPortlets) {
+			return true;
+		}
+
+		if (config.excludedTargetPortlets.includes(id)) {
+			return false;
+		}
+
+		return true;
+	};
+
 	app.addRoutes([
 		{
 			handler: ActionURLScreen,
@@ -33,15 +47,9 @@ const initSPA = function (config) {
 				const host = loginRedirectURL.host || window.location.host;
 
 				if (app.isLinkSameOrigin_(host)) {
-					match = uri.searchParams.get('p_p_lifecycle') === '1';
-
-					if (match) {
-						const id = uri.searchParams.get('p_p_id');
-
-						if (id && config.excludedTargetPortlets) {
-							match = !config.excludedTargetPortlets.includes(id);
-						}
-					}
+					match =
+						uri.searchParams.get('p_p_lifecycle') === '1' &&
+						checkExcludedTargetPortlets(uri);
 				}
 
 				return match;
@@ -64,7 +72,9 @@ const initSPA = function (config) {
 
 						const lifecycle = uri.searchParams.get('p_p_lifecycle');
 
-						match = lifecycle === '0' || !lifecycle;
+						match =
+							(lifecycle === '0' || !lifecycle) &&
+							checkExcludedTargetPortlets(uri);
 					}
 				}
 
