@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {getPortletNamespace} from 'frontend-js-web';
+
 import App from './app/LiferayApp';
 import ActionURLScreen from './screen/ActionURLScreen';
 import RenderURLScreen from './screen/RenderURLScreen';
@@ -26,6 +28,17 @@ const initSPA = function (config) {
 
 		if (config.excludedTargetPortlets.includes(id)) {
 			return false;
+		}
+		else {
+			const redirect = uri.searchParams.get(
+				getPortletNamespace(id) + 'redirect'
+			);
+
+			if (redirect) {
+				return checkExcludedTargetPortlets(
+					new URL(redirect, window.location.origin)
+				);
+			}
 		}
 
 		return true;
