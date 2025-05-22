@@ -85,9 +85,7 @@ const initSPA = function (config) {
 
 						const lifecycle = uri.searchParams.get('p_p_lifecycle');
 
-						match =
-							(lifecycle === '0' || !lifecycle) &&
-							checkExcludedTargetPortlets(uri);
+						match = lifecycle === '0' || !lifecycle;
 					}
 				}
 
