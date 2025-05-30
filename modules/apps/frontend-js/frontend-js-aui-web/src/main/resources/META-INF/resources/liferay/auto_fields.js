@@ -399,7 +399,7 @@ AUI.add(
 							const inputNodeName = item.attr('nodeName');
 							const inputType = item.attr('type');
 
-							let oldName = item.attr('name') || item.attr('id');
+							let oldName = item.attr('id') || item.attr('name');
 
 							const newName = oldName.replace(
 								/([0-9]+)([_A-Za-z]*)$/,
