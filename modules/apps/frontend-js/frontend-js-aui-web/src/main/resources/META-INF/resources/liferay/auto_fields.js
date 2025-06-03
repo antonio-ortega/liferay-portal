@@ -346,19 +346,23 @@ AUI.add(
 					let clonedRow;
 
 					if (!!inputsLocalized._nodes.length && !paletteIsCloned) {
-						const palette = document.querySelector(
-							"[id$='PaletteBoundingBox']"
-						);
-
 						const trigger = clone.one('button');
+
+						const currentButton = currentRow.one('button');
+
+						const currentMenu = currentButton.getData('menu');
+
+						const currentMenuListContainer = currentButton.getData('menuListContainer');
+
+						trigger.setData('menu', currentMenu);
+
+						trigger.setData('menuListContainer', currentMenuListContainer);
 
 						const list = A.Node.create(
 							'<ul class="dropdown-menu dropdown-menu-left-side"></ul>'
 						);
 
 						trigger.placeAfter(list);
-
-						list.append(palette.cloneNode(true));
 					}
 
 					if (instance.url) {

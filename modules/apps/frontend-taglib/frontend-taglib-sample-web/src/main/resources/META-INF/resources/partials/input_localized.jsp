@@ -9,7 +9,7 @@
 
 <clay:container-fluid>
 	<form>
-		<aui:input id="inputLocalizedId!" label="Sample label" localized="<%= true %>" name="input-localized-name" type="text" value="" />
+		<aui:input id="inputLocalizedId!" label="Sample label" localized="<%= false %>" name="input-localized-name" type="text" value="" />
 	</form>
 
 	<aui:form name="fm2">

@@ -122,10 +122,9 @@ AUI.add(
 					);
 
 					if (overlay) {
-						instance._overlayStyleLeft = document.querySelector('.overlay:not(.overlay-hidden)').style.left;
-						instance._overlayStyleTop = document.querySelector('.overlay:not(.overlay-hidden)').style.top;
+						overlay.destroy();
 
-						overlay.hide();
+						instance._overlayMap.clear();
 					}
 
 					instance._activeMenu = null;
@@ -419,14 +418,6 @@ AUI.add(
 						modal: Util.isPhone() || Util.isTablet(),
 						width: listNodeWidth,
 					});
-
-					const overlayElement = document.querySelector('.overlay:not(.overlay-hidden)')
-
-					if (overlayElement) {
-						overlayElement.style.left = instance._overlayStyleLeft;
-
-						overlayElement.style.top = instance._overlayStyleTop;	
-					}
 
 					if (!Util.isPhone() && !Util.isTablet()) {
 						const focusManager = overlay.bodyNode.focusManager;
