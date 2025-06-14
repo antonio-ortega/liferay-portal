@@ -43,15 +43,13 @@ test(
             
             await page.getByRole('button', { name: 'Save' }).click();
 
-            await expect(page.getByText('Main Configuration')).toBeVisible({timeout:5000});
+            const crossoriginAttr = await page.locator('script[src^="http://127.0.0.1/o/frontend-js-web/Liferay.js"]').getAttribute('crossorigin', {timeout: 1000});
 
-            await expect(
-                page.locator('script[src^="/o/frontend-js-web/Liferay.js"]')
-            ).toHaveAttribute('data-senna-track','permanent');
-		});
+            await expect(crossoriginAttr).toStrictEqual('');
+        });
 
         await test.step('Check crossorigin attribute is removed when CDN is disabled', async () => {
-            /*await page.getByLabel('CDN Host HTTP', { exact: true }).clear();
+            await page.getByLabel('CDN Host HTTP', { exact: true }).clear();
             
             await page.getByLabel('CDN Host HTTPS').clear();
             
@@ -59,7 +57,7 @@ test(
 
             await expect(
                 page.locator('script[src^="/o/frontend-js-web/Liferay.js"]')
-            ).not.toHaveAttribute('crossorigin','');*/
+            ).not.toHaveAttribute('crossorigin','');
         })
 	}
 );
