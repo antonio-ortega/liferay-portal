@@ -94,9 +94,9 @@ public class LiferayGlobalObjectPostAUIDynamicInclude
 		HttpServletRequest httpServletRequest) {
 
 		try {
-			String cdnHost = PortalUtil.getCDNHost(httpServletRequest);
+			if (Validator.isNotNull(
+					PortalUtil.getCDNHost(httpServletRequest))) {
 
-			if (Validator.isNotNull(cdnHost)) {
 				return " crossorigin=\"\"";
 			}
 		}

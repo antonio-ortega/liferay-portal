@@ -6,8 +6,8 @@
 import {expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../fixtures/apiHelpersTest';
-import {instanceSettingsPagesTest} from '../../../fixtures/instanceSettingsPagesTest';
 import {featureFlagsTest} from '../../../fixtures/featureFlagsTest';
+import {instanceSettingsPagesTest} from '../../../fixtures/instanceSettingsPagesTest';
 import {isolatedSiteTest} from '../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../fixtures/loginTest';
 import {productMenuPageTest} from '../../../fixtures/productMenuPageTest';
@@ -20,7 +20,7 @@ export const test = mergeTests(
 	featureFlagsTest({
 		'LPS-178052': {enabled: true},
 	}),
-    instanceSettingsPagesTest,
+	instanceSettingsPagesTest,
 	isolatedSiteTest,
 	loginTest(),
 	productMenuPageTest,
@@ -32,32 +32,38 @@ test(
 	{tag: '@LPD-56873'},
 	async ({instanceSettingsPage, page}) => {
 		await test.step('Check crossorigin attribute is added when CDN is enabled', async () => {
-            await instanceSettingsPage.goToInstanceSetting(
-                'Instance Configuration',
-                'General'
-            );
+			await instanceSettingsPage.goToInstanceSetting(
+				'Instance Configuration',
+				'General'
+			);
 
-            await page.getByLabel('CDN Host HTTP', { exact: true }).fill('http://127.0.0.1');
-            
-            await page.getByLabel('CDN Host HTTPS').fill('https://127.0.0.1');
-            
-            await page.getByRole('button', { name: 'Save' }).click();
+			await page
+				.getByLabel('CDN Host HTTP', {exact: true})
+				.fill('http://127.0.0.1');
 
-            const crossoriginAttr = await page.locator('script[src^="http://127.0.0.1/o/frontend-js-web/Liferay.js"]').getAttribute('crossorigin', {timeout: 1000});
+			await page.getByLabel('CDN Host HTTPS').fill('https://127.0.0.1');
 
-            await expect(crossoriginAttr).toStrictEqual('');
-        });
+			await page.getByRole('button', {name: 'Save'}).click();
 
-        await test.step('Check crossorigin attribute is removed when CDN is disabled', async () => {
-            await page.getByLabel('CDN Host HTTP', { exact: true }).clear();
-            
-            await page.getByLabel('CDN Host HTTPS').clear();
-            
-            await page.getByRole('button', { name: 'Save' }).click();
+			const crossoriginAttr = await page
+				.locator(
+					'script[src^="http://127.0.0.1/o/frontend-js-web/Liferay.js"]'
+				)
+				.getAttribute('crossorigin', {timeout: 1000});
 
-            await expect(
-                page.locator('script[src^="/o/frontend-js-web/Liferay.js"]')
-            ).not.toHaveAttribute('crossorigin','');
-        })
+			await expect(crossoriginAttr).toStrictEqual('');
+		});
+
+		await test.step('Check crossorigin attribute is removed when CDN is disabled', async () => {
+			await page.getByLabel('CDN Host HTTP', {exact: true}).clear();
+
+			await page.getByLabel('CDN Host HTTPS').clear();
+
+			await page.getByRole('button', {name: 'Save'}).click();
+
+			await expect(
+				page.locator('script[src^="/o/frontend-js-web/Liferay.js"]')
+			).not.toHaveAttribute('crossorigin', '');
+		});
 	}
 );
