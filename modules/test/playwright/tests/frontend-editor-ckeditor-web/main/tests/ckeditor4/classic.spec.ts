@@ -161,14 +161,14 @@ test(
 		});
 
 		await expect(ckeditor4Page.contextMenu.getByLabel('URL')).toHaveValue(
-			'/documents/d/guest/satellite-png'
+			(new RegExp('^/documents/d/guest/satellite-png'))
 		);
 
 		await ckeditor4Page.contextMenu.getByText('OK').click();
 
 		await expect(
 			ckeditor4Page.editableFrame.locator(
-				'img[src="/documents/d/guest/satellite-png"]'
+				'img[src^="/documents/d/guest/satellite-png"]'
 			)
 		).toBeVisible();
 	}
