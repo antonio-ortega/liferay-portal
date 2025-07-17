@@ -161,7 +161,7 @@ test(
 		});
 
 		await expect(ckeditor4Page.contextMenu.getByLabel('URL')).toHaveValue(
-			(new RegExp('^/documents/d/guest/satellite-png'))
+			new RegExp('^/documents/d/guest/satellite-png')
 		);
 
 		await ckeditor4Page.contextMenu.getByText('OK').click();
