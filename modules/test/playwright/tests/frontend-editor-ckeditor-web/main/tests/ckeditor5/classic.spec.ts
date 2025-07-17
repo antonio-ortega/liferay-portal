@@ -123,7 +123,7 @@ test(
 
 		await expect(
 			classicPage.editable.locator(
-				'img[src="/documents/d/guest/moon-png"]'
+				'img[src^="/documents/d/guest/moon-png"]'
 			)
 		).toBeVisible();
 	}
