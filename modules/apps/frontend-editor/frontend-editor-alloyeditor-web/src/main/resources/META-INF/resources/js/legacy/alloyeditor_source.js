@@ -262,12 +262,14 @@ AUI.add(
 				_toggleEditorModeUI() {
 					const instance = this;
 
+					const editorContent = instance._editorContent;
 					const editorFullscreen = instance._editorFullscreen;
 					const editorSwitch = instance._editorSwitch;
 					const editorSwitchContainer = editorSwitch.ancestor();
 					const editorSwitchTheme = instance._editorSwitchTheme;
 					const editorWrapper = instance._editorWrapper;
 
+					editorContent.toggleClass('hide');
 					editorWrapper.toggleClass(CSS_SHOW_SOURCE);
 					editorSwitchContainer.toggleClass(CSS_SHOW_SOURCE);
 					editorFullscreen.toggleClass('hide');
@@ -325,6 +327,7 @@ AUI.add(
 
 					const host = instance.get(STR_HOST);
 
+					instance._editorContent = host._srcNode;
 					instance._editorFullscreen = host.one('#Fullscreen');
 					instance._editorSource = host.one('#Source');
 					instance._editorSwitch = host.one('#Switch');
