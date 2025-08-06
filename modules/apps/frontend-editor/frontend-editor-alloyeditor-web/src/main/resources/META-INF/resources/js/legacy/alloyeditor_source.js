@@ -123,77 +123,49 @@ AUI.add(
 					const host = instance.get(STR_HOST);
 					const strings = instance.get(STRINGS);
 
-					let fullScreenDialog = instance._fullScreenDialog;
-					let fullScreenEditor = instance._fullScreenEditor;
-
-					if (fullScreenDialog) {
-						fullScreenEditor.set('value', host.getHTML());
-
-						fullScreenDialog.show();
-					}
-					else {
-						Liferay.Util.openModal({
-							buttons: [
-								{
-									label: strings.cancel,
-									onClick: () => {
-										fullScreenDialog.hide();
-									},
+					Liferay.Util.openModal({
+						bodyHTML: '<div id="fullScreenContainer"></div>',
+						buttons: [
+							{
+								label: strings.cancel,
+								onClick: ({processClose}) => {
+									processClose();
 								},
-								{
-									displayType: 'primary',
-									label: strings.done,
-									onClick: () => {
-										fullScreenDialog.hide();
-										instance._switchMode({
-											content:
-												fullScreenEditor.get('value'),
-										});
-									},
-								},
-							],
-							className:
-								'lfr-fulscreen-source-editor-dialog modal-full-screen',
-							containerProps: {},
-							onOpen: ({container}) => {
-								fullScreenDialog = container;
-
-								Liferay.Util.getTop()
-									.AUI()
-									.use(
-										'liferay-fullscreen-source-editor',
-										(A) => {
-											fullScreenEditor =
-												new A.LiferayFullScreenSourceEditor(
-													{
-														boundingBox: container
-															.getStdModNode(
-																A.WidgetStdMod
-																	.BODY
-															)
-															.appendChild(
-																'<div></div>'
-															),
-														dataProcessor:
-															host.getNativeEditor()
-																.dataProcessor,
-														previewCssClass:
-															'alloy-editor alloy-editor-placeholder',
-														value: host.getHTML(),
-													}
-												).render();
-
-											instance._fullScreenDialog =
-												fullScreenDialog;
-
-											instance._fullScreenEditor =
-												fullScreenEditor;
-										}
-									);
 							},
-							title: strings.editContent,
-						});
-					}
+							{
+								displayType: 'primary',
+								label: strings.done,
+								onClick: ({processClose}) => {
+									processClose();
+									instance._switchMode({
+										content: fullScreenEditor.get('value'),
+									});
+								},
+							},
+						],
+						className:
+							'lfr-fullscreen-source-editor-dialog modal-full-screen',
+						containerProps: {},
+						onOpen: () => {
+							Liferay.Util.getTop()
+								.AUI()
+								.use(
+									'liferay-fullscreen-source-editor',
+									(A) => {
+										new A.LiferayFullScreenSourceEditor({
+											boundingBox: document.getElementById('fullScreenContainer'),
+											dataProcessor:
+												host.getNativeEditor()
+													.dataProcessor,
+											previewCssClass:
+												'alloy-editor alloy-editor-placeholder',
+											value: host.getHTML(),
+										}).render();
+									}
+								);
+						},
+						title: strings.editContent,
+					});
 				},
 
 				_onSwitchBlur() {
@@ -332,18 +304,6 @@ AUI.add(
 
 					if (sourceEditor) {
 						sourceEditor.destroy();
-					}
-
-					const fullScreenEditor = instance._fullScreenEditor;
-
-					if (fullScreenEditor) {
-						fullScreenEditor.destroy();
-					}
-
-					const fullScreenDialog = instance._fullScreenDialog;
-
-					if (fullScreenDialog) {
-						fullScreenDialog.destroy();
 					}
 
 					new A.EventHandle(instance._eventHandles).detach();
