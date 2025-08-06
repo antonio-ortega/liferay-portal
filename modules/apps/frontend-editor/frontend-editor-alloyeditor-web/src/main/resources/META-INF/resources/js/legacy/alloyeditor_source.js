@@ -123,6 +123,8 @@ AUI.add(
 					const host = instance.get(STR_HOST);
 					const strings = instance.get(STRINGS);
 
+					let fullScreenEditor = instance._fullScreenEditor;
+
 					Liferay.Util.openModal({
 						bodyHTML: '<div id="fullScreenContainer"></div>',
 						buttons: [
@@ -152,15 +154,24 @@ AUI.add(
 								.use(
 									'liferay-fullscreen-source-editor',
 									(A) => {
-										new A.LiferayFullScreenSourceEditor({
-											boundingBox: document.getElementById('fullScreenContainer'),
-											dataProcessor:
-												host.getNativeEditor()
-													.dataProcessor,
-											previewCssClass:
-												'alloy-editor alloy-editor-placeholder',
-											value: host.getHTML(),
-										}).render();
+										fullScreenEditor =
+											new A.LiferayFullScreenSourceEditor(
+												{
+													boundingBox:
+														document.getElementById(
+															'fullScreenContainer'
+														),
+													dataProcessor:
+														host.getNativeEditor()
+															.dataProcessor,
+													previewCssClass:
+														'alloy-editor alloy-editor-placeholder',
+													value: host.getHTML(),
+												}
+											).render();
+
+										instance._fullScreenEditor =
+											fullScreenEditor;
 									}
 								);
 						},
