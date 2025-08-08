@@ -61,6 +61,7 @@ export interface IFrontendDataSetContext {
 	onSelect?: ({selectedItems}: {selectedItems: Array<any>}) => void;
 	openModal: Function;
 	openSidePanel: Function;
+	paco: boolean;
 	portletId?: string;
 	searchParam?: string;
 	searching: boolean;
@@ -71,6 +72,7 @@ export interface IFrontendDataSetContext {
 	selectedItemsValue?: Array<any>;
 	selectionType?: string;
 	setSearching: (value: boolean) => void;
+	setPaco: Function;
 	showBulkActionsManagementBar: boolean;
 	showBulkActionsManagementBarActions: boolean;
 	showInfoPanel: boolean;

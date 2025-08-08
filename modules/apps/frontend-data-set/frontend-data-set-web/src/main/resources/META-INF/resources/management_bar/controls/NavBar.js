@@ -21,7 +21,7 @@ import SortDropdown from './SortDropdown';
 import FiltersDropdown from './filters/FiltersDropdown';
 
 function NavBar({creationMenu, handleCheckboxClick, items, showSearch}) {
-	const {selectable, selectionType, showInfoPanel} = useContext(
+	const {paco, selectable, selectionType, showInfoPanel} = useContext(
 		FrontendDataSetContext
 	);
 
@@ -38,6 +38,7 @@ function NavBar({creationMenu, handleCheckboxClick, items, showSearch}) {
 			<ManagementToolbar.ItemList>
 				{!!items.length &&
 					selectable &&
+					paco &&
 					selectionType === 'multiple' && (
 						<ManagementToolbar.Item>
 							<SelectionCheckbox

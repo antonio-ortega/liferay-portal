@@ -156,6 +156,7 @@ const FrontendDataSetContent = ({
 	const [highlightedItemsValue, setHighlightedItemsValue] = useState([]);
 	const [infoPanelOpen, setInfoPanelOpen] = useState<boolean>(false);
 	const [searching, setSearching] = useState(!!apiURL);
+	const [paco, setPaco] = useState(0);
 	const [items, setItems] = useState(itemsProp || []);
 	const [itemsChanges, setItemsChanges] = useState<{[key: string]: any}>({});
 	const [pageNumber, setPageNumber] = useState(
@@ -1235,6 +1236,7 @@ const FrontendDataSetContent = ({
 				onSelect,
 				openModal,
 				openSidePanel,
+				paco,
 				portletId,
 				searchParam,
 				searching,
@@ -1245,6 +1247,7 @@ const FrontendDataSetContent = ({
 				selectedItemsValue,
 				selectionType,
 				setSearching,
+				setPaco,
 				showBulkActionsManagementBar,
 				showBulkActionsManagementBarActions,
 				showInfoPanel: infoPanelComponent ? true : false,

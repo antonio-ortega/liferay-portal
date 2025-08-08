@@ -4,7 +4,7 @@
  */
 
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, {useState} from 'react';
 
 import getSelectedItemValue from '../utils/getSelectedItemValue';
 import BulkActions from './controls/BulkActions';
@@ -25,10 +25,12 @@ function ManagementBar({
 	selectedItemsKey,
 	selectedItemsValue,
 	selectionType,
-	showSearch,
+	//showSearch,
 	showSelectAll,
 	total,
 }) {
+	const [showSearch, setShowSearch] = useState(false);
+
 	const pageSelectedItemsValue = selectedItemsValue.filter((id) =>
 		items.some(
 			(item) =>
@@ -81,6 +83,10 @@ function ManagementBar({
 			<ActiveFiltersBar
 				dataLoading={dataLoading}
 				disabled={!!selectedItemsValue.length}
+				toggleShowSearch={() => {
+					console.log("toggleShowSearch. Current value: " + showSearch);
+					setShowSearch(!showSearch);
+				}}
 				total={total}
 			/>
 		</>

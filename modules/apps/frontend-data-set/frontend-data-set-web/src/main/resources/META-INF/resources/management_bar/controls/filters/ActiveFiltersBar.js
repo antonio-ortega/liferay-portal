@@ -14,16 +14,27 @@ import {VIEWS_ACTION_TYPES} from '../../../views/viewsReducer';
 import FilterResume from './FilterResume';
 import SearchResume from './SearchResume';
 
-function ActiveFiltersBar({disabled, total}) {
-	const {onSearch, searchParam, searching, setSearching} = useContext(
+function ActiveFiltersBar({disabled, toggleShowSearch, total}) {
+	const {onSearch, searchParam, paco, searching, setPaco, setSearching} = useContext(
 		FrontendDataSetContext
 	);
+
 	const [{filters}, viewsDispatch] = useContext(ViewsContext);
 
 	const searchActive = Boolean(searchParam?.trim());
 
 	const resetFiltersValue = () => {
+		console.log("Reset Filters Value");
+
+		toggleShowSearch();
+
 		setSearching(true);
+
+		console.log("paco: " + paco);
+
+		setPaco(!paco);
+
+		console.log("paco: " + paco);
 
 		viewsDispatch({
 			type: VIEWS_ACTION_TYPES.UPDATE_FILTERS,
@@ -113,6 +124,7 @@ function ActiveFiltersBar({disabled, total}) {
 
 ActiveFiltersBar.propTypes = {
 	disabled: PropTypes.bool,
+	toggleShowSearch: PropTypes.func,
 	total: PropTypes.number,
 };
 
