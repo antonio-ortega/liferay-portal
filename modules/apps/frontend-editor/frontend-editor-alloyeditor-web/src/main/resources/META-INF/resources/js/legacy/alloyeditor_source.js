@@ -148,6 +148,7 @@ AUI.add(
 						className:
 							'lfr-fullscreen-source-editor-dialog modal-full-screen',
 						containerProps: {},
+						iframeBodyCssClass: 'dialog-with-footer',
 						onOpen: () => {
 							Liferay.Util.getTop()
 								.AUI()

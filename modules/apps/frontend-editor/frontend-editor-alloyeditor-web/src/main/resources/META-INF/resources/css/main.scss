@@ -166,6 +166,28 @@
 	}
 }
 
-.lfr-fullscreen-source-editor-dialog .modal-dialog {
-	max-width: 90%;
+.lfr-fullscreen-source-editor-dialog {
+	bottom: 0;
+	left: 0;
+	right: 0;
+	top: 0;
+
+	.modal-content {
+		max-height: 90vh;
+	}
+
+	.modal-dialog {
+		max-width: 90%;
+	}
+}
+
+.lfr-fullscreen-source-editor-content.horizontal {
+
+	&.horizontal .panel-splitter {
+		display: none;
+	}
+
+	&.vertical .source-panel {
+		vertical-align: top;
+	}
 }
