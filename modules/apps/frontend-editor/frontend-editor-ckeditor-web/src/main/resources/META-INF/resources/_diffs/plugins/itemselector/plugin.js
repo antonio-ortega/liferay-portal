@@ -56,6 +56,8 @@
 				return;
 			}
 
+			const url = imageSrc.url ? imageSrc.url : imageSrc;
+
 			const editorContentDocument =
 				!editor.window.$.AlloyEditor &&
 				!editorContent.id.endsWith('BalloonEditor')
@@ -63,16 +65,18 @@
 					: editorContent;
 
 			const imgElement = editorContentDocument.querySelector(
+<<<<<<< HEAD
 				`img[src='${imageSrc}']`
+=======
+				`img[src='${url}']`
+>>>>>>> parent of 5e58c97 (LPD-53880 use imageselector plugins callback if exists instead of letting it be intercepted by adaptive-media)
 			);
 
-			if (imgElement) {
-				imgElement.onload = function () {
-					if (this.width === 0) {
-						this.setAttribute('width', '150px');
-					}
-				};
-			}
+			imgElement.onload = function () {
+				if (this.width === 0) {
+					this.setAttribute('width', '150px');
+				}
+			};
 		},
 
 		_commitAudioValue(value, node) {
