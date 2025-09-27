@@ -162,6 +162,10 @@ function sourceTagTemplate({media, srcset}) {
 					region: element.getClientRect(),
 				},
 			});
+
+			editor.fire('AMImageChange', {
+				imageSrc
+			});
 		},
 
 		init(editor) {

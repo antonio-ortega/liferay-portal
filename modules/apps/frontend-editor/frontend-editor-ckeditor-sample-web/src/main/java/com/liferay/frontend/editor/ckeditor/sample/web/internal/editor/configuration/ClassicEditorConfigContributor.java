@@ -39,7 +39,7 @@ public class ClassicEditorConfigContributor
 		String extraPlugins = jsonObject.getString("extraPlugins");
 
 		jsonObject.put(
-			"extraPlugins", extraPlugins += ",maximize"
+			"extraPlugins", extraPlugins += ",maximize,adaptivemedia"
 		).put(
 			"toolbar_liferay",
 			JSONUtil.putAll(

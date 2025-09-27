@@ -39,6 +39,13 @@
 
 				if (browseButton) {
 					browseButton.onClick = function () {
+						editor.on('AMImageChange', (event) => {
+							dialogDefinition.dialog.setValueOf(
+								tabName,
+								targetField,
+								event.data.imageSrc
+							);
+						});
 						editor.execCommand(commandName, (newVal) => {
 							dialogDefinition.dialog.setValueOf(
 								tabName,
@@ -65,11 +72,7 @@
 					: editorContent;
 
 			const imgElement = editorContentDocument.querySelector(
-<<<<<<< HEAD
 				`img[src='${imageSrc}']`
-=======
-				`img[src='${url}']`
->>>>>>> parent of 5e58c97 (LPD-53880 use imageselector plugins callback if exists instead of letting it be intercepted by adaptive-media)
 			);
 
 			imgElement.onload = function () {
@@ -288,7 +291,7 @@
 						: document.getElementById(`cke_${editor.name}`);
 
 					if (typeof callback === 'function') {
-						callback(imageSrc);
+						callback(imageSrc, selectedItem);
 					}
 					else {
 						const editorContentHeight =
