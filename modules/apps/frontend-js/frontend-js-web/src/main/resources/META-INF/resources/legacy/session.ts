@@ -28,8 +28,6 @@ export class Session {
 
 	private _alertClosed: any;
 	private _banner: any;
-	private _cookieKey: string;
-	private _cookieOptions: {path: string; secure: boolean};
 	private _expiredText: string;
 	private _initPageTitle: string;
 	private _initTimestamp?: string;
@@ -49,12 +47,6 @@ export class Session {
 
 		this._alertClosed = '';
 		this._banner = null;
-		this._cookieKey =
-			'LFR_SESSION_STATE_' + Liferay.ThemeDisplay.getRealUserId();
-		this._cookieOptions = {
-			path: Liferay.ThemeDisplay.getPathContext() || '/',
-			secure: window.location.protocol === 'https:',
-		};
 		this._expiredText = Liferay.Language.get(
 			'due-to-inactivity-your-session-has-expired'
 		);
@@ -242,15 +234,6 @@ export class Session {
 		this._timestamp = Date.now().toString();
 
 		this._initTimestamp = this._timestamp;
-
-		if (navigator.cookieEnabled) {
-			Liferay.Util.Cookie.set(
-				this._cookieKey,
-				this._timestamp,
-				Liferay.Util.Cookie.TYPES.NECESSARY,
-				this._cookieOptions
-			);
-		}
 	}
 
 	private _startTimer() {
