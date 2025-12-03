@@ -15,7 +15,6 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 
@@ -51,7 +50,7 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 			PortalUtil.getLiferayPortletResponse(portletResponse);
 
 		return FDSActionDropdownItemList.of(
-			FDSActionDropdownItemBuilder.setHref(
+			/*FDSActionDropdownItemBuilder.setHref(
 				"#test-visibility-filter"
 			).setIcon(
 				"sun"
@@ -65,7 +64,7 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 				HashMapBuilder.<String, Object>put(
 					"color", "Yellow"
 				).build()
-			).build(),
+			).build(),*/
 			FDSActionDropdownItemBuilder.setIcon(
 				"view"
 			).setId(
@@ -251,6 +250,66 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 				"Open Side Panel"
 			).setTarget(
 				"link"
+			).build(),
+			FDSActionDropdownItemBuilder.setIcon(
+				"hidden"
+			).setId(
+				"groupPermissionTest"
+			).setSeparator(
+				false
+			).setType(
+				"group"
+			).build(),
+			FDSActionDropdownItemBuilder.setFDSActionDropdownItems(
+				FDSActionDropdownItemList.of(
+					FDSActionDropdownItemBuilder.setIcon(
+						"separator"
+					).setId(
+						"sampleMessage"
+					).setLabel(
+						"Group Item"
+					).setTarget(
+						"link"
+					).build(),
+					FDSActionDropdownItemBuilder.setFDSActionDropdownItems(
+						FDSActionDropdownItemList.of(
+							FDSActionDropdownItemBuilder.setIcon(
+								"exclamation-circle"
+							).setId(
+								"sampleMessage"
+							).setLabel(
+								"Contextual Sub Item 1"
+							).setTarget(
+								"link"
+							).build(),
+							FDSActionDropdownItemBuilder.setIcon(
+								"exclamation-circle"
+							).setId(
+								"sampleMessage"
+							).setLabel(
+								"Contextual Sub Item 2"
+							).setTarget(
+								"link"
+							).build()
+						)
+					).setIcon(
+						"nodes"
+					).setId(
+						"contextualItem"
+					).setLabel(
+						"Contextual Item"
+					).setSeparator(
+						false
+					).setType(
+						"contextual"
+					).build()
+				)
+			).setId(
+				"groupItems"
+			).setSeparator(
+				true
+			).setType(
+				"group"
 			).build());
 	}
 
