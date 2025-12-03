@@ -155,6 +155,22 @@ public class FDSActionDropdownItemBuilder {
 		return fdsActionDropdownItemStep.setLabel(labelUnsafeSupplier);
 	}
 
+	public static AfterMethodStep setMethod(String method) {
+		FDSActionDropdownItemStep fdsActionDropdownItemStep =
+			new FDSActionDropdownItemStep();
+
+		return fdsActionDropdownItemStep.setMethod(method);
+	}
+
+	public static AfterMethodStep setMethod(
+		UnsafeSupplier<String, Exception> methodUnsafeSupplier) {
+
+		FDSActionDropdownItemStep fdsActionDropdownItemStep =
+			new FDSActionDropdownItemStep();
+
+		return fdsActionDropdownItemStep.setMethod(methodUnsafeSupplier);
+	}
+
 	public static AfterQuickActionStep setQuickAction(boolean quickAction) {
 		FDSActionDropdownItemStep fdsActionDropdownItemStep =
 			new FDSActionDropdownItemStep();
@@ -220,15 +236,37 @@ public class FDSActionDropdownItemBuilder {
 		return fdsActionDropdownItemStep.setType(typeUnsafeSupplier);
 	}
 
+	public static AfterVisibilityFiltersStep setVisibilityFilters(
+		Map<String, Object> visibilityFilters) {
+
+		FDSActionDropdownItemStep fdsActionDropdownItemStep =
+			new FDSActionDropdownItemStep();
+
+		return fdsActionDropdownItemStep.setVisibilityFilters(
+			visibilityFilters);
+	}
+
+	public static AfterVisibilityFiltersStep setVisibilityFilters(
+		UnsafeSupplier<Map<String, Object>, Exception>
+			visibilityFiltersUnsafeSupplier) {
+
+		FDSActionDropdownItemStep fdsActionDropdownItemStep =
+			new FDSActionDropdownItemStep();
+
+		return fdsActionDropdownItemStep.setVisibilityFilters(
+			visibilityFiltersUnsafeSupplier);
+	}
+
 	public static class FDSActionDropdownItemStep
 		implements ActiveStep, AfterActiveStep, AfterDisabledStep,
 				   AfterDropdownItemsStep, AfterHrefStep, AfterIconStep,
-				   AfterIdStep, AfterKeyStep, AfterLabelStep, AfterPutDataStep,
-				   AfterQuickActionStep, AfterSeparatorStep, AfterSetDataStep,
-				   AfterTargetStep, AfterTypeStep, BuildStep, DisabledStep,
+				   AfterIdStep, AfterKeyStep, AfterLabelStep, AfterMethodStep,
+				   AfterPutDataStep, AfterQuickActionStep, AfterSeparatorStep,
+				   AfterSetDataStep, AfterTargetStep, AfterTypeStep,
+				   AfterVisibilityFiltersStep, BuildStep, DisabledStep,
 				   DropdownItemsStep, HrefStep, IconStep, IdStep, LabelStep,
-				   PutDataStep, QuickActionStep, SeparatorStep, SetDataStep,
-				   TargetStep, TypeStep {
+				   MethodStep, PutDataStep, QuickActionStep, SeparatorStep,
+				   SetDataStep, TargetStep, TypeStep, VisibilityFiltersStep {
 
 		@Override
 		public FDSActionDropdownItem build() {
@@ -458,6 +496,29 @@ public class FDSActionDropdownItemBuilder {
 			}
 		}
 
+		public AfterMethodStep setMethod(String method) {
+			_fdsActionDropdownItem.setMethod(method);
+
+			return this;
+		}
+
+		public AfterMethodStep setMethod(
+			UnsafeSupplier<String, Exception> methodUnsafeSupplier) {
+
+			try {
+				String method = methodUnsafeSupplier.get();
+
+				if (method != null) {
+					_fdsActionDropdownItem.setMethod(method);
+				}
+
+				return this;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		}
+
 		@Override
 		public AfterQuickActionStep setQuickAction(boolean quickAction) {
 			_fdsActionDropdownItem.setQuickAction(quickAction);
@@ -565,6 +626,29 @@ public class FDSActionDropdownItemBuilder {
 
 	}
 
+	public AfterVisibilityFiltersStep setVisibilityFilters(Map<String, Object> visibilityFilters) {
+		_fdsActionDropdownItem.setVisibilityFilters(visibilityFilters);
+
+		return this;
+	}
+
+	public AfterVisibilityFiltersStep setVisibilityFilters(
+		UnsafeSupplier<Map<String, Object>, Exception> visibilityFiltersUnsafeSupplier) {
+
+		try {
+			String visibilityFilters = visibilityFiltersUnsafeSupplier.get();
+
+			if (visibilityFilters != null) {
+				_fdsActionDropdownItem.setVisibilityFilters(visibilityFilters);
+			}
+
+			return this;
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
+	}
+
 	public interface ActiveStep {
 
 		public AfterActiveStep setActive(boolean active);
@@ -576,70 +660,85 @@ public class FDSActionDropdownItemBuilder {
 
 	public interface AfterActiveStep
 		extends BuildStep, DisabledStep, DropdownItemsStep, HrefStep, IconStep,
-				IdStep, LabelStep, QuickActionStep, SeparatorStep, SetDataStep,
-				TargetStep, TypeStep {
+				IdStep, LabelStep, MethodStep, QuickActionStep, SeparatorStep,
+				SetDataStep, TargetStep, TypeStep, VisibilityFiltersStep {
 	}
 
 	public interface AfterDisabledStep
-		extends BuildStep, DropdownItemsStep, HrefStep, IconStep, IdStep, LabelStep,
-				QuickActionStep, SeparatorStep, TargetStep, TypeStep {
+		extends BuildStep, DropdownItemsStep, HrefStep, IconStep, IdStep,
+				LabelStep, MethodStep, QuickActionStep, SeparatorStep,
+				TargetStep, TypeStep, VisibilityFiltersStep {
 	}
 
 	public interface AfterDropdownItemsStep
-		extends BuildStep, IconStep, IdStep, KeyStep, LabelStep, QuickActionStep,
-				SeparatorStep, TargetStep, TypeStep {
+		extends BuildStep, IconStep, IdStep, KeyStep, LabelStep, MethodStep,
+				QuickActionStep, SeparatorStep, TargetStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterHrefStep
-		extends BuildStep, DropdownItemsStep, IconStep, IdStep, KeyStep, LabelStep,
-				QuickActionStep, SeparatorStep, TargetStep, TypeStep {
+		extends BuildStep, DropdownItemsStep, IconStep, IdStep, KeyStep,
+				LabelStep, MethodStep, QuickActionStep, SeparatorStep,
+				TargetStep, TypeStep, VisibilityFiltersStep {
 	}
 
 	public interface AfterIconStep
 		extends BuildStep, DropdownItemsStep, IdStep, KeyStep, LabelStep,
-				QuickActionStep, SeparatorStep, TargetStep, TypeStep {
+				MethodStep, QuickActionStep, SeparatorStep, TargetStep,
+				TypeStep, VisibilityFiltersStep {
 	}
 
-	public interface AfterIdStep 
-		extends BuildStep, DropdownItemsStep, KeyStep, LabelStep,
-				QuickActionStep, SeparatorStep, TargetStep, TypeStep {
+	public interface AfterIdStep
+		extends BuildStep, DropdownItemsStep, KeyStep, LabelStep, MethodStep,
+				QuickActionStep, SeparatorStep, TargetStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterKeyStep
-		extends BuildStep, LabelStep, QuickActionStep, SeparatorStep,
-				TargetStep, TypeStep {
+		extends BuildStep, LabelStep, MethodStep, QuickActionStep,
+				SeparatorStep, TargetStep, TypeStep, VisibilityFiltersStep {
 	}
 
 	public interface AfterLabelStep
-		extends BuildStep, QuickActionStep, SeparatorStep, TargetStep,
-				TypeStep {
+		extends BuildStep, MethodStep, QuickActionStep, SeparatorStep,
+				TargetStep, TypeStep, VisibilityFiltersStep {
+	}
+
+	public interface AfterMethodStep
+		extends BuildStep, QuickActionStep, SeparatorStep, TargetStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterPutDataStep
 		extends ActiveStep, BuildStep, DisabledStep, DropdownItemsStep,
 				HrefStep, IconStep, KeyStep, LabelStep, PutDataStep,
 				QuickActionStep, SeparatorStep, SetDataStep, TargetStep,
-				TypeStep {
+				TypeStep, VisibilityFiltersStep {
 	}
 
 	public interface AfterQuickActionStep
-		extends BuildStep, SeparatorStep, TargetStep, TypeStep {
+		extends BuildStep, SeparatorStep, TargetStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterSeparatorStep
-		extends BuildStep, TargetStep, TypeStep {
+		extends BuildStep, TargetStep, TypeStep, VisibilityFiltersStep {
 	}
 
 	public interface AfterSetDataStep
 		extends BuildStep, DisabledStep, DropdownItemsStep, HrefStep, IconStep,
-				LabelStep, QuickActionStep, SeparatorStep, TargetStep,
-				TypeStep {
+				LabelStep, QuickActionStep, SeparatorStep, TargetStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
-	public interface AfterTargetStep extends BuildStep, TypeStep {
+	public interface AfterTargetStep
+		extends BuildStep, TypeStep, VisibilityFiltersStep {
 	}
 
-	public interface AfterTypeStep extends BuildStep {
+	public interface AfterTypeStep extends BuildStep, VisibilityFiltersStep {
+	}
+
+	public interface AfterVisibilityFiltersStep extends BuildStep {
 	}
 
 	public interface BuildStep {
@@ -712,6 +811,15 @@ public class FDSActionDropdownItemBuilder {
 
 	}
 
+	public interface MethodStep {
+
+		public AfterMethodStep setMethod(String method);
+
+		public AfterMethodStep setMethod(
+			UnsafeSupplier<String, Exception> methodUnsafeSupplier);
+
+	}
+
 	public interface PutDataStep {
 
 		public AfterPutDataStep putData(String key, String value);
@@ -760,6 +868,17 @@ public class FDSActionDropdownItemBuilder {
 
 		public AfterTypeStep setType(
 			UnsafeSupplier<String, Exception> typeUnsafeSupplier);
+
+	}
+
+	public interface VisibilityFiltersStep {
+
+		public AfterVisibilityFiltersStep setVisibilityFilters(
+			Map<String, Object> visibilityFilters);
+
+		public AfterVisibilityFiltersStep setVisibilityFilters(
+			UnsafeSupplier<Map<String, Object>, Exception>
+				setVisibilityFiltersUnsafeSupplier);
 
 	}
 

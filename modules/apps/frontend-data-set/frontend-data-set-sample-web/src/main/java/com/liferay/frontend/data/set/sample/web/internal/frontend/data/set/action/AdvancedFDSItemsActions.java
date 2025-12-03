@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 
@@ -40,7 +41,7 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 	public List<FDSActionDropdownItem> getFDSActionDropdownItems(
 		HttpServletRequest httpServletRequest) {
 
-		//String href = "/o/c/fdssamples/{id}";
+		String href = "/o/c/fdssamples/{id}";
 
 		PortletResponse portletResponse =
 			(PortletResponse)httpServletRequest.getAttribute(
@@ -50,6 +51,98 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 			PortalUtil.getLiferayPortletResponse(portletResponse);
 
 		return FDSActionDropdownItemList.of(
+			FDSActionDropdownItemBuilder.setHref(
+				"#test-visibility-filter"
+			).setIcon(
+				"sun"
+			).setId(
+				"sampleVisibilityFilterMessage"
+			).setLabel(
+				"Sample Visibility Filter"
+			).setTarget(
+				"link"
+			).setVisibilityFilters(
+				HashMapBuilder.<String, Object>put(
+					"color", "Yellow"
+				).build()
+			).build(),
+			FDSActionDropdownItemBuilder.setIcon(
+				"view"
+			).setId(
+				"infoPanel"
+			).setLabel(
+				"View Details"
+			).setTarget(
+				"infoPanel"
+			).build(),
+			FDSActionDropdownItemBuilder.setIcon(
+				"view"
+			).setId(
+				"sampleMessage"
+			).setLabel(
+				"Sample View"
+			).setTarget(
+				"link"
+			).build(),
+			FDSActionDropdownItemBuilder.setHref(
+				"#test-pencil"
+			).setIcon(
+				"pencil"
+			).setId(
+				"sampleEditMessage"
+			).setLabel(
+				"Sample Edit"
+			).setTarget(
+				"link"
+			).build(),
+			FDSActionDropdownItemBuilder.setHref(
+				"#test-delete"
+			).setIcon(
+				"times-circle"
+			).setId(
+				"sampleDeleteMessage"
+			).setLabel(
+				"Sample Delete"
+			).setTarget(
+				"link"
+			).build(),
+			FDSActionDropdownItemBuilder.setHref(
+				"#test-copy"
+			).setIcon(
+				"copy"
+			).setId(
+				"sampleMoveFolderMessage"
+			).setLabel(
+				"Sample Copy"
+			).setTarget(
+				"link"
+			).build(),
+			FDSActionDropdownItemBuilder.setHref(
+				href
+			).setIcon(
+				"truck"
+			).setId(
+				"asyncSuccess"
+			).setLabel(
+				"Async Success"
+			).setMethod(
+				"get"
+			).setTarget(
+				"async"
+			).build(),
+			FDSActionDropdownItemBuilder.setHref(
+				"http://localhost"
+			).setIcon(
+				"times-circle"
+			).setId(
+				"asyncErrorConnectionRefused"
+			).setLabel(
+				"Async Connection Refused"
+			).setMethod(
+				"get"
+			).setTarget(
+				"async"
+			).build(),
 			FDSActionDropdownItemBuilder.putData(
 				"disableHeader", "false"
 			).putData(
@@ -86,7 +179,7 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 			).setIcon(
 				"rectangle-split"
 			).setId(
-			 	"open-side-panel-no-title"
+				"open-side-panel-no-title"
 			).setLabel(
 				"Side Panel With Action and Content Title"
 			).setTarget(
@@ -110,8 +203,55 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 				"Side Panel With Content Title"
 			).setTarget(
 				"sidePanel"
-			).build()
-		);
+			).build(),
+			FDSActionDropdownItemBuilder.setHref(
+				PortletURLBuilder.createRenderURL(
+					liferayPortletResponse
+				).setMVCRenderCommandName(
+					"/side_panel/empty"
+				).setWindowState(
+					LiferayWindowState.POP_UP
+				).buildString()
+			).setIcon(
+				"rectangle-split"
+			).setId(
+				"open-side-panel-without-title"
+			).setLabel(
+				"Side Panel With No Title"
+			).setTarget(
+				"sidePanel"
+			).build(),
+			FDSActionDropdownItemBuilder.setHref(
+				href + "/abc"
+			).setIcon(
+				"staging"
+			).setId(
+				"asyncErrorResourceNotFound"
+			).setLabel(
+				"Async Resource Not Found"
+			).setMethod(
+				"get"
+			).setTarget(
+				"async"
+			).build(),
+			FDSActionDropdownItemBuilder.setIcon(
+				"reload"
+			).setId(
+				"reload"
+			).setLabel(
+				"Reload Data"
+			).setTarget(
+				"link"
+			).build(),
+			FDSActionDropdownItemBuilder.setIcon(
+				"rectangle-split"
+			).setId(
+				"openSidePanel"
+			).setLabel(
+				"Open Side Panel"
+			).setTarget(
+				"link"
+			).build());
 	}
 
 	@Override
