@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 
@@ -50,7 +51,7 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 			PortalUtil.getLiferayPortletResponse(portletResponse);
 
 		return FDSActionDropdownItemList.of(
-			/*FDSActionDropdownItemBuilder.setHref(
+			FDSActionDropdownItemBuilder.setHref(
 				"#test-visibility-filter"
 			).setIcon(
 				"sun"
@@ -64,7 +65,7 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 				HashMapBuilder.<String, Object>put(
 					"color", "Yellow"
 				).build()
-			).build(),*/
+			).build(),
 			FDSActionDropdownItemBuilder.setIcon(
 				"view"
 			).setId(
@@ -290,8 +291,7 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 								"Contextual Sub Item 2"
 							).setTarget(
 								"link"
-							).build()
-						)
+							).build())
 					).setIcon(
 						"nodes"
 					).setId(
@@ -302,8 +302,7 @@ public class AdvancedFDSItemsActions implements FDSItemsActions {
 						false
 					).setType(
 						"contextual"
-					).build()
-				)
+					).build())
 			).setId(
 				"groupItems"
 			).setSeparator(

@@ -407,7 +407,8 @@ public class FDSActionDropdownItemBuilder {
 		FDSActionDropdownItemStep fdsActionDropdownItemStep =
 			new FDSActionDropdownItemStep();
 
-		return fdsActionDropdownItemStep.setVisibilityFilters(visibilityFilters);
+		return fdsActionDropdownItemStep.setVisibilityFilters(
+			visibilityFilters);
 	}
 
 	public static class FDSActionDropdownItemStep
@@ -421,13 +422,14 @@ public class FDSActionDropdownItemBuilder {
 				   AfterQuickActionStep, AfterRequestBodyStep,
 				   AfterSeparatorStep, AfterSetDataStep,
 				   AfterSuccessMessageStep, AfterTargetStep, AfterTitleStep,
-				   AfterTypeStep, AfterVisibilityFiltersStep, BuildStep, ConfirmationMessageStep,
-				   ConfirmationMessageTypeStep, DisabledStep, DropdownItemsStep,
-				   ErrorMessageStep, HighlightedStep, HrefStep, IconStep,
-				   IdStep, LabelStep, MethodStep, ModalSizeStep,
-				   PermissionKeyStep, PutDataStep, QuickActionStep,
-				   RequestBodyStep, SeparatorStep, SetDataStep,
-				   SuccessMessageStep, TargetStep, TitleStep, TypeStep, VisibilityFiltersStep {
+				   AfterTypeStep, AfterVisibilityFiltersStep, BuildStep,
+				   ConfirmationMessageStep, ConfirmationMessageTypeStep,
+				   DisabledStep, DropdownItemsStep, ErrorMessageStep,
+				   HighlightedStep, HrefStep, IconStep, IdStep, LabelStep,
+				   MethodStep, ModalSizeStep, PermissionKeyStep, PutDataStep,
+				   QuickActionStep, RequestBodyStep, SeparatorStep, SetDataStep,
+				   SuccessMessageStep, TargetStep, TitleStep, TypeStep,
+				   VisibilityFiltersStep {
 
 		@Override
 		public FDSActionDropdownItem build() {
@@ -1035,20 +1037,20 @@ public class FDSActionDropdownItemBuilder {
 			}
 		}
 
+		@Override
+		public AfterVisibilityFiltersStep setVisibilityFilters(
+			Map<String, Object> visibilityFilters) {
+
+			FDSActionDropdownItemStep fdsActionDropdownItemStep =
+				new FDSActionDropdownItemStep();
+
+			return fdsActionDropdownItemStep.setVisibilityFilters(
+				visibilityFilters);
+		}
+
 		private final FDSActionDropdownItem _fdsActionDropdownItem =
 			new FDSActionDropdownItem();
 
-	}
-
-	@Override
-	public AfterVisibilityFiltersStep setVisibilityFilters(
-		Map<String, Object> visibilityFilters) {
-
-		FDSActionDropdownItemStep fdsActionDropdownItemStep =
-			new FDSActionDropdownItemStep();
-
-		return fdsActionDropdownItemStep.setVisibilityFilters(
-			visibilityFilters);
 	}
 
 	public interface ActiveStep {
@@ -1069,7 +1071,8 @@ public class FDSActionDropdownItemBuilder {
 				FDSActionDropdownItemsStep, HighlightedStep, HrefStep, IconStep,
 				IdStep, LabelStep, MethodStep, ModalSizeStep, PermissionKeyStep,
 				QuickActionStep, RequestBodyStep, SeparatorStep, SetDataStep,
-				SuccessMessageStep, TargetStep, TitleStep, TypeStep, VisibilityFiltersStep {
+				SuccessMessageStep, TargetStep, TitleStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterConfirmationMessageStep
@@ -1086,7 +1089,8 @@ public class FDSActionDropdownItemBuilder {
 				FDSActionDropdownItemsStep, HighlightedStep, HrefStep, IconStep,
 				IdStep, LabelStep, MethodStep, ModalSizeStep, PermissionKeyStep,
 				QuickActionStep, RequestBodyStep, SeparatorStep, SetDataStep,
-				SuccessMessageStep, TargetStep, TitleStep, TypeStep, VisibilityFiltersStep {
+				SuccessMessageStep, TargetStep, TitleStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterDisabledStep
@@ -1094,7 +1098,8 @@ public class FDSActionDropdownItemBuilder {
 				FDSActionDropdownItemsStep, HighlightedStep, HrefStep, IconStep,
 				IdStep, LabelStep, MethodStep, ModalSizeStep, PermissionKeyStep,
 				QuickActionStep, RequestBodyStep, SeparatorStep,
-				SuccessMessageStep, TargetStep, TitleStep, TypeStep, VisibilityFiltersStep {
+				SuccessMessageStep, TargetStep, TitleStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterDropdownItemsStep
@@ -1117,7 +1122,8 @@ public class FDSActionDropdownItemBuilder {
 		extends BuildStep, HighlightedStep, HrefStep, IconStep, IdStep,
 				LabelStep, MethodStep, ModalSizeStep, PermissionKeyStep,
 				QuickActionStep, RequestBodyStep, SeparatorStep,
-				SuccessMessageStep, TargetStep, TitleStep, TypeStep, VisibilityFiltersStep {
+				SuccessMessageStep, TargetStep, TitleStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterHighlightedStep
@@ -1159,7 +1165,8 @@ public class FDSActionDropdownItemBuilder {
 	public interface AfterLabelStep
 		extends BuildStep, MethodStep, ModalSizeStep, PermissionKeyStep,
 				QuickActionStep, RequestBodyStep, SeparatorStep,
-				SuccessMessageStep, TargetStep, TitleStep, TypeStep, VisibilityFiltersStep {
+				SuccessMessageStep, TargetStep, TitleStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterMethodStep
@@ -1176,7 +1183,8 @@ public class FDSActionDropdownItemBuilder {
 
 	public interface AfterPermissionKeyStep
 		extends BuildStep, QuickActionStep, RequestBodyStep, SeparatorStep,
-				SuccessMessageStep, TargetStep, TitleStep, TypeStep, VisibilityFiltersStep {
+				SuccessMessageStep, TargetStep, TitleStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterPutDataStep
@@ -1197,7 +1205,8 @@ public class FDSActionDropdownItemBuilder {
 	}
 
 	public interface AfterSeparatorStep
-		extends BuildStep, SuccessMessageStep, TargetStep, TitleStep, TypeStep, VisibilityFiltersStep {
+		extends BuildStep, SuccessMessageStep, TargetStep, TitleStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
 	public interface AfterSetDataStep
@@ -1207,20 +1216,22 @@ public class FDSActionDropdownItemBuilder {
 	}
 
 	public interface AfterSuccessMessageStep
-		extends BuildStep, TargetStep, TitleStep, TypeStep, VisibilityFiltersStep {
+		extends BuildStep, TargetStep, TitleStep, TypeStep,
+				VisibilityFiltersStep {
 	}
 
-	public interface AfterTargetStep extends BuildStep, TitleStep, TypeStep, VisibilityFiltersStep {
+	public interface AfterTargetStep
+		extends BuildStep, TitleStep, TypeStep, VisibilityFiltersStep {
 	}
 
-	public interface AfterTitleStep extends BuildStep, TypeStep, VisibilityFiltersStep {
+	public interface AfterTitleStep
+		extends BuildStep, TypeStep, VisibilityFiltersStep {
 	}
 
 	public interface AfterTypeStep extends BuildStep, VisibilityFiltersStep {
 	}
 
-	public interface AfterVisibilityFiltersStep
-		extends BuildStep {
+	public interface AfterVisibilityFiltersStep extends BuildStep {
 	}
 
 	public interface BuildStep {
@@ -1449,6 +1460,7 @@ public class FDSActionDropdownItemBuilder {
 
 		public AfterVisibilityFiltersStep setVisibilityFilters(
 			Map<String, Object> visibilityFilters);
+
 	}
 
 }
