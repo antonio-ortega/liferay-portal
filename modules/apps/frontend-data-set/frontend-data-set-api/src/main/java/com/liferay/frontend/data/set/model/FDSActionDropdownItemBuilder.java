@@ -8,6 +8,8 @@ package com.liferay.frontend.data.set.model;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.petra.function.UnsafeSupplier;
 
+import jakarta.portlet.PortletURL;
+
 import java.util.List;
 import java.util.Map;
 
@@ -121,6 +123,22 @@ public class FDSActionDropdownItemBuilder {
 		return fdsActionDropdownItemStep.setIcon(iconUnsafeSupplier);
 	}
 
+	public static AfterIdStep setId(String id) {
+		FDSActionDropdownItemStep fdsActionDropdownItemStep =
+			new FDSActionDropdownItemStep();
+
+		return fdsActionDropdownItemStep.setId(id);
+	}
+
+	public static AfterIdStep setId(
+		UnsafeSupplier<String, Exception> idUnsafeSupplier) {
+
+		FDSActionDropdownItemStep fdsActionDropdownItemStep =
+			new FDSActionDropdownItemStep();
+
+		return fdsActionDropdownItemStep.setId(idUnsafeSupplier);
+	}
+
 	public static AfterLabelStep setLabel(String label) {
 		FDSActionDropdownItemStep fdsActionDropdownItemStep =
 			new FDSActionDropdownItemStep();
@@ -205,15 +223,15 @@ public class FDSActionDropdownItemBuilder {
 	public static class FDSActionDropdownItemStep
 		implements ActiveStep, AfterActiveStep, AfterDisabledStep,
 				   AfterDropdownItemsStep, AfterHrefStep, AfterIconStep,
-				   AfterKeyStep, AfterLabelStep, AfterPutDataStep,
+				   AfterIdStep, AfterKeyStep, AfterLabelStep, AfterPutDataStep,
 				   AfterQuickActionStep, AfterSeparatorStep, AfterSetDataStep,
 				   AfterTargetStep, AfterTypeStep, BuildStep, DisabledStep,
-				   DropdownItemsStep, HrefStep, IconStep, LabelStep,
+				   DropdownItemsStep, HrefStep, IconStep, IdStep, LabelStep,
 				   PutDataStep, QuickActionStep, SeparatorStep, SetDataStep,
 				   TargetStep, TypeStep {
 
 		@Override
-		public DropdownItem build() {
+		public FDSActionDropdownItem build() {
 			return _fdsActionDropdownItem;
 		}
 
@@ -358,6 +376,29 @@ public class FDSActionDropdownItemBuilder {
 
 				if (icon != null) {
 					_fdsActionDropdownItem.setIcon(icon);
+				}
+
+				return this;
+			}
+			catch (Exception exception) {
+				throw new RuntimeException(exception);
+			}
+		}
+
+		public AfterIdStep setId(String id) {
+			_fdsActionDropdownItem.setId(id);
+
+			return this;
+		}
+
+		public AfterIdStep setId(
+			UnsafeSupplier<String, Exception> idUnsafeSupplier) {
+
+			try {
+				String id = idUnsafeSupplier.get();
+
+				if (id != null) {
+					_fdsActionDropdownItem.setId(id);
 				}
 
 				return this;
@@ -535,26 +576,31 @@ public class FDSActionDropdownItemBuilder {
 
 	public interface AfterActiveStep
 		extends BuildStep, DisabledStep, DropdownItemsStep, HrefStep, IconStep,
-				LabelStep, QuickActionStep, SeparatorStep, SetDataStep,
+				IdStep, LabelStep, QuickActionStep, SeparatorStep, SetDataStep,
 				TargetStep, TypeStep {
 	}
 
 	public interface AfterDisabledStep
-		extends BuildStep, DropdownItemsStep, HrefStep, IconStep, LabelStep,
+		extends BuildStep, DropdownItemsStep, HrefStep, IconStep, IdStep, LabelStep,
 				QuickActionStep, SeparatorStep, TargetStep, TypeStep {
 	}
 
 	public interface AfterDropdownItemsStep
-		extends BuildStep, IconStep, KeyStep, LabelStep, QuickActionStep,
+		extends BuildStep, IconStep, IdStep, KeyStep, LabelStep, QuickActionStep,
 				SeparatorStep, TargetStep, TypeStep {
 	}
 
 	public interface AfterHrefStep
-		extends BuildStep, DropdownItemsStep, IconStep, KeyStep, LabelStep,
+		extends BuildStep, DropdownItemsStep, IconStep, IdStep, KeyStep, LabelStep,
 				QuickActionStep, SeparatorStep, TargetStep, TypeStep {
 	}
 
 	public interface AfterIconStep
+		extends BuildStep, DropdownItemsStep, IdStep, KeyStep, LabelStep,
+				QuickActionStep, SeparatorStep, TargetStep, TypeStep {
+	}
+
+	public interface AfterIdStep 
 		extends BuildStep, DropdownItemsStep, KeyStep, LabelStep,
 				QuickActionStep, SeparatorStep, TargetStep, TypeStep {
 	}
@@ -598,7 +644,7 @@ public class FDSActionDropdownItemBuilder {
 
 	public interface BuildStep {
 
-		public DropdownItem build();
+		public FDSActionDropdownItem build();
 
 	}
 
@@ -636,6 +682,15 @@ public class FDSActionDropdownItemBuilder {
 
 		public AfterIconStep setIcon(
 			UnsafeSupplier<String, Exception> iconUnsafeSupplier);
+
+	}
+
+	public interface IdStep {
+
+		public AfterIdStep setId(String id);
+
+		public AfterIdStep setId(
+			UnsafeSupplier<String, Exception> idUnsafeSupplier);
 
 	}
 
