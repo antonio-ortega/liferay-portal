@@ -148,7 +148,7 @@ test(
 
 			expect(
 				fdsSamplePage.table.container.locator(
-					'[data-id="string,creator,name"]'
+					'[data-id="string,creator.name"]'
 				)
 			).toBeVisible();
 		});
