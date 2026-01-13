@@ -43,6 +43,10 @@ public class FDSTableSchemaField {
 		return _contentRendererClientExtension;
 	}
 
+	public boolean isArrayFieldName() {
+		return _arrayFieldName;
+	}
+
 	public boolean isLocalizeLabel() {
 		return _localizeLabel;
 	}
@@ -53,6 +57,12 @@ public class FDSTableSchemaField {
 
 	public FDSTableSchemaField setActionId(String actionId) {
 		_actionId = actionId;
+
+		return this;
+	}
+
+	public FDSTableSchemaField setArrayFieldName(boolean arrayFieldName) {
+		_arrayFieldName = arrayFieldName;
 
 		return this;
 	}
@@ -155,6 +165,7 @@ public class FDSTableSchemaField {
 	}
 
 	private String _actionId;
+	private boolean _arrayFieldName = false;
 	private String _contentRenderer;
 	private boolean _contentRendererClientExtension;
 	private String _contentRendererModuleURL;
