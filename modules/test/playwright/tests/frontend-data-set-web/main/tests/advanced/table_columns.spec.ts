@@ -10,9 +10,9 @@ import {featureFlagsTest} from '../../../../../fixtures/featureFlagsTest';
 import {isolatedSiteTest} from '../../../../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../../../../fixtures/loginTest';
 import {EFDSVisualizationMode, waitForFDS} from '../../../../../utils/waitFor';
-import {fdsSamplePageTest} from '../../fixtures/fdsSamplePageTest';
-import {systemDataSetsPageTest} from '../../../../frontend-data-set-admin-web/main/tests/data-set-admin/fixtures/systemDataSetsPageTest';
 import {waitForAlert} from '../../../../../utils/waitForAlert';
+import {systemDataSetsPageTest} from '../../../../frontend-data-set-admin-web/main/tests/data-set-admin/fixtures/systemDataSetsPageTest';
+import {fdsSamplePageTest} from '../../fixtures/fdsSamplePageTest';
 
 const test = mergeTests(
 	apiHelpersTest,
@@ -107,7 +107,11 @@ test(
 	{tag: '@LPD-75783'},
 	async ({fdsSamplePage, page, systemDataSetsPage}) => {
 		await test.step('Check author column, defined by creator.name field name, is visible', async () => {
-			expect(fdsSamplePage.table.container.locator('[data-id="string,creator,name"]')).toBeVisible();
+			expect(
+				fdsSamplePage.table.container.locator(
+					'[data-id="string,creator,name"]'
+				)
+			).toBeVisible();
 		});
 
 		await test.step('Create System Data Set', async () => {
@@ -137,14 +141,21 @@ test(
 
 			await fdsSamplePage.selectTab('Advanced');
 
-			await waitForFDS({page, visualizationMode: EFDSVisualizationMode.TABLE});
+			await waitForFDS({
+				page,
+				visualizationMode: EFDSVisualizationMode.TABLE,
+			});
 
-			expect(fdsSamplePage.table.container.locator('[data-id="string,creator,name"]')).toBeVisible();
+			expect(
+				fdsSamplePage.table.container.locator(
+					'[data-id="string,creator,name"]'
+				)
+			).toBeVisible();
 		});
 
 		await test.step('Delete used system data set', async () => {
 			await systemDataSetsPage.goto();
-			
+
 			const fdsRows = systemDataSetsPage.pageContainer.locator('.fds tr');
 
 			const advancedSampleRow = fdsRows.filter({

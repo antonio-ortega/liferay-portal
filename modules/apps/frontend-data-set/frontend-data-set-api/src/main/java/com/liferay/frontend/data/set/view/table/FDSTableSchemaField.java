@@ -39,12 +39,12 @@ public class FDSTableSchemaField {
 		return _sortingOrder;
 	}
 
-	public boolean isContentRendererClientExtension() {
-		return _contentRendererClientExtension;
-	}
-
 	public boolean isArrayFieldName() {
 		return _arrayFieldName;
+	}
+
+	public boolean isContentRendererClientExtension() {
+		return _contentRendererClientExtension;
 	}
 
 	public boolean isLocalizeLabel() {
@@ -165,7 +165,7 @@ public class FDSTableSchemaField {
 	}
 
 	private String _actionId;
-	private boolean _arrayFieldName = false;
+	private boolean _arrayFieldName;
 	private String _contentRenderer;
 	private boolean _contentRendererClientExtension;
 	private String _contentRendererModuleURL;
