@@ -5,7 +5,6 @@
 
 package com.liferay.frontend.data.set.view.table;
 
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.StringUtil;
