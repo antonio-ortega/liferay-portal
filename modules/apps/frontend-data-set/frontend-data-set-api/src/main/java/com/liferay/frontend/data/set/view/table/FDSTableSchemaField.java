@@ -119,16 +119,7 @@ public class FDSTableSchemaField {
 		).put(
 			"contentRendererModuleURL", getContentRendererModuleURL()
 		).put(
-			"fieldName",
-			() -> {
-				String fieldName = getFieldName();
-
-				if (fieldName.contains(StringPool.PERIOD)) {
-					return StringUtil.split(fieldName, StringPool.PERIOD);
-				}
-
-				return fieldName;
-			}
+			"fieldName", getFieldName()
 		).put(
 			"localizeLabel", isLocalizeLabel()
 		).put(

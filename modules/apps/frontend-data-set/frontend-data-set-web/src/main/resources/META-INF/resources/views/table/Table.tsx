@@ -85,16 +85,10 @@ const getVisibleFields = ({
 	visibleFieldNames,
 }: {
 	fields: Array<any>;
-	visibleFieldNames: VisibleFieldNames;
+	visibleFieldNames: Array<string>;
 }) => {
 	const visibleFields = fields.filter(
-		({fieldName}: {fieldName: string | string[]}) => {
-			if (Array.isArray(fieldName)) {
-				return visibleFieldNames[fieldName.join(',')];
-			}
-
-			return visibleFieldNames[fieldName.replaceAll('.', ',')];
-		}
+		({fieldName}) => visibleFieldNames[fieldName]
 	);
 
 	return visibleFields.length ? visibleFields : fields;
