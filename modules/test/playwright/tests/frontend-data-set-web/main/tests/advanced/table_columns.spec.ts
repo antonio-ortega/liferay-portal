@@ -109,7 +109,7 @@ test(
 		await test.step('Check author column, defined by creator.name field name, is visible', async () => {
 			expect(
 				fdsSamplePage.table.container.locator(
-					'[data-id="string,creator,name"]'
+					'[data-id="string,creator.name"]'
 				)
 			).toBeVisible();
 		});
