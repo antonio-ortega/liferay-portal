@@ -965,7 +965,7 @@ for (const spaConfiguration of spaConfigurations) {
 			{tag: '@LPD-20947'},
 			async ({fdsSamplePage, page}) => {
 				const tableFields = {
-					Author: 'creator,name',
+					Author: 'creator.name',
 					ID: 'id',
 					Title: 'title',
 				};
