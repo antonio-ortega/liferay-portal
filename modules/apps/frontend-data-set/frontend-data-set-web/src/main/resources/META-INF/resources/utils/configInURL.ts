@@ -29,7 +29,7 @@ export function readConfigFromURL(id: string): Partial<IConfigInURL> | null {
 	let config = {};
 
 	try {
-		config = JsonURL.parse(configParam);
+		config = JsonURL.parse(configParam,  { AQF: true, noEmptyComposite: true });
 	}
 	catch (error) {
 		return null;
@@ -76,7 +76,7 @@ export function writeConfigInURL(
 	params.set(
 		getConfigParamName(id),
 		JsonURL.stringify(
-			sortObjectKeys({...(currentConfig || {}), ...config})
+			sortObjectKeys({...(currentConfig || {}), ...config}), { AQF: true, noEmptyComposite: true }
 		) || ''
 	);
 
