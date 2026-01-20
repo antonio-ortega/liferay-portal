@@ -54,7 +54,7 @@ const getConfigFromURL = (
 	let config = {};
 
 	try {
-		config = JsonURL.parse(configParam);
+		config = JsonURL.parse(configParam,  { AQF: true, noEmptyComposite: true });
 	}
 	catch (error) {
 		return null;
