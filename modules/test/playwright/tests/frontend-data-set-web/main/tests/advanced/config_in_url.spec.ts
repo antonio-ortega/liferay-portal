@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import JsonURL from '@jsonurl/jsonurl';
 import {Page, expect, mergeTests} from '@playwright/test';
 
 import {apiHelpersTest} from '../../../../../fixtures/apiHelpersTest';
@@ -13,7 +14,6 @@ import {loginTest} from '../../../../../fixtures/loginTest';
 import {EFDSVisualizationMode, waitForFDS} from '../../../../../utils/waitFor';
 import {fdsSamplePageTest} from '../../fixtures/fdsSamplePageTest';
 import {FDSSamplePage} from '../../pages/FDSSamplePage';
-import JsonURL from '@jsonurl/jsonurl';
 
 interface IConfigInURL {
 	delta: number;
@@ -54,7 +54,10 @@ const getConfigFromURL = (
 	let config = {};
 
 	try {
-		config = JsonURL.parse(configParam,  { AQF: true, noEmptyComposite: true });
+		config = JsonURL.parse(configParam, {
+			AQF: true,
+			noEmptyComposite: true,
+		});
 	}
 	catch (error) {
 		return null;
