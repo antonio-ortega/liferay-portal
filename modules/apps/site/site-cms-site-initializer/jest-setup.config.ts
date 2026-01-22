@@ -31,13 +31,13 @@ jest.mock('@ckeditor/ckeditor5-table/dist/index', () => ({}));
 jest.mock('@ckeditor/ckeditor5-ui/dist/index', () => ({}));
 jest.mock('@ckeditor/ckeditor5-widget/dist/index', () => ({}));
 jest.mock('@jsonurl/jsonurl', () => ({
-    parse: jest.fn((str) => JSON.parse(str)),
-    stringify: jest.fn((obj) => JSON.stringify(obj)),
-    __esModule: true,
-    default: {
-        parse: jest.fn((str) => JSON.parse(str)),
-        stringify: jest.fn((obj) => JSON.stringify(obj)),
-    },
+	__esModule: true,
+	default: {
+		parse: jest.fn((str) => JSON.parse(str)),
+		stringify: jest.fn((object) => JSON.stringify(object)),
+	},
+	parse: jest.fn((str) => JSON.parse(str)),
+	stringify: jest.fn((object) => JSON.stringify(object)),
 }));
 
 class MockBroadcastChannel {
