@@ -128,6 +128,7 @@ export interface ICreationActionItem {
 }
 
 export enum EItemActionsType {
+	CONTEXTUAL = 'contextual',
 	GROUP = 'group',
 	ITEM = 'item',
 }
