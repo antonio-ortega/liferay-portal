@@ -756,43 +756,33 @@ const FrontendDataSetContent = ({
 			return;
 		}
 
-		const unfrozenGlobalFDSState = deepClone(globalFDSState);
+		const updatedFilters: Array<IBaseFilterState> = [];
 
-		const configInURL: Partial<IConfigInURL> | null = readConfigFromURL(id);
+		const urlFilters = getFilters();
 
-		const shouldUpdateFilters = unfrozenGlobalFDSState.filters.some(
-			(filter: IBaseFilterState) => {
-				if (filter.preloadedData || filter.selectedData) {
-					const preloadedData = JSON.stringify(filter.preloadedData);
-					const selectedData = JSON.stringify(filter.selectedData);
+		globalFDSState.filters.some((filter: IBaseFilterState) => {
+			if (filter.preloadedData || filter.selectedData) {
+				const initialFiltersRemoved = urlFilters && !urlFilters.length;
+				const preloadedData = JSON.stringify(filter.preloadedData);
+				const selectedData = JSON.stringify(filter.selectedData);
 
-					return (
-						preloadedData !== selectedData ||
-						(preloadedData === selectedData &&
-							configInURL?.filters?.some(
-								(filterURL) => filterURL.id === filter.id
-							))
-					);
+				if (initialFiltersRemoved || preloadedData !== selectedData) {
+					updatedFilters.push(filter);
 				}
-
-				return false;
 			}
-		);
+		});
 
-		if (shouldUpdateFilters) {
-			updateConfigInURL({
-				[EConfigInURLKeys.ACTIVE_FILTERS]:
-					unfrozenGlobalFDSState.filters,
-			});
-		}
+		const searchParam = getSearchParam();
+		const searchQuery = globalFDSState.search.query;
 
-		if (
-			(unfrozenGlobalFDSState.search.query || configInURL?.q) &&
-			unfrozenGlobalFDSState.search.query !== configInURL?.q
-		) {
+		const searchHasChanged =
+			(searchParam ?? '') !== (searchQuery ?? '') &&
+			(searchParam || searchQuery);
+
+		if (updatedFilters.length || searchHasChanged) {
 			updateConfigInURL({
-				[EConfigInURLKeys.SEARCH_PARAM]:
-					unfrozenGlobalFDSState.search.query,
+				[EConfigInURLKeys.ACTIVE_FILTERS]: updatedFilters,
+				[EConfigInURLKeys.SEARCH_PARAM]: globalFDSState.search.query,
 			});
 		}
 
@@ -806,9 +796,10 @@ const FrontendDataSetContent = ({
 			});
 		}
 	}, [
+		getFilters,
+		getSearchParam,
 		globalFDSState,
 		globalFDSStateInitialized,
-		id,
 		updateConfigInURL,
 		viewsDispatch,
 	]);
@@ -1158,7 +1149,7 @@ const FrontendDataSetContent = ({
 		}
 	}, [dataSetWrapperRef]);
 
-	const getInitialFilters = useCallback(() => {
+	const mappedInitialFilters = useMemo(() => {
 		return initialFilters
 			?.filter((filter: any) => filter.preloadedData)
 			.map((filter: any) => {
@@ -1177,7 +1168,7 @@ const FrontendDataSetContent = ({
 			value: IConfigInURL[keyof IConfigInURL];
 		}> = [];
 
-		const initialFilters = getInitialFilters();
+		const initialFilters = mappedInitialFilters;
 		const searchParam = getSearchParam();
 		const urlFilters = getFilters();
 
@@ -1265,13 +1256,13 @@ const FrontendDataSetContent = ({
 	}, [
 		getActiveSorts,
 		getDelta,
-		getInitialFilters,
 		getFilters,
 		getPageNumber,
 		getSearchParam,
 		getView,
 		getVisibleFields,
 		globalFDSState,
+		mappedInitialFilters,
 		paginationDelta,
 		setGlobalFDSState,
 		sorts,
