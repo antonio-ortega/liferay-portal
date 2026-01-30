@@ -756,43 +756,67 @@ const FrontendDataSetContent = ({
 			return;
 		}
 
-		const unfrozenGlobalFDSState = deepClone(globalFDSState);
-
 		const configInURL: Partial<IConfigInURL> | null = readConfigFromURL(id);
 
-		const shouldUpdateFilters = unfrozenGlobalFDSState.filters.some(
-			(filter: IBaseFilterState) => {
-				if (filter.preloadedData || filter.selectedData) {
-					const preloadedData = JSON.stringify(filter.preloadedData);
-					const selectedData = JSON.stringify(filter.selectedData);
+		const urlFilters = configInURL?.filters;
+		const urlSearch = configInURL?.q;
 
-					return (
-						preloadedData !== selectedData ||
-						(preloadedData === selectedData &&
-							configInURL?.filters?.some(
-								(filterURL) => filterURL.id === filter.id
-							))
-					);
+		let updatedFilters: Array<IBaseFilterState> | null = [];
+		const updatedSearch = globalFDSState.search.query;
+
+		let hasPreloadedFilter = false;
+
+		globalFDSState.filters.some((filter: IBaseFilterState) => {
+			const preloadedData = JSON.stringify(filter.preloadedData);
+			const selectedData = JSON.stringify(filter.selectedData);
+
+			if (selectedData) {
+				if (
+					!preloadedData ||
+					preloadedData !== selectedData ||
+					configInURL?.filters?.some(
+						(filterURL) => filterURL.id === filter.id
+					)
+				) {
+					updatedFilters?.push(filter);
 				}
-
-				return false;
+				else {
+					hasPreloadedFilter = true;
+				}
 			}
-		);
+			else if (preloadedData) {
+				if (filter.type === 'selection') {
+					const newSelectionFilter = structuredClone(
+						filter
+					) as ISelectionFilterState;
 
-		if (shouldUpdateFilters) {
-			updateConfigInURL({
-				[EConfigInURLKeys.ACTIVE_FILTERS]:
-					unfrozenGlobalFDSState.filters,
-			});
+					newSelectionFilter.active = true;
+					newSelectionFilter.selectedData = {
+						exclude: false,
+						selectedItems: newSelectionFilter.items,
+					};
+
+					updatedFilters?.push(newSelectionFilter);
+				}
+			}
+		});
+
+		if (!updatedFilters.length && !hasPreloadedFilter) {
+			updatedFilters = null;
 		}
 
-		if (
-			(unfrozenGlobalFDSState.search.query || configInURL?.q) &&
-			unfrozenGlobalFDSState.search.query !== configInURL?.q
-		) {
+		const hasFilterChanged = !!urlFilters || !!updatedFilters?.length;
+
+		const hasSearchChanged =
+			(urlSearch ?? '') !== (updatedSearch ?? '') &&
+			(urlSearch || updatedSearch);
+
+		if (hasFilterChanged || hasSearchChanged) {
 			updateConfigInURL({
-				[EConfigInURLKeys.SEARCH_PARAM]:
-					unfrozenGlobalFDSState.search.query,
+				[EConfigInURLKeys.ACTIVE_FILTERS]: hasFilterChanged
+					? updatedFilters
+					: urlFilters,
+				[EConfigInURLKeys.SEARCH_PARAM]: globalFDSState.search.query,
 			});
 		}
 
