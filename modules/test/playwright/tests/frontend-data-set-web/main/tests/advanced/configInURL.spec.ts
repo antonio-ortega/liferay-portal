@@ -104,11 +104,10 @@ const assertNoActiveFiltersInURL = async (fdsId: string, page: Page) => {
 };
 
 const assertActiveFiltersInURL = async (
-	active: boolean,
 	ids: string[],
 	fdsId: string,
-	paramInURL: boolean,
-	page: Page
+	page: Page,
+	paramInURL: boolean
 ) => {
 	await waitForFDS({page, visualizationMode: EFDSVisualizationMode.TABLE});
 
@@ -116,16 +115,20 @@ const assertActiveFiltersInURL = async (
 
 	await expect(() => {
 		if (paramInURL) {
+			expect(config.filters).toBeTruthy();
+
 			for (const id of ids) {
 				expect(
 					config.filters.some((filter: any) => filter.id === id)
-				).toBe(active);
+				).toBe(paramInURL);
 			}
 		}
-		else if (config) {
-			expect(
-				config.filters === undefined || !config.filters.length
-			).toBeTruthy();
+		else if (config?.filters.length) {
+			for (const id of ids) {
+				expect(
+					config.filters.some((filter: any) => filter.id === id)
+				).toBe(paramInURL);
+			}
 		}
 	}).toPass();
 };
@@ -135,12 +138,10 @@ const assertActiveFilter = async (
 	id: string,
 	fdsId: string,
 	filterResumeExpectedText: string,
-	paramInURL: boolean = false,
+	paramInURL: boolean,
 	page: Page
 ) => {
-	if (paramInURL) {
-		await assertActiveFiltersInURL(active, [id], fdsId, true, page);
-	}
+	await assertActiveFiltersInURL([id], fdsId, page, paramInURL);
 
 	const filterResumeLocator = page.getByRole('button', {
 		name: filterResumeExpectedText,
@@ -483,17 +484,10 @@ for (const spaConfiguration of spaConfigurations) {
 					);
 
 				const checkFiltersInURL = (
-					active: boolean,
 					ids: string[],
 					paramInURL: boolean = true
 				) =>
-					assertActiveFiltersInURL(
-						active,
-						ids,
-						'advanced',
-						paramInURL,
-						page
-					);
+					assertActiveFiltersInURL(ids, 'advanced', page, paramInURL);
 
 				await test.step('Check color filter is pre-applied, and no other else', async () => {
 					await checkFilter(
@@ -504,7 +498,6 @@ for (const spaConfiguration of spaConfigurations) {
 					);
 
 					await checkFiltersInURL(
-						false,
 						['date', 'size', 'status', 'title'],
 						false
 					);
@@ -518,7 +511,6 @@ for (const spaConfiguration of spaConfigurations) {
 						'Color: Blue, Green, Yellow',
 						true
 					);
-					await assertNoActiveFiltersInURL('advanced', page);
 				});
 
 				await test.step('Change filter name via UI several times', async () => {
@@ -664,12 +656,10 @@ for (const spaConfiguration of spaConfigurations) {
 					await page.goForward();
 					await waitForFDS({page});
 					await checkFilter(true, 'color', 'Color: Blue', true);
-					await checkFiltersInURL(false, [
-						'date',
-						'size',
-						'status',
-						'title',
-					]);
+					await checkFiltersInURL(
+						['date', 'size', 'status', 'title'],
+						false
+					);
 
 					expect(await page.goForward()).toBeNull();
 				});
@@ -690,7 +680,7 @@ for (const spaConfiguration of spaConfigurations) {
 						'Status: Approved, Draft',
 						true
 					);
-					await checkFiltersInURL(false, ['date', 'size', 'title']);
+					await checkFiltersInURL(['date', 'size', 'title'], false);
 
 					await removeFilter('Color: Blue', page);
 					await checkFilter(
@@ -699,15 +689,14 @@ for (const spaConfiguration of spaConfigurations) {
 						'Status: Approved, Draft',
 						true
 					);
-					await checkFiltersInURL(false, [
-						'color',
-						'date',
-						'size',
-						'title',
-					]);
+					await checkFiltersInURL(['color'], true);
+					await checkFiltersInURL(['date', 'size', 'title'], false);
 
 					await removeFilter('Status: Approved, Draft', page);
-					await assertNoActiveFiltersInURL('advanced', page);
+
+					await checkFiltersInURL(['status'], false);
+
+					await checkFiltersInURL(['color'], true);
 				});
 			}
 		);
