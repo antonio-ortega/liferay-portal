@@ -94,6 +94,11 @@ public class ViewAllSectionSystemFDSEntry implements SystemFDSEntry {
 	}
 
 	@Override
+	public boolean getSnapshotsEnabled() {
+		return true;
+	}
+
+	@Override
 	public String getSymbol() {
 		return "sheets";
 	}
