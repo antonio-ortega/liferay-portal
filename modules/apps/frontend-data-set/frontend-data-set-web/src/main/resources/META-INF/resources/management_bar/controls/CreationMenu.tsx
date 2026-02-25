@@ -21,7 +21,11 @@ const MEDIUM_BREAKPOINT = 768;
 
 const DropdownTrigger = React.forwardRef(
 	(
-		{inEmptyState, ...otherProps}: {inEmptyState: boolean},
+		{
+			hideManagementBarInEmptyState,
+			inEmptyState,
+			...otherProps
+		}: {hideManagementBarInEmptyState: boolean; inEmptyState: boolean},
 		ref: Ref<HTMLButtonElement>
 	) => {
 		const {width} = useWindowSize();
@@ -32,7 +36,11 @@ const DropdownTrigger = React.forwardRef(
 					{...otherProps}
 					className={!inEmptyState ? 'nav-btn px-3' : undefined}
 					data-testid="fdsCreationActionButton"
-					displayType={inEmptyState ? 'secondary' : 'primary'}
+					displayType={
+						inEmptyState && hideManagementBarInEmptyState
+							? 'primary'
+							: 'secondary'
+					}
 					ref={ref}
 				>
 					<span className="inline-item inline-item-before">
@@ -63,9 +71,11 @@ const DropdownTrigger = React.forwardRef(
 );
 
 const DropDown = ({
+	hideManagementBarInEmptyState,
 	inEmptyState,
 	primaryItems,
 }: {
+	hideManagementBarInEmptyState: boolean;
 	inEmptyState: boolean;
 	primaryItems: Array<ICreationActionItem>;
 }) => {
@@ -79,7 +89,14 @@ const DropDown = ({
 		<ClayDropDown
 			active={active}
 			onActiveChange={setActive}
-			trigger={<DropdownTrigger inEmptyState={inEmptyState} />}
+			trigger={
+				<DropdownTrigger
+					hideManagementBarInEmptyState={
+						hideManagementBarInEmptyState
+					}
+					inEmptyState={inEmptyState}
+				/>
+			}
 		>
 			<ClayDropDown.ItemList>
 				{primaryItems.map((item, i) => (
@@ -200,9 +217,11 @@ function CreationButton({
 }
 
 function CreationMenu({
+	hideManagementBarInEmptyState,
 	inEmptyState,
 	primaryItems,
 }: {
+	hideManagementBarInEmptyState: boolean;
 	inEmptyState: boolean;
 	primaryItems: Array<ICreationActionItem>;
 }) {
@@ -219,6 +238,9 @@ function CreationMenu({
 			<li className="nav-item">
 				{primaryItems.length > 1 ? (
 					<DropDown
+						hideManagementBarInEmptyState={
+							hideManagementBarInEmptyState
+						}
 						inEmptyState={inEmptyState}
 						primaryItems={primaryItems}
 					/>
