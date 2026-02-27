@@ -135,13 +135,18 @@ test('A user with "View" and "Permissions" permission', async ({
 	});
 
 	await test.step('Check that the "Permissions" button action is visible', async () => {
+		await openActionsDropdown({
+			customDataSetsPage,
+			text: blogPostsDataSetConfig.name,
+		});
+
 		await expect(
-			customDataSetsPage.dataSetPermissionsButton.first()
+			customDataSetsPage.dataSetPermissionsMenuItem.first()
 		).toBeVisible();
 	});
 
 	await test.step('Open Permissions modal', async () => {
-		await customDataSetsPage.dataSetPermissionsButton.first().click();
+		await customDataSetsPage.dataSetPermissionsMenuItem.first().click();
 
 		await expect(
 			customDataSetsPage.permissionsModal.locator('#guest_ACTION_VIEW')
@@ -183,7 +188,12 @@ test('A user with "View" and "Permissions" permission', async ({
 	});
 
 	await test.step('Open Permissions modal', async () => {
-		await customDataSetsPage.dataSetPermissionsButton.first().click();
+		await openActionsDropdown({
+			customDataSetsPage,
+			text: blogPostsDataSetConfig.name,
+		});
+
+		await customDataSetsPage.dataSetPermissionsMenuItem.first().click();
 	});
 
 	await test.step('Confirm "View" permission is persisted', async () => {
@@ -344,7 +354,7 @@ test('A user with "Delete" permission', async ({
 
 	await test.step('Check that "Delete" is visible', async () => {
 		await expect(
-			customDataSetsPage.dataSetDeleteButton.first()
+			customDataSetsPage.dataSetDeleteMenuItem.first()
 		).toBeVisible();
 	});
 });
@@ -497,13 +507,18 @@ test('Check "Edit" permission', async ({
 	});
 
 	await test.step('Check that the user has only "Edit" option on actions menu', async () => {
+		await openActionsDropdown({
+			customDataSetsPage,
+			text: blogPostsDataSetConfig.name,
+		});
+
 		await expect(
-			customDataSetsPage.dataSetEditButton.first()
+			customDataSetsPage.dataSetEditMenuItem.first()
 		).toBeVisible();
 	});
 
 	await test.step('Check that the user can now edit the data set', async () => {
-		await customDataSetsPage.dataSetEditButton.first().click();
+		await customDataSetsPage.dataSetEditMenuItem.first().click();
 
 		await expect(
 			page.getByRole('heading', {name: 'Details'})
