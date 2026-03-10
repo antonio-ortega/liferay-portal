@@ -1,0 +1,18 @@
+assemble:
+    -   from: build/static
+        into: static
+liferay-sample-custom-element-7:
+    friendlyURLMapping: liferay-sample-custom-element-7
+    htmlElementName: liferay-sample-custom-element-7
+    instanceable: false
+    name: Liferay Sample Custom Element 7
+    portletCategoryName: category.client-extensions
+    type: customElement
+    urls:
+        -   main.*.js
+    useESM: true
+liferay-sample-custom-element-7-frontend-js-import-maps-entry:
+    bareSpecifier: liferay-sample-custom-element-7
+    name: Liferay Sample Custom Element 7 Frontend JS Import Maps Entry
+    type: jsImportMapsEntry
+    url: main.*.js
