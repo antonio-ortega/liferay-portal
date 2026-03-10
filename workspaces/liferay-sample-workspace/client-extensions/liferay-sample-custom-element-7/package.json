@@ -1,0 +1,15 @@
+{
+	"dependencies": {
+		"@clayui/button": "^3.159.0",
+		"@clayui/form": "^3.159.0",
+		"@clayui/layout": "^3.159.0",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0"
+	},
+	"name": "@liferay/liferay-sample-custom-element-7",
+	"private": true,
+	"scripts": {
+		"build": "esbuild src/main.tsx --outdir=build/static --bundle --entry-names=[name].[hash] --format=esm --external:react --external:react-dom --loader:.js=jsx"
+	},
+	"version": "0.0.0"
+}
