@@ -11,9 +11,9 @@ const ELEMENT_ID = 'liferay-sample-custom-element-7';
 
 class LiferaySampleCustomElement extends HTMLElement {
 	connectedCallback() {
-		const fdsAtomKey = this.getAttribute('fdsAtomKey');
-		if (fdsAtomKey){
-			createRoot(this).render(<AdvancedSearch fdsAtomKey={`${fdsAtomKey}_fdsState`} />);
+		const fdsName = this.getAttribute('fdsName');
+		if (fdsName){
+			createRoot(this).render(<AdvancedSearch fdsAtomKey={`${fdsName}_fdsState`} />);
 		}
 	}
 }
