@@ -3,11 +3,23 @@ import {ClayInput} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import React, {useEffect, useState} from 'react';
 
+import type {paquito} from '../../../../../../liferay-frontend-projects/projects/js-toolkit/packages/js-api/data-set';
+
+import useLiferayState from '../../../../../../liferay-frontend-projects/projects/js-toolkit/packages/js-api/data-set';
+
 const AdvancedSearch = ({fdsAtomKey}: {fdsAtomKey: string}) => {
 	const [advancedFDSState, setAdvancedFDSState] = useState(null);
 	const [query, setQuery] = useState(advancedFDSState?.search?.query ?? '');
 
 	const globalState = (window as any).Liferay?.State.__unsafe__;
+
+	const saludoPaquito: paquito = ({argname, argtype}) => {
+		return `Hola ${argname}, veo que tu tipo es ${argtype}`;
+	};
+
+	console.log(saludoPaquito({argname: 'Antonio', argtype: 'string'}));
+
+	console.log(useLiferayState());
 
 	function waitForGlobalVariable(key: string) {
 		return new Promise<any>((resolve) => {
