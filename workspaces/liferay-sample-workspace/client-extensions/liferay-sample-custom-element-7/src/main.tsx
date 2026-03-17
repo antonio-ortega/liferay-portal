@@ -5,7 +5,7 @@
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 
-import AdvancedSearch from './AdvancedSearch';
+import ClassicSearch from './ClassicSearch';
 
 const ELEMENT_ID = 'liferay-sample-custom-element-7';
 
@@ -13,7 +13,7 @@ class LiferaySampleCustomElement extends HTMLElement {
 	connectedCallback() {
 		const fdsName = this.getAttribute('fdsName');
 		if (fdsName){
-			createRoot(this).render(<AdvancedSearch fdsAtomKey={`${fdsName}_fdsState`} />);
+			createRoot(this).render(<ClassicSearch fdsAtomKey={`${fdsName}_fdsState`} />);
 		}
 	}
 }
