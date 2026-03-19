@@ -1,0 +1,38 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+fds-state-monitor {
+	display: block;
+	font-family: monospace;
+	padding: 1em;
+}
+
+fds-state-monitor .status {
+	color: #6b6c7e;
+	margin-bottom: 0.5em;
+}
+
+fds-state-monitor .status.connected {
+	color: #287d3c;
+}
+
+fds-state-monitor .status.error {
+	color: #da1414;
+}
+
+fds-state-monitor .state-display {
+	background: #f1f2f5;
+	border: 1px solid #e7e7ed;
+	border-radius: 4px;
+	margin: 0.5em 0;
+	max-height: 300px;
+	overflow: auto;
+	padding: 0.75em;
+	white-space: pre-wrap;
+}
+
+fds-state-monitor .actions button {
+	margin: 0.25em;
+}

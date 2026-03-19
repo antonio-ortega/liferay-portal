@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"esModuleInterop": true,
+		"jsx":"react",
+		"lib": [
+			"DOM",
+			"ES2020"
+		],
+		"module": "ES2020",
+		"moduleResolution": "node",
+		"outDir": "./build",
+		"paths": {
+			"@liferay/js-api-local/*": [
+				"../../../../../../liferay-frontend-projects/projects/js-toolkit/packages/js-api/*"
+			]
+		},
+		"sourceMap": false,
+		"target": "ES2020",
+		"types": [
+		]
+	},
+	"include": [
+		"./src/**/*",
+		"../../../../../../liferay-frontend-projects/projects/js-toolkit/packages/js-api/liferay.d.ts"
+	]
+}

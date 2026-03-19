@@ -1,0 +1,15 @@
+assemble:
+    -   from: build/static
+        into: static
+liferay-sample-fds-state-monitor:
+    cssURLs:
+        -   style.*.css
+    friendlyURLMapping: fds-state-monitor
+    htmlElementName: fds-state-monitor
+    instanceable: true
+    name: Liferay Sample FDS State Monitor
+    portletCategoryName: category.client-extensions
+    type: customElement
+    urls:
+        -   index.*.js
+    useESM: true
