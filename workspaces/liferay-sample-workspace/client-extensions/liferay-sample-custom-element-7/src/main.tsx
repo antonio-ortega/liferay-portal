@@ -13,7 +13,7 @@ class LiferaySampleCustomElement extends HTMLElement {
 	connectedCallback() {
 		const fdsName = this.getAttribute('fdsName');
 		if (fdsName){
-			createRoot(this).render(<ClassicSearch fdsAtomKey={`${fdsName}_fdsState`} />);
+			createRoot(this).render(<ClassicSearch fdsName={fdsName} />);
 		}
 	}
 }

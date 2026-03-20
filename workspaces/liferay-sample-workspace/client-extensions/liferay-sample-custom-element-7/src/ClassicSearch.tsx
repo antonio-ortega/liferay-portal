@@ -3,38 +3,37 @@ import {ClayInput} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import React, {useEffect, useState} from 'react';
 
-const ClassicSearch = ({fdsAtomKey}: {fdsAtomKey: string}) => {
-	const [classicFDSState, setClassicFDSState] = useState(null);
-	const [query, setQuery] = useState(classicFDSState?.search?.query ?? '');
+import {getFDSAtom, FDSState} from '../../../../../../liferay-frontend-projects/projects/js-toolkit/packages/js-api/data-set';
+import {Atom, readAtom, writeAtom, subscribeAtom} from '../../../../../../liferay-frontend-projects/projects/js-toolkit/packages/js-api/state';
 
-	const globalState = (window as any).Liferay?.State.__unsafe__;
-
-	function waitForGlobalVariable(key: string) {
-		return new Promise<any>((resolve) => {
-			const isAvailable = () => {
-				if (globalState.getAtomOrSelectorKey(fdsAtomKey)) {
-					resolve(true);
-				} else {
-					setTimeout(isAvailable, 100);
-				}
-			};
-			isAvailable();
-		});
-	}
+const ClassicSearch = ({fdsName}: {fdsName: string}) => {
+	const [atom, setAtom] = useState<Atom<FDSState> | null>(null);
+	const [classicFDSState, setclassicFDSState] = useState<FDSState | null>(null);
+	const [query, setQuery] = useState('');
 
 	useEffect(() => {
-		waitForGlobalVariable(fdsAtomKey).then(() => {
-			setClassicFDSState(globalState.readKey(fdsAtomKey));
-			
-			globalState.subscribeKey(fdsAtomKey, (newValue: any) => {
-				setClassicFDSState(newValue);
+		let subscription: {dispose: () => void} | null = null;
+
+		getFDSAtom(fdsName).then((fdsAtom) => {
+			setAtom(fdsAtom);
+
+			const currentState = readAtom(fdsAtom);
+			setclassicFDSState(currentState);
+			setQuery(currentState?.search?.query ?? '');
+
+			subscription = subscribeAtom(fdsAtom, (newValue: FDSState) => {
+				setclassicFDSState(newValue);
+				setQuery(newValue?.search?.query ?? '');
 			});
 		});
 
-	}, [waitForGlobalVariable, globalState, fdsAtomKey]);
+		return () => {
+			if (subscription) subscription.dispose();
+		};
+	}, [fdsName]);
 
 	useEffect(() => {
-		setQuery(classicFDSState?.search?.query);
+		setQuery(classicFDSState?.search?.query ?? '');
 	}, [classicFDSState]);
 
 	return (
@@ -52,10 +51,13 @@ const ClassicSearch = ({fdsAtomKey}: {fdsAtomKey: string}) => {
 
 				<ClayInput.GroupItem>
 					<ClayButton
-						data-qa-id="ClassicSearchFDSSampleButton"
+						disabled={!atom}
+						data-qa-id="classicSearchFDSSampleButton"
 						onClick={() => {
-							globalState.writeKey(fdsAtomKey, {
-								...classicFDSState as any,
+							if (!atom || !classicFDSState) return;
+
+							writeAtom(atom, {
+								...classicFDSState,
 								search: {query},
 							});
 						}}
