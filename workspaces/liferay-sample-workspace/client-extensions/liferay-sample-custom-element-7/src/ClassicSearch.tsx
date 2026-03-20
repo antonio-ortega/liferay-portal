@@ -3,9 +3,9 @@ import {ClayInput} from '@clayui/form';
 import ClayLayout from '@clayui/layout';
 import React, {useEffect, useState} from 'react';
 
-const AdvancedSearch = ({fdsAtomKey}: {fdsAtomKey: string}) => {
-	const [advancedFDSState, setAdvancedFDSState] = useState(null);
-	const [query, setQuery] = useState(advancedFDSState?.search?.query ?? '');
+const ClassicSearch = ({fdsAtomKey}: {fdsAtomKey: string}) => {
+	const [classicFDSState, setClassicFDSState] = useState(null);
+	const [query, setQuery] = useState(classicFDSState?.search?.query ?? '');
 
 	const globalState = (window as any).Liferay?.State.__unsafe__;
 
@@ -24,18 +24,18 @@ const AdvancedSearch = ({fdsAtomKey}: {fdsAtomKey: string}) => {
 
 	useEffect(() => {
 		waitForGlobalVariable(fdsAtomKey).then(() => {
-			setAdvancedFDSState(globalState.readKey(fdsAtomKey));
+			setClassicFDSState(globalState.readKey(fdsAtomKey));
 			
 			globalState.subscribeKey(fdsAtomKey, (newValue: any) => {
-				setAdvancedFDSState(newValue);
+				setClassicFDSState(newValue);
 			});
 		});
 
 	}, [waitForGlobalVariable, globalState, fdsAtomKey]);
 
 	useEffect(() => {
-		setQuery(advancedFDSState?.search?.query);
-	}, [advancedFDSState]);
+		setQuery(classicFDSState?.search?.query);
+	}, [classicFDSState]);
 
 	return (
 		<ClayLayout.ContainerFluid>
@@ -45,17 +45,17 @@ const AdvancedSearch = ({fdsAtomKey}: {fdsAtomKey: string}) => {
 						className="form-control"
 						component="input"
 						onChange={({target: {value}}) => setQuery(value)}
-						placeholder="Search in Advanced tab of Frontend Data Set Sample"
+						placeholder="Search in Classic tab of Frontend Data Set Sample"
 						value={query}
 					/>
 				</ClayInput.GroupItem>
 
 				<ClayInput.GroupItem>
 					<ClayButton
-						data-qa-id="advancedSearchFDSSampleButton"
+						data-qa-id="ClassicSearchFDSSampleButton"
 						onClick={() => {
 							globalState.writeKey(fdsAtomKey, {
-								...advancedFDSState as any,
+								...classicFDSState as any,
 								search: {query},
 							});
 						}}
@@ -68,4 +68,4 @@ const AdvancedSearch = ({fdsAtomKey}: {fdsAtomKey: string}) => {
 	);
 };
 
-export default AdvancedSearch;
+export default ClassicSearch;
