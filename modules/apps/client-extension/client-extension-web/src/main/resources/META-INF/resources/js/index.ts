@@ -6,3 +6,4 @@
 export {default as ModalImportClientExtensionEntry} from './components/ModalImportClientExtensionEntry';
 export {default as ScriptElementAttributesFormField} from './components/global-js/ScriptElementAttributesFormField';
 export {default as FrontendTokenDefinitionFilePicker} from './components/theme-css/FrontendTokenDefinitionFilePicker';
+export {default as ClientExtensionFragmentItemSelector} from '../item/selector/ClientExtensionFragmentItemSelector';

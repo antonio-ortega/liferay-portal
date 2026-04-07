@@ -11,6 +11,12 @@
 		"module": "es2022",
 		"moduleResolution": "node",
 		"paths": {
+			"@liferay/frontend-data-set-admin-web": [
+				"../../../../../../frontend-data-set-admin-web/src/main/resources/META-INF/resources/js/index.ts"
+			],
+			"@liferay/frontend-data-set-web": [
+				"../../../../../../frontend-data-set-web/src/main/resources/META-INF/resources/index.ts"
+			],
 			"frontend-js-components-web": [
 				"../../../../../../../frontend-js/frontend-js-components-web/src/main/resources/META-INF/resources/index.ts"
 			],

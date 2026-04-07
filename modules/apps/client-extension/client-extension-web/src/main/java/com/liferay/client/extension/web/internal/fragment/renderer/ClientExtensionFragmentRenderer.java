@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 
 @Component(service = FragmentRenderer.class)
-public class CXFragmentRenderer implements FragmentRenderer {
+public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 
 	@Override
 	public String getCollectionKey() {
@@ -103,7 +103,7 @@ public class CXFragmentRenderer implements FragmentRenderer {
 	}
 
     private static final Log _log = LogFactoryUtil.getLog(
-        CXFragmentRenderer.class);
+        ClientExtensionFragmentRenderer.class);
 
     @Reference
 	private Language _language;

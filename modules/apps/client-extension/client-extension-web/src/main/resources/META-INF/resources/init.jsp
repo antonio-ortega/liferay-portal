@@ -15,15 +15,24 @@ taglib uri="http://liferay.com/tld/editor" prefix="liferay-editor" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/frontend-data-set" prefix="frontend-data-set" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
+taglib uri="http://liferay.com/tld/react" prefix="react" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.client.extension.model.ClientExtensionEntry" %><%@
-page import="com.liferay.portal.kernel.util.Constants" %>
+page import="com.liferay.client.extension.web.internal.constants.ClientExtensionAdminFDSNames" %><%@
+page import="com.liferay.client.extension.web.internal.constants.ClientExtensionFragmentWebKeys" %><%@
+page import="com.liferay.client.extension.web.internal.display.context.ClientExtensionFragmentItemSelectorDisplayContext" %><%@
+page import="com.liferay.portal.kernel.util.Constants" %><%@
+page import="com.liferay.portal.kernel.util.HashMapBuilder" %>
 
 <liferay-frontend:defineObjects />
 
 <liferay-theme:defineObjects />
 
 <portlet:defineObjects />
+
+<%
+ClientExtensionFragmentItemSelectorDisplayContext clientExtensionFragmentItemSelectorDisplayContext = (ClientExtensionFragmentItemSelectorDisplayContext)request.getAttribute(ClientExtensionFragmentWebKeys.CLIENT_EXTENSION_ITEM_SELECTOR_DISPLAY_CONTEXT);
+%>
