@@ -5,8 +5,8 @@
 
 package com.liferay.client.extension.web.internal.fragment.renderer;
 
-import com.liferay.client.extension.model.ClientExtensionEntry;
-import com.liferay.client.extension.service.ClientExtensionEntryServiceUtil;
+import com.liferay.client.extension.type.CET;
+import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,7 +29,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.osgi.service.component.annotations.Component;
@@ -112,12 +115,22 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 
 			long companyId = themeDisplay.getCompanyId();
 
-			ClientExtensionEntry clientExtensionEntry =
-				ClientExtensionEntryServiceUtil.
-					fetchClientExtensionEntryByExternalReferenceCode(
-						externalReferenceCode, companyId);
+			List<CET> clientExtensions = _cetManager.getCETs(
+				companyId, null, null, Pagination.of(-1, -1), null);
 
-			String typeSettings = clientExtensionEntry.getTypeSettings();
+			Optional<CET> clientExtensionEntry = clientExtensions.stream(
+			).filter(
+				cet -> cet.getExternalReferenceCode(
+				).equals(
+					externalReferenceCode
+				)
+			).findFirst();
+
+			String typeSettings = clientExtensionEntry.map(
+				CET::getTypeSettings
+			).orElse(
+				null
+			);
 
 			Properties typeSettingsProps = new Properties();
 
@@ -130,11 +143,23 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 				typeSettingsProps.getProperty("useESM"));
 			String type = useESM ? "module" : "text/javascript";
 
+			String[] urlList = urls.split("_SAFE_NEWLINE_CHARACTER_");
+
+			for (String url : urlList) {
+				if ((url != null) &&
+					!url.trim(
+					).isEmpty()) {
+
+					printWriter.write(
+						StringBundler.concat(
+							"<script src=\"", url.trim(), "\" type=\"", type,
+							"\" data-senna-track=\"temporary\"></script>"));
+				}
+			}
+
 			printWriter.write(
 				StringBundler.concat(
-					"<script src=\"", urls, "\" type=\"", type,
-					"\" data-senna-track=\"temporary\"></script>", "<",
-					htmlElementName, "></", htmlElementName, ">"));
+					"<", htmlElementName, "></", htmlElementName, ">"));
 		}
 		catch (Exception exception) {
 			_log.error("Unable to render client extension", exception);
@@ -145,6 +170,9 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ClientExtensionFragmentRenderer.class);
+
+	@Reference
+	private CETManager _cetManager;
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
