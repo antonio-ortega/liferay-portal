@@ -5,29 +5,34 @@
 
 package com.liferay.client.extension.web.internal.fragment.renderer;
 
+import com.liferay.client.extension.type.CET;
+import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
+import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.vulcan.pagination.Pagination;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Optional;
+import java.util.Properties;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -35,7 +40,6 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Antonio Ortega
  */
-
 @Component(service = FragmentRenderer.class)
 public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 
@@ -60,6 +64,9 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 							"name", "itemSelector"
 						).put(
 							"type", "itemSelector"
+						).put(
+							"typeOptions",
+							JSONUtil.put("itemType", "ClientExtension")
 						)))));
 	}
 
@@ -86,14 +93,73 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 		throws IOException {
 
 		try {
-            PrintWriter printWriter = httpServletResponse.getWriter();
+			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(true);
 
-            printWriter.write(
-            StringBundler.concat(
-                "<div class=\"portlet-msg-info\">",
-                _language.get(
-                    httpServletRequest, "select-a-client-extension"),
-                "</div>"));
+			PrintWriter printWriter = httpServletResponse.getWriter();
+
+			FragmentEntryLink fragmentEntryLink =
+				fragmentRendererContext.getFragmentEntryLink();
+
+			JSONObject jsonObject =
+				(JSONObject)_fragmentEntryConfigurationParser.getFieldValue(
+					getConfigurationJSONObject(fragmentRendererContext),
+					fragmentEntryLink.getEditableValuesJSONObject(),
+					fragmentRendererContext.getLocale(), "itemSelector");
+
+			String externalReferenceCode = jsonObject.getString(
+				"externalReferenceCode");
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			long companyId = themeDisplay.getCompanyId();
+
+			List<CET> clientExtensions = _cetManager.getCETs(
+				companyId, null, null, Pagination.of(-1, -1), null);
+
+			Optional<CET> clientExtensionEntry = clientExtensions.stream(
+			).filter(
+				cet -> cet.getExternalReferenceCode(
+				).equals(
+					externalReferenceCode
+				)
+			).findFirst();
+
+			String typeSettings = clientExtensionEntry.map(
+				CET::getTypeSettings
+			).orElse(
+				null
+			);
+
+			Properties typeSettingsProps = new Properties();
+
+			typeSettingsProps.load(new StringReader(typeSettings));
+
+			String htmlElementName = typeSettingsProps.getProperty(
+				"htmlElementName");
+			String urls = typeSettingsProps.getProperty("urls");
+			boolean useESM = Boolean.parseBoolean(
+				typeSettingsProps.getProperty("useESM"));
+			String type = useESM ? "module" : "text/javascript";
+
+			String[] urlList = urls.split("_SAFE_NEWLINE_CHARACTER_");
+
+			for (String url : urlList) {
+				if ((url != null) &&
+					!url.trim(
+					).isEmpty()) {
+
+					printWriter.write(
+						StringBundler.concat(
+							"<script src=\"", url.trim(), "\" type=\"", type,
+							"\" data-senna-track=\"temporary\"></script>"));
+				}
+			}
+
+			printWriter.write(
+				StringBundler.concat(
+					"<", htmlElementName, "></", htmlElementName, ">"));
 		}
 		catch (Exception exception) {
 			_log.error("Unable to render client extension", exception);
@@ -102,9 +168,16 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 		}
 	}
 
-    private static final Log _log = LogFactoryUtil.getLog(
-        ClientExtensionFragmentRenderer.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ClientExtensionFragmentRenderer.class);
 
-    @Reference
+	@Reference
+	private CETManager _cetManager;
+
+	@Reference
+	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
 	private Language _language;
+
 }

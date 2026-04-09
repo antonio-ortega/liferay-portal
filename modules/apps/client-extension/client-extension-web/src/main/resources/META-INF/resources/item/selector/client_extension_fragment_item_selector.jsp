@@ -7,33 +7,7 @@
 
 <%@ include file="/init.jsp" %>
 
-<aui:style type="text/css">
-	.management-bar-wrapper {
-		background: #fff;
-		margin-left: -100%;
-		margin-right: -100%;
-		padding-left: 100%;
-		padding-right: 100%;
-	}
-
-	.portlet-body {
-		overflow: hidden;
-	}
-</aui:style>
-
-<div class="container-fluid container-fluid-max-xxxl">
-	<frontend-data-set:classic-display
-		actionParameterName="externalReferenceCode"
-		dataProviderKey="<%= ClientExtensionAdminFDSNames.CLIENT_EXTENSION_TYPES %>"
-		id="<%= ClientExtensionAdminFDSNames.CLIENT_EXTENSION_TYPES %>"
-		itemsPerPage="<%= 10 %>"
-		selectedItemsKey="externalReferenceCode"
-		selectionType="single"
-		uniformActionsDisplay="<%= true %>"
-	/>
-</div>
-
-<!-- react:component
+<react:component
 	module="{ClientExtensionFragmentItemSelector} from client-extension-web"
 	props='<%=
 		HashMapBuilder.<String, Object>put(
@@ -44,4 +18,4 @@
 			"namespace", liferayPortletResponse.getNamespace()
 		).build()
 	%>'
-/ -->
+/>
