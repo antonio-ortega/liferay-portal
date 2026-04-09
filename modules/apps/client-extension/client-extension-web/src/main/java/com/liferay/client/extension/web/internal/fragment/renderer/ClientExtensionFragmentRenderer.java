@@ -5,8 +5,13 @@
 
 package com.liferay.client.extension.web.internal.fragment.renderer;
 
+import com.liferay.client.extension.model.ClientExtensionEntry;
+import com.liferay.client.extension.service.ClientExtensionEntryServiceUtil;
+import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
+import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -14,16 +19,20 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -60,6 +69,8 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 							"name", "itemSelector"
 						).put(
 							"type", "itemSelector"
+						).put(
+							"typeOptions", JSONUtil.put("itemType", "ClientExtension")
 						)))));
 	}
 
@@ -86,14 +97,53 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 		throws IOException {
 
 		try {
-            PrintWriter printWriter = httpServletResponse.getWriter();
+			ObjectEntryThreadLocal.setSkipObjectEntryResourcePermission(true);
 
-            printWriter.write(
+			PrintWriter printWriter = httpServletResponse.getWriter();
+
+			FragmentEntryLink fragmentEntryLink =
+				fragmentRendererContext.getFragmentEntryLink();
+
+			JSONObject jsonObject =
+				(JSONObject)_fragmentEntryConfigurationParser.getFieldValue(
+					getConfigurationJSONObject(fragmentRendererContext),
+					fragmentEntryLink.getEditableValuesJSONObject(),
+					fragmentRendererContext.getLocale(), "itemSelector");
+
+			String externalReferenceCode = jsonObject.getString(
+				"externalReferenceCode");
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			long companyId = themeDisplay.getCompanyId();
+
+			ClientExtensionEntry clientExtensionEntry = ClientExtensionEntryServiceUtil.fetchClientExtensionEntryByExternalReferenceCode(externalReferenceCode, companyId);
+            
+			String typeSettings = clientExtensionEntry.getTypeSettings();
+
+			Properties typeSettingsProps = new Properties();
+			typeSettingsProps.load(new StringReader(typeSettings));
+
+			String htmlElementName = typeSettingsProps.getProperty("htmlElementName");
+			String urls = typeSettingsProps.getProperty("urls");
+			boolean useESM = Boolean.parseBoolean(typeSettingsProps.getProperty("useESM"));
+			String type = useESM ? "module" : "text/javascript";
+
+			printWriter.write(
             StringBundler.concat(
-                "<div class=\"portlet-msg-info\">",
-                _language.get(
-                    httpServletRequest, "select-a-client-extension"),
-                "</div>"));
+                "<script src=\"",
+				urls, 
+				"\" type=\"",
+				type,
+				"\" data-senna-track=\"temporary\"></script>",
+				"<",
+				htmlElementName,
+				"></",
+				htmlElementName,
+				">"
+			));
 		}
 		catch (Exception exception) {
 			_log.error("Unable to render client extension", exception);
@@ -104,6 +154,9 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 
     private static final Log _log = LogFactoryUtil.getLog(
         ClientExtensionFragmentRenderer.class);
+
+	@Reference
+	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
 
     @Reference
 	private Language _language;

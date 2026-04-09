@@ -5,7 +5,6 @@
 
 import ClayButton from '@clayui/button';
 import ClayModal from '@clayui/modal';
-import {getDataSetResourceURL} from '@liferay/frontend-data-set-admin-web';
 import {FrontendDataSet} from '@liferay/frontend-data-set-web';
 import React, {useState} from 'react';
 
@@ -23,39 +22,26 @@ const views = [
 		name: 'list',
 		schema: {
 			description: 'description',
+			fields: [{
+				fieldName: 'name',
+				label: 'Client Extension Name'
+			}],
 			sticker: 'sticker',
 			symbol: 'symbol',
-			title: 'label',
+			title: 'name',
 			tooltip: 'tooltip',
 		},
 		setItemComponentProps: ({item, props}: {item: any; props: any}) => {
-			if (
-				!item.dataSetToDataSetCardsSections.length &&
-				!item.dataSetToDataSetTableSections.length &&
-				!item.dataSetToDataSetListSections.length
-			) {
-				return {
-					...props,
-					item: {
-						...item,
-						sticker: {displayType: 'warning'},
-						symbol: 'exclamation-circle',
-						tooltip: Liferay.Language.get(
-							'no-visualization-modes-have-been-defined'
-						),
-					},
-				};
-			}
-			else {
-				return {
-					...props,
-					item: {
-						...item,
-						sticker: {displayType: 'unstyled'},
-						symbol: 'catalog',
-					},
-				};
-			}
+			return {
+				...props,
+				item: {
+					...item,
+					description: item.name,
+					sticker: {displayType: 'unstyled'},
+					symbol: 'catalog',
+					title: item.name
+				},
+			};
 		},
 	},
 ];
@@ -95,12 +81,7 @@ const ClientExtensionFragmentItemSelector = ({
 		<div className="client-extension-item-selector">
 			<ClayModal.Body>
 				<FrontendDataSet
-					apiURL={getDataSetResourceURL({
-						params: {
-							nestedFields:
-								'dataSetToDataSetCardsSections, dataSetToDataSetTableSections, dataSetToDataSetListSections',
-						},
-					})}
+					apiURL="http://localhost:8080/o/frontend-data-set-taglib/app/data-set/com_liferay_client_extension_web_internal_portlet_ClientExtensionAdminPortlet-clientExtensionTypes/com_liferay_client_extension_web_internal_portlet_ClientExtensionAdminPortlet-clientExtensionTypes?groupId=20127&plid=1&portletId=com_liferay_item_selector_web_portlet_ItemSelectorPortlet"
 					id={`${namespace}ClientExtensionFragmentItemSelector`}
 					onSelectedItemsChange={(
 						selectedItems: Array<ISelectedItem>

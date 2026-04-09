@@ -80,6 +80,8 @@ public class ClassicDisplayTag extends BaseDisplayTag {
 
 			_apiURL = sb.toString();
 
+			System.out.println(_apiURL);
+
 			if (_creationMenu == null) {
 				_creationMenu = new CreationMenu();
 			}
