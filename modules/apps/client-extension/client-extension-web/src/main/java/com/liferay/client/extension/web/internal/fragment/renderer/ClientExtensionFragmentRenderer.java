@@ -13,7 +13,6 @@ import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.object.entry.util.ObjectEntryThreadLocal;
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.Language;
@@ -29,14 +28,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -44,7 +37,6 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Antonio Ortega
  */
-
 @Component(service = FragmentRenderer.class)
 public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 
@@ -70,7 +62,8 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 						).put(
 							"type", "itemSelector"
 						).put(
-							"typeOptions", JSONUtil.put("itemType", "ClientExtension")
+							"typeOptions",
+							JSONUtil.put("itemType", "ClientExtension")
 						)))));
 	}
 
@@ -119,31 +112,29 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 
 			long companyId = themeDisplay.getCompanyId();
 
-			ClientExtensionEntry clientExtensionEntry = ClientExtensionEntryServiceUtil.fetchClientExtensionEntryByExternalReferenceCode(externalReferenceCode, companyId);
-            
+			ClientExtensionEntry clientExtensionEntry =
+				ClientExtensionEntryServiceUtil.
+					fetchClientExtensionEntryByExternalReferenceCode(
+						externalReferenceCode, companyId);
+
 			String typeSettings = clientExtensionEntry.getTypeSettings();
 
 			Properties typeSettingsProps = new Properties();
+
 			typeSettingsProps.load(new StringReader(typeSettings));
 
-			String htmlElementName = typeSettingsProps.getProperty("htmlElementName");
+			String htmlElementName = typeSettingsProps.getProperty(
+				"htmlElementName");
 			String urls = typeSettingsProps.getProperty("urls");
-			boolean useESM = Boolean.parseBoolean(typeSettingsProps.getProperty("useESM"));
+			boolean useESM = Boolean.parseBoolean(
+				typeSettingsProps.getProperty("useESM"));
 			String type = useESM ? "module" : "text/javascript";
 
 			printWriter.write(
-            StringBundler.concat(
-                "<script src=\"",
-				urls, 
-				"\" type=\"",
-				type,
-				"\" data-senna-track=\"temporary\"></script>",
-				"<",
-				htmlElementName,
-				"></",
-				htmlElementName,
-				">"
-			));
+				StringBundler.concat(
+					"<script src=\"", urls, "\" type=\"", type,
+					"\" data-senna-track=\"temporary\"></script>", "<",
+					htmlElementName, "></", htmlElementName, ">"));
 		}
 		catch (Exception exception) {
 			_log.error("Unable to render client extension", exception);
@@ -152,12 +143,13 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 		}
 	}
 
-    private static final Log _log = LogFactoryUtil.getLog(
-        ClientExtensionFragmentRenderer.class);
+	private static final Log _log = LogFactoryUtil.getLog(
+		ClientExtensionFragmentRenderer.class);
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
 
-    @Reference
+	@Reference
 	private Language _language;
+
 }

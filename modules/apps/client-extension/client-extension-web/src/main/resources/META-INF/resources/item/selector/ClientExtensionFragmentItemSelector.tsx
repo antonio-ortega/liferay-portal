@@ -22,10 +22,12 @@ const views = [
 		name: 'list',
 		schema: {
 			description: 'description',
-			fields: [{
-				fieldName: 'name',
-				label: 'Client Extension Name'
-			}],
+			fields: [
+				{
+					fieldName: 'name',
+					label: 'Client Extension Name',
+				},
+			],
 			sticker: 'sticker',
 			symbol: 'symbol',
 			title: 'name',
@@ -39,7 +41,7 @@ const views = [
 					description: item.name,
 					sticker: {displayType: 'unstyled'},
 					symbol: 'catalog',
-					title: item.name
+					title: item.name,
 				},
 			};
 		},
@@ -81,7 +83,7 @@ const ClientExtensionFragmentItemSelector = ({
 		<div className="client-extension-item-selector">
 			<ClayModal.Body>
 				<FrontendDataSet
-					apiURL="http://localhost:8080/o/frontend-data-set-taglib/app/data-set/com_liferay_client_extension_web_internal_portlet_ClientExtensionAdminPortlet-clientExtensionTypes/com_liferay_client_extension_web_internal_portlet_ClientExtensionAdminPortlet-clientExtensionTypes?groupId=20127&plid=1&portletId=com_liferay_item_selector_web_portlet_ItemSelectorPortlet"
+					apiURL="/o/frontend-data-set-taglib/app/data-set/com_liferay_client_extension_web_internal_portlet_ClientExtensionAdminPortlet-clientExtensionTypes/com_liferay_client_extension_web_internal_portlet_ClientExtensionAdminPortlet-clientExtensionTypes?portletId=com_liferay_item_selector_web_portlet_ItemSelectorPortlet"
 					id={`${namespace}ClientExtensionFragmentItemSelector`}
 					onSelectedItemsChange={(
 						selectedItems: Array<ISelectedItem>

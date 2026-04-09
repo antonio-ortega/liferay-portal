@@ -12,7 +12,6 @@ import com.liferay.item.selector.ItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 
@@ -86,7 +85,8 @@ public class ClientExtensionFragmentItemSelectorView
 		ServletContext servletContext = getServletContext();
 
 		servletRequest.setAttribute(
-			ClientExtensionFragmentWebKeys.CLIENT_EXTENSION_ITEM_SELECTOR_DISPLAY_CONTEXT,
+			ClientExtensionFragmentWebKeys.
+				CLIENT_EXTENSION_ITEM_SELECTOR_DISPLAY_CONTEXT,
 			new ClientExtensionFragmentItemSelectorDisplayContext(
 				(HttpServletRequest)servletRequest));
 
