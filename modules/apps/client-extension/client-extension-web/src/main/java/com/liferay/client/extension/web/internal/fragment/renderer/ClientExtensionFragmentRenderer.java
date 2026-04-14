@@ -67,6 +67,16 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 						).put(
 							"typeOptions",
 							JSONUtil.put("itemType", "ClientExtension")
+						),
+						JSONUtil.put(
+							"description",
+							"Enter key=\"value\" properties separated by spaces"
+						).put(
+							"label", "properties"
+						).put(
+							"name", "properties"
+						).put(
+							"type", "text"
 						)))));
 	}
 
@@ -77,7 +87,7 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 
 	@Override
 	public String getLabel(Locale locale) {
-		return _language.get(locale, "client-extension");
+		return "Custom Element Client Extension Display";
 	}
 
 	@Override
@@ -100,14 +110,20 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 			FragmentEntryLink fragmentEntryLink =
 				fragmentRendererContext.getFragmentEntryLink();
 
-			JSONObject jsonObject =
+			JSONObject clientExtensionItem =
 				(JSONObject)_fragmentEntryConfigurationParser.getFieldValue(
 					getConfigurationJSONObject(fragmentRendererContext),
 					fragmentEntryLink.getEditableValuesJSONObject(),
 					fragmentRendererContext.getLocale(), "itemSelector");
 
-			String externalReferenceCode = jsonObject.getString(
+			String externalReferenceCode = clientExtensionItem.getString(
 				"externalReferenceCode");
+
+			String clientExtensionProperties =
+				(String)_fragmentEntryConfigurationParser.getFieldValue(
+					getConfigurationJSONObject(fragmentRendererContext),
+					fragmentEntryLink.getEditableValuesJSONObject(),
+					fragmentRendererContext.getLocale(), "properties");
 
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)httpServletRequest.getAttribute(
@@ -159,7 +175,8 @@ public class ClientExtensionFragmentRenderer implements FragmentRenderer {
 
 			printWriter.write(
 				StringBundler.concat(
-					"<", htmlElementName, "></", htmlElementName, ">"));
+					"<", htmlElementName, " ", clientExtensionProperties,
+					" ></", htmlElementName, ">"));
 		}
 		catch (Exception exception) {
 			_log.error("Unable to render client extension", exception);
