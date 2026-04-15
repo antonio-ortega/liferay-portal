@@ -933,6 +933,32 @@ public class SystemFDSSerializerTest extends BaseFDSSerializerTestCase {
 	}
 
 	@Test
+	public void testSerializeHideSearchBar() throws Exception {
+		_registerServices(
+			_registerSystemFDSEntry(
+				SystemFDSEntryFactory.create(
+					FDS_NAMES[0]
+				).withHideSearchBar(
+					false
+				)),
+			_registerSystemFDSEntry(
+				SystemFDSEntryFactory.create(
+					FDS_NAMES[1]
+				).withHideSearchBar(
+					true
+				)));
+
+		Assert.assertFalse(
+			systemFDSSerializer.serializeHideSearchBar(
+				FDS_NAMES[0], httpServletRequest));
+		Assert.assertTrue(
+			systemFDSSerializer.serializeHideSearchBar(
+				FDS_NAMES[1], httpServletRequest));
+
+		_unregisterServices();
+	}
+
+	@Test
 	public void testSerializeItemsActions() throws Exception {
 
 		// Different items actions
@@ -1942,6 +1968,11 @@ public class SystemFDSSerializerTest extends BaseFDSSerializerTestCase {
 						return _hideManagementBarInEmptyState;
 					}
 
+					@Override
+					public boolean getHideSearchBar() {
+						return _hideSearchBar;
+					}
+
 					public int[] getListOfItemsPerPage() {
 						if (_listOfItemsPerPage != null) {
 							return _listOfItemsPerPage;
@@ -2010,6 +2041,14 @@ public class SystemFDSSerializerTest extends BaseFDSSerializerTestCase {
 			return this;
 		}
 
+		public SystemFDSEntryWrapper withHideSearchBar(
+			boolean hideSearchBar) {
+
+			_hideSearchBar = hideSearchBar;
+
+			return this;
+		}
+
 		public SystemFDSEntryWrapper withPagination(
 			int defaultItemsPerPage, int[] listOfItemsPerPage) {
 
@@ -2039,6 +2078,7 @@ public class SystemFDSSerializerTest extends BaseFDSSerializerTestCase {
 		private int _defaultItemsPerPage = -1;
 		private final String _fdsName;
 		private boolean _hideManagementBarInEmptyState;
+		private boolean _hideSearchBar;
 		private int[] _listOfItemsPerPage;
 		private String _propsTransformer;
 		private boolean _snapshotsEnabled;

@@ -664,6 +664,26 @@ public class CustomFDSSerializerTest extends BaseFDSSerializerTestCase {
 	}
 
 	@Test
+	public void testSerializeHideSearchBar() throws Exception {
+		_mockSerializeHideSearchBar(FDS_NAMES[0], false);
+		_mockSerializeHideSearchBar(FDS_NAMES[1], true);
+
+		Assert.assertNotEquals(
+			_customFDSSerializer.serializeHideSearchBar(
+				FDS_NAMES[0], httpServletRequest),
+			_customFDSSerializer.serializeHideSearchBar(
+				FDS_NAMES[1], httpServletRequest));
+		Assert.assertFalse(
+			_customFDSSerializer.serializeHideSearchBar(
+				FDS_NAMES[0], httpServletRequest));
+		Assert.assertTrue(
+			_customFDSSerializer.serializeHideSearchBar(
+				FDS_NAMES[1], httpServletRequest));
+
+		_resetFDSSerializer();
+	}
+
+	@Test
 	public void testSerializeItemsActions() throws Exception {
 
 		// Different items actions
@@ -1438,6 +1458,24 @@ public class CustomFDSSerializerTest extends BaseFDSSerializerTestCase {
 
 		Mockito.when(
 			_customFDSSerializer.serializeHideManagementBarInEmptyState(
+				fdsName, httpServletRequest)
+		).thenCallRealMethod();
+	}
+
+	private void _mockSerializeHideSearchBar(
+		String fdsName, boolean hideSearchBar) {
+
+		Mockito.when(
+			_customFDSSerializer.getDataSetObjectEntryProperties(
+				fdsName, httpServletRequest)
+		).thenReturn(
+			HashMapBuilder.<String, Object>put(
+				"hideSearchBar", hideSearchBar
+			).build()
+		);
+
+		Mockito.when(
+			_customFDSSerializer.serializeHideSearchBar(
 				fdsName, httpServletRequest)
 		).thenCallRealMethod();
 	}
