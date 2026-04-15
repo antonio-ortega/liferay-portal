@@ -298,6 +298,20 @@ public class SystemFDSSerializer
 	}
 
 	@Override
+	public boolean serializeShowDefaultSearchBar(
+		String fdsName, HttpServletRequest httpServletRequest) {
+
+		SystemFDSEntry systemFDSEntry =
+			systemFDSEntryRegistry.getSystemFDSEntry(fdsName);
+
+		if (systemFDSEntry == null) {
+			return false;
+		}
+
+		return systemFDSEntry.getShowDefaultSearchBar();
+	}
+
+	@Override
 	public JSONArray serializeSnapshots(
 		String fdsName, HttpServletRequest httpServletRequest) {
 

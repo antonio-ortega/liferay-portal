@@ -485,6 +485,16 @@ public class CustomFDSSerializer
 	}
 
 	@Override
+	public boolean serializeShowDefaultSearchBar(
+		String fdsName, HttpServletRequest httpServletRequest) {
+
+		Map<String, Object> properties = getDataSetObjectEntryProperties(
+			fdsName, httpServletRequest);
+
+		return GetterUtil.getBoolean(properties.get("showDefaultSearchBar"));
+	}
+
+	@Override
 	public JSONArray serializeSnapshots(
 		String fdsName, HttpServletRequest httpServletRequest) {
 

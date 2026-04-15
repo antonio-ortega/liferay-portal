@@ -50,6 +50,10 @@ public interface SystemFDSEntry {
 		return false;
 	}
 
+	public default boolean getShowDefaultSearchBar() {
+		return true;
+	}
+
 	public default String getSymbol() {
 		return "dynamic-data-list";
 	}

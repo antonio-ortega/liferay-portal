@@ -71,6 +71,7 @@ export interface IDataSet {
 	restApplication: string;
 	restEndpoint: string;
 	restSchema: string;
+	showDefaultSearchBar?: boolean;
 	snapshotsEnabled: boolean;
 	sortsOrder?: string;
 	tableSectionsOrder?: string;

@@ -142,6 +142,7 @@ const FrontendDataSetContent = ({
 	selectionType,
 	showBulkActionsManagementBar = true,
 	showBulkActionsManagementBarActions = true,
+	showDefaultSearchBar = true,
 	showManagementBar = true,
 	showNavBarWhenSelected = false,
 	showPagination = true,
@@ -1545,7 +1546,7 @@ const FrontendDataSetContent = ({
 				selectedItemsValue={selectedItemsValue}
 				selectionType={selectionType}
 				showNavBarWhenSelected={showNavBarWhenSelected}
-				showSearch={showSearch}
+				showSearch={showSearch && showDefaultSearchBar}
 				showSelectAll={showSelectAll}
 				total={total}
 			/>
@@ -2133,6 +2134,7 @@ const FrontendDataSetContent = ({
 				selectionType,
 				showBulkActionsManagementBar,
 				showBulkActionsManagementBarActions,
+				showDefaultSearchBar,
 				showInfoPanel: infoPanelComponent ? true : false,
 				sidePanelId: dataSetSupportSidePanelIdRef.current,
 				sorts,
