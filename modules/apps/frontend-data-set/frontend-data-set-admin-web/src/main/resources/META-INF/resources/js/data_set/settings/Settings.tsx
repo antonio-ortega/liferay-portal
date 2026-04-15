@@ -60,7 +60,7 @@ const Settings = ({
 		Array<TVisualizationMode>
 	>([]);
 
-	const handleToggleChange = useCallback(
+	const handleHideManagementBarInEmptyStateChange = useCallback(
 		() => setHideManagementBarInEmptyState(!hideManagementBarInEmptyState),
 		[hideManagementBarInEmptyState]
 	);
@@ -432,7 +432,7 @@ const Settings = ({
 							<div className="d-flex form-group justify-content-end mr-2">
 								<ClayToggle
 									disabled={loading}
-									onToggle={handleToggleChange}
+									onToggle={handleHideManagementBarInEmptyStateChange}
 									toggled={hideManagementBarInEmptyState}
 								/>
 							</div>
