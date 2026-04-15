@@ -226,6 +226,20 @@ public class SystemFDSSerializer
 	}
 
 	@Override
+	public boolean serializeHideSearchBar(
+		String fdsName, HttpServletRequest httpServletRequest) {
+
+		SystemFDSEntry systemFDSEntry =
+			systemFDSEntryRegistry.getSystemFDSEntry(fdsName);
+
+		if (systemFDSEntry == null) {
+			return false;
+		}
+
+		return systemFDSEntry.getHideSearchBar();
+	}
+
+	@Override
 	public List<FDSActionDropdownItem> serializeItemsActions(
 		String fdsName, HttpServletRequest httpServletRequest) {
 

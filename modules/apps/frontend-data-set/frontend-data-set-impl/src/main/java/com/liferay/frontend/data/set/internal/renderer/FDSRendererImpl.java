@@ -213,6 +213,10 @@ public class FDSRendererImpl implements FDSRenderer {
 					() -> fdsSerializer.serializeHideManagementBarInEmptyState(
 						fdsName, httpServletRequest)
 				).put(
+					"hideSearchBar",
+					() -> fdsSerializer.serializeHideSearchBar(
+						fdsName, httpServletRequest)
+				).put(
 					"id", fdsName
 				).put(
 					"itemsActions",

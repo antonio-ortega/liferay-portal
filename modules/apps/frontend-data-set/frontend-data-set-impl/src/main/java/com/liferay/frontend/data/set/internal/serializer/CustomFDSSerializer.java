@@ -341,6 +341,16 @@ public class CustomFDSSerializer
 	}
 
 	@Override
+	public boolean serializeHideSearchBar(
+		String fdsName, HttpServletRequest httpServletRequest) {
+
+		Map<String, Object> properties = getDataSetObjectEntryProperties(
+			fdsName, httpServletRequest);
+
+		return GetterUtil.getBoolean(properties.get("hideSearchBar"));
+	}
+
+	@Override
 	public List<FDSActionDropdownItem> serializeItemsActions(
 		String fdsName, HttpServletRequest httpServletRequest) {
 

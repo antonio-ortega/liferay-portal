@@ -120,6 +120,7 @@ const FrontendDataSetContent = ({
 	groupedFilters,
 	header,
 	hideManagementBarInEmptyState = false,
+	hideSearchBar = false,
 	id,
 	infoPanelComponent,
 	inlineAddingSettings,
@@ -1545,7 +1546,7 @@ const FrontendDataSetContent = ({
 				selectedItemsValue={selectedItemsValue}
 				selectionType={selectionType}
 				showNavBarWhenSelected={showNavBarWhenSelected}
-				showSearch={showSearch}
+				showSearch={showSearch && !hideSearchBar}
 				showSelectAll={showSelectAll}
 				total={total}
 			/>
@@ -2003,6 +2004,7 @@ const FrontendDataSetContent = ({
 				formName,
 				globalFDSState: unfrozenGlobalFDSState,
 				hideManagementBarInEmptyState,
+				hideSearchBar,
 				highlightItems,
 				highlightedItemsValue,
 				id,

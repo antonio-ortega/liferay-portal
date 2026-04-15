@@ -146,19 +146,20 @@
 					"type": "Boolean"
 				},
 				{
-					"DBType": "Clob",
-					"businessType": "LongText",
-					"externalReferenceCode": "ITEM_ACTIONS_ORDER",
+					"DBType": "Boolean",
+					"businessType": "Boolean",
+					"defaultValue": false,
+					"externalReferenceCode": "HIDE_SEARCH_BAR",
 					"indexed": true,
 					"indexedAsKeyword": false,
 					"label": {
-						"en_US": "Item Actions Order"
+						"en_US": "Hide Search Bar"
 					},
-					"name": "itemActionsOrder",
+					"name": "hideSearchBar",
 					"required": false,
 					"state": false,
 					"system": true,
-					"type": "Clob"
+					"type": "Boolean"
 				},
 				{
 					"DBType": "String",

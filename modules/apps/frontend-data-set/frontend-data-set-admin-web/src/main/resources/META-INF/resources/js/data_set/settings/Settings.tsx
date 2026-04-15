@@ -52,6 +52,9 @@ const Settings = ({
 	>(NOT_CONFIGURED_VISUALIZATION_MODE.type);
 	const [hideManagementBarInEmptyState, setHideManagementBarInEmptyState] =
 		useState(dataSet.hideManagementBarInEmptyState ?? true);
+	const [hideSearchBar, setHideSearchBar] = useState<boolean>(
+		dataSet.hideSearchBar ?? false
+	);
 	const [loading, setLoading] = useState(true);
 	const [visualizationModes, setVisualizationModes] = useState<
 		Array<TVisualizationMode>
@@ -60,6 +63,11 @@ const Settings = ({
 	const handleToggleChange = useCallback(
 		() => setHideManagementBarInEmptyState(!hideManagementBarInEmptyState),
 		[hideManagementBarInEmptyState]
+	);
+
+	const handleHideSearchBarChange = useCallback(
+		() => setHideSearchBar(!hideSearchBar),
+		[hideSearchBar]
 	);
 
 	const getManageUserViewsWithFilterURL = () => {
@@ -96,6 +104,7 @@ const Settings = ({
 		const body = {
 			defaultVisualizationMode,
 			hideManagementBarInEmptyState,
+			hideSearchBar,
 			snapshotsEnabled,
 		};
 
@@ -138,7 +147,7 @@ const Settings = ({
 			const url = getDataSetResourceURL({
 				dataSetERC: dataSet.externalReferenceCode,
 				params: {
-					fields: `${fields},hideManagementBarInEmptyState`,
+					fields: `${fields},hideManagementBarInEmptyState,hideSearchBar`,
 					nestedFields: fields,
 				},
 			});
@@ -157,6 +166,8 @@ const Settings = ({
 
 					setHideManagementBarInEmptyState(true);
 
+					setHideSearchBar(false);
+
 					return;
 				}
 
@@ -165,6 +176,7 @@ const Settings = ({
 				const {
 					hideManagementBarInEmptyState:
 						persistedHideManagementBarInEmptyState,
+					hideSearchBar: persistedHideSearchBar,
 					[OBJECT_RELATIONSHIP.DATA_SET_CARDS_SECTIONS]: cards,
 					[OBJECT_RELATIONSHIP.DATA_SET_LIST_SECTIONS]: list,
 					[OBJECT_RELATIONSHIP.DATA_SET_TABLE_SECTIONS]: table,
@@ -214,6 +226,12 @@ const Settings = ({
 					setHideManagementBarInEmptyState(
 						serverHideManagementBarValue
 					);
+				}
+
+				const serverHideSearchBarValue = persistedHideSearchBar || false;
+
+				if (serverHideSearchBarValue !== hideSearchBar) {
+					setHideSearchBar(serverHideSearchBarValue);
 				}
 
 				setLoading(false);
@@ -416,6 +434,37 @@ const Settings = ({
 									disabled={loading}
 									onToggle={handleToggleChange}
 									toggled={hideManagementBarInEmptyState}
+								/>
+							</div>
+						</ClayLayout.Col>
+					</ClayLayout.Row>
+
+					<ClayLayout.Row className="align-items-center justify-content-between mb-4">
+						<ClayLayout.Col size={9}>
+							<div>
+								<label
+									htmlFor="hide-search-bar"
+									id="hide-search-bar"
+								>
+									{Liferay.Language.get(
+										'hide-search-bar'
+									)}
+								</label>
+							</div>
+
+							<div>
+								{Liferay.Language.get(
+									'hide-search-bar-help'
+								)}
+							</div>
+						</ClayLayout.Col>
+
+						<ClayLayout.Col size={1}>
+							<div className="d-flex form-group justify-content-end mr-2">
+								<ClayToggle
+									disabled={loading}
+									onToggle={handleHideSearchBarChange}
+									toggled={hideSearchBar}
 								/>
 							</div>
 						</ClayLayout.Col>
