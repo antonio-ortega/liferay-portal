@@ -86,9 +86,9 @@ export interface IFrontendDataSetContext {
 	selectedItemsKey: string;
 	selectedItemsValue?: Array<any>;
 	selectionType?: 'single' | 'multiple';
-	showDefaultSearchBar?: boolean;
 	showBulkActionsManagementBar: boolean;
 	showBulkActionsManagementBarActions: boolean;
+	showDefaultSearchBar?: boolean;
 	showInfoPanel: boolean;
 	sidePanelId?: string;
 	sorts?: Array<TSort>;

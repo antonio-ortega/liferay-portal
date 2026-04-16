@@ -1205,7 +1205,7 @@ public class SystemFDSSerializerTest extends BaseFDSSerializerTestCase {
 	}
 
 	@Test
-	public void testSerializeShowDefaultSearchBar() throws Exception {}
+	public void testSerializeShowDefaultSearchBar() throws Exception {
 		_registerServices(
 			_registerSystemFDSEntry(
 				SystemFDSEntryFactory.create(
@@ -1227,7 +1227,7 @@ public class SystemFDSSerializerTest extends BaseFDSSerializerTestCase {
 			systemFDSSerializer.serializeShowDefaultSearchBar(
 				FDS_NAMES[1], httpServletRequest));
 
-		_unregisterServices();	
+		_unregisterServices();
 	}
 
 	@Test

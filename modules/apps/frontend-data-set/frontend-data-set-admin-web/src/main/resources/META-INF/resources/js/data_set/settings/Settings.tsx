@@ -449,11 +449,17 @@ const Settings = ({
 						<ClayLayout.Col size={9}>
 							<div>
 								<label htmlFor="show-default-search-bar-toggle">
-									{Liferay.Language.get('show-default-search-bar')}
+									{Liferay.Language.get(
+										'show-default-search-bar'
+									)}
 								</label>
 							</div>
 
-							<div>{Liferay.Language.get('show-default-search-bar-help')}</div>
+							<div>
+								{Liferay.Language.get(
+									'show-default-search-bar-help'
+								)}
+							</div>
 						</ClayLayout.Col>
 
 						<ClayLayout.Col className="align-self-start" size={1}>

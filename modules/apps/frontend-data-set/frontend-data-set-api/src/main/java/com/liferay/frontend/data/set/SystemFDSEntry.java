@@ -46,12 +46,12 @@ public interface SystemFDSEntry {
 
 	public String getRESTSchema();
 
-	public default boolean getSnapshotsEnabled() {
-		return false;
-	}
-
 	public default boolean getShowDefaultSearchBar() {
 		return true;
+	}
+
+	public default boolean getSnapshotsEnabled() {
+		return false;
 	}
 
 	public default String getSymbol() {
