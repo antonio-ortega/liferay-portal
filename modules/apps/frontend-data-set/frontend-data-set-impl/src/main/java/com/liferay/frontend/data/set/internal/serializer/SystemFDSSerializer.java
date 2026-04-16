@@ -305,7 +305,7 @@ public class SystemFDSSerializer
 			systemFDSEntryRegistry.getSystemFDSEntry(fdsName);
 
 		if (systemFDSEntry == null) {
-			return false;
+			return true;
 		}
 
 		return systemFDSEntry.getShowDefaultSearchBar();
