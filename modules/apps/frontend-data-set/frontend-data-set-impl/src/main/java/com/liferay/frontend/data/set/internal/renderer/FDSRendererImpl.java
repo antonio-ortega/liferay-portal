@@ -241,6 +241,10 @@ public class FDSRendererImpl implements FDSRenderer {
 						return paginationJSONObject;
 					}
 				).put(
+					"showSearch",
+					() -> !fdsSerializer.serializeHideSearchBar(
+						fdsName, httpServletRequest)
+				).put(
 					"snapshots",
 					() -> {
 						if (!snapshotsEnabled) {
@@ -257,10 +261,6 @@ public class FDSRendererImpl implements FDSRenderer {
 
 						return snapshotsJSONArray;
 					}
-				).put(
-					"showSearch",
-					() -> !fdsSerializer.serializeHideSearchBar(
-						fdsName, httpServletRequest)
 				).put(
 					"snapshotsEnabled", snapshotsEnabled
 				).put(

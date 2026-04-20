@@ -40,12 +40,12 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		defaultVisualizationMode?: string;
 		description?: string;
 		erc?: string;
+		hideSearchBar?: boolean;
 		label?: string;
 		listOfItemsPerPage?: string;
 		restApplication?: string;
 		restEndpoint?: string;
 		restSchema?: string;
-		hideSearchBar?: boolean;
 		snapshotsEnabled?: boolean;
 	}) {
 		const url = getDataSetResourceURL({});
@@ -56,12 +56,12 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 			defaultVisualizationMode,
 			description,
 			externalReferenceCode: erc,
+			hideSearchBar,
 			label,
 			listOfItemsPerPage,
 			restApplication,
 			restEndpoint,
 			restSchema,
-			hideSearchBar,
 			snapshotsEnabled,
 		};
 
@@ -431,9 +431,9 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		defaultVisualizationMode,
 		erc = DEFAULT_DATA_SET_ERC,
 		filtersOrder,
+		hideSearchBar,
 		label,
 		listOfItemsPerPage,
-		hideSearchBar,
 		snapshotsEnabled,
 	}: {
 		additionalAPIURLParameters?: string;
@@ -441,9 +441,9 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		defaultVisualizationMode?: string;
 		erc?: string;
 		filtersOrder?: string;
+		hideSearchBar?: boolean;
 		label?: string;
 		listOfItemsPerPage?: string;
-		hideSearchBar?: boolean;
 		snapshotsEnabled?: boolean;
 	}) {
 		const url = getDataSetResourceURL({
@@ -455,9 +455,9 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 			defaultItemsPerPage,
 			defaultVisualizationMode,
 			filtersOrder,
+			hideSearchBar,
 			label,
 			listOfItemsPerPage,
-			hideSearchBar,
 			snapshotsEnabled,
 		};
 

@@ -423,7 +423,9 @@ const Settings = ({
 							<div className="d-flex form-group justify-content-end mr-2">
 								<ClayToggle
 									disabled={loading}
-									onToggle={handleHideManagementBarInEmptyStateChange}
+									onToggle={
+										handleHideManagementBarInEmptyStateChange
+									}
 									toggled={hideManagementBarInEmptyState}
 								/>
 							</div>
@@ -437,16 +439,12 @@ const Settings = ({
 									htmlFor="hide-search-bar"
 									id="hide-search-bar"
 								>
-									{Liferay.Language.get(
-										'hide-search-bar'
-									)}
+									{Liferay.Language.get('hide-search-bar')}
 								</label>
 							</div>
 
 							<div>
-								{Liferay.Language.get(
-									'hide-search-bar-help'
-								)}
+								{Liferay.Language.get('hide-search-bar-help')}
 							</div>
 						</ClayLayout.Col>
 

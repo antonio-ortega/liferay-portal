@@ -2041,9 +2041,7 @@ public class SystemFDSSerializerTest extends BaseFDSSerializerTestCase {
 			return this;
 		}
 
-		public SystemFDSEntryWrapper withHideSearchBar(
-			boolean hideSearchBar) {
-
+		public SystemFDSEntryWrapper withHideSearchBar(boolean hideSearchBar) {
 			_hideSearchBar = hideSearchBar;
 
 			return this;
