@@ -147,7 +147,7 @@ const Settings = ({
 			const url = getDataSetResourceURL({
 				dataSetERC: dataSet.externalReferenceCode,
 				params: {
-					fields: `${fields},hideManagementBarInEmptyState,hideSearchBar`,
+					fields: `${fields},hideManagementBarInEmptyState`,
 					nestedFields: fields,
 				},
 			});
@@ -166,8 +166,6 @@ const Settings = ({
 
 					setHideManagementBarInEmptyState(true);
 
-					setHideSearchBar(false);
-
 					return;
 				}
 
@@ -176,7 +174,6 @@ const Settings = ({
 				const {
 					hideManagementBarInEmptyState:
 						persistedHideManagementBarInEmptyState,
-					hideSearchBar: persistedHideSearchBar,
 					[OBJECT_RELATIONSHIP.DATA_SET_CARDS_SECTIONS]: cards,
 					[OBJECT_RELATIONSHIP.DATA_SET_LIST_SECTIONS]: list,
 					[OBJECT_RELATIONSHIP.DATA_SET_TABLE_SECTIONS]: table,
@@ -226,12 +223,6 @@ const Settings = ({
 					setHideManagementBarInEmptyState(
 						serverHideManagementBarValue
 					);
-				}
-
-				const serverHideSearchBarValue = persistedHideSearchBar || false;
-
-				if (serverHideSearchBarValue !== hideSearchBar) {
-					setHideSearchBar(serverHideSearchBarValue);
 				}
 
 				setLoading(false);

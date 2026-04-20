@@ -162,6 +162,21 @@
 					"type": "Boolean"
 				},
 				{
+					"DBType": "Clob",
+					"businessType": "LongText",
+					"externalReferenceCode": "ITEM_ACTIONS_ORDER",
+					"indexed": true,
+					"indexedAsKeyword": false,
+					"label": {
+						"en_US": "Item Actions Order"
+					},
+					"name": "itemActionsOrder",
+					"required": false,
+					"state": false,
+					"system": true,
+					"type": "Clob"
+				},
+				{
 					"DBType": "String",
 					"businessType": "Text",
 					"externalReferenceCode": "LABEL",

@@ -337,7 +337,6 @@ export interface IFrontendDataSetProps {
 	groupedFilters?: Array<any>;
 	header?: IHeader;
 	hideManagementBarInEmptyState?: boolean;
-	hideSearchBar?: boolean;
 	id: string;
 	infoPanelComponent?: React.ComponentType<IInfoPanelComponent>;
 	inlineAddingSettings?: {

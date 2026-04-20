@@ -49,7 +49,6 @@ export interface IFrontendDataSetContext {
 	formName?: string;
 	globalFDSState: IFDSState;
 	hideManagementBarInEmptyState?: boolean;
-	hideSearchBar?: boolean;
 	highlightItems: Function;
 	highlightedItemsValue?: Array<string>;
 	id: string;
@@ -117,7 +116,6 @@ const FrontendDataSetContext = React.createContext({
 	executeAsyncItemAction: () => {},
 	forceSortsUpdate: () => {},
 	hideManagementBarInEmptyState: false,
-	hideSearchBar: false,
 	highlightItems: () => {},
 	id: '',
 	loadData: () => {},

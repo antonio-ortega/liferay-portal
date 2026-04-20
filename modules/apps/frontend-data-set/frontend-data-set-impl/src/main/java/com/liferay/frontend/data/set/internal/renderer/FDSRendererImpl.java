@@ -213,10 +213,6 @@ public class FDSRendererImpl implements FDSRenderer {
 					() -> fdsSerializer.serializeHideManagementBarInEmptyState(
 						fdsName, httpServletRequest)
 				).put(
-					"hideSearchBar",
-					() -> fdsSerializer.serializeHideSearchBar(
-						fdsName, httpServletRequest)
-				).put(
 					"id", fdsName
 				).put(
 					"itemsActions",
@@ -261,6 +257,10 @@ public class FDSRendererImpl implements FDSRenderer {
 
 						return snapshotsJSONArray;
 					}
+				).put(
+					"showSearch",
+					() -> !fdsSerializer.serializeHideSearchBar(
+						fdsName, httpServletRequest)
 				).put(
 					"snapshotsEnabled", snapshotsEnabled
 				).put(
