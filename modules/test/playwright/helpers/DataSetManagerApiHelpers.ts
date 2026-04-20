@@ -32,7 +32,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		restApplication = API_ENDPOINT_PATH,
 		restEndpoint = `/by-external-reference-code/${erc}/dataSetToDataSetTableSections`,
 		restSchema = 'DataSetTableSection',
-		showDefaultSearchBar = true,
+		hideSearchBar = false,
 		snapshotsEnabled,
 	}: {
 		additionalAPIURLParameters?: string;
@@ -45,7 +45,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		restApplication?: string;
 		restEndpoint?: string;
 		restSchema?: string;
-		showDefaultSearchBar?: boolean;
+		hideSearchBar?: boolean;
 		snapshotsEnabled?: boolean;
 	}) {
 		const url = getDataSetResourceURL({});
@@ -61,7 +61,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 			restApplication,
 			restEndpoint,
 			restSchema,
-			showDefaultSearchBar,
+			hideSearchBar,
 			snapshotsEnabled,
 		};
 
@@ -433,7 +433,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		filtersOrder,
 		label,
 		listOfItemsPerPage,
-		showDefaultSearchBar,
+		hideSearchBar,
 		snapshotsEnabled,
 	}: {
 		additionalAPIURLParameters?: string;
@@ -443,7 +443,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 		filtersOrder?: string;
 		label?: string;
 		listOfItemsPerPage?: string;
-		showDefaultSearchBar?: boolean;
+		hideSearchBar?: boolean;
 		snapshotsEnabled?: boolean;
 	}) {
 		const url = getDataSetResourceURL({
@@ -457,7 +457,7 @@ export class DataSetManagerApiHelpers extends ApiHelpers {
 			filtersOrder,
 			label,
 			listOfItemsPerPage,
-			showDefaultSearchBar,
+			hideSearchBar,
 			snapshotsEnabled,
 		};
 
