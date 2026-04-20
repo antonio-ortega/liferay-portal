@@ -435,10 +435,7 @@ const Settings = ({
 					<ClayLayout.Row className="align-items-center justify-content-between mb-4">
 						<ClayLayout.Col size={9}>
 							<div>
-								<label
-									htmlFor="hide-search-bar"
-									id="hide-search-bar"
-								>
+								<label htmlFor="hide-search-bar">
 									{Liferay.Language.get('hide-search-bar')}
 								</label>
 							</div>
@@ -452,6 +449,7 @@ const Settings = ({
 							<div className="d-flex form-group justify-content-end mr-2">
 								<ClayToggle
 									disabled={loading}
+									id="hide-search-bar"
 									onToggle={handleHideSearchBarChange}
 									toggled={hideSearchBar}
 								/>
