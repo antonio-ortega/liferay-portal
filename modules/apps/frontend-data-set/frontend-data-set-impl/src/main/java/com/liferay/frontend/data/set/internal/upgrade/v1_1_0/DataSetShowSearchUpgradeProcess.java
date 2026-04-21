@@ -5,10 +5,13 @@
 
 package com.liferay.frontend.data.set.internal.upgrade.v1_1_0;
 
+import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.object.model.ObjectField;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -16,9 +19,12 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.LocaleUtil;
 
 import java.io.Serializable;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -29,11 +35,13 @@ public class DataSetShowSearchUpgradeProcess extends UpgradeProcess {
 	public DataSetShowSearchUpgradeProcess(
 		CompanyLocalService companyLocalService,
 		ObjectDefinitionLocalService objectDefinitionLocalService,
-		ObjectEntryLocalService objectEntryLocalService) {
+		ObjectEntryLocalService objectEntryLocalService,
+		ObjectFieldLocalService objectFieldLocalService) {
 
 		_companyLocalService = companyLocalService;
 		_objectDefinitionLocalService = objectDefinitionLocalService;
 		_objectEntryLocalService = objectEntryLocalService;
+		_objectFieldLocalService = objectFieldLocalService;
 	}
 
 	@Override
@@ -57,6 +65,22 @@ public class DataSetShowSearchUpgradeProcess extends UpgradeProcess {
 			}
 
 			return;
+		}
+
+		ObjectField existingObjectField =
+			_objectFieldLocalService.fetchObjectField(
+				objectDefinition.getObjectDefinitionId(), "showSearch");
+
+		if (existingObjectField == null) {
+			_objectFieldLocalService.addSystemObjectField(
+				"SHOW_SEARCH", objectDefinition.getUserId(), 0,
+				objectDefinition.getObjectDefinitionId(), "Boolean", null, null,
+				"Boolean", true, false, null,
+				HashMapBuilder.put(
+					LocaleUtil.US, "Show Search"
+				).build(),
+				false, "showSearch", ObjectFieldConstants.READ_ONLY_FALSE, null,
+				false, false, Collections.emptyList());
 		}
 
 		for (ObjectEntry objectEntry :
@@ -85,5 +109,6 @@ public class DataSetShowSearchUpgradeProcess extends UpgradeProcess {
 	private final CompanyLocalService _companyLocalService;
 	private final ObjectDefinitionLocalService _objectDefinitionLocalService;
 	private final ObjectEntryLocalService _objectEntryLocalService;
+	private final ObjectFieldLocalService _objectFieldLocalService;
 
 }

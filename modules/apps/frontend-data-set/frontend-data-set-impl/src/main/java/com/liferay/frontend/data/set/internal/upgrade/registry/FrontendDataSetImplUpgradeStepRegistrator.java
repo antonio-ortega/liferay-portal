@@ -10,6 +10,7 @@ import com.liferay.frontend.data.set.internal.upgrade.v1_1_0.DataSetShowSearchUp
 import com.liferay.object.action.engine.ObjectActionEngine;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
+import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
@@ -37,7 +38,7 @@ public class FrontendDataSetImplUpgradeStepRegistrator
 			"1.0.0", "1.1.0",
 			new DataSetShowSearchUpgradeProcess(
 				_companyLocalService, _objectDefinitionLocalService,
-				_objectEntryLocalService));
+				_objectEntryLocalService, _objectFieldLocalService));
 	}
 
 	@Reference
@@ -51,5 +52,8 @@ public class FrontendDataSetImplUpgradeStepRegistrator
 
 	@Reference
 	private ObjectEntryLocalService _objectEntryLocalService;
+
+	@Reference
+	private ObjectFieldLocalService _objectFieldLocalService;
 
 }
