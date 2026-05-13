@@ -3,8 +3,13 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {FDSState, getFDSAtom} from '@liferay/js-api/data-set';
-import {Atom, readAtom, subscribeAtom, writeAtom} from '@liferay/js-api/state';
+import {getFDSAtom} from '@liferay/js-api/data-set';
+import {
+	DataSetAtom,
+	getSearch,
+	setSearch,
+	subscribeSearch,
+} from '@liferay/js-api/state/dataset-search';
 import React, {useEffect, useState} from 'react';
 
 interface AppProps {
@@ -12,7 +17,7 @@ interface AppProps {
 }
 
 function App({fdsName}: AppProps) {
-	const [atom, setAtom] = useState<Atom<FDSState> | null>(null);
+	const [atom, setAtom] = useState<DataSetAtom | null>(null);
 	const [query, setQuery] = useState('');
 
 	useEffect(() => {
@@ -26,10 +31,10 @@ function App({fdsName}: AppProps) {
 				}
 
 				setAtom(resolvedAtom);
-				setQuery(readAtom(resolvedAtom).search?.query ?? '');
+				setQuery(getSearch(resolvedAtom) ?? '');
 
-				subscription = subscribeAtom(resolvedAtom, (next) => {
-					setQuery(next?.search?.query ?? '');
+				subscription = subscribeSearch(resolvedAtom, (next) => {
+					setQuery(next ?? '');
 				});
 			})
 			.catch((error: Error) => {
@@ -49,15 +54,7 @@ function App({fdsName}: AppProps) {
 			return;
 		}
 
-		const currentState = readAtom(atom);
-
-		writeAtom(atom, {
-			...currentState,
-			search: {
-				...currentState.search,
-				query,
-			},
-		});
+		setSearch(atom, query);
 	};
 
 	return (
