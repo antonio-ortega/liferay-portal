@@ -3,13 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {getFDSAtom} from '@liferay/js-api/data-set';
-import {
-	DataSetAtom,
-	getSearch,
-	setSearch,
-	subscribeSearch,
-} from '@liferay/js-api/state/dataset-search';
+import {DataSetSearch, dataSetSearch} from '@liferay/js-api/data-set';
 import React, {useEffect, useState} from 'react';
 
 interface AppProps {
@@ -17,24 +11,24 @@ interface AppProps {
 }
 
 function App({fdsName}: AppProps) {
-	const [atom, setAtom] = useState<DataSetAtom | null>(null);
+	const [search, setSearchApi] = useState<DataSetSearch | null>(null);
 	const [query, setQuery] = useState('');
 
 	useEffect(() => {
 		let disposed = false;
 		let subscription: {dispose: () => void} | undefined;
 
-		getFDSAtom(fdsName)
-			.then((resolvedAtom) => {
+		dataSetSearch(fdsName)
+			.then((resolvedSearch) => {
 				if (disposed) {
 					return;
 				}
 
-				setAtom(resolvedAtom);
-				setQuery(getSearch(resolvedAtom) ?? '');
+				setSearchApi(resolvedSearch);
+				setQuery(resolvedSearch.get());
 
-				subscription = subscribeSearch(resolvedAtom, (next) => {
-					setQuery(next ?? '');
+				subscription = resolvedSearch.subscribe((next) => {
+					setQuery(next);
 				});
 			})
 			.catch((error: Error) => {
@@ -50,18 +44,18 @@ function App({fdsName}: AppProps) {
 	}, [fdsName]);
 
 	const handleSearch = () => {
-		if (!atom) {
+		if (!search) {
 			return;
 		}
 
-		setSearch(atom, query);
+		search.set(query);
 	};
 
 	return (
 		<div style={{display: 'flex', gap: '0.5rem', padding: '1rem'}}>
 			<input
 				className="form-control"
-				disabled={!atom}
+				disabled={!search}
 				onChange={(event) => setQuery(event.target.value)}
 				onKeyDown={(event) => {
 					if (event.key === 'Enter') {
@@ -69,7 +63,7 @@ function App({fdsName}: AppProps) {
 					}
 				}}
 				placeholder={
-					atom
+					search
 						? `Search in ${fdsName}`
 						: `Waiting for FDS "${fdsName}"...`
 				}
@@ -80,7 +74,7 @@ function App({fdsName}: AppProps) {
 
 			<button
 				className="btn btn-primary"
-				disabled={!atom}
+				disabled={!search}
 				onClick={handleSearch}
 				type="button"
 			>
