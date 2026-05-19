@@ -48,6 +48,12 @@ export {default as FDS_EVENT} from './utils/eventsDefinitions';
 export {getFDSAtom} from './utils/getFDSAtom';
 
 export {
+	getFDSActiveFiltersSelector,
+	getFDSFilterByIdSelector,
+	getFDSSearchQuerySelector,
+} from './utils/getFDSSelectors';
+
+export {
 	DisplayType,
 	EConfigInURLBehavior,
 	IBaseFilterState,
