@@ -1,0 +1,37 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+import React from 'react';
+import {Root, createRoot} from 'react-dom/client';
+
+import App from './App';
+
+const DEFAULT_FDS_NAME =
+	'com_liferay_frontend_data_set_sample_web_internal_portlet_FDSSamplePortlet-classic';
+
+const DEFAULT_FILTER_ID = 'givenName';
+
+const ELEMENT_NAME = 'liferay-sample-custom-element-8';
+
+class LiferaySampleCustomElement extends HTMLElement {
+	private _root?: Root;
+
+	connectedCallback() {
+		const fdsName = this.getAttribute('fds-name') || DEFAULT_FDS_NAME;
+		const filterId =
+			this.getAttribute('filter-id') || DEFAULT_FILTER_ID;
+
+		this._root = createRoot(this);
+		this._root.render(<App fdsName={fdsName} filterId={filterId} />);
+	}
+
+	disconnectedCallback() {
+		this._root?.unmount();
+	}
+}
+
+if (!customElements.get(ELEMENT_NAME)) {
+	customElements.define(ELEMENT_NAME, LiferaySampleCustomElement);
+}
