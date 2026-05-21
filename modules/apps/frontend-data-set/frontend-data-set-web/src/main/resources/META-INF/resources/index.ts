@@ -49,6 +49,7 @@ export {getFDSAtom} from './utils/getFDSAtom';
 
 export {
 	getFDSActiveFiltersSelector,
+	getFDSAllFiltersSelector,
 	getFDSFilterByIdSelector,
 	getFDSSearchQuerySelector,
 } from './utils/getFDSSelectors';

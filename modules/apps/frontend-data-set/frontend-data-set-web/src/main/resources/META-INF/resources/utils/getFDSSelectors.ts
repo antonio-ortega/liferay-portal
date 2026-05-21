@@ -27,6 +27,14 @@ const getFDSActiveFiltersSelector = (
 		get(fdsAtom).filters.filter((filter) => filter.active)
 	);
 
+const getFDSAllFiltersSelector = (
+	fdsAtom: Atom<IFDSState>
+): Selector<Array<IBaseFilterState>> =>
+	getOrCreateSelector(
+		`${fdsAtom.key}_allFilters`,
+		(get) => get(fdsAtom).filters as Array<IBaseFilterState>
+	);
+
 const getFDSFilterByIdSelector = (
 	fdsAtom: Atom<IFDSState>,
 	filterId: string
@@ -45,6 +53,7 @@ const getFDSSearchQuerySelector = (
 
 export {
 	getFDSActiveFiltersSelector,
+	getFDSAllFiltersSelector,
 	getFDSFilterByIdSelector,
 	getFDSSearchQuerySelector,
 };
