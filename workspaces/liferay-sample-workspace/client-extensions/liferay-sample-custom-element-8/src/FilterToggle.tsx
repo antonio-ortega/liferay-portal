@@ -4,9 +4,9 @@
  */
 
 import {
-	DataSetFilters,
 	FDSFilterState,
-	dataSetFilters,
+	FiltersSubscription,
+	subscribeFilters,
 } from '@liferay/js-api/data-set';
 import React, {useEffect, useState} from 'react';
 
@@ -16,25 +16,31 @@ interface FilterToggleProps {
 }
 
 function FilterToggle({fdsName, filterId}: FilterToggleProps) {
-	const [filtersApi, setFiltersApi] = useState<DataSetFilters | null>(null);
+	const [filtersApi, setFiltersApi] = useState<FiltersSubscription | null>(
+		null
+	);
 	const [filters, setFilters] = useState<Array<FDSFilterState>>([]);
 
 	useEffect(() => {
 		let disposed = false;
-		let subscription: {dispose: () => void} | undefined;
+		let subscription: FiltersSubscription | undefined;
 
-		dataSetFilters(fdsName)
+		subscribeFilters(fdsName, (next) => {
+			if (disposed) {
+				return;
+			}
+
+			setFilters(next);
+		})
 			.then((resolvedFilters) => {
 				if (disposed) {
+					resolvedFilters.dispose();
+
 					return;
 				}
 
+				subscription = resolvedFilters;
 				setFiltersApi(resolvedFilters);
-				setFilters(resolvedFilters.get());
-
-				subscription = resolvedFilters.subscribe((next) => {
-					setFilters(next);
-				});
 			})
 			.catch((error: Error) => {
 				console.warn(
@@ -60,7 +66,7 @@ function FilterToggle({fdsName, filterId}: FilterToggleProps) {
 			return;
 		}
 
-		filtersApi.set(
+		filtersApi.setFilters(
 			filters.map((filter) =>
 				filter.id === filterId ? transform(filter) : filter
 			)
