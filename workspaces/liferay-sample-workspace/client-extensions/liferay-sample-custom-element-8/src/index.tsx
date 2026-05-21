@@ -20,8 +20,7 @@ class LiferaySampleCustomElement extends HTMLElement {
 
 	connectedCallback() {
 		const fdsName = this.getAttribute('fds-name') || DEFAULT_FDS_NAME;
-		const filterId =
-			this.getAttribute('filter-id') || DEFAULT_FILTER_ID;
+		const filterId = this.getAttribute('filter-id') || DEFAULT_FILTER_ID;
 
 		this._root = createRoot(this);
 		this._root.render(<App fdsName={fdsName} filterId={filterId} />);
