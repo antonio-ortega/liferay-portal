@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {DataSetSearch, dataSetSearch} from '@liferay/js-api/data-set';
+import {SearchSubscription, subscribeSearch} from '@liferay/js-api/data-set';
 import React, {useEffect, useState} from 'react';
 
 interface AppProps {
@@ -11,25 +11,29 @@ interface AppProps {
 }
 
 function App({fdsName}: AppProps) {
-	const [search, setSearchApi] = useState<DataSetSearch | null>(null);
+	const [search, setSearch] = useState<SearchSubscription | null>(null);
 	const [query, setQuery] = useState('');
 
 	useEffect(() => {
 		let disposed = false;
-		let subscription: {dispose: () => void} | undefined;
+		let subscription: SearchSubscription | undefined;
 
-		dataSetSearch(fdsName)
+		subscribeSearch(fdsName, (next) => {
+			if (disposed) {
+				return;
+			}
+
+			setQuery(next);
+		})
 			.then((resolvedSearch) => {
 				if (disposed) {
+					resolvedSearch.dispose();
+
 					return;
 				}
 
-				setSearchApi(resolvedSearch);
-				setQuery(resolvedSearch.get());
-
-				subscription = resolvedSearch.subscribe((next) => {
-					setQuery(next);
-				});
+				subscription = resolvedSearch;
+				setSearch(resolvedSearch);
 			})
 			.catch((error: Error) => {
 				console.warn(
@@ -48,7 +52,7 @@ function App({fdsName}: AppProps) {
 			return;
 		}
 
-		search.set(query);
+		search.setSearch(query);
 	};
 
 	return (
