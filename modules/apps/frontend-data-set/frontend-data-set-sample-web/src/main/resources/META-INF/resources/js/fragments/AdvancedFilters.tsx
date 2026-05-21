@@ -9,11 +9,15 @@ import {
 	IBaseFilterState,
 	IFDSState,
 	ISelectionFilterState,
+	getFDSFilterByIdSelector,
 } from '@liferay/frontend-data-set-web';
+import {State} from '@liferay/frontend-js-state-web';
 import {useLiferayState} from '@liferay/frontend-js-state-web/react';
-import React from 'react';
+import React, {useMemo} from 'react';
 
 import {advancedFDSAtom} from '../utils/atoms';
+
+const COLOR_FILTER_ID = 'color';
 
 /**
  * This fragment highlights sync with FDS, where contexts are joined through
@@ -22,12 +26,27 @@ import {advancedFDSAtom} from '../utils/atoms';
  * This is the recommended method of wiring, as it ensures type safety.
  */
 const AdvancedFilters = () => {
-	const [advancedFDSState, setAdvancedFDSState] =
-		useLiferayState<IFDSState>(advancedFDSAtom);
-
-	const colorFilter = advancedFDSState.filters.find(
-		(filter: IBaseFilterState) => filter.id === 'color'
+	const memoizedColorFilterSelector = useMemo(
+		() => getFDSFilterByIdSelector(advancedFDSAtom, COLOR_FILTER_ID),
+		[]
 	);
+
+	const [colorFilter] = useLiferayState<IBaseFilterState | undefined>(
+		memoizedColorFilterSelector
+	);
+
+	const updateColorFilter = (
+		patch: (filter: IBaseFilterState) => IBaseFilterState
+	) => {
+		const current = State.readAtom(advancedFDSAtom) as IFDSState;
+
+		State.writeAtom<IFDSState>(advancedFDSAtom, {
+			...current,
+			filters: current.filters.map((filter: IBaseFilterState) =>
+				filter.id === COLOR_FILTER_ID ? patch(filter) : filter
+			),
+		});
+	};
 
 	return (
 		<ClayLayout.ContainerFluid className="pt-2">
@@ -43,18 +62,10 @@ const AdvancedFilters = () => {
 						disabled={Boolean(!colorFilter?.selectedData)}
 						label="Active"
 						onToggle={(value) => {
-							setAdvancedFDSState({
-								...advancedFDSState,
-								filters: advancedFDSState.filters.map(
-									(filter: IBaseFilterState) => {
-										if (filter.id === 'color') {
-											return {...filter, active: value};
-										}
-
-										return filter;
-									}
-								),
-							});
+							updateColorFilter((filter) => ({
+								...filter,
+								active: value,
+							}));
 						}}
 						toggled={colorFilter?.active ?? false}
 					/>
@@ -67,24 +78,16 @@ const AdvancedFilters = () => {
 						disabled={Boolean(!colorFilter?.selectedData)}
 						label="Exclude"
 						onToggle={(value) => {
-							setAdvancedFDSState({
-								...advancedFDSState,
-								filters: advancedFDSState.filters.map(
-									(filter: IBaseFilterState) => {
-										if (filter.id === 'color') {
-											return {
-												...filter,
-												selectedData: {
-													...filter.selectedData,
-													exclude: value,
-												},
-											} as ISelectionFilterState;
-										}
-
-										return filter;
-									}
-								),
-							});
+							updateColorFilter(
+								(filter) =>
+									({
+										...filter,
+										selectedData: {
+											...filter.selectedData,
+											exclude: value,
+										},
+									}) as ISelectionFilterState
+							);
 						}}
 						toggled={
 							(colorFilter?.selectedData?.exclude as boolean) ??
