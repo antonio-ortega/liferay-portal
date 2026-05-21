@@ -13,9 +13,9 @@ const getOrCreateSelector = <T>(
 	key: string,
 	deriveValue: (get: Getter) => T
 ): Selector<T> => {
-	const existing = State.__unsafe__.getAtomOrSelectorKey(key) as
-		| Selector<T>
-		| null;
+	const existing = State.__unsafe__.getAtomOrSelectorKey(
+		key
+	) as Selector<T> | null;
 
 	return existing ?? State.selector<T>(key, deriveValue);
 };
