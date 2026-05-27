@@ -18,12 +18,13 @@ class LiferaySampleCustomElement extends HTMLElement {
 
 	connectedCallback() {
 		const fdsName = this.getAttribute('fds-name') || DEFAULT_FDS_NAME;
-
+		console.log("Connecting with", fdsName);
 		this._root = createRoot(this);
 		this._root.render(<App fdsName={fdsName} />);
 	}
 
 	disconnectedCallback() {
+		console.log("Disconnecting");
 		this._root?.unmount();
 	}
 }

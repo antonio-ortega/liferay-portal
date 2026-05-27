@@ -11,55 +11,48 @@ interface AppProps {
 }
 
 function App({fdsName}: AppProps) {
-	const [search, setSearch] = useState<SearchSubscription | null>(null);
+	const [searchSubscription, setSearchSubscription] = useState<SearchSubscription | null>(null);
 	const [query, setQuery] = useState('');
 
 	useEffect(() => {
-		let disposed = false;
-		let subscription: SearchSubscription | undefined;
+		console.log("Effect starts for", fdsName);
 
-		subscribeSearch(fdsName, (next) => {
-			if (disposed) {
-				return;
-			}
+		if (searchSubscription) {
+			console.log("I am already subscribed!");
+			searchSubscription.dispose();
+		}
 
-			setQuery(next);
+		subscribeSearch(fdsName, (queryString : string) => {
+			console.log("Search callback change for", fdsName, "with", queryString);
+			setQuery(queryString);
 		})
-			.then((resolvedSearch) => {
-				if (disposed) {
-					resolvedSearch.dispose();
-
-					return;
-				}
-
-				subscription = resolvedSearch;
-				setSearch(resolvedSearch);
+			.then((searchSubscription : SearchSubscription) => {
+				setSearchSubscription(searchSubscription);
 			})
 			.catch((error: Error) => {
 				console.warn(
 					`[liferay-sample-custom-element-7] ${error.message}`
 				);
 			});
-
 		return () => {
-			disposed = true;
-			subscription?.dispose();
+			console.log("Effect cleanup, disposing", fdsName)
+			searchSubscription?.dispose();
 		};
 	}, [fdsName]);
 
 	const handleSearch = () => {
-		if (!search) {
+		if (!searchSubscription) {
 			return;
 		}
 
-		search.setSearch(query);
+		searchSubscription.setSearch(query);
 	};
 
 	return (
 		<div style={{display: 'flex', gap: '0.5rem', padding: '1rem'}}>
 			<input
 				className="form-control"
-				disabled={!search}
+				disabled={!searchSubscription}
 				onChange={(event) => setQuery(event.target.value)}
 				onKeyDown={(event) => {
 					if (event.key === 'Enter') {
@@ -67,7 +60,7 @@ function App({fdsName}: AppProps) {
 					}
 				}}
 				placeholder={
-					search
+					searchSubscription
 						? `Search in ${fdsName}`
 						: `Waiting for FDS "${fdsName}"...`
 				}
@@ -78,7 +71,7 @@ function App({fdsName}: AppProps) {
 
 			<button
 				className="btn btn-primary"
-				disabled={!search}
+				disabled={!searchSubscription}
 				onClick={handleSearch}
 				type="button"
 			>
