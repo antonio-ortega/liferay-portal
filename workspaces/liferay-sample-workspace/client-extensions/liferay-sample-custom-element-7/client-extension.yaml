@@ -4,7 +4,7 @@ assemble:
 liferay-sample-custom-element-7:
     friendlyURLMapping: liferay-sample-custom-element-7
     htmlElementName: liferay-sample-custom-element-7
-    instanceable: false
+    instanceable: true
     name: Liferay Sample Custom Element 7
     portletCategoryName: category.client-extensions
     type: customElement
