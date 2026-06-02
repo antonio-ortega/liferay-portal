@@ -34,19 +34,20 @@ const test = mergeTests(
 	pageEditorPagesTest
 );
 
+let customElement: Locator;
 let customElementFragmentId: string;
+let customElementInput: Locator;
+let fdsPageClassicUrl: string;
 let fdsPageTitle: string;
 let fdsPageUrl: string;
-let customElement: Locator;
-let customElementInput: Locator;
 
 test.beforeEach(async ({fdsSamplePage, page, pageEditorPage, site}) => {
-		const result =
-			await test.step('Create a page with the FDS Sample widget', async () =>
-				fdsSamplePage.setupFDSSampleWidget({site}));
+		await test.step('Create a page with the FDS Sample widget', async () => {
+			const {layout, url} = await fdsSamplePage.setupFDSSampleWidget({site});
 
-		fdsPageUrl = result?.url;
-		fdsPageTitle = result?.layout.nameCurrentValue;
+			fdsPageUrl = url;
+			fdsPageTitle = layout.nameCurrentValue;
+		});
 
 		await test.step('Add the Custom Element 7 widget to the page', async () => {
 			await page.goto(`${fdsPageUrl}?p_l_mode=edit`);
@@ -66,10 +67,23 @@ test.beforeEach(async ({fdsSamplePage, page, pageEditorPage, site}) => {
 			customElementInput = customElement.locator('input');
 		});
 
-		await test.step('Switch to the Classic FDS tab', async () => {
+		await test.step('Capture the Classic tab URL from the rendered toolbar', async () => {
 			await page.goto(fdsPageUrl);
 
-			await fdsSamplePage.selectTab('Classic');
+			const classicTabHref = await page
+				.locator('.nav-link')
+				.filter({hasText: 'Classic'})
+				.getAttribute('href');
+
+			if (!classicTabHref) {
+				throw new Error('Classic FDS tab href was not present on the page');
+			}
+
+			fdsPageClassicUrl = classicTabHref;
+		});
+
+		await test.step('Reload the page directly on the Classic tab', async () => {
+			await page.goto(fdsPageClassicUrl);
 
 			await waitForFDS({page});
 		});
@@ -427,10 +441,6 @@ test(
 			{name: 'Search'}
 		);
 		const secondCustomElementInput = secondCustomElement.locator('input');
-		const secondCustomElementSearchButton = secondCustomElement.getByRole(
-			'button',
-			{name: 'Search'}
-		);
 
 		const fdsSearchInput = fdsSamplePage.managementToolbar.searchInput;
 		const fdsSearchButton = fdsSamplePage.managementToolbar.searchButton;
@@ -452,9 +462,7 @@ test(
 		await test.step(
 			'Open the page in view mode and wait for both Custom Elements to subscribe',
 			async () => {
-				await page.goto(fdsPageUrl);
-
-				await fdsSamplePage.selectTab('Classic');
+				await page.goto(fdsPageClassicUrl);
 
 				await waitForFDS({page});
 
@@ -524,7 +532,7 @@ test(
 		await test.step(
 			'Reload the page and confirm only the second Custom Element subscribes',
 			async () => {
-				await page.goto(fdsPageUrl);
+				await page.goto(fdsPageClassicUrl);
 
 				await fdsSamplePage.selectTab('Classic');
 
