@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"@liferay/js-api": "^0.7.0",
+		"@liferay/js-api": "link:../../../../../liferay-frontend-projects/projects/js-toolkit/packages/js-api",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0"
 	},
