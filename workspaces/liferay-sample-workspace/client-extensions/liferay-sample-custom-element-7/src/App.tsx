@@ -4,36 +4,29 @@
  */
 
 import {SearchSubscription, subscribeSearch} from '@liferay/js-api/data-set';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 interface AppProps {
 	fdsName: string;
 }
 
 function App({fdsName}: AppProps) {
-	const [search, setSearch] = useState<SearchSubscription | null>(null);
+	const [searchSubscription, setSearchSubscription] =
+		useState<SearchSubscription | null>(null);
+	const searchSubscriptionRef = useRef<SearchSubscription | null>(null);
 	const [query, setQuery] = useState('');
 
 	useEffect(() => {
-		let disposed = false;
-		let subscription: SearchSubscription | undefined;
-
-		subscribeSearch(fdsName, (next) => {
-			if (disposed) {
-				return;
-			}
-
-			setQuery(next);
-		})
-			.then((resolvedSearch) => {
-				if (disposed) {
-					resolvedSearch.dispose();
-
-					return;
-				}
-
-				subscription = resolvedSearch;
-				setSearch(resolvedSearch);
+		subscribeSearch(
+			fdsName,
+			(queryString: string) => {
+				setQuery(queryString);
+			},
+			{timeout: 10000}
+		)
+			.then((subscription: SearchSubscription) => {
+				searchSubscriptionRef.current = subscription;
+				setSearchSubscription(subscription);
 			})
 			.catch((error: Error) => {
 				console.warn(
@@ -42,24 +35,24 @@ function App({fdsName}: AppProps) {
 			});
 
 		return () => {
-			disposed = true;
-			subscription?.dispose();
+			searchSubscriptionRef.current?.dispose();
+			searchSubscriptionRef.current = null;
 		};
 	}, [fdsName]);
 
 	const handleSearch = () => {
-		if (!search) {
+		if (!searchSubscription) {
 			return;
 		}
 
-		search.setSearch(query);
+		searchSubscription.setSearch(query);
 	};
 
 	return (
 		<div style={{display: 'flex', gap: '0.5rem', padding: '1rem'}}>
 			<input
 				className="form-control"
-				disabled={!search}
+				disabled={!searchSubscription}
 				onChange={(event) => setQuery(event.target.value)}
 				onKeyDown={(event) => {
 					if (event.key === 'Enter') {
@@ -67,7 +60,7 @@ function App({fdsName}: AppProps) {
 					}
 				}}
 				placeholder={
-					search
+					searchSubscription
 						? `Search in ${fdsName}`
 						: `Waiting for FDS "${fdsName}"...`
 				}
@@ -78,7 +71,7 @@ function App({fdsName}: AppProps) {
 
 			<button
 				className="btn btn-primary"
-				disabled={!search}
+				disabled={!searchSubscription}
 				onClick={handleSearch}
 				type="button"
 			>
