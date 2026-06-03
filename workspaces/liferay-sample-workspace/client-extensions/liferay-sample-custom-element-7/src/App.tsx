@@ -11,22 +11,35 @@ interface AppProps {
 }
 
 function App({fdsName}: AppProps) {
-	const [searchSubscription, setSearchSubscription] =
-		useState<SearchSubscription | null>(null);
-	const searchSubscriptionRef = useRef<SearchSubscription | null>(null);
+	const [disabled, setDisabled] = useState<boolean>(true);
 	const [query, setQuery] = useState('');
+	const [setSearch, setSetSearch] = useState<Function>(() => () => {});
 
 	useEffect(() => {
+		let disposed = false;
+		let searchSubscription : SearchSubscription | null = null;
+
+		const handleQueryValue = 	(queryString: string) => {
+			//console.log("Search query handler for", fdsName, ". New query: ", queryString);
+			setQuery(queryString);
+			setDisabled(false);
+		}
+
+		//console.log("Effect running for", fdsName);
 		subscribeSearch(
-			fdsName,
-			(queryString: string) => {
-				setQuery(queryString);
-			},
-			{timeout: 10000}
+			fdsName, handleQueryValue, {timeout: 10000}
 		)
 			.then((subscription: SearchSubscription) => {
-				searchSubscriptionRef.current = subscription;
-				setSearchSubscription(subscription);
+				console.log("Search subscription handler for", fdsName);
+				if (disposed) {
+					console.log("Preexisting Search subscription exists");
+					subscription.dispose()
+					return;
+				}
+				searchSubscription = subscription;
+				setSetSearch(() => subscription.setSearch);
+				handleQueryValue(subscription.getSearch());
+				//console.log("Search subscription is ready for", fdsName, ". I received query", subscription.getSearch());
 			})
 			.catch((error: Error) => {
 				console.warn(
@@ -35,24 +48,26 @@ function App({fdsName}: AppProps) {
 			});
 
 		return () => {
-			searchSubscriptionRef.current?.dispose();
-			searchSubscriptionRef.current = null;
+			//console.log("Effect disposal for", fdsName, "subscription: " + searchSubscription);
+			disposed = true;
+			if (searchSubscription) {
+				searchSubscription.dispose();
+				searchSubscription = null;
+			}
+			setDisabled(true);
 		};
 	}, [fdsName]);
 
 	const handleSearch = () => {
-		if (!searchSubscription) {
-			return;
-		}
-
-		searchSubscription.setSearch(query);
+		console.log("Search triggered from CX for", fdsName, "with", query);
+		setSearch(query);
 	};
 
 	return (
 		<div style={{display: 'flex', gap: '0.5rem', padding: '1rem'}}>
 			<input
 				className="form-control"
-				disabled={!searchSubscription}
+				disabled={disabled}
 				onChange={(event) => setQuery(event.target.value)}
 				onKeyDown={(event) => {
 					if (event.key === 'Enter') {
@@ -60,9 +75,9 @@ function App({fdsName}: AppProps) {
 					}
 				}}
 				placeholder={
-					searchSubscription
-						? `Search in ${fdsName}`
-						: `Waiting for FDS "${fdsName}"...`
+					disabled
+						? `Waiting for FDS "${fdsName}"...`
+						: `Search in ${fdsName}`
 				}
 				style={{flex: 1}}
 				type="text"
@@ -71,7 +86,7 @@ function App({fdsName}: AppProps) {
 
 			<button
 				className="btn btn-primary"
-				disabled={!searchSubscription}
+				disabled={disabled}
 				onClick={handleSearch}
 				type="button"
 			>
